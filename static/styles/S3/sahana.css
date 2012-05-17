@@ -141,6 +141,7 @@ button {
 /* CSS floats */
 .fleft {
     float: left !important;
+    text-align: left;
 }
 .fright {
     float: right !important;
@@ -282,7 +283,7 @@ table {
 #menu_modules {
     position: absolute;
     /* top: 255px; */
-    height: 36px;
+    height: 40px;
     background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
     border-top: 1px solid #2a323f;
     /* alternate gradient
@@ -424,18 +425,18 @@ table {
 }
 
 .S3menulogo {
-    background: url(../../img/S3menu_logo.png) left top no-repeat;
+    background: url(../../img/dswd/logo.png) left top no-repeat;
     text-shadow: none;
     padding: none;
-    width: 35px;
-    height: 28px;
+    width: 41px;
+    height: 35px;
     display: inline-block;
     position: absolute;
     top: 3px;
     left: 2px;
 }
 .S3menuHome {
-    padding-left: 20px;
+    padding-left: 38px;
 }
 
 /* Sidebar / response.menu_options */
@@ -618,6 +619,11 @@ table {
 }
 #home li {
     margin-left: 12px;
+}
+#dswd{
+    color: #171C1C; 
+    font-family: Arial,Helvetica,Sans-Serif; 
+    font-size: 11px; 
 }
 #footer {
     margin: 0 auto;
@@ -1420,7 +1426,7 @@ li input + a {
 }
 
 #menu_box_center {
-	width: 655px;
+	width: 538px;
 }
 
 #menu_box_1 {
@@ -1451,6 +1457,10 @@ li input + a {
 	width: auto;
 }
 
+.menu_div{
+    margin-top: 6px;
+}
+
 #facility_box {
 	width: auto;
 	float: right;
@@ -1465,10 +1475,9 @@ li input + a {
 
 #manage_facility_box {
 	/* If inside menu_box_2
-    width: 240px;
 	margin-left: 10px;
 	padding-bottom: 40px; */
-    width: 470px;
+    width: 350px;
 }
 
 #manage_facility_box a {
@@ -1498,12 +1507,11 @@ li input + a {
 .div_arrow	{
     padding: 0 15px;
     text-align:left;
-    margin-top: 100px;
+    /*margin-top: 22px;*/
 }
 #content .menu_box h3  {
     border-bottom: 0px;
     font-size: 1.6em;
-    text-align: center;
 }
 .menu-btn-r {
     margin: 0px;
@@ -1513,7 +1521,8 @@ li input + a {
     display: block;
     white-space:nowrap;
     text-align: center;
-    font-size: 1.3em;
+    font-size: 1.7em;
+    font-weight: bold;
 }
 .menu-btn-l {
     margin-top:4px;
@@ -1531,7 +1540,15 @@ li input + a {
     padding: 10px 0 10px 0;
 }
 #about{
-    clear: both;
+    float: left;
+    padding-top: 4px;
+    width: 370px;
+    text-align: left;
+}
+
+#about p{
+    text-align: justify;
+    font-size: 12px;
 }
 
 /* RSS Feed */
@@ -1702,6 +1719,7 @@ body {
 	color: black;
 	font-size: 14pt;
     margin: 0;
+    tex-align: center;
 }
 
 /* Links can't be clicked, so mark them with simple underline */

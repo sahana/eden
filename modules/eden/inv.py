@@ -1394,6 +1394,7 @@ $(document).ready(function() {
         list_fields = ["item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
+
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -2004,12 +2005,13 @@ def inv_send_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_send_form_name().upper()),
-                                 _colspan=2, _class="pdf_title"),
-                              TD(logo, _colspan=2),
+                           TR(TD(logo, _colspan=2),
+                              TD(T(current.deployment_settings.get_send_form_name()), _colspan=2, _class="pdf_title")
                               ),
                            TR(TH("%s: " % table.send_ref.label),
-                              TD(table.send_ref.represent(record.send_ref))
+                              table.send_ref.represent(record.send_ref),
+                              TH("%s: " % table.status.label),
+                               table.status.represent(record.status),
                               ),
                            TR( TH("%s: " % table.date.label),
                                table.date.represent(record.date),
@@ -2021,9 +2023,6 @@ def inv_send_rheader(r):
                                TH("%s: " % table.to_site_id.label),
                                table.to_site_id.represent(record.to_site_id),
                               ),
-                           TR( TH("%s: " % table.status.label),
-                               table.status.represent(record.status),
-                             ),
                            TR(
                                TH("%s: " % table.comments.label),
                                TD(record.comments or "", _colspan=3)
@@ -2257,14 +2256,13 @@ def inv_recv_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_recv_form_name()),
-                                 _colspan=2, _class="pdf_title"),
-                              TD(logo, _colspan=2),
+                           TR(TD(logo, _colspan=2),
+                              TD(T(current.deployment_settings.get_recv_form_name()),
+                                 _colspan=2, _class="pdf_title")
                               ),
                            TR(TH("%s: " % table.recv_ref.label),
-                              TD(table.recv_ref.represent(record.recv_ref))
-                              ),
-                           TR( TH("%s: " % table.status.label),
+                              table.recv_ref.represent(record.recv_ref),
+                              TH("%s: " % table.status.label),
                                table.status.represent(record.status),
                               ),
                            TR( TH( "%s: " % table.eta.label),
@@ -2282,13 +2280,10 @@ def inv_recv_rheader(r):
                                TH( "%s: " % table.recipient_id.label),
                                s3_fullname(record.recipient_id),
                               ),
-                           TR( TH( "%s: " % table.send_ref.label),
-                               table.send_ref.represent(record.send_ref),
-                               TH( "%s: " % table.recv_ref.label),
-                               table.recv_ref.represent(record.recv_ref),
-                              ),
-                           TR( TH( "%s: " % table.comments.label),
-                               TD(record.comments or "", _colspan=3),
+                           TR( TH( "%s: " % table.purchase_ref.label),
+                               table.purchase_ref.represent(record.purchase_ref),
+                               TH( "%s: " % table.comments.label),
+                               record.comments,
                               ),
                             )
 

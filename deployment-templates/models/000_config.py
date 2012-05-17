@@ -331,7 +331,7 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
 #deployment_settings.req.use_req_number = False
-deployment_settings.req.generate_req_number = False
+#deployment_settings.req.generate_req_number = False
 deployment_settings.req.req_form_name = "Request Issue Form"
 deployment_settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
@@ -523,14 +523,14 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Organizations"),
             #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
             restricted = True,
-            module_type = 1
+            module_type = 10
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
-            name_nice = T("Staff & Volunteers"),
+            name_nice = T("Staff"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 2,
+            module_type = 10,
         )),
     # ("cms", Storage(
           # name_nice = T("Content Management"),
@@ -561,7 +561,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Warehouse"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = 4
+            module_type = 1
         )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
@@ -573,7 +573,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 5,
+            module_type = 10,
         )),
     # Vehicle depends on Assets
     # ("vehicle", Storage(
@@ -586,7 +586,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Requests"),
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
-            module_type = 10,
+            module_type = 2,
         )),
     # ("project", Storage(
             # name_nice = T("Projects"),
