@@ -309,8 +309,16 @@ class S3RL_PDF(S3Codec):
                     fobjs.append(_field)
                 else:
                     fobjs.append(Field(field_name))
+
+        # Merge the groupby and order by into a comma separated string
+        if self.pdf_groupby:
+            if self.pdf_orderby:
+                orderby = "%s,%s" % (self.pdf_groupby, self.pdf_orderby)
+            else:
+                orderby = self.pdf_groupby
+        else:
+            orderby = self.pdf_orderby
         # Get the data...
-        orderby = ",".join([self.pdf_groupby, self.pdf_orderby])
         sqltable = resource.sqltable(self.list_fields,
                                      orderby = orderby,
                                      start = None, # needs to be None to get all records
@@ -341,7 +349,8 @@ class S3RL_PDF(S3Codec):
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
                                raw_data = data,
-                               list_fields = flabel,
+                               list_fields = fnames,
+                               labels=flabel,
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
