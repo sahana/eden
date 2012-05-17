@@ -1005,7 +1005,12 @@ class S3TrackingModel(S3Model):
                                          writable = True,
                                          widget = S3SiteAutocompleteWidget(),
                                          represent=org_site_represent),
-                                  req_ref(),
+                                  Field("repacking_slip_no", label = T("Repacking Slip No.")),
+                                  item_id(),
+                                  Field("quantity", "double",
+                                   label = T("Quantity"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   ),
                                   Field("date", "date",
                                         label = T("Date"),
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
@@ -1025,6 +1030,16 @@ class S3TrackingModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields()
                             )
+
+                             # pack_quantity virtual field
+        table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+
+               # Resource configuration
+        self.configure(tablename,
+                       list_fields = ["site_id", "repacking_slip_no", "quantity", "date", "repacked_id"],
+                       #onaccept = self.inv_track_item_onaccept,
+                       onvalidation = self.inv_kit_item_onvalidate,
+                       )
 
         # =====================================================================
         # Tracking Items
@@ -1594,6 +1609,60 @@ $(document).ready(function() {
         return
 
     # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_kit_item_onvalidate(form):
+
+        s3db = current.s3db
+        db = current.db
+        stable = s3db.supply_item
+        ktable = s3db.supply_kit_item
+        siptable = s3db.supply_item_pack
+        invtable = s3db.inv_inv_item
+
+        if stable.kit == True:
+
+           #get food pack contents
+           query = (ktable.parent_item_id == form.record.item_id)
+           rows = db(query).select()
+
+           #get quantity of selected contents on the food pack (supply_kit_item)
+           kit_item ={}
+           #loop through each supply item in the kit
+           for record in rows:
+               one_kit = record.quantity
+               #check if the contents in supply kit item are in the inventory (inv_inv_item)
+               query2 = (record.item_id == invtable.id)
+               wh_items = db(query).select()
+
+               #select the pack id of the kit_item in the supply_item_pack table
+               total_amount = 0
+               for wh_item in wh_items:
+                   pack_item_id = wh_item.item_pack_id
+                   pack_quantity = siptable[pack_item_id].quantity
+                   wh_item_quantity = wh_item.quantity
+
+                   amount = pack_quantity * wh_item_quantity
+                   total_amount += amount
+               # find out how many kits we can make & store in kit_item
+               kit_item[record.item_id] = total_amount / one_kit
+               max_kits = min(kit_item.values())
+               if max_kits < form.record.quantity:
+                   form.errors.quantity = T("You can only make %d kits with the available stock" % max_kits)
+                    #record2.quantity
+#                   item_total[record.item_id] =
+#           for record in rows:
+#               kit_item[record.item_id] = record.item_pack_id
+            # if stable.item_id == ktable.parent_item_id: #if the "food pack" item in supply_item table is in supply_kit_item table
+                # x==1
+                # foreach(ktable.item_id) #for every kit item in the supply_kit_item table
+                    # total_quantity = (ktable.quantity(ktable.item_pack_id)) # get the total quantity of each item
+                    # x.total_quantity = total_quantity
+                    # x++
+           return
+
+    # -------------------------------------------------------------------------
+
     @staticmethod
     def inv_get_shipping_code(type, site_id, field):
         s3db = current.s3db

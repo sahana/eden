@@ -87,8 +87,6 @@ class S3SupplyModel(S3Model):
         organisation_id = self.org_organisation_id
         organisation_represent = self.org_organisation_represent
 
-        NONE = current.messages.NONE
-
         # Shortcuts
         add_component = self.add_component
         comments = s3.comments
@@ -478,11 +476,11 @@ class S3SupplyModel(S3Model):
 
         # Supply Kit Items as component of Items
         add_component("supply_kit_item",  supply_item = "parent_item_id")
-        #add_component("supply_item",  supply_item = dict(joinby="parent_item_id",
-        #                                                  alias="kit_item",
-        #                                                 link="supply_kit_item",
-        #                                                      actuate="hide",
-        #                                                     key="item_id"))
+        # add_component("supply_item",  supply_item = dict(joinby="parent_item_id",
+                                                          # alias="kit_item",
+                                                         # link="supply_kit_item",
+                                                              # actuate="hide",
+                                                             # key="item_id"))
 
         # =====================================================================
         # Catalog Item
