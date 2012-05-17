@@ -447,7 +447,6 @@ $(document).ready(function() {
                      ]
     });
 
-
 	if (S3.dataTables.hideList) {
 		for (i=0; i<S3.dataTables.hideList.length; i++){
 			$('.dataTable').dataTable().fnSetColumnVis(S3.dataTables.hideList[i], false);

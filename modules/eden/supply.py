@@ -694,18 +694,21 @@ S3FilterFieldChange({
         # Inventory items as component of Packs
         add_component("inv_inv_item", supply_item_pack="item_pack_id")
 
-         # =====================================================================
-         # Supply Kit Item Table
-
-         # For defining what items are in a kit
+        # =====================================================================
+        # Supply Kit Item Table
+        #
+        # For defining what items are in a kit
 
         tablename = "supply_kit_item"
         table = define_table(tablename,
-                            supply_item_id("parent_item_id", label = T("Parent Item")),
-                            supply_item_id("item_id", label = T("Kit Item"), comment = None ),
+                             supply_item_id("parent_item_id",
+                                            label = T("Parent Item"),
+                                            comment = None),
+                             supply_item_id("item_id", label = T("Kit Item")),
                              Field("quantity", "double",
                                    label = T("Quantity"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              item_pack_id(),
                              comments(),
