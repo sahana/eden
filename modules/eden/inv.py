@@ -1152,8 +1152,8 @@ $(document).ready(function() {
         tracktable.recv_inv_item_id.readable = False
 
         list_fields = ["item_id",
-                       (T("Weight (kg)"), "weight"),
-                       (T("Volume (m3)"), "volume"),
+                       (T("Weight (kg)"), "item_id$weight"),
+                       (T("Volume (m3)"), "item_id$volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
@@ -1244,8 +1244,8 @@ $(document).ready(function() {
         record = table[r.id]
         recv_ref = record.recv_ref
         list_fields = ["item_id",
-                       (T("Weight (kg)"), "weight"),
-                       (T("Volume (m3)"), "volume"),
+                       (T("Weight (kg)"), "item_id$weight"),
+                       (T("Volume (m3)"), "item_id$volume"),
                        "item_source_no",
                        "item_pack_id",
                        "quantity",

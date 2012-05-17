@@ -183,7 +183,7 @@ class S3RL_PDF(S3Codec):
             footer_flowable = self.get_html_flowable(footer,
                                                      doc.printable_width)
             if self.pdf_footer_padding:
-                footer_flowable.append(Spacer(1,self.pdf_footer_padding))    
+                footer_flowable.append(Spacer(1, self.pdf_footer_padding))    
         # Build report template
 
         # Get data for the body of the text
@@ -193,7 +193,7 @@ class S3RL_PDF(S3Codec):
         doc.calc_body_size(header_flowable, footer_flowable)
         if attr.get("pdf_componentname"):
             componentname = attr.get("pdf_componentname")
-            (prefix, component) = componentname.split("_",1) 
+            (prefix, component) = componentname.split("_", 1) 
             resource = current.manager.define_resource(request.controller,
                                                        request.function,
                                                        components = component,
@@ -202,7 +202,7 @@ class S3RL_PDF(S3Codec):
 
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
-        elif isinstance(r,S3Request):
+        elif isinstance(r, S3Request):
             if r.component:
                 resource = r.component
             else:
@@ -278,7 +278,7 @@ class S3RL_PDF(S3Codec):
             for lf in self.list_fields:
                 # if the list fields contains the label then use that
                 # otherwise look for the label in the list of fields
-                if isinstance(lf,(tuple,list)):
+                if isinstance(lf, (tuple, list)):
                     fnames.append(lf[1])
                     flabel.append(lf[0])
                 else:
@@ -297,7 +297,11 @@ class S3RL_PDF(S3Codec):
                     found = True
                     break
             if not found:
-                fobjs.append(Field(field_name))
+                if "$" in field_name:
+                    _field = resource.resolve_selector(field_name)["field"]
+                    fobjs.append(_field)
+                else:
+                    fobjs.append(Field(field_name))
         # Get the data...
         sqltable = resource.sqltable(fnames,
                                      start=None, # needs to be None to get all records
@@ -310,7 +314,7 @@ class S3RL_PDF(S3Codec):
                 row = []
                 cnt = 0
                 for field in fobjs:
-                    value = record[resource.tablename][field.name]
+                    value = record[field._tablename][field.name]
                     repr = field.represent
                     if repr:
                         try:
@@ -326,12 +330,13 @@ class S3RL_PDF(S3Codec):
                 data.append(row)
 
         # Now generate the PDF table
-        return S3PDFTable(doc,
-                          raw_data = data,
-                          list_fields = flabel,
-                          autogrow = self.table_autogrow,
-                          body_height = doc.body_height,
-                         ).build()
+        pdf_table = S3PDFTable(doc,
+                               raw_data = data,
+                               list_fields = flabel,
+                               autogrow = self.table_autogrow,
+                               body_height = doc.body_height,
+                               ).build()
+        return pdf_table
         
 # -------------------------------------------------------------------------
 class EdenDocTemplate(BaseDocTemplate):
