@@ -923,9 +923,11 @@ class S3OptionsMenu:
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
-                        M("Monetization", c="inv", f="inv_item", vars=dict(report="mon")),
-                        M("Summary of Releases", c="inv", f="inv_item", vars=dict(report="rel")),
-                        M("Summary of Incoming Supplies", c="inv", f="inv_item", vars=dict(report="inc")),
+                        M("Monetization", c="inv", f="inv_item", m="search", vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="track_item", m="search", vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="track_item", m="search", vars=dict(report="inc")),
+                        M("Utilization Report", c="inv", f="track_item", m="search", vars=dict(report="util")),
+                        M("Expiration Report", c="inv", f="track_item", m="search", vars=dict(report="exp")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),

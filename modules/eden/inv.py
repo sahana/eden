@@ -1142,18 +1142,19 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
+        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
         LIST_TRACK_ITEMS = T("List of Shipment Items")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_TRACK_ITEM,
-            title_display = T("Shipment Item Details"),
+            title_display = T("Summary Details"),
             title_list = LIST_TRACK_ITEMS,
             title_update = T("Edit Shipment Item"),
             title_search = T("Search Shipment Items"),
-            subtitle_create = T("Add New Shpment Item"),
-            subtitle_list = T("Shipment Items"),
+            subtitle_create = T("Add New Shipment Item"),
+            subtitle_list = T("Shipment Item Details"),
             label_list_button = LIST_TRACK_ITEMS,
             label_create_button = ADD_TRACK_ITEM,
             label_delete_button = T("Delete Shipment Item"),
@@ -1161,6 +1162,28 @@ $(document).ready(function() {
             msg_record_modified = T("Shipment Item updated"),
             msg_record_deleted = T("Shipment Item deleted"),
             msg_list_empty = T("No Shipment Items"))
+
+        inv_track_search = S3Search(
+            simple=(S3SearchSimpleWidget(
+                        name="inv_track_search_text",
+                        label=T("Search"),
+                        comment=T("Search for an item by text."),
+                        field="item_id$name"
+                      )),
+            advanced=(S3SearchOptionsWidget(
+                        name="recv_search_site",
+                        label=T("Facility"),
+                        field="send_id$site_id",
+                        represent ="%(name)s",
+                        cols = 2
+                      ),
+                      S3SearchMinMaxWidget(
+                        name="inv_track_search_date",
+                        method="range",
+                        label=T("Expiry Date"),
+                        field="expiry_date"
+                      ),                      
+            ))
 
         # Resource configuration
         self.configure(tablename,
@@ -1182,6 +1205,7 @@ $(document).ready(function() {
                                       "supply_org_id",
                                       "item_status",
                                      ],
+                       search_method = inv_track_search,
                        onaccept = self.inv_track_item_onaccept,
                        onvalidation = self.inv_track_item_onvalidate,
                        )
@@ -2842,6 +2866,24 @@ class InvItemVirtualFields:
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
+        except:
+            # not available
+            return current.messages.NONE
+
+# =============================================================================
+class InvTrackItemVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = ["quantity",
+                    "pack_value"
+                    ]
+
+    def total_value(self):
+        try:
+            v = self.inv_track_item.quantity * self.inv_track_item.pack_value
+            # Need real numbers to use for Report calculations
+            #return IS_FLOAT_AMOUNT.represent(v, precision=2)
+            return v
         except:
             # not available
             return current.messages.NONE

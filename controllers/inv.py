@@ -219,19 +219,26 @@ def inv_item():
     """ REST Controller """
 
     table = s3db.inv_inv_item
-    s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
-    s3mgr.configure("inv_inv_item", 
-                    list_fields = ["id",
-                                      "site_id",
-                                      "item_id",
-                                      (T("Item Code"), "item_code"),
-                                      (T("Category"), "item_category"),
-                                      "quantity",
-                                      "pack_value",      
-                                      "status",
-                                      ]
-                    )
+    if "report" in request.get_vars:
+        if request.get_vars.report == "mon":
+            s3.crud_strings["inv_inv_item"].update(dict( title_list = T("Monetization Report"),
+              subtitle_list = T("Monetization Details"),
+              msg_list_empty = T("No Stock currently registered"),
+              title_search = T("Monetization Report"),
+              ))
+            s3mgr.configure("inv_inv_item",
+                            list_fields = ["id",
+                                           (T("Donor"), "supply_org_id"),
+                                           (T("Items/Description"), "item_id"),
+                                           (T("Quantity"), "quantity"),
+                                           (T("Unit"), "item_pack_id"),
+                                           (T("Unit Value"), "pack_value"),
+                                           (T("Total Value"), "total_value"),
+                                           (T("Remarks"), "comments"),
+                                           "status",
+                                           ]
+                            )
 
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -1386,6 +1393,105 @@ def track_item():
                     deletable=False,
                    )
 
+    table = s3db.inv_track_item
+
+    if "report" in request.get_vars:
+        if request.get_vars.report == "rel":
+            s3.crud_strings["inv_track_item"] = Storage(
+                                                        title_list = T("Summary of Releases"),
+                                                        subtitle_list = T("Summary Details"),
+                                                        title_search = T("Summary of Releases"),
+                                                        )
+            s3mgr.configure("inv_track_item",
+                            list_fields = ["id",
+                                           #"send_id",
+                                           #"req_item_id",
+                                           (T("Date Released"), "send_id$date"),
+                                           (T("Beneficiary"), "send_id$site_id"),
+                                           (T("TOS No."), "send_id$send_ref"),
+                                           (T("RIS No."), "send_id$req_ref"),
+                                           (T("Items/Description"), "item_id"),
+                                           (T("Source"), "supply_org_id"),
+                                           (T("Unit"), "item_pack_id"),
+                                           (T("Quantity"), "quantity"),
+                                           (T("Unit Cost"), "pack_value"),
+                                           (T("Total Cost"), "total_value"),
+                                           ],
+                            orderby = "site_id",
+                            sort = True
+                            )
+            response.s3.filter = (table.send_id != None)
+
+        elif request.get_vars.report == "inc":
+            s3.crud_strings["inv_track_item"] = Storage(
+                                                        title_list = T("Summary of Incoming Supplies"),
+                                                        subtitle_list = T("Summary Details"),
+                                                        title_search = T("Summary of Incoming Supplies"),
+                                                        )
+
+            s3mgr.configure("inv_track_item",
+                            list_fields = ["id",
+                                           (T("Date Received"), "recv_id$date"),
+                                           (T("Received By"), "recv_id$recipient_id"),
+                                           (T("TOS No."), "recv_id$send_ref"),
+                                           (T("RIS No."), "recv_id$recv_ref"),
+                                           (T("PO No."), "recv_id$purchase_ref"),
+                                           (T("Item/Description"), "item_id"),
+                                           (T("Unit"), "item_pack_id"),
+                                           (T("Quantity"), "quantity"),
+                                           (T("Unit Cost"), "pack_value"),
+                                           (T("Total Cost"), "total_value"),
+                                           (T("Source"), "supply_org_id"),
+                                           (T("Remarks"), "comments"),
+                                           ],
+                            orderby = "recipient_id",
+                            )
+            response.s3.filter = (table.recv_id != None)
+
+        elif request.get_vars.report == "util":
+            s3.crud_strings["inv_track_item"] = Storage(
+                                                        title_list = T("Utilization Report"),
+                                                        subtitle_list = T("Utilization Details"),
+                                                        title_search = T("Utilization Report"),
+                                                        )
+
+            s3mgr.configure("inv_track_item",
+                            list_fields = ["id",
+                                           (T("Item/Description"), "item_id$name"),
+                                           (T("Beneficiary"), "send_id$site_id"),
+                                           (T("TOS No."), "send_id$send_ref"),
+                                           (T("RIS No."), "send_id$req_ref"),
+                                           (T("Items/Description"), "item_id"),
+                                           (T("Source"), "supply_org_id"),
+                                           (T("Unit"), "item_pack_id"),
+                                           (T("Quantity"), "quantity"),
+                                           (T("Unit Cost"), "pack_value"),
+                                           (T("Total Cost"), "total_value"),
+                                           ]
+                            )
+
+            response.s3.filter = (table.item_id != None)
+
+        elif request.get_vars.report == "exp":
+            s3.crud_strings["inv_track_item"] = Storage(
+                                                        title_list = T("Expiration Report"),
+                                                        subtitle_list = T("Expiration Details"),
+                                                        title_search = T("Expiration Report"),
+                                                        )
+
+            s3mgr.configure("inv_track_item",
+                            list_fields = ["id",
+                                           (T("Item/Description"), "item_id"),
+                                           (T("Expiration Date"), "expiry_date"),
+                                           (T("Source"), "supply_org_id"),
+                                           (T("Unit"), "item_pack_id"),
+                                           (T("Quantity"), "quantity"),
+                                           (T("Unit Cost"), "pack_value"),
+                                           (T("Total Cost"), "total_value"),
+                                           ]
+                            )
+            response.s3.filter = (table.expiry_date != None)
+
     output = s3_rest_controller(rheader=response.s3.inv_warehouse_rheader)
     return output
 
@@ -1544,7 +1650,7 @@ def recv_item_json():
 # =============================================================================
 def send_item_json():
     """
-    """
+"""
 
     stable = s3db.org_site
     istable = s3db.inv_send
@@ -1558,7 +1664,7 @@ def send_item_json():
             ((istable.status == eden.inv.inv_ship_status["SENT"]) | \
              (istable.status == eden.inv.inv_ship_status["RECEIVED"])) & \
             (ittable.deleted == False)
-    records =  db(query).select(istable.id,
+    records = db(query).select(istable.id,
                                 istable.date,
                                 stable.name,
                                 ittable.quantity)
@@ -1571,7 +1677,7 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
-#==============================================================================
 def kit():
     return s3_rest_controller()
+
 # END =========================================================================
