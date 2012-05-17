@@ -228,7 +228,8 @@ def inv_item():
                                       (T("Item Code"), "item_code"),
                                       (T("Category"), "item_category"),
                                       "quantity",
-                                      "pack_value",                                      
+                                      "pack_value",      
+                                      "status",                                
                                       ]
                     )
 
@@ -491,6 +492,7 @@ def send():
                                "return_quantity",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                                "comments",
                               ]
             elif record.status == SHIP_STATUS_RETURNING:
@@ -505,6 +507,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                               ]
             else:
                 list_fields = ["id",
@@ -517,6 +520,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                               ]
             s3mgr.configure("inv_track_item",
                             list_fields=list_fields,
@@ -1479,6 +1483,7 @@ def adj_close():
                                                                  expiry_date = adj_item.expiry_date,
                                                                  quantity = adj_item.new_quantity,
                                                                  owner_org_id = adj_item.new_owner_org_id,
+                                                                 status = adj_item.new_status,
                                                                 )
     # Change the status of the adj record to Complete
     db(atable.id == adj_id).update(status=1)

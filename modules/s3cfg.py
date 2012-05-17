@@ -251,7 +251,7 @@ class S3Config(Storage):
     def get_fin_currencies(self):
         return self.fin.get("currencies", self.CURRENCIES)
     def get_fin_currency_default(self):
-        return self.fin.get("currency_default", "USD") # Dollars
+        return self.fin.get("currency_default", "PHP") # Dollars
     def get_fin_currency_writable(self):
         return self.fin.get("currency_writable", True)
 
@@ -534,16 +534,38 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
-    def get_inv_shipment_types(self):
+
+    def get_inv_item_status(self):
         T = current.T
-        return self.inv.get("shipment_types", { 0: current.messages.NONE,
-                          1: T("Other Warehouse"),
-                          2: T("Local Donation"),
-                          3: T("Foreign Donation"),
-                          4: T("Local Purchases"),
-                          #5: T("Confiscated Goods")
-                        })
+        return self.inv.get("item_status", {#0: current.messages.NONE,
+                                            1: T("Dump"),
+                                            2: T("Sale"),
+                                            3: T("Reject"),
+                                            4: T("Surplus")
+                                           })
     
+    def get_inv_send_type(self):
+        T = current.T
+        return self.inv.get("send_type", { #0: current.messages.NONE,
+                                          21: T("Distribution"),
+                                         })
+    
+    def get_inv_shipment_type(self):
+        T = current.T
+        return self.inv.get("shipment_type", {0: current.messages.NONE,
+                         11: T("Internal"),
+                            })
+        
+    def get_inv_recv_type(self):
+        T = current.T
+        return self.inv.get("recv_type", { 0: current.messages.NONE,
+                            31: T("Other Warehouse"),
+                            32: T("Local Donation"),
+                            33: T("Foreign Donation"),
+                            34: T("Local Purchases"),
+                            35: T("Confiscated Goods from Bureau Of Customs")
+                           })    
+
     def get_inv_name(self):
         return self.inv.get("inv_name", "Waybill")
     def get_inv_form_name(self):
