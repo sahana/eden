@@ -247,6 +247,11 @@ def inv_item():
                          vars = {"viewing" : "%s.%s" % ("inv_inv_item", record.item_id)}
                         )
                      )
+    def prep(r):
+        if r.method != "search":
+            response.s3.dataTable_group = 1
+        return True
+
     # Import pre-process
     def import_prep(data):
         """
@@ -307,12 +312,17 @@ def inv_item():
                     deletable=False,
                    )
     rheader = response.s3.inv_warehouse_rheader
+    response.s3.prep = prep
     output =  s3_rest_controller(rheader=rheader,
                                  csv_extra_fields = [
                                                      dict(label="Organisation",
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
+                                 pdf_paper_alignment = "Landscape",
+                                 pdf_table_autogrow = "B",
+                                 pdf_groupby = "site_id, item_id",
+                                 pdf_orderby = "expiry_date, supply_org_id",
                                 )
     if "add_btn" in output:
         del output["add_btn"]

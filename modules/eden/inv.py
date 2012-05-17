@@ -339,12 +339,11 @@ $(document).ready(function() {
                                       "owner_org_id",
                                       "supply_org_id",
                                       ],
-                       pdf_hide_comments = True,
                        onvalidation = self.inv_inv_item_onvalidate,
                        search_method = inv_item_search,
                        report_options = report_options,
-                       deduplicate = self.inv_item_duplicate
-                       )
+                       deduplicate = self.inv_item_duplicate,
+                      )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)

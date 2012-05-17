@@ -125,6 +125,7 @@ class S3RL_PDF(S3Codec):
                  * pdf_footer_padding: add this amount of space between the body and the footer
                  * use_colour:      True to add colour to the cells. default False
                  * pdf_groupby:  How to group the results
+                 * pdf_orderby:  How to sort rows (within any level of grouping)
                  * pdf_hide_comments: don't show the comments in a table
                  * pdf_table_autogrow: Indicates that a table should grow to
                                           fill the available space. Valid values:
@@ -145,6 +146,7 @@ class S3RL_PDF(S3Codec):
         self.r = r
         self.list_fields = attr.get("list_fields")
         self.pdf_groupby = attr.get("pdf_groupby")
+        self.pdf_orderby = attr.get("pdf_orderby")
         self.pdf_hide_comments = attr.get("pdf_hide_comments")
         self.table_autogrow = attr.get("pdf_table_autogrow")
         self.pdf_header_padding = attr.get("pdf_header_padding",0)
@@ -272,6 +274,7 @@ class S3RL_PDF(S3Codec):
                     continue
                 if self.pdf_hide_comments and field.name == "comments":
                     continue
+                self.list_fields.append(field.name)
                 fnames.append(field.name)
                 flabel.append(field.label)
         else:
@@ -279,9 +282,13 @@ class S3RL_PDF(S3Codec):
                 # if the list fields contains the label then use that
                 # otherwise look for the label in the list of fields
                 if isinstance(lf, (tuple, list)):
+                    if lf[1] == "id":
+                        continue
                     fnames.append(lf[1])
                     flabel.append(lf[0])
                 else:
+                    if lf == "id":
+                        continue
                     for field in fields:
                         if field.name == lf:
                             fnames.append(field.name)
@@ -303,9 +310,11 @@ class S3RL_PDF(S3Codec):
                 else:
                     fobjs.append(Field(field_name))
         # Get the data...
-        sqltable = resource.sqltable(fnames,
-                                     start=None, # needs to be None to get all records
-                                     limit=None,
+        orderby = ",".join([self.pdf_groupby, self.pdf_orderby])
+        sqltable = resource.sqltable(self.list_fields,
+                                     orderby = orderby,
+                                     start = None, # needs to be None to get all records
+                                     limit = None,
                                     )
         data = []
         # Convert the data into the represent format
@@ -333,6 +342,7 @@ class S3RL_PDF(S3Codec):
         pdf_table = S3PDFTable(doc,
                                raw_data = data,
                                list_fields = flabel,
+                               groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
                                ).build()
@@ -604,9 +614,10 @@ class S3PDFTable(object):
     def __init__(self,
                  document,
                  raw_data,
-                 list_fields=None,
-                 groupby=None,
-                 hide_comments=False,
+                 list_fields = None,
+                 labels = None,
+                 groupby = None,
+                 hide_comments = False,
                  autogrow = False,
                  body_height = 0,
                 ):
@@ -616,6 +627,7 @@ class S3PDFTable(object):
             @param document: A S3PDF object
             @param raw_data: A list of rows
             @param list_fields: A list of field names
+            @param labels: a list of labels
             @param groupby: A field name that is to be used as a sub-group
                    All the records that share the same pdf_groupby value
                    will be clustered together
@@ -631,13 +643,14 @@ class S3PDFTable(object):
         self.pdf = document
         self.raw_data = raw_data
         self.list_fields = list_fields
+        self.labels = labels
         self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow
         self.body_height = body_height
         self.data = []
         self.subheadingList = []
-        self.labels = []
+        self.subheadingLevel = {}
         self.pages = []
         self.colWidths = []
         self.newColWidth = [] # @todo: remove this (but see presentation)
@@ -666,10 +679,11 @@ class S3PDFTable(object):
                      just one table object, but if the table needs to be split
                      across columns then one object per page will be created.
         """
-        if self.raw_data != None:
-            self.labels = self.list_fields
+        if self.pdf_groupby:
+            data = self.group_data()
+            self.data = [self.labels] + data
+        elif self.raw_data != None:
             self.data = [self.labels] + self.raw_data
-
         if len(self.data) == 0:
             return None
         endCol = len(self.labels) - 1
@@ -687,6 +701,60 @@ class S3PDFTable(object):
             #print "Need to split the table"
             self.pages = self.splitTable(tempTable)
         return self.presentation()
+
+    def group_data(self):
+        groups = self.pdf_groupby.split(",")
+        newData = []
+        data = self.raw_data
+        level = 0
+        for field in groups:
+            level += 1
+            field = field.strip()
+            # find the location of field in list_fields
+            i = 0
+            rowlength = len(self.list_fields)
+            while i < rowlength:
+                if self.list_fields[i] == field:
+                    break
+                i += 1
+            list_fields = self.list_fields[0:i]+self.list_fields[i+1:]
+            self.list_fields = list_fields
+            labels = self.labels[0:i]+self.labels[i+1:]
+            self.labels = labels
+            currentGroup = None
+            r = 0
+            for row in data:
+                if r+1 in self.subheadingList:
+                    newData.append(row)
+                    r += 1
+                else:
+                    try:
+                        group = row[i]
+                        if group != currentGroup:
+                            line = [group]
+                            newData.append(line)
+                            r += 1
+                            currentGroup = group
+                            self.subheadingList.append(r)
+                            self.subheadingLevel[r] = level
+                            # all existing subheadings after this point need to
+                            # be shuffled down one place.
+                            for x in range (len(self.subheadingList)):
+                                if self.subheadingList[x] > r:
+                                    posn = self.subheadingList[x]
+                                    self.subheadingList[x] = posn + 1
+                                    oldlevel = self.subheadingLevel[posn]
+                                    del self.subheadingLevel[posn]
+                                    self.subheadingLevel[posn+1] = oldlevel
+                        line = row[0:i]+row[i+1:]
+                        newData.append(line)
+                        r += 1
+                    except:
+                        newData.append(row)
+                        r += 1
+            data = newData
+            newData = []
+        return data
 
     # -------------------------------------------------------------------------
     def presentation(self):
@@ -897,7 +965,7 @@ class S3PDFTable(object):
                 rowH = lastKnownHeight
             else:
                 lastKnownHeight = rowH
-            if total + rowH > self.tempDoc.height - 100: # @ToDo: remove the literal and work out the right number
+            if total + rowH > self.body_height:
                 rowSplit.append(rowNo)
                 total = 2 * rowH # 2* is needed to take into account the repeated header row
             else:
@@ -915,7 +983,10 @@ class S3PDFTable(object):
                 page = []
                 label = []
                 for colIndex in range(startCol, endCol):
-                    label.append(self.labels[colIndex])
+                    try:
+                        label.append(self.labels[colIndex])
+                    except IndexError:
+                        label.append("")
                 page.append(label)
                 for rowIndex in range(startRow, endRow):
                     line = []
@@ -929,7 +1000,8 @@ class S3PDFTable(object):
                                     line.append(self.data[rowIndex][0])
                                 except IndexError:
                                     line.append("")
-                            line.append("")
+                            else:
+                                line.append("")
                     page.append(line)
                 pages.append(page)
                 startCol = endCol
@@ -969,13 +1041,14 @@ class S3PDFTable(object):
         for i in range(rowCnt):
             # If subheading
             if startRow + i in self.subheadingList:
+                level = self.subheadingLevel[startRow + i]
                 if colour_required:
                     style.append(("BACKGROUND", (0, i), (endCol, i),
                                   self.headerColour))
                 style.append(("FONTNAME", (0, i), (endCol, i),
                               "Helvetica-Bold"))
                 style.append(("SPAN", (0, i), (endCol, i)))
-                style.append(("LEFTPADDING", (0, i), (endCol, i), 6))
+                style.append(("LEFTPADDING", (0, i), (endCol, i), 6 * level))
             elif i > 0:
                 if colour_required:
                     if rowColourCnt % 2 == 0:
