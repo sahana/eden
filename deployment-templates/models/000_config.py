@@ -387,14 +387,41 @@ deployment_settings.inv.send_short_name = "TO"
 deployment_settings.inv.send_ref_field_name = "Tally Out Number"
 deployment_settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
 deployment_settings.inv.recv_shortname = "ARDR"
-deployment_settings.inv.shipment_types = {
-         0: T("-"),
-         1: T("Other Warehouse"),
-         2: T("Donation"),
-         3: T("Foreign Donation"),
-         4: T("Local Purchases"),
-         5: T("Confiscated Goods from Bureau Of Customs")
-    }
+
+#deployment_settings.inv.collapse_tabs = False
+# Use the term 'Order' instead of 'Shipment'
+#deployment_settings.inv.shipment_name = "order"
+# Inventory send item status
+deployment_settings.inv.send_type = {
+         0: T("None"),
+         21: T("Distribute"),
+}
+
+# Inventory item status
+deployment_settings.inv.item_status = {
+         0: T("None"),
+         1: T("Dump"),
+         2: T("Sale"),
+         3: T("Reject"),
+         4: T("Surplus")
+}
+
+# Inventory receive item status
+deployment_settings.inv.shipment_type = {
+         0: T("None"),
+         11: T("Internal"),
+}
+
+#shipment type
+deployment_settings.inv.recv_types = {
+         0: T("None"),
+         31: T("Other Warehouse"),
+         32: T("Donation"),
+         33: T("Foreign Donation"),
+         34: T("Local Purchases"),
+         35: T("Confiscated Goods from Bureau Of Customs")
+}
+
 # Supply
 #deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
