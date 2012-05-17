@@ -58,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T(("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname()))
+rn_label = T("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname())
 
 # =============================================================================
 class S3RequestModel(S3Model):

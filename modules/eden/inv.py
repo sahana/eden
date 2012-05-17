@@ -98,13 +98,14 @@ tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
                    TRACK_STATUS_RETURNING : T("Returning"),
                    }
 
-itn_label = T("Item Source Tracking Number")
+#itn_label = T("Item Source Tracking Number")
 # Overwrite the label until we have a better way to do this
 itn_label = T("CTN")
 settings = current.deployment_settings
 wn_label = T(settings.get_send_ref_field_name())
 grn_label = T("%(GRN)s Number") % dict(GRN=settings.get_recv_shortname())
 po_label = T("Purchase Order Number")
+
 # =============================================================================
 class S3InventoryModel(S3Model):
     """
@@ -813,6 +814,7 @@ class S3TrackingModel(S3Model):
                                         comment = DIV( _class="tooltip",
                                                        _title="%s|%s" % (T("%(GRN)s Status") % dict(GRN=settings.get_recv_shortname()),
                                                                          T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % dict(GRN=settings.get_recv_shortname(),
+                                                                                                                                         GRN_name=settings.get_recv_form_name()))),
                                         ),
                                   Field("cert_status",
                                         "integer",
