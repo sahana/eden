@@ -175,6 +175,11 @@ $(document).ready(function() {
         var aaSorting = [ [1, 'asc'] ];
     }
 
+    if (S3.dataTables.group) {
+        var sortFixed = [[ S3.dataTables.group, 'asc' ]];
+    } else {
+        var sortFixed = null;
+    }
     if (S3.dataTables.sDom) {
         var sDom = S3.dataTables.sDom;
     } else {
@@ -435,10 +440,8 @@ $(document).ready(function() {
 	            }
             }
         },
-        "aaSortingFixed": [[ S3.dataTables.group, 'asc' ]],
-        "aoColumnDefs": [
-                         { "bVisible": false, "aTargets": [ S3.dataTables.group ] }
-                     ],
+        "aaSortingFixed": sortFixed,
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [ S3.dataTables.group ] }]
     });
 
 
