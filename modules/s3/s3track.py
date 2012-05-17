@@ -262,6 +262,9 @@ class S3Trackable(object):
 
             if location:
                 locations.append(location)
+            else:
+                # Ensure we return an entry so that indexes match
+                locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:
             return Rows(records=locations, compact=False)
@@ -510,6 +513,9 @@ class S3Trackable(object):
                                                 *_fields).first()
             if location:
                 locations.append(location)
+            else:
+                # Ensure we return an entry so that indexes match
+                locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:
             return Rows(records=locations, compact=False)

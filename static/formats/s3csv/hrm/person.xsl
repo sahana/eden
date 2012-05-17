@@ -179,18 +179,18 @@
                 <data field="name"><xsl:value-of select="$OfficeName"/></data>
 
                 <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:choose>
-                        <xsl:when test="$BranchName!=''">
-                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:value-of select="$OrgName"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </reference>
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:choose>
+                            <xsl:when test="$BranchName!=''">
+                                <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$OrgName"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </reference>
 
                 <xsl:choose>
                     <!-- Don't create null locations which over-write good locations imported via office.csv -->

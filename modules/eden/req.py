@@ -58,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T("Requisition Reference")
+rn_label = T("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname())
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -555,7 +555,7 @@ $(function() {
                                                             ).first()
                 if req_row:
                     return A(value,
-                             _href = URL(f = "req",
+                             _href = URL(c = "req", f = "req",
                                          args = [req_row.id, "form"]
                                         ),
                             )
@@ -592,17 +592,17 @@ $(function() {
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method = "list",
-                        pdf_title = "Request Form",
+                        pdf_title = current.deployment_settings.get_req_form_name(),
                         pdf_filename = filename,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
                         pdf_componentname = "req_req_item",
                         pdf_header_padding = 12,
-#                        pdf_footer = inv_recv_pdf_footer,
+                        #pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )
+                       )        
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -791,7 +791,7 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if settings.get_req_use_req_number() and not rrtable[id].req_ref:
-            code = s3db.inv_get_shipping_code("REQ",
+            code = s3db.inv_get_shipping_code(current.deployment_settings.get_req_shortname(),
                                               rrtable[id].site_id,
                                               s3db.req_req.req_ref,
                                              )
@@ -1986,21 +1986,24 @@ def req_rheader(r, check_page = False):
                     transit_status_cells = (TH( "%s: " % T("Transit Status")),
                                             transit_status)
                 else:
-                    transit_status_cells = ("","")
+                    transit_status_cells = ("", "")
 
                 table = r.table
                 site_id = record.site_id
                 org_id = s3db.org_site[site_id].organisation_id
                 logo = s3db.org_organisation_logo(org_id)
+                headerTR = TR(TD(settings.get_req_form_name(),
+                                 _colspan=2, _class="pdf_title"),
+                              TD(logo, _colspan=2),
+                              )
                 if settings.get_req_use_req_number():
-                    logoTR = TR(TD(logo, _colspan=2),
-                                  TH("%s: " % table.req_ref.label),
-                                  TD(table.req_ref.represent(record.req_ref))
-                                )
-                else:
-                    logoTR = TR(TD(logo, _colspan=2))
+                    headerTR = DIV(TR(
+                                     TH("%s: " % table.req_ref.label),
+                                     TD(table.req_ref.represent(record.req_ref))
+                                    )
+                                  )
                 rData = TABLE(
-                               logoTR,
+                               headerTR,
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),

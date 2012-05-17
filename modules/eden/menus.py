@@ -168,8 +168,7 @@ class S3MainMenu:
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
-                               vars=dict(_next=login_next),
-                               check=self_registration),
+                               vars=dict(_next=login_next)),
                             MM("Register", m="register",
                                vars=dict(_next=login_next),
                                check=self_registration),
@@ -214,6 +213,7 @@ class S3MainMenu:
                         restrict=[ADMIN], **attr)(
                             MM("Settings", f="settings"),
                             MM("Users", f="user"),
+                            MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
@@ -922,6 +922,11 @@ class S3OptionsMenu:
                                        aggregate="sum")),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
+                    M("Reports", c="inv", f="inv_item")(
+                        M("Monetization", c="inv", f="inv_item", vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="inv_item", vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="inv_item", vars=dict(report="inc")),
+                    ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
                         M("List All"),
@@ -1016,6 +1021,20 @@ class S3OptionsMenu:
         session = current.session
         ADMIN = session.s3.system_roles.ADMIN
 
+        # Do we have a series_id?
+        series_id = False
+        vars = Storage()
+        try:
+            series_id = int(current.request.args[0])
+        except:
+            try:
+                (dummy, series_id) = current.request.vars["viewing"].split(".")
+                series_id = int(series_id)
+            except:
+                pass
+        if series_id:
+            vars.viewing = "survey_complete.%s" % series_id
+
         return M(c="survey")(
                     M("Assessment Templates", f="template")(
                         #M("New", m="create"),
@@ -1037,7 +1056,7 @@ class S3OptionsMenu:
                         M("Import Template Layout", f="formatter",
                           m="import", p="create"),
                         M("Import Completed Assessment Forms", f="complete",
-                          m="import", p="create"),
+                          m="import", p="create", vars=vars, check=series_id),
                     ),
                 )
 

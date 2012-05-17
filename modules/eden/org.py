@@ -332,17 +332,13 @@ class S3OrganisationModel(S3Model):
                                                  label=ADD_ORGANIZATION,
                                                  title=T("Organization"),
                                                  tooltip=help)
-        
+
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
                                                       label=ADD_ORGANIZATION,
                                                       title=T("Organization"),
                                                       tooltip=help)
-
-        # This deepcopy stuff causes an error about NoneTypes not being copyable.
-        #from_organisation_comment = copy.deepcopy(organisation_comment)
-        #from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
 
         organisation_id = S3ReusableField("organisation_id",
                                           db.org_organisation, sortby="name",
@@ -388,6 +384,8 @@ class S3OrganisationModel(S3Model):
                     comment = T("Search for an Organization by name or acronym"),
                     field = [ "name",
                               "acronym",
+                              "parent.name",
+                              "parent.acronym",
                             ]
                     ),
                     S3SearchOptionsWidget(
@@ -837,6 +835,8 @@ class S3SiteModel(S3Model):
                                   label = T("Facility"),
                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                   represent = org_site_represent,
+                                  orderby = "org_site.name",
+                                  sort = True,
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget = S3SiteAutocompleteWidget(),
                                   comment = DIV(_class="tooltip",
@@ -1380,16 +1380,22 @@ class S3OfficeModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def org_organisation_represent(id, showlink=False, acronym=True):
-    """ Represent an Organisation in option fields or list views """
+def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
+    """
+        Represent an Organisation in option fields or list views
+
+        @param showlink: whether to make the output into a hyperlink
+        @param acronym: whether to show any acronym present
+        @param parent: whether to show the parent Org for branches
+    """
 
     db = current.db
     s3db = current.s3db
 
-    if isinstance(id, Row):
+    if not parent and isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         org = id
-    else:
+    elif parent:
         otable = s3db.org_organisation
         btable = s3db.org_organisation_branch
         query = (otable.id == id)
@@ -1399,20 +1405,32 @@ def org_organisation_represent(id, showlink=False, acronym=True):
                                btable.organisation_id,
                                left = left,
                                limitby = (0, 1)).first()
-    if org:
-        represent = org.org_organisation.name
-        if "org_organisation_branch" in org:
-            # We're a Branch
-            query = (otable.id == org.org_organisation_branch.organisation_id)
-            parent = db(query).select(otable.name,
-                                      limitby = (0, 1)).first()
-            if parent:
-                represent = "%s, %s" % (parent.name,
-                                        represent)
+    else:
+        otable = s3db.org_organisation
+        query = (otable.id == id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               limitby = (0, 1)).first()
 
-        elif acronym and org.org_organisation.acronym:
-            represent = "%s (%s)" % (represent,
-                                     org.org_organisation.acronym)
+    if org:
+        if parent:
+            represent = org.org_organisation.name
+            if "org_organisation_branch" in org:
+                # We're a Branch
+                query = (otable.id == org.org_organisation_branch.organisation_id)
+                parent = db(query).select(otable.name,
+                                          limitby = (0, 1)).first()
+                if parent:
+                    represent = "%s, %s" % (parent.name,
+                                            represent)
+            elif acronym and org.org_organisation.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.org_organisation.acronym)
+        else:
+            represent = org.name
+            if acronym and org.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.acronym)
         if showlink:
             represent = A(represent,
                           _href = URL(c="org", f="organisation", args = [id]))
@@ -1425,8 +1443,8 @@ def org_organisation_represent(id, showlink=False, acronym=True):
 def org_organisation_logo(id, type="png"):
     """
         Return a logo of the organisation with the given id, if one exists
-        
-        The id can either be the id of the organisation 
+
+        The id can either be the id of the organisation
                or a Row of the organisation
 
         The type can either be png or bmp and is the format of the saved image
@@ -1455,7 +1473,7 @@ def org_organisation_logo(id, type="png"):
                       )
         return logo
     return DIV() # no logo so return an empty div
-    
+
 
 # =============================================================================
 def org_site_represent(id, show_link=True):
@@ -1673,11 +1691,20 @@ def org_organisation_controller():
     def prep(r):
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
-            if r.component_name == "human_resource" and r.component_id:
+            if not r.component and r.method not in ["read", "update", "delete"]:
+                # Filter out branches
+                btable = s3db.org_organisation_branch
+                s3.filter = (btable.id > 0) & \
+                            (r.table.id != btable.branch_id)
+            elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
                 htable = s3db.hrm_human_resource
                 htable.person_id.widget = None
                 htable.person_id.writable = False
+
+            elif r.component_name == "branch":
+                s3db.org_organisation_branch.branch_id.represent = lambda val: \
+                    s3db.org_organisation_represent(val, parent=False)
 
             elif r.component_name == "office" and \
                  r.method and r.method != "read":

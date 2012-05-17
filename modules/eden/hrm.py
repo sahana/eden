@@ -189,7 +189,6 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Record deleted"),
             msg_list_empty = T("No staff or volunteers currently registered"))
 
-        # Used by Scenarios, Events, Tasks & RAT
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,
                                             sortby = ["type", "status"],
@@ -326,75 +325,6 @@ class S3HRModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_update_staff_role(record, user_id):
-        """
-            Set/retract the Org/Site staff role
-
-            @param record: the hrm_human_resource record
-            @param user_id: the auth_user record ID of the person the
-                            record belongs to.
-
-            @todo: rewrite for new OrgAuth model
-            @todo: combine with pr_human_resource_update_affiliation?
-        """
-
-        # @todo: invalid action, rewrite for new model
-        return
-
-        #db = current.db
-        #auth = current.auth
-
-        #htable = db.hrm_human_resource
-        #utable = auth.settings.table_user
-        #mtable = auth.settings.table_membership
-
-        #org_role = record.owned_by_organisation
-
-        #if record.deleted:
-            #try:
-                #fk = json.loads(record.deleted_fk)
-                #organisation_id = fk.get("organisation_id", None)
-                #site_id = fk.get("site_id", None)
-                #person_id = fk.get("person_id", None)
-            #except:
-                #return
-        #else:
-            #organisation_id = record.get("organisation_id", None)
-            #site_id = record.get("site_id", None)
-            #person_id = record.get("person_id", None)
-
-        #if record.deleted or record.status != 1:
-            #remove_org_role = True
-            #if org_role:
-                #if organisation_id and person_id:
-                    ## Check whether the person has another active
-                    ## HR record in the same organisation
-                    #query = (htable.person_id == person_id) & \
-                            #(htable.organisation_id == organisation_id) & \
-                            #(htable.id != record.id) & \
-                            #(htable.status == 1) & \
-                            #(htable.deleted != True)
-                    #if db(query).select(htable.id, limitby=(0, 1)).first():
-                        #remove_org_role = False
-                #if remove_org_role:
-                    #query = (mtable.user_id == user_id) & \
-                            #(mtable.group_id == org_role)
-                    #db(query).delete()
-            ## @todo:
-            ## Remove from "staff" group (all memberships for the site)
-        #else:
-            #if org_role:
-                #query = (mtable.user_id == user_id) & \
-                        #(mtable.group_id == org_role)
-                #role = db(query).select(limitby=(0, 1)).first()
-                #if not role:
-                    #mtable.insert(user_id = user_id,
-                                  #group_id = org_role)
-            ## @todo:
-            ## Add to "staff" group with restriction to the site
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def hrm_human_resource_ondelete(row):
         """ On-delete routine for HR records """
 
@@ -424,18 +354,6 @@ class S3HRModel(S3Model):
 
             s3db.pr_update_affiliations(htable, record)
 
-            query = (ptable.id == person_id) & \
-                    (ltable.pe_id == ptable.pe_id) & \
-                    (utable.id == ltable.user_id)
-            user = db(query).select(utable.id,
-                                    limitby=(0, 1)).first()
-        if not user:
-            return
-        else:
-            user_id = user.id
-            # Set/retract the staff role
-            S3HRModel.hrm_update_staff_role(record, user_id)
-
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm_human_resource_onaccept(form):
@@ -451,9 +369,16 @@ class S3HRModel(S3Model):
         htable = s3db.hrm_human_resource
 
         if "vars" in form:
+            # e.g. coming from staff/create
+            vars = form.vars
+        elif "id" in form:
+            # e.g. coming from user/create
+            vars = form
+        elif hasattr(form, "vars"):
+            # SQLFORM e.g. ?
             vars = form.vars
         else:
-            # Coming from s3_register callback
+            # e.g. Coming from s3_register callback
             vars = form
 
         # Get the full record
@@ -465,8 +390,6 @@ class S3HRModel(S3Model):
                                       htable.person_id,
                                       htable.site_id,
                                       htable.organisation_id,
-                                      # Needed by hrm_update_staff_role()
-                                      #htable.owned_by_organisation,
                                       htable.status,
                                       htable.deleted,
                                       htable.deleted_fk,
@@ -530,8 +453,6 @@ class S3HRModel(S3Model):
             if profile:
                 query = (utable.id == user.id)
                 db(query).update(**profile)
-            # Set/retract the staff role
-            S3HRModel.hrm_update_staff_role(record, user_id)
 
         # Ensure only one Facility Contact per Facility
         contact = vars.site_contact
@@ -2201,13 +2122,10 @@ S3FilterFieldChange({
         data = table(table.id == id)
 
         if delete:
-            # I really wish this weren't neccesary, but I really need to get that person_id!
-            def reduction(a, b):
-                a.update({b["f"]: b["k"]})
-                return a
-            data = reduce(reduction, eval(data.deleted_fk), {})
-
-        person_id = data["person_id"]
+            deleted_fks = json.loads(data.deleted_fk)
+            person_id = deleted_fks["person_id"]
+        else:
+            person_id = data["person_id"]
 
         ctable = s3db.hrm_certification
         cctable = s3db.hrm_course_certificate
@@ -2498,12 +2416,12 @@ def hrm_rheader(r, tabs=[]):
         # Tabs
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
-            #if group == "staff":
-            #    address_tab_name = T("Home Address")
-            #else:
-            #    address_tab_name = T("Addresses")
+            if group == "staff":
+                address_tab_name = T("Home Address")
+            else:
+                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
-                    #(address_tab_name, "address"),
+                    (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
@@ -2518,13 +2436,13 @@ def hrm_rheader(r, tabs=[]):
             # Configure for HR manager mode
             if group == "staff":
                 hr_record = T("Staff Record")
-                #address_tab_name = T("Home Address")
+                address_tab_name = T("Home Address")
             elif group == "volunteer":
                 hr_record = T("Volunteer Record")
-                #address_tab_name = T("Addresses")
+                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    #(address_tab_name, "address"),
+                    (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),

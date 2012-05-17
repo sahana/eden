@@ -78,6 +78,7 @@ __all__ = ["S3TemplateModel",
           ]
 
 from gluon import *
+from gluon.dal import Row
 from gluon.storage import Storage
 from ..s3 import *
 
@@ -3061,20 +3062,52 @@ def getLocationList(series_id):
 
     comtable = s3db.survey_complete
     query = db(comtable.series_id == series_id)
-    rows = query.select(comtable.id)
+    rows = query.select()
     response_locations = []
     for row in rows:
-        locWidget = get_default_location(row.id)
-        complete_id = locWidget.question["complete_id"]
-        if "answer" not in locWidget.question:
-            continue
-        answer = locWidget.question["answer"]
-        if locWidget != None:
-            record = locWidget.getLocationRecord(complete_id, answer)
-            if len(record.records) == 1:
-                location = record.records[0].gis_location
-                location.complete_id = complete_id
-                response_locations.append(location)
+        lat = None
+        lon = None
+        name = None
+        # get location rewrite to use the data in the answer_list
+        answer_list = row.answer_list.splitlines()
+        answer_dict = {}
+        for line in answer_list:
+            (question,answer) = line.split(",")
+            answer_dict[question.strip('"')] = answer.strip('"')
+        
+        if "STD-Lat" in  answer_dict:
+            lat = float(answer_dict["STD-Lat"])
+            if lat < -90.0 or lat > 90.0:
+                lat = None
+        if "STD-Lon" in  answer_dict:
+            lon = float(answer_dict["STD-Lon"])
+            if lon < -180.0 or lon > 180.0:
+                lon = None
+        codeList = ["STD-L4","STD-L3","STD-L2","STD-L1","STD-L0"]
+        for locCode in codeList:
+            if locCode in answer_dict:
+                name = answer_dict[locCode]
+                break
+        if lat and lon: # only need lat and lon to display on a map
+            location = Row()
+            location.lat = lat
+            location.lon = lon
+            location.name = name
+            location.complete_id = row.id
+            response_locations.append(location)
+        else:
+            # The lat & lon were not added to the assessment so try and get one
+            locWidget = get_default_location(row.id)
+            complete_id = locWidget.question["complete_id"]
+            if "answer" not in locWidget.question:
+                continue
+            answer = locWidget.question["answer"]
+            if locWidget != None:
+                record = locWidget.getLocationRecord(complete_id, answer)
+                if len(record.records) == 1:
+                    location = record.records[0].gis_location
+                    location.complete_id = complete_id
+                    response_locations.append(location)
     return response_locations
 
 

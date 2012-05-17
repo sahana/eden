@@ -546,12 +546,10 @@ class S3OrganisationAutocompleteWidget(FormWidget):
 
     """
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
-        Differs from the S3AutocompleteWidget in that it uses name & acronym fields
-        for the represent (S3OrganisationSearch also uses these of the actual search).
+        Differs from the S3AutocompleteWidget in that it can default to the setting in the profile.
 
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
-        @ToDo: Support Branches in the represents
     """
 
     def __init__(self,
@@ -569,9 +567,9 @@ class S3OrganisationAutocompleteWidget(FormWidget):
 
         def transform_value(value):
             if not value and self.default_from_profile:
-                session = current.session
-                if session.auth and session.auth.user:
-                    value = session.auth.user.organisation_id
+                auth = current.session.auth
+                if auth and auth.user:
+                    value = auth.user.organisation_id
             return value
 
         return S3GenericAutocompleteTemplate(
@@ -586,14 +584,7 @@ class S3OrganisationAutocompleteWidget(FormWidget):
                 URL(c="org", f="organisation",
                     args="search.json",
                     vars={"filter":"~"})
-            ),
-            name_getter = """function (item) {
-    var name = item.name;
-    if (item.acronym) {
-        name += ' (' + item.acronym + ')';
-    }
-    return name;
-}""",
+            )
         )
 
 # -----------------------------------------------------------------------------
@@ -984,8 +975,8 @@ def S3GenericAutocompleteTemplate(
     value,
     attributes,
     source,
-    name_getter = "function (item) { return item.name }",
-    id_getter = "function (item) { return item.id }",
+    name_getter = "function(item) {return item.name}",
+    id_getter = "function(item) {return item.id}",
     transform_value = lambda value: value,
 ):
     """

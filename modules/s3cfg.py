@@ -4,9 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
-    @copyright: 2009-2011 (c) Sahana Software Foundation
+    @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -81,7 +79,8 @@ class S3Config(Storage):
         self.CURRENCIES = {
             "USD" :T("United States Dollars"),
             "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds")
+            "GBP" :T("Great British Pounds"),
+            "CHF" :T("Swiss Francs")
         }
 
     # -------------------------------------------------------------------------
@@ -344,9 +343,23 @@ class S3Config(Storage):
     def get_L10n_languages(self):
         return self.L10n.get("languages", { "en":current.T("English") })
     def get_L10n_religions(self):
+        """
+            Religions used in Person Registry
+
+            @ToDo: find a better code
+            http://eden.sahanafoundation.org/ticket/594
+        """
         T = current.T
-        return self.L10n.get("religions", { "none":T("None"),
-                                            "other":T("Other") })
+        return self.L10n.get("religions", {
+                "none":T("none"),
+                "christian":T("Christian"),
+                "muslim":T("Muslim"),
+                "jewish":T("Jewish"),
+                "buddhist":T("Buddhist"),
+                "hindu":T("Hindu"),
+                "bahai":T("Bahai"),
+                "other":T("other")
+            })
     def get_L10n_date_format(self):
         T = current.T
         return self.L10n.get("date_format", T("%Y-%m-%d"))
@@ -478,6 +491,7 @@ class S3Config(Storage):
     def get_ui_social_buttons(self):
         """ Display social media Buttons in the footer? """
         return self.ui.get("social_buttons", False)
+
     # -------------------------------------------------------------------------
     # Modules
     # -------------------------------------------------------------------------
@@ -513,6 +527,10 @@ class S3Config(Storage):
         return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
         return self.req.get("req_type", ["Stock", "People", "Other"])
+    def get_req_form_name(self):
+        return self.req.get("req_form_name", "Requisition Form")
+    def get_req_shortname(self):
+        return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
     # Inventory Management Setting
@@ -526,6 +544,26 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
+    def get_inv_shipment_types(self):
+        T = current.T
+        return self.inv.get("shipment_types", {
+                          0: current.messages.NONE,
+                          1: T("Other Warehouse"),
+                          2: T("Local Donation"),
+                          3: T("Foreign Donation"),
+                          4: T("Local Purchases"),
+                          #5: T("Confiscated Goods")
+                        })
+    def get_send_form_name(self):
+        return self.inv.get("send_form_name", "Waybill")
+    def get_send_ref_field_name(self):
+        return self.inv.get("send_ref_field_name", "Waybill Number")
+    def get_send_shortname(self):
+        return self.inv.get("send_shortname", "WB")
+    def get_recv_form_name(self):
+        return self.inv.get("recv_form_name", "Goods Received Note")
+    def get_recv_shortname(self):
+        return self.inv.get("recv_shortname", "GRN")
 
     # -------------------------------------------------------------------------
     # Supply

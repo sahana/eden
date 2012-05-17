@@ -221,6 +221,17 @@ def inv_item():
     table = s3db.inv_inv_item
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
 
+    s3mgr.configure("inv_inv_item", 
+                    list_fields = ["id",
+                                      "site_id",
+                                      "item_id",
+                                      (T("Item Code"), "item_code"),
+                                      (T("Category"), "item_category"),
+                                      "quantity",
+                                      "pack_value",
+                                      ]
+                    )
+
     # Upload for configuration (add replace option)
     response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
@@ -236,6 +247,11 @@ def inv_item():
                          vars = {"viewing" : "%s.%s" % ("inv_inv_item", record.item_id)}
                         )
                      )
+    def prep(r):
+        if r.method != "search":
+            response.s3.dataTable_group = 1
+        return True
+
     # Import pre-process
     def import_prep(data):
         """
@@ -296,12 +312,17 @@ def inv_item():
                     deletable=False,
                    )
     rheader = response.s3.inv_warehouse_rheader
+    response.s3.prep = prep
     output =  s3_rest_controller(rheader=rheader,
                                  csv_extra_fields = [
                                                      dict(label="Organisation",
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
+                                 pdf_paper_alignment = "Landscape",
+                                 pdf_table_autogrow = "B",
+                                 pdf_groupby = "site_id, item_id",
+                                 pdf_orderby = "expiry_date, supply_org_id",
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -433,8 +454,6 @@ def send():
         tracktable.item_id.readable = False
         tracktable.recv_quantity.readable = False
         tracktable.return_quantity.readable = False
-        tracktable.currency.readable = False
-        tracktable.pack_value.readable = False
         tracktable.expiry_date.readable = False
         tracktable.owner_org_id.readable = False
         tracktable.supply_org_id.readable = False
@@ -446,6 +465,8 @@ def send():
             tracktable.quantity.writable = True
             tracktable.comments.writable = True
             # hide some fields
+            tracktable.currency.readable = False
+            tracktable.pack_value.readable = False
             tracktable.item_source_no.readable = False
         elif status == TRACK_STATUS_ARRIVED:
             # Shipment arrived display some extra fields at the destination
@@ -453,9 +474,13 @@ def send():
             tracktable.recv_quantity.readable = True
             tracktable.return_quantity.readable = True
             tracktable.recv_bin.readable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
         elif status == TRACK_STATUS_RETURNING:
             tracktable.return_quantity.readable = True
             tracktable.return_quantity.writable = True
+            tracktable.currency.readable = True
+            tracktable.pack_value.readable = True
 
     def prep(r):
         # Default to the Search tab in the location selector
@@ -470,6 +495,8 @@ def send():
                                "item_pack_id",
                                "bin",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "recv_quantity",
                                "return_quantity",
                                "owner_org_id",
@@ -482,6 +509,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "return_quantity",
                                "bin",
                                "owner_org_id",
@@ -493,6 +522,8 @@ def send():
                                "item_id",
                                "item_pack_id",
                                "quantity",
+                               "currency",
+                               "pack_value",
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
@@ -1535,4 +1566,7 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
+#==============================================================================
+def kit():
+    return s3_rest_controller()
 # END =========================================================================

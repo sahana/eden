@@ -181,7 +181,7 @@ def select():
     else:
         start = 0
     nrows = 0
-    stop = start + 100
+    stop = start + 50
     table = None
     rows = []
     orderby = request.vars.orderby
