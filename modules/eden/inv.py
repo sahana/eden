@@ -508,6 +508,7 @@ class S3TrackingModel(S3Model):
              "inv_recv",
              "inv_recv_represent",
              "inv_recv_ref_represent",
+             "inv_kit",
              "inv_track_item",
              "inv_track_item_onaccept",
              "inv_get_shipping_code",
@@ -926,6 +927,39 @@ class S3TrackingModel(S3Model):
                         method="cert",
                         action=self.inv_recv_donation_cert )
 
+        # =====================================================================
+        #
+        tablename = "inv_kit"
+        table = self.define_table(tablename,
+                                  Field("site_id",
+                                        "reference org_site",
+                                         label=T("By Facility"),
+                                         ondelete = "SET NULL",
+                                         default = auth.user.site_id if auth.is_logged_in() else None,
+                                         readable = True,
+                                         writable = True,
+                                         widget = S3SiteAutocompleteWidget(),
+                                         represent=org_site_represent),
+                                  req_ref(),
+                                  Field("date", "date",
+                                        label = T("Date"),
+                                        requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget(),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Date Repacked"),
+                                                                        T("Will be filled automatically when the Item has been Repacked"))
+                                                      )
+                                        ),
+                                  person_id(name = "repacked_id",
+                                            label = T("Repacked By"),
+                                            ondelete = "SET NULL",
+                                            default = auth.s3_logged_in_person(),
+                                           # comment = self.pr_person_comment(child="repacked_id")),
+                                           ),
+                                  s3.comments(),
+                                  *s3.meta_fields()
+                            )
 
         # =====================================================================
         # Tracking Items

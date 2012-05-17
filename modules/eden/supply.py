@@ -70,6 +70,7 @@ class S3SupplyModel(S3Model):
              "supply_item_id",
              "supply_item_entity_id",
              "supply_item_pack_id",
+             "supply_kit_item",
              "supply_item_represent",
              "supply_item_add",
              "supply_item_duplicate_fields",
@@ -321,6 +322,9 @@ class S3SupplyModel(S3Model):
                                                    )
                                                ),
                              brand_id(),
+                             Field("kit", "boolean",
+                                   default=False,
+                                   label=T("Supply  kit item")),
                              Field("model",
                                    label = T("Model/Type"),
                                    length=128),
@@ -470,6 +474,14 @@ class S3SupplyModel(S3Model):
         # Request Items as component of Items
         add_component("req_req_item", supply_item="item_id")
 
+        # Supply Kit Items as component of Items
+        add_component("supply_kit_item",  supply_item = "parent_item_id")
+        #add_component("supply_item",  supply_item = dict(joinby="parent_item_id",
+        #                                                  alias="kit_item",
+        #                                                 link="supply_kit_item",
+        #                                                      actuate="hide",
+        #                                                     key="item_id"))
+
         # =====================================================================
         # Catalog Item
         #
@@ -609,6 +621,8 @@ $(document).ready(function() {
                              comments(),
                              *meta_fields())
 
+
+
         # CRUD strings
         ADD_ITEM_PACK = T("Add Item Pack")
         LIST_ITEM_PACK = T("List Item Packs")
@@ -677,6 +691,23 @@ S3FilterFieldChange({
 
         # Inventory items as component of Packs
         add_component("inv_inv_item", supply_item_pack="item_pack_id")
+
+         # =====================================================================
+         # Supply Kit Item Table
+
+         # For defining what items are in a kit
+
+        tablename = "supply_kit_item"
+        table = define_table(tablename,
+                            supply_item_id("parent_item_id", label = T("Parent Item")),
+                            supply_item_id("item_id", label = T("Kit Item"), comment = None ),
+                             Field("quantity", "double",
+                                   label = T("Quantity"),
+                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   ),
+                             item_pack_id(),
+                             comments(),
+                             *meta_fields())
 
         # =====================================================================
         # Alternative Items
@@ -1281,6 +1312,9 @@ def supply_item_rheader(r):
                     (T("Requested"), "req_item"),
                     (T("In Catalogs"), "catalog_item"),
                    ]
+
+            if item.kit == True:
+                tabs.append((T("Kit Items"), "kit_item"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
