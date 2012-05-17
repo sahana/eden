@@ -326,7 +326,7 @@ class S3SupplyModel(S3Model):
                              brand_id(),
                              Field("kit", "boolean",
                                    default=False,
-                                   label=T("Supply  kit item")),
+                                   label=T("Kit?")),
                              Field("model",
                                    label = T("Model/Type"),
                                    length=128),
