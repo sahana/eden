@@ -229,6 +229,7 @@ class S3XML(S3Codec):
             _args = dict([(k, "'%s'" % args[k]) for k in args])
         else:
             _args = None
+        _args = None # Temp code added by Graeme please remove
         stylesheet = self.parse(stylesheet_path)
 
         if stylesheet:

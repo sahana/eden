@@ -527,13 +527,10 @@ class S3Config(Storage):
         return self.req.get("generate_req_number", True)
     def get_req_req_type(self):
         return self.req.get("req_type", ["Stock", "People", "Other"])
-
-    def get_req_name(self):
-        return self.req.get("req_name", "Requisition")
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
-    def get_req_field_name(self):
-        return self.req.get("req_field_name", "Requisition Number")
+    def get_req_shortname(self):
+        return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
     # Inventory Management Setting
@@ -557,19 +554,16 @@ class S3Config(Storage):
                           4: T("Local Purchases"),
                           #5: T("Confiscated Goods")
                         })
-    def get_inv_name(self):
-        return self.inv.get("inv_name", "Waybill")
-    def get_inv_form_name(self):
-        return self.inv.get("inv_form_name", "Waybill")
-    def get_inv_field_name(self):
-        return self.inv.get("inv_field_name", "Waybill Number")
-
-    def get_grn_name(self):
-        return self.inv.get("grn_name", "Goods Received Note")
-    def get_grn_form_name(self):
-        return self.inv.get("grn_form_name", "Goods Received Note")
-    def get_grn_shortname(self):
-        return self.inv.get("grn_shortname", "GRN")
+    def get_send_form_name(self):
+        return self.inv.get("send_form_name", "Waybill")
+    def get_send_ref_field_name(self):
+        return self.inv.get("send_ref_field_name", "Waybill Number")
+    def get_send_shortname(self):
+        return self.inv.get("send_shortname", "WB")
+    def get_recv_form_name(self):
+        return self.inv.get("recv_form_name", "Goods Received Note")
+    def get_recv_shortname(self):
+        return self.inv.get("recv_shortname", "GRN")
 
     # -------------------------------------------------------------------------
     # Supply

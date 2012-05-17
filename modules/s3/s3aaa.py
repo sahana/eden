@@ -4343,11 +4343,10 @@ class S3Permission(object):
             acl = acls[e]
 
             # Get the page ACL
-            if "c" in acl:
-                if "f" in acl:
-                    page_acl = acl["f"]
-                else:
-                    page_acl = acl["c"]
+            if "f" in acl:
+                page_acl = acl["f"]
+            elif "c" in acl:
+                page_acl = acl["c"]
             elif page_restricted:
                 page_acl = NONE
             else:
