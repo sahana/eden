@@ -3,6 +3,35 @@ from tests.web2unittest import SeleniumUnitTest
 class Logistics(SeleniumUnitTest):
     # These tests assume that regression/inv-mngt has been added to prepop
     # -----------------------------------------------------------------------------
+    def send(self):
+        """ Test for sending inventory items from one site to another """
+        browser = self.browser
+        self.login()
+        # Open Send Create page
+        url = "%s/inv/send/create" % self.url
+        browser.get(url)
+
+        el = browser.find_element_by_id("inv_send_site_id")
+        for option in el.find_elements_by_tag_name("option"):
+            if option.text == "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)":
+                option.click()
+        el = browser.find_element_by_id("inv_send_to_site_id")
+        for option in el.find_elements_by_tag_name("option"):
+            if option.text == "Lospalos Warehouse (Warehouse)":
+                option.click()
+        self.w_autocomplete("Beatriz de C",
+                            "inv_send_sender",
+                            "Beatriz de Carvalho",
+                            )
+        self.w_autocomplete("Liliana  Otilia",
+                            "inv_send_recipient",
+                            )
+        browser.find_element_by_css_selector("input[type=\"submit\"]").click()
+
+    def test_001_send(self):
+        """ Tests for Send Workflow """
+        self.send()
+
     def test_inventory(self):
         """ Tests for Inventory """
 
@@ -69,3 +98,4 @@ class Logistics(SeleniumUnitTest):
                             "req_req_requester",
                             "Beatriz de Carvalho",
                             )
+        
