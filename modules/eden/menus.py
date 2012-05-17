@@ -1039,7 +1039,7 @@ class S3OptionsMenu:
 
         return M(c="survey")(
                     M("Assessment Templates", f="template")(
-                        #M("New", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     #M("Section", f="section")(
