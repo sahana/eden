@@ -60,7 +60,7 @@ inv_ship_status = {
                     "RETURNING"  : SHIP_STATUS_RETURNING,
                 }
 
-T = current.T
+T = current.T  
 shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
                     SHIP_STATUS_RECEIVED:   T("Received"),
                     SHIP_STATUS_SENT:       T("Sent"),
@@ -986,7 +986,6 @@ class S3TrackingModel(S3Model):
                                         default = 1,
                                         represent = lambda opt: tracking_status[opt],
                                         writable = False),
-					
                                   inv_item_id(name="send_inv_item_id",
                                               ondelete = "RESTRICT",
                                               script = SCRIPT("""
@@ -1070,7 +1069,6 @@ $(document).ready(function() {
 
         # pack_quantity virtual field
         table.virtualfields.append(item_pack_virtualfields(tablename=tablename))
-        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1096,14 +1094,14 @@ $(document).ready(function() {
                        list_fields = ["id",
                                       "status",
                                       "item_id",
-                                      (T("Weight (kg)"), "weight"),
-                                      (T("Volume (m3)"), "volume"),
+                                      (T("Weight (kg)"), "item_id$weight"),
+                                      (T("Volume (m3)"), "item_id$volume"),
                                       "item_pack_id",
                                       "send_id",
                                       "quantity",
-									  "currency",
-									  "pack_value",
-									  "bin",
+                                      "currency",
+                                      "pack_value",
+                                      "bin",
                                       "return_quantity",
                                       "recv_quantity",
                                       "recv_bin",
@@ -1170,7 +1168,7 @@ $(document).ready(function() {
     @staticmethod
     def inv_send_form (r, **attr):
         """
-            Generate a PDF of a Consignment Note/ ---Waybill
+            Generate a PDF of a Waybill
         """
 
         s3db = current.s3db
@@ -1191,9 +1189,9 @@ $(document).ready(function() {
                        "item_source_no",
                        "item_pack_id",
                        "quantity",
-					   "currency",
-					   "pack_value",
-					   "bin",
+                       "currency",
+                       "pack_value",
+                       "bin",
                       ]
         exporter = r.resource.exporter.pdf
         return exporter(r,
@@ -1285,10 +1283,9 @@ $(document).ready(function() {
                        "item_pack_id",
                        "quantity",
                        "recv_quantity",
-					   "currency",
-					   "pack_value",
+                       "currency",
+                       "pack_value",
                        "bin"
-                       
                       ]
         exporter = r.resource.exporter.pdf
         return exporter(r,
@@ -1347,7 +1344,7 @@ $(document).ready(function() {
     @staticmethod
     def inv_send_ref_represent(value, show_link=True):
         """
-            Represent for the Tall Out number, 
+            Represent for the Waybill number, 
             if show_link is True then it will generate a link to the pdf
         """
         if value:
@@ -1498,13 +1495,13 @@ $(document).ready(function() {
         oldTotal = 0
         # only modify the original inv. item total if we have a quantity on the form
         # and a sent item record to indicate where it came from.
-        # Their'll not be a quantity if it is being received since by then it is read only
+        # There will not be a quantity if it is being received since by then it is read only
         # It will be there on an import and so the value will be deducted correctly
         if form.vars.quantity and form.vars.send_inv_item_id:
             stock_item = inv_item_table[form.vars.send_inv_item_id]
             stock_quantity = stock_item.quantity
             stock_pack = siptable[stock_item.item_pack_id].quantity
-	    if form.record:
+            if form.record:
                 if form.record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
                     old_track_pack_quantity = siptable[form.record.item_pack_id].quantity
@@ -1521,7 +1518,7 @@ $(document).ready(function() {
                                        new_track_pack_quantity
                                       )
             db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
-	if form.vars.send_id and form.vars.recv_id:
+        if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
         id = form.vars.id
@@ -1631,7 +1628,7 @@ $(document).ready(function() {
                 # copy the adj_item_id to the tracking record
                 db(tracktable.id == id).update(adj_item_id = adj_item_id)
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_deleting(id):
         """
@@ -1651,7 +1648,6 @@ $(document).ready(function() {
         # if this is linked to a request
         # then remove these items from the quantity in transit
         if record.req_item_id:
-
             req_id = record.req_item_id
             req_item = ritable[req_id]
             req_quantity = req_item.quantity_transit
@@ -1664,6 +1660,7 @@ $(document).ready(function() {
                                                   )
             db(ritable.id == req_id).update(quantity_transit = quantity_transit)
             s3db.req_update_status(req_id)
+
         # Check that we have a link to a warehouse
         if record.send_inv_item_id:
             trackTotal = record.quantity
@@ -1890,7 +1887,8 @@ def inv_send_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_send_form_name()), _colspan=2, _class="pdf_title"),
+                           TR(TD(T(current.deployment_settings.get_send_form_name().upper()),
+                                 _colspan=2, _class="pdf_title"),
                               TD(logo, _colspan=2),
                               ),
                            TR(TH("%s: " % table.send_ref.label),
@@ -2318,7 +2316,6 @@ class S3AdjustModel(S3Model):
                                             ondelete = "RESTRICT",
                                             default = auth.s3_logged_in_person(),
                                             comment = self.pr_person_comment(child="adjuster_id")),
-
                                   self.super_link("site_id",
                                                   "org_site",
                                                   ondelete = "SET NULL",
@@ -2327,6 +2324,8 @@ class S3AdjustModel(S3Model):
                                                   readable = True,
                                                   writable = True,
                                                   empty = False,
+                                                  orderby = "org_site.name",
+                                                  sort = True,
                                                   represent=org_site_represent),
                                   Field("adjustment_date",
                                         "date",
@@ -2711,26 +2710,6 @@ class InvItemVirtualFields:
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
-        except:
-            # not available
-            return current.messages.NONE
-
-# =============================================================================
-class InvTrackItemVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    extra_fields = []
-
-    def volume(self):
-        try:
-            return self.inv_track_item.item_id.volume
-        except:
-            # not available
-            return current.messages.NONE
-
-    def weight(self):
-        try:
-            return self.inv_track_item.item_id.weight
         except:
             # not available
             return current.messages.NONE

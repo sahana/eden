@@ -503,8 +503,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testParseURLQuery(self):
 
-        url_query = {"project.organisation_id$name__like": "test",
-                     "task.description__like!": "test"}
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*"}
 
         resource = s3mgr.define_resource("project", "project", vars=url_query)
 
@@ -523,8 +523,181 @@ class S3ResourceFilterTests(unittest.TestCase):
         query = rfilter.get_query()
         self.assertEqual(str(query), "((((project_project.deleted <> 'T') AND "
                                      "(project_project.id > 0)) AND "
-                                     "(org_organisation.name LIKE 'test')) AND "
-                                     "(NOT (project_task.description LIKE 'test')))")
+                                     "(LOWER(org_organisation.name) LIKE '%test%')) AND "
+                                     "(NOT (LOWER(project_task.description) LIKE '%test%')))")
+
+        url_query = {"project.organisation_id$name__like": "Test*,Other*"}
+
+        resource = s3mgr.define_resource("project", "project", vars=url_query)
+
+        rfilter = resource.rfilter
+        fjoins = rfilter.get_left_joins()
+        self.assertNotEqual(fjoins, None)
+        self.assertTrue(isinstance(fjoins, list))
+        self.assertEqual(fjoins[0], "org_organisation ON "
+                                    "(project_project.organisation_id = org_organisation.id)")
+
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(org_organisation.name) LIKE 'other%')))")
+
+    def testParseURLQueryWithAlternativeSelectors(self):
+
+        url_query = {"project.organisation_id$name|task.description__like": "Test*"}
+
+        resource = s3mgr.define_resource("project", "project", vars=url_query)
+
+        rfilter = resource.rfilter
+        fjoins = rfilter.get_left_joins()
+        self.assertNotEqual(fjoins, None)
+        self.assertTrue(isinstance(fjoins, list))
+        self.assertEqual(fjoins[0], "org_organisation ON "
+                                    "(project_project.organisation_id = org_organisation.id)")
+        self.assertEqual(fjoins[1], "project_task_project ON "
+                                    "((project_task_project.project_id = project_project.id) AND "
+                                    "(project_task_project.deleted <> 'T'))")
+        self.assertEqual(fjoins[2], "project_task ON "
+                                    "(project_task_project.task_id = project_task.id)")
+
+        query = rfilter.get_query()
+        self.assertEqual(str(query), "(((project_project.deleted <> 'T') AND "
+                                     "(project_project.id > 0)) AND "
+                                     "((LOWER(org_organisation.name) LIKE 'test%') OR "
+                                     "(LOWER(project_task.description) LIKE 'test%')))")
+
+    def testSerializeURLQuery(self):
+
+        FS = s3base.S3FieldSelector
+
+        #q = FS("person.date_of_birth") <= datetime.date(2012, 4, 1)
+
+        #u = q.serialize_url()
+        #k = "person.date_of_birth__le"
+        #self.assertNotEqual(u, None)
+        #self.assertTrue(isinstance(u, Storage))
+        #self.assertTrue(k in u)
+        #self.assertEqual(len(u.keys()), 1)
+        #self.assertEqual(u[k], "2012-04-01")
+
+        q = FS("person.first_name") == "Test"
+
+        u = q.serialize_url()
+        k = "person.first_name"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test")
+
+        q = FS("person.first_name").lower().like("Test%")
+
+        u = q.serialize_url()
+        k = "person.first_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*")
+
+        q = (FS("person.first_name").lower().like("Test%")) | \
+            (FS("person.last_name").lower().like("Test%"))
+
+        u = q.serialize_url()
+        k = "person.first_name|person.last_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*")
+
+        q = (FS("person.first_name").lower().like("Test%")) | \
+            (FS("person.last_name").lower().like("Other%"))
+
+        u = q.serialize_url()
+        k = "person.first_name|person.last_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertFalse(k in u)
+
+        q = (FS("person.first_name").lower().like("Test%")) | \
+            (~(FS("person.last_name").lower().like("Test%")))
+
+        u = q.serialize_url()
+        k = "person.first_name|person.last_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertFalse(k in u)
+
+        q = (~(FS("person.first_name").lower().like("Test%"))) | \
+            (~(FS("person.last_name").lower().like("Test%")))
+
+        u = q.serialize_url()
+        k = "person.first_name|person.last_name__like!"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*")
+
+        q = (FS("person.first_name").lower().like("Test%")) | \
+            (FS("person.first_name").lower().like("Other%"))
+
+        u = q.serialize_url()
+        k = "person.first_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*,Other*")
+
+        q = FS("person.first_name").belongs(["Test", "Other"])
+
+        u = q.serialize_url()
+        k = "person.first_name__belongs"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test,Other")
+
+        q = FS("first_name").like(["Test%", "Other%"])
+
+        resource = s3mgr.define_resource("pr", "person")
+        u = q.serialize_url(resource=resource)
+        k = "person.first_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*,Other*")
+
+    def testSerializeResourceFilterURL(self):
+
+        url_query = {"project.organisation_id$name__like": "*test*",
+                     "task.description__like!": "*test*"}
+
+        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        rfilter = resource.rfilter
+        url_vars = rfilter.serialize_url()
+        self.assertEqual(len(url_vars), len(url_query))
+        for k in url_query:
+            self.assertTrue(k in url_vars)
+            self.assertEqual(url_vars[k], url_query[k])
+
+        FS = s3base.S3FieldSelector
+        q = FS("first_name").like(["Test%", "Other%"])
+        resource = s3mgr.define_resource("pr", "person")
+        resource.add_filter(q)
+        rfilter = resource.rfilter
+        u = rfilter.serialize_url()
+        k = "person.first_name__like"
+        self.assertNotEqual(u, None)
+        self.assertTrue(isinstance(u, Storage))
+        self.assertTrue(k in u)
+        self.assertEqual(len(u.keys()), 1)
+        self.assertEqual(u[k], "Test*,Other*")
 
     def testParseValue(self):
 

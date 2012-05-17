@@ -598,11 +598,11 @@ $(function() {
                         pdf_hide_comments = True,
                         pdf_componentname = "req_req_item",
                         pdf_header_padding = 12,
-#                        pdf_footer = inv_recv_pdf_footer,
+                        #pdf_footer = inv_recv_pdf_footer,
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )        
+                       )
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -1986,22 +1986,25 @@ def req_rheader(r, check_page = False):
                     transit_status_cells = (TH( "%s: " % T("Transit Status")),
                                             transit_status)
                 else:
-                    transit_status_cells = ("","")
+                    transit_status_cells = ("", "")
 
                 table = r.table
                 site_id = record.site_id
                 org_id = s3db.org_site[site_id].organisation_id
                 logo = s3db.org_organisation_logo(org_id)
                 if settings.get_req_use_req_number():
-                    logoTR = TR(TD(logo, _colspan=2),
-                                  TH("%s: " % table.req_ref.label),
+                    numberTR = TR(TH("%s: " % table.req_ref.label),
                                   TD(table.req_ref.represent(record.req_ref))
                                 )
                 else:
-                    logoTR = TR(TD(logo, _colspan=2))
+                    numberTR = DIV()
                 rData = TABLE(
-                              TR(TD(T(current.deployment_settings.get_req_form_name()), _colspan=2, _class="pdf_title"),
-                              ),
+                               TR(
+                                  TD(settings.get_req_form_name(),
+                                     _colspan=2, _class="pdf_title"),
+                                  TD(logo, _colspan=2)
+                                  ),
+                               numberTR(),
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),

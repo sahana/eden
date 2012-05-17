@@ -2081,6 +2081,15 @@ class S3DelegationTests(unittest.TestCase):
             # Delegate the dvi_reader role for org1 to org2
             auth.s3_delegate_role([self.dvi_reader, self.dvi_editor], self.org1, receiver=self.org2)
 
+            delegations = auth.s3_get_delegations(self.org1)
+            self.assertNotEqual(delegations, None)
+            self.assertTrue(isinstance(delegations, Storage))
+            self.assertTrue(self.org2 in delegations)
+            self.assertTrue(isinstance(delegations[self.org2], list))
+            self.assertEqual(len(delegations[self.org2]), 2)
+            self.assertTrue(self.dvi_reader in delegations[self.org2])
+            self.assertTrue(self.dvi_editor in delegations[self.org2])
+
             # Check the delegations
             delegations = auth.user.delegations
             self.assertTrue(self.dvi_reader in delegations)
@@ -2092,6 +2101,14 @@ class S3DelegationTests(unittest.TestCase):
 
             auth.s3_remove_delegation(self.dvi_editor, self.org1, receiver=self.org2)
 
+            delegations = auth.s3_get_delegations(self.org1)
+            self.assertNotEqual(delegations, None)
+            self.assertTrue(isinstance(delegations, Storage))
+            self.assertTrue(self.org2 in delegations)
+            self.assertTrue(isinstance(delegations[self.org2], list))
+            self.assertEqual(len(delegations[self.org2]), 1)
+            self.assertTrue(self.dvi_reader in delegations[self.org2])
+
             # Check the delegations
             delegations = auth.user.delegations
             self.assertTrue(self.dvi_reader in delegations)
@@ -2100,6 +2117,11 @@ class S3DelegationTests(unittest.TestCase):
             self.assertTrue(self.org1 in delegations[self.dvi_reader][self.org3])
 
             auth.s3_remove_delegation(self.dvi_reader, self.org1, receiver=self.org2)
+
+            delegations = auth.s3_get_delegations(self.org1)
+            self.assertNotEqual(delegations, None)
+            self.assertTrue(isinstance(delegations, Storage))
+            self.assertEqual(delegations.keys(), [])
 
             # Check the delegations
             delegations = auth.user.delegations
@@ -2656,7 +2678,7 @@ def run_suite(*test_classes):
         tests = loader.loadTestsFromTestCase(test_class)
         suite.addTests(tests)
     if suite is not None:
-        unittest.TextTestRunner().run(suite)
+        unittest.TextTestRunner(verbosity=2).run(suite)
     return
 
 if __name__ == "__main__":

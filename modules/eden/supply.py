@@ -86,6 +86,8 @@ class S3SupplyModel(S3Model):
         organisation_id = self.org_organisation_id
         organisation_represent = self.org_organisation_represent
 
+        NONE = current.messages.NONE
+
         # Shortcuts
         add_component = self.add_component
         comments = s3.comments
@@ -392,7 +394,7 @@ class S3SupplyModel(S3Model):
                                          sort=True),
                     represent = self.supply_item_represent,
                     label = T("Item"),
-                    widget = S3AutocompleteWidget("supply", 
+                    widget = S3AutocompleteWidget("supply",
                                          "item"),
                     #widget = S3SearchAutocompleteWidget(
                     #                get_fieldname = "item_id",
