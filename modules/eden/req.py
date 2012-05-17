@@ -58,7 +58,7 @@ req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
                                               _class = "req_status_complete")
                    }
 
-rn_label = T(current.deployment_settings.get_req_field_name())
+rn_label = T(("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname()))
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -555,7 +555,7 @@ $(function() {
                                                             ).first()
                 if req_row:
                     return A(value,
-                             _href = URL(f = "req",
+                             _href = URL(c = "req", f = "req",
                                          args = [req_row.id, "form"]
                                         ),
                             )
@@ -791,7 +791,7 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if settings.get_req_use_req_number() and not rrtable[id].req_ref:
-            code = s3db.inv_get_shipping_code("REQ",
+            code = s3db.inv_get_shipping_code(current.deployment_settings.get_req_shortname(),
                                               rrtable[id].site_id,
                                               s3db.req_req.req_ref,
                                              )
@@ -1999,9 +1999,10 @@ def req_rheader(r, check_page = False):
                 else:
                     numberTR = DIV()
                 rData = TABLE(
-                               TR(TD(logo, _colspan=2),
+                               TR(
                                   TD(settings.get_req_form_name(),
                                      _colspan=2, _class="pdf_title"),
+                                  TD(logo, _colspan=2)
                                   ),
                                numberTR(),
                                TR(

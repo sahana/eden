@@ -102,8 +102,8 @@ itn_label = T("Item Source Tracking Number")
 # Overwrite the label until we have a better way to do this
 itn_label = T("CTN")
 settings = current.deployment_settings
-wn_label = T(settings.get_inv_field_name())
-grn_label = T("%(GRN)s Number") % dict(GRN=settings.get_grn_shortname())
+wn_label = T(settings.get_send_ref_field_name())
+grn_label = T("%(GRN)s Number") % dict(GRN=settings.get_recv_shortname())
 po_label = T("Purchase Order Number")
 # =============================================================================
 class S3InventoryModel(S3Model):
@@ -703,7 +703,26 @@ class S3TrackingModel(S3Model):
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
                                             "track_item"])
+        
         self.configure(tablename,
+        list_fields = ["id",
+                        "send_ref",
+                        "req_ref",
+                        "sender_id",
+                        "site_id",
+                        "date",
+                        "recepient_id",
+                        "delivery_date",
+                        "to_site_id",
+                        "status",
+                        "transport_type",
+                        "vehicle_plate_no",
+                        "driver_name",
+                        "time_in",
+                        "time_out", 
+                        "comments"                        
+                        ],                                      
+                       
                        onaccept = self.inv_send_onaccept,
                        create_next = send_item_url,
                        update_next = send_item_url)
@@ -790,11 +809,11 @@ class S3TrackingModel(S3Model):
                                         represent = lambda opt: ship_doc_status.get(opt, UNKNOWN_OPT),
                                         default = SHIP_DOC_PENDING,
                                         widget = radio_widget,
-                                        label = T("%(GRN)s Status") % dict(GRN=settings.get_grn_shortname()),
+                                        label = T("%(GRN)s Status") % dict(GRN=settings.get_recv_shortname()),
                                         comment = DIV( _class="tooltip",
-                                                       _title="%s|%s" % (T("%(GRN)s Status") % dict(GRN=settings.get_grn_shortname()),
-                                                                         T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % dict(GRN=settings.get_grn_shortname(),
-                                                                                                                                         GRN_name=settings.get_grn_name()))),
+                                                       _title="%s|%s" % (T("%(GRN)s Status") % dict(GRN=settings.get_recv_shortname()),
+                                                                         T("Has the %(GRN)s (%(GRN_name)s) form been completed?") % dict(GRN=settings.get_recv_shortname(),
+                                                                                                                                         GRN_name=settings.get_recv_form_name()))),
                                         ),
                                   Field("cert_status",
                                         "integer",
@@ -911,8 +930,21 @@ class S3TrackingModel(S3Model):
         self.configure("inv_recv",
                         deletable=False,
                        )
-
+                
         self.configure(tablename,
+                       list_fields = ["id",
+                                      "recv_ref",
+                                      "send_ref",
+                                      "purchase_ref",
+                                      "recipient_id",
+                                      "site_id",
+                                      "date",                                      
+                                      "type",
+                                      "status",
+                                      "req_ref",
+                                      "sender_id",
+                                      "comments"
+                                      ],
                        onaccept = self.inv_recv_onaccept,
                        search_method = recv_search,
                        create_next = recv_item_url,
@@ -1160,7 +1192,7 @@ $(document).ready(function() {
         # If the send_ref is None then set it up
         id = form.vars.id
         if not stable[id].send_ref:
-            code = S3TrackingModel.inv_get_shipping_code("WB",
+            code = S3TrackingModel.inv_get_shipping_code(current.deployment_settings.get_send_shortname(),
                                                          stable[id].site_id,
                                                          s3db.inv_send.send_ref,
                                                         )
@@ -1199,7 +1231,7 @@ $(document).ready(function() {
         return exporter(r,
                         method = "list",
                         pdf_componentname = "inv_track_item",
-                        pdf_title = current.deployment_settings.get_inv_name(),
+                        pdf_title = current.deployment_settings.get_send_form_name(),
                         pdf_filename = send_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -1251,7 +1283,8 @@ $(document).ready(function() {
         # If the recv_ref is None then set it up
         id = form.vars.id
         if not rtable[id].recv_ref:
-            code = S3TrackingModel.inv_get_shipping_code("GRN",
+            #AR Number
+            code = S3TrackingModel.inv_get_shipping_code(current.deployment_settings.get_recv_shortname(),
                                                          rtable[id].site_id,
                                                          s3db.inv_recv.recv_ref,
                                                         )
@@ -1291,7 +1324,7 @@ $(document).ready(function() {
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method = "list",
-                        pdf_title = T(current.deployment_settings.get_grn_form_name()),
+                        pdf_title = T(current.deployment_settings.get_recv_form_name()),
                         pdf_filename = recv_ref,
                         list_fields = list_fields,
                         pdf_hide_comments = True,
@@ -1888,7 +1921,7 @@ def inv_send_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_inv_form_name().upper()),
+                           TR(TD(T(current.deployment_settings.get_send_form_name().upper()),
                                  _colspan=2, _class="pdf_title"),
                               TD(logo, _colspan=2),
                               ),
@@ -1977,7 +2010,7 @@ def inv_send_rheader(r):
                         msg = T("You need to check all item quantities before you can complete the return process")
                         rfooter.append(SPAN(msg))
             else:
-                cn_btn = A( T(current.deployment_settings.get_inv_name()),
+                cn_btn = A( T(current.deployment_settings.get_send_form_name()),
                               _href = URL(f = "send",
                                           args = [record.id, "form"]
                                           ),
@@ -2141,7 +2174,7 @@ def inv_recv_rheader(r):
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_grn_form_name()), _colspan=2, _class="pdf_title"),
+                           TR(TD(T(current.deployment_settings.get_recv_form_name()), _colspan=2, _class="pdf_title"),
                               TD(logo, _colspan=2),
                               ),
                            TR(TH("%s: " % table.recv_ref.label),
