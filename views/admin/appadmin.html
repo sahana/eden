@@ -24,8 +24,8 @@
       {{=T('"update" is an optional expression like "field1=\'newvalue\'". You cannot update or delete the results of a JOIN')}}</p>
     <br/><br/>
     <h3>{{=nrows}} {{=T("selected")}}</h3>
-    {{if start>0:}}[ {{=A(T("previous 100 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start - 100)))}} ]{{pass}}
-    {{if stop<nrows:}}[ {{=A(T("next 100 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start + 100)))}} ]{{pass}}    
+    {{if start>0:}}[ {{=A(T("previous 50 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start - 50)))}} ]{{pass}}
+    {{if stop<nrows:}}[ {{=A(T("next 50 rows"), _href=URL(f='select', args=request.args[0], vars=dict(start=start + 50)))}} ]{{pass}}    
     {{if rows:}}
        <div style="overflow: auto;" width="80%">
        {{linkto=URL(f='update', args=request.args[0])}}

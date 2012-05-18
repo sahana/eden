@@ -102,6 +102,10 @@
     {{except:}}
     {{pass}}
 
+    {{if response.s3.dataTable_group:}}
+        S3.dataTables.group = {{=XML(response.s3.dataTable_group)}}
+    {{pass}}
+
     {{if response.s3.hideCol is not None:}}
         S3.dataTables.hideList = {{=XML(response.s3.hideCol)}};
     {{pass}}

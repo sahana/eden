@@ -29,40 +29,73 @@ class PRTests(unittest.TestCase):
             auth.s3_impersonate(None)
 
             organisations = s3db.pr_get_entities(types="org_organisation", as_list=True, represent=False)
-            org = organisations[0]
+            org1 = organisations[0]
+            org2 = organisations[1]
 
-            users = s3db.pr_realm_users(org)
+            users = s3db.pr_realm_users(org1)
             self.assertEqual(users, Storage())
 
-            s3db.pr_add_affiliation(org, admin_pe_id, role="Volunteer", role_type=9)
-            s3db.pr_add_affiliation(org, user_pe_id, role="Staff")
+            users = s3db.pr_realm_users(org2)
+            self.assertEqual(users, Storage())
 
-            users = s3db.pr_realm_users(org)
+            s3db.pr_add_affiliation(org1, admin_pe_id, role="Volunteer", role_type=9)
+            s3db.pr_add_affiliation(org2, user_pe_id, role="Staff")
+
+            users = s3db.pr_realm_users(org1)
+            self.assertFalse(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org2)
             self.assertTrue(user_id in users)
             self.assertFalse(admin_id in users)
 
-            users = s3db.pr_realm_users(org, roles="Volunteer")
+            users = s3db.pr_realm_users([org1, org2])
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org1, roles="Volunteer")
             self.assertFalse(user_id in users)
             self.assertTrue(admin_id in users)
 
-            users = s3db.pr_realm_users(org, roles="Staff")
-            self.assertTrue(user_id in users)
+            users = s3db.pr_realm_users(org2, roles="Volunteer")
+            self.assertFalse(user_id in users)
             self.assertFalse(admin_id in users)
 
-            users = s3db.pr_realm_users(org, roles=["Staff", "Volunteer"])
-            self.assertTrue(user_id in users)
-            self.assertTrue(admin_id in users)
-
-            users = s3db.pr_realm_users(org, role_types=1)
-            self.assertTrue(user_id in users)
-            self.assertFalse(admin_id in users)
-
-            users = s3db.pr_realm_users(org, role_types=9)
+            users = s3db.pr_realm_users([org1, org2], roles="Volunteer")
             self.assertFalse(user_id in users)
             self.assertTrue(admin_id in users)
 
-            users = s3db.pr_realm_users(org, role_types=None)
+            users = s3db.pr_realm_users(org1, roles="Staff")
+            self.assertFalse(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users(org2, roles="Staff")
             self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users([org1, org2], roles="Staff")
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users([org1, org2], roles=["Staff", "Volunteer"])
+            self.assertTrue(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            users = s3db.pr_realm_users([org1, org2], role_types=1)
+            self.assertTrue(user_id in users)
+            self.assertFalse(admin_id in users)
+
+            users = s3db.pr_realm_users([org1, org2], role_types=9)
+            self.assertFalse(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            users = s3db.pr_realm_users([org1, org2], role_types=None)
+            self.assertTrue(user_id in users)
+            self.assertTrue(admin_id in users)
+
+            s3db.pr_remove_affiliation(org2, user_pe_id, role="Staff")
+            users = s3db.pr_realm_users([org1, org2], role_types=None)
+            self.assertFalse(user_id in users)
             self.assertTrue(admin_id in users)
 
             # None as realm should give a list of all current users

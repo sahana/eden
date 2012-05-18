@@ -3903,7 +3903,7 @@ class S3Resource(object):
         fields = []
         append = fields.append
 
-        for s in selectors:
+        for s in slist:
 
             # Allow to override the field label
             if isinstance(s, tuple):
@@ -4886,8 +4886,20 @@ class S3ResourceFilter:
             else:
                 self._add_vfltr(f, component=component, master=master)
 
+            skip_master = False
             alias = self.resource.alias
             if not master and component and component != alias:
+                alias = component
+                skip_master = True
+            if alias in self.cvfltr:
+                # simply append the query -> the risk for and the impact
+                # of a possible query duplication is smaller (by orders
+                # of magnitude!) than the necessary effort for query
+                # de-duplication
+                self.cvfltr[alias].append(f)
+            else:
+                self.cvfltr[alias] = [f]
+            if skip_master:
                 return
 
             joins, distinct = f.joins(self.resource)
@@ -5057,22 +5069,62 @@ class S3ResourceFilter:
             # Parse the value
             v = S3ResourceFilter._parse_value(val)
 
-            # Build a S3ResourceQuery
-            try:
-                q = S3ResourceQuery(op, S3FieldSelector(fs), v)
-            except SyntaxError:
-                # Invalid query, skip
-                continue
-            except KeyError:
-                # Invalid operand, skip
-                continue
+            if "|" in fs:
+                selectors = fs.split("|")
+            else:
+                selectors = [fs]
 
-            # Invert operation
-            if invert:
-                q = ~q
+            q = None
+            prefix = None
+            for fs in selectors:
+
+                # Check prefix
+                if "." in fs:
+                    a = fs.split(".", 1)[0]
+                    if prefix is None:
+                        prefix = a
+                elif prefix is not None:
+                    fs = "%s.%s" % (prefix, fs)
+                else:
+                    # Invalid selector
+                    q = None
+                    break
+
+                # Build a S3ResourceQuery
+                rquery = None
+                try:
+                    if op == S3ResourceQuery.LIKE:
+                        # Auto-lowercase and replace wildcard
+                        f = S3FieldSelector(fs).lower()
+                        if isinstance(v, basestring):
+                            v = v.replace("*", "%").lower()
+                        elif isinstance(v, list):
+                            v = [x.replace("*", "%").lower() for x in v]
+                    else:
+                        f = S3FieldSelector(fs)
+                    rquery = S3ResourceQuery(op, f, v)
+                except (SyntaxError, KeyError):
+                    q = None
+                    break
+
+                # Invert operation
+                if invert:
+                    rquery = ~rquery
+
+                # Add to subquery
+                if q is None:
+                    q = rquery
+                else:
+                    q |= rquery
+
+            if q is None:
+                continue
 
             # Append to query
-            alias, f = fs.split(".", 1)
+            if len(selectors) > 1:
+                alias = resource.alias
+            else:
+                alias = selectors[0].split(".", 1)[0]
             if alias not in query:
                 query[alias] = [q]
             else:
@@ -5348,6 +5400,22 @@ class S3ResourceFilter:
                     )
 
         return represent
+
+    # -------------------------------------------------------------------------
+    def serialize_url(self):
+        """
+            Serialize this filter as URL query
+
+            @returns: a Storage of URL GET variables
+        """
+        resource = self.resource
+
+        url_vars = Storage()
+        for f in self.cvfltr.values():
+            for q in f:
+                sub = q.serialize_url(resource=resource)
+                url_vars.update(sub)
+        return url_vars
 
 # =============================================================================
 
@@ -5918,6 +5986,98 @@ class S3ResourceQuery:
                 return "(%s > %s)" % (l, r)
             else:
                 return "(%s ?%s? %s)" % (l, op, r)
+
+    # -------------------------------------------------------------------------
+    def serialize_url(self, resource=None):
+        """
+            Serialize this query as URL query
+
+            @returns: a Storage of URL variables
+        """
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        url_query = Storage()
+        def _serialize(n, o, v, invert):
+            try:
+                if isinstance(v, list):
+                    v = ",".join([S3TypeConverter.convert(str, val) for val in v])
+                else:
+                    v = S3TypeConverter.convert(str, v)
+            except:
+                return
+            if "." not in n:
+                if resource is not None:
+                    n = "%s.%s" % (resource.alias, n)
+                else:
+                    return
+            if o == self.LIKE:
+                v = v.replace("%", "*")
+            if o == self.EQ:
+                operator = ""
+            else:
+                operator = "__%s" % o
+            if invert:
+                operator = "%s!" % operator
+            url_query["%s%s" % (n, operator)] = v
+            return
+        if op == self.AND:
+            lu = l.serialize_url()
+            url_query.update(lu)
+            ru = r.serialize_url()
+            url_query.update(ru)
+        elif op == self.OR:
+            sub = self._or()
+            if sub is None:
+                # This OR-subtree is not serializable
+                return url_query
+            n, o, v, invert = sub
+            _serialize(n, o, v, invert)
+        elif op == self.NOT:
+            lu = l.serialize_url()
+            for k in lu:
+                url_query["%s!" % k] = lu[k]
+        elif isinstance(l, S3FieldSelector):
+            _serialize(l.name, op, r, False)
+        return url_query
+
+    # -------------------------------------------------------------------------
+    def _or(self):
+        """
+            Helper method to URL-serialize an OR-subtree in a query in
+            alternative field selector syntax if they all use the same
+            operator and value (this is needed to URL-serialize an
+            S3SearchSimpleWidget query).
+        """
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        if self.op == self.AND:
+            return None
+        elif self.op == self.NOT:
+            lname, lop, lval, linv = l._or()
+            return (lname, lop, lval, not linv)
+        elif self.op == self.OR:
+            lvars = l._or()
+            rvars = r._or()
+            if lvars is None or rvars is None:
+                return None
+            lname, lop, lval, linv = lvars
+            rname, rop, rval, rinv = rvars
+            if lop != rop or linv != rinv:
+                return None
+            if lname == rname:
+                return (lname, lop, [lval, rval], linv)
+            elif lval == rval:
+                return ("%s|%s" % (lname, rname), lop, lval, linv)
+            else:
+                return None
+        else:
+            return (self.left.name, self.op, self.right, False)
 
 # =============================================================================
 

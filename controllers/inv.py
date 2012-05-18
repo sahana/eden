@@ -236,6 +236,7 @@ def inv_item():
                                            (T("Unit Value"), "pack_value"),
                                            (T("Total Value"), "total_value"),
                                            (T("Remarks"), "comments"),
+                                           "status",
                                            ]
                             )
 
@@ -254,6 +255,11 @@ def inv_item():
                          vars = {"viewing" : "%s.%s" % ("inv_inv_item", record.item_id)}
                         )
                      )
+    def prep(r):
+        if r.method != "search":
+            response.s3.dataTable_group = 1
+        return True
+
     # Import pre-process
     def import_prep(data):
         """
@@ -314,12 +320,17 @@ def inv_item():
                     deletable=False,
                    )
     rheader = response.s3.inv_warehouse_rheader
+    response.s3.prep = prep
     output =  s3_rest_controller(rheader=rheader,
                                  csv_extra_fields = [
                                                      dict(label="Organisation",
                                                           field=s3db.org_organisation_id(comment=None)
                                                           )
                                                      ],
+                                 pdf_paper_alignment = "Landscape",
+                                 pdf_table_autogrow = "B",
+                                 pdf_groupby = "site_id, item_id",
+                                 pdf_orderby = "expiry_date, supply_org_id",
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -498,6 +509,7 @@ def send():
                                "return_quantity",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                                "comments",
                               ]
             elif record.status == SHIP_STATUS_RETURNING:
@@ -512,6 +524,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                               ]
             else:
                 list_fields = ["id",
@@ -524,6 +537,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
+                               "item_status",
                               ]
             s3mgr.configure("inv_track_item",
                             list_fields=list_fields,
@@ -1585,6 +1599,7 @@ def adj_close():
                                                                  expiry_date = adj_item.expiry_date,
                                                                  quantity = adj_item.new_quantity,
                                                                  owner_org_id = adj_item.new_owner_org_id,
+                                                                 status = adj_item.new_status,
                                                                 )
     # Change the status of the adj record to Complete
     db(atable.id == adj_id).update(status=1)
@@ -1662,5 +1677,7 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
+def kit():
+    return s3_rest_controller()
 
 # END =========================================================================

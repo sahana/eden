@@ -213,6 +213,7 @@ class S3MainMenu:
                         restrict=[ADMIN], **attr)(
                             MM("Settings", f="settings"),
                             MM("Users", f="user"),
+                            MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
