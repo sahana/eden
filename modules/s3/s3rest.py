@@ -3162,12 +3162,13 @@ class S3Resource(object):
         manager = current.manager
         xml = manager.xml
 
+        pkey = self.table._id
         action = "read"
         representation = "xml"
 
         # Construct the record URL
         if base_url:
-            record_url = "%s/%s" % (base_url, record.id)
+            record_url = "%s/%s" % (base_url, record[pkey])
         else:
             record_url = None
 
@@ -3192,6 +3193,8 @@ class S3Resource(object):
                 # Shall this component be included?
                 if components and component.tablename not in components:
                     continue
+
+                cpkey = component.table._id
 
                 if component.link is not None:
                     c = component.link
@@ -3219,7 +3222,7 @@ class S3Resource(object):
                     component_url = None
 
                 # Find related records
-                crecords = self(record.id, component=c.alias)
+                crecords = self(record[pkey], component=c.alias)
                 if not c.multiple and len(crecords):
                     crecords = [crecords[0]]
 
@@ -3229,7 +3232,7 @@ class S3Resource(object):
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:
-                        crecord_url = "%s/%s" % (component_url, crecord.id)
+                        crecord_url = "%s/%s" % (component_url, crecord[cpkey])
                     else:
                         crecord_url = None
                     # Export the component record
@@ -3308,7 +3311,7 @@ class S3Resource(object):
         audit = manager.audit
         if audit:
             audit("read", prefix, name,
-                  record=record.id, representation="xml")
+                  record=record[table._id], representation="xml")
 
         # Reference map for this record
         rmap = xml.rmap(table, record, rfields)
@@ -3341,7 +3344,7 @@ class S3Resource(object):
         """
 
         tablename = self.tablename
-        record_id = record.id
+        record_id = record[self.table._id]
 
         if rmap:
             reference_map.extend(rmap)

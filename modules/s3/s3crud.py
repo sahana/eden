@@ -527,7 +527,7 @@ class S3CRUD(S3Method):
                    _config("onaccept")
 
         # Get the target record ID
-        record_id = self._record_id(r)
+        record_id = self.record
         if r.interactive and not record_id:
             r.error(404, self.resource.ERROR.BAD_RECORD)
 
@@ -685,7 +685,7 @@ class S3CRUD(S3Method):
         delete_next = self._config("delete_next", None)
 
         # Get the target record ID
-        record_id = self._record_id(r)
+        record_id = self.record
 
         # Check if deletable
         if not deletable:
