@@ -3119,13 +3119,14 @@ class S3Resource(object):
                 duration)
 
         # Complete the tree
-        return xml.tree(None,
+        tree = xml.tree(None,
                         root=root,
                         domain=manager.domain,
                         url=base_url,
                         results=results,
                         start=start,
                         limit=limit)
+        return tree
 
     # -------------------------------------------------------------------------
     def __export_resource(self,

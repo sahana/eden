@@ -1113,34 +1113,38 @@ class S3Search(S3CRUD):
     # -------------------------------------------------------------------------
     def save_search_widget(self, r, search_vars, **attr):
         """
-            @todo: docstring
+            Add a widget to a Search form to allow saving this search to the
+            user's profile, to which they can subscribe
         """
 
         request = self.request
 
+        T = current.T
         db = current.db
         s3db = current.s3db
 
         user_id = current.session.auth.user.id
-        save_search_btn_id = "save_my_filter_btn_%s" % str(request.utcnow.microsecond)
-        save_search_processing_id = "save_search_processing_%s" % str(request.utcnow.microsecond)
-        save_search_a_id = "save_search_a_%s" % str(request.utcnow.microsecond)
-        arg = str(user_id) + "/save_search"
-        save_search_a = DIV("View and Subscribe to Saved Searches ",
-                            A("Here",
-                          _href=URL(r=request, c="pr", f="person", args=[arg]),
-                        _target="_blank"
-                        ),
-                        ".",
+        now = request.utcnow.microsecond
+        save_search_btn_id = "save_my_filter_btn_%s" % now
+        save_search_processing_id = "save_search_processing_%s" % now
+        save_search_a_id = "save_search_a_%s" % now
+        arg = "%s/save_search" % user_id
+        save_search_a = DIV(T("View and Subscribe to Saved Searches"),
+                            A(T("Here"),
+                              _href=URL(r=request, c="pr", f="person",
+                                        args=[arg]),
+                              _target="_blank"
+                             ),
+                            ".",
                         _id=save_search_a_id,
                         _class="save_search_a"
                         )
-        search_vars["prefix"] = r.prefix
+        search_vars["prefix"] = r.controller
         search_vars["function"] = r.function
 
         table = s3db.pr_save_search
-        if len (db(table.user_id == user_id).select(table.id,
-                                                    limitby=(0, 1))):
+        if len(db(table.user_id == user_id).select(table.id,
+                                                   limitby=(0, 1))):
             rows = db(table.user_id == user_id).select(table.ALL)
             for row in rows:
                 pat = "_"
@@ -1167,50 +1171,51 @@ class S3Search(S3CRUD):
                                        )
 
         save_search_btn = A("Save Search",
-                                    _class="save_search_btn",
-                                    _id=save_search_btn_id,
-                                    _href="#",
-                                    _title="Save this search")
+                            _class="save_search_btn",
+                            _id=save_search_btn_id,
+                            _href="#",
+                            _title=T("Save this search"))
         save_search_a["_style"] = "display:none;"
-        save_search_processing = IMG(_src="/" + request.application + "/static/img/ajax-loader.gif",
+        save_search_processing = IMG(_src="/%s/static/img/ajax-loader.gif" % request.application,
                                     _id=save_search_processing_id,
                                     _class="save_search_processing_id",
                                     _style="display:none;"
                                     )
         s_var = {}
         s_var["save"] = True
-        jurl = URL(r=request, c=r.prefix, f=r.function, args=["search"], vars=s_var)
-        save_search_script = SCRIPT("".join("""
-                                        $("#%s").live( 'click', function () {
-                                            $("#%s").show();
-                                            $("#%s").hide();
-                                            $.ajax({
-                                                url: '%s',
-                                                data: '%s',
-                                                success: function(data) {
-                                                                    $("#%s").show();
-                                                                    $("#%s").hide();
-                                                                    },
-                                                type: 'POST'
-                                                });
-                                            return false;
-                                            });
-                                        """ %
-                                        (save_search_btn_id,
-                                         save_search_processing_id,
-                                         save_search_btn_id,
-                                         jurl,
-                                         jsonlib.dumps(search_vars),
-                                         save_search_a_id,
-                                         save_search_processing_id)))
-        save_search = DIV(save_search_processing,
-                                save_search_a,
-                                save_search_btn,
-                                save_search_script,
-                                _style="font-size:12px; padding:5px 0px 5px 90px;",
-                                _id="save_search"
-                                )
-        return save_search
+        jurl = URL(r=request, c=r.controller, f=r.function,
+                   args=["search"], vars=s_var)
+        save_search_script = SCRIPT("""
+$('#%s').live('click', function() {
+    $('#%s').show();
+    $('#%s').hide();
+    $.ajax({
+        url: '%s',
+        data: '%s',
+        success: function(data) {
+            $('#%s').show();
+            $('#%s').hide();
+        },
+        type: 'POST'
+        });
+    return false;
+    });
+""" % (save_search_btn_id,
+       save_search_processing_id,
+       save_search_btn_id,
+       jurl,
+       jsonlib.dumps(search_vars),
+       save_search_a_id,
+       save_search_processing_id))
+
+        widget = DIV(save_search_processing,
+                    save_search_a,
+                    save_search_btn,
+                    save_search_script,
+                    _style="font-size:12px; padding:5px 0px 5px 90px;",
+                    _id="save_search"
+                    )
+        return widget
 
     # -------------------------------------------------------------------------
     def search_interactive(self, r, **attr):
@@ -1253,7 +1258,6 @@ class S3Search(S3CRUD):
 
         # Initialize the form
         form = DIV(_class="search_form form-container")
-
 
         # Get the session options
         session_options = session.s3.search_options
@@ -1463,15 +1467,19 @@ class S3Search(S3CRUD):
 
         if isinstance(items, DIV):
             filter = session.s3.filter
-            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application),
+            app = request.application
+            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
-                                 _href=r.url(method="", representation="pdf", vars=filter)),
-                               A(IMG(_src="/%s/static/img/icon-xls.png" % request.application),
+                                 _href=r.url(method="", representation="pdf",
+                                             vars=filter)),
+                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
                                  _title=T("Export in XLS format"),
-                                 _href=r.url(method="", representation="xls", vars=filter)),
-                               A(IMG(_src="/%s/static/img/RSS_16.png" % request.application),
+                                 _href=r.url(method="", representation="xls",
+                                             vars=filter)),
+                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
                                  _title=T("Export in RSS format"),
-                                 _href=r.url(method="", representation="rss", vars=filter)),
+                                 _href=r.url(method="", representation="rss",
+                                             vars=filter)),
                                _id="list_formats")
             tabs = [(T("List"), None),
                     #(T("Export"), "export")
@@ -1484,9 +1492,12 @@ class S3Search(S3CRUD):
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
             if list_formats:
-                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % request.application),
-                                     _title=T("Export in KML format"),
-                                     _href=r.url(method="", representation="kml", vars=filter)),
+                app = request.application
+                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
+                                      _title=T("Export in KML format"),
+                                      _href=r.url(method="",
+                                                  representation="kml",
+                                                  vars=filter)),
                                     )
             if tabs:
                 tabs.append((T("Map"), "map"))
