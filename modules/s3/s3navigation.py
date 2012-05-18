@@ -204,7 +204,7 @@ class S3NavigationItem(object):
         self.tablename = t
         self.method = m
         if m is not None:
-            if args is None or not len(args):
+            if not len(args):
                 self.args = [m]
             elif args[-1] != m:
                 self.args.append(m)
