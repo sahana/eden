@@ -513,7 +513,7 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
     elif pe_id is not None:
         query = (ptable.pe_id == pe_id) & (ptable.deleted != True)
 
-    if not record and not rows and query:
+    if not record and not rows and query is not None:
         record = db(query).select(ptable.first_name,
                                   ptable.middle_name,
                                   ptable.last_name,
