@@ -2,13 +2,9 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-
 from gluon import current
-
 from s3 import s3_debug
-
 from tests import *
-
 import unittest
 
 class Web2UnitTest(unittest.TestCase):
@@ -19,13 +15,14 @@ class Web2UnitTest(unittest.TestCase):
         self.config = current.test_config
         self.browser = self.config.browser
         self.url = self.config.url
-        self.user = "normal"
+        self.user = "admin"
 
 class SeleniumUnitTest(Web2UnitTest):
     def login(self, user=None):
         if user == None:
             user = self.user
         login(user)
+
 
     def dt_filter(self,
                   search_string = " ",
