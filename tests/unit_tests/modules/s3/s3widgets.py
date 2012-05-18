@@ -7,6 +7,7 @@ import unittest
 
 from gluon import current
 from s3.s3widgets import S3OptionsMatrixWidget
+from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # =============================================================================
 class TestS3OptionsMatrixWidget(unittest.TestCase):
@@ -418,7 +419,6 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
                                  )
         self.assertEqual(str(self.widget(self.field, self.value)), str(expected_result))
 
-
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -435,7 +435,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        TestS3OptionsMatrixWidget,
+        TestS3OptionsMatrixWidget
     )
 
 # END ========================================================================

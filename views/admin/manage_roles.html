@@ -1,0 +1,61 @@
+{{extend "layout.html"}}
+
+{{try:}}
+	{{=H2(title)}}
+{{except:}}
+	{{pass}}
+
+<div id='rheader'>
+{{try:}}
+	{{=XML(rheader)}}
+</div>
+<div id='component'>
+{{except:}}
+<div>
+{{pass}}
+
+{{if globals().get('form', False):}}
+	<div class="form-container">
+		{{=form}}
+	</div>
+{{pass}}
+
+{{if globals().get('role_form', False):}}
+	<div class="form-container">
+		{{lbl=role_form.custom.label}}
+		{{wid=role_form.custom.widget}}
+		{{acllen=len(role_form.custom.matrix_access_level_labels)}}
+
+		<h3>{{=T('Roles for')}} {{=user.name}}</h3>
+		{{=role_form.custom.begin}}
+			<table class="">
+				<thead>
+					<tr>
+						<th></th>
+						{{for label in role_form.custom.matrix_access_level_labels:}}
+							<th span="col">{{=label}}</th>
+						{{pass}}
+					</tr>
+				</thead>
+				<tbody>
+					{{for field in role_form.fields:}}
+						{{if wid[field]:}}
+							<tr>
+								<th span="row">{{=lbl[field]}}</th>
+
+								{{for widget in wid[field]:}}
+									<td>{{=widget}}</td>
+								{{pass}}
+							</tr>
+						{{pass}}
+					{{pass}}
+					<tr>
+						<td></td>
+						<td colspan="{{=acllen}}">{{=INPUT(_type='submit', _value=T('Update Roles'))}}</td>
+					</tr>
+				</tbody>
+			</table>
+		{{=role_form.custom.end}}
+	</div>
+{{pass}}
+</div>

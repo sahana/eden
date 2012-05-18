@@ -56,6 +56,8 @@ def logout():
     url = "%s/default/user/login" % config.url
     browser.get(url)
 
+    browser.find_element_by_id("auth_menu_email").click()
+
     try:
         elem = browser.find_element_by_id("auth_menu_logout")
     except NoSuchElementException:

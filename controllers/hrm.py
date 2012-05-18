@@ -3,7 +3,6 @@
 """
     Human Resource Management
 """
-
 module = request.controller
 resourcename = request.function
 
@@ -591,6 +590,12 @@ def person():
     s3mgr.model.set_method("pr", resourcename,
                            method="contacts",
                            action=s3db.pr_contacts)
+
+    # Plug-in role matrix for Admins/OrgAdmins
+    realms = auth.user is not None and auth.user.realms or []
+    if ADMIN in realms or ORG_ADMIN in realms:
+        s3mgr.model.set_method("pr", resourcename, method="roles",
+                               action=s3base.S3RoleMatrix())
 
     if deployment_settings.has_module("asset"):
         # Assets as component of people

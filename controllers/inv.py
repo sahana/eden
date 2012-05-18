@@ -168,7 +168,7 @@ def warehouse():
         return output
     response.s3.postp = postp
 
-    rheader = response.s3.inv_warehouse_rheader
+    rheader = s3db.inv_warehouse_rheader
 
     if "extra_data" in request.get_vars:
         csv_template = "inv_item"

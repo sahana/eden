@@ -2052,7 +2052,8 @@ class GIS(object):
                 for row in rows:
                     latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
 
-            latlons[tablename] = latlons
+            _latlons = {}
+            _latlons[tablename] = latlons
 
             if DEBUG:
                 end = datetime.datetime.now()
@@ -2063,7 +2064,7 @@ class GIS(object):
 
             return dict(marker = marker,
                         gps_marker = gps_marker,
-                        latlons = latlons,
+                        latlons = _latlons,
                         tooltips = tooltips,
                         popup_label = popup_label,
                         popup_url = popup_url,

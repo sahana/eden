@@ -80,7 +80,7 @@ from s3validators import *
 
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3HiddenWidget(StringWidget):
 
     """
@@ -103,7 +103,7 @@ class S3HiddenWidget(StringWidget):
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3DateWidget(FormWidget):
 
     """
@@ -164,7 +164,7 @@ $( '#%s' ).datepicker( 'option', 'dateFormat', '%s' );
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3DateTimeWidget(FormWidget):
 
     """
@@ -251,7 +251,7 @@ $('#{0}').after(clear_button);'''.format(selector,
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3BooleanWidget(BooleanWidget):
 
     """
@@ -316,7 +316,7 @@ $( '#%s' ).click(function() {
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3UploadWidget(UploadWidget):
 
     """
@@ -369,7 +369,7 @@ class S3UploadWidget(UploadWidget):
                           "]", br, image)
         return inp
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AutocompleteWidget(FormWidget):
 
     """
@@ -450,7 +450,7 @@ class S3AutocompleteWidget(FormWidget):
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
 
     """
@@ -541,7 +541,7 @@ class S3LocationAutocompleteWidget(FormWidget):
             source = repr(url),
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OrganisationAutocompleteWidget(FormWidget):
 
     """
@@ -587,7 +587,7 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             )
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3PersonAutocompleteWidget(FormWidget):
 
     """
@@ -751,7 +751,7 @@ $('#%s').blur(function() {
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):
 
     """
@@ -917,7 +917,7 @@ $('#%s').blur(function() {
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3TrainingAutocompleteWidget(FormWidget):
 
     """
@@ -1083,7 +1083,7 @@ $('#%(dummy_input)s').blur(function() {
                   )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationDropdownWidget(FormWidget):
     """
         Renders a dropdown for an Lx level of location hierarchy
@@ -1133,7 +1133,7 @@ class S3LocationDropdownWidget(FormWidget):
                         requires=field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationSelectorWidget(FormWidget):
 
     """
@@ -1871,7 +1871,7 @@ S3.i18n.gis_country_required = '%s';""" % (country_snippet,
                         requires=requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LatLonWidget(DoubleWidget):
     """
         Widget for latitude or longitude input, gives option to input in terms
@@ -1964,7 +1964,7 @@ S3.i18n.gis_range_error =
                         _class="gis_coord_wrap"
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3CheckboxesWidget(OptionsWidget):
 
     """
@@ -2101,7 +2101,7 @@ class S3CheckboxesWidget(OptionsWidget):
             return None
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3MultiSelectWidget(MultipleOptionsWidget):
 
     """
@@ -2146,8 +2146,7 @@ $( '#%s' ).multiselect({
                         requires = field.requires
                       )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3ACLWidget(CheckboxesWidget):
 
     """
@@ -2225,7 +2224,7 @@ class S3ACLWidget(CheckboxesWidget):
                 #raise SyntaxError, "widget cannot determine options of %s" \
                     #% field
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
@@ -2288,7 +2287,7 @@ class CheckboxesWidgetS3(OptionsWidget):
             opts[-1][0][0]["hideerror"] = False
         return TABLE(*opts, **attr)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AddPersonWidget(FormWidget):
     """
         Renders a person_id field as a Create Person form,
@@ -2445,8 +2444,7 @@ class S3AddPersonWidget(FormWidget):
                        table,
                        divider)
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AutocompleteOrAddWidget(FormWidget):
     """
         This widget searches for or adds an object. It contains:
@@ -2472,7 +2470,7 @@ class S3AutocompleteOrAddWidget(FormWidget):
             self.add_widget(field, value, **attributes)
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AddObjectWidget(FormWidget):
     """
         This widget displays an inline form loaded via AJAX on demand.
@@ -2668,8 +2666,7 @@ $(function () {
             )
         )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SearchAutocompleteWidget(FormWidget):
     """
         Uses the s3Search Module
@@ -2721,8 +2718,7 @@ class S3SearchAutocompleteWidget(FormWidget):
                     hidden_input
                     )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3TimeIntervalWidget(FormWidget):
     """
         Simple time interval widget for the scheduler task table
@@ -2791,7 +2787,7 @@ class S3TimeIntervalWidget(FormWidget):
         val = val / multiplier[1]
         return "%s %s" % (val, T(multiplier[0]))
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3InvBinWidget(FormWidget):
     """
         Widget used by S3CRUD to offer the user matching bins where
@@ -2858,6 +2854,7 @@ class S3InvBinWidget(FormWidget):
                     new_div
                     )
 
+# =============================================================================
 class S3EmbedComponentWidget(FormWidget):
     """
         Widget used by S3CRUD for link-table components with actuate="embed".
@@ -3050,7 +3047,7 @@ class S3EmbedComponentWidget(FormWidget):
                        table,
                        divider)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def s3_comments_widget(field, value):
     """
         A smaller-than-normal textarea
@@ -3063,7 +3060,7 @@ def s3_comments_widget(field, value):
                     value=value,
                     requires=field.requires)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def s3_richtext_widget(field, value):
     """
         A larger-than-normal textarea to be used by the CMS Post Body field
@@ -3082,7 +3079,7 @@ def s3_richtext_widget(field, value):
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
     js = "var ck_config = {toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};"
     s3.js_global.append(js)
-    
+
     js = "$('#%s').ckeditor(ck_config);" % id
     s3.jquery_ready.append(js)
 
@@ -3092,7 +3089,7 @@ def s3_richtext_widget(field, value):
                     value=value,
                     requires=field.requires)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SliderWidget(FormWidget):
 
     """
@@ -3136,13 +3133,13 @@ class S3SliderWidget(FormWidget):
 
         return TAG[""](sliderdiv, sliderinput)
 
-
-# -----------------------------------------------------------------------------
-class S3OptionsMatrixWidget(object):
+# =============================================================================
+class S3OptionsMatrixWidget(FormWidget):
     """
         Constructs a two dimensional array/grid of checkboxes
         with row and column headers.
     """
+
     def __init__(self, rows, cols):
         """
             @type rows: tuple
@@ -3162,7 +3159,7 @@ class S3OptionsMatrixWidget(object):
         """
             Returns the grid/matrix of checkboxes as a web2py TABLE object and
             adds references to required Javascript files.
-            
+
             @type field: Field
             @param field:
                 This gets passed in when the widget is rendered or used.
@@ -3210,9 +3207,10 @@ class S3OptionsMatrixWidget(object):
 
         current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
 
-        return TABLE(grid_header,
-                     TBODY(grid_rows),
-                     _id=self._id,
-                     _class="s3optionsmatrix")
+        # If the table has an id attribute, activate the jQuery plugin for it.
+        if "_id" in attributes:
+            current.response.s3.jquery_ready.append("$('#{0}').s3optionsmatrix();".format(attributes.get('_id')))
+
+        return TABLE(header, TBODY(grid_rows), **attributes)
 
 # END =========================================================================
