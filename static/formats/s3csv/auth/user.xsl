@@ -78,12 +78,37 @@
     <xsl:template name="resource">
         <xsl:param name="item"/>
 
+        <xsl:variable name="role">
+            <xsl:choose>
+                <xsl:when test="contains($item, '/')">
+                    <xsl:value-of select="substring-before($item, '/')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$item"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:variable name="realm">
+            <xsl:choose>
+                <xsl:when test="contains($item, '/')">
+                    <xsl:value-of select="substring-after($item, '/')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="'default'"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
         <resource name="auth_membership">
             <reference field="group_id" resource="auth_group">
                 <xsl:attribute name="uuid">
-                    <xsl:value-of select="$item"/>
+                    <xsl:value-of select="$role"/>
                 </xsl:attribute>
             </reference>
+            <xsl:if test="$realm='0'">
+                <data field="pe_id" value="0"/>
+            </xsl:if>
         </resource>
 
     </xsl:template>
