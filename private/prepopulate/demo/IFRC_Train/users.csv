@@ -1,11 +1,41 @@
-First Name,Last Name,Email,Password,Role,Organisation
-Project,Editor,project@example.com,eden,"STAFF,MAP_ADMIN",Timor-Leste Red Cross Society
-Warehouse,Editor,warehouse@example.com,eden,LOGS_EDIT,Timor-Leste Red Cross Society
-Test,User,test@example.com,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Adriana,Macedo,adriana.macedo@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Duarte,Botelheiro,duarte.botelheiro@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Beatriz,de Carvalho,beatriz.decarvalho@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Yakobus,Sereno,yakobus.serena@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Liliana,Otilia,liliana.otilia@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Eduardo,dos Santos,eduardo.dossantos@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
-Margarida,Martins,margarida.martins@redcross.tl,eden,"LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",Timor-Leste Red Cross Society
+"First Name","Last Name","Email","Password","Role","Organisation"
+"Test","User","test@example.com","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Adriana","Macedo","adriana.macedo@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Duarte","Botelheiro","duarte.botelheiro@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Beatriz","de Carvalho","beatriz.decarvalho@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Yakobus","Sereno","yakobus.serena@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Liliana","Otilia","liliana.otilia@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Eduardo","dos Santos","eduardo.dossantos@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Margarida","Martins","margarida.martins@redcross.tl","eden","inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor","Timor-Leste Red Cross Society"
+"Asset ","Reader","asset_reader@example.com","eden","asset_reader","Timor-Leste Red Cross Society"
+"Asset ","Data Entry","asset_data_entry@example.com","eden","asset_data_entry","Timor-Leste Red Cross Society"
+"Asset ","Editor","asset_editor@example.com","eden","asset_editor","Timor-Leste Red Cross Society"
+"Asset ","Super Editor","asset_super@example.com","eden","asset_super","Timor-Leste Red Cross Society"
+"Warehouse ","Reader","inv_reader@example.com","eden","inv_reader","Timor-Leste Red Cross Society"
+"Warehouse ","Data Entry","inv_data_entry@example.com","eden","inv_data_entry","Timor-Leste Red Cross Society"
+"Warehouse ","Editor","inv_editor@example.com","eden","inv_editor","Timor-Leste Red Cross Society"
+"Warehouse ","Super Editor","inv_super@example.com","eden","inv_super","Timor-Leste Red Cross Society"
+"Incident ","Reader","irs_reader@example.com","eden","irs_reader","Timor-Leste Red Cross Society"
+"Incident ","Data Entry","irs_data_entry@example.com","eden","irs_data_entry","Timor-Leste Red Cross Society"
+"Incident ","Editor","irs_editor@example.com","eden","irs_editor","Timor-Leste Red Cross Society"
+"Incident ","Super Editor","irs_super@example.com","eden","irs_super","Timor-Leste Red Cross Society"
+"Members ","Reader","member_reader@example.com","eden","member_reader","Timor-Leste Red Cross Society"
+"Members ","Data Entry","member_data_entry@example.com","eden","member_data_entry","Timor-Leste Red Cross Society"
+"Members ","Editor","member_editor@example.com","eden","member_editor","Timor-Leste Red Cross Society"
+"Members ","Super Editor","member_super@example.com","eden","member_super","Timor-Leste Red Cross Society"
+"Project ","Reader","project_reader@example.com","eden","project_reader","Timor-Leste Red Cross Society"
+"Project ","Data Entry","project_data_entry@example.com","eden","project_data_entry","Timor-Leste Red Cross Society"
+"Project ","Editor","project_editor@example.com","eden","project_editor","Timor-Leste Red Cross Society"
+"Project ","Super Editor","project_super@example.com","eden","project_super","Timor-Leste Red Cross Society"
+"Staff ","Reader","staff_reader@example.com","eden","staff_reader","Timor-Leste Red Cross Society"
+"Staff ","Data Entry","staff_data_entry@example.com","eden","staff_data_entry","Timor-Leste Red Cross Society"
+"Staff ","Editor","staff_editor@example.com","eden","staff_editor","Timor-Leste Red Cross Society"
+"Staff ","Super Editor","staff_super@example.com","eden","staff_super","Timor-Leste Red Cross Society"
+"Volunteer ","Reader","vol_reader@example.com","eden","vol_reader","Timor-Leste Red Cross Society"
+"Volunteer ","Data Entry","vol_data_entry@example.com","eden","vol_data_entry","Timor-Leste Red Cross Society"
+"Volunteer ","Editor","vol_editor@example.com","eden","vol_editor","Timor-Leste Red Cross Society"
+"Volunteer ","Super Editor","vol_super@example.com","eden","vol_super","Timor-Leste Red Cross Society"
+"Assessment ","Reader","survey_reader@example.com","eden","survey_reader","Timor-Leste Red Cross Society"
+"Assessment ","Data Entry","survey_data_entry@example.com","eden","survey_data_entry","Timor-Leste Red Cross Society"
+"Assessment ","Editor","survey_editor@example.com","eden","survey_editor","Timor-Leste Red Cross Society"
+"Assessment ","Super Editor","survey_super@example.com","eden","survey_super","Timor-Leste Red Cross Society"

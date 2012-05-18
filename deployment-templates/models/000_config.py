@@ -98,12 +98,7 @@ deployment_settings.base.migrate = True
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-deployment_settings.base.prepopulate = 1
-# NOTE: the web UI will not be accessible while the DB is empty,
-# instead run:
-#   python web2py.py -N -S eden -M
-# to create the db structure, then exit and re-import the data.
-
+deployment_settings.base.prepopulate = ["RGIMS"]
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
@@ -183,27 +178,13 @@ deployment_settings.L10n.utc_offset = "UTC +0000"
 #deployment_settings.L10n.date_format = T("%m-%d-%Y")
 #deployment_settings.L10n.time_format = T("%H:%M:%S")
 #deployment_settings.L10n.datetime_format = T("%m-%d-%Y %H:%M:%S")
-# Religions used in Person Registry
-# @ToDo: find a better code
-# http://eden.sahanafoundation.org/ticket/594
-deployment_settings.L10n.religions = {
-    "none":T("none"),
-    "christian":T("Christian"),
-    "muslim":T("Muslim"),
-	"jewish":T("Jewish"),
-    "buddhist":T("Buddhist"),
-    "hindu":T("Hindu"),
-    "bahai":T("Bahai"),
-    "other":T("other")
-}
-# Make last name in person/user records mandatory
-#deployment_settings.L10n.mandatory_lastname = True
-
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 deployment_settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 #deployment_settings.L10n.thousands_separator = ","
+# Make last name in person/user records mandatory
+#deployment_settings.L10n.mandatory_lastname = True
 
 # Finance settings
 #deployment_settings.fin.currencies = {
@@ -292,9 +273,11 @@ deployment_settings.gis.display_L0 = False
 # 3: Apply Controller ACLs
 # 4: Apply both Controller & Function ACLs
 # 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table & Organisation ACLs
+# 6: Apply Controller, Function, Table ACLs and Entity Realm
+# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#deployment_settings.security.policy = 6 # Organisation-ACLs
+#deployment_settings.security.policy = 7 # Organisation-ACLs
 #acl = deployment_settings.aaa.acl
 #deployment_settings.aaa.default_uacl =  acl.READ   # User ACL
 #deployment_settings.aaa.default_oacl =  acl.CREATE | acl.READ | acl.UPDATE # Owner ACL
@@ -347,6 +330,9 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.req.multiple_req_items = False
 #deployment_settings.req.use_commit = False
 #deployment_settings.req.use_req_number = False
+#deployment_settings.req.generate_req_number = False
+#deployment_settings.req.req_form_name = "Request Issue Form"
+#deployment_settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
@@ -395,13 +381,26 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.inv.collapse_tabs = False
 # Use the term 'Order' instead of 'Shipment'
 #deployment_settings.inv.shipment_name = "order"
+#deployment_settings.inv.send_form_name = "Tally Out Sheet"
+#deployment_settings.inv.send_short_name = "TO"
+#deployment_settings.inv.send_ref_field_name = "Tally Out Number"
+#deployment_settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
+#deployment_settings.inv.recv_shortname = "ARDR"
+#deployment_settings.inv.shipment_types = {
+#         0: T("-"),
+#         1: T("Other Warehouse"),
+#         2: T("Donation"),
+#         3: T("Foreign Donation"),
+#         4: T("Local Purchases"),
+#         5: T("Confiscated Goods from Bureau Of Customs")
+#    }
 
 # Supply
 #deployment_settings.supply.use_alt_name = False
 # Do not edit after deployment
 #deployment_settings.supply.catalog_default = T("Other Items")
 
-# Organsiation Management
+# Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #deployment_settings.org.site_code_len = 3
 
@@ -420,6 +419,15 @@ deployment_settings.gis.display_L0 = False
 #deployment_settings.project.drr = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
+# Uncomment this to customise
+#deployment_settings.project.organisation_roles = {
+#    1: T("Lead Implementer"), # T("Host National Society")
+#    2: T("Partner"), # T("Partner National Society")
+#    3: T("Donor"),
+#    4: T("Customer"), # T("Beneficiary")?
+#    5: T("Super"), # T("Beneficiary")?
+#}
+#deployment_settings.project.organisation_lead_role = 1
 
 # Save Search Widget
 #deployment_settings.save_search.widget = False
@@ -464,14 +472,14 @@ deployment_settings.modules = OrderedDict([
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-     # Uncomment to enable internal support requests
-     #("support", Storage(
-     #        name_nice = T("Support"),
-     #        #description = "Support Requests",
-     #        restricted = True,
-     #        module_type = None  # This item is handled separately for the menu
-     #    )),
-     ("gis", Storage(
+    # Uncomment to enable internal support requests
+    #("support", Storage(
+    #        name_nice = T("Support"),
+    #        #description = "Support Requests",
+    #        restricted = True,
+    #        module_type = None  # This item is handled separately for the menu
+    #    )),
+    ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,

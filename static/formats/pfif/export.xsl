@@ -7,8 +7,6 @@
 
          PFIF 1.2 Export Templates for Sahana-Eden
 
-         Version 0.3 / 2011-05-09 / by nursix
-
          Copyright (c) 2010 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
@@ -103,15 +101,30 @@
                 </pfif:date_of_birth>
             </xsl:if>
 
-            <pfif:photo_url>
-                <xsl:value-of select="./data[@field='picture']/@url"/>
-            </pfif:photo_url>
+            <!-- Image -->
+            <xsl:apply-templates select="./resource[@name='pr_image'][1]"/>
 
-            <!-- other Elements -->
+            <!-- Address -->
             <xsl:apply-templates select="./resource[@name='pr_address' and
                                          ./data[@field='type']/@value=1][1]" />
+
+            <!-- Note -->
             <xsl:apply-templates select="./resource[@name='pr_note']"/>
+
         </pfif:person>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='pr_image']">
+        <xsl:variable name="url">
+            <xsl:value-of select="substring-before(substring-after(./data[@field='url']/@value, '&quot;'), '&quot;')"/>
+        </xsl:variable>
+
+        <xsl:if test="$url">
+            <pfif:photo_url>
+                <xsl:value-of select="$url"/>
+            </pfif:photo_url>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

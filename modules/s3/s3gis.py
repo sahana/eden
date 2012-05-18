@@ -2052,7 +2052,8 @@ class GIS(object):
                 for row in rows:
                     latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
 
-            latlons[tablename] = latlons
+            _latlons = {}
+            _latlons[tablename] = latlons
 
             if DEBUG:
                 end = datetime.datetime.now()
@@ -2063,7 +2064,7 @@ class GIS(object):
 
             return dict(marker = marker,
                         gps_marker = gps_marker,
-                        latlons = latlons,
+                        latlons = _latlons,
                         tooltips = tooltips,
                         popup_label = popup_label,
                         popup_url = popup_url,
@@ -3661,12 +3662,13 @@ class GIS(object):
         # HTML
         ######
         html = DIV(_id="map_wrapper")
+        html_append = html.append
 
         # Map (Embedded not Window)
-        html.append(DIV(_id="map_panel"))
+        html_append(DIV(_id="map_panel"))
 
         # Status Reports
-        html.append(TABLE(TR(
+        html_append(TABLE(TR(
             #TD(
             #    # Somewhere to report details of OSM File Features via on_feature_hover()
             #    DIV(_id="status_osm"),
@@ -3685,15 +3687,25 @@ class GIS(object):
         # Scripts
         #########
 
-        def add_javascript(script):
+        # JS Loader
+        html_append(SCRIPT(_type="text/javascript",
+                           _src=URL(c="static", f="scripts/S3/yepnope.1.5.4-min.js")))
+
+        scripts = []
+        scripts_append = scripts.append
+        ready = ""
+        def add_javascript(script, ready=""):
             if type(script) == SCRIPT:
-                html.append(script)
+                if ready:
+                    ready = """%s
+%s""" % (ready, script)
+                else:
+                    ready = script
             elif script.startswith("http"):
-                html.append(SCRIPT(_type="text/javascript",
-                                   _src=script))
+                scripts_append(script)
             else:
-                html.append(SCRIPT(_type="text/javascript",
-                                   _src=URL(c="static", f=script)))
+                script = URL(c="static", f=script)
+                scripts_append(script)
 
         debug = session.s3.debug
         if debug:
@@ -3716,6 +3728,7 @@ class GIS(object):
             if mouse_position == "mgrs":
                 add_javascript("scripts/gis/usng2.js")
                 add_javascript("scripts/gis/MP.js")
+            pass
         else:
             if projection not in (900913, 4326):
                 add_javascript("scripts/gis/proj4js/lib/proj4js-compressed.js")
@@ -3724,10 +3737,6 @@ class GIS(object):
             add_javascript("scripts/gis/GeoExt.js")
             if mouse_position == "mgrs":
                 add_javascript("scripts/gis/MGRS.min.js")
-
-        if print_tool:
-            url = "%sinfo.json?var=printCapabilities" % print_tool["url"]
-            add_javascript(url)
 
         #######
         # Tools
@@ -3832,7 +3841,6 @@ class GIS(object):
         # If we do come back to it, then it should be moved to static
         if print_tool:
             url = print_tool["url"]
-            url + "" # check url can be concatenated with strings
             if "title" in print_tool:
                 mapTitle = unicode(print_tool["mapTitle"])
             else:
@@ -3845,7 +3853,7 @@ class GIS(object):
                 creator = unicode(auth.user.email)
             else:
                 creator = ""
-            print_tool1 = u"".join(("""
+            script = u"".join(("""
         if (typeof(printCapabilities) != 'undefined') {
             // info.json from script headers OK
             printProvider = new GeoExt.data.PrintProvider({
@@ -4011,8 +4019,10 @@ class GIS(object):
             });
         }
         """))
-        else:
-            print_tool1 = ""
+            ready = """%s
+%s""" % (ready, script)
+            script = "%sinfo.json?var=printCapabilities" % url
+            scripts_append(script)
 
         ##########
         # Settings
@@ -4045,27 +4055,13 @@ class GIS(object):
         if bbox:
             # Calculate from Bounds
             center = """S3.gis.lat, S3.gis.lon;
-S3.gis.bottom_left = new OpenLayers.LonLat(%f, %f);
-S3.gis.top_right = new OpenLayers.LonLat(%f, %f);
+S3.gis.bottom_left = [%f, %f];
+S3.gis.top_right = [%f, %f];
 """ % (bbox["min_lon"], bbox["min_lat"], bbox["max_lon"], bbox["max_lat"])
         else:
             center = """S3.gis.lat = %s;
 S3.gis.lon = %s;
 """ % (lat, lon)
-
-        # Still being used by legacy Feature Layers
-        # // Needs to be uniquely instantiated
-        # // Define StyleMap, Using 'style_cluster' rule for 'default' styling intent
-        cluster_style = """
-        var style_cluster = new OpenLayers.Style(s3_gis_cluster_style(1), S3.gis.cluster_options);
-        var featureClusterStyleMap = new OpenLayers.StyleMap({
-                                          'default': style_cluster,
-                                          'select': {
-                                              fillColor: '#ffdc33',
-                                              strokeColor: '#ff9933'
-                                          }
-        });
-        """
 
         ########
         # Layers
@@ -4321,9 +4317,14 @@ S3.gis.layers_feature_queries[%i] = {
                     # Add to the output JS
                     layers_config = "".join((layers_config,
                                              layer_type_js))
-                    if layer.scripts:
-                        for script in layer.scripts:
-                            add_javascript(script)
+                    for script in layer.scripts:
+                        if "google.com" in script:
+                            # Uses document.write, so can't load async
+                            script = SCRIPT(_type="text/javascript",
+                                            _src=script)
+                            html_append(script)
+                        else:
+                            add_javascript(script, ready=ready)
             except Exception, exception:
                 error = "%s not shown: %s" % (LayerType.__name__,
                                                            exception)
@@ -4348,7 +4349,7 @@ S3.i18n.gis_feature_info = '%s';
 
         # Configure settings to pass through to Static script
         # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
-        html.append(SCRIPT("".join((
+        config_script = "".join((
             authenticated,
             "S3.public_url = '%s';\n" % public_url,  # Needed just for GoogleEarthPanel
             config_id,
@@ -4366,7 +4367,7 @@ S3.i18n.gis_feature_info = '%s';
             "S3.gis.projection = '%i';\n" % projection,
             "S3.gis.units = '%s';\n" % units,
             "S3.gis.maxResolution = %f;\n" % maxResolution,
-            "S3.gis.maxExtent = new OpenLayers.Bounds(%s);\n" % maxExtent,
+            "S3.gis.maxExtent = [%s];\n" % maxExtent,
             "S3.gis.numZoomLevels = %i;\n" % numZoomLevels,
             "S3.gis.max_w = %i;\n" % settings.get_gis_marker_max_width(),
             "S3.gis.max_h = %i;\n" % settings.get_gis_marker_max_height(),
@@ -4415,18 +4416,16 @@ S3.i18n.gis_feature_info = '%s';
             "S3.i18n.gis_potlatch = '%s';\n" % T("Edit the OpenStreetMap data for this area"),
             # For S3LocationSelectorWidget
             "S3.i18n.gis_current_location = '%s';\n" % T("Current Location"),
-        ))))
+        ))
+        html_append(SCRIPT(config_script))
 
         # Static Script
         if debug:
-            add_javascript("scripts/S3/s3.gis.js")
             add_javascript("scripts/S3/s3.gis.layers.js")
             add_javascript("scripts/S3/s3.gis.controls.js")
+            add_javascript("scripts/S3/s3.gis.js")
         else:
             add_javascript("scripts/S3/s3.gis.min.js")
-
-        # Dynamic Script (stuff which should, as far as possible, be moved to static)
-        html.append(SCRIPT(print_tool1))
 
         # Set up map plugins
         # This, and any code it generates is done last
@@ -4435,8 +4434,24 @@ S3.i18n.gis_feature_info = '%s';
             for plugin in plugins:
                 plugin.extend_gis_map(
                     add_javascript,
-                    html.append # for adding in dynamic configuration, etc.
+                    html_append # for adding in dynamic configuration, etc.
                 )
+
+        script = "','".join(scripts)
+        if ready:
+            ready = """%s
+S3.gis.show_map();""" % ready
+        else:
+            ready = "S3.gis.show_map();"
+        # Tell YepNope to load all our scripts asynchronously & then run the callback
+        script = """yepnope({
+    load: ['%s'],
+    complete: function() {
+        %s
+    }
+});""" % (script, ready)
+
+        html_append(SCRIPT(script))
 
         return html
 
@@ -5084,7 +5099,8 @@ class GoogleLayer(Layer):
 
             if "MapMaker" in output or "MapMakerHybrid" in output:
                 # Need to use v2 API
-                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349
+                # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
+                # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
                 add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
             else:
                 # v3 API
@@ -5302,14 +5318,14 @@ class OSMLayer(Layer):
     tablename = "gis_layer_openstreetmap"
     js_array = "S3.gis.layers_osm"
 
-    # def __init__(self):
-        # if Projection().epsg != 900913:
-            # raise Exception("Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection\n")
-        # super(OSMLayer, self).__init__()
-
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
+        
+            if Projection().epsg != 900913:
+                # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
+                return {}
+            
             output = {
                     "id": self.layer_id,
                     "name": self.safe_name,

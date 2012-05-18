@@ -8,6 +8,9 @@
 var map;
 // @ToDo: move this to S3.gis when restoring this
 //var printProvider;
+S3.gis.layers_all = new Array();
+S3.gis.format_geojson = new OpenLayers.Format.GeoJSON();
+S3.gis.dirs = new Array();
 // Images
 S3.gis.ajax_loader = S3.Ap.concat('/static/img/ajax-loader.gif');
 S3.gis.marker_url = S3.Ap.concat('/static/img/markers/');
@@ -28,7 +31,7 @@ S3.gis.options = {
     //paddingForPopups: new OpenLayers.Bounds(50, 10, 200, 300),
     units: S3.gis.units,
     maxResolution: S3.gis.maxResolution,
-    maxExtent: S3.gis.maxExtent,
+    maxExtent: new OpenLayers.Bounds(S3.gis.maxExtent[0], S3.gis.maxExtent[1], S3.gis.maxExtent[2], S3.gis.maxExtent[3]),
     numZoomLevels: S3.gis.numZoomLevels
 };
 // Default values if not set by the layer
@@ -39,48 +42,56 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 // Counter to know whether there are layers still loading
 S3.gis.layers_loading = 0;
 
-/* Configure the Viewport */
-function s3_gis_setCenter(bottom_left, top_right) {
-    bottom_left.transform(S3.gis.proj4326, S3.gis.projection_current);
-    var left = bottom_left.lon;
-    var bottom = bottom_left.lat;
-    top_right.transform(S3.gis.proj4326, S3.gis.projection_current);
-    var right = top_right.lon;
-    var top = top_right.lat;
-    S3.gis.bounds = OpenLayers.Bounds.fromArray([left, bottom, right, top]);
-    S3.gis.center = S3.gis.bounds.getCenterLonLat();
-}
-
-if (S3.gis.lat && S3.gis.lon) {
-    S3.gis.center = new OpenLayers.LonLat(S3.gis.lon, S3.gis.lat);
-    S3.gis.center.transform(S3.gis.proj4326, S3.gis.projection_current);
-} else if (S3.gis.bottom_left && S3.gis.top_right) {
-    s3_gis_setCenter(S3.gis.bottom_left, S3.gis.top_right);
-}
-
 // Register Plugins
 S3.gis.plugins = [];
 function registerPlugin(plugin) {
     S3.gis.plugins.push(plugin);
 }
 
-// Main Ext function
-Ext.onReady(function() {
-    // Build the OpenLayers map
-    addMap();
-
-    // Add the GeoExt UI
-    addMapUI();
-
-    // If we were instantiated with bounds, use these now
-    if ( S3.gis.bounds ) {
-        map.zoomToExtent(S3.gis.bounds);
+/* Main Start Function
+   - called by yepnope callback */
+//Ext.onReady(function() {
+//    S3.gis.show_map();
+//}
+S3.gis.show_map = function() {
+    // Configure the Viewport
+    if (S3.gis.lat && S3.gis.lon) {
+        S3.gis.center = new OpenLayers.LonLat(S3.gis.lon, S3.gis.lat);
+        S3.gis.center.transform(S3.gis.proj4326, S3.gis.projection_current);
+    } else if (S3.gis.bottom_left && S3.gis.top_right) {
+        s3_gis_setCenter(S3.gis.bottom_left, S3.gis.top_right);
     }
 
-    // Toolbar Tooltips
-    Ext.QuickTips.init();
-});
+    //Ext.onReady(function() {
+        // Build the OpenLayers map
+        addMap();
 
+        // Add the GeoExt UI
+        addMapUI();
+
+        // If we were instantiated with bounds, use these now
+        if ( S3.gis.bounds ) {
+            map.zoomToExtent(S3.gis.bounds);
+        }
+
+        // Toolbar Tooltips
+        Ext.QuickTips.init();
+    //}
+}
+
+// Configure the Viewport
+function s3_gis_setCenter(bottom_left, top_right) {
+    bottom_left = new OpenLayers.LonLat(bottom_left[0], bottom_left[1]);
+    bottom_left.transform(S3.gis.proj4326, S3.gis.projection_current);
+    var left = bottom_left.lon;
+    var bottom = bottom_left.lat;
+    top_right = new OpenLayers.LonLat(top_right[0], top_right[1]);
+    top_right.transform(S3.gis.proj4326, S3.gis.projection_current);
+    var right = top_right.lon;
+    var top = top_right.lat;
+    S3.gis.bounds = OpenLayers.Bounds.fromArray([left, bottom, right, top]);
+    S3.gis.center = S3.gis.bounds.getCenterLonLat();
+}
 
 // Build the OpenLayers map
 function addMap() {

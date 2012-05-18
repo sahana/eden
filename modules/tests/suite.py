@@ -11,11 +11,7 @@ import unittest
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-<<<<<<< HEAD
 import unittest, re, time
-=======
-
->>>>>>> 8933169430b6badd4a2c6515d3aeeb83d8e67120
 from gluon import current
 from gluon.storage import Storage
 import sys
@@ -46,50 +42,32 @@ else:
 
 if test:
     # Run specified Test after logging in
-<<<<<<< HEAD
-    login(account="admin")
-    globals()[test]()
-    
-else:
-=======
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    login(account="admin")
+#    login(account="admin")
     globals()[test]()
 
 else:
     # Run all Tests
->>>>>>> 8933169430b6badd4a2c6515d3aeeb83d8e67120
+
     # Log into admin testing account
     login(account="admin")
     
-    # List of individual automated test scripts which Suite will run one by one:
-    # Organization Management (ORG) tests
-    org001() # Setup Organizations
-    org002() # Setup Offices
-    
-    # Human Resources Management (HRM) tests
-    hrm001() # Setup Staff
-    hrm002() # Setup New Volunteer
-    hrm003() # Setup Training Course
-    hrm004() # Setup Training Event
-    hrm005() # Assign staff to Organization
-    hrm006() # Assign Staff to office
-    hrm007() # Assign staff to warehouse
-    
-    # Inventory management (INV) tests
-    inv001() # Setup Warehouses     // needs more refining
-    inv002() # Setup Items        // needs more refining
-    inv003() # Setup Catalogues // needs more refining
-    inv004() # Setup Categories // needs more refining
-    inv005() # Create Requests // needs more refining
-    inv006() # Match Requests // needs more refining
-    
-    # Assets management (ASSET) tests
-    asset001() # Set up Assets
-    
+    suite = unittest.TestLoader().loadTestsFromTestCase(org_create_organization)  # run test org_create_organization.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(org_create_office)) # run test org_create_office.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_staff)) # run test hrm_setup_staff.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_volunteer)) # run test hrm_setup_volunteer.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingcourse)) # run test hrm_setup_trainingcourse.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingevent)) # run test hrm_setup_trainingevent.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # run test hrm_assign_organizationstaff.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # run test hrm_assign_officestaff.py
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # run test hrm_assign_warehousestaff.py
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+  
+
     # Log out of testing account
-    logout() #
-    
+    logout() 
+   
     # Cleanup 
     browser.close()

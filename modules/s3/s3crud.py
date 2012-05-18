@@ -1969,6 +1969,13 @@ class S3CRUD(S3Method):
         vars = self.request.get_vars
         resource = self.resource
 
+        if resource.linked is not None:
+            skip = [resource.linked.tablename]
+        else:
+            skip = []
+        parent = resource.parent
+        fkey = resource.fkey
+
         context = str(vars.sSearch).lower()
         columns = int(vars.iColumns)
 
@@ -1985,23 +1992,25 @@ class S3CRUD(S3Method):
             if fieldtype.startswith("reference") and \
                hasattr(field, "sortby") and field.sortby:
                 tn = fieldtype[10:]
-                try:
+                if parent is not None and \
+                   parent.tablename == tn and field.name != fkey:
+                    alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                    ktable = db[tn].with_alias(alias)
+                    ktable._id = ktable[ktable._id.name]
+                    tn = alias
+                else:
+                    ktable = db[tn]
+                if tn not in skip:
+                    q = (field == ktable._id)
                     join = [j for j in left if j.first._tablename == tn]
-                except:
-                    # Old DAL version?
-                    join = [j for j in left if j.table._tablename == tn]
-                if not join:
-                    left.append(db[tn].on(field == db[tn].id))
-                else:
-                    try:
-                        join[0].second = (join[0].second) | (field == db[tn].id)
-                    except:
-                        join[0].query = (join[0].query) | (field == db[tn].id)
+                    if not join:
+                        left.append(ktable.on(q))
                 if isinstance(field.sortby, (list, tuple)):
-                    flist.extend([db[tn][f] for f in field.sortby])
+                    flist.extend([ktable[f] for f in field.sortby
+                                            if f in ktable.fields])
                 else:
-                    if field.sortby in db[tn]:
-                        flist.append(db[tn][field.sortby])
+                    if field.sortby in ktable.fields:
+                        flist.append(ktable[field.sortby])
             else:
                 flist.append(field)
 
@@ -2068,6 +2077,8 @@ class S3CRUD(S3Method):
             skip = [resource.linked.tablename]
         else:
             skip = []
+        parent = resource.parent
+        fkey = resource.fkey
 
         iSortingCols = int(vars["iSortingCols"])
 
@@ -2081,37 +2092,34 @@ class S3CRUD(S3Method):
         columns = [lfields[int(vars["iSortCol_%s" % str(i)])].field
                    for i in xrange(iSortingCols)]
         for i in xrange(len(columns)):
-            c = columns[i]
-            if not c:
+            field = columns[i]
+            if not field:
                 continue
-            fieldtype = str(c.type)
+            fieldtype = str(field.type)
             if fieldtype.startswith("reference") and \
-               hasattr(c, "sortby") and c.sortby:
+               hasattr(field, "sortby") and field.sortby:
                 tn = fieldtype[10:]
+                if parent is not None and \
+                   parent.tablename ==tn and field.name != fkey:
+                    alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                    ktable = db[tn].with_alias(alias)
+                    ktable._id = ktable[ktable._id.name]
+                    tn = alias
+                else:
+                    ktable = db[tn]
                 if tn not in skip:
-                    try:
-                        join = [j for j in left if j.first._tablename == tn]
-                    except:
-                        # Old DAL version?
-                        join = [j for j in left if j.table._tablename == tn]
+                    q = (field == ktable._id)
+                    join = [j for j in left if j.first._tablename == tn]
                     if not join:
-                        left.append(db[tn].on(c == db[tn].id))
-                    else:
-                        try:
-                            join[0].query = (join[0].second) | \
-                                            (c == db[tn].id)
-                        except:
-                            # Old DAL version?
-                            join[0].query = (join[0].query) | \
-                                            (c == db[tn].id)
-                if not isinstance(c.sortby, (list, tuple)):
-                    orderby.append("%s.%s%s" % (tn, c.sortby, direction(i)))
+                        left.append(ktable.on(q))
+                if not isinstance(field.sortby, (list, tuple)):
+                    orderby.append("%s.%s%s" % (tn, field.sortby, direction(i)))
                 else:
                     orderby.append(", ".join(["%s.%s%s" %
                                               (tn, fn, direction(i))
-                                              for fn in c.sortby]))
+                                              for fn in field.sortby]))
             else:
-                orderby.append("%s%s" % (c, direction(i)))
+                orderby.append("%s%s" % (field, direction(i)))
 
         return ", ".join(orderby)
 

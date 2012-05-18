@@ -15,7 +15,7 @@ S3.i18n.minute = '{{=T("Minute")}}';
 S3.i18n.delete_confirmation = '{{=T("Are you sure you want to delete this record?")}}';
 S3.i18n.close_map = '{{=T("Close map")}}';
 S3.i18n.no_match = '{{=T("No match")}}';
-S3.i18n.in_inv = '{{=T("in Inv.")}}';
+S3.i18n.in_inv = '{{=T("in Stock")}}';
 S3.i18n.no_packs = '{{=T("No Packs for Item")}}';
 S3.i18n.input_number = '{{=T("Please enter a number only")}}';
 S3.i18n.ac_widget_more_results = '{{=T("Greater than 10 matches. Please refine search further")}}';

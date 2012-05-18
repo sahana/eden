@@ -14,15 +14,15 @@
     {{if response.s3.dataTableSelectable:}}
         S3.dataTables.Selectable = true;
     {{pass}}
-    
+
     {{if response.s3.dataTableSelectAll:}}
         S3.dataTables.SelectAll = true;
     {{pass}}
-    
+
     {{if response.s3.dataTableSelectAllValid:}}
         S3.dataTables.ShowAllValidButton = true;
     {{pass}}
-    
+
     {{if response.s3.dataTablePostMethod:}}
         S3.dataTables.UsePostMethod = true;
     {{else:}}
@@ -61,7 +61,7 @@
     {{if response.s3.dataTableID:}}
         S3.dataTables.id = '{{=response.s3.dataTableID}}';
     {{pass}}
-    
+
     {{if response.s3.dataTable_iDisplayLength:}}
         S3.dataTables.iDisplayLength = {{=response.s3.dataTable_iDisplayLength}};
     {{pass}}
@@ -100,6 +100,10 @@
             S3.dataTables.aaSorting = {{=XML(sortby)}};
         {{pass}}
     {{except:}}
+    {{pass}}
+
+    {{if response.s3.dataTable_group:}}
+        S3.dataTables.group = {{=XML(response.s3.dataTable_group)}}
     {{pass}}
 
     {{if response.s3.hideCol is not None:}}

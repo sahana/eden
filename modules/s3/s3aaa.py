@@ -33,6 +33,7 @@ __all__ = ["AuthS3",
            "S3Permission",
            "S3Audit",
            "S3RoleManager",
+           "S3RoleMatrix",
            "FaceBookAccount",
            "GooglePlusAccount",
           ]
@@ -40,6 +41,7 @@ __all__ = ["AuthS3",
 import datetime
 import re
 import time
+import uuid
 import urllib
 from urllib import urlencode
 import urllib2
@@ -145,7 +147,8 @@ class AuthS3(Auth):
                               AUTHENTICATED = "AUTHENTICATED",
                               ANONYMOUS = "ANONYMOUS",
                               EDITOR = "EDITOR",
-                              MAP_ADMIN = "MAP_ADMIN")
+                              MAP_ADMIN = "MAP_ADMIN",
+                              ORG_ADMIN = "ORG_ADMIN")
 
     def __init__(self):
 
@@ -412,7 +415,7 @@ class AuthS3(Auth):
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6) and \
+        if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
            not settings.table_permission:
             # Permissions table (group<->permission)
             # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
@@ -1704,7 +1707,8 @@ class AuthS3(Auth):
             # Get all current auth_memberships of the user
             mtable = self.settings.table_membership
             query = (mtable.deleted != True) & \
-                    (mtable.user_id == user_id)
+                    (mtable.user_id == user_id) & \
+                    (mtable.group_id != None)
             rows = db(query).select(mtable.group_id, mtable.pe_id)
 
             # Add all group_ids to session.s3.roles
@@ -1835,6 +1839,8 @@ class AuthS3(Auth):
                                owner in delegations[group_id]:
                                 # Duplicate
                                 continue
+                            if partner not in pmap:
+                                continue
 
                             # Find the realm
                             if group_id not in delegations:
@@ -1957,11 +1963,16 @@ class AuthS3(Auth):
 
             @param user_id: the record ID of the user account
             @param group_id: the record ID(s)/UID(s) of the group
-            @param for_pe: the PE-ID to restrict the group membership
-                           to (will be ignored for system roles)
+            @param for_pe: the person entity (pe_id) to restrict the group
+                           membership to, possible values:
 
-            @note: strings or lists of strings are assumed to be
-                   group UIDs
+                           - None: use default realm (entities the user is
+                             affiliated with)
+                           - 0: site-wide realm (no entity-restriction)
+                           - X: restrict to records owned by entity X
+
+            @note: strings are assumed to be group UIDs
+            @note: for_pe will be ignored for ADMIN, ANONYMOUS and AUTHENTICATED
         """
 
         db = current.db
@@ -1972,19 +1983,28 @@ class AuthS3(Auth):
 
         # Find the group IDs
         query = None
+        uuids = None
         if isinstance(group_id, (list, tuple)):
             if isinstance(group_id[0], str):
-                query &= (gtable.uuid.belongs(group_id))
+                uuids = group_id
+                query = (gtable.uuid.belongs(group_id))
             else:
                 group_ids = group_id
-        elif isinstance(group_id, str):
-            query &= (gtable.uuid == group_id)
+        elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
+            query = (gtable.uuid == group_id)
         else:
             group_ids = [group_id]
         if query is not None:
             query = (gtable.deleted != True) & query
-            groups = db(query).select(gtable.id)
+            groups = db(query).select(gtable.id, gtable.uuid)
             group_ids = [g.id for g in groups]
+            missing = [uuid for uuid in uuids
+                       if uuid not in [g.uuid for g in groups]]
+            for m in missing:
+                group_id = self.s3_create_role(m, uid=m)
+                if group_id:
+                    group_ids.append(group_id)
 
         # Find the assigned groups
         query = (mtable.deleted != True) & \
@@ -1995,12 +2015,15 @@ class AuthS3(Auth):
         assigned_groups = [g.group_id for g in assigned]
 
         # Add missing memberships
-        system_roles = map(str, self.get_system_roles().values())
+        sr = self.get_system_roles()
+        unrestrictable = [str(sr.ADMIN),
+                          str(sr.ANONYMOUS),
+                          str(sr.AUTHENTICATED)]
         for group_id in group_ids:
             if group_id not in assigned_groups:
                 membership = {"user_id": user_id,
                               "group_id": group_id}
-                if for_pe is not None and str(group_id) not in system_roles:
+                if for_pe is not None and str(group_id) not in unrestrictable:
                     membership["pe_id"] = for_pe
                 membership_id = mtable.insert(**membership)
 
@@ -2017,13 +2040,15 @@ class AuthS3(Auth):
 
             @param user_id: the record ID of the user account
             @param group_id: the record ID(s)/UID(s) of the role
-            @param for_pe: only remove the group membership that is
-                           restricted to this PE (will be ignored for
-                           system roles), if an empty list is specified,
-                           all memberships in this group will be removed
+            @param for_pe: only remove the group membership for this
+                           realm, possible values:
 
-            @note: strings or lists of strings are assumed to be
-                   role UIDs
+                           - None: only remove for the default realm
+                           - 0: only remove for the site-wide realm
+                           - X: only remove for entity X
+                           - []: remove for any realms
+
+            @note: strings are assumed to be role UIDs
         """
 
         if not group_id:
@@ -2039,11 +2064,11 @@ class AuthS3(Auth):
         query = None
         if isinstance(group_id, (list, tuple)):
             if isinstance(group_id[0], str):
-                query &= (gtable.uuid.belongs(group_id))
+                query = (gtable.uuid.belongs(group_id))
             else:
                 group_ids = group_id
         elif isinstance(group_id, str):
-            query &= (gtable.uuid == group_id)
+            query = (gtable.uuid == group_id)
         else:
             group_ids = [group_id]
         if query is not None:
@@ -2056,10 +2081,13 @@ class AuthS3(Auth):
                 (mtable.user_id == user_id) & \
                 (mtable.group_id.belongs(group_ids))
 
-        system_roles = map(str, self.get_system_roles().values())
+        sr = self.get_system_roles()
+        unrestrictable = [str(sr.ADMIN),
+                          str(sr.ANONYMOUS),
+                          str(sr.AUTHENTICATED)]
         if for_pe != []:
             query &= ((mtable.pe_id == for_pe) | \
-                      (mtable.group_id.belongs(system_roles)))
+                      (mtable.group_id.belongs(unrestrictable)))
         memberships = db(query).select()
 
         # Archive the memberships
@@ -2082,11 +2110,40 @@ class AuthS3(Auth):
         return
 
     # -------------------------------------------------------------------------
+    def s3_get_roles(self, user_id, for_pe=[]):
+        """
+            Lookup all roles which have been assigned to user for an entity
+
+            @param user_id: the user_id
+            @param for_pe: the entity (pe_id) or list of entities
+        """
+        mtable = self.settings.table_membership
+
+        if not user_id:
+            return []
+
+        query = (mtable.deleted != True) & \
+                (mtable.user_id == user_id)
+        if isinstance(for_pe, (list, tuple)):
+            if len(for_pe):
+                query &= (mtable.pe_id.belongs(for_pe))
+        else:
+            query &= (mtable.pe_id == for_pe)
+        rows = current.db(query).select(mtable.group_id)
+        return list(set([row.group_id for row in rows]))
+
+    # -------------------------------------------------------------------------
     def s3_has_role(self, role, for_pe=None):
         """
-            Check whether the currently logged-in user has a role
+            Check whether the currently logged-in user has a certain role
+            (auth_group membership).
 
             @param role: the record ID or UID of the role
+            @param for_pe: check for this particular realm, possible values:
+
+                           None - for any entity
+                           0 - site-wide
+                           X - for entity X
         """
 
         # Allow override
@@ -2135,11 +2192,8 @@ class AuthS3(Auth):
         # Check the realm
         if role in realms:
             realm = realms[role]
-            if realm is None or \
-               for_pe is not None and not for_pe or \
-               for_pe in realm:
+            if realm is None or for_pe is None or for_pe in realm:
                 return True
-
         return False
 
     # -------------------------------------------------------------------------
@@ -2163,6 +2217,290 @@ class AuthS3(Auth):
             query &= (mtable.pe_id == for_pe)
         members = current.db(query).select(mtable.user_id)
         return [m.user_id for m in members]
+
+    # -------------------------------------------------------------------------
+    def s3_delegate_role(self,
+                         group_id,
+                         entity,
+                         receiver=None,
+                         role=None,
+                         role_type=None):
+        """
+            Delegate a role (auth_group) from one entity to another
+
+            @param group_id: the role ID or UID (or a list of either)
+            @param entity: the delegating entity
+            @param receiver: the pe_id of the receiving entity (or a list of pe_ids)
+            @param role: the affiliation role
+            @param role_type: the role type for the affiliation role (default=9)
+
+            @note: if role is None, a new role of role_type 0 will be created
+                   for each entity in receiver and used for the delegation
+                   (1:1 delegation)
+            @note: if both receiver and role are specified, the delegation will
+                   add all receivers to this role and create a 1:N delegation to
+                   this role. If the role does not exist, it will be created (using
+                   the given role type)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not self.permission.delegations:
+            return False
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if dtable is None or \
+           rtable is None or \
+           atable is None:
+            return False
+        if not group_id or not entity or not receiver and not role:
+            return False
+
+        # Find the group IDs
+        gtable = self.settings.table_group
+        query = None
+        uuids = None
+        if isinstance(group_id, (list, tuple)):
+            if isinstance(group_id[0], str):
+                uuids = group_id
+                query = (gtable.uuid.belongs(group_id))
+            else:
+                group_ids = group_id
+        elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
+            query = (gtable.uuid == group_id)
+        else:
+            group_ids = [group_id]
+        if query is not None:
+            query = (gtable.deleted != True) & query
+            groups = db(query).select(gtable.id, gtable.uuid)
+            group_ids = [g.id for g in groups]
+            missing = [u for u in uuids if u not in [g.uuid for g in groups]]
+            for m in missing:
+                group_id = self.s3_create_role(m, uid=m)
+                if group_id:
+                    group_ids.append(group_id)
+        if not group_ids:
+            return False
+
+        if receiver is not None:
+            if not isinstance(receiver, (list, tuple)):
+                receiver = [receiver]
+            query = (dtable.deleted != True) & \
+                    (dtable.group_id.belongs(group_ids)) & \
+                    (dtable.role_id == rtable.id) & \
+                    (rtable.deleted != True) & \
+                    (atable.role_id == rtable.id) & \
+                    (atable.deleted != True) & \
+                    (atable.pe_id.belongs(receiver))
+            rows = db(query).select(atable.pe_id)
+            assigned = [row.pe_id for row in rows]
+            receivers = [r for r in receiver if r not in assigned]
+        else:
+            receivers = None
+
+        if role_type is None:
+            role_type = 9 # Other
+
+        roles = []
+        if role is None:
+            if receivers is None:
+                return False
+            for pe_id in receivers:
+                role_name = "__DELEGATION__%s__%s__" % (entity, pe_id)
+                query = (rtable.role == role_name)
+                role = db(query).select(limitby=(0, 1)).first()
+                if role is not None:
+                    if role.deleted:
+                        role.update_record(deleted=False,
+                                           role_type=0)
+                    role_id = role.id
+                else:
+                    role_id = s3db.pr_add_affiliation(entity, pe_id,
+                                                      role=role_name,
+                                                      role_type=0)
+                if role_id:
+                    roles.append(role_id)
+        else:
+            query = (rtable.deleted != True) & \
+                    (rtable.pe_id == entity) & \
+                    (rtable.role == role)
+            row = db(query).select(rtable.id, limitby=(0, 1)).first()
+            if row is None:
+                role_id = rtable.insert(pe_id = entity,
+                                        role = role,
+                                        role_type = role_type)
+            else:
+                role_id = row.id
+            if role_id:
+                if receivers is not None:
+                    for pe_id in receivers:
+                        atable.insert(role_id=role_id,
+                                      pe_id=pe_id)
+                        pr_rebuild_path(pe_id, clear=True)
+                roles.append(role_id)
+
+        for role_id in roles:
+            for group_id in group_ids:
+                dtable.insert(role_id=role_id, group_id=group_id)
+
+        # Update roles for current user if required
+        self.s3_set_roles()
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def s3_remove_delegation(self,
+                             group_id,
+                             entity,
+                             receiver=None,
+                             role=None):
+        """
+            Remove a delegation.
+
+            @param group_id: the auth_group ID or UID (or a list of either)
+            @param entity: the delegating entity
+            @param receiver: the receiving entity
+            @param role: the affiliation role
+
+            @note: if receiver is specified, only 1:1 delegations (to role_type 0)
+                   will be removed, but not 1:N delegations => to remove for 1:N
+                   you must specify the role instead of the receiver
+            @note: if both receiver and role are None, all delegations with this
+                   group_id will be removed for the entity
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not self.permission.delegations:
+            return False
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if dtable is None or \
+           rtable is None or \
+           atable is None:
+            return False
+        if not group_id or not entity or not receiver and not role:
+            return False
+
+        # Find the group IDs
+        gtable = self.settings.table_group
+        query = None
+        uuids = None
+        if isinstance(group_id, (list, tuple)):
+            if isinstance(group_id[0], str):
+                uuids = group_id
+                query = (gtable.uuid.belongs(group_id))
+            else:
+                group_ids = group_id
+        elif isinstance(group_id, str) and not group_id.isdigit():
+            uuids = [group_id]
+            query = (gtable.uuid == group_id)
+        else:
+            group_ids = [group_id]
+        if query is not None:
+            query = (gtable.deleted != True) & query
+            groups = db(query).select(gtable.id, gtable.uuid)
+            group_ids = [g.id for g in groups]
+        if not group_ids:
+            return False
+
+        # Get all delegations
+        query = (dtable.deleted != True) & \
+                (dtable.group_id.belongs(group_ids)) & \
+                (dtable.role_id == rtable.id) & \
+                (rtable.pe_id == entity) & \
+                (atable.role_id == rtable.id)
+        if receiver:
+            if not isinstance(receiver, (list, tuple)):
+                receiver = [receiver]
+            query &= (atable.pe_id.belongs(receiver))
+        elif role:
+            query &= (rtable.role == role)
+        rows = db(query).select(dtable.id,
+                                dtable.group_id,
+                                rtable.id,
+                                rtable.role_type)
+
+        # Remove properly
+        rmv = Storage()
+        for row in rows:
+            if not receiver or row[rtable.role_type] == 0:
+                deleted_fk = {"role_id": row[rtable.id],
+                              "group_id": row[dtable.group_id]}
+                rmv[row[dtable.id]] = json.dumps(deleted_fk)
+        for record_id in rmv:
+            query = (dtable.id == record_id)
+            data = {"role_id": None,
+                    "group_id": None,
+                    "deleted_fk": rmv[record_id]}
+            db(query).update(**data)
+
+        # Maybe update the current user's delegations?
+        if len(rmv):
+            self.s3_set_roles()
+        return True
+
+    # -------------------------------------------------------------------------
+    def s3_get_delegations(self, entity, role_type=0, by_role=False):
+        """
+            Lookup delegations for an entity, ordered either by
+            receiver (by_role=False) or by affiliation role (by_role=True)
+
+            @param entity: the delegating entity (pe_id)
+            @param role_type: limit the lookup to this affiliation role type,
+                              (can use 0 to lookup 1:1 delegations)
+            @param by_role: group by affiliation roles
+
+            @returns: a Storage {<receiver>: [group_ids]}, or
+                      a Storage {<rolename>: {entities:[pe_ids], groups:[group_ids]}}
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if not entity or not self.permission.delegations:
+            return None
+        dtable = s3db.table("pr_delegation")
+        rtable = s3db.table("pr_role")
+        atable = s3db.table("pr_affiliation")
+        if None in (dtable, rtable, atable):
+            return None
+
+        query = (rtable.deleted != True) & \
+                (dtable.deleted != True) & \
+                (atable.deleted != True) & \
+                (rtable.pe_id == entity) & \
+                (dtable.role_id == rtable.id) & \
+                (atable.role_id == rtable.id)
+        if role_type is not None:
+            query &= (rtable.role_type == role_type)
+        rows = db(query).select(atable.pe_id,
+                                rtable.role,
+                                dtable.group_id)
+        delegations = Storage()
+        for row in rows:
+            receiver = row[atable.pe_id]
+            role = row[rtable.role]
+            group_id = row[dtable.group_id]
+            if by_role:
+                if role not in delegations:
+                    delegations[role] = Storage(entities=[], groups=[])
+                delegation = delegations[role]
+                if receiver not in delegation.entities:
+                    delegation.entities.append(receiver)
+                if group_id not in delegation.groups:
+                    delegation.groups.append(group_id)
+            else:
+                if receiver not in delegations:
+                    delegations[receiver] = [group_id]
+                else:
+                    delegations[receiver].append(group_id)
+        return delegations
 
     # -------------------------------------------------------------------------
     # ACL management
@@ -2292,7 +2630,6 @@ class AuthS3(Auth):
             return True
 
         db = current.db
-        session = current.session
 
         sr = self.get_system_roles()
 
@@ -2300,7 +2637,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = session.s3.security_policy
+        policy = current.deployment_settings.get_security_policy()
 
         # Simple policy
         if policy == 1:
@@ -2385,7 +2722,7 @@ class AuthS3(Auth):
             s3db = current.s3db
             table = s3db[table]
 
-        policy = session.s3.security_policy
+        policy = current.deployment_settings.get_security_policy()
 
         if policy == 1:
             # "simple" security policy: show all records
@@ -2690,8 +3027,10 @@ class AuthS3(Auth):
                 pass
             else:
                 user_id = None
-                if PID in row:
-                    # Records which link to a person_id shall be owned by that person
+                # Records which link to a person_id shall be owned by that person
+                if tablename == "pr_person":
+                    user_id = self.s3_get_user_id(row[table._id])
+                elif PID in row:
                     user_id = self.s3_get_user_id(row[PID])
                 if not user_id and self.s3_logged_in() and self.user:
                     # Fallback to current user
@@ -2725,8 +3064,7 @@ class AuthS3(Auth):
                 # Otherwise, do a fallback cascade
                 else:
                     get_pe_id = s3db.pr_get_pe_id
-                    if EID in row:
-                        # Person Entities own their own records and
+                    if EID in row and tablename not in ("pr_person", "dvi_body"):
                         owner_entity = row[EID]
                     elif OID in row:
                         owner_entity = get_pe_id(otablename, row[OID])
@@ -3395,10 +3733,11 @@ class S3Permission(object):
         elif not entities:
             return None
         elif OENT in table.fields:
+            public = (table[OENT] == None)
             if len(entities) == 1:
-                return (table[OENT] == entities[0])
+                return (table[OENT] == entities[0]) | public
             else:
-                return (table[OENT].belongs(entities))
+                return (table[OENT].belongs(entities)) | public
         return None
 
     # -------------------------------------------------------------------------
@@ -3456,7 +3795,11 @@ class S3Permission(object):
                 _debug("*** GRANTED ***")
                 return True
             else:
-                permitted = racl == self.READ
+                if self.page_restricted(c=c, f=f):
+                    permitted = racl == self.READ
+                else:
+                    _debug("==> unrestricted page")
+                    permitted = True
                 if permitted:
                     _debug("*** GRANTED ***")
                 else:
@@ -4001,11 +4344,10 @@ class S3Permission(object):
             acl = acls[e]
 
             # Get the page ACL
-            if "c" in acl:
-                if "f" in acl:
-                    page_acl = acl["f"]
-                else:
-                    page_acl = acl["c"]
+            if "f" in acl:
+                page_acl = acl["f"]
+            elif "c" in acl:
+                page_acl = acl["c"]
             elif page_restricted:
                 page_acl = NONE
             else:
@@ -4307,19 +4649,14 @@ class S3Audit(object):
 
 # =============================================================================
 class S3RoleManager(S3Method):
-    """
-        REST Method to manage ACLs (Role Manager UI for administrators)
-
-        @todo: does not handle org-wise role assignment or
-               delegation of permissions yet.
-    """
+    """ REST Method to manage ACLs (Role Manager UI for administrators) """
 
     # Controllers to hide from the permissions matrix
     HIDE_CONTROLLER = ("admin", "default")
 
     # Roles to hide from the permissions matrix
     # @todo: deprecate
-    HIDE_ROLES = (1, 4)
+    HIDE_ROLES = []
 
     # Undeletable roles
     # @todo: deprecate
@@ -5024,228 +5361,554 @@ class S3RoleManager(S3Method):
 
     # -------------------------------------------------------------------------
     def _roles(self, r, **attr):
-        """
-            View/Update roles of a user
-        """
+
+        T = current.T
+        db = current.db
+        auth = current.auth
+
+        request = current.request
+        session = current.session
+
+        if auth.settings.username:
+            username = "username"
+        else:
+            username = "email"
 
         output = dict()
 
-        db = current.db
-        T = current.T
+        # Unrestrictable roles
+        sr = auth.get_system_roles()
+        unrestrictable = [sr.ADMIN, sr.ANONYMOUS, sr.AUTHENTICATED]
 
-        CANCEL = T("Cancel")
+        if r.record:
+            user = r.record
+            user_id = r.id
+            user_name = user[username]
 
-        session = current.session
-        manager = current.manager
-        sr = session.s3.system_roles
-        request = self.request
-        crud_settings = manager.s3.crud
-        formstyle = crud_settings.formstyle
+            use_realms = auth.permission.entity_realm
+            unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
+            if user_id == auth.user.id:
+                # Users cannot remove their own ADMIN permission
+                unassignable.append(sr.ADMIN)
 
-        auth = manager.auth
-        gtable = auth.settings.table_group
-        mtable = auth.settings.table_membership
+            if r.representation == "html":
 
-        if r.interactive:
-            if r.record:
-                user = r.record
-                user_id = user.id
-                username = user.email
-                query = (mtable.deleted != True) &\
-                        (mtable.user_id == user_id)
-                memberships = db(query).select()
-                memberships = Storage([(str(m.group_id), m.id)
-                                       for m in memberships])
-                roles = db(gtable.deleted != True).select(gtable.ALL)
-                roles = Storage([(str(g.id), " %s" % g.role)
-                                 for g in roles
-                                 if g.hidden != True and \
-                                    g.id not in (sr.ANONYMOUS,
-                                                 sr.AUTHENTICATED)])
-                field = Storage(name="roles",
-                                requires = IS_IN_SET(roles, multiple=True))
-                widget = CheckboxesWidgetS3.widget(field, memberships.keys())
+                arrow = TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
+                           _style="text-align:center; vertical-align:middle; width:48px;")
 
-                if session.s3.cancel:
-                    cancel = session.s3.cancel
-                else:
-                    cancel = r.url(method="")
-                form = FORM(TABLE(
-                            TR(TD(widget)),
-                            TR(TD(INPUT(_type="submit", _value=T("Save")),
-                                  A(CANCEL,
-                                    _href=cancel, _class="action-lnk")))))
+                # Get current memberships
+                mtable = auth.settings.table_membership
+                gtable = auth.settings.table_group
+                query = (mtable.deleted != True) & \
+                        (mtable.user_id == user_id) & \
+                        (gtable.deleted != True) & \
+                        (mtable.group_id == gtable.id)
+                rows = db(query).select(mtable.id,
+                                        mtable.pe_id,
+                                        gtable.id,
+                                        gtable.role)
+                entities = [row[mtable.pe_id] for row in rows]
+                entity_repr = self._entity_represent(entities)
+                assigned = [row[gtable.id] for row in rows]
 
-                if form.accepts(request.post_vars, session):
-                    assign = form.vars.roles
-                    for role in roles:
-                        query = (mtable.deleted != True) & \
-                                (mtable.user_id == user_id) & \
-                                (mtable.group_id == role)
-                        _set = db(query)
-                        if str(role) not in assign:
-                            _set.update(deleted=True)
+                # Page Title
+                title = "%s: %s" % (T("Roles of User"), user_name)
+
+                # Remove-Form -------------------------------------------------
+
+                # Subtitle
+                rmvtitle = T("Roles currently assigned")
+                trow = TR(TH(), TH("Role"))
+                if use_realms:
+                    trow.append(TH(T("For Entity")))
+                thead = THEAD(trow)
+
+                # Rows
+                if rows:
+                    i = 0
+                    trows = []
+                    remove = False
+                    for row in rows:
+                        group_id = row[gtable.id]
+                        _class = i % 2 and "even" or "odd"
+                        i += 1
+                        trow = TR(_class=_class)
+
+                        # Row selector
+                        if group_id in unassignable:
+                            trow.append(TD())
                         else:
-                            membership = _set.select(limitby=(0, 1)).first()
-                            if not membership:
-                                mtable.insert(user_id=user_id, group_id=role)
-                    session.confirmation = T("User Updated")
-                    redirect(r.url(method=""))
+                            trow.append(TD(INPUT(_type="checkbox",
+                                                _name="d_%s" % row[mtable.id],
+                                                _class="remove_item")))
+                            remove = True
 
-                output.update(title="%s - %s" %
-                                    (T("Assigned Roles"), username),
-                              form=form)
+                        # Role
+                        name = row[gtable.role]
+                        trow.append(TD(name))
 
-                current.response.view = "admin/user_roles.html"
+                        # Entity
+                        if use_realms:
+                            if row[gtable.id] in unrestrictable:
+                                pe_id = 0
+                            else:
+                                pe_id = row[mtable.pe_id]
+                            pe_repr = entity_repr[pe_id] or T("unknown")
+                            trow.append(TD(pe_repr))
+                        trows.append(trow)
 
+                    # Remove button
+                    if remove:
+                        submit_row = TR(arrow,
+                                        TD(INPUT(_id="submit_delete_button",
+                                                _type="submit",
+                                                _value=T("Remove"))))
+                        if use_realms:
+                            submit_row.append(TD())
+                        trows.append(submit_row)
+
+                    # Assemble form
+                    tbody = TBODY(trows)
+                    rmvform = FORM(DIV(TABLE(thead, tbody,
+                                            _class="dataTable display"),
+                                    _id="table-container"))
+                else:
+                    rmvform = FORM(DIV(T("No roles currently assigned to this user.")))
+
+                # Process Remove-Form
+                if rmvform.accepts(request.post_vars, session,
+                                   formname="rmv_user_%s_roles" % user_id):
+                    removed = 0
+                    for opt in rmvform.vars:
+                        if rmvform.vars[opt] == "on" and opt.startswith("d_"):
+                            membership_id = opt[2:]
+                            query = mtable.id == membership_id
+                            row = db(query).select(mtable.user_id,
+                                                   mtable.group_id,
+                                                   mtable.pe_id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                if use_realms:
+                                    pe_id = row.pe_id
+                                else:
+                                    pe_id = []
+                                auth.s3_retract_role(row.user_id,
+                                                     row.group_id,
+                                                     for_pe=pe_id)
+                                removed += 1
+                    if removed:
+                        session.confirmation = T("%s Roles of the user removed" % removed)
+                        redirect(r.url())
+
+                # Add form ----------------------------------------------------
+
+                # Subtitle
+                addtitle = T("Assign another Role")
+                if use_realms:
+                    help_txt = "(%s)" % T("Default Realm = All Entities the User is a Staff Member of")
+                else:
+                    help_txt = ""
+
+                trow = TR(TH("Role", _colspan="2"))
+                if use_realms:
+                    trow.append(TH(T("For Entity")))
+                thead = THEAD(trow)
+
+                # Roles selector
+                gtable = auth.settings.table_group
+                query = (gtable.deleted != True) & \
+                        (~(gtable.id.belongs(unassignable)))
+                rows = db(query).select(gtable.id, gtable.role)
+                select_grp = SELECT(OPTION(_value=None, _selected="selected"),
+                                    _name="group_id")
+                options = [(row.role, row.id)
+                           for row in rows
+                            if row.id not in unrestrictable or \
+                               row.id not in assigned]
+                options.sort()
+                [select_grp.append(OPTION(role, _value=gid))
+                 for role, gid in options]
+
+                # Entity Selector
+                if use_realms:
+                    select_ent = self._entity_select()
+
+                # Add button
+                submit_btn = INPUT(_id="submit_add_button",
+                                   _type="submit",
+                                   _value=T("Add"))
+
+                # Assemble form
+                trow = TR(TD(select_grp, _colspan="2"), _class="odd")
+                srow = TR(arrow, TD(submit_btn))
+                if use_realms:
+                    trow.append(TD(select_ent))
+                    srow.append(TD())
+                addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
+                                         _class="dataTable display")))
+
+                # Process Add-Form
+                if addform.accepts(request.post_vars, session,
+                                   formname="add_user_%s_roles" % user_id):
+                    try:
+                        group_id = int(addform.vars.group_id)
+                    except ValueError:
+                        group_id = None
+                    pe_id = addform.vars.pe_id
+                    if pe_id == "__NONE__" or not use_realms:
+                        pe_id = None
+                    if group_id in unrestrictable:
+                        pe_id = 0
+                    if group_id:
+                        auth.s3_assign_role(user_id, group_id, for_pe=pe_id)
+                        session.confirmation = T("Role assigned to User")
+                        redirect(r.url())
+
+                # Action links
+                list_btn = A(T("Back to Users List"),
+                             _href=URL(c="admin", f="user"),
+                             _class="action-btn")
+                edit_btn = A(T("Edit User Account %s" % user_name),
+                             _href=URL(c="admin", f="user",
+                                       args=[user_id]),
+                             _class="action-lnk")
+                add_btn = A(T("Create New Role"),
+                            _href=URL(c="admin", f="role",
+                                      args="create"),
+                            _class="action-lnk")
+
+                output = dict(title=title,
+                              rmvtitle=rmvtitle,
+                              rmvform=rmvform,
+                              addtitle=addtitle,
+                              help_txt=help_txt,
+                              addform=addform,
+                              list_btn=list_btn,
+                              edit_btn=edit_btn,
+                              add_btn=add_btn)
+
+                current.response.view = "admin/membership_manage.html"
             else:
-                session.error = T("No user to update")
-                redirect(r.url(method=""))
+                r.error(501, manager.BAD_FORMAT)
+
         else:
-            r.error(501, manager.BAD_FORMAT)
+            r.error(404, self.resource.ERROR.BAD_RECORD)
 
         return output
 
     # -------------------------------------------------------------------------
     def _users(self, r, **attr):
-        """
-            View/Update users of a role
-        """
+
+        T = current.T
+        db = current.db
+        auth = current.auth
+
+        request = current.request
+        session = current.session
+
+        if auth.settings.username:
+            username = "username"
+        else:
+            username = "email"
 
         output = dict()
 
-        session = current.session
-        manager = current.manager
-        request = self.request
+        # Unrestrictable roles
+        sr = auth.get_system_roles()
+        unrestrictable = [sr.ADMIN, sr.ANONYMOUS, sr.AUTHENTICATED]
 
-        db = current.db
-        T = current.T
-        auth = manager.auth
+        if r.record:
+            group = r.record
+            group_id = r.id
+            group_role = group.role
 
-        utable = auth.settings.table_user
-        gtable = auth.settings.table_group
-        mtable = auth.settings.table_membership
+            use_realms = auth.permission.entity_realm and \
+                         group_id not in unrestrictable
+            assignable = group_id not in [sr.ANONYMOUS, sr.AUTHENTICATED]
 
-        if r.interactive:
-            if r.record:
+            if r.representation == "html":
 
-                role_id = r.record.id
-                role_name = r.record.role
-                role_desc = r.record.description
+                arrow = TD(IMG(_src="/%s/static/img/arrow-turn.png" % request.application),
+                           _style="text-align:center; vertical-align:middle; width:48px;")
 
-                title = "%s: %s" % (T("Role"), role_name)
-                output.update(title=title,
-                              description=role_desc,
-                              group=role_id)
-
-                if auth.settings.username:
-                    username = "username"
-                else:
-                    username = "email"
-
-                # @todo: Audit
-                users = db().select(utable.ALL)
+                # Get current memberships
+                mtable = auth.settings.table_membership
+                utable = auth.settings.table_user
                 query = (mtable.deleted != True) & \
-                        (mtable.group_id == role_id)
-                assigned = db(query).select(mtable.ALL)
+                        (mtable.group_id == group_id) & \
+                        (utable.deleted != True) & \
+                        (mtable.user_id == utable.id)
+                if not use_realms:
+                    query &= ((mtable.pe_id == None) | (mtable.pe_id == 0))
+                rows = db(query).select(mtable.id,
+                                        mtable.pe_id,
+                                        utable.id,
+                                        utable.first_name,
+                                        utable.last_name,
+                                        utable[username])
+                entities = [row[mtable.pe_id] for row in rows]
+                if use_realms:
+                    entity_repr = self._entity_represent(entities)
+                else:
+                    entity_repr = Storage()
+                assigned = [row[utable.id] for row in rows]
 
-                assigned_users = [row.user_id for row in assigned]
-                unassigned_users = [(row.id, row)
-                                    for row in users
-                                    if row.id not in assigned_users]
+                # Page title
+                title = "%s: %s" % (T("User with Role"), group_role)
 
-                # Delete form
-                if assigned_users:
-                    thead = THEAD(TR(TH(),
-                                     TH(T("Name")),
-                                     TH(T("Username")),
-                                     TH(T("Remove?"))))
-                    trows = []
+                # Remove-Form -------------------------------------------------
+                rmvtitle = T("Users with this Role")
+
+                if assigned:
+
+                    # Table Header
+                    trow = TR()
+                    if assignable:
+                        trow.append(TH())
+                    trow.append(TH(T("Name")))
+                    trow.append(TH(T("Username")))
+                    if use_realms:
+                        trow.append(TH(T("For Entity")))
+                    thead = THEAD(trow)
+
+                    # Rows
                     i = 0
-                    for user in users:
-                        if user.id not in assigned_users:
-                            continue
+                    trows = []
+                    remove = False
+                    for row in rows:
                         _class = i % 2 and "even" or "odd"
                         i += 1
-                        trow = TR(TD(A(), _name="Id"),
-                                  TD("%s %s" % (user.first_name,
-                                                user.last_name)),
-                                  TD(user[username]),
-                                  TD(INPUT(_type="checkbox",
-                                           _name="d_%s" % user.id,
-                                           _class="remove_item")),
-                                _class=_class)
+                        trow = TR(_class=_class)
+
+                        # User cannot remove themselves from the ADMIN role
+                        if row[utable.id] == auth.user.id and \
+                           group_id == sr.ADMIN:
+                            removable = False
+                        else:
+                            removable = True
+
+                        # Row selector
+                        if assignable and removable:
+                            remove = True
+                            trow.append(TD(INPUT(_type="checkbox",
+                                                 _name="d_%s" % row[mtable.id],
+                                                 _class="remove_item")))
+                        else:
+                            trow.append(TD())
+                        # Name
+                        name = "%s %s" % (row[utable.first_name],
+                                          row[utable.last_name])
+                        trow.append(TD(name))
+
+                        # Username
+                        uname = row[utable[username]]
+                        trow.append(TD(uname))
+
+                        # Entity
+                        if use_realms:
+                            pe_id = row[mtable.pe_id]
+                            pe_repr = entity_repr[pe_id] or T("unknown")
+                            trow.append(TD(pe_repr))
+
                         trows.append(trow)
-                    trows.append(TR(TD(), TD(), TD(),
-                                TD(INPUT(_id="submit_delete_button",
-                                         _type="submit",
-                                         _value=T("Remove")))))
+
+                    # Remove button
+                    if assignable and remove:
+                        submit_row = TR(arrow,
+                                        TD(INPUT(_id="submit_delete_button",
+                                                _type="submit",
+                                                _value=T("Remove"))),
+                                        TD())
+                        if use_realms:
+                            submit_row.append(TD())
+                        trows.append(submit_row)
+
+                    # Assemble form
                     tbody = TBODY(trows)
-                    del_form = TABLE(thead, tbody, _id="list",
-                                     _class="dataTable display")
+                    rmvform = FORM(DIV(TABLE(thead, tbody,
+                                             _class="dataTable display")))
                 else:
-                    del_form = T("No users with this role")
+                    rmvform = FORM(DIV(T("No users with this role at the moment.")))
 
-                del_form = FORM(DIV(del_form, _id="table-container"),
-                                    _name="del_form")
+                # Process Remove-Form
+                if rmvform.accepts(request.post_vars, session,
+                                   formname="rmv_role_%s_users" % group_id):
+                    removed = 0
+                    for opt in rmvform.vars:
+                        if rmvform.vars[opt] == "on" and opt.startswith("d_"):
+                            membership_id = opt[2:]
+                            query = mtable.id == membership_id
+                            row = db(query).select(mtable.user_id,
+                                                   mtable.group_id,
+                                                   mtable.pe_id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                auth.s3_retract_role(row.user_id,
+                                                     row.group_id,
+                                                     for_pe=row.pe_id)
+                                removed += 1
+                    if removed:
+                        session.confirmation = T("%s Users removed from Role" % removed)
+                        redirect(r.url())
 
-                # Add form
-                uname = lambda u: \
-                        "%s: %s %s" % (u.id, u.first_name, u.last_name)
-                u_opts = [OPTION(uname(u[1]),
-                          _value=u[0]) for u in unassigned_users]
-                if u_opts:
-                    u_opts = [OPTION("",
-                              _value=None, _selected="selected")] + u_opts
-                    u_select = DIV(TABLE(TR(
-                                    TD(SELECT(_name="new_user", *u_opts)),
-                                    TD(INPUT(_type="submit",
-                                             _id="submit_add_button",
-                                             _value=T("Add"))))))
+                # Add-Form ----------------------------------------------------
+
+                # Subtitle and help text
+                addtitle = T("Assign Role to a User")
+                if use_realms and assignable:
+                    help_txt = "(%s)" % T("Default Realm = All Entities the User is a Staff Member of")
                 else:
-                    u_select = T("No further users can be added")
-                add_form = FORM(DIV(u_select), _name="add_form")
+                    help_txt = ""
 
-                # Process delete form
-                if del_form.accepts(request.post_vars,
-                                    session, formname="del_form"):
-                    del_ids = [v[2:] for v in del_form.vars
-                                     if v[:2] == "d_" and
-                                        del_form.vars[v] == "on"]
-                    query = (mtable.deleted != True) & \
-                            (mtable.group_id == role_id) & \
-                            (mtable.user_id.belongs(del_ids))
-                    db(query).update(deleted=True)
-                    redirect(r.url())
+                # Form header
+                trow = TR(TH(T("User"), _colspan="2"))
+                if use_realms:
+                    trow.append(TH(T("For Entity")))
+                thead = THEAD(trow)
 
-                # Process add form
-                if add_form.accepts(request.post_vars,
-                                    session, formname="add_form"):
-                    if add_form.vars.new_user:
-                        mtable.insert(group_id=role_id,
-                                      user_id=add_form.vars.new_user)
-                    redirect(r.url())
+                # User selector
+                utable = auth.settings.table_user
+                query = (utable.deleted != True)
+                if group_id in unrestrictable and assigned:
+                    query &= (~(utable.id.belongs(assigned)))
+                rows = db(query).select(utable.id,
+                                        utable.first_name,
+                                        utable.last_name,
+                                        utable[username])
+                if rows and assignable:
+                    select_usr = SELECT(OPTION("",
+                                            _value=None,
+                                            _selected="selected"),
+                                        _name="user_id")
+                    options = [("%s (%s %s)" % (row[username],
+                                                row.first_name,
+                                                row.last_name),
+                                row.id) for row in rows]
+                    options.sort()
+                    [select_usr.append(OPTION(name, _value=uid)) for name, uid in options]
 
-                form = DIV(H4(T("Users with this role")), del_form,
-                           H4(T("Add new users")), add_form)
+                    # Entity selector
+                    if use_realms:
+                        select_ent = self._entity_select()
+
+                    # Add button
+                    submit_btn = INPUT(_id="submit_add_button",
+                                       _type="submit",
+                                       _value=T("Add"))
+
+
+
+                    # Assemble form
+                    trow = TR(TD(select_usr, _colspan="2"), _class="odd")
+                    srow = TR(arrow,
+                              TD(submit_btn))
+                    if use_realms:
+                        trow.append(TD(self._entity_select()))
+                        srow.append(TD())
+                    addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
+                                             _class="dataTable display")))
+                elif not assignable:
+                    addform = FORM(DIV(T("This role can not be assigned to users.")))
+                else:
+                    addform = FORM(DIV(T("No further users can be assigned.")))
+
+                # Process Add-form
+                if addform.accepts(request.post_vars, session,
+                                   formname="add_role_%s_users" % group_id):
+                    pe_id = addform.vars.pe_id
+                    if pe_id == "__NONE__":
+                        pe_id = None
+                    if group_id in unrestrictable:
+                        pe_id = 0
+                    user_id = addform.vars.user_id
+                    if user_id:
+                        auth.s3_assign_role(user_id, group_id, for_pe=pe_id)
+                        session.confirmation = T("User added to Role")
+                        redirect(r.url())
+
+                # Action links
                 list_btn = A(T("Back to Roles List"),
                              _href=URL(c="admin", f="role"),
                              _class="action-btn")
-                edit_btn = A(T("Edit Role"),
-                             _href=URL(c="admin", f="role",
-                                       args=[role_id]),
-                             _class="action-btn")
-                output.update(form=form, list_btn=list_btn, edit_btn=edit_btn)
+                if group_id != sr.ADMIN:
+                    edit_btn = A(T("Edit Permissions for %s" % group_role),
+                                 _href=URL(c="admin", f="role",
+                                           args=[group_id]),
+                                 _class="action-lnk")
+                else:
+                    edit_btn = ""
+                add_btn = A(T("Create New User"),
+                            _href=URL(c="admin", f="user",
+                                      args="create"),
+                            _class="action-lnk")
 
-                current.response.view = "admin/role_users.html"
-
+                # Assemble output
+                output = dict(title=title,
+                              rmvtitle=rmvtitle,
+                              rmvform=rmvform,
+                              addtitle=addtitle,
+                              help_txt=help_txt,
+                              addform=addform,
+                              list_btn=list_btn,
+                              edit_btn=edit_btn,
+                              add_btn=add_btn)
+                current.response.view = "admin/membership_manage.html"
             else:
-                session.error = T("No role to update")
-                redirect(r.there())
+                r.error(501, manager.BAD_FORMAT)
         else:
-            r.error(501, manager.BAD_FORMAT)
+            r.error(404, self.resource.ERROR.BAD_RECORD)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def _entity_select(self):
+        """ Get a SELECT of person entities for realm assignment """
+
+        T = current.T
+        s3db = current.s3db
+
+        select = SELECT(
+                    OPTGROUP(
+                        OPTION(T("Default Realm"), _value="__NONE__", _selected="selected"),
+                        OPTION(T("All Entities"), _value=0),
+                        _label=T("Multiple")),
+                    _name="pe_id")
+
+        table = s3db.table("pr_pentity")
+        if table is None:
+            return select
+        instance_type_nice = table.instance_type.represent
+
+        types = ("org_organisation", "org_office", "pr_group")
+        entities = s3db.pr_get_entities(types=types, group=True)
+
+        for instance_type in entities:
+            optgroup = OPTGROUP(_label=instance_type_nice(instance_type))
+            items = [(n, i) for i, n in entities[instance_type].items()]
+            items.sort()
+            for name, pe_id in items:
+                optgroup.append(OPTION(name, _value=pe_id))
+            select.append(optgroup)
+
+        return select
+
+    # -------------------------------------------------------------------------
+    def _entity_represent(self, entities):
+        """
+            Get a representation dict for a list of pe_ids
+
+            @param entities: the pe_ids of the entities
+        """
+        T = current.T
+
+        pe_ids = [e for e in entities if e is not None and e != 0]
+        if pe_ids:
+            representation = current.s3db.pr_get_entities(pe_ids=pe_ids)
+        else:
+            representation = Storage()
+        representation[None] = T("Default Realm")
+        representation[0] = T("All Entities")
+        return representation
 
 # =============================================================================
 class FaceBookAccount(OAuthAccount):
@@ -5557,5 +6220,453 @@ class GooglePlusAccount(OAuthAccount):
         else:
             self.session.token = None
             return None
+
+# =============================================================================
+class S3RoleMatrix(S3Method):
+    """
+        REST Method to manage ACLs for people on entities
+        (Role Manager UI for organisation administrators)
+    """
+
+    controllers = Storage()
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Apply role manager
+        """
+        method = self.method
+        manager = current.manager
+
+        if method == "roles" and r.name == "person":
+            output = self._roles(r, **attr)
+        elif method == "users" and r.name in ("organisation", "office"):
+            output = self._users(r, **attr)
+        else:
+            r.error(405, manager.ERROR.BAD_METHOD)
+
+        if r.http == "GET" and method not in ("create", "update", "delete"):
+            current.session.s3.cancel = r.url()
+        return output
+
+    # -------------------------------------------------------------------------
+    def _roles(self, request, **kwargs):
+        """
+            In this view we have a person record and the orgadmin can select
+            an organisation or office.
+
+            @returns: a dict object for a view.
+        """
+        self.request = request
+        self.kwargs = kwargs
+        self.output = {}
+        s3db = current.s3db
+        db = current.db
+        T = current.T
+
+        current.response.view = "admin/manage_roles.html"
+        self.output["title"] = T("User Roles")
+
+        # Check we're logged in as an admin or org_admin
+        # and fetch the realm
+        realm = self.get_realm()
+
+        # Get the users for this admin is allowed to edit roles
+        users = s3db.pr_realm_users(realm)
+
+        # This is the user account the roles will apply to
+        user = self.get_user_by_pe_id(request.record.pe_id)
+        if user:
+            user.name = users.get(int(user.id), None)
+        else:
+            user.name = None
+        self.output["user"] = user
+
+        entities = s3db.pr_get_entities(pe_ids=realm,
+                                        types=["org_organisation",
+                                               "org_office"],
+                                        group=True)
+
+        # The entity is a pe_id and name for an organisation or office
+        entity = Storage()
+        entity.id = request.get_vars.get("entity", None)
+        entity.name = None
+
+        if entity.id:
+            entity.id = int(entity.id)
+
+            # Go through the entity groups to find the entity that matches the
+            # id selected in the form
+            for group, ents in entities.iteritems():
+                if entity.id in ents.keys():
+                    entity.name = ents[entity.id]
+                    break
+
+        # Take the grouped list of entities and create optgroups from it
+        instance_type_nice = s3db.table("pr_pentity").instance_type.represent
+
+        options = []
+        for instance_type in entities:
+            optgroup = OPTGROUP(_label=instance_type_nice(instance_type))
+            items = [(n, i) for i, n in entities[instance_type].items()]
+            items.sort()
+            for name, pe_id in items:
+                optgroup.append(OPTION(name, _value=pe_id))
+            options.append(optgroup)
+
+        # The form for selecting a user
+        self.output["form"] = FORM(TABLE(TR(TD(LABEL("%s: " % T("Organization or Office"),
+                                                     _for="entity"),
+                                               _class="w2p_fl"),
+                                            TD(SELECT(OPTION(""),
+                                                      *options,
+                                                      _name="entity",
+                                                      value=entity.id),
+                                               _class="w2p_fw")),
+                                         TR(TD(),
+                                            TD(INPUT(_type="submit",
+                                                     _value=T("Select"))))),
+                                   _method="GET")
+
+        return self.process_forms(user, entity)
+
+    # -------------------------------------------------------------------------
+    def _users(self, request, **kwargs):
+        """
+            In this view we have a pr_pentity record of an organisation or office
+            and the orgadmin can select a user account to edit the roles for.
+
+            @returns: a dict object for a view.
+        """
+        self.request = request
+        self.kwargs = kwargs
+        self.output = {}
+        s3db = current.s3db
+        db = current.db
+        T = current.T
+
+        current.response.view = "admin/manage_roles.html"
+        self.output["title"] = T("User Roles")
+
+        # Check we're logged in as an admin or org_admin
+        # and fetch the realm
+        realm = self.get_realm()
+
+        # Get the users for this admin is allowed to edit roles
+        users = s3db.pr_realm_users(realm)
+
+        # This is the user account the roles will apply to
+        user = Storage()
+        user.id = request.get_vars.get("user", None)
+        if user.id:
+            user.name = users.get(int(user.id), None)
+
+        # We're access this method from an entity (org, office or group)
+        # so we already have a record
+        entity = Storage()
+        entity.id = request.record.pe_id
+        entity.name = s3db.pr_get_entities(pe_ids=[entity.id],
+                                           types=["org_organisation",
+                                                  "org_office"])[entity.id]
+        self.output["entity"] = entity
+
+        # Check that the orgadmin has permission to edit roles
+        # for this entity
+        if realm and entity.id not in realm:
+            current.auth.permission.fail()
+
+        # The form for selecting a user
+        self.output["form"] = SQLFORM.factory(Field("user",
+                                                    T("User"),
+                                                    requires=IS_IN_SET(users),
+                                                    default=user.id),
+                                              _method="GET",
+                                              submit_button="Select")
+
+        return self.process_forms(user, entity)
+
+    # -------------------------------------------------------------------------
+    def get_realm(self):
+        """
+            Returns the realm (list of pe_ids) that this user can manage
+            or raises a permission error if the user is not logged in
+        """
+        system_roles = current.auth.get_system_roles()
+        ORG_ADMIN = system_roles.ORG_ADMIN
+        ADMIN = system_roles.ADMIN
+
+        if current.auth.user:
+            realms = current.auth.user.realms
+        else:
+            # User is not logged in
+            current.auth.permission.fail()
+
+        # Get the realm from the current realms
+        if ADMIN in realms:
+            return realms[ADMIN]
+        elif ORG_ADMIN in realms:
+            return realms[ORG_ADMIN]
+        else:
+            # raise an error here - user is not permitted
+            # to access the role matrix
+            current.auth.permission.fail()
+
+    # -------------------------------------------------------------------------
+    def get_user_by_pe_id(self, pe_id):
+        """
+            Returns a dict with the id and name of the user that is linked
+            to a pentity record.
+
+            @type pe_id: int
+            @param pe_id: The id of the pentity in the database.
+
+            @todo: move this into AuthS3
+        """
+        s3db = current.s3db
+        auth = current.auth
+
+        utable = current.auth.settings.table_user
+        ltable = current.s3db.pr_person_user
+
+        if auth.settings.username:
+            username = utable.username
+        else:
+            username = utable.email
+
+        query = (ltable.pe_id == pe_id) & \
+                (ltable.user_id == utable.id)
+        record = current.db(query).select(utable.id, username).first()
+
+        user = Storage()
+        if record:
+            user["id"] = record.id
+            user["name"] = record[username]
+        return user
+
+    # -------------------------------------------------------------------------
+    def get_modules(self):
+        """
+            This returns an OrderedDict of modules with their uid as the key,
+            e.g., {hrm: "Human Resources",}
+        """
+        return current.deployment_settings.get_aaa_role_modules()
+
+    # -------------------------------------------------------------------------
+    def get_access_levels(self):
+        """
+            This returns an OrderedDict of access levels and their uid as
+            the key, e.g., {reader: "Reader",}
+        """
+        return current.deployment_settings.get_aaa_access_levels()
+
+    # -------------------------------------------------------------------------
+    def get_matrix_options(self, module_uids, access_level_uids):
+        """
+            This fetches all the values required for populating the role
+            matrix.
+
+            @param module_uids: A list of strings. These are prefixes for
+                                roles, e.g., ["project", "asset",]
+            @param access_level_uids: A list of string. These are suffixes
+                                      for roles, e.g., ["reader", "editor",]
+        """
+        options = []
+        # for each module
+        for module in module_uids:
+            # The first value is for "None" access level
+            row = [None,]
+
+            # for each access level
+            for access_level in access_level_uids:
+                uid = "%s_%s" % (module, access_level) # combine the UIDs
+                row.append(uid)
+
+            options.append(row)
+
+        return options
+
+    # -------------------------------------------------------------------------
+    def get_user_roles(self, user, entity, module_uids):
+        """
+            Returns the current roles for the user against the current entity.
+
+            @type user: Storage()
+            @param user: A Storage() object with "id" and "name" properties
+            @type entity: Storage()
+            @param entity: A Storage() object with "id" (pe_id) and
+                           "name" (string) properties
+            @type module_uids: list
+            @param module_uids: A list of strings that are prefixes for roles
+                                e.g., ["proj", "asset"]
+        """
+
+        # Get current memberships
+        mtable = current.auth.settings.table_membership
+        gtable = current.auth.settings.table_group
+        query = (mtable.deleted != True) & \
+                (mtable.user_id == user.id) & \
+                (gtable.deleted != True) & \
+                (mtable.group_id == gtable.id) & \
+                (mtable.pe_id == entity.id)
+        rows = current.db(query).select(gtable.uuid)
+
+        # We only want roles that will be shown in the matrix
+        values = {}
+        for row in rows:
+            role = row[gtable.uuid]
+            module_uid = role.split("_", 1)[0]
+            if module_uid in module_uids:
+              field_name = "role_%s" % module_uid
+              values[field_name] = role
+        return values
+
+    # -------------------------------------------------------------------------
+    def role_form_factory(self,
+                          user,
+                          entity,
+                          row_labels,
+                          col_labels,
+                          options,
+                          groups):
+        """
+            Constructs the form for the role matrix
+
+            @type user: Storage()
+            @param user: A Storage() object with "id" and "name" properties
+            @type entity: Storage()
+            @param entity: A Storage() object with "id" (pe_id) and
+                        "name" (string) properties
+        """
+        fields = []
+        for idx, option_list in enumerate(options):
+            name = "%s_%s" % ("role", groups[idx])
+            field = self.role_field_factory(name, row_labels[idx], option_list)
+            fields.append(field)
+
+        form = SQLFORM.factory(*fields,
+                               hidden=dict(user=user.id, entity=entity.id),
+                               _method="POST")
+        form.custom["matrix_access_level_labels"] = col_labels
+
+        return form
+
+    # -------------------------------------------------------------------------
+    def role_field_factory(self, name, label, options):
+        """
+            Returns a Field object for a single row in the role matrix.
+
+            @type name: String
+            @param name: The name of the field e.g., "project_editor"
+            @type label: String
+            @param label: The label for this row in the matrix,
+                          e.g., "Projects"
+        """
+        return Field(
+            name,
+            label=label,
+            widget=lambda field,value: self.role_matrix_row(field, value),
+            requires=IS_IN_SET(options)
+        )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def role_matrix_row(field, value, **attributes):
+        """
+            This is a custom widget that just returns a list of INPUT objects
+        """
+        table = SQLFORM.widgets.radio.widget(field, value,
+                                             _class="test", **attributes)
+        return [td.element("input") for td in table.elements("td")]
+
+    # -------------------------------------------------------------------------
+    def process_forms(self, user, entity):
+        """
+            Takes a user and an entity and returns a dictionary for the view
+
+            @param user: A Storage() object with "id" and "name" properties
+            @param entity: A Storage() object with "id" (pe_id) and
+                        "name" (string) properties
+        """
+        if user.name and entity.name:
+            if self.role_form_is_valid(user, entity):
+                redirect(self.request.url())
+            else:
+                self.output["user"] = user
+                self.output["entity"] = entity
+
+        return self.output
+
+    # -------------------------------------------------------------------------
+    def role_form_is_valid(self, user, entity):
+        """
+            Takes user and entity objects and constructs the role matrix. If
+            the role matrix form as been submitted, the values are tested and
+            the result (True/False) is returned.
+
+            @param user: A Storage() object with "id" and "name" properties
+            @param entity: A Storage() object with "id" (pe_id) and
+                        "name" (string) properties
+        """
+        T = current.T
+
+        modules = self.get_modules()
+        module_uids = modules.keys()
+        row_labels = modules.values()
+
+        access_levels = self.get_access_levels()
+        access_level_uids = access_levels.keys()
+        # Need "None" as a value for the no-access value
+        col_labels = [T("None"),] + access_levels.values()
+
+        options = self.get_matrix_options(module_uids, access_level_uids)
+
+        # Fetch the current roles for this user
+        user_roles = self.get_user_roles(user,
+                                         entity,
+                                         module_uids)
+
+        # Build the role matrix form
+        role_form = self.role_form_factory(user,
+                                           entity,
+                                           row_labels,
+                                           col_labels,
+                                           options,
+                                           module_uids)
+
+        # Set the values of the role matrix to the current roles
+        role_form.vars.update(user_roles)
+
+        # If the role matrix form has been submitted, test it's valid
+        post_vars = self.request.post_vars
+        if role_form.accepts(post_vars, current.session, keepvalues=True):
+            before = user_roles.values()
+            after = [role_uid for group, role_uid in role_form.vars.items()
+                              if group[:5] == "role_"]
+            self.update_roles(post_vars.user, post_vars.entity, before, after)
+            current.session.confirmation = T("Roles updated")
+            return True
+        else:
+            # The role matrix form is either invalid or hasn't been submitted
+            # so we need to add it to show it again
+            self.output["role_form"] = role_form
+            return False
+
+    # -------------------------------------------------------------------------
+    def update_roles(self, user_id, entity_id, before, after):
+        """
+            Update the users roles on entity based on the selected roles
+            in before and after
+        """
+        for role_uid in before:
+            # If role_uid is not in after,
+            # the access level has changed.
+            if role_uid not in after:
+                current.auth.s3_retract_role(user_id, role_uid, entity_id)
+
+        for role_uid in after:
+            # If the role_uid is not in before,
+            # the access level has changed
+            if role_uid != "None" and role_uid not in before:
+                current.auth.s3_assign_role(user_id, role_uid, entity_id)
 
 # END =========================================================================

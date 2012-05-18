@@ -84,6 +84,21 @@ def brand():
 # =============================================================================
 def item():
     """ RESTful CRUD controller """
+    
+    supply_item_table = s3db.supply_item #kit field
+
+    def prep(r):
+        if r.component and r.component.name == "inv_item":
+            inv_item_pack_requires = IS_ONE_OF(db,
+                                               "supply_item_pack.id",
+                                               s3db.supply_item_pack_represent,
+                                               sort=True,
+                                               filterby = "item_id",
+                                               filter_opts = [r.record.id],
+                                               )
+            s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+        return True
+    response.s3.prep = prep
 
     # Sort Alphabetically for the AJAX-pulled dropdown
     s3mgr.configure("supply_item",
@@ -91,7 +106,11 @@ def item():
 
     # Defined in the Model for use from Multiple Controllers for unified menus
     return supply_item_controller()
+# -----------------------------------------------------------------------------
+def kit_item():
+    """ RESTful CRUD controller """
 
+    return s3_rest_controller()
 # =============================================================================
 def catalog_item():
     """ RESTful CRUD controller """

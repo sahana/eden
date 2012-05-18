@@ -443,6 +443,7 @@ AUTHENTICATED = system_roles.AUTHENTICATED
 ANONYMOUS = system_roles.ANONYMOUS
 EDITOR = system_roles.EDITOR
 MAP_ADMIN = system_roles.MAP_ADMIN
+ORG_ADMIN = system_roles.ORG_ADMIN
 
 if session.s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py

@@ -13,11 +13,11 @@
          L2.............................optional.....L2
          L3.............................optional.....L3
          Address........................optional.....Address
-         Lat.......................optional.....person home address latitude
-         Lon.......................optional.....person home address longitude
-         Capacity
-         Population
-         Status
+         Lat............................optional.....Latitude
+         Lon............................optional.....Longitude
+         Capacity.......................
+         Population.....................
+         Status.........................
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

@@ -234,6 +234,7 @@ class S3OrganisationModel(S3Model):
                                    length=128,           # Mayon Compatibility
                                    label = T("Name")),
                              Field("acronym", length=8, label = T("Acronym"),
+                                   represent = lambda val: val or "",
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Acronym"),
                                                                    T("Acronym of the organization's name, eg. IFRC.")))),
@@ -331,17 +332,13 @@ class S3OrganisationModel(S3Model):
                                                  label=ADD_ORGANIZATION,
                                                  title=T("Organization"),
                                                  tooltip=help)
-        
+
         from_organisation_comment = S3AddResourceLink(c="org",
                                                       f="organisation",
                                                       vars=dict(child="from_organisation_id"),
                                                       label=ADD_ORGANIZATION,
                                                       title=T("Organization"),
                                                       tooltip=help)
-
-        # This deepcopy stuff causes an error about NoneTypes not being copyable.
-        #from_organisation_comment = copy.deepcopy(organisation_comment)
-        #from_organisation_comment[0]["_href"] = organisation_comment[0]["_href"].replace("popup", "popup&child=from_organisation_id")
 
         organisation_id = S3ReusableField("organisation_id",
                                           db.org_organisation, sortby="name",
@@ -387,6 +384,8 @@ class S3OrganisationModel(S3Model):
                     comment = T("Search for an Organization by name or acronym"),
                     field = [ "name",
                               "acronym",
+                              "parent.name",
+                              "parent.acronym",
                             ]
                     ),
                     S3SearchOptionsWidget(
@@ -459,6 +458,16 @@ class S3OrganisationModel(S3Model):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
+        # For imports
+        add_component("org_organisation",
+                      org_organisation=Storage(
+                                    name="parent",
+                                    link="org_organisation_branch",
+                                    joinby="branch_id",
+                                    key="organisation_id",
+                                    actuate="embed",
+                                    autocomplete="name",
+                                    autodelete=False))
 
         # Assets
         # @ToDo
@@ -502,7 +511,8 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation_branch"
         table = define_table(tablename,
                              organisation_id(),
-                             organisation_id("branch_id"),
+                             organisation_id("branch_id",
+                                             label=T("Branch")),
                              *meta_fields())
 
         # CRUD strings
@@ -662,15 +672,16 @@ class S3OrganisationModel(S3Model):
             db = current.db
             table = item.table
             name = "name" in item.data and item.data.name
-            query = (table.name.lower() == name.lower())
-            duplicate = db(query).select(table.id,
-                                         table.name,
-                                         limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                # Retain the correct spelling of the name
-                item.data.name = duplicate.name
-                item.method = item.METHOD.UPDATE
+            if name:
+                query = (table.name.lower() == name.lower())
+                duplicate = db(query).select(table.id,
+                                             table.name,
+                                             limitby=(0, 1)).first()
+                if duplicate:
+                    item.id = duplicate.id
+                    # Retain the correct spelling of the name
+                    item.data.name = duplicate.name
+                    item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -824,6 +835,8 @@ class S3SiteModel(S3Model):
                                   label = T("Facility"),
                                   default = auth.user.site_id if auth.is_logged_in() else None,
                                   represent = org_site_represent,
+                                  orderby = "org_site.name",
+                                  sort = True,
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget = S3SiteAutocompleteWidget(),
                                   comment = DIV(_class="tooltip",
@@ -1367,32 +1380,62 @@ class S3OfficeModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def org_organisation_represent(id, showlink=False, acronym=True):
-    """ Represent an Organisation in option fields or list views """
+def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
+    """
+        Represent an Organisation in option fields or list views
+
+        @param showlink: whether to make the output into a hyperlink
+        @param acronym: whether to show any acronym present
+        @param parent: whether to show the parent Org for branches
+    """
 
     db = current.db
     s3db = current.s3db
-    NONE = current.messages.NONE
 
-    if isinstance(id, Row):
+    if not parent and isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
         org = id
-    else:
-        table = s3db.org_organisation
-        query = (table.id == id)
-        org = db(query).select(table.name,
-                               table.acronym,
+    elif parent:
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
+        query = (otable.id == id)
+        left = btable.on(btable.branch_id == otable.id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               btable.organisation_id,
+                               left = left,
                                limitby = (0, 1)).first()
+    else:
+        otable = s3db.org_organisation
+        query = (otable.id == id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               limitby = (0, 1)).first()
+
     if org:
-        represent = org.name
-        if acronym and org.acronym:
-            represent = "%s (%s)" % (represent,
-                                     org.acronym)
+        if parent:
+            represent = org.org_organisation.name
+            if "org_organisation_branch" in org:
+                # We're a Branch
+                query = (otable.id == org.org_organisation_branch.organisation_id)
+                parent = db(query).select(otable.name,
+                                          limitby = (0, 1)).first()
+                if parent:
+                    represent = "%s, %s" % (parent.name,
+                                            represent)
+            elif acronym and org.org_organisation.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.org_organisation.acronym)
+        else:
+            represent = org.name
+            if acronym and org.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.acronym)
         if showlink:
             represent = A(represent,
                           _href = URL(c="org", f="organisation", args = [id]))
     else:
-        represent = NONE
+        represent = current.messages.NONE
 
     return represent
 
@@ -1400,8 +1443,8 @@ def org_organisation_represent(id, showlink=False, acronym=True):
 def org_organisation_logo(id, type="png"):
     """
         Return a logo of the organisation with the given id, if one exists
-        
-        The id can either be the id of the organisation 
+
+        The id can either be the id of the organisation
                or a Row of the organisation
 
         The type can either be png or bmp and is the format of the saved image
@@ -1430,7 +1473,7 @@ def org_organisation_logo(id, type="png"):
                       )
         return logo
     return DIV() # no logo so return an empty div
-    
+
 
 # =============================================================================
 def org_site_represent(id, show_link=True):
@@ -1530,6 +1573,7 @@ def org_rheader(r, tabs=[]):
                     (T("Offices"), "office"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
+                    (T("User Roles"), "users"),
                     #(T("Tasks"), "task"),
                    ]
 
@@ -1583,6 +1627,7 @@ def org_rheader(r, tabs=[]):
         except:
             pass
         tabs.append((T("Attachments"), "document"))
+        tabs.append((T("User Roles"), "users"))
 
 
         logo = org_organisation_logo(record.organisation_id)
@@ -1641,21 +1686,39 @@ def org_organisation_controller():
     T = current.T
     db = current.db
     gis = current.gis
+    auth = current.auth
     s3 = current.response.s3
     manager = current.manager
-
-    tablename = "org_office"
-    table = s3db[tablename]
 
     # Pre-process
     def prep(r):
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
-            if r.component_name == "human_resource" and r.component_id:
+
+            # Plug in role matrix for Admins/OrgAdmins
+            if r.id and auth.user is not None:
+                sr = auth.get_system_roles()
+                realms = auth.user.realms or Storage()
+                if sr.ADMIN in realms or \
+                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
+                    manager.model.set_method(r.prefix, r.name,
+                                             method="users",
+                                             action=S3RoleMatrix())
+
+            if not r.component and r.method not in ["read", "update", "delete"]:
+                # Filter out branches
+                btable = s3db.org_organisation_branch
+                s3.filter = (btable.id > 0) & \
+                            (r.table.id != btable.branch_id)
+            elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
                 htable = s3db.hrm_human_resource
                 htable.person_id.widget = None
                 htable.person_id.writable = False
+
+            elif r.component_name == "branch":
+                s3db.org_organisation_branch.branch_id.represent = lambda val: \
+                    s3db.org_organisation_represent(val, parent=False)
 
             elif r.component_name == "office" and \
                  r.method and r.method != "read":
@@ -1707,6 +1770,7 @@ def org_office_controller():
     manager = current.manager
     settings = current.deployment_settings
     s3db = current.s3db
+    auth = current.auth
 
     # Get default organisation_id
     req_vars = request.vars
@@ -1774,6 +1838,16 @@ def org_office_controller():
                 s3.filter = (table.type != 5) | (table.type == None)
 
         if r.interactive:
+
+            # Plug in role matrix for Admins/OrgAdmins
+            if r.id and auth.user is not None:
+                sr = auth.get_system_roles()
+                realms = auth.user.realms or Storage()
+                if sr.ADMIN in realms or \
+                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
+                    manager.model.set_method(r.prefix, r.name,
+                                             method="users",
+                                             action=S3RoleMatrix())
 
             if settings.has_module("inv"):
                 # Don't include Warehouses in the type dropdown

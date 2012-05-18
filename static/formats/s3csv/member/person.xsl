@@ -8,6 +8,7 @@
          Column headers defined in this stylesheet:
 
          Organisation...................required.....organisation name
+         Branch.........................required.....branch name
          Type...........................optional.....Membership type
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
@@ -36,7 +37,6 @@
          PersonGender...................optional.....person gender
 
          @todo:
-
             - add more labels.xml lookups
             - fix location hierarchy:
                 - use country name in location_onaccept to match L0?
@@ -66,15 +66,31 @@
              match="row"
              use="col[@field='Organisation']"/>
 
+    <xsl:key name="branches" match="row"
+             use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
-            <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('orgs',
-                                                        col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation"/>
+            <!-- Top-level Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs', col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName">
+                        <xsl:value-of select="col[@field='Organisation']/text()"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="BranchName"></xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Branches -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches', concat(col[@field='Organisation'], '/', col[@field='Branch']))[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName"></xsl:with-param>
+                    <xsl:with-param name="BranchName">
+                        <xsl:value-of select="col[@field='Branch']/text()"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -85,19 +101,39 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
 
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
+        <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
             <xsl:choose>
-                <xsl:when test="col[@field='Acronym']!=''">
-                    <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
+                <xsl:when test="$OrgName!=''">
+                    <!-- This is the Organisation -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$OrgName"/></data>
+                </xsl:when>
+                <xsl:when test="$BranchName!=''">
+                    <!-- This is the Branch -->
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$BranchName"/></data>
                 </xsl:when>
             </xsl:choose>
+
+            <xsl:if test="$BranchName!=''">
+                <!-- Nest the Top-Level -->
+                <resource name="org_organisation_branch">
+                    <reference field="organisation_id">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="col[@field='Organisation']"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
 
     </xsl:template>
@@ -107,6 +143,7 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="Lists" select="col[@field='Lists']"/>
         <xsl:variable name="Paid" select="col[@field='Paid']"/>
 
@@ -141,6 +178,7 @@
             <!-- Membership record -->
             <xsl:call-template name="Member">
                 <xsl:with-param name="OrgName" select="$OrgName"/>
+                <xsl:with-param name="BranchName" select="$BranchName"/>
             </xsl:call-template>
 
             <!-- Mailing Lists -->
@@ -158,6 +196,7 @@
     <xsl:template name="Member">
 
         <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
 
         <xsl:variable name="type">
             <xsl:choose>
@@ -182,7 +221,14 @@
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:attribute>
             </reference>
 

@@ -41,6 +41,7 @@ __all__ = ["S3HiddenWidget",
            "S3OrganisationAutocompleteWidget",
            "S3PersonAutocompleteWidget",
            "S3SiteAutocompleteWidget",
+           "S3TrainingAutocompleteWidget",
            "S3LocationSelectorWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
@@ -79,7 +80,7 @@ from s3validators import *
 
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3HiddenWidget(StringWidget):
 
     """
@@ -102,7 +103,7 @@ class S3HiddenWidget(StringWidget):
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3DateWidget(FormWidget):
 
     """
@@ -163,7 +164,7 @@ $( '#%s' ).datepicker( 'option', 'dateFormat', '%s' );
                         requires = field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3DateTimeWidget(FormWidget):
 
     """
@@ -250,7 +251,7 @@ $('#{0}').after(clear_button);'''.format(selector,
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3BooleanWidget(BooleanWidget):
 
     """
@@ -315,7 +316,7 @@ $( '#%s' ).click(function() {
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3UploadWidget(UploadWidget):
 
     """
@@ -368,7 +369,7 @@ class S3UploadWidget(UploadWidget):
                           "]", br, image)
         return inp
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AutocompleteWidget(FormWidget):
 
     """
@@ -449,7 +450,7 @@ class S3AutocompleteWidget(FormWidget):
                       )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
 
     """
@@ -537,18 +538,15 @@ class S3LocationAutocompleteWidget(FormWidget):
             field,
             value,
             attributes,
-            transform_value = lambda value: value,
             source = repr(url),
-            name_getter = "function (item) { return item.name }",
-            id_getter = "function (item) { return item.id }"
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OrganisationAutocompleteWidget(FormWidget):
 
     """
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
-        Differs from the S3AutocompleteWidget in that it uses name & acronym fields
+        Differs from the S3AutocompleteWidget in that it can default to the setting in the profile.
 
         @ToDo: Add an option to hide the widget completely when using the Org from the Profile
                - i.e. prevent user overrides
@@ -569,9 +567,9 @@ class S3OrganisationAutocompleteWidget(FormWidget):
 
         def transform_value(value):
             if not value and self.default_from_profile:
-                session = current.session
-                if session.auth and session.auth.user:
-                    value = session.auth.user.organisation_id
+                auth = current.session.auth
+                if auth and auth.user:
+                    value = auth.user.organisation_id
             return value
 
         return S3GenericAutocompleteTemplate(
@@ -584,33 +582,26 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             transform_value = transform_value,
             source = repr(
                 URL(c="org", f="organisation",
-                      args="search.json",
-                      vars={"filter":"~"})
-            ),
-            name_getter = """function (item) {
-    var name = '';
-    if (item.name != null) {
-        name += item.name;
-    }
-    if (item.acronym != '') {
-        name += ' (' + item.acronym + ')';
-    }
-    return name;
-}""",
-            id_getter = "function (item) { return item.id }"
+                    args="search.json",
+                    vars={"filter":"~"})
+            )
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3PersonAutocompleteWidget(FormWidget):
 
     """
         Renders a pr_person SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses 3 name fields
 
+        To make this widget use the HR table, set the controller to "hrm"
+
         @ToDo: Migrate to template (initial attempt failed)
-    """
+   """
 
     def __init__(self,
+                 controller = "pr",
+                 function = "person_search",
                  post_process = "",
                  delay = 450,   # milliseconds
                  min_length=2): # Increase this for large deployments
@@ -618,6 +609,8 @@ class S3PersonAutocompleteWidget(FormWidget):
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
+        self.c = controller
+        self.f = function
 
     def __call__(self, field, value, **attributes):
 
@@ -635,7 +628,8 @@ class S3PersonAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="pr", f="person_search",
+        url = URL(c=self.c,
+                  f=self.f,
                   args="search.json",
                   vars={"filter":"~"})
 
@@ -757,8 +751,7 @@ $('#%s').blur(function() {
                         requires = field.requires
                       )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):
 
     """
@@ -924,6 +917,55 @@ $('#%s').blur(function() {
                         requires = field.requires
                       )
 
+# =============================================================================
+class S3TrainingAutocompleteWidget(FormWidget):
+
+    """
+        Renders an hrm_training_event SELECT as an INPUT field with AJAX Autocomplete.
+        Differs from the S3AutocompleteWidget in that it uses course, site and date fields
+        for the represent (S3TrainingSearch also uses the first 2 for the actual search).
+
+        @ToDo: S3Search-style Filters instead of pure AC
+    """
+
+    def __init__(self,
+                 post_process = "",
+                 delay = 450,     # milliseconds
+                 min_length = 2): # Increase this for large deployments
+
+        self.post_process = post_process
+        self.delay = delay
+        self.min_length = min_length
+
+    def __call__(self, field, value, **attributes):
+
+        return S3GenericAutocompleteTemplate(
+            self.post_process,
+            self.delay,
+            self.min_length,
+            field,
+            value,
+            attributes,
+            source = repr(
+                URL(c="hrm", f="training_event",
+                    args="search.json",
+                    vars={"filter":"~"})
+            ),
+            name_getter = """function (item) {
+    var name = '';
+    if (item.course != null) {
+        name += item.course;
+    }
+    if (item.site != '') {
+        name += ' (' + item.site + ')';
+    }
+    if (item.date != '') {
+        name += ' [' + item.date + ']';
+    }
+    return name;
+}""",
+        )
+
 # -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(
     post_process,
@@ -932,10 +974,10 @@ def S3GenericAutocompleteTemplate(
     field,
     value,
     attributes,
-    transform_value,
     source,
-    name_getter,
-    id_getter,
+    name_getter = "function(item) {return item.name}",
+    id_getter = "function(item) {return item.id}",
+    transform_value = lambda value: value,
 ):
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
@@ -1041,7 +1083,7 @@ $('#%(dummy_input)s').blur(function() {
                   )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationDropdownWidget(FormWidget):
     """
         Renders a dropdown for an Lx level of location hierarchy
@@ -1091,7 +1133,7 @@ class S3LocationDropdownWidget(FormWidget):
                         requires=field.requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationSelectorWidget(FormWidget):
 
     """
@@ -1829,7 +1871,7 @@ S3.i18n.gis_country_required = '%s';""" % (country_snippet,
                         requires=requires
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LatLonWidget(DoubleWidget):
     """
         Widget for latitude or longitude input, gives option to input in terms
@@ -1922,7 +1964,7 @@ S3.i18n.gis_range_error =
                         _class="gis_coord_wrap"
                       )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3CheckboxesWidget(OptionsWidget):
 
     """
@@ -2059,7 +2101,7 @@ class S3CheckboxesWidget(OptionsWidget):
             return None
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3MultiSelectWidget(MultipleOptionsWidget):
 
     """
@@ -2104,8 +2146,7 @@ $( '#%s' ).multiselect({
                         requires = field.requires
                       )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3ACLWidget(CheckboxesWidget):
 
     """
@@ -2183,7 +2224,7 @@ class S3ACLWidget(CheckboxesWidget):
                 #raise SyntaxError, "widget cannot determine options of %s" \
                     #% field
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
@@ -2246,7 +2287,7 @@ class CheckboxesWidgetS3(OptionsWidget):
             opts[-1][0][0]["hideerror"] = False
         return TABLE(*opts, **attr)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AddPersonWidget(FormWidget):
     """
         Renders a person_id field as a Create Person form,
@@ -2403,44 +2444,7 @@ class S3AddPersonWidget(FormWidget):
                        table,
                        divider)
 
-# -----------------------------------------------------------------------------
-class S3HumanResourceAutocompleteWidget(FormWidget):
-    def __init__(self,
-                 post_process = "",
-                 delay = 450,   # milliseconds
-                 min_length=2): # Increase this for large deployments
-
-        self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
-
-    def __call__(self, field, value, attributes):
-        return S3GenericAutocompleteTemplate(
-            post_process = self.post_process,
-            delay = self.delay,
-            min_length = self.min_length,
-            attributes = attributes,
-            field = field,
-            value = value,
-            name_getter = "function (item) { alert(item.represent); return item.represent; }",
-            id_getter = "function (item) { alert(item.id);  return item.id }",
-            transform_value = lambda value: value,
-            source = (
-                "function (request, response) {"
-                    "$.ajax({"
-                        "url: S3.Ap.concat('/hrm/human_resource/search.acjson?"
-                            "simple_form=True"
-                            "&human_resource_search_simple_simple='+request.term+'"
-                            "&get_fieldname=person_id"
-                        "'),"
-                        "dataType: 'json',"
-                        "success: response"
-                    "});"
-                "}"
-            )
-        )
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AutocompleteOrAddWidget(FormWidget):
     """
         This widget searches for or adds an object. It contains:
@@ -2466,7 +2470,7 @@ class S3AutocompleteOrAddWidget(FormWidget):
             self.add_widget(field, value, **attributes)
         )
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AddObjectWidget(FormWidget):
     """
         This widget displays an inline form loaded via AJAX on demand.
@@ -2662,8 +2666,7 @@ $(function () {
             )
         )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SearchAutocompleteWidget(FormWidget):
     """
         Uses the s3Search Module
@@ -2715,8 +2718,7 @@ class S3SearchAutocompleteWidget(FormWidget):
                     hidden_input
                     )
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3TimeIntervalWidget(FormWidget):
     """
         Simple time interval widget for the scheduler task table
@@ -2785,7 +2787,7 @@ class S3TimeIntervalWidget(FormWidget):
         val = val / multiplier[1]
         return "%s %s" % (val, T(multiplier[0]))
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3InvBinWidget(FormWidget):
     """
         Widget used by S3CRUD to offer the user matching bins where
@@ -2852,6 +2854,7 @@ class S3InvBinWidget(FormWidget):
                     new_div
                     )
 
+# =============================================================================
 class S3EmbedComponentWidget(FormWidget):
     """
         Widget used by S3CRUD for link-table components with actuate="embed".
@@ -3044,7 +3047,7 @@ class S3EmbedComponentWidget(FormWidget):
                        table,
                        divider)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def s3_comments_widget(field, value):
     """
         A smaller-than-normal textarea
@@ -3057,7 +3060,7 @@ def s3_comments_widget(field, value):
                     value=value,
                     requires=field.requires)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def s3_richtext_widget(field, value):
     """
         A larger-than-normal textarea to be used by the CMS Post Body field
@@ -3076,7 +3079,7 @@ def s3_richtext_widget(field, value):
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
     js = "var ck_config = {toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};"
     s3.js_global.append(js)
-    
+
     js = "$('#%s').ckeditor(ck_config);" % id
     s3.jquery_ready.append(js)
 
@@ -3086,7 +3089,7 @@ def s3_richtext_widget(field, value):
                     value=value,
                     requires=field.requires)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3SliderWidget(FormWidget):
 
     """
@@ -3130,82 +3133,84 @@ class S3SliderWidget(FormWidget):
 
         return TAG[""](sliderdiv, sliderinput)
 
-# -----------------------------------------------------------------------------
-class S3OptionsMatrixWidget(object):
+# =============================================================================
+class S3OptionsMatrixWidget(FormWidget):
     """
         Constructs a two dimensional array/grid of checkboxes
         with row and column headers.
     """
-    def __init__(self, rows, columns, _id=None, checklist=None):
+
+    def __init__(self, rows, cols):
         """
-            @param rows:
-                A tuple containing (name,label) tuples where name is used in the
-                input name (row_column) and label is used in the row headers
             @type rows: tuple
-            @param columns:
-                A tuple containing (name,label) tuples where name is used in the
-                input name (row_column) and label is used in the column headers
-            @type columns: tuple
-            @param checklist:
-                A tuple of strings that will match the name of the checkboxes
-                to be enabled/checked
-            @type checklist: tuple
+            @param rows:
+                A tuple of tuples.
+                The nested tuples will have the row label followed by a value
+                for each checkbox in that row.
+
+            @type cols: tuple
+            @param cols:
+                A tuple containing the labels to use in the column headers
         """
         self.rows = rows
-        self.columns = columns
-        self._id = _id if _id is not None else ""
-        self.checklist = checklist
+        self.cols = cols
 
-    def __call__(self):
+    def __call__(self, field, value, **attributes):
         """
             Returns the grid/matrix of checkboxes as a web2py TABLE object and
             adds references to required Javascript files.
+
+            @type field: Field
+            @param field:
+                This gets passed in when the widget is rendered or used.
+
+            @type value: list
+            @param value:
+                A list of the values matching those of the checkboxes.
+
+            @param attributes:
+                HTML attributes to assign to the table.
         """
-        
-        grid_column_header_cells = [TH()]
-        for column in self.columns:
-            # Get the "label" from the column tuple
-            grid_column_header_cells.append(TH(column[1]))
-        
+
+        if isinstance(value, (list, tuple)):
+            values = [str(v) for v in value]
+        else:
+            values = [str(value)]
+
+        # Create the table header
+        header_cells = []
+        for col in self.cols:
+            header_cells.append(TH(col, _scope="col"))
+        header = THEAD(TR(header_cells))
+
+        # Create the table body cells
         grid_rows = []
         for row in self.rows:
             # Create a list to hold our table cells
             # the first cell will hold the row label
-            row_cells = [TH(row[1])]
-            for column in self.columns:
-                # Construct the checkbox name attribute out of the row and
-                # column name values
-                cell_name = "%s_%s" % (row[0], column[0])
-
+            row_cells = [TH(row[0], _scope="row")]
+            for option in row[1:]:
                 # This determines if the checkbox should be checked
-                if self.checklist is not None and cell_name in self.checklist:
-                    cell_value = "on"
+                if option in values:
+                    checked = True
                 else:
-                    cell_value = ""
+                    checked = False
 
-                row_cells.append(
-                                 TD(
-                                    INPUT(
-                                          _type="checkbox",
-                                          _id="id_%s" % cell_name,
-                                          _name=cell_name,
-                                          value=cell_value
+                row_cells.append(TD(
+                                    INPUT(_type="checkbox",
+                                          _name=field.name,
+                                          _value=option,
+                                          value=checked
                                           )
-                                    )
-                                 )
+                                    ))
             grid_rows.append(TR(row_cells))
-        
-        grid_header = THEAD(TR(grid_column_header_cells))
 
         current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
-        jquery_selector = "#%s" % self._id if self._id != "" else "."  
-        current.response.s3.jquery_ready.append("""
-$('{0}').s3optionsmatrix();
-""".format(jquery_selector))
 
-        return TABLE(grid_header,
-                     TBODY(grid_rows),
-                     _id=self._id,
-                     _class="s3optionsmatrix")
+        # If the table has an id attribute, activate the jQuery plugin for it.
+        if "_id" in attributes:
+            current.response.s3.jquery_ready.append("$('#{0}').s3optionsmatrix();".format(attributes.get('_id')))
+
+        return TABLE(header, TBODY(grid_rows), **attributes)
 
 # END =========================================================================

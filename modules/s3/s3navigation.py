@@ -194,14 +194,17 @@ class S3NavigationItem(object):
         elif isinstance(args, str):
             args = args.split("/")
         self.args = args
-        self.vars = vars
+        if vars:
+            self.vars = vars
+        else:
+            self.vars = Storage()
         self.extension = extension
 
         # Table and method
         self.tablename = t
         self.method = m
         if m is not None:
-            if args is None or not len(args):
+            if not len(args):
                 self.args = [m]
             elif args[-1] != m:
                 self.args.append(m)

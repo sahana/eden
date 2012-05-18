@@ -17,7 +17,7 @@
 
            You can add a third argument &ignore_errors
          CSV fields:
-         Request........................req_req_item.req_id & req_req.request_number (lookup only)
+         Request........................req_req_item.req_id & req_req.req_ref (lookup only)
          Item...........................req_req_item.item_id & supply_item.name (lookup only)
          Pack...........................req_req_item.pack & supply_item_pack
          Quantity.......................req_req_item.quantity
@@ -45,7 +45,7 @@
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$Request"/>
                     </xsl:attribute>
-                    <data field="request_number"><xsl:value-of select="$Request"/></data>
+                    <data field="req_ref"><xsl:value-of select="$Request"/></data>
                 </resource>
 
                 <!-- Supply Item -->
