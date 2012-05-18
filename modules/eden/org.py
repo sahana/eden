@@ -1573,6 +1573,7 @@ def org_rheader(r, tabs=[]):
                     (T("Offices"), "office"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
+                    (T("User Roles"), "users"),
                     #(T("Tasks"), "task"),
                    ]
 
@@ -1626,6 +1627,7 @@ def org_rheader(r, tabs=[]):
         except:
             pass
         tabs.append((T("Attachments"), "document"))
+        tabs.append((T("User Roles"), "users"))
 
 
         logo = org_organisation_logo(record.organisation_id)
@@ -1684,6 +1686,7 @@ def org_organisation_controller():
     T = current.T
     db = current.db
     gis = current.gis
+    auth = current.auth
     s3 = current.response.s3
     manager = current.manager
 
@@ -1691,6 +1694,17 @@ def org_organisation_controller():
     def prep(r):
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
+
+            # Plug in role matrix for Admins/OrgAdmins
+            if r.id and auth.user is not None:
+                sr = auth.get_system_roles()
+                realms = auth.user.realms or Storage()
+                if sr.ADMIN in realms or \
+                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
+                    manager.model.set_method(r.prefix, r.name,
+                                             method="users",
+                                             action=S3RoleMatrix())
+
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
                 btable = s3db.org_organisation_branch
@@ -1756,6 +1770,7 @@ def org_office_controller():
     manager = current.manager
     settings = current.deployment_settings
     s3db = current.s3db
+    auth = current.auth
 
     # Get default organisation_id
     req_vars = request.vars
@@ -1823,6 +1838,16 @@ def org_office_controller():
                 s3.filter = (table.type != 5) | (table.type == None)
 
         if r.interactive:
+
+            # Plug in role matrix for Admins/OrgAdmins
+            if r.id and auth.user is not None:
+                sr = auth.get_system_roles()
+                realms = auth.user.realms or Storage()
+                if sr.ADMIN in realms or \
+                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
+                    manager.model.set_method(r.prefix, r.name,
+                                             method="users",
+                                             action=S3RoleMatrix())
 
             if settings.has_module("inv"):
                 # Don't include Warehouses in the type dropdown

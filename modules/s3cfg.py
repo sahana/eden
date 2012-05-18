@@ -172,6 +172,26 @@ class S3Config(Storage):
     def get_aaa_default_oacl(self):
         return self.aaa.get("default_oacl", self.aaa.acl.READ |
                                             self.aaa.acl.UPDATE)
+    def get_aaa_role_modules(self):
+        T = current.T
+        return self.aaa.get("role_modules", OrderedDict([
+            ('staff', 'Staff'),
+            ('vol', 'Volunteers'),
+            ('member', 'Members'),
+            ('inv', 'Warehouses'),
+            ('asset', 'Assets'),
+            ('project', 'Projects'),
+            ('survey', 'Assessments'),
+            ('irs', 'Incidents')
+        ]))
+    def get_aaa_access_levels(self):
+        T = current.T
+        return self.aaa.get("access_levels", OrderedDict([
+            ('reader', 'Reader'),
+            ('data_entry', 'Data Entry'),
+            ('editor', 'Editor'),
+            ('super', 'Super Editor')
+        ]))
 
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
