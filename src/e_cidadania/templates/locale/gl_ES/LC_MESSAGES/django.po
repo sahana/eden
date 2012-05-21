@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:14+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: 2012-02-29 11:50+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -19,75 +19,75 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: dashboard.py:49
+#: dashboard.py:68
 msgid "Users"
 msgstr "Usuarios"
 
-#: dashboard.py:59
+#: dashboard.py:78
 msgid "Applications"
 msgstr "Aplicativos"
 
-#: dashboard.py:68
+#: dashboard.py:87
 msgid "Latest News"
 msgstr "Noticias recentes"
 
-#: dashboard.py:76
+#: dashboard.py:95
 msgid "Media Management"
 msgstr "Manexo de medios"
 
-#: dashboard.py:80
+#: dashboard.py:99
 msgid "FileBrowser"
 msgstr "Explorador de arquivos"
 
-#: dashboard.py:89
+#: dashboard.py:108
 msgid "e-cidadania Support"
 msgstr "Soporte e-cidadania"
 
-#: dashboard.py:93
+#: dashboard.py:112
 msgid "Documentation"
 msgstr "Documentación"
 
-#: dashboard.py:98
+#: dashboard.py:117
 msgid "Wiki"
 msgstr "Wiki"
 
-#: dashboard.py:103
+#: dashboard.py:122
 msgid "Translations"
 msgstr "Traduccións"
 
-#: dashboard.py:111
+#: dashboard.py:130
 msgid "Thirdparty Support"
 msgstr "Soporte de terceiras partes"
 
-#: dashboard.py:115
+#: dashboard.py:134
 msgid "Django Documentation"
 msgstr "Documentación Django"
 
-#: dashboard.py:120
+#: dashboard.py:139
 msgid "Grappelli Documentation"
 msgstr "Documentación Grappelli"
 
-#: dashboard.py:125
+#: dashboard.py:144
 msgid "python-dateutil Documentation"
 msgstr "Documentación Python-dateutil"
 
-#: dashboard.py:134
+#: dashboard.py:153
 msgid "e-cidadania source code"
 msgstr "código fonte e-cidadania"
 
-#: dashboard.py:138
+#: dashboard.py:157
 msgid "GitHub"
 msgstr "GitHub"
 
-#: dashboard.py:143
+#: dashboard.py:162
 msgid "Gitorious"
 msgstr "Gitorious"
 
-#: dashboard.py:148
+#: dashboard.py:167
 msgid "Repo.or.vz (Mirror)"
 msgstr "Repo.or.cz (espello)"
 
-#: dashboard.py:157
+#: dashboard.py:176
 msgid "Recent Actions"
 msgstr "Accións recentes"
 
@@ -123,33 +123,10 @@ msgstr ""
 msgid "^news/(?P<post_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:94
+#: urls.py:86
 #, fuzzy
 msgid "^comments/"
 msgstr "Comentarios"
-
-#: views.py:67
-#, fuzzy
-msgid ""
-"Hi! It seems that it's your first time here.             Maybe you want to "
-"<a href=\"/accounts/register\">register</a>             or <a href=\"/"
-"accounts/login\">login</a> if you have an account."
-msgstr ""
-"Ola! Parece que é a túa primeira vez aquí. Tal vez queiras <a href=\"/"
-"accounts/register\">rexistrarte</a> ou <a href=\"/accounts/login\">entrar</"
-"a> se xa tes unha conta."
-
-#: views.py:85
-msgid "e-cidadania news"
-msgstr "Novas de e-cidadania"
-
-#: views.py:87
-msgid "Updates on the main e-cidadania site."
-msgstr "Actualizacións na páxina principal de e-cidadania"
-
-#: views.py:125
-msgid "Post added successfully."
-msgstr "Entrada engadida satisfactoriamente."
 
 #: templates/404.html:9
 msgid "Nooo...!"
@@ -175,27 +152,32 @@ msgstr ""
 "Enviaremos ao escuadrón espaguetti para reparar isto. Mentres tanto yi podes "
 "volver ao índice."
 
-#: templates/base.html:116
+#: templates/base.html:105
 msgid "Pages"
 msgstr "Páxinas"
 
-#: templates/base.html:126
+#: templates/base.html:115
 msgid "Help"
 msgstr "Axuda"
 
-#: templates/base.html:127
+#: templates/base.html:116
 msgid "Mailing lists"
 msgstr "Roldas de correo"
 
-#: templates/base.html:128
+#: templates/base.html:117
 msgid "Issues"
 msgstr "Incidencias"
 
-#: templates/base.html:129
+#: templates/base.html:118
 msgid "E-mail"
 msgstr "Correo electrónico"
 
-#: templates/base.html:141
+#: templates/base.html:119 templates/invite.html:15
+#: templates/invite_done.html:10
+msgid "Invite your friends"
+msgstr ""
+
+#: templates/base.html:131
 msgid "created by"
 msgstr "creado por"
 
@@ -203,39 +185,41 @@ msgstr "creado por"
 msgid "Invite your friends to e-cidadania"
 msgstr ""
 
-#: templates/invite.html:15 templates/invite_done.html:10
-msgid "Invite your friends"
-msgstr ""
-
-#: templates/invite.html:20
+#: templates/invite.html:21
 msgid "Invite via E-mail"
 msgstr ""
 
-#: templates/invite.html:21
+#: templates/invite.html:22
 msgid "Write the e-mail adresses here"
 msgstr ""
 
-#: templates/invite.html:22
+#: templates/invite.html:23
 msgid ""
 "If you want to invite more than one person, you will have to write their "
 "adresses separated by commas. Example: this@that.com, foo@bar.net, "
 "black@white.org"
 msgstr ""
 
-#: templates/invite.html:23
+#: templates/invite.html:24
 msgid ""
 "Hi!, I would like you to join e-cidadania, the participative democracy "
 "platform for citizens."
 msgstr ""
 
-#: templates/invite.html:24
+#: templates/invite.html:25
 msgid ""
 "You can write here whatever text you want for your invitation, or leave it "
 "by default."
 msgstr ""
 
-#: templates/invite.html:25
+#: templates/invite.html:26
 msgid "Submit"
+msgstr ""
+
+#: templates/invite.html:31
+msgid ""
+"To send invitations via e-mail you have to be <a href='/accounts/"
+"login/'>logged in</a>."
 msgstr ""
 
 #: templates/invite_done.html:11
@@ -258,28 +242,32 @@ msgstr "Entrar"
 msgid "Sign up"
 msgstr "Rexistrarse"
 
-#: templates/menu.html:12
+#: templates/menu.html:13
 msgid "Language"
 msgstr "Idioma"
 
-#: templates/menu.html:32
+#: templates/menu.html:33
 msgid "Profile"
 msgstr "Perfil"
 
-#: templates/menu.html:44
+#: templates/menu.html:45
 msgid "Administration"
 msgstr "Administración"
 
-#: templates/menu.html:45
+#: templates/menu.html:46
 #, fuzzy
 msgid "Create new space"
 msgstr "Non hai espazos."
 
 #: templates/menu.html:47
+msgid "Add news"
+msgstr ""
+
+#: templates/menu.html:50
 msgid "Edit profile"
 msgstr "Editar perfil"
 
-#: templates/menu.html:49
+#: templates/menu.html:52
 msgid "Logout"
 msgstr "Saír"
 
@@ -483,6 +471,25 @@ msgstr "Publicar o teu comentario"
 #: templates/comments/preview.html:20
 msgid "or make changes"
 msgstr "ou facer cambios"
+
+#, fuzzy
+#~ msgid ""
+#~ "Hi! It seems that it's your first time here.             Maybe you want "
+#~ "to <a href=\"/accounts/register\">register</a>             or <a href=\"/"
+#~ "accounts/login\">login</a> if you have an account."
+#~ msgstr ""
+#~ "Ola! Parece que é a túa primeira vez aquí. Tal vez queiras <a href=\"/"
+#~ "accounts/register\">rexistrarte</a> ou <a href=\"/accounts/login"
+#~ "\">entrar</a> se xa tes unha conta."
+
+#~ msgid "e-cidadania news"
+#~ msgstr "Novas de e-cidadania"
+
+#~ msgid "Updates on the main e-cidadania site."
+#~ msgstr "Actualizacións na páxina principal de e-cidadania"
+
+#~ msgid "Post added successfully."
+#~ msgstr "Entrada engadida satisfactoriamente."
 
 #~ msgid "Post deleted successfully."
 #~ msgstr "Entrada eliminada satisfactoriamente."

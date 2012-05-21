@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:14+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: 2012-01-05 10:57\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,51 +18,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
-#: admin.py:38
+#: admin.py:37
 msgid "Other data"
 msgstr "Otros datos"
 
-#: models.py:35
+#: models.py:33
 msgid "Title"
 msgstr "Título"
 
-#: models.py:36
+#: models.py:34
 msgid "Text"
 msgstr "Texto"
 
-#: models.py:37
+#: models.py:35
 msgid "Date"
 msgstr "Fecha"
 
-#: models.py:38
+#: models.py:36
 msgid "Last update"
 msgstr "Última actualización"
 
-#: models.py:39
+#: models.py:37
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:41
+#: models.py:39
 msgid "Publish in index page"
 msgstr "Publicar en el página principal"
 
-#: models.py:42
+#: models.py:40
 msgid "Publish in"
 msgstr "Publicar en "
 
-#: models.py:44
+#: models.py:42
 msgid "If you want to post to the index leave this blank"
 msgstr "Si quieres publicarlo en la página principal deja esto en blanco"
 
-#: urls.py:29
+#: urls.py:28
 msgid "^add/$"
 msgstr ""
 
-#: urls.py:31
+#: urls.py:30
 msgid "^(?P<post_id>\\d+)/delete/$"
 msgstr ""
 
-#: urls.py:33
+#: urls.py:32
 msgid "^(?P<post_id>\\d+)/edit/$"
 msgstr ""
 

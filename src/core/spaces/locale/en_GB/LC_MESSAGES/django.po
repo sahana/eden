@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:13+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,21 +18,21 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:67
+#: admin.py:66
 msgid "Appearance"
 msgstr ""
 
-#: admin.py:70 templates/spaces/space_add.html:140
+#: admin.py:69 templates/spaces/space_add.html:140
 #: templates/spaces/space_add.html:228 templates/spaces/space_edit.html:143
 msgid "Modules"
 msgstr ""
 
-#: file_validation.py:54
+#: file_validation.py:53
 #, python-format
 msgid "Please keep filesize under %s."
 msgstr ""
 
-#: file_validation.py:56
+#: file_validation.py:55
 msgid "Filetype not supported."
 msgstr ""
 
@@ -171,83 +171,83 @@ msgstr ""
 msgid "Events"
 msgstr ""
 
-#: urls.py:40
+#: urls.py:39
 msgid "^(?P<space_name>\\w+)/rss/$"
 msgstr ""
 
-#: urls.py:43 urls.py:99
+#: urls.py:42 urls.py:98
 msgid "^(?P<space_name>\\w+)/news/"
 msgstr ""
 
-#: urls.py:46
+#: urls.py:45
 msgid "^(?P<space_name>\\w+)/proposal/"
 msgstr ""
 
-#: urls.py:49
+#: urls.py:48
 msgid "^(?P<space_name>\\w+)/calendar/"
 msgstr ""
 
-#: urls.py:52
+#: urls.py:51
 msgid "^(?P<space_name>\\w+)/debate/"
 msgstr ""
 
-#: urls.py:59
+#: urls.py:58
 msgid "^(?P<space_name>\\w+)/docs/add/$"
 msgstr ""
 
-#: urls.py:61
+#: urls.py:60
 msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
 msgstr ""
 
-#: urls.py:63
+#: urls.py:62
 msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
 msgstr ""
 
-#: urls.py:65
+#: urls.py:64
 msgid "^(?P<space_name>\\w+)/docs/$"
 msgstr ""
 
-#: urls.py:72
+#: urls.py:71
 msgid "^(?P<space_name>\\w+)/event/add/$"
 msgstr ""
 
-#: urls.py:74
+#: urls.py:73
 msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/edit/$"
 msgstr ""
 
-#: urls.py:76
+#: urls.py:75
 msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/delete/$"
 msgstr ""
 
-#: urls.py:78
+#: urls.py:77
 msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/$"
 msgstr ""
 
-#: urls.py:80
+#: urls.py:79
 msgid "^(?P<space_name>\\w+)/event/$"
 msgstr ""
 
-#: urls.py:87
+#: urls.py:86
 msgid "^(?P<space_name>\\w+)/intent/$"
 msgstr ""
 
-#: urls.py:88
+#: urls.py:87
 msgid "^(?P<space_name>\\w+)/intent/approve/(?P<token>\\w+)/$"
 msgstr ""
 
-#: urls.py:95
+#: urls.py:94
 msgid "^(?P<space_name>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:97
+#: urls.py:96
 msgid "^(?P<space_name>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:101
+#: urls.py:100
 msgid "^add/$"
 msgstr ""
 
-#: urls.py:105
+#: urls.py:104
 msgid "^go/"
 msgstr ""
 
@@ -261,39 +261,39 @@ msgstr ""
 msgid "All the recent activity in %s "
 msgstr ""
 
-#: views.py:121
+#: views.py:120
 msgid "Access has been already authorized"
 msgstr ""
 
-#: views.py:127
+#: views.py:126
 msgid "New participation request"
 msgstr ""
 
-#: views.py:128
+#: views.py:127
 msgid ""
 "User {0} wants to participate in space {1}.\n"
 "                   Plese click on the link below to approve.\n"
 " {2}"
 msgstr ""
 
-#: views.py:131
+#: views.py:130
 msgid "Your request is being processed."
 msgstr ""
 
-#: views.py:145
+#: views.py:144
 msgid "The requested intent does not exist!"
 msgstr ""
 
-#: views.py:154
+#: views.py:153
 #, python-format
 msgid "The user has been authorized to participate in space \"%s\"."
 msgstr ""
 
-#: views.py:155
+#: views.py:154
 msgid "Autorization succesful"
 msgstr ""
 
-#: views.py:238
+#: views.py:237
 msgid ""
 "Hello anonymous user. Remember                                               "
 "that this space is public to view, "
@@ -303,15 +303,19 @@ msgid ""
 "\">login</a> to participate."
 msgstr ""
 
-#: views.py:245
+#: views.py:244
 msgid ""
 "You're an anonymous user.                           You must <a href=\"/"
 "accounts/register\">register</a>                           or <a href=\"/"
 "accounts/login\">login</a> to access here."
 msgstr ""
 
-#: views.py:255
+#: views.py:254
 msgid "You're not registered to this space."
+msgstr ""
+
+#: views.py:313
+msgid "Space edited successfully"
 msgstr ""
 
 #: templates/spaces/document_add.html:4 templates/spaces/document_add.html:16
@@ -376,7 +380,7 @@ msgid "Edit document"
 msgstr ""
 
 #: templates/spaces/document_edit.html:70 templates/spaces/event_edit.html:129
-#: templates/spaces/space_edit.html:220
+#: templates/spaces/space_edit.html:241
 msgid "Save"
 msgstr ""
 
@@ -413,7 +417,7 @@ msgid "Create new event"
 msgstr ""
 
 #: templates/spaces/event_add.html:128 templates/spaces/event_edit.html:128
-#: templates/spaces/space_add.html:215 templates/spaces/space_edit.html:219
+#: templates/spaces/space_add.html:215 templates/spaces/space_edit.html:240
 msgid "Cancel"
 msgstr ""
 

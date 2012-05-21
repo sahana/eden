@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:14+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: 2012-02-29 09:04+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -19,51 +19,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: admin.py:38
+#: admin.py:37
 msgid "Other data"
 msgstr "Outros datos"
 
-#: models.py:35
+#: models.py:33
 msgid "Title"
 msgstr "Título"
 
-#: models.py:36
+#: models.py:34
 msgid "Text"
 msgstr "Texto"
 
-#: models.py:37
+#: models.py:35
 msgid "Date"
 msgstr "Data"
 
-#: models.py:38
+#: models.py:36
 msgid "Last update"
 msgstr "Última actualización"
 
-#: models.py:39
+#: models.py:37
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:41
+#: models.py:39
 msgid "Publish in index page"
 msgstr "Publicar na páxina principal"
 
-#: models.py:42
+#: models.py:40
 msgid "Publish in"
 msgstr "Publicar en"
 
-#: models.py:44
+#: models.py:42
 msgid "If you want to post to the index leave this blank"
 msgstr "Se queres postealo na páxina principal deixa isto en blanco"
 
-#: urls.py:29
+#: urls.py:28
 msgid "^add/$"
 msgstr ""
 
-#: urls.py:31
+#: urls.py:30
 msgid "^(?P<post_id>\\d+)/delete/$"
 msgstr ""
 
-#: urls.py:33
+#: urls.py:32
 msgid "^(?P<post_id>\\d+)/edit/$"
 msgstr ""
 
