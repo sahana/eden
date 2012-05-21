@@ -1707,8 +1707,7 @@ def org_organisation_controller():
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
-                btable = s3db.org_organisation_branch
-                branch_filter = S3FieldSelector("branch.id") == None
+                branch_filter = S3FieldSelector("parent.id") == None
                 r.resource.add_filter(branch_filter)
             elif r.component_name == "human_resource" and r.component_id:
                 # Workaround until widget is fixed:
