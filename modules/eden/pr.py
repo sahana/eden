@@ -2758,34 +2758,19 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     return pe_str
 
 # =============================================================================
-def pr_person_represent(id):
+def pr_person_represent(person_id):
     """ Representation """
 
-    if not id:
+    table = current.s3db.pr_person
+
+    if not person_id:
         return current.messages.NONE
-
-    db = current.db
-    s3db = current.s3db
-    cache = current.cache
-
-    table = s3db.pr_person
-
-    def _represent(id):
-        if isinstance(id, Row):
-            person = id
-            id = person.id
-        else:
-            person = db(table.id == id).select(table.first_name,
-                                               table.middle_name,
-                                               table.last_name,
-                                               limitby=(0, 1)).first()
-        if person:
-            return s3_fullname(person)
-        else:
-            return None
-
-    name = cache.ram("pr_person_%s" % id,
-                     lambda: _represent(id), time_expire=10)
+    if isinstance(person_id, dict):
+        return s3_fullname(person_id.keys())
+    else:
+        name = current.cache.ram("pr_person_%s" % person_id,
+                                 lambda: s3_fullname(person_id),
+                                 time_expire=60)
     return name
 
 # =============================================================================

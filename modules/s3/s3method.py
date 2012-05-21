@@ -106,6 +106,22 @@ class S3Method(object):
                 else:
                     self.method = "list"
 
+            ## In interactive single-record CRUD, open the
+            ## instance record instead of a super-entity record
+            #if r.interactive and \
+               #self.record and \
+               #self.method in ("read", "update") and \
+               #self.resource.table._id.name != "id":
+                #record = self.resource[self.record]
+                #tablename = record.instance_type
+                #prefix, name = tablename.split("_", 1)
+                #resource = manager.define_resource(prefix, name,
+                                                   #uid=record.uuid)
+                #resource.load()
+                #if resource.count() == 1:
+                    #self.resource = resource
+                    #self.record = resource.records().first()[resource.table._id]
+
         self.prefix = self.resource.prefix
         self.name = self.resource.name
         self.tablename = self.resource.tablename
