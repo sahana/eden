@@ -6,17 +6,17 @@
 */
 
 body {
-  padding-top: 42px;
+  padding-top: 52px;
 }
 
-div.documentwrapper {
-  float: left;
-  width: 100%;
+.navbar .brand {
+  color: #FFF;
+  text-shadow: #777 2px 2px 3px;
 }
 
 {%- block sidebarlogo %}
   {%- if logo %}
-.topbar h3 a, .topbar .brand {
+.navbar h3 a, .navbar .brand {
   background: transparent url("{{ logo }}") no-repeat 22px 3px;
   padding-left: 62px;
 }

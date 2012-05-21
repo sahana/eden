@@ -81,10 +81,6 @@ urlpatterns += i18n_patterns('',
     url(r'^rss/$', IndexEntriesFeed(), name='site-feed'),
     
     #(r'^api/', include('e_cidadania.apps.api.urls')),
-    
-#    # Static content #### FOR DEVELOPMENT!! ####
-    url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': 'static'}),
 
     # This urls is for the django comments system
     url(_(r'^comments/'), include('django.contrib.comments.urls')),
@@ -97,12 +93,6 @@ urlpatterns += i18n_patterns('',
     
     # For smart_selects app
     url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
-)
-
-urlpatterns += patterns('',
-    # Static content #### FOR DEVELOPMENT!! ####
-    url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root': settings.MEDIA_ROOT}),
 )
 
 if settings.DEBUG:
