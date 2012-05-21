@@ -273,8 +273,7 @@ if deployment_settings.has_module(module):
 
         # Load the models we depend on
         if deployment_settings.has_module("cr"):
-            s3mgr.load("cr_shelter")
-            shelter_id = response.s3.shelter_id
+            shelter_id = s3db.shelter_id
         if deployment_settings.has_module("hrm"):
             human_resource_id = s3db.hrm_human_resource_id
         else:
@@ -445,7 +444,7 @@ if deployment_settings.has_module(module):
                   represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
             s3_comments(),
             #document_id(),  # Better to have multiple Documents on a Tab
-            shelter_id(),
+            s3db.shelter_id(),
             *s3_meta_fields())
 
         # CRUD strings

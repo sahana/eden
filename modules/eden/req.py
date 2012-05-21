@@ -2094,7 +2094,7 @@ def req_match():
     if tablename == "org_office":
         rheader = s3db.org_rheader
     elif tablename == "cr_shelter":
-        rheader = s3.shelter_rheader
+        rheader = s3db.cr_shelter_rheader
     elif tablename == "hms_hospital":
         rheader = s3db.hms_hospital_rheader
     else:

@@ -938,6 +938,13 @@ class S3IRSResponseModel(S3Model):
         human_resource_id = self.hrm_human_resource_id
         location_id = self.gis_location_id
         ireport_id = self.irs_ireport_id
+        
+        if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
+            hrm_label = T("Staff")
+        elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
+            hrm_label = T("Volunteer")
+        else:
+            hrm_label = T("Staff/Volunteer")
 
         # ---------------------------------------------------------------------
         # Staff assigned to an Incident
@@ -946,7 +953,8 @@ class S3IRSResponseModel(S3Model):
         table = self.define_table(tablename,
                                   ireport_id(),
                                   # Simple dropdown is faster for a small team
-                                  human_resource_id(widget=None),
+                                  human_resource_id(label = hrm_label,
+                                                    widget=None),
                                   Field("incident_commander", "boolean",
                                         default = False,
                                         label = T("Incident Commander"),
@@ -999,7 +1007,8 @@ class S3IRSResponseModel(S3Model):
         table = self.define_table(tablename,
                                   ireport_id(),
                                   # Simple dropdown is faster for a small team
-                                  human_resource_id(represent=hr_represent,
+                                  human_resource_id(label = hrm_label,
+                                                    represent=hr_represent,
                                                     requires = IS_ONE_OF(db,
                                                                          "hrm_human_resource.id",
                                                                          hr_represent,
@@ -1065,12 +1074,18 @@ def irs_rheader(r, tabs=[]):
         s3db = current.s3db
         #s3 = current.response.s3
         settings = current.deployment_settings
-
+        if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
+            hrm_label = T("Staff")
+        elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
+            hrm_label = T("Volunteers")
+        else:
+            hrm_label = T("Staff & Volunteers")
+            
         tabs = [(T("Report Details"), None),
                 (T("Photos"), "image"),
                 (T("Documents"), "document"),
                 (T("Vehicles"), "vehicle"),
-                (T("Staff"), "human_resource"),
+                (hrm_label, "human_resource"),
                 (T("Tasks"), "task"),
                ]
         if settings.has_module("msg"):

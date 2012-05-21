@@ -2,27 +2,64 @@
 
 """
     Shelter (Camp) Registry, model
+    
+
+    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
 """
 
-if deployment_settings.has_module("cr"):
+__all__ = ["S3CampDataModel",
+           "cr_shelter_rheader"]
 
-    # Add Shelters as component of Services, Types as a simple way
-    # to get reports showing shelters per type, etc.
-    s3mgr.model.add_component("cr_shelter",
-                              cr_shelter_type="shelter_type_id",
-                              cr_shelter_service="shelter_service_id")
+from gluon import *
+from gluon.storage import Storage
+from ..s3 import *
+from eden.layouts import S3AddResourceLink
 
-    def shelter_tables():
-        """ Load the Shelter Tables when needed """
+T = current.T
 
-        module = "cr"
+class S3CampDataModel(S3Model):
+    
+    names = ["cr_shelter_type",
+             "cr_shelter_service",
+             "cr_shelter",
+             ]
+
+    # Define a function model() which takes no parameters (except self):
+    def model(self):
+
+        # You will most likely need (at least) these:
+        db = current.db
+
+        # This one should also be there:
+        s3 = current.response.s3
+        s3db = current.s3db
+        settings = current.deployment_settings
 
         person_id = s3db.pr_person_id
         location_id = s3db.gis_location_id
         organisation_id = s3db.org_organisation_id
-
-        super_entity = s3mgr.model.super_entity
-        super_link = s3mgr.model.super_link
 
         # -------------------------------------------------------------------------
         # Shelter types
@@ -32,12 +69,12 @@ if deployment_settings.has_module("cr"):
                                 Field("name", notnull=True,
                                       requires = IS_NOT_ONE_OF(db,
                                                                "%s.name" % tablename)),
-                                s3_comments(),
+                                s3.comments(),
 
                                 *(s3_timestamp() + s3_uid() + s3_deletion_status()))
 
         # CRUD strings
-        if deployment_settings.get_ui_camp():
+        if settings.get_ui_camp():
             ADD_SHELTER_TYPE = T("Add Camp Type")
             LIST_SHELTER_TYPES = T("List Camp Types")
             SHELTER_TYPE_LABEL = T("Camp Type")
@@ -95,12 +132,12 @@ if deployment_settings.has_module("cr"):
         tablename = "cr_shelter_service"
         table = db.define_table(tablename,
                                 Field("name", notnull=True),
-                                s3_comments(),
+                                s3.comments(),
 
                                 *(s3_timestamp() + s3_uid() + s3_deletion_status()))
 
         # CRUD strings
-        if deployment_settings.get_ui_camp():
+        if settings.get_ui_camp():
             ADD_SHELTER_SERVICE = T("Add Camp Service")
             LIST_SHELTER_SERVICES = T("List Camp Services")
             SHELTER_SERVICE_LABEL = T("Camp Service")
@@ -142,6 +179,7 @@ if deployment_settings.has_module("cr"):
                 name_nice_plural = T("Shelter Services"))
 
         def cr_shelter_service_represent(shelter_service_ids):
+            NONE = current.messages.NONE
             table = db.cr_shelter_service
             if not shelter_service_ids:
                 return NONE
@@ -178,7 +216,7 @@ if deployment_settings.has_module("cr"):
         
         tablename = "cr_shelter"
         table = db.define_table(tablename,
-                                super_link("site_id", "org_site"),
+                                self.super_link("site_id", "org_site"),
                                 #Field("code",
                                 #      length=10,           # Mayon compatibility
                                 #      notnull=True,
@@ -209,11 +247,11 @@ if deployment_settings.has_module("cr"):
                                       label = T("Status")),
                                 Field("source",
                                       label = T("Source")),
-                                s3_comments(),
-                                *(address_fields() + s3_meta_fields()))
+                                s3.comments(),
+                                *(s3.address_fields() + s3.meta_fields()))
 
         # CRUD strings
-        if deployment_settings.get_ui_camp():
+        if settings.get_ui_camp():
             ADD_SHELTER = T("Add Camp")
             LIST_SHELTERS = T("List Camps")
             SHELTER_LABEL = T("Camp Service")
@@ -275,10 +313,16 @@ if deployment_settings.has_module("cr"):
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
 
-        s3mgr.configure(tablename,
+        # Add Shelters as component of Services, Types as a simple way
+        # to get reports showing shelters per type, etc.
+        self.add_component(tablename,
+                          cr_shelter_type="shelter_type_id",
+                          cr_shelter_service="shelter_service_id")
+
+        self.configure(tablename,
                         super_entity="org_site",
                         # Update the Address Fields
-                        onvalidation=address_onvalidation,
+                        onvalidation=s3.address_onvalidation,
                         list_fields=["id",
                                      "name",
                                      "status",
@@ -293,77 +337,73 @@ if deployment_settings.has_module("cr"):
                                      "person_id",
                                     ])
 
-        # -----------------------------------------------------------------------------
-        def shelter_rheader(r, tabs=[]):
-
-            """ Resource Headers """
-
-            if r.representation == "html":
-                tablename, record = s3_rheader_resource(r)
-                if tablename == "cr_shelter" and record:
-                    if not tabs:
-                        tabs = [(T("Basic Details"), None),
-                                (T("People"), "presence"),
-                                (T("Staff"), "human_resource"),
-                            ]
-                        if deployment_settings.has_module("assess"):
-                            tabs.append((T("Assessments"), "rat"))
-
-                        try:
-                            tabs = tabs + response.s3.req_tabs(r)
-                        except:
-                            pass
-                        try:
-                            tabs = tabs + s3db.inv_tabs(r)
-                        except:
-                            pass
-
-                    rheader_tabs = s3_rheader_tabs(r, tabs)
-
-                    if r.name == "shelter":
-                        location = s3db.gis_location_represent(record.location_id)
-
-                        rheader = DIV(TABLE(
-                                            TR(
-                                                TH("%s: " % T("Name")), record.name
-                                              ),
-                                            TR(
-                                                TH("%s: " % T("Location")), location
-                                              ),
-                                            ),
-                                      rheader_tabs)
-                    else:
-                        rheader = DIV(TABLE(
-                                            TR(
-                                                TH("%s: " % T("Name")), record.name
-                                              ),
-                                            ),
-                                      rheader_tabs)
-
-                    if r.component and r.component.name == "req":
-                        # Inject the helptext script
-                        rheader.append(response.s3.req_helptext_script)
-
-                    return rheader
-            return None
         # Pass variables back to global scope (response.s3.*)
-        return dict(
-            shelter_id = shelter_id,
-            shelter_rheader = shelter_rheader,
-            ADD_SHELTER = ADD_SHELTER,
-            SHELTER_LABEL = SHELTER_LABEL
-            )
+        return Storage( ADD_SHELTER = ADD_SHELTER,
+                        SHELTER_LABEL = SHELTER_LABEL
+                        )
+        
+    # -----------------------------------------------------------------------------
+    def defaults(self):
+        shelter_id = S3ReusableField("shelter_id", "integer",
+                                      readable=False,
+                                      writable=False)
 
-    # Provide a handle to this load function
-    s3mgr.loader(shelter_tables,
-                 "cr_shelter_type",
-                 "cr_shelter_service",
-                 "cr_shelter")
+        return
 
-else:
-    def shelter_id(**arguments):
-        """ Allow FKs to be added safely to other models in case module disabled """
-        return Field("shelter_id", "integer", readable=False, writable=False)
+# -----------------------------------------------------------------------------
+def cr_shelter_rheader(r, tabs=[]):
+
+    """ Resource Headers """
+
+    if r.representation == "html":
+        s3db = current.s3db
+        tablename, record = s3_rheader_resource(r)
+        if tablename == "cr_shelter" and record:
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("People"), "presence"),
+                        (T("Staff"), "human_resource"),
+                    ]
+                if current.deployment_settings.has_module("assess"):
+                    tabs.append((T("Assessments"), "rat"))
+
+                try:
+                    tabs = tabs + s3db.req_tabs(r)
+                except:
+                    pass
+                try:
+                    tabs = tabs + s3db.inv_tabs(r)
+                except:
+                    pass
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            if r.name == "shelter":
+                location = s3db.gis_location_represent(record.location_id)
+
+                rheader = DIV(TABLE(
+                                    TR(
+                                        TH("%s: " % T("Name")), record.name
+                                      ),
+                                    TR(
+                                        TH("%s: " % T("Location")), location
+                                      ),
+                                    ),
+                              rheader_tabs)
+            else:
+                rheader = DIV(TABLE(
+                                    TR(
+                                        TH("%s: " % T("Name")), record.name
+                                      ),
+                                    ),
+                              rheader_tabs)
+
+            #if r.component and r.component.name == "req":
+                # Inject the helptext script
+            #    rheader.append(response.s3.req_helptext_script)
+
+            return rheader
+    return None
 
 # END =========================================================================
 
