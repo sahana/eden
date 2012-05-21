@@ -19,6 +19,6 @@
 
 # e-cidadania version and current status
 __version__ = "0.1.5"
-__status__ = "beta 3"
+__status__ = "RC 1"
 
 from defaults import *
