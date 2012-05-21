@@ -1737,9 +1737,13 @@ def inv_tabs(r):
             else:
                 show_inv = None
             if show_inv == True or show_inv == False:
+                if not session.s3.show_inv:
+                    session.s3.show_inv = Storage()
                 session.s3.show_inv["%s_%s" %  (r.name, r.id)] = show_inv
-            else:
+            elif session.s3.show_inv:
                 show_inv = session.s3.show_inv.get("%s_%s" %  (r.name, r.id))
+            else:
+                show_inv = False
         else:
             show_inv = True
             show_collapse = False

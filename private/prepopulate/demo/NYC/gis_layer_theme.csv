@@ -1,0 +1,2 @@
+Name,Description,Date,Style,Folder,Config,Enabled,Visible
+Sucos,% Unsafe Water,2004,"[{'low':0,'high':0.2,'fill':'98E600'},{'low':0.2,'high':0.4,'fill':'FFFF00'},{'low':0.40,'high':0.6,'fill':'FFAA00'},{'low':0.6,'high':0.8,'fill':'FF5500'},{'low':0.8,'high':1.1,'fill':'FF0000'}]",TL,TL,True,False

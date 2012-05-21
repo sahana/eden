@@ -16,6 +16,7 @@ current.s3db = s3db = S3Model()
 import eden.asset
 import eden.auth
 import eden.cms
+import eden.cr
 import eden.delphi
 import eden.doc
 import eden.dvi

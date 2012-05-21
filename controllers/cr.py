@@ -14,9 +14,6 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-# Load Models
-s3mgr.load("cr_shelter")
-
 # S3 framework functions
 # -----------------------------------------------------------------------------
 def index():
@@ -39,8 +36,7 @@ def shelter_type():
     tabs = [(T("Basic Details"), None),
             (s3.crud_strings["cr_shelter"].subtitle_list, "shelter")]
 
-    rheader = lambda r: response.s3.shelter_rheader(r,
-                                                    tabs=tabs)
+    rheader = lambda r: s3db.cr_shelter_rheader(r, tabs=tabs)
 
     # @ToDo: Shelters per type display is broken -- always returns none.
     output = s3_rest_controller(rheader=rheader)
@@ -57,8 +53,7 @@ def shelter_service():
     tabs = [(T("Basic Details"), None),
             (s3.crud_strings["cr_shelter"].subtitle_list, "shelter")]
 
-    rheader = lambda r: response.s3.shelter_rheader(r,
-                                                    tabs=tabs)
+    rheader = lambda r: s3db.cr_shelter_rheader(r, tabs=tabs)
 
     output = s3_rest_controller(rheader=rheader)
     return output
@@ -157,7 +152,7 @@ def shelter():
     # Pre-processor
     response.s3.prep = cr_shelter_prep
 
-    rheader = response.s3.shelter_rheader
+    rheader = s3db.cr_shelter_rheader
     output = s3_rest_controller(rheader=rheader)
 
     return output

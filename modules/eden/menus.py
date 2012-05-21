@@ -520,10 +520,10 @@ class S3OptionsMenu:
         settings = current.deployment_settings
         if settings.get_ui_camp():
             shelter = "Camps"
-            types = "Camp Types and Services"
+            types = "Camp Settings"
         else:
             shelter = "Shelters"
-            types = "Shelter Types and Services"
+            types = "Shelter Settings"
 
         return M(c="cr")(
                     M(shelter, f="shelter")(
@@ -533,9 +533,9 @@ class S3OptionsMenu:
                         #M("Search", m="search"),
                         M("Import", m="import"),
                     ),
-                    M(types, f="shelter_type", restrict=[ADMIN])(
-                        M("List / Add Services", m="create"),
-                        M("List / Add Types"),
+                    M(types, restrict=[ADMIN])(
+                        M("Types", f="shelter_type"),
+                        M("Services", f="shelter_service"),
                     )
                 )
 
