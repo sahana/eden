@@ -24,3 +24,9 @@ epio*
 *.dbf
 *.idea*
 src/e_cidadania/build/*
+develop-eggs
+eggs
+parts
+bin
+e_cidadania.egg-info
+.installed.cfg
