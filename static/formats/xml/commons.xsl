@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
 <xsl:stylesheet
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
@@ -10,7 +8,7 @@
          include into other stylesheets with:
             <xsl:include href="../xml/commons.xsl"/>
 
-         Copyright (c) 2010-11 Sahana Software Foundation
+         Copyright (c) 2010-12 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -98,6 +96,41 @@
         <xsl:value-of select="translate($string,
             'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÀÈÌÒÙÄÖÜÅÂÊÎÔÛÃẼĨÕŨØ',
             'abcdefghijklmnopqrstuvwxyzáéíóúàèìòùäöüåâêîôûãẽĩõũø')"/>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="left-trim">
+        <xsl:param name="s" />
+        <xsl:choose>
+            <xsl:when test="substring($s, 1, 1) = ''">
+              <xsl:value-of select="$s"/>
+            </xsl:when>
+            <xsl:when test="normalize-space(substring($s, 1, 1)) = ''">
+              <xsl:call-template name="left-trim">
+                <xsl:with-param name="s" select="substring($s, 2)" />
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$s" />
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <xsl:template name="right-trim">
+        <xsl:param name="s" />
+        <xsl:choose>
+            <xsl:when test="substring($s, 1, 1) = ''">
+              <xsl:value-of select="$s"/>
+            </xsl:when>
+            <xsl:when test="normalize-space(substring($s, string-length($s))) = ''">
+              <xsl:call-template name="right-trim">
+                <xsl:with-param name="s" select="substring($s, 1, string-length($s) - 1)" />
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$s" />
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -294,11 +327,8 @@
                 <xsl:value-of select="$input"/>
             </xsl:otherwise>
         </xsl:choose>
-
-
     </xsl:template>
 
-    
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

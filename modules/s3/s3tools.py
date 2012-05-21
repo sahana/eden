@@ -69,7 +69,6 @@ DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
 
 # =============================================================================
-
 class SQLTABLES3(SQLTABLE):
 
     """
@@ -243,7 +242,6 @@ class SQLTABLES3(SQLTABLE):
         components.append(TBODY(*tbody))
 
 # =============================================================================
-
 class CrudS3(Crud):
 
     """
@@ -293,7 +291,6 @@ class CrudS3(Crud):
 
 
 # =============================================================================
-
 class S3BulkImporter(object):
     """
         Import CSV files of data to pre-populate the database.
@@ -325,6 +322,7 @@ class S3BulkImporter(object):
         self.errorList = []
         self.resultList = []
 
+    # -------------------------------------------------------------------------
     def load_descriptor(self, path):
         """ Method that will load the descriptor file and then all the
             import tasks in that file into the importTasks property.
@@ -345,6 +343,7 @@ class S3BulkImporter(object):
             else: # standard importer
                 self.extractImporterLine(path, details)
 
+    # -------------------------------------------------------------------------
     def extractImporterLine(self, path, details):
         """
             Method that extract the details for an import Task
@@ -393,6 +392,7 @@ class S3BulkImporter(object):
             self.errorList.append(
             "prepopulate error: job not of length 4. %s job ignored" % task)
 
+    # -------------------------------------------------------------------------
     def extractSpecialistLine(self, path, details):
         """ Method that will store a single import job into
             the importTasks property.
@@ -414,12 +414,14 @@ class S3BulkImporter(object):
         self.tasks.append([2, function, csv, extraArgs])
         self.specialTasks.append([function, csv, extraArgs])
 
+    # -------------------------------------------------------------------------
     def load_import(self, controller, csv, xsl):
         """ Method that will store a single import job into
             the importTasks property.
         """
         self.importTasks.append([controller, csv, xsl])
 
+    # -------------------------------------------------------------------------
     def execute_import_task(self, task):
         """ Method that will execute each import job, in order """
         start = datetime.datetime.now()
@@ -517,6 +519,7 @@ class S3BulkImporter(object):
             if current.session.s3.debug:
                 s3_debug(msg)
 
+    # -------------------------------------------------------------------------
     def execute_special_task(self, task):
         start = datetime.datetime.now()
         if task[0] == 2:
@@ -547,10 +550,98 @@ class S3BulkImporter(object):
             if current.session.s3.debug:
                 s3_debug(msg)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_role(filename):
+        """ Import Roles from CSV """
+
+        # Check if the source file is accessible
+        try:
+            openFile = open(filename, "r")
+        except IOError:
+            return "Unable to open file %s" % filename
+
+        auth = current.auth
+        acl = auth.permission
+        create_role = auth.s3_create_role
+
+        def parseACL(_acl):
+            permissions = _acl.split("|")
+            aclValue = 0
+            for permission in permissions:
+                if permission == "READ":
+                    aclValue = aclValue | acl.READ
+                if permission == "CREATE":
+                    aclValue = aclValue | acl.CREATE
+                if permission == "UPDATE":
+                    aclValue = aclValue | acl.UPDATE
+                if permission == "DELETE":
+                    aclValue = aclValue | acl.DELETE
+                if permission == "ALL":
+                    aclValue = aclValue | acl.ALL
+            return aclValue
+
+        reader = csv.DictReader(openFile)
+        roles = {}
+        acls = {}
+        args = {}
+        for row in reader:
+            if row != None:
+                role = row["role"]
+                if "description" in row:
+                    desc = row["description"]
+                else:
+                    desc = ""
+                rules = {}
+                extra_param = {}
+                if "controller" in row and row["controller"]:
+                    rules["c"] = row["controller"]
+                if "function" in row and row["function"]:
+                    rules["f"] = row["function"]
+                if "table" in row and row["table"]:
+                    rules["t"] = row["table"]
+                if row["oacl"]:
+                    rules["oacl"] = parseACL(row["oacl"])
+                if row["uacl"]:
+                    rules["uacl"] = parseACL(row["uacl"])
+                #if "org" in row and row["org"]:
+                    #rules["organisation"] = row["org"]
+                #if "facility" in row and row["facility"]:
+                    #rules["facility"] = row["facility"]
+                if "entity" in row and row["entity"]:
+                    rules["entity"] = row["entity"]
+                if "hidden" in row and row["hidden"]:
+                    extra_param["hidden"] = row["hidden"]
+                if "system" in row and row["system"]:
+                    extra_param["system"] = row["system"]
+                if "protected" in row and row["protected"]:
+                    extra_param["protected"] = row["protected"]
+                if "uid" in row and row["uid"]:
+                    extra_param["uid"] = row["uid"]
+            if role in roles:
+                acls[role].append(rules)
+            else:
+                roles[role] = [role,desc]
+                acls[role] = [rules]
+            if len(extra_param) > 0 and role not in args:
+                args[role] = extra_param
+        for rulelist in roles.values():
+            if rulelist[0] in args:
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]],
+                            **args[rulelist[0]])
+            else:
+                create_role(rulelist[0],
+                            rulelist[1],
+                            *acls[rulelist[0]])
+
+    # -------------------------------------------------------------------------
     def clear_tasks(self):
         """ Clear the importTask list """
         self.tasks = []
 
+    # -------------------------------------------------------------------------
     def perform_tasks(self, path):
         """ convenience method that will load and then execute the import jobs
             that are listed in the descriptor file
@@ -563,13 +654,12 @@ class S3BulkImporter(object):
                 self.execute_special_task(task)
 
 # =============================================================================
-
 class S3DateTime(object):
     """
         Toolkit for date+time parsing/representation
     """
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def date_represent(date, utc=False):
         """
@@ -640,165 +730,5 @@ class S3DateTime(object):
             return xml.encode_local_datetime(dt)
         else:
             return current.messages.NONE
-
-# =============================================================================
-
-# James 2012-04-13
-# This is now deprecated in favour of S3AddResourceLink
-#class S3Comment(object):
-#    """
-#    Stores resource table field comment, so that it can later be
-#    represented in different formats
-#
-#    @author: Shiv Deepak
-#    """
-#
-#    def __init__(self, desc=None, title=None,
-#                 anchor_title=None, anchor_link=None):
-#        """
-#            Initialise the object
-#
-#            @param desc: the actual comment which will be displayed as tooltip
-#
-#            @param title: the title of the comment, mostly it will the
-#                          name of the field to which the comment belongs to
-#
-#            @param anchor_title: hiperlink title for HTML forms, added just
-#                                 just before the tooltip
-#
-#            @param anchor_link: hiperlink url, anchor_title and anchor_link
-#                                should be specified together
-#        """
-#
-#        self.desc = unicode(desc).decode("utf-8") if desc else None
-#        self.title = unicode(title).decode("utf-8") if title else None
-#
-#        self.anchor_title =\
-#            str(anchor_title).decode("utf-8") if anchor_title else None
-#        self.anchor_link =\
-#            str(anchor_link).decode("utf-8") if anchor_link else None
-#
-#    def markup(self):
-#        """
-#            General HTML output for webpages with tooltip
-#
-#            @return: field's comment in HTML markup,
-#                     return object will be of type
-#                     U{XmlComponent
-#                     <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
-#        """
-#
-#        xmlescape = lambda m: escape(m)
-#
-#        if self.anchor_title and self.anchor_link:
-#
-#            if self.desc:
-#                need_tooltip=True
-#                desc = xmlescape(self.desc)
-#                if self.title == None:
-#                    title = ""
-#                    tooltip_text = desc
-#                else:
-#                    title = xmlescape(self.title)
-#                    tooltip_text = "%s|%s" % (title, desc)
-#            else:
-#                need_tooltip=False
-#
-#            anchor_title = xmlescape(self.anchor_title)
-#            anchor_link = xmlescape(self.anchor_link)
-#
-#            if need_tooltip:
-#                output = DIV(A(anchor_title,
-#                               _href=anchor_link,
-#                               _class="colorbox",
-#                               _target='top',
-#                               _title=anchor_title),
-#                             DIV(_class="tooltip",
-#                                 _title=tooltip_text
-#                                 )
-#                             )
-#            else:
-#                output = DIV(A(anchor_title,
-#                               _href=anchor_link,
-#                               _class="colorbox",
-#                               _target='top',
-#                               _title=anchor_title),
-#                             )
-#
-#        elif self.title and self.desc:
-#
-#            desc = xmlescape(self.desc)
-#            title = xmlescape(self.title)
-#
-#            output = DIV(_class="tooltip",
-#                         _title="%s|%s" % (title,
-#                                           desc),
-#                         )
-#
-#        elif self.desc:
-#
-#            desc = xmlescape(self.desc)
-#
-#            output = DIV(_class="tooltip",
-#                         _title=desc,
-#                         )
-#
-#        else:
-#            output = DIV("")
-#
-#        return output
-#
-#    def plaintext(self):
-#        """
-#            Comment in plain text, suitable on PDF
-#
-#            @return: field's comment in plain text
-#        """
-#
-#        output = self.desc if self.desc else ""
-#        return output
-#
-#    def xml(self):
-#        """
-#            to impart U{XmlComponent
-#            <http://web2py.com/examples/static/epydoc/web2py.gluon.html-module.html>}
-#            behaviour to the class
-#        """
-#        return str(self)
-#
-#    # Magic Methods for string like behaviour
-#    def __str__(self):
-#        output = self.markup()
-#        return output.xml()
-#
-#    def __repr__(self):
-#        return str(self)
-#
-#    def __len__(self):
-#        return len(str(self))
-#
-#    def __add__(self,other):
-#        return '%s%s' % (self,other)
-#
-#    def __radd__(self,other):
-#        return '%s%s' % (other,self)
-#
-#    def __cmp__(self,other):
-#        return cmp(str(self),str(other))
-#
-#    def __hash__(self):
-#        return hash(str(self))
-#
-#    def __getattr__(self,name):
-#        return getattr(str(self),name)
-#
-#    def __getitem__(self,i):
-#        return str(self)[i]
-#
-#    def __getslice__(self,i,j):
-#        return str(self)[i:j]
-#
-#    def __iter__(self):
-#        for c in str(self): yield c
 
 # END =========================================================================

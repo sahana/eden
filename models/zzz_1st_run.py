@@ -19,6 +19,7 @@ if len(pop_list) > 0:
         table = db["pr_group"]
         for team in deployment_settings.get_auth_opt_in_team_list():
             table.insert(name = team, group_type = 5)
+
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
         # Send Messages from Outbox
@@ -171,9 +172,6 @@ if len(pop_list) > 0:
                     onaccept = lambda form: \
                         auth.s3_link_to_person(user=form.vars))
     s3mgr.model.add_component("auth_membership", auth_user="user_id")
-
-    # Create the bulk Importer object
-    bi = s3base.S3BulkImporter()
 
     # Allow population via shell scripts
     if not request.env.request_method:

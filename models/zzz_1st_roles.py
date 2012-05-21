@@ -17,86 +17,10 @@ else:
 # Add core roles as long as at least one populate setting is on
 if len(pop_list) > 0:
 
-    import csv
-    def import_role(filename, extraVars=None):
-        def parseACL(_acl):
-            permissions = _acl.split("|")
-            aclValue = 0
-            for permission in permissions:
-                if permission == "READ":
-                    aclValue = aclValue | acl.READ
-                if permission == "CREATE":
-                    aclValue = aclValue | acl.CREATE
-                if permission == "UPDATE":
-                    aclValue = aclValue | acl.UPDATE
-                if permission == "DELETE":
-                    aclValue = aclValue | acl.DELETE
-                if permission == "ALL":
-                    aclValue = aclValue | acl.ALL
-            return aclValue
+    # Create the bulk Importer object
+    bi = s3base.S3BulkImporter()
 
-        # Check if the source file is accessible
-        try:
-            openFile = open(filename, "r")
-        except IOError:
-            return "Unable to open file %s" % filename
-        acl = auth.permission
-        reader = csv.DictReader(openFile)
-        roles = {}
-        acls = {}
-        args = {}
-        for row in reader:
-            if row != None:
-                role = row["role"]
-                if "description" in row:
-                    desc = row["description"]
-                else:
-                    desc = ""
-                rules = {}
-                extra_param = {}
-                if "controller" in row and row["controller"]:
-                    rules["c"] = row["controller"]
-                if "function" in row and row["function"]:
-                    rules["f"] = row["function"]
-                if "table" in row and row["table"]:
-                    rules["t"] = row["table"]
-                if row["oacl"]:
-                    rules["oacl"] = parseACL(row["oacl"])
-                if row["uacl"]:
-                    rules["uacl"] = parseACL(row["uacl"])
-                #if "org" in row and row["org"]:
-                    #rules["organisation"] = row["org"]
-                #if "facility" in row and row["facility"]:
-                    #rules["facility"] = row["facility"]
-                if "entity" in row and row["entity"]:
-                    rules["entity"] = row["entity"]
-                if "hidden" in row and row["hidden"]:
-                    extra_param["hidden"] = row["hidden"]
-                if "system" in row and row["system"]:
-                    extra_param["system"] = row["system"]
-                if "protected" in row and row["protected"]:
-                    extra_param["protected"] = row["protected"]
-                if "uid" in row and row["uid"]:
-                    extra_param["uid"] = row["uid"]
-            if role in roles:
-                acls[role].append(rules)
-            else:
-                roles[role] = [role,desc]
-                acls[role] = [rules]
-            if len(extra_param) > 0 and role not in args:
-                args[role] = extra_param
-        for rulelist in roles.values():
-            if rulelist[0] in args:
-                create_role(rulelist[0],
-                            rulelist[1],
-                            *acls[rulelist[0]],
-                            **args[rulelist[0]])
-            else:
-                create_role(rulelist[0],
-                            rulelist[1],
-                            *acls[rulelist[0]])
-    response.s3.import_role = import_role
-
+    response.s3.import_role = bi.import_role
 
     # Shortcuts
     acl = auth.permission
