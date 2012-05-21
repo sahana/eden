@@ -1,7 +1,7 @@
 e-cidadania
 ===========
 
-Current version: 0.1.5 beta
+Current version: 0.1.5 RC1
 
 e-cidadania is a project to develop an open source application for citizen participation, usable by associations, companies and administrations.
 
@@ -50,7 +50,7 @@ Getting help
  * `Mailing lists <http://code.ecidadania.org/wiki/MailingLists>`_ global and local.
  * `Social networks <http://code.ecidadania.org/wiki/SocialNetworks>`_ where e-cidadania present.
  * `Website <http://ecidadania.org>`_ e-cidadania official website.
- * `IRC channels <irc://irc.freenode.net#ecidadania-dev>`_ #ecidadania-dev and #ecidadania for e-cidadania.
+ * `IRC channels <http://webchat.freenode.net>`_ #ecidadania-dev and #ecidadania for e-cidadania.
 
 Useful information
 ------------------

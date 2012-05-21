@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:13+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,44 +17,56 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.py:39
+#: admin.py:38
 msgid "Description"
 msgstr ""
 
-#: admin.py:42
+#: admin.py:41
 msgid "Options"
 msgstr ""
 
-#: models.py:31
+#: models.py:30
 msgid "Page Title"
 msgstr ""
 
-#: models.py:32
+#: models.py:31
 msgid "URL"
 msgstr ""
 
-#: models.py:33
+#: models.py:32
 msgid "Content"
 msgstr ""
 
-#: models.py:34
+#: models.py:33
 msgid "Show in footer"
 msgstr ""
 
-#: models.py:35
+#: models.py:34
 msgid "Author"
 msgstr ""
 
-#: models.py:37
+#: models.py:36
 msgid "Last update"
 msgstr ""
 
-#: models.py:38
+#: models.py:37
 msgid "Order"
 msgstr ""
 
-#: models.py:42
+#: models.py:41
 msgid "Static Pages"
+msgstr ""
+
+#: urls.py:29
+msgid "^edit/"
+msgstr ""
+
+#: urls.py:31
+msgid "^delete/"
+msgstr ""
+
+#: urls.py:33
+msgid "^add/"
 msgstr ""
 
 #: templates/staticpages/staticpages_index.html:13

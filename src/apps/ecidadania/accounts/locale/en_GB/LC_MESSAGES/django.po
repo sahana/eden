@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:13+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,78 +18,70 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:34
+#: models.py:35
 msgid "Male"
 msgstr ""
 
-#: models.py:35
+#: models.py:36
 msgid "Female"
 msgstr ""
 
-#: models.py:43
+#: models.py:44
 msgid "Interes"
 msgstr ""
 
-#: models.py:55
+#: models.py:56
 msgid "Name"
 msgstr ""
 
-#: models.py:56
+#: models.py:57
 msgid "Surname"
 msgstr ""
 
-#: models.py:57
+#: models.py:58
 msgid "Gender"
 msgstr ""
 
-#: models.py:60
+#: models.py:61
 msgid "Birth date"
 msgstr ""
 
-#: models.py:64
-msgid "Province"
-msgstr ""
-
-#: models.py:65
-msgid "Region"
-msgstr ""
-
-#: models.py:66
-msgid "Neighborhood"
-msgstr ""
-
-#: models.py:69
-msgid "Address"
-msgstr ""
-
-#: models.py:70
-msgid "Number"
-msgstr ""
-
-#: models.py:72
-msgid "Floor"
-msgstr ""
-
-#: models.py:73
-msgid "Letter"
-msgstr ""
-
-#: models.py:76
-msgid "Phone 1"
-msgstr ""
-
-#: models.py:81 models.py:87
-msgid "9 digits maximum"
+#: models.py:79
+msgid "District"
 msgstr ""
 
 #: models.py:82
-msgid "Phone 2"
+msgid "Address"
+msgstr ""
+
+#: models.py:83
+msgid "Number"
+msgstr ""
+
+#: models.py:85
+msgid "Floor"
+msgstr ""
+
+#: models.py:86
+msgid "Letter"
 msgstr ""
 
 #: models.py:89
+msgid "Phone 1"
+msgstr ""
+
+#: models.py:94 models.py:100
+msgid "9 digits maximum"
+msgstr ""
+
+#: models.py:95
+msgid "Phone 2"
+msgstr ""
+
+#: models.py:102
 msgid "Identification document"
 msgstr ""
 
-#: models.py:92
+#: models.py:105
 msgid "Website"
 msgstr ""

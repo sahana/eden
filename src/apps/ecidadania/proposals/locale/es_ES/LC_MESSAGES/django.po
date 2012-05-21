@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:13+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: 2012-01-05 11:04\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,83 +18,83 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Translated-Using: django-rosetta 0.6.0\n"
 
-#: admin.py:45
+#: admin.py:44
 msgid "Location"
 msgstr "Localización"
 
-#: admin.py:48
+#: admin.py:47
 msgid "Relations"
 msgstr "Relaciones"
 
-#: admin.py:51
+#: admin.py:50
 msgid "Other"
 msgstr "Otros"
 
-#: admin.py:54
+#: admin.py:53
 msgid "Options"
 msgstr "Opciones"
 
-#: models.py:37
+#: models.py:36
 msgid "Economically not viable"
 msgstr "Económicamente no viable"
 
-#: models.py:38
+#: models.py:37
 msgid "Legally not viable"
 msgstr "Legalmente no viable"
 
-#: models.py:39
+#: models.py:38
 msgid "Technically not viable"
 msgstr "Técnicamente no viable"
 
-#: models.py:40
+#: models.py:39
 msgid "Offtopic"
 msgstr "Fuera de tópico"
 
-#: models.py:48 models.py:81 templates/proposals/proposal_add.html:135
+#: models.py:47 models.py:80 templates/proposals/proposal_add.html:135
 msgid "Title"
 msgstr "Título"
 
-#: models.py:79
+#: models.py:78
 msgid "Code"
 msgstr "Código"
 
-#: models.py:82 templates/proposals/proposal_add.html:136
+#: models.py:81 templates/proposals/proposal_add.html:136
 msgid "Description"
 msgstr "Descripción"
 
-#: models.py:88
+#: models.py:87
 msgid "Latitude"
 msgstr "Latitud"
 
-#: models.py:90
+#: models.py:89
 msgid "Longitude"
 msgstr "Longitud"
 
-#: models.py:98
+#: models.py:97
 msgid "Votes from"
 msgstr "Votos de"
 
-#: models.py:116
+#: models.py:115
 msgid "Proposal"
 msgstr "Propuesta"
 
-#: models.py:117
+#: models.py:116
 msgid "Proposals"
 msgstr "Propuestas"
 
-#: urls.py:34
+#: urls.py:33
 msgid "^add/"
 msgstr ""
 
-#: urls.py:36
+#: urls.py:35
 msgid "^(?P<prop_id>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:38
+#: urls.py:37
 msgid "^(?P<prop_id>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:40
+#: urls.py:39
 msgid "^add_support_vote/"
 msgstr ""
 

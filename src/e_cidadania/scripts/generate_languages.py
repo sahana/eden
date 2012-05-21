@@ -13,7 +13,7 @@ import argparse
 
 __author__ = "Oscar Carballal Prego <oscar.carballal@cidadania.coop>"
 __license__ = "GPLv3"
-__version__ = "0.5"
+__version__ = "0.6"
 
 class Language():
 
@@ -27,16 +27,16 @@ class Language():
         """
         # Get current work directory and add it to sys.path so we can import
         # the project settings.
-        self.cwd = os.getcwd().strip('scripts') # Remove scripts directory just in case
+        self.cwd = os.getcwd() # Remove scripts directory just in case
         sys.path.append(self.cwd)
 
         # Get the languages configured in settings.py and the installed
         # e-cidadania modules. If we can't get the settings module, abort execution.
         try:
-            import settings
+            import e_cidadania.settings as settings
         except:
             sys.exit("\nCould not import the settings module. Aborting execution.\n\
-            Probable cause: the script is not being executed from poject root.\n")
+Probable cause: the script is not being executed from the project root (usually src/).\n")
 
         # You must put here the name off you applications variable in the form
         # "settings.YOURVARNAME"
@@ -52,7 +52,7 @@ class Language():
         print "\n >> Populating variables with applications...\n"
         for app in self.applications:
             appdata = app.split('.') # Separate all components
-            appdata.pop(0) # Remove project name, it's useless
+            #appdata.pop(0) # Remove project name, it's useless. This was for django <= 1.3
             app_path_list = appdata # This will leave us with an useful route to the application
             app_path = '/'.join(app_path_list)
             appname = app_path_list[-1] # Get the application name (last value)
@@ -77,7 +77,7 @@ class Language():
                 subprocess.Popen.wait(a)
 
         print '\n>> %s site root language catalog.' % (action)
-        os.chdir(self.cwd)
+        os.chdir(self.cwd + '/e_cidadania')
         for lang in self.languages:
             if action is not "Compiling":
                 a = subprocess.Popen(command + "-i 'apps/*' -l %s" % (lang[0]), shell=True)

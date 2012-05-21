@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-04-10 10:14+0200\n"
+"POT-Creation-Date: 2012-05-21 17:48+0200\n"
 "PO-Revision-Date: 2012-02-29 08:59+0000\n"
 "Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -19,63 +19,63 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:43 models.py:110
+#: models.py:42 models.py:107
 msgid "Title"
 msgstr "Título"
 
-#: models.py:44 templates/debate/debate_view.html:104
+#: models.py:43 templates/debate/debate_view.html:104
 msgid "Description"
 msgstr "Descrición"
 
-#: models.py:45
+#: models.py:44
 msgid "Scope"
 msgstr "Ámbito"
 
-#: models.py:48 models.py:113
+#: models.py:47 models.py:110
 msgid "Date created"
 msgstr "Data de creación"
 
-#: models.py:49
+#: models.py:48
 msgid "Last update"
 msgstr "Ultima actualización"
 
-#: models.py:51
+#: models.py:50
 msgid "Start date"
 msgstr "Data de comezo"
 
-#: models.py:52
+#: models.py:51
 msgid "End date"
 msgstr "Data de fin"
 
-#: models.py:77 models.py:91
+#: models.py:76 models.py:89
 msgid "Criteria"
 msgstr "Criterio"
 
-#: models.py:111
+#: models.py:108
 msgid "Message"
 msgstr "Mensaxe"
 
-#: models.py:116
+#: models.py:113
 msgid "Last modification time"
 msgstr "Hora da última modificación"
 
-#: urls.py:36
+#: urls.py:35
 msgid "^add/"
 msgstr ""
 
-#: urls.py:38
+#: urls.py:37
 msgid "^update_position/"
 msgstr ""
 
-#: urls.py:40
+#: urls.py:39
 msgid "^update_note/"
 msgstr ""
 
-#: urls.py:42
+#: urls.py:41
 msgid "^create_note/"
 msgstr ""
 
-#: urls.py:44
+#: urls.py:43
 #, fuzzy
 msgid "^delete_note/"
 msgstr "Editar nota"
@@ -85,38 +85,46 @@ msgstr "Editar nota"
 msgid "Create new debate"
 msgstr "Crear novo debate"
 
-#: templates/debate/debate_add.html:24
+#: templates/debate/debate_add.html:21
 msgid "Create a new debate"
 msgstr "Crear un novo debate"
 
-#: templates/debate/debate_add.html:33
+#: templates/debate/debate_add.html:22
 msgid "Remove column"
 msgstr "Eliminar columna"
 
-#: templates/debate/debate_add.html:34
+#: templates/debate/debate_add.html:23
 msgid "Add column"
 msgstr "Engadir columna"
 
-#: templates/debate/debate_add.html:63
+#: templates/debate/debate_add.html:26
 msgid "Remove row"
 msgstr "Eliminar fila"
 
-#: templates/debate/debate_add.html:64
+#: templates/debate/debate_add.html:27
 msgid "Add row"
 msgstr "Engadir fila"
 
-#: templates/debate/debate_add.html:67
+#: templates/debate/debate_add.html:60 templates/debate/debate_view.html:132
+msgid "Add new note"
+msgstr "Engadir nova nota"
+
+#: templates/debate/debate_add.html:61
+msgid "Change color"
+msgstr ""
+
+#: templates/debate/debate_add.html:63
 #: templates/debate/debate_add_simple.html:60
 msgid "Other debate data"
 msgstr "Outros datos do debate"
 
-#: templates/debate/debate_add.html:127
+#: templates/debate/debate_add.html:147
 #: templates/debate/debate_add_simple.html:120
 #: templates/debate/debate_view.html:115
 msgid "Save"
 msgstr "Gardar"
 
-#: templates/debate/debate_add.html:128
+#: templates/debate/debate_add.html:148
 #: templates/debate/debate_add_simple.html:121
 msgid "Cancel"
 msgstr "Cancelar"
@@ -226,10 +234,6 @@ msgstr "100 caracteres"
 #, fuzzy
 msgid "View note"
 msgstr "Ver debate"
-
-#: templates/debate/debate_view.html:132
-msgid "Add new note"
-msgstr "Engadir nova nota"
 
 #~ msgid "Add phase"
 #~ msgstr "Engadir fase"
