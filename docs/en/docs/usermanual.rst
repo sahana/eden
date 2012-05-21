@@ -1,6 +1,9 @@
 User manual
 ===========
 
+What is e-cidadania
+-------------------
+
 How to register
 ---------------
 
@@ -11,8 +14,26 @@ public spaces, without participating.
 To register in e-cidadania you must click "Login" and in the bottom you can find
 the registration link. It will ask your name, e-mail and password.
 
+Participating in a process
+--------------------------
+
+How to participate in a space
+`````````````````````````````
+
+Spaces
+``````
+
+What are they?
+''''''''''''''
+
+How do they work
+''''''''''''''''
+
+Proposals
+`````````
+
 How to send a proposal
-----------------------
+''''''''''''''''''''''
 
 Sending proposals is very easy. You just have to access to your participative space
 and click on "Proposals", after that you need to click on "Add new proposal" on
@@ -37,8 +58,11 @@ Tags
         Title: The Apple Store sidewalk is broken
         Tags: broken, sidewalk, apple, store
 
+Debates
+```````
+
 How to join a debate
---------------------
+''''''''''''''''''''
 
 The debates system is new, so pay attention to not get lost, this is not like an
 internet forum.
@@ -46,9 +70,17 @@ internet forum.
 We have moved in-person debate models to this platform, and one of them is the
 one we're going to show you. You'll see how fast you get used!
 
-How to view documents
----------------------
+Voting
+``````
 
+News
+````
+
+Comments
+''''''''
+
+File repository
+```````````````
 To see or download any document you just have to click on the document and it
 will start downloading. If the document tou want doesn't appear in the list
 you just have to make click on "See all documents" and a page will come up with
