@@ -520,10 +520,10 @@ def commit_rheader(r):
             tabs = [(T("Edit Details"), None)]
             type = record.type and int(record.type)
 
+            table = r.table
             if type == 1:
                 tabs.append((T("Items"), "commit_item"))
 
-                table = r.table
                 #req_record = db.req_req[record.req_id]
                 #req_date = req_record.date
                 rheader = DIV( TABLE( TR( TH( "%s: " % table.req_id.label),

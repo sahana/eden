@@ -413,8 +413,8 @@ def community():
                               csv_template="community")
 
 # -----------------------------------------------------------------------------
-def activity_contact():
-    """ RESTful CRUD controller """
+def community_contact():
+    """ Show a list of all community contacts """
 
     return s3_rest_controller()
 

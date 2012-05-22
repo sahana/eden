@@ -603,52 +603,28 @@ class S3ProjectModel(S3Model):
             table.name.requires = None
 
         # CRUD Strings
-        if pca:
-            ACTIVITY = T("Community")
-            ACTIVITY_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
-            ADD_ACTIVITY = T("Add Community")
-            LIST_ACTIVITIES = T("List Communities")
-            crud_strings[tablename] = Storage(
-                title_create = ADD_ACTIVITY,
-                title_display = T("Community Details"),
-                title_list = LIST_ACTIVITIES,
-                title_update = T("Edit Community Details"),
-                title_search = T("Search Community"),
-                title_upload = T("Import Community Data"),
-                title_report = T("Who is doing What Where"),
-                subtitle_create = T("Add New Community"),
-                subtitle_list = T("Communities"),
-                subtitle_report = T("Communities"),
-                label_list_button = LIST_ACTIVITIES,
-                label_create_button = ADD_ACTIVITY,
-                msg_record_created = T("Community Added"),
-                msg_record_modified = T("Community Updated"),
-                msg_record_deleted = T("Community Deleted"),
-                msg_list_empty = T("No Communities Found")
-            )
-        else:
-            ACTIVITY = T("Activity")
-            ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
-            ADD_ACTIVITY = T("Add Activity")
-            LIST_ACTIVITIES = T("List Activities")
-            crud_strings[tablename] = Storage(
-                title_create = ADD_ACTIVITY,
-                title_display = T("Activity Details"),
-                title_list = LIST_ACTIVITIES,
-                title_update = T("Edit Activity"),
-                title_search = T("Search Activities"),
-                title_upload = T("Import Activity Data"),
-                title_report = T("Who is doing What Where") if drr else T("Activity Report"),
-                subtitle_create = T("Add New Activity"),
-                subtitle_list = T("Activities"),
-                subtitle_report = T("Activities"),
-                label_list_button = LIST_ACTIVITIES,
-                label_create_button = ADD_ACTIVITY,
-                msg_record_created = T("Activity Added"),
-                msg_record_modified = T("Activity Updated"),
-                msg_record_deleted = T("Activity Deleted"),
-                msg_list_empty = T("No Activities Found")
-            )
+        ACTIVITY = T("Activity")
+        ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
+        ADD_ACTIVITY = T("Add Activity")
+        LIST_ACTIVITIES = T("List Activities")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_ACTIVITY,
+            title_display = T("Activity Details"),
+            title_list = LIST_ACTIVITIES,
+            title_update = T("Edit Activity"),
+            title_search = T("Search Activities"),
+            title_upload = T("Import Activity Data"),
+            title_report = T("Activity Report"),
+            subtitle_create = T("Add New Activity"),
+            subtitle_list = T("Activities"),
+            subtitle_report = T("Activities"),
+            label_list_button = LIST_ACTIVITIES,
+            label_create_button = ADD_ACTIVITY,
+            msg_record_created = T("Activity Added"),
+            msg_record_modified = T("Activity Updated"),
+            msg_record_deleted = T("Activity Deleted"),
+            msg_list_empty = T("No Activities Found")
+        )
 
         # Virtual Fields
         if drr:
@@ -802,17 +778,14 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              project_id(),
-                             Field("name",
-                                   label = T("Short Description"),
-                                   requires=IS_NOT_EMPTY()
-                                   ),
                              location_id(
                                    readable = True,
                                    writable = True,
-                                   widget = S3LocationSelectorWidget(hide_address=True)),
+                                   widget = S3LocationSelectorWidget(hide_address=True),
+                                   represent=self.gis_location_lx_represent),
                              multi_activity_type_id(),
                              comments(),
-                             format="%(name)s",
+                             #format=lambda r: self.gis_location_lx_represent(r.location_id),
                              *(s3.lx_fields() + s3.meta_fields()))
 
         # CRUD Strings
@@ -841,35 +814,42 @@ class S3ProjectModel(S3Model):
 
         # Search Method
         project_community_search = S3Search(
-                simple=(
-                    S3SearchSimpleWidget(
-                        name = "project_community_search_text",
-                        label = T("Name"),
-                        comment = T("Search for a Community by name."),
-                        field = "location_id$name"
-                    ),
+            advanced=(
+                S3SearchOptionsWidget(
+                    name = "project_community_search_project",
+                    label = T("Project"),
+                    field = "project_id",
+                    cols = 3
                 ),
-                advanced = (
-                    S3SearchSimpleWidget(
-                        name = "project_community_search_text_advanced",
-                        label = T("Name"),
-                        comment = T("Search for a Community by name."),
-                        field = "location_id$name"
-                    ),
-                    S3SearchLocationHierarchyWidget(
-                        name="project_community_search_L1",
-                        field="L1",
-                        cols = 3,
-                    ),
+                S3SearchLocationHierarchyWidget(
+                    name="project_community_search_L0",
+                    field="L0",
+                    cols = 3
+                ),
+                S3SearchLocationHierarchyWidget(
+                    name="project_community_search_L1",
+                    field="L1",
+                    cols = 3
+                ),
+                S3SearchLocationHierarchyWidget(
+                    name="project_community_search_L2",
+                    field="L2",
+                    cols = 3
+                ),
+                S3SearchLocationHierarchyWidget(
+                    name="project_community_search_L3",
+                    field="L3",
+                    cols = 3
                 )
+            )
         )
 
         # Resource Configuration
-        report_fields = [(T("Community"), "name"),
+        report_fields = [(T('Location'), 'location_id'),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
                         ]
-        list_fields = ["name",
+        list_fields = ["location_id",
                        "project_id",
                        "multi_activity_type_id",
                        "comments"
@@ -888,8 +868,8 @@ class S3ProjectModel(S3Model):
                                          cols=report_fields,
                                          facts=report_fields,
                                          defaults=Storage(
-                                                          rows="project_id",
-                                                          cols="name",
+                                                          rows="location_id",
+                                                          cols="project_id",
                                                           fact="multi_activity_type_id",
                                                           aggregate="list",
                                                           totals=True
@@ -900,15 +880,14 @@ class S3ProjectModel(S3Model):
 
         # Reusable Field
         community_id = S3ReusableField("community_id", db.project_community,
-                                      sortby="name",
                                       requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                       "project_community.id",
-                                                                      "%(name)s",
                                                                       sort=True)),
                                       represent = lambda id, row=None: \
-                                                  s3_get_db_field_value(tablename = "project_community",
-                                                                        fieldname = "name",
-                                                                        look_up_value = id),
+                                                  self.gis_location_lx_represent(
+                                                    s3_get_db_field_value(tablename = "project_community",
+                                                                        fieldname = "location_id",
+                                                                        look_up_value = id)),
                                       label = COMMUNITY,
                                       comment = S3AddResourceLink(ADD_COMMUNITY,
                                                                   c="project", f="community",
@@ -962,7 +941,7 @@ class S3ProjectModel(S3Model):
             msg_record_deleted = T("Contact Deleted"),
             msg_list_empty = T("No Contacts Found"))
 
-        activity_contact_search = S3Search(
+        community_contact_search = S3Search(
             advanced=(S3SearchSimpleWidget(
                             name = "community_contact_search_simple",
                             label = T("Name"),
@@ -981,22 +960,23 @@ class S3ProjectModel(S3Model):
                             name="community_contact_search_L2",
                             field="person_id$L2",
                             cols = 3,
-                        ),
+                        )
                     ))
 
         # Resource configuration
         hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
-                  search_method=activity_contact_search,
-                  list_fields=["community_id",
-                               (T("Project"), "community_id$project_id"),
-                               "person_id",
-                               (hierarchy["L0"], "person_id$L0"),
-                               (hierarchy["L1"], "person_id$L1"),
-                               (hierarchy["L2"], "person_id$L2"),
-                               (hierarchy["L3"], "person_id$L3"),
+                  search_method=community_contact_search,
+                  list_fields=["person_id",
+                               # (hierarchy["L0"], "person_id$L0"),
+                               # (hierarchy["L1"], "person_id$L1"),
+                               # (hierarchy["L2"], "person_id$L2"),
+                               # (hierarchy["L3"], "person_id$L3"),
                                (T("Email"), "email"),
-                               (T("Mobile Phone"), "sms")])
+                               (T("Mobile Phone"), "sms"),
+                               "community_id",
+                               (T("Project"), "community_id$project_id"),
+                               ])
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -1308,21 +1288,21 @@ class S3ProjectModel(S3Model):
         """
         """
 
-        location_id = form.vars.location_id
+        # location_id = form.vars.location_id
 
-        if location_id:
-            db = current.db
-            s3db = current.s3db
-            table = s3db.gis_location
-            query = (table.id == form.vars.location_id)
-            row = db(query).select(table.parent,
-                                   limitby=(0, 1)).first()
-            if row and row.parent:
-                query = (table.id == row.parent)
-                parent = db(query).select(table.name,
-                                          limitby=(0, 1)).first()
-                if parent:
-                    form.vars.name = parent.name
+        # if location_id:
+        #     db = current.db
+        #     s3db = current.s3db
+        #     table = s3db.gis_location
+        #     query = (table.id == form.vars.location_id)
+        #     row = db(query).select(table.parent,
+        #                            limitby=(0, 1)).first()
+        #     if row and row.parent:
+        #         query = (table.id == row.parent)
+        #         parent = db(query).select(table.name,
+        #                                   limitby=(0, 1)).first()
+        #         if parent:
+        #             form.vars.name = parent.name
         return
 
     # -------------------------------------------------------------------------
@@ -1436,7 +1416,7 @@ class S3ProjectDRRModel(S3Model):
                                         represent = lambda opt, row=None: \
                                                     project_organisation_roles.get(opt, NONE)),
                                   Field("amount", "double",
-                                        requires = IS_FLOAT_AMOUNT(),
+                                        requires = IS_NULL_OR(IS_FLOAT_AMOUNT()),
                                         represent = lambda v, row=None: \
                                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
                                         widget = IS_FLOAT_AMOUNT.widget,
@@ -3518,6 +3498,9 @@ class S3ProjectCommunityVirtualfields:
         else:
             return None
 
+    def name(self):
+        return current.gis.gis_location_lx_represent(self.project_community.location_id)
+
     def L0(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3574,7 +3557,6 @@ class S3ProjectBeneficiaryVirtualfields:
             Grab the first location from the database for this community and
             return the location tree
         """
-
         db = current.db
         s3db = current.s3db
 
@@ -3582,9 +3564,7 @@ class S3ProjectBeneficiaryVirtualfields:
         ctable = s3db.project_community
         query = (ctable.id == community_id)
 
-
         community = db(query).select(ctable.location_id, limitby=(0,1)).first()
-
 
         parents = Storage()
         if community:
@@ -3607,11 +3587,6 @@ class S3ProjectBeneficiaryVirtualfields:
     def L1(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
 
-
-
-
-
-
         if "L1" in parents:
             return parents["L1"]
         else:
@@ -3620,11 +3595,6 @@ class S3ProjectBeneficiaryVirtualfields:
     def L2(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
 
-
-
-
-
-
         if "L2" in parents:
             return parents["L2"]
         else:
@@ -3632,11 +3602,6 @@ class S3ProjectBeneficiaryVirtualfields:
 
     def L3(self):
         parents = self._get_community_location(self.project_beneficiary.community_id)
-
-
-
-
-
 
         if "L3" in parents:
             return parents["L3"]
