@@ -2259,6 +2259,7 @@ def survey_series_rheader(r, tabs=[]):
                         ]
             else:
                 tabs = [(T("Details"), None),
+                        (T("Completed Assessments"), "complete"),
                         (T("Summary"), "summary"),
                         (T("Chart"), "graph"),
                         (T("Map"), "map"),

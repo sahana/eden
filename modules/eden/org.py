@@ -1508,7 +1508,7 @@ def org_site_represent(id, show_link=True):
         return represent
 
     instance_type_nice = stable.instance_type.represent(instance_type)
-
+    tab = None
     if instance_type == "org_office":
         type = None
         try:
@@ -1525,6 +1525,8 @@ def org_site_represent(id, show_link=True):
         if type == 5:
             instance_type = "inv_warehouse"
             instance_type_nice = T("Warehouse")
+            # add the url to the stock tab for the warehouse
+            tab = "inv_item"
 
     if site:
         represent = "%s (%s)" % (site.name, instance_type_nice)
@@ -1538,9 +1540,12 @@ def org_site_represent(id, show_link=True):
             id = db(query).select(table.id,
                                   limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
+        args = [id]
+        if tab:
+            args.append(tab)
         represent = A(represent,
                       _href = URL(c=c, f=f,
-                                  args = [id],
+                                  args = args,
                                   extension = "" # removes the .aaData extension in paginated views!
                                 ))
 

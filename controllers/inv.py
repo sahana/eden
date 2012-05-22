@@ -178,16 +178,6 @@ def warehouse():
         csv_template = "warehouse"
     csv_stylesheet = "%s.xsl" % csv_template
 
-
-    # remove CRUD generated buttons in the tabs
-    s3mgr.configure("inv_inv_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
-
-
     output = s3_rest_controller(module, resourcename,
                                 rheader=rheader,
                                 csv_template = csv_template,
@@ -304,13 +294,6 @@ def inv_item():
                         deletable=False,
                        )
 
-    # remove CRUD generated buttons in the tabs
-    s3mgr.configure("inv_inv_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
     rheader = response.s3.inv_warehouse_rheader
     response.s3.prep = prep
     output =  s3_rest_controller(rheader=rheader,
@@ -485,8 +468,18 @@ def send():
     def prep(r):
         # Default to the Search tab in the location selector
         response.s3.gis.tab = "search"
+        record = sendtable[r.id]
+        if record and record.status != SHIP_STATUS_IN_PROCESS:
+            # now that the shipment has been sent
+            # lock the record so that it can't be meddled with
+            s3mgr.configure("inv_send",
+                            create=False,
+                            listadd=False,
+                            editable=False,
+                            deletable=False,
+                           )
+
         if r.component:
-            record = sendtable[r.id]
             if record.status == SHIP_STATUS_RECEIVED or \
                record.status == SHIP_STATUS_CANCEL:
                 list_fields = ["id",
@@ -552,13 +545,14 @@ def send():
             if r.component_id:
                 track_record = tracktable[r.component_id]
                 set_track_attr(track_record.status)
-                # if the track record is linked to a request item
-                # then display the item_id so that the correct item can be selected
-                # @todo: restrict the selectable items to this type.
+                # if the track record is linked to a request item then
+                # the stock item has already been selected so make it read only
                 if track_record and track_record.get("req_item_id"):
-                    tracktable.item_id.readable = True
-                else:
-                    tracktable.item_id.readable = False
+                    tracktable.send_inv_item_id.writable = False
+                    tracktable.item_pack_id.readable = False
+                    tracktable.item_pack_id.writable = False
+                # Hide the item id
+                tracktable.item_id.readable = False
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
             if r.interactive:
@@ -714,14 +708,9 @@ def send_process():
         s3db.req_update_status(req_id)
     # Create a Receive record
     rtable = s3db.inv_recv
-    code = s3db.inv_get_shipping_code("GRN",
-                                      send_record.to_site_id,
-                                      s3db.inv_recv.recv_ref
-                                     )
     recv_id = rtable.insert(sender_id = send_record.sender_id,
                             send_ref = send_record.send_ref,
                             req_ref = send_record.req_ref,
-                            recv_ref = code,
                             from_site_id = send_record.site_id,
                             eta = send_record.delivery_date,
                             recipient_id = send_record.recipient_id,
@@ -736,21 +725,9 @@ def send_process():
                                              recv_id = recv_id)
 
     session.confirmation = T("Shipment Items sent from Warehouse")
-    # Go to the Site which has sent these items
-    site_id = send_record.site_id
-    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                          site_id)
-    query = (otable.id == id)
-    otype = db(query).select(otable.type, limitby = (0, 1)).first()
-    if otype and otype.type == 5:
-        url = URL(c = "inv",
-                 f = "warehouse",
-                 args = [id, "inv_item"])
-    else:
-        url = URL(c = "org",
-                 f = "office",
-                 args = [id, "inv_item"])
-    redirect(url)
+    redirect(URL(c = "inv",
+                 f = "send",
+                 args = [send_id, "track_item"]))
 
 # -----------------------------------------------------------------------------
 def send_returns():
@@ -966,12 +943,15 @@ def recv():
             recvtable.send_ref.writable = True
             recvtable.recv_ref.readable = False
             recvtable.sender_id.readable = False
-            recvtable.from_site_id.writable = False
-            recvtable.from_site_id.readable = False
         else:
             # Make all fields writable False
             for field in recvtable.fields:
                 recvtable[field].writable = False
+        if status == SHIP_STATUS_SENT:
+            recvtable.recipient_id.readable = True
+            recvtable.recipient_id.writable = True
+            recvtable.comments.writable = True
+            
 
     TRACK_STATUS_UNKNOWN    = s3db.inv_tracking_status["UNKNOWN"]
     TRACK_STATUS_PREPARING  = s3db.inv_tracking_status["IN_PROCESS"]
@@ -1039,9 +1019,20 @@ def recv():
 
 
     def prep(r):
+        record = recvtable[r.id]
+        if (record and
+            (record.status != SHIP_STATUS_IN_PROCESS and
+             record.status != SHIP_STATUS_SENT)):
+            # now that the shipment has been sent
+            # lock the record so that it can't be meddled with
+            s3mgr.configure("inv_recv",
+                            create=False,
+                            listadd=False,
+                            editable=False,
+                            deletable=False,
+                           )
         if r.component:
             # if we have a component then set the track_item attributes
-            record = recvtable[r.id]
             # Can only create or delete track items for a recv record if the status is preparing
             if r.method == "create" or r.method == "delete":
                 if record.status != SHIP_STATUS_IN_PROCESS:
@@ -1075,6 +1066,8 @@ def recv():
                            "item_id",
                            "item_pack_id",
                            "quantity",
+                           "currency",
+                           "pack_value",
                            "recv_quantity",
                            "recv_bin",
                            "owner_org_id",
@@ -1227,7 +1220,12 @@ def recv_process():
 
     site_id = recv_record.site_id
     # Update Receive record & lock for editing
+    code = s3db.inv_get_shipping_code("GRN",
+                                      send_record.to_site_id,
+                                      s3db.inv_recv.recv_ref
+                                     )
     rtable[recv_id] = dict(date = request.utcnow,
+                           recv_ref = code,
                            status = eden.inv.inv_ship_status["RECEIVED"],
                            owned_by_user = None,
                            owned_by_group = ADMIN)

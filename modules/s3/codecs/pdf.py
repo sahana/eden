@@ -82,6 +82,10 @@ try:
     reportLabImported = True
 except ImportError:
     reportLabImported = False
+    BaseDocTemplate = object
+    inch = 72.0
+    canvas = Storage()
+    canvas.Canvas = None
 
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
