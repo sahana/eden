@@ -30,3 +30,4 @@ parts
 bin
 e_cidadania.egg-info
 .installed.cfg
+.coverage
