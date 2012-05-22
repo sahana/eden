@@ -1,0 +1,18 @@
+[run]
+source =
+    src/*
+
+omit = 
+    tests/*
+    eggs/*
+    docs/*
+    src/manage.py
+    bootstrap.py
+    setup.py
+    src/apps/thirdparty/*
+    src/wsgi.py       
+
+[report]
+exclude_lines =
+    pragma: no cover
+show_missing = True       
