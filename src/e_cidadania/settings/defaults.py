@@ -159,6 +159,11 @@ ECIDADANIA_MODULES = (
     'extras.custom_stuff',
 )
 
+TEST_APPS = (
+    # Apps which form a part of the testing framework of e-cidadania.
+    'django_nose',
+)
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
@@ -194,7 +199,11 @@ LOGGING = {
 from e_cidadania.settings.development import *
 
 # Combine all the apps in the django variable INSTALLED_APPS
-INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
+INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES + TEST_APPS
+
+# Override django's default test runner to use Nose test runner instead.            
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = ['tests']
 
 # Activate the new url syntax in django 1.3 which will be
 # compatible till 1.5
