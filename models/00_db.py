@@ -77,6 +77,7 @@ else:
         raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
 
 current.db = db
+db.set_folder("upload")
 
 # Sessions Storage
 if deployment_settings.get_base_session_memcache():

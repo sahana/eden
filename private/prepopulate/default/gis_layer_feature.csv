@@ -1,3 +1,4 @@
+"Name","Description","Module","Resource","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
 "Incident Reports",,"irs","ireport",,,"US","incident","Danger Area","Incident","name/category",,,,,,"False",
 "Hospitals",,"hms","hospital",,,"US","hospital","Medical Facility","Hospital",,,,,,,"False",
 "Shelters",,"cr","shelter",,,"US","shelter","Campground","Shelter","name/population/capacity","shelter.status=2","status",2,,,"False",
