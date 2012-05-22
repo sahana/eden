@@ -166,6 +166,8 @@ def index():
                 ["facility", T("Warehouses"), "inv", "warehouse"],
                 ["facility", T("Hospitals"), "hms", "hospital"],
                 ["facility", T("Offices"), "org", "office"],
+                ["sit", T("Staff"), "hrm", "staff"],
+                ["sit", T("Volunteers"), "hrm", "volunteer"],
                 ["sit", T("Incidents"), "irs", "ireport"],
                 ["sit", T("Assessments"), "survey", "series"],
                 ["sit", T("Assets"), "asset", "asset"],
