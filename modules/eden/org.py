@@ -979,7 +979,6 @@ class S3SiteModel(S3Model):
             if p == len(wildcard_posn):
                 return None
 
-
 # =============================================================================
 class S3FacilityModel(S3Model):
     """
@@ -1421,7 +1420,7 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
                 parent = db(query).select(otable.name,
                                           limitby = (0, 1)).first()
                 if parent:
-                    represent = "%s, %s" % (parent.name,
+                    represent = "%s > %s" % (parent.name,
                                             represent)
             elif acronym and org.org_organisation.acronym:
                 represent = "%s (%s)" % (represent,
@@ -1479,6 +1478,7 @@ def org_organisation_logo(id, type="png"):
 def org_site_represent(id, show_link=True):
     """ Represent a Facility in option fields or list views """
 
+    
     db = current.db
     s3db = current.s3db
     represent = current.messages.NONE
@@ -1491,14 +1491,15 @@ def org_site_represent(id, show_link=True):
     if isinstance(id, Row) and "instance_type" in id:
         # Do not repeat the lookup if already done by IS_ONE_OF
         site = id
-        id = None
     else:
-        site = db(stable._id == id).select(stable.name,
+        site = db(stable._id == id).select(stable.id,
+                                           stable.name,
                                            stable.site_id,
                                            stable.instance_type,
                                            limitby=(0, 1)).first()
         if not site:
             return represent
+    id = None
 
     instance_type = site.instance_type
     try:
@@ -1535,7 +1536,7 @@ def org_site_represent(id, show_link=True):
         if not id:
             query = (table.site_id == site.site_id)
             id = db(query).select(table.id,
-                                  limitby=(0, 1)).first()
+                                  limitby=(0, 1)).first().id
         c, f = instance_type.split("_", 1)
         represent = A(represent,
                       _href = URL(c=c, f=f,

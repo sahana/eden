@@ -1753,7 +1753,7 @@ def inv_tabs(r):
                 recv_tab = T("Orders")
             else:
                 recv_tab = T("Receive")
-            inv_tabs = [(T("Warehouse Stock"), "inv_item"),
+            inv_tabs = [(T("Stock"), "inv_item"),
                         #(T("Incoming"), "incoming/"),
                         (recv_tab, "recv"),
                         (T("Send"), "send", dict(select="sent")),
@@ -2222,7 +2222,7 @@ def inv_recv_rheader(r):
                 if auth.s3_has_permission("update",
                                           "inv_recv",
                                           record_id=record.id) and \
-                not r.component:
+                not True and r.component: #@TODo: hide this button in JS if there is a form displayed
                     tracktable = current.s3db.inv_track_item
                     query = (tracktable.recv_id == record.id) & \
                             (tracktable.recv_quantity == None)
