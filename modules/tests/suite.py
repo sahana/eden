@@ -16,6 +16,7 @@ from gluon import current
 from gluon.storage import Storage
 
 # S3 Tests
+from tests.web2unittest import *
 from tests import *
 
 # Read Settings
@@ -46,13 +47,16 @@ if test:
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
 #    login(account="admin")
-    globals()[test]()
+#    globals()[test]()
+    print test
+    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 else:
     # Run all Tests
     # Log into admin testing account
 #    login(account="admin")
-    
+
     suite = unittest.TestLoader().loadTestsFromTestCase(Logistics)
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Org001))
     unittest.TextTestRunner(verbosity=2).run(suite)

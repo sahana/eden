@@ -777,17 +777,11 @@ def send_req():
         for inv_i in inv_items:
             # get inv_item.pack_quantity
             if len(inv_items) == 1:
-                inv_p_qnty = siptable[inv_i.item_pack_id].quantity
-                inv_qnty = inv_i.quantity * inv_p_qnty
-                if inv_qnty > req_qnty_wanted:
-                    send_item_quantity = req_qnty_wanted
-                else:
-                    send_item_quantity = inv_qnty
-                send_item_quantity = send_item_quantity / inv_p_qnty
-                comment = None
+                # Remove this total from the warehouse stock
+                send_item_quantity = inv_remove(inv_i, req_qnty_wanted)
             else:
                 send_item_quantity = 0
-                comment = "%d items needed to match total request" % req_qnty_wanted
+            comment = "%d items needed to match total request" % req_qnty_wanted
             tracktable.insert(send_id = send_id,
                               send_inv_item_id = inv_i.id,
                               item_id = inv_i.item_id,

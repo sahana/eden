@@ -325,6 +325,14 @@ $(document).ready(function() {
         # Item Search Method (Advanced Search only)
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
+        # lock the record so that it can't be meddled with
+        self.configure("inv_inv_item",
+                        create=False,
+                        listadd=False,
+                        editable=False,
+                        deletable=False,
+                       )
+
         self.configure(tablename,
                        super_entity = "supply_item_entity",
                        list_fields = ["id",
@@ -379,6 +387,46 @@ $(document).ready(function() {
                     org_repr = current.response.s3.org_organisation_represent
                     form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % (form.vars.item_source_no,
                                                                                                     org_repr(record.track_org_id))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_remove(inv_rec,
+                   required_total,
+                   required_pack_value = 1,
+                   current_track_total = 0,
+                   update = True,
+                  ):
+        """
+            Check that the required_total can be removed from the inv_record
+            if their is insufficient stock then set up the total to being 
+            what is in stock otherwise set it to be the required total.
+            If the update flag is true then remove it from stock.
+
+            The current total is what has already been removed for this
+            transaction.
+        """
+        inv_p_qnty = siptable[inv_rec.item_pack_id].quantity
+        inv_qnty = inv_rec.quantity * inv_p_qnty
+        cur_qnty = current_track_total * inv_p_qnty
+        req_qnty = required_total * required_pack_value
+
+        # It already matches so no change required
+        if cur_qnty == req_qnty:
+            return required_total
+
+        if inv_qnty + cur_qnty > req_qnty:
+            send_item_quantity = req_qnty
+            new_qnty = (inv_qnty + cur_qnty - req_qnty) / inv_p_qnty
+        else:
+            send_item_quantity = inv_qnty + cur_qnty
+            new_qnty = 0
+        send_item_quantity = send_item_quantity / inv_p_qnty
+
+        if update:
+            # update the levels in stock
+            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = new_qnty)
+
+        return send_item_quantity
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1537,7 +1585,7 @@ $(document).ready(function() {
             stock_item = inv_item_table[form.vars.send_inv_item_id]
             stock_quantity = stock_item.quantity
             stock_pack = siptable[stock_item.item_pack_id].quantity
-	    if form.record:
+            if form.record:
                 if form.record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
                     old_track_pack_quantity = siptable[form.record.item_pack_id].quantity
@@ -1554,7 +1602,7 @@ $(document).ready(function() {
                                        new_track_pack_quantity
                                       )
             db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
-	if form.vars.send_id and form.vars.recv_id:
+        if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
         id = form.vars.id
@@ -1922,7 +1970,9 @@ def inv_send_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
+            tracktable = s3db.inv_track_item
 
+            send_id = record.id
             site_id = record.site_id
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
@@ -1955,19 +2005,19 @@ def inv_send_rheader(r):
             rSubdata = TABLE ()
             rfooter = TAG[""]()
 
+            # Find out how many inv_track_items we have for this send record
+            query = (tracktable.send_id == send_id) & \
+                    (tracktable.deleted == False)
+            cnt = current.db(query).count()
+
+            action = DIV()
             if record.status == SHIP_STATUS_IN_PROCESS:
                 if auth.s3_has_permission("update",
                                           "inv_send",
                                           record_id=record.id):
 
-                    tracktable = current.s3db.inv_track_item
-                    query = (tracktable.send_id == record.id) & \
-                            (tracktable.send_inv_item_id == None) & \
-                            (tracktable.deleted == False)
-                    row = current.db(query).select(tracktable.id,
-                                        limitby=(0, 1)).first()
-                    if row == None:
-                        send_btn = A( T("Send Shipment"),
+                    if cnt > 0:
+                        action.append( A( T("Send Shipment"),
                                       _href = URL(c = "inv",
                                                   f = "send_process",
                                                   args = [record.id]
@@ -1975,10 +2025,10 @@ def inv_send_rheader(r):
                                       _id = "send_process",
                                       _class = "action-btn"
                                       )
+                                    )
 
                         send_btn_confirm = SCRIPT("S3ConfirmClick('#send_process', '%s')"
                                                   % T("Do you want to send this shipment?") )
-                        rfooter.append(send_btn)
                         rfooter.append(send_btn_confirm)
                     ritable = current.s3db.req_req_item
                     rcitable = current.s3db.req_commit_item
@@ -1994,13 +2044,8 @@ def inv_send_rheader(r):
                                    record.req_commit_item.quantity,
                                   ))
             elif record.status == SHIP_STATUS_RETURNING:
-                    tracktable = current.s3db.inv_track_item
-                    query = (tracktable.send_id == record.id) & \
-                            (tracktable.return_quantity == None)
-                    row = current.db(query).select(tracktable.id,
-                                        limitby=(0, 1)).first()
-                    if row == None:
-                        return_btn = A( T("Complete Returns"),
+                    if cnt > 0:
+                        action.append( A( T("Complete Returns"),
                                       _href = URL(c = "inv",
                                                   f = "return_process",
                                                   args = [record.id]
@@ -2008,95 +2053,73 @@ def inv_send_rheader(r):
                                       _id = "return_process",
                                       _class = "action-btn"
                                       )
+                                    )
                         return_btn_confirm = SCRIPT("S3ConfirmClick('#return_process', '%s')"
                                                   % T("Do you want to complete the return process?") )
-                        rfooter.append(return_btn)
                         rfooter.append(return_btn_confirm)
                     else:
                         msg = T("You need to check all item quantities before you can complete the return process")
                         rfooter.append(SPAN(msg))
-            else:
-                cn_btn = A( T(current.deployment_settings.get_send_form_name()),
-                              _href = URL(f = "send",
-                                          args = [record.id, "form"]
-                                          ),
-                              _class = "action-btn"
-                              )
-                rfooter.append(cn_btn)
+            elif record.status != SHIP_STATUS_CANCEL:
+                if record.status == SHIP_STATUS_SENT:
+                    vars = current.request.vars
+                    if auth.s3_has_permission("update",
+                                              "inv_send",
+                                              record_id=record.id):
+                        action.append( A( T("Manage Returns"),
+                                        _href = URL(f = "send_returns",
+                                                    args = [record.id],
+                                                    vars = None,
+                                                    ),
+                                        _id = "send_return",
+                                        _class = "action-btn",
+                                        _title = T("Only use this button to accept back into stock some items that were returned from a delivery to beneficiaries who do not record the shipment details directly into the system")
+                                        )
+                                     )
 
-                if record.status != SHIP_STATUS_CANCEL:
-                    if record.status == SHIP_STATUS_SENT:
-                        vars = current.request.vars
-                        if "site_id" in vars and \
-                            auth.s3_has_permission("update",
-                                                   "org_site",
-                                                   record_id=vars.site_id):
-                            receive_btn = A( T("Process Received Shipment"),
-                                            _href = URL(c = "inv",
-                                                        f = "recv_sent",
-                                                        args = [record.id],
-                                                        vars = vars
-                                                        ),
-                                            _id = "send_receive",
-                                            _class = "action-btn",
-                                            _title = T("Receive this shipment")
-                                            )
+                        return_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
+                                                     % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                        rfooter.append(return_btn_confirm)
+                        action.append( A( T("Confirm Shipment Received"),
+                                        _href = URL(f = "send",
+                                                    args = [record.id],
+                                                    vars = dict(received = True),
+                                                    ),
+                                        _id = "send_receive",
+                                        _class = "action-btn",
+                                        _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system")
+                                        )
+                                     )
 
-                            #receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                            #                             % T("Receive this shipment?") )
-                            rfooter.append(receive_btn)
-                            #rheader.append(receive_btn_confirm)
-                        if auth.s3_has_permission("update",
-                                                  "inv_send",
-                                                  record_id=record.id):
-                            if "received" in vars:
-                                s3db.inv_send[record.id] = \
-                                    dict(status = SHIP_STATUS_RECEIVED)
-                            else:
-                                return_btn = A( T("Manage Returns"),
-                                                _href = URL(f = "send_returns",
-                                                            args = [record.id],
-                                                            vars = None,
-                                                            ),
-                                                _id = "send_return",
-                                                _class = "action-btn",
-                                                _title = T("Only use this button to accept back into stock some items that were returned from a delivery to beneficiaries who do not record the shipment details directly into the system")
-                                                )
+                        receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
+                                                     % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                        rfooter.append(receive_btn_confirm)
+                    if auth.s3_has_permission("delete",
+                                              "inv_send",
+                                              record_id=record.id):
+                        action.append( A( T("Cancel Shipment"),
+                                        _href = URL(c = "inv",
+                                                    f = "send_cancel",
+                                                    args = [record.id]
+                                                    ),
+                                        _id = "send_cancel",
+                                        _class = "action-btn"
+                                        )
+                                     )
 
-                                return_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                                                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
-                                rfooter.append(return_btn)
-                                rfooter.append(return_btn_confirm)
-                                receive_btn = A( T("Confirm Shipment Received"),
-                                                _href = URL(f = "send",
-                                                            args = [record.id],
-                                                            vars = dict(received = True),
-                                                            ),
-                                                _id = "send_receive",
-                                                _class = "action-btn",
-                                                _title = T("Only use this button to confirm that the shipment has been received by a destination which will not record the shipment directly into the system")
-                                                )
-
-                                receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                                                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
-                                rfooter.append(receive_btn)
-                                rfooter.append(receive_btn_confirm)
-                        if auth.s3_has_permission("delete",
-                                                  "inv_send",
-                                                  record_id=record.id):
-                            cancel_btn = A( T("Cancel Shipment"),
-                                            _href = URL(c = "inv",
-                                                        f = "send_cancel",
-                                                        args = [record.id]
-                                                        ),
-                                            _id = "send_cancel",
-                                            _class = "action-btn"
-                                            )
-
-                            cancel_btn_confirm = SCRIPT("S3ConfirmClick('#send_cancel', '%s')"
-                                                         % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
-                            rfooter.append(cancel_btn)
-                            rfooter.append(cancel_btn_confirm)
+                        cancel_btn_confirm = SCRIPT("S3ConfirmClick('#send_cancel', '%s')"
+                                                     % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
+                        rfooter.append(cancel_btn_confirm)
+            msg = ""
+            if cnt == 1:
+                msg = T("One item is attached to this shipment")
+            elif cnt > 1:
+                msg = T("%s items are attached to this shipment") % cnt
+            rData.append(
+                         TR( TH(action, _colspan=2),
+                             TD(msg)
+                           )
+                        )
 
             s3.rfooter = rfooter
             rheader = DIV (rData,
@@ -2176,6 +2199,9 @@ def inv_recv_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
+            tracktable = current.s3db.inv_track_item
+
+            recv_id = record.id
             site_id = record.site_id
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
@@ -2216,30 +2242,30 @@ def inv_recv_rheader(r):
                             )
 
             rfooter = TAG[""]()
+            action = DIV()
+            # Find out how many inv_track_items we have for this recv record
+            query = (tracktable.recv_id == recv_id) & \
+                    (tracktable.deleted == False)
+            cnt = current.db(query).count()
 
             if record.status == SHIP_STATUS_SENT or \
                record.status == SHIP_STATUS_IN_PROCESS:
                 if auth.s3_has_permission("update",
                                           "inv_recv",
-                                          record_id=record.id) and \
-                not True and r.component: #@TODo: hide this button in JS if there is a form displayed
-                    tracktable = current.s3db.inv_track_item
-                    query = (tracktable.recv_id == record.id) & \
-                            (tracktable.recv_quantity == None)
-                    row = current.db(query).select(tracktable.id,
-                                        limitby=(0, 1)).first()
-                    if row == None:
-                        recv_btn = A( T("Receive Shipment"),
-                                      _href = URL(c = "inv",
-                                                  f = "recv_process",
-                                                  args = [record.id]
-                                                  ),
-                                      _id = "recv_process",
-                                      _class = "action-btn"
+
+                                          record_id=record.id):
+                    if cnt > 0:
+                        action.append( A( T("Receive Shipment"),
+                                              _href = URL(c = "inv",
+                                                          f = "recv_process",
+                                                          args = [record.id]
+                                                          ),
+                                              _id = "recv_process",
+                                              _class = "action-btn"
+                                        )
                                       )
                         recv_btn_confirm = SCRIPT("S3ConfirmClick('#recv_process', '%s')"
                                                   % T("Do you want to receive this shipment?") )
-                        rfooter.append(recv_btn)
                         rfooter.append(recv_btn_confirm)
                     else:
                         msg = T("You need to check all item quantities and allocate to bins before you can receive the shipment")
@@ -2249,7 +2275,7 @@ def inv_recv_rheader(r):
                     if current.auth.s3_has_permission("delete",
                                                       "inv_recv",
                                                       record_id=record.id):
-                        cancel_btn = A( T("Cancel Shipment"),
+                        action.append( A( T("Cancel Shipment"),
                                         _href = URL(c = "inv",
                                                     f = "recv_cancel",
                                                     args = [record.id]
@@ -2257,11 +2283,21 @@ def inv_recv_rheader(r):
                                         _id = "recv_cancel",
                                         _class = "action-btn"
                                         )
+                                     )
 
                         cancel_btn_confirm = SCRIPT("S3ConfirmClick('#recv_cancel', '%s')"
                                                      % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
-                        rfooter.append(cancel_btn)
                         rfooter.append(cancel_btn_confirm)
+            msg = ""
+            if cnt == 1:
+                msg = T("One item is attached to this shipment")
+            elif cnt > 1:
+                msg = T("%s items are attached to this shipment") % cnt
+            rData.append(
+                         TR( TH(action, _colspan=2),
+                             TD(msg)
+                           )
+                        )
 
             s3.rfooter = rfooter
             rheader = DIV (rData,
