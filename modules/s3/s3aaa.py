@@ -210,6 +210,7 @@ class AuthS3(Auth):
                                       hms_hospital = T("Hospital"),
                                       #project_site = T("Project Site"),
                                       #fire_station = T("Fire Station"),
+                                      dvi_morgue = T("Morgue"),
                                       )
 
     # -------------------------------------------------------------------------
