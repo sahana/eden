@@ -158,5 +158,3 @@ This will return a dictionary of rows before and after the create
                           quiet = True,
                          ):
         return w_inv_item_select(item_repr, tablename, field, quiet)
-
-

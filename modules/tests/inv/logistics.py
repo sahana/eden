@@ -8,8 +8,8 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_send(self, user, data):
         """
-Helper method to add a inv_send record by the given user
-"""
+            Helper method to add a inv_send record by the given user 
+        """
         self.login(account=user, nexturl="inv/send/create")
         table = "inv_send"
         result = self.create(table, data)
@@ -17,9 +17,9 @@ Helper method to add a inv_send record by the given user
 
     def helper_inv_send_rec(self, result):
         """
-Simple helper function to get the waybill reference of the newly
-created inv_send row so it can be used to filter dataTables
-"""
+            Simple helper function to get the waybill reference of the newly
+            created inv_send row so it can be used to filter dataTables
+        """
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -28,9 +28,9 @@ created inv_send row so it can be used to filter dataTables
 
     def helper_inv_send_get_id(self, result):
         """
-Simple helper function to get the waybill reference of the newly
-created inv_send row so it can be used to filter dataTables
-"""
+            Simple helper function to get the waybill reference of the newly
+            created inv_send row so it can be used to filter dataTables
+        """
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -39,9 +39,9 @@ created inv_send row so it can be used to filter dataTables
 
     def helper_inv_send_get_ref(self, result):
         """
-Simple helper function to get the waybill reference of the newly
-created inv_send row so it can be used to filter dataTables
-"""
+            Simple helper function to get the waybill reference of the newly
+            created inv_send row so it can be used to filter dataTables
+        """
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -50,9 +50,9 @@ created inv_send row so it can be used to filter dataTables
 
     def helper_inv_track_item(self, user, send_id, data, removed=True):
         """
-Helper method to add a track item to the inv_send with the
-given send_id by the given user
-"""
+            Helper method to add a track item to the inv_send with the 
+            given send_id by the given user 
+        """
         try:
             add_btn = self.browser.find_element_by_id("show-add-btn")
             if add_btn.is_displayed():
@@ -80,12 +80,13 @@ given send_id by the given user
     # dbcallback for the inv_track item create function
     def dbcallback_getStockLevels(self, table, data, rows):
         """
-Callback to add the total in stock for the selected item.
+            Callback to add the total in stock for the selected item.
 
-This can then be used to look at the value before and after
-to ensure that the totals have been removed from the warehouse.
-The stock row will be added to the *end* of the list of rows
-"""
+            This can then be used to look at the value before and after
+            to ensure that the totals have been removed from the warehouse.
+            
+            The stock row will be added to the *end* of the list of rows 
+        """
         table = self.current.s3db["inv_inv_item"]
         for details in data:
             if details[0] == "send_inv_item_id":
@@ -135,7 +136,6 @@ The stock row will be added to the *end* of the list of rows
                 ),
                ]
         result = self.helper_inv_track_item("normal", send_id, data)
-        driver.find_element_by_link_text("Home").click()
 
 # def test_inventory(self):
 # """ Tests for Inventory """

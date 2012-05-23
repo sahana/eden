@@ -99,4 +99,4 @@ def w_inv_item_select (item_repr,
         if giveup > 60:
             break
     return raw_value
-    
+
