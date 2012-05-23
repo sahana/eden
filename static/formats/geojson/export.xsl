@@ -50,6 +50,9 @@
                 <xsl:value-of select="concat($prefix, '_', $name)"/>
             </xsl:variable>
             <xsl:choose>
+                <xsl:when test="not(//reference[@name='location'])">
+                    <!-- skip -->
+                </xsl:when>
                 <xsl:when test="count(./resource[@name=$resource])=1">
                     <xsl:apply-templates select="./resource[@name=$resource]"/>
                 </xsl:when>
@@ -211,7 +214,7 @@
         <xsl:variable name="value" select="data[@field='value']"/>
 
         <type>Feature</type>
-        <geometry>  
+        <geometry>
             <xsl:attribute name="value">
                 <!-- Use pre-prepared GeoJSON -->
                 <xsl:value-of select="$geometry"/>
@@ -237,7 +240,7 @@
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
         <!-- Feature Layer -->
-        
+
             <xsl:variable name="geometry" select="./geometry/@value"/>
             <xsl:variable name="wkt" select="./reference[@field='location_id']/@wkt"/>
 
@@ -245,7 +248,7 @@
                 <xsl:when test="$geometry!='null'">
                     <!-- Use pre-prepared GeoJSON -->
                     <type>Feature</type>
-                    <geometry>  
+                    <geometry>
                         <xsl:attribute name="value">
                             <xsl:value-of select="$geometry"/>
                         </xsl:attribute>
