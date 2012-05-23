@@ -35,6 +35,7 @@ __all__ = ["S3LocationModel",
            "S3MapModel",
            "S3GISThemeModel",
            "gis_location_represent",
+           'gis_location_lx_represent',
            "gis_layer_represent",
            "gis_rheader",
            ]
@@ -3618,6 +3619,37 @@ def gis_location_represent(record, showlink=True, simpletext=False):
                                                  limitby=(0, 1)).first()
 
     return gis_location_represent_row(location, showlink, simpletext)
+
+def gis_location_lx_represent(record):
+    """
+    Represent a location, given either its id or full Row, as a simple string
+    """
+    if not record:
+        return current.messages.None
+
+    if isinstance(record, Row):
+        location = record
+    else:
+        db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
+        table = s3db.gis_location
+        location = db(table.id == record).select(cache=cache, limitby=(0, 1)).first()
+
+    parents = Storage()
+    parents = current.gis.get_parent_per_level(parents,
+                                               location.id,
+                                               ids=False,
+                                               names=True)
+
+    location_list = [location.name,]
+    if parents:
+        fields = ["L%s" % (i) for i in xrange(0, 4)]
+        for field in reversed(fields):
+            if field in parents and parents[field]:
+                location_list.append(parents[field])
+
+    return ", ".join(location_list)
 
 # =============================================================================
 def gis_layer_represent(id, link=True):

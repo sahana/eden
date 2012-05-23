@@ -9,13 +9,13 @@
 
          CSV column...........Format..........Content
 
-         Name.................string..........Community short description
          Project..............string..........Project Name
          Activities...........comma-sep list..List of Activity Types
          Country..............string..........Country code/name (L0)
          State................string..........State/Province name (L1)
          District.............string..........District name (L2)
          City.................string..........City name (L3)
+         L4...................string..........(L4)
          Lat..................float...........Latitude
          Lon..................float...........Longitude
          ContactPersonXXX.....comma-sep list..Contact Person (can be multiple columns)
@@ -56,10 +56,10 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
-        <xsl:variable name="Community" select="col[@field='Name']/text()"/>
+        <!--<xsl:variable name="Community" select="col[@field='Name']/text()"/>-->
 
         <resource name="project_community">
-            <data field="name"><xsl:value-of select="$Community"/></data>
+            <!--<data field="name"><xsl:value-of select="$Community"/></data>-->
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             <!-- Link to Project -->
             <reference field="project_id" resource="project_project">
@@ -170,16 +170,16 @@
     <xsl:template name="Locations">
 
         <xsl:variable name="Project" select="col[@field='Project']/text()"/>
-        <xsl:variable name="Community" select="col[@field='Name']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='State']/text()"/>
         <xsl:variable name="l2" select="col[@field='District']/text()"/>
         <xsl:variable name="l3" select="col[@field='City']/text()"/>
+        <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Community)"/>
+        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -276,8 +276,8 @@
             </resource>
         </xsl:if>
 
-        <!-- Community Location -->
-        <xsl:if test="$Community!=''">
+        <!-- L4 Location -->
+        <xsl:if test="$l4!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$l4id"/>
@@ -312,7 +312,8 @@
                         </reference>
                     </xsl:otherwise>
                 </xsl:choose>
-                <data field="name"><xsl:value-of select="concat($Project, ': ', $Community)"/></data>
+                <data field="name"><xsl:value-of select="$l4"/></data>
+                <data field="level"><xsl:text>L4</xsl:text></data>
                 <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
             </resource>
@@ -323,20 +324,19 @@
     <!-- ****************************************************************** -->
     <xsl:template name="LocationReference">
 
-        <xsl:variable name="Community" select="col[@field='Name']/text()"/>
-
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='State']/text()"/>
         <xsl:variable name="l2" select="col[@field='District']/text()"/>
         <xsl:variable name="l3" select="col[@field='City']/text()"/>
+        <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Community)"/>
+        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
 
         <xsl:choose>
-            <xsl:when test="$Community!=''">
+            <xsl:when test="$l4!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l4id"/>
@@ -395,14 +395,13 @@
     <!-- ****************************************************************** -->
     <xsl:template name="ContactPerson">
 
-        <xsl:variable name="Community" select="col[@field='Name']/text()"/>
-
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='State']/text()"/>
         <xsl:variable name="l2" select="col[@field='District']/text()"/>
         <xsl:variable name="l3" select="col[@field='City']/text()"/>
+        <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
-        <xsl:variable name="l4id" select="concat('Location L4: ', $Community)"/>
+        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
 
         <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
             <xsl:variable name="PersonData" select="text()"/>
@@ -434,7 +433,7 @@
 
                         <!-- Populate the fields directly which are normally populated onvalidation -->
                         <data field="address">
-                            <xsl:value-of select="$Community"/>
+                            <xsl:value-of select="$l4"/>
                         </data>
                         <data field="L0">
                             <xsl:value-of select="$l0"/>
