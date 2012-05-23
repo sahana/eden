@@ -303,7 +303,8 @@ class S3SearchSimpleWidget(S3SearchWidget):
                 # Create a set of queries that test the current
                 # value against each field
                 for field in self.field:
-                    field_query = S3FieldSelector(field).like(value)
+                    s = S3FieldSelector(field).lower()
+                    field_query = s.like("%%%s%%" % value.lower())
 
                     # We want a match against any field
                     if field_queries:

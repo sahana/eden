@@ -3917,7 +3917,7 @@ class S3Resource(object):
 
             # Resolve the selector
             if "." not in selector:
-                selector = "%s.%s" % (alias, selector)
+                selector = "%s.%s" % (self.alias, selector)
             elif skip_components:
                 continue
             try:
