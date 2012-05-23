@@ -1720,8 +1720,9 @@ class QUANTITY_INV_ITEM(object):
                                            limitby = (0, 1)).first() # @todo: this should be a virtual field
         if inv_item_record and value:
             query = (db.supply_item_pack.id == self.item_pack_id)
-            send_quantity = (float(value) - track_quantity) * db(query).select(db.supply_item_pack.quantity,
-                                                            limitby=(0, 1)).first().quantity
+            send_record = db(query).select(db.supply_item_pack.quantity,
+                                           limitby=(0, 1)).first()
+            send_quantity = (float(value) - track_quantity) * send_record.quantity
             inv_quantity = inv_item_record.inv_inv_item.quantity * \
                              inv_item_record.supply_item_pack.quantity
             if send_quantity > inv_quantity:

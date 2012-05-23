@@ -67,7 +67,7 @@ class SeleniumUnitTest(Web2UnitTest):
         for details in data:
             el_id = "%s_%s" % (tablename, details[0])
             el_value = details[1]
-            try:
+            if len(details) == 3:
                 el_type = details[2]
                 if el_type == "option":
                     el = browser.find_element_by_id(el_id)
@@ -80,7 +80,12 @@ class SeleniumUnitTest(Web2UnitTest):
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
                                                    )
-            except:
+                elif el_type == "inv_widget":
+                    raw_value = self.w_inv_item_select(el_value,
+                                                       tablename,
+                                                       details[0],
+                                                      )
+            else:
                 el = browser.find_element_by_id(el_id)
                 el.send_keys(el_value)
                 raw_value = el_value
@@ -146,3 +151,11 @@ class SeleniumUnitTest(Web2UnitTest):
                        quiet = True,
                       ):
         return w_autocomplete(search, autocomplete, needle, quiet)
+
+    def w_inv_item_select(self,
+                          item_repr,
+                          tablename,
+                          field,
+                          quiet = True,
+                         ):
+        return w_inv_item_select(item_repr, tablename, field, quiet)
