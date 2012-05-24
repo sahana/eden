@@ -1,0 +1,57 @@
+[main]
+host = https://www.transifex.net
+
+[ecidadania.spaces]
+source_file = core/spaces/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = core/spaces/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = core/spaces/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.accounts]
+source_file = apps/ecidadania/accounts/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/accounts/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/accounts/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.calendar]
+source_file = apps/ecidadania/cal/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/cal/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/cal/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.debate]
+source_file = apps/ecidadania/debate/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/debate/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/debate/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.news]
+source_file = apps/ecidadania/news/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/news/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/news/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.proposals]
+source_file = apps/ecidadania/proposals/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/proposals/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/proposals/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.staticpages]
+source_file = apps/ecidadania/staticpages/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/ecidadania/staticpages/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/ecidadania/staticpages/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.userprofile]
+source_file = apps/thirdparty/userprofile/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = apps/thirdparty/userprofile/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = apps/thirdparty/userprofile/locale/gl_ES/LC_MESSAGES/django.po
+
+[ecidadania.core]
+source_file = e_cidadania/locale/en_GB/LC_MESSAGES/django.po
+source_lang = en_GB
+trans.es_ES = e_cidadania/locale/es_ES/LC_MESSAGES/django.po
+trans.gl_ES = e_cidadania/locale/gl_ES/LC_MESSAGES/django.po
+
