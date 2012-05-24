@@ -1,22 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Oscar Carballal <oscar@cidadania.coop>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-21 17:48+0200\n"
-"PO-Revision-Date: 2012-02-29 08:44+0000\n"
-"Last-Translator: Oscar Carballal <oscar@cidadania.coop>\n"
-"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/"
-"ecidadania/language/es_ES/)\n"
-"Language: es_ES\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2012-05-24 10:12+0200\n"
+"PO-Revision-Date: 2012-05-24 08:16+0000\n"
+"Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
+"Language-Team: Spanish (Spain) (http://www.transifex.net/projects/p/ecidadania/language/es_ES/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: es_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: models.py:42 models.py:107
@@ -76,9 +75,8 @@ msgid "^create_note/"
 msgstr ""
 
 #: urls.py:43
-#, fuzzy
 msgid "^delete_note/"
-msgstr "Editar nota"
+msgstr ""
 
 #: templates/debate/debate_add.html:4
 #: templates/debate/debate_add_simple.html:4
@@ -134,9 +132,8 @@ msgid "Debates in "
 msgstr "Debates en "
 
 #: templates/debate/debate_list.html:10
-#, fuzzy
 msgid "Debates in"
-msgstr "Debates en "
+msgstr ""
 
 #: templates/debate/debate_list.html:18
 msgid "There are no debates."
@@ -160,9 +157,8 @@ msgstr "siguiente"
 
 #: templates/debate/debate_outdated.html:4
 #: templates/debate/debate_outdated.html:16
-#, fuzzy
 msgid "Can't view this debate"
-msgstr "Crear nuevo debate"
+msgstr ""
 
 #: templates/debate/debate_outdated.html:17
 msgid ""
@@ -172,11 +168,11 @@ msgstr ""
 
 #: templates/debate/debate_outdated.html:20
 msgid "Started on:"
-msgstr "Comenzado el:"
+msgstr ""
 
 #: templates/debate/debate_outdated.html:23
 msgid "Finished on:"
-msgstr "Finalizado el:"
+msgstr ""
 
 #: templates/debate/debate_view.html:5
 msgid "View debate"
@@ -191,28 +187,24 @@ msgid "Scope:"
 msgstr "Ámbito:"
 
 #: templates/debate/debate_view.html:27
-#, fuzzy
 msgid "Start date:"
-msgstr "Fecha de comienzo"
+msgstr ""
 
 #: templates/debate/debate_view.html:27 templates/debate/debate_view.html:28
-#, fuzzy
 msgid "No date"
-msgstr "Fecha de finalización"
+msgstr ""
 
 #: templates/debate/debate_view.html:28
-#, fuzzy
 msgid "End date:"
-msgstr "Fecha de finalización"
+msgstr ""
 
 #: templates/debate/debate_view.html:68
-#, fuzzy
 msgid "Delete note"
-msgstr "Editar nota"
+msgstr ""
 
 #: templates/debate/debate_view.html:72
 msgid "View"
-msgstr "Ver"
+msgstr ""
 
 #: templates/debate/debate_view.html:74
 msgid "Edit"
@@ -231,6 +223,5 @@ msgid "100 characters"
 msgstr "100 caracteres"
 
 #: templates/debate/debate_view.html:122
-#, fuzzy
 msgid "View note"
-msgstr "Ver debate"
+msgstr ""
