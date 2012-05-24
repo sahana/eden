@@ -5845,7 +5845,7 @@ class S3ResourceQuery:
         try:
             l = extract(lfield)
             r = extract(rfield)
-        except (KeyError, SyntaxError):
+        except KeyError, SyntaxError:
             return None
 
         op = self.op
