@@ -296,6 +296,22 @@ $(document).ready(function() {
                     comment=T("If none are selected, then all are searched."),
                     cols = 2
                 ),
+                S3SearchOptionsWidget(
+                    name="owner_org_seach",
+                    label=T("Owning Organisation"),
+                    field="owner_org_id",
+                    represent ="%(name)s",
+                    comment=T("If none are selected, then all are searched."),
+                    cols = 2
+                ),
+                S3SearchOptionsWidget(
+                    name="supply_org_seach",
+                    label=T("Donating Organisation"),
+                    field="supply_org_id",
+                    represent ="%(name)s",
+                    comment=T("If none are selected, then all are searched."),
+                    cols = 2
+                ),
                 # NotImplemented yet
                 # S3SearchOptionsWidget(
                     # name="inv_item_search_category",
@@ -315,7 +331,7 @@ $(document).ready(function() {
             #rows=["item_id", "currency"],
             rows=["item_id", (T("Category"), "item_category"),],
             #cols=["site_id", "currency"],
-            cols=["site_id"],
+            cols=["site_id", "owner_org_id", "supply_org_id"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
             groupby=self.inv_inv_item.site_id,
@@ -1163,7 +1179,7 @@ $(document).ready(function() {
             title_list = LIST_TRACK_ITEMS,
             title_update = T("Edit Shipment Item"),
             title_search = T("Search Shipment Items"),
-            subtitle_create = T("Add New Shpment Item"),
+            subtitle_create = T("Add New Shipment Item"),
             subtitle_list = T("Shipment Items"),
             label_list_button = LIST_TRACK_ITEMS,
             label_create_button = ADD_TRACK_ITEM,
