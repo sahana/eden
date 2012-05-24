@@ -3,7 +3,8 @@ About this document
 
 :Authors:
 
-    Oscar Carballal <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Bithin
 
 :Corrections:
 
@@ -30,9 +31,5 @@ Translations
 Thanks
 ------
 
-- Algueirada
-- Xunta de Galicia
-- CESGA (Centro de Supercomputación de Galicia)
-- Concello de Ferrol
 - NovaCaixaGalicia
 - Google
