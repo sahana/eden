@@ -1189,6 +1189,39 @@ $(document).ready(function() {
             msg_record_deleted = T("Shipment Item deleted"),
             msg_list_empty = T("No Shipment Items"))
 
+        track_search = S3Search(
+            simple=(S3SearchSimpleWidget(
+                        name="track_search_text_simple",
+                        label=T("Search"),
+#                        comment=recv_search_comment,
+                        field=[ "item_id$name",
+                                "send_id$site_id$name",
+                                "recv_id$site_id$name",
+                                ]
+                      )),
+            advanced=(S3SearchSimpleWidget(
+                        name="track_search_text_advanced",
+                        label=T("Search"),
+#                        comment=recv_search_comment,
+                        field=[ "item_id$name",
+                                "send_id$site_id$name",
+                                "recv_id$site_id$name",
+                                ]
+                      ),
+                      S3SearchMinMaxWidget(
+                        name="send_search_date",
+                        method="range",
+                        label=T("Sent date"),
+                        field="send_id$date"
+                      ),
+#                      S3SearchMinMaxWidget(
+#                        name="recv_search_date",
+#                        method="range",
+#                        label=T("Received date"),
+#                        field="recv_id$date"
+#                      ),
+            ))
+
         # Resource configuration
         self.configure(tablename,
                        list_fields = ["id",
@@ -1208,6 +1241,7 @@ $(document).ready(function() {
                                       "owner_org_id",
                                       "supply_org_id",
                                      ],
+                       search_method = track_search,
                        onaccept = self.inv_track_item_onaccept,
                        onvalidation = self.inv_track_item_onvalidate,
                        )

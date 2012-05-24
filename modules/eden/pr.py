@@ -799,7 +799,7 @@ class S3PersonModel(S3Model):
         dob = form.vars.get("date_of_birth", None)
 
         if age and age != 1 and dob:
-            now = request.utcnow
+            now = current.request.utcnow
             dy = int((now.date() - dob).days / 365.25)
             if dy < 0:
                 ag = 1
@@ -2980,6 +2980,7 @@ def pr_contacts(r, **attr):
             contacts_wrapper.append(P(
                 SPAN(detail.value),
                 A(T("Edit"), _class="editBtn action-btn fright"),
+                A(T("Delete"), _class="deleteBtn delete-btn fright"),
                 _id="contact-%s" % detail.id,
                 _class="contact",
                 ))
@@ -3011,6 +3012,7 @@ def pr_contacts(r, **attr):
         emergency_wrapper.append(P(
             SPAN("%s%s%s" % (name, relationship, contact.phone)),
             A(T("Edit"), _class="editBtn action-btn fright"),
+            A(T("Delete"), _class="deleteBtn delete-btn fright"),
             _id="emergency-%s" % contact.id,
             _class="emergency",
             ))
