@@ -81,6 +81,14 @@ $('#contact-add').click(function () {
 $('.contact').each(function () {
     var contact = $(this);
     var id = contact.attr('id').match(/\d+/);
+
+    contact.find('a.deleteBtn').click(function (e) {
+        if (confirm(S3.i18n.delete_confirmation)) {
+            $.post(S3.Ap.concat('/pr/contact/' + id[0] + '/delete'));
+            contact.addClass('hidden');
+        }
+    });
+
     contact.find('a.editBtn').click(function (e) {
         var span = contact.find('span');
         var current = span.html();
@@ -144,6 +152,14 @@ $('#emergency-add').click(function () {
 $('.emergency').each(function () {
     var emergency = $(this);
     var id = emergency.attr('id').match(/\d+/);
+
+    emergency.find('a.deleteBtn').click(function (e) {
+        if (confirm(S3.i18n.delete_confirmation)) {
+            $.post(S3.Ap.concat('/pr/contact_emergency/' + id + '/delete'));
+            emergency.addClass('hidden');
+        }
+    });
+
     emergency.find('a.editBtn').click(function () {
         // Show a Spinner
         $('#emergency-add_throbber').removeClass('hidden').show();
