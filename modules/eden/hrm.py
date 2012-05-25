@@ -110,7 +110,10 @@ class S3HRModel(S3Model):
                                          represent = lambda opt: \
                                             hrm_type_opts.get(opt,
                                                               UNKNOWN_OPT)),
-                                  #Field("code", label=T("Staff ID")),
+                                  Field("code",
+                                        #readable=False,
+                                        #writable=False,
+                                        label=T("Staff ID")),
                                   Field("job_title", label=T("Job Title")),
                                   #Field("job_title", "list:reference db.hrm_job_role", label=T("Job Title"),
                                   #      requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -121,6 +124,10 @@ class S3HRModel(S3Model):
                                   #      represent = self.job_title_multirepresent, # @ToDo
                                   #      ),
                                   # Current status
+                                  Field("essential", "boolean",
+                                        #readable = False,
+                                        #writable = False,
+                                        label = T("Essential Staff?")),
                                   Field("status", "integer",
                                         requires = IS_IN_SET(hrm_status_opts,
                                                              zero=None),
