@@ -24,8 +24,8 @@ def w_autocomplete(search,
     config = current.test_config
     browser = config.browser
 
-    autocomplete_id = "dummy_%s" % autocomplete
-    throbber_id = "dummy_%s_throbber" % autocomplete
+    autocomplete_id = "dummy_%s_id" % autocomplete
+    throbber_id = "dummy_%s_id_throbber" % autocomplete
     if needle == None:
         needle = search
 
@@ -99,4 +99,3 @@ def w_inv_item_select (item_repr,
         if giveup > 60:
             break
     return raw_value
-    
