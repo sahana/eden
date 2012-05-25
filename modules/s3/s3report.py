@@ -64,7 +64,6 @@ class S3Cube(S3CRUD):
         "max": T("Maximum"),
         "sum": T("Sum"),
         "avg": T("Average"),
-        "mean": T("Average"),
         #"std": T("Standard Deviation")
     }
 
@@ -587,7 +586,7 @@ class S3Cube(S3CRUD):
 class S3Report:
     """ Class representing reports """
 
-    METHODS = ["list", "count", "min", "max", "sum", "avg", "mean"] #, "std"]
+    METHODS = ["list", "count", "min", "max", "sum", "avg"] #, "std"]
 
     def __init__(self, resource, rows, cols, layers):
         """
@@ -994,7 +993,7 @@ class S3Report:
             except TypeError, ValueError:
                 return None
 
-        elif method in ("avg", "mean"):
+        elif method in ("avg"):
             try:
                 if len(values):
                     return sum(values) / float(len(values))
