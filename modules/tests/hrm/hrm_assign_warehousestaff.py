@@ -13,7 +13,7 @@ class hrm_assign_warehousestaff(SeleniumUnitTest):
         driver.find_element_by_link_text("Open").click()
         driver.find_element_by_link_text("Staff").click()
         driver.find_element_by_id("select_from_registry").click()
-        w_autocomplete("Herc","hrm_human_resource_person","Herculano Hugh",False)
+        w_autocomplete("Herc","hrm_human_resource_person_id","Herculano Hugh",False)
         driver.find_element_by_css_selector("input[type=\"submit\"]").click()
         driver.find_element_by_css_selector("span.S3menulogo").click()
         driver.find_element_by_link_text("Home").click()

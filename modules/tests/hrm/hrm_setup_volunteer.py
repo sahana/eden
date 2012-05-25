@@ -10,7 +10,7 @@ class hrm_setup_volunteer(SeleniumUnitTest):
         driver = browser
         driver.find_element_by_link_text("Staff & Volunteers").click()
         driver.find_element_by_link_text("New Volunteer").click()
-        w_autocomplete("Rom","hrm_human_resource_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
+        w_autocomplete("Rom","hrm_human_resource_organisation_id","Romanian Food Assistance Association (Test) (RFAAT)",False)
         driver.find_element_by_id("pr_person_first_name").clear()
         driver.find_element_by_id("pr_person_first_name").send_keys("John")
         driver.find_element_by_id("pr_person_last_name").clear()

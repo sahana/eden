@@ -9,7 +9,7 @@ class hrm_setup_staff(SeleniumUnitTest):
         driver = self.browser
         driver.find_element_by_link_text("Staff & Volunteers").click()
         driver.find_element_by_link_text("New Staff Member").click()
-        w_autocomplete("Rom","hrm_human_resource_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
+        w_autocomplete("Rom","hrm_human_resource_organisation_id","Romanian Food Assistance Association (Test) (RFAAT)",False)
         driver.find_element_by_id("pr_person_first_name").clear()
         driver.find_element_by_id("pr_person_first_name").send_keys("Robert")
         driver.find_element_by_id("pr_person_middle_name").clear()
@@ -34,7 +34,7 @@ class hrm_setup_staff(SeleniumUnitTest):
         driver.find_element_by_id("hrm_human_resource_end_date").click()
         driver.find_element_by_id("hrm_human_resource_end_date").clear()
         driver.find_element_by_id("hrm_human_resource_end_date").send_keys("2015-03-02")
-        w_autocomplete("Buch","hrm_human_resource_site","Bucharest RFAAT Centre (Test) (Office)",False)
+        w_autocomplete("Buch","hrm_human_resource_site_id","Bucharest RFAAT Centre (Test) (Office)",False)
         driver.find_element_by_css_selector("input[type=\"submit\"]").click()
         driver.find_element_by_link_text("Home").click()
 

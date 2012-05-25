@@ -20,7 +20,7 @@ class org_create_office(SeleniumUnitTest):
         driver.find_element_by_id("org_office_name").send_keys("Bucharest RFAAT Centre (Test)")
         driver.find_element_by_id("org_office_code").clear()
         driver.find_element_by_id("org_office_code").send_keys("12345678")
-        w_autocomplete("Rom","org_office_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
+        w_autocomplete("Rom","org_office_organisation_id","Romanian Food Assistance Association (Test) (RFAAT)",False)
         driver.find_element_by_id("org_office_type").click()
         driver.find_element_by_id("org_office_type").send_keys("Headquarters")
         driver.find_element_by_id("gis_location_L0").send_keys("Romania")
