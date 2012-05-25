@@ -133,7 +133,8 @@ class S3PersonEntity(S3Model):
                            # tables & configuring as a super-entity
                            #cr_shelter = shelter,
                            #fire_station = T("Fire Station"),
-                           #hms_hospital = T("Hospital"),
+                           dvi_morgue = T("Morgue"),
+                           hms_hospital = T("Hospital"),
                            dvi_body = T("Body"))
 
         tablename = "pr_pentity"
