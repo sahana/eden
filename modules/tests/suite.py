@@ -46,8 +46,8 @@ if test:
     # Run specified Test after logging in
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-#    login(account="admin")
-#    globals()[test]()
+    login(account="admin")
+# globals()[test]()
     print test
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
     unittest.TextTestRunner(verbosity=2).run(suite)
@@ -55,39 +55,31 @@ if test:
 else:
     # Run all Tests
     # Log into admin testing account
-#    login(account="admin")
+    login(account="admin")
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(Logistics)
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Org001))
+## @Graeme TEMP remove:     unittest.TestLoader().loadTestsFromTestCase(Logistics)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(org_create_organization) # Create Organizations
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(org_create_office)) # Create Office
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_staff)) # Setup Staff
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_volunteer)) # Setup New Volunteer
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingcourse)) # Setup Training Course
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingevent)) # Setup Training Event
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # Assign staff to Organization
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # Assign Staff to office
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # Assign Staff to warehouse
     unittest.TextTestRunner(verbosity=2).run(suite)
-#    inventory()
-    # List of individual automated test scripts which Suite will run one by one:
-    # Organization Management (ORG) tests
-#    org001() # Setup Organizations
-    org002() # Setup Offices
     
-    # Human Resources Management (HRM) tests
-    hrm001() # Setup Staff
-    hrm002() # Setup New Volunteer
-    hrm003() # Setup Training Course
-    hrm004() # Setup Training Event
-    hrm005() # Assign staff to Organization
-    hrm006() # Assign Staff to office
-    hrm007() # Assign staff to warehouse
-    
-    # Inventory management (INV) tests
-    inv001() # Setup Warehouses     // needs more refining
-    inv002() # Setup Items        // needs more refining
-    inv003() # Setup Catalogues // needs more refining
-    inv004() # Setup Categories // needs more refining
-    inv005() # Create Requests // needs more refining
-    inv006() # Match Requests // needs more refining
-    
-    # Assets management (ASSET) tests
-    asset001() # Set up Assets
+#    # Inventory management (INV) tests
+#    inv001() # Setup Warehouses // needs more refining
+#    inv002() # Setup Items // needs more refining
+#    inv003() # Setup Catalogues // needs more refining
+#    inv004() # Setup Categories // needs more refining
+#    inv005() # Create Requests // needs more refining
+#    inv006() # Match Requests // needs more refining
+#    
+#    # Assets management (ASSET) tests
+#    asset001() # Set up Assets
     
     # Log out of testing account
-    logout() #
-    
-    # Cleanup 
-    browser.close()
+logout()
