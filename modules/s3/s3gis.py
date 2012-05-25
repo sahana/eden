@@ -1926,7 +1926,7 @@ class GIS(object):
                                      ftable.controller,
                                      ftable.function,
                                      ftable.trackable,
-                                     #ftable.polygons,
+                                     ftable.polygons,
                                      ftable.popup_label,
                                      ftable.popup_fields,
                                      limitby=(0, 1)).first()
@@ -1938,7 +1938,7 @@ class GIS(object):
                 popup_label = frow.popup_label
                 popup_fields = frow.popup_fields
                 trackable = frow.trackable
-                #polygons = frow.polygons
+                polygons = frow.polygons
                 controller = frow.controller or resource.prefix
                 function = frow.function or resource.name
             else:
@@ -1947,7 +1947,7 @@ class GIS(object):
                 popup_label = ""
                 popup_fields = "name"
                 trackable = False
-                #polygons = False
+                polygons = False
                 controller = resource.prefix
                 function = resource.name
 

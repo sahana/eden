@@ -1880,22 +1880,20 @@ S3FilterFieldChange({
         # Deletion and update have a different format
         try:
             id = record.vars.id
-            delete = False
         except:
             id = record.id
-            delete = True
 
         table = s3db.hrm_certification
         data = table(table.id == id)
 
-        if delete:
-            # I really wish this weren't neccesary, but I really need to get that person_id!
-            def reduction(a, b):
-                a.update({b["f"]: b["k"]})
-                return a
-            data = reduce(reduction, eval(data.deleted_fk), {})
-
-        person_id = data["person_id"]
+        try:
+            if data.deleted:
+                deleted_fk = json.loads(record.deleted_fk)
+                person_id = deleted_fk["person_id"]
+            else:
+                person_id = data["person_id"]
+        except:
+            return
 
         ctable = s3db.hrm_competency
         cstable = s3db.hrm_certificate_skill

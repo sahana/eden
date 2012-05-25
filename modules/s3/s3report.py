@@ -64,7 +64,6 @@ class S3Cube(S3CRUD):
         "max": T("Maximum"),
         "sum": T("Sum"),
         "avg": T("Average"),
-        "mean": T("Average"),
         #"std": T("Standard Deviation")
     }
 
@@ -168,7 +167,7 @@ class S3Cube(S3CRUD):
 
                 session.s3.report_options[tablename] = Storage([(k, v) for k, v in
                                                         form_values.iteritems() if v])
-            
+
             # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
 
@@ -254,7 +253,7 @@ class S3Cube(S3CRUD):
 
             # Represent the report --------------------------------------------
             #
-            if representation == "html":
+            if representation in ("html", "iframe"):
                 report_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
@@ -284,7 +283,7 @@ class S3Cube(S3CRUD):
                 # @todo: support other formats
                 r.error(501, manager.ERROR.BAD_FORMAT)
 
-        elif representation == "html":
+        elif representation in ("html", "iframe"):
 
                 # Fallback to list view ---------------------------------------
                 #
@@ -300,7 +299,7 @@ class S3Cube(S3CRUD):
 
         # Complete the page ---------------------------------------------------
         #
-        if representation == "html":
+        if representation in ("html", "iframe"):
             crud_string = self.crud_string
             title = crud_string(self.tablename, "title_report")
             if not title:
@@ -470,7 +469,7 @@ class S3Cube(S3CRUD):
             Processes the filter widgets into a filter query
 
             @param form: the filter form
-            
+
             @rtype: tuple
             @return: A tuple containing (query object, validation errors)
         """
@@ -587,7 +586,7 @@ class S3Cube(S3CRUD):
 class S3Report:
     """ Class representing reports """
 
-    METHODS = ["list", "count", "min", "max", "sum", "avg", "mean"] #, "std"]
+    METHODS = ["list", "count", "min", "max", "sum", "avg"] #, "std"]
 
     def __init__(self, resource, rows, cols, layers):
         """
@@ -994,7 +993,7 @@ class S3Report:
             except TypeError, ValueError:
                 return None
 
-        elif method in ("avg", "mean"):
+        elif method in ("avg"):
             try:
                 if len(values):
                     return sum(values) / float(len(values))
