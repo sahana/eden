@@ -1,4 +1,5 @@
 __all__ = ["w_autocomplete",
+           "w_inv_item_select",
           ]
 
 # @todo Their are performance issues need to profile and find out in which functions are the bottlenecks
@@ -16,10 +17,10 @@ import time
 
 # -----------------------------------------------------------------------------
 def w_autocomplete(search,
-                 autocomplete,
-                 needle = None,
-                 quiet = True,
-                ):
+                   autocomplete,
+                   needle = None,
+                   quiet = True,
+                  ):
     config = current.test_config
     browser = config.browser
 
@@ -34,11 +35,12 @@ def w_autocomplete(search,
     # give time for the throbber to appear
     time.sleep(1)
     # now wait for throbber to close
-    giveup = 0
+    giveup = 0.0
+    sleeptime = 0.2
     while browser.find_element_by_id(throbber_id).is_displayed():
-        time.sleep(1)
-        giveup += 1
-        if giveup == 20:
+        time.sleep(sleeptime)
+        giveup += sleeptime
+        if giveup > 60:
             return False
     # throbber has closed and data was found, return
     for i in range(10):
@@ -65,8 +67,36 @@ def w_autocomplete(search,
             try:
                 menu = browser.find_element_by_id("ui-menu-%s" % automenu)
             except:
-                print "Unable to find another ui_menu"
                 menu = None
             # end of looping through each autocomplete menu
         print "Sleeping"
-        time.sleep(1)
+        time.sleep(sleeptime)
+
+def w_inv_item_select (item_repr,
+                       tablename,
+                       field,
+                       quiet = True,
+                      ):
+    config = current.test_config
+    browser = config.browser
+
+    el_id = "%s_%s" % (tablename, field)
+    el = browser.find_element_by_id(el_id)
+    for option in el.find_elements_by_tag_name("option"):
+        if option.text == item_repr:
+            option.click()
+            raw_value = int(option.get_attribute("value"))
+            break
+    # Now wait for the pack_item to be populated
+    el_id = "%s_%s" % (tablename, "item_pack_id")
+    el = browser.find_element_by_id(el_id)
+    giveup = 0.0
+    sleeptime = 0.2
+    while el.find_elements_by_tag_name("option")[0].text == "":
+        # The pack drop down hasn't been populated yet so sleep
+        time.sleep(sleeptime)
+        giveup += sleeptime
+        if giveup > 60:
+            break
+    return raw_value
+    

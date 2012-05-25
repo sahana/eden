@@ -19,7 +19,7 @@ class Web2UnitTest(unittest.TestCase):
         self.browser = self.config.browser
         self.app = current.request.application
         self.url = self.config.url
-        self.user = "normal"
+        self.user = "admin"
 
 class SeleniumUnitTest(Web2UnitTest):
     def login(self, account=None, nexturl=None):
@@ -31,9 +31,9 @@ class SeleniumUnitTest(Web2UnitTest):
 
     def getRows (self, table, data, dbcallback):
         """
-            get a copy of all the records that match the data passed in
-            this can be modified by the callback function
-        """
+get a copy of all the records that match the data passed in
+this can be modified by the callback function
+"""
         query = ((table.deleted == "F"))
         for details in data:
             query = query & ((table[details[0]] == details[1]))
@@ -52,14 +52,13 @@ class SeleniumUnitTest(Web2UnitTest):
               ):
         """ Generic method to create a record from the data passed in
 
-            table      The table where the record belongs
-            data       The data that is to be inserted
-            success    The expectation that this create will succeed
-            dbcallback Used by getRows to return extra data from 
-                       the database before & after the create
-            
-            This will return a dictionary of rows before and after the create
-        """
+table The table where the record belongs
+data The data that is to be inserted
+success The expectation that this create will succeed
+dbcallback Used by getRows to return extra data from
+the database before & after the create
+This will return a dictionary of rows before and after the create
+"""
         browser = self.browser
         result = {}
         id_data = []
@@ -67,7 +66,7 @@ class SeleniumUnitTest(Web2UnitTest):
         for details in data:
             el_id = "%s_%s" % (tablename, details[0])
             el_value = details[1]
-            try:
+            if len(details) == 3:
                 el_type = details[2]
                 if el_type == "option":
                     el = browser.find_element_by_id(el_id)
@@ -80,7 +79,12 @@ class SeleniumUnitTest(Web2UnitTest):
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
                                                    )
-            except:
+                elif el_type == "inv_widget":
+                    raw_value = self.w_inv_item_select(el_value,
+                                                       tablename,
+                                                       details[0],
+                                                      )
+            else:
                 el = browser.find_element_by_id(el_id)
                 el.send_keys(el_value)
                 raw_value = el_value
@@ -146,3 +150,13 @@ class SeleniumUnitTest(Web2UnitTest):
                        quiet = True,
                       ):
         return w_autocomplete(search, autocomplete, needle, quiet)
+
+    def w_inv_item_select(self,
+                          item_repr,
+                          tablename,
+                          field,
+                          quiet = True,
+                         ):
+        return w_inv_item_select(item_repr, tablename, field, quiet)
+
+

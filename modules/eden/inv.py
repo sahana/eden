@@ -296,6 +296,22 @@ $(document).ready(function() {
                     comment=T("If none are selected, then all are searched."),
                     cols = 2
                 ),
+                S3SearchOptionsWidget(
+                    name="owner_org_seach",
+                    label=T("Owning Organisation"),
+                    field="owner_org_id",
+                    represent ="%(name)s",
+                    comment=T("If none are selected, then all are searched."),
+                    cols = 2
+                ),
+                S3SearchOptionsWidget(
+                    name="supply_org_seach",
+                    label=T("Donating Organisation"),
+                    field="supply_org_id",
+                    represent ="%(name)s",
+                    comment=T("If none are selected, then all are searched."),
+                    cols = 2
+                ),
                 # NotImplemented yet
                 # S3SearchOptionsWidget(
                     # name="inv_item_search_category",
@@ -315,7 +331,7 @@ $(document).ready(function() {
             #rows=["item_id", "currency"],
             rows=["item_id", (T("Category"), "item_category"),],
             #cols=["site_id", "currency"],
-            cols=["site_id"],
+            cols=["site_id", "owner_org_id", "supply_org_id"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
             groupby=self.inv_inv_item.site_id,
@@ -1163,7 +1179,7 @@ $(document).ready(function() {
             title_list = LIST_TRACK_ITEMS,
             title_update = T("Edit Shipment Item"),
             title_search = T("Search Shipment Items"),
-            subtitle_create = T("Add New Shpment Item"),
+            subtitle_create = T("Add New Shipment Item"),
             subtitle_list = T("Shipment Items"),
             label_list_button = LIST_TRACK_ITEMS,
             label_create_button = ADD_TRACK_ITEM,
@@ -1172,6 +1188,39 @@ $(document).ready(function() {
             msg_record_modified = T("Shipment Item updated"),
             msg_record_deleted = T("Shipment Item deleted"),
             msg_list_empty = T("No Shipment Items"))
+
+        track_search = S3Search(
+            simple=(S3SearchSimpleWidget(
+                        name="track_search_text_simple",
+                        label=T("Search"),
+#                        comment=recv_search_comment,
+                        field=[ "item_id$name",
+                                "send_id$site_id$name",
+                                "recv_id$site_id$name",
+                                ]
+                      )),
+            advanced=(S3SearchSimpleWidget(
+                        name="track_search_text_advanced",
+                        label=T("Search"),
+#                        comment=recv_search_comment,
+                        field=[ "item_id$name",
+                                "send_id$site_id$name",
+                                "recv_id$site_id$name",
+                                ]
+                      ),
+                      S3SearchMinMaxWidget(
+                        name="send_search_date",
+                        method="range",
+                        label=T("Sent date"),
+                        field="send_id$date"
+                      ),
+#                      S3SearchMinMaxWidget(
+#                        name="recv_search_date",
+#                        method="range",
+#                        label=T("Received date"),
+#                        field="recv_id$date"
+#                      ),
+            ))
 
         # Resource configuration
         self.configure(tablename,
@@ -1192,6 +1241,7 @@ $(document).ready(function() {
                                       "owner_org_id",
                                       "supply_org_id",
                                      ],
+                       search_method = track_search,
                        onaccept = self.inv_track_item_onaccept,
                        onvalidation = self.inv_track_item_onvalidate,
                        )

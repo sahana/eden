@@ -238,7 +238,7 @@ def inv_item():
                         )
                      )
     def prep(r):
-        if r.method != "search":
+        if r.method != "search" and r.method != "report":
             response.s3.dataTable_group = 1
         return True
 
@@ -399,6 +399,8 @@ def send():
     # Set Validator for checking against the number of items in the warehouse
     vars = request.vars
     if (vars.send_inv_item_id):
+        if not vars.item_pack_id:
+            vars.item_pack_id = s3db.inv_inv_item[vars.send_inv_item_id].item_pack_id
         s3db.inv_track_item.quantity.requires = QUANTITY_INV_ITEM(db,
                                                                  vars.send_inv_item_id,
                                                                  vars.item_pack_id)
@@ -574,7 +576,12 @@ def send():
         return True
 
     if len(request.args) > 1 and request.args[1] == "track_item":
-        status = sendtable[request.args[0]].status
+        # Shouldn't fail but...
+        # if user enters the send id then it could so wrap in a try...
+        try:
+            status = sendtable[request.args[0]].status
+        except:
+            status = None
         if status:
             editable = False
             if status == SHIP_STATUS_RETURNING:
@@ -1221,7 +1228,7 @@ def recv_process():
     site_id = recv_record.site_id
     # Update Receive record & lock for editing
     code = s3db.inv_get_shipping_code("GRN",
-                                      send_record.to_site_id,
+                                      recv_record.site_id,
                                       s3db.inv_recv.recv_ref
                                      )
     rtable[recv_id] = dict(date = request.utcnow,
