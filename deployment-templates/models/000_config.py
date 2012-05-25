@@ -74,8 +74,8 @@ deployment_settings.auth.registration_requires_approval = False
 deployment_settings.auth.always_notify_approver = True
 
 # Base settings
-deployment_settings.base.system_name = T("Sahana Eden Humanitarian Management Platform")
-deployment_settings.base.system_name_short = T("Sahana Eden")
+deployment_settings.base.system_name = T("Crisis Management System")
+deployment_settings.base.system_name_short = T("Crisis Management System")
 
 # Set this to the Public URL of the instance
 deployment_settings.base.public_url = "http://127.0.0.1:8000"
@@ -98,7 +98,7 @@ deployment_settings.base.migrate = True
 # ["roles", "user"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
-deployment_settings.base.prepopulate = 1
+deployment_settings.base.prepopulate = ["Crisis"]
 
 # Set this to True to use Content Delivery Networks to speed up Internet-facing sites
 deployment_settings.base.cdn = False
@@ -108,7 +108,7 @@ deployment_settings.base.cdn = False
 # JS Debug messages are also available in the Console
 # can also load an individual page in debug mode by appending URL with
 # ?debug=1
-deployment_settings.base.debug = False
+deployment_settings.base.debug = True
 
 # Email settings
 # Outbound server
@@ -119,10 +119,10 @@ deployment_settings.mail.server = "127.0.0.1:25"
 #deployment_settings.mail.tls = True
 #deployment_settings.mail.login = "username:password"
 # From Address
-deployment_settings.mail.sender = "'Sahana' <sahana@your.org>"
+deployment_settings.mail.sender = "'CMS' <cms@cms.org>"
 # Default email address to which requests to approve new user accounts gets sent
 # This can be overridden for specific domains/organisations via the auth_domain table
-deployment_settings.mail.approver = "useradmin@your.org"
+deployment_settings.mail.approver = "useradmin@cms.org"
 # Daily Limit on Sending of emails
 #deployment_settings.mail.limit = 1000
 
@@ -132,9 +132,9 @@ deployment_settings.mail.approver = "useradmin@your.org"
 # Frontpage settings
 # RSS feeds
 deployment_settings.frontpage.rss = [
-    {"title": "Eden",
+    {"title": "GDACS",
      # Trac timeline
-     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+     "url": "http://www.gdacs.org/rss.aspx"
     },
     {"title": "Twitter",
      # @SahanaFOSS
@@ -173,7 +173,7 @@ deployment_settings.L10n.default_language = "en"
 # Display the language toolbar
 deployment_settings.L10n.display_toolbar = True
 # Default timezone for users
-deployment_settings.L10n.utc_offset = "UTC +0000"
+deployment_settings.L10n.utc_offset = "UTC +0500"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #deployment_settings.L10n.date_format = T("%m-%d-%Y")
 #deployment_settings.L10n.time_format = T("%H:%M:%S")
@@ -483,7 +483,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 6,     # 6th item in the menu
+            module_type = 1,     # 6th item in the menu
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -496,14 +496,14 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Organizations"),
             #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
             restricted = True,
-            module_type = 1
+            module_type = 10
         )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
             name_nice = T("Staff & Volunteers"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 2,
+            module_type = 10,
         )),
     ("cms", Storage(
           name_nice = T("Content Management"),
@@ -522,7 +522,7 @@ deployment_settings.modules = OrderedDict([
             #description = "Sends & Receives Alerts via Email & SMS",
             restricted = True,
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-            module_type = None,
+            module_type = 10,
         )),
     ("supply", Storage(
             name_nice = T("Supply Chain Management"),
@@ -534,7 +534,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Warehouse"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = 4
+            module_type = 10
         )),
     #("proc", Storage(
     #        name_nice = T("Procurement"),
@@ -546,7 +546,7 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 5,
+            module_type = 10,
         )),
     # Vehicle depends on Assets
     ("vehicle", Storage(
@@ -565,13 +565,13 @@ deployment_settings.modules = OrderedDict([
             name_nice = T("Projects"),
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
-            module_type = 2
+            module_type = 5
         )),
     ("survey", Storage(
-            name_nice = T("Surveys"),
+            name_nice = T("Assessments"),
             #description = "Create, enter, and manage surveys.",
             restricted = True,
-            module_type = 5,
+            module_type = 10,
         )),
     ("cr", Storage(
             name_nice = T("Shelters"),
@@ -585,11 +585,17 @@ deployment_settings.modules = OrderedDict([
             restricted = True,
             module_type = 10
         )),
+    ("security", Storage(
+            name_nice = T("Security"),
+            #description = "Security   ",
+            restricted = True,
+            module_type = 4
+        )),
     ("irs", Storage(
             name_nice = T("Incidents"),
             #description = "Incident Reporting System",
             restricted = False,
-            module_type = 10
+            module_type = None
         )),
     #("impact", Storage(
     #        name_nice = T("Impacts"),
@@ -640,12 +646,12 @@ deployment_settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #)),
-    #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
+    ("delphi", Storage(
+            name_nice = T("Decision Maker"),
+            #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
+            restricted = False,
+            module_type = 2,
+        )),
     ("dvi", Storage(
            name_nice = T("Disaster Victim Identification"),
            #description = "Disaster Victim Identification",
@@ -656,10 +662,10 @@ deployment_settings.modules = OrderedDict([
            #audit_write = True
        )),
     ("mpr", Storage(
-           name_nice = T("Missing Person Registry"),
+           name_nice = T("Missing Persons"),
            #description = "Helps to report and search for missing persons",
            restricted = False,
-           module_type = 10,
+           module_type = 3,
        )),
     ("dvr", Storage(
            name_nice = T("Disaster Victim Registry"),
@@ -679,12 +685,12 @@ deployment_settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 1,
     #   )),
-    #("flood", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
+    ("flood", Storage(
+            name_nice = T("Flood Warnings"),
+            #description = "Flood Gauges show water levels in various parts of the country",
+            restricted = False,
+            module_type = 10
+        )),
     #("patient", Storage(
     #        name_nice = T("Patient Tracking"),
     #        #description = "Tracking of Patients",

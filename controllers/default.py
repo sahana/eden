@@ -145,15 +145,6 @@ def index():
     response.title = title
 
     item = ""
-    if deployment_settings.has_module("cms"):
-        table = s3db.cms_post
-        item = db(table.module == module).select(table.body,
-                                                 limitby=(0, 1)).first()
-        if item:
-            item = DIV(XML(item.body))
-        else:
-            item = ""
-
     if deployment_settings.has_module("cr"):
         s3mgr.load("cr_shelter")
         SHELTERS = s3.crud_strings["cr_shelter"].subtitle_list
@@ -166,20 +157,26 @@ def index():
                 ["facility", T("Warehouses"), "inv", "warehouse"],
                 ["facility", T("Hospitals"), "hms", "hospital"],
                 ["facility", T("Offices"), "org", "office"],
+                
+                ["sit", T("Maps"), "gis", "map_viewing_client"],
+                ["sit", T("Security"), "security", "index"],
+                ["sit", T("Projects"), "project", "project"],
                 ["sit", T("Staff"), "hrm", "staff"],
-                ["sit", T("Volunteers"), "hrm", "volunteer"],
                 ["sit", T("Incidents"), "irs", "ireport"],
-                ["sit", T("Assessments"), "survey", "series"],
                 ["sit", T("Assets"), "asset", "asset"],
                 ["sit", T("Inventory Items"), "inv", "inv_item"],
+                
+                        
                 #["dec", T("Gap Map"), "project", "gap_map"],
                 #["dec", T("Gap Report"), "project", "gap_report"],
-                ["dec", T("Requests"), "req", "req"],
-                ["res", T("Projects"), "project", "project"],
+                
+                ["dec", T("Decision Maker"), "delphi", "index"],
+                ["dec", T("Assessments"), "survey", "series"],
+                ["dec", T("Scenarios"), "scenario", "scenario"],
+                
+                ["res", T("Missing persons"), "mpr", "index"],
                 ["res", T("Activities"), "project", "activity"],
-                ["res", T("Commitments"), "req", "commit"],
-                ["res", T("Sent Shipments"), "inv", "send"],
-                ["res", T("Received Shipments"), "inv", "recv"]
+                
                 ]
 
     # Change to (Mitigation)/Preparedness/Response/Recovery?
