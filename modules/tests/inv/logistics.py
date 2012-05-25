@@ -8,8 +8,8 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_send(self, user, data):
         """
-            Helper method to add a inv_send record by the given user 
-        """
+Helper method to add a inv_send record by the given user
+"""
         self.login(account=user, nexturl="inv/send/create")
         table = "inv_send"
         result = self.create(table, data)
@@ -17,9 +17,9 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_send_rec(self, result):
         """
-            Simple helper function to get the waybill reference of the newly
-            created inv_send row so it can be used to filter dataTables
-        """
+Simple helper function to get the waybill reference of the newly
+created inv_send row so it can be used to filter dataTables
+"""
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -28,9 +28,9 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_send_get_id(self, result):
         """
-            Simple helper function to get the waybill reference of the newly
-            created inv_send row so it can be used to filter dataTables
-        """
+Simple helper function to get the waybill reference of the newly
+created inv_send row so it can be used to filter dataTables
+"""
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -39,9 +39,9 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_send_get_ref(self, result):
         """
-            Simple helper function to get the waybill reference of the newly
-            created inv_send row so it can be used to filter dataTables
-        """
+Simple helper function to get the waybill reference of the newly
+created inv_send row so it can be used to filter dataTables
+"""
         # The newly created inv_send will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_send = result["after"].records[0]
@@ -50,9 +50,9 @@ class Logistics(SeleniumUnitTest):
 
     def helper_inv_track_item(self, user, send_id, data, removed=True):
         """
-            Helper method to add a track item to the inv_send with the 
-            given send_id by the given user 
-        """
+Helper method to add a track item to the inv_send with the
+given send_id by the given user
+"""
         try:
             add_btn = self.browser.find_element_by_id("show-add-btn")
             if add_btn.is_displayed():
@@ -80,13 +80,12 @@ class Logistics(SeleniumUnitTest):
     # dbcallback for the inv_track item create function
     def dbcallback_getStockLevels(self, table, data, rows):
         """
-            Callback to add the total in stock for the selected item.
+Callback to add the total in stock for the selected item.
 
-            This can then be used to look at the value before and after
-            to ensure that the totals have been removed from the warehouse.
-            
-            The stock row will be added to the *end* of the list of rows 
-        """
+This can then be used to look at the value before and after
+to ensure that the totals have been removed from the warehouse.
+The stock row will be added to the *end* of the list of rows
+"""
         table = self.current.s3db["inv_inv_item"]
         for details in data:
             if details[0] == "send_inv_item_id":
@@ -136,71 +135,72 @@ class Logistics(SeleniumUnitTest):
                 ),
                ]
         result = self.helper_inv_track_item("normal", send_id, data)
+        driver.find_element_by_link_text("Home").click()
 
-#    def test_inventory(self):
-#        """ Tests for Inventory """
+# def test_inventory(self):
+# """ Tests for Inventory """
 #
-#        browser = self.browser
+# browser = self.browser
 #
-#        # Login
-#        self.login()
+# # Login
+# self.login()
 #
-#        # Open Inv module
-#        url = "%s/inv/inv_item" % self.url
-#        url = "%s/inv/warehouse" % self.url
-#        browser.get(url)
+# # Open Inv module
+# url = "%s/inv/inv_item" % self.url
+# url = "%s/inv/warehouse" % self.url
+# browser.get(url)
 #
-#        # Check that the inventory is correct.
-#        (start, end, length) = self.dt_row_cnt(check=(1,6,6), quiet=False)
-#        # look for the entries in Lospalos Warehouse
-#        warehouse = "Lospalos Warehouse"
-#        self.assertTrue(self.dt_filter(warehouse), "DataTable not working correctly")
+# # Check that the inventory is correct.
+# (start, end, length) = self.dt_row_cnt(check=(1,6,6), quiet=False)
+# # look for the entries in Lospalos Warehouse
+# warehouse = "Lospalos Warehouse"
+# self.assertTrue(self.dt_filter(warehouse), "DataTable not working correctly")
 #
-#        (start, end, total, filtered) = self.dt_row_cnt(check=(1,1,1,6), quiet=False)
-#        self.assertTrue(self.dt_filter(), "DataTable not working correctly")
-#        (start, end, length) = self.dt_row_cnt(check=(1,6,6))
+# (start, end, total, filtered) = self.dt_row_cnt(check=(1,1,1,6), quiet=False)
+# self.assertTrue(self.dt_filter(), "DataTable not working correctly")
+# (start, end, length) = self.dt_row_cnt(check=(1,6,6))
 #
-#        links = self.dt_links(quiet=False)
+# links = self.dt_links(quiet=False)
 #
-#        records = self.dt_data()
-#        warehouse_found = False
-#        tried = []
-#        for cnt, line in enumerate(records):
-#            if warehouse in line:
-#                tried.append(cnt)
-#                if self.dt_action(cnt+1,"Details"):
-#                    warehouse_found = True
-#                    break
-#        self.assertTrue(not warehouse_found, "Unable to locate warehouse %s, tried to click rows %s" % (warehouse, tried))
+# records = self.dt_data()
+# warehouse_found = False
+# tried = []
+# for cnt, line in enumerate(records):
+# if warehouse in line:
+# tried.append(cnt)
+# if self.dt_action(cnt+1,"Details"):
+# warehouse_found = True
+# break
+# self.assertTrue(not warehouse_found, "Unable to locate warehouse %s, tried to click rows %s" % (warehouse, tried))
 #
-#        # Having opened the Lospalos warehouse
-#        # After a prepop the warehouse should have:
-#        #    4200 plastic sheets from Australia RC
-#        #    2000 plastic sheets from Acme
-#        match = self.dt_find("Plastic Sheets")
-#        if match:
-#            if not self.dt_find(4200, cellList=match, column=5, first=True):
-#                assert 0, "Unable to find 4200 Plastic Sheets"
-#            if not self.dt_find(2000, cellList=match, column=5, first=True):
-#                assert 0, "Unable to find 2000 Plastic Sheets"
-#        else:
-#            assert 0, "Unable to find any Plastic Sheets"
+# # Having opened the Lospalos warehouse
+# # After a prepop the warehouse should have:
+# # 4200 plastic sheets from Australia RC
+# # 2000 plastic sheets from Acme
+# match = self.dt_find("Plastic Sheets")
+# if match:
+# if not self.dt_find(4200, cellList=match, column=5, first=True):
+# assert 0, "Unable to find 4200 Plastic Sheets"
+# if not self.dt_find(2000, cellList=match, column=5, first=True):
+# assert 0, "Unable to find 2000 Plastic Sheets"
+# else:
+# assert 0, "Unable to find any Plastic Sheets"
 #
 #
-#    # -----------------------------------------------------------------------------
-#    def test_requests(self):
-#        """ Tests for Requests """
+# # -----------------------------------------------------------------------------
+# def test_requests(self):
+# """ Tests for Requests """
 #
-#        browser = self.browser
+# browser = self.browser
 #
-#        # Login
-#        self.login()
+# # Login
+# self.login()
 #
-#        # Open Request module
-#        url = "%s/req/req/create" % self.url
-#        browser.get(url)
-#        self.w_autocomplete("Beatriz de C",
-#                            "req_req_requester",
-#                            "Beatriz de Carvalho",
-#                            )
-#        
+# # Open Request module
+# url = "%s/req/req/create" % self.url
+# browser.get(url)
+# self.w_autocomplete("Beatriz de C",
+# "req_req_requester",
+# "Beatriz de Carvalho",
+# )
+# 
