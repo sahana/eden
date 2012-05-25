@@ -168,7 +168,7 @@ class S3Cube(S3CRUD):
 
                 session.s3.report_options[tablename] = Storage([(k, v) for k, v in
                                                         form_values.iteritems() if v])
-            
+
             # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
 
@@ -254,7 +254,7 @@ class S3Cube(S3CRUD):
 
             # Represent the report --------------------------------------------
             #
-            if representation == "html":
+            if representation in ("html", "iframe"):
                 report_data = None
                 if not report.empty:
                     items = S3ContingencyTable(report,
@@ -284,7 +284,7 @@ class S3Cube(S3CRUD):
                 # @todo: support other formats
                 r.error(501, manager.ERROR.BAD_FORMAT)
 
-        elif representation == "html":
+        elif representation in ("html", "iframe"):
 
                 # Fallback to list view ---------------------------------------
                 #
@@ -300,7 +300,7 @@ class S3Cube(S3CRUD):
 
         # Complete the page ---------------------------------------------------
         #
-        if representation == "html":
+        if representation in ("html", "iframe"):
             crud_string = self.crud_string
             title = crud_string(self.tablename, "title_report")
             if not title:
@@ -470,7 +470,7 @@ class S3Cube(S3CRUD):
             Processes the filter widgets into a filter query
 
             @param form: the filter form
-            
+
             @rtype: tuple
             @return: A tuple containing (query object, validation errors)
         """
