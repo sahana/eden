@@ -54,6 +54,7 @@ class S3DVIModel(S3Model):
         s3 = current.response.s3
 
         location_id = self.gis_location_id
+        organisation_id = self.org_organisation_id
 
         pe_label = self.pr_pe_label
         person_id = self.pr_person_id
@@ -155,9 +156,12 @@ class S3DVIModel(S3Model):
         #
         tablename = "dvi_morgue"
         table = db.define_table(tablename,
+                                self.super_link("pe_id", "pr_pentity"),
+                                self.super_link("site_id", "org_site"),
                                 Field("name",
                                       unique=True,
                                       notnull=True),
+                                organisation_id(),
                                 Field("description"),
                                 location_id(),
                                 *s3.meta_fields())
@@ -169,11 +173,28 @@ class S3DVIModel(S3Model):
                                     represent = self.morgue_represent,
                                     ondelete = "RESTRICT")
 
-        # CRUD Strings?
+        # CRUD Strings
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Morgue"),
+            title_display = T("Morgue Details"),
+            title_list = T("Morgues"),
+            title_update = T("Update Morgue Details"),
+            title_search = T("Search Morgues"),
+            subtitle_create = T("Add New Morgue"),
+            subtitle_list = T("List of Morgues"),
+            label_list_button = T("List of Morgues"),
+            label_create_button = T("Add Morgue"),
+            label_delete_button = T("Delete Morgue"),
+            msg_record_created = T("Morgue added"),
+            msg_record_modified = T("Morgue updated"),
+            msg_record_deleted = T("Morgue deleted"),
+            msg_list_empty = T("No morgues found"))
 
         # Search Method?
 
         # Resource Configuration?
+        self.configure(tablename,
+                       super_entity=("pr_pentity", "org_site"))
 
         # Components
         self.add_component("dvi_body", dvi_morgue="morgue_id")
