@@ -1709,6 +1709,7 @@ class S3HRSkillModel(S3Model):
                                    label=T("Hours")),
                              Field("place",              # We could make this an event_id?
                                    label=T("Place")),
+                             s3.comments(),
                              *meta_fields())
 
         crud_strings[tablename] = Storage(
