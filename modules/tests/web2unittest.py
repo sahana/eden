@@ -76,19 +76,31 @@ This will return a dictionary of rows before and after the create
                             raw_value = int(option.get_attribute("value"))
                             break
                 elif el_type == "autocomplete":
-                    raw_value = self.w_autocomplete(el_value,
-                                                    el_id,
-                                                   )
+                    if len(el_value) > 10:
+                        raw_value = self.w_autocomplete(el_value[:10],
+                                                        el_id,
+                                                        el_value,
+                                                       )
+                    else:
+                        raw_value = self.w_autocomplete(el_value,
+                                                        el_id,
+                                                       )
                 elif el_type == "inv_widget":
                     raw_value = self.w_inv_item_select(el_value,
                                                        tablename,
                                                        details[0],
                                                       )
+                elif el_type == "gis_location":
+                    self.w_gis_location(el_value,
+                                        details[0],
+                                       )
+                    raw_value = None
             else:
                 el = browser.find_element_by_id(el_id)
                 el.send_keys(el_value)
                 raw_value = el_value
-            id_data.append([details[0], raw_value])
+            if raw_value:
+                id_data.append([details[0], raw_value])
         result["before"] = self.getRows(table, id_data, dbcallback)
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
         confirm = True
@@ -158,3 +170,10 @@ This will return a dictionary of rows before and after the create
                           quiet = True,
                          ):
         return w_inv_item_select(item_repr, tablename, field, quiet)
+
+    def w_gis_location(self,
+                      item_repr,
+                      field,
+                      quiet = True,
+                     ):
+        return w_gis_location(item_repr, field, quiet)

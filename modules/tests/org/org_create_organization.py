@@ -13,8 +13,9 @@ class org_create_organization(SeleniumUnitTest):
             print "test_create_organization - Not run as Organization name already exists in the db"
             return False
         driver = self.browser
-        driver.find_element_by_link_text("Organizations").click()
-        driver.find_element_by_link_text("New").click()
+        self.login(account="normal", nexturl="org/organisation/create")
+#        driver.find_element_by_link_text("Organizations").click()
+#        driver.find_element_by_link_text("New").click()
         driver.find_element_by_id("org_organisation_name").click()
         driver.find_element_by_id("org_organisation_name").clear()
         driver.find_element_by_id("org_organisation_name").send_keys(name)

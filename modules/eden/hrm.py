@@ -271,6 +271,8 @@ class S3HRModel(S3Model):
                          (hierarchy["L2"], "L2"),
                         ]
 
+        # Redirect to the Details tabs after creation
+        hrm_url = URL(args=["[id]", "update"])
         self.configure(
             tablename,
             super_entity = "sit_trackable",
@@ -308,7 +310,9 @@ class S3HRModel(S3Model):
                 cols=report_fields,
                 facts=report_fields,
                 methods=["count", "list"],
-            )
+            ),
+            create_next = hrm_url,
+            update_next = hrm_url,
         )
 
         # ---------------------------------------------------------------------

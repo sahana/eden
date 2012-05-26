@@ -301,6 +301,9 @@ class S3RequestModel(S3Model):
         if len(req_type_opts) == 1:
             k,v = req_type_opts.popitem()
             table.type.default = k
+            table.type.requires = k
+            table.type.writable = False
+            table.type.readable = False
 
         if not settings.get_req_use_req_number():
             table.req_ref.readable = False
