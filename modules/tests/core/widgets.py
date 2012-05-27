@@ -1,5 +1,6 @@
 __all__ = ["w_autocomplete",
            "w_inv_item_select",
+           "w_gis_location",
           ]
 
 # @todo Their are performance issues need to profile and find out in which functions are the bottlenecks
@@ -69,7 +70,6 @@ def w_autocomplete(search,
             except:
                 menu = None
             # end of looping through each autocomplete menu
-        print "Sleeping"
         time.sleep(sleeptime)
 
 def w_inv_item_select (item_repr,
@@ -100,3 +100,30 @@ def w_inv_item_select (item_repr,
             break
     return raw_value
     
+def w_gis_location (item_repr,
+                    field,
+                    quiet = True,
+                   ):
+    config = current.test_config
+    browser = config.browser
+
+    if field == "L0":
+        el_id = "gis_location_%s" % field
+        el = browser.find_element_by_id(el_id)
+        for option in el.find_elements_by_tag_name("option"):
+            if option.text == item_repr:
+                option.click()
+                raw_value = int(option.get_attribute("value"))
+                break
+    elif field[0] == "L":
+        # @todo make this a proper autocomplete widget (select or add)
+        el_id = "gis_location_%s_ac" % field
+        el = browser.find_element_by_id(el_id)
+        el.send_keys(item_repr)
+        raw_value = None # can't get the id at the moment (see the todo)
+    else:
+        el_id = "gis_location_%s" % field
+        el = browser.find_element_by_id(el_id)
+        el.send_keys(item_repr)
+        raw_value = item_repr
+    return raw_value

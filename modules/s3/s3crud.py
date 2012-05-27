@@ -2005,6 +2005,8 @@ class S3CRUD(S3Method):
                     join = [j for j in left if j.first._tablename == tn]
                     if not join:
                         left.append(ktable.on(q))
+                    else:
+                        join[0].second |= (field == ktable._id)
                 if isinstance(field.sortby, (list, tuple)):
                     flist.extend([ktable[f] for f in field.sortby
                                             if f in ktable.fields])
@@ -2112,6 +2114,8 @@ class S3CRUD(S3Method):
                     join = [j for j in left if j.first._tablename == tn]
                     if not join:
                         left.append(ktable.on(q))
+                    else:
+                        join[0].second |= q
                 if not isinstance(field.sortby, (list, tuple)):
                     orderby.append("%s.%s%s" % (tn, field.sortby, direction(i)))
                 else:

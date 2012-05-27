@@ -84,24 +84,35 @@ This will return a dictionary of rows before and after the create
                                                        tablename,
                                                        details[0],
                                                       )
+                elif el_type == "gis_location":
+                    self.w_gis_location(el_value,
+                                        details[0],
+                                       )
+                    raw_value = None
             else:
                 el = browser.find_element_by_id(el_id)
                 el.send_keys(el_value)
                 raw_value = el_value
-            id_data.append([details[0], raw_value])
+            if raw_value:
+                id_data.append([details[0], raw_value])
         result["before"] = self.getRows(table, id_data, dbcallback)
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
         confirm = True
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            s3_debug(elem.text)
         except NoSuchElementException:
             confirm = False
         self.assertTrue (confirm == success, "Unexpected create success of %s" % confirm)
         result["after"] = self.getRows(table, id_data, dbcallback)
+        successMsg = "Record added to database"
+        failMsg = "Record not added to database"
         if success:
-            self.assertTrue ((len(result["after"]) - len(result["before"])) == 1, "Record not added to database")
+            self.assertTrue ((len(result["after"]) - len(result["before"])) == 1, failMsg)
+            s3_debug(successMsg)
         else:
-            self.assertTrue ((len(result["after"]) == len(result["before"])), "Record added to database")
+            self.assertTrue ((len(result["after"]) == len(result["before"])), successMsg)
+            s3_debug(failMsg)
         return result
 
     def dt_filter(self,
@@ -159,4 +170,9 @@ This will return a dictionary of rows before and after the create
                          ):
         return w_inv_item_select(item_repr, tablename, field, quiet)
 
-
+    def w_gis_location(self,
+                      item_repr,
+                      field,
+                      quiet = True,
+                     ):
+        return w_gis_location(item_repr, field, quiet)

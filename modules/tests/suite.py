@@ -7,6 +7,7 @@ import sys
 import re
 import time
 import unittest
+import HTMLTestRunner
 
 # Selenium WebDriver
 from selenium import webdriver
@@ -50,7 +51,16 @@ if test:
 # globals()[test]()
     print test
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    try:
+        import HTMLTestRunner
+        fp = file('Sahana-Eden.html', 'wb')
+        runner = HTMLTestRunner.HTMLTestRunner(
+                                               stream=fp,
+                                               title='Sahana Eden',
+                                              )
+        runner.run(suite)
+    except:
+        unittest.TextTestRunner(verbosity=2).run(suite)
 
 else:
     # Run all Tests
@@ -68,7 +78,33 @@ else:
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # Assign staff to Organization
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # Assign Staff to office
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # Assign Staff to warehouse
-    unittest.TextTestRunner(verbosity=2).run(suite)
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(Logistics)
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Org001))
+    try:
+        import HTMLTestRunner
+        fp = file('Sahana-Eden.html', 'wb')
+        runner = HTMLTestRunner.HTMLTestRunner(
+                                               stream=fp,
+                                               title='Sahana Eden',
+                                              )
+        runner.run(suite)
+    except:
+        unittest.TextTestRunner(verbosity=2).run(suite)
+#    inventory()
+    # List of individual automated test scripts which Suite will run one by one:
+    # Organization Management (ORG) tests
+#    org001() # Setup Organizations
+    org002() # Setup Offices
+    
+    # Human Resources Management (HRM) tests
+    hrm001() # Setup Staff
+    hrm002() # Setup New Volunteer
+    hrm003() # Setup Training Course
+    hrm004() # Setup Training Event
+    hrm005() # Assign staff to Organization
+    hrm006() # Assign Staff to office
+    hrm007() # Assign staff to warehouse
     
 #    # Inventory management (INV) tests
 #    inv001() # Setup Warehouses // needs more refining
