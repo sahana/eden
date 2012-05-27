@@ -13,7 +13,7 @@ class Office(SeleniumUnitTest):
                  "12345678",
                 ),
                 ("organisation_id",
-                 "Romanian Food Assistance Association (Test) (RFAAT)",
+                 "Romanian Food Assistance Association (Test)",
                  "autocomplete",
                 ),
                 ("type",
@@ -36,6 +36,7 @@ class Office(SeleniumUnitTest):
                  "gis_location"
                 ),
                ]
+        
         self.login(account="normal", nexturl="org/office/create")
         table = "org_office"
         result = self.create(table, data)

@@ -70,7 +70,6 @@ def w_autocomplete(search,
             except:
                 menu = None
             # end of looping through each autocomplete menu
-        print "Sleeping"
         time.sleep(sleeptime)
 
 def w_inv_item_select (item_repr,

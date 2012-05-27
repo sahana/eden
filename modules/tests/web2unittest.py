@@ -76,15 +76,9 @@ This will return a dictionary of rows before and after the create
                             raw_value = int(option.get_attribute("value"))
                             break
                 elif el_type == "autocomplete":
-                    if len(el_value) > 10:
-                        raw_value = self.w_autocomplete(el_value[:10],
-                                                        el_id,
-                                                        el_value,
-                                                       )
-                    else:
-                        raw_value = self.w_autocomplete(el_value,
-                                                        el_id,
-                                                       )
+                    raw_value = self.w_autocomplete(el_value,
+                                                    el_id,
+                                                   )
                 elif el_type == "inv_widget":
                     raw_value = self.w_inv_item_select(el_value,
                                                        tablename,
@@ -106,14 +100,19 @@ This will return a dictionary of rows before and after the create
         confirm = True
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            s3_debug(elem.text)
         except NoSuchElementException:
             confirm = False
         self.assertTrue (confirm == success, "Unexpected create success of %s" % confirm)
         result["after"] = self.getRows(table, id_data, dbcallback)
+        successMsg = "Record added to database"
+        failMsg = "Record not added to database"
         if success:
-            self.assertTrue ((len(result["after"]) - len(result["before"])) == 1, "Record not added to database")
+            self.assertTrue ((len(result["after"]) - len(result["before"])) == 1, failMsg)
+            s3_debug(successMsg)
         else:
-            self.assertTrue ((len(result["after"]) == len(result["before"])), "Record added to database")
+            self.assertTrue ((len(result["after"]) == len(result["before"])), successMsg)
+            s3_debug(failMsg)
         return result
 
     def dt_filter(self,
