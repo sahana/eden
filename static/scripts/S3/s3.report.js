@@ -132,4 +132,16 @@ $(function() {
     $('#hide-chart').click(function(){
         $('#chart-container').hide();
     });
+
+    // Toggle the report options
+    $('legend').click(function(){
+        $(this).siblings().toggle();
+        $(this).children().toggle();
+    });
+});
+
+
+$(document).ready(function() {
+    // Hide the report options when the page loads
+    $('#report_options legend').siblings().toggle();
 });
