@@ -46,7 +46,7 @@ if test:
     # Run specified Test after logging in
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    login(account="admin")
+    #login(account="admin")
 # globals()[test]()
     print test
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
@@ -55,7 +55,7 @@ if test:
 else:
     # Run all Tests
     # Log into admin testing account
-    login(account="admin")
+    #login(account="admin")
 
 ## @Graeme TEMP remove:     unittest.TestLoader().loadTestsFromTestCase(Logistics)
 
@@ -68,6 +68,8 @@ else:
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # Assign staff to Organization
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # Assign Staff to office
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # Assign Staff to warehouse
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Logistics)) # 
+    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(Logistics2)) # 
     unittest.TextTestRunner(verbosity=2).run(suite)
     
 #    # Inventory management (INV) tests
