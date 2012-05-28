@@ -1,5 +1,6 @@
 __all__ = ["w_autocomplete",
            "w_inv_item_select",
+           "w_supply_select",
           ]
 
 # @todo Their are performance issues need to profile and find out in which functions are the bottlenecks
@@ -82,6 +83,7 @@ def w_inv_item_select (item_repr,
 
     el_id = "%s_%s" % (tablename, field)
     el = browser.find_element_by_id(el_id)
+    raw_value = None
     for option in el.find_elements_by_tag_name("option"):
         if option.text == item_repr:
             option.click()
@@ -99,4 +101,26 @@ def w_inv_item_select (item_repr,
         if giveup > 60:
             break
     return raw_value
+
+def w_supply_select(item_repr,
+                        tablename,
+                        field,
+                        quiet = True,
+                       ):
+        el_id = "%s_%s" % (tablename, field)
+        raw_value = w_autocomplete(item_repr, el_id)
+        # Now wait for the pack_item to be populated
+        browser = current.test_config.browser
+        el_id = "%s_%s" % (tablename, "item_pack_id")
+        el = browser.find_element_by_id(el_id)
+        giveup = 0.0
+        sleeptime = 0.2
+        while el.find_elements_by_tag_name("option")[0].text == "":
+            # The pack drop down hasn't been populated yet so sleep
+            time.sleep(sleeptime)
+            giveup += sleeptime
+            if giveup > 60:
+                break
+        return raw_value
+
     
