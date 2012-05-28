@@ -220,6 +220,7 @@ def person():
             (T("Contact Details"), "contacts"),
             (T("Images"), "image"),
             (T("Identity"), "identity"),
+            (T("Education"), "education"),
             (T("Groups"), "group_membership"),
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
