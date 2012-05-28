@@ -136,6 +136,9 @@ The stock row will be added to the *end* of the list of rows
                ]
         result = self.helper_inv_track_item("normal", send_id, data)
         driver.find_element_by_link_text("Home").click()
+        
+        
+        
 
 # def test_inventory(self):
 # """ Tests for Inventory """
