@@ -84,6 +84,11 @@ This will return a dictionary of rows before and after the create
                                                        tablename,
                                                        details[0],
                                                       )
+                elif el_type == "supply_widget":
+                    raw_value = self.w_supply_select(el_value,
+                                                     tablename,
+                                                     details[0],
+                                                    )
             else:
                 el = browser.find_element_by_id(el_id)
                 el.send_keys(el_value)
@@ -158,5 +163,14 @@ This will return a dictionary of rows before and after the create
                           quiet = True,
                          ):
         return w_inv_item_select(item_repr, tablename, field, quiet)
+    
+    def w_supply_select(self,
+                       item_repr,
+                       tablename,
+                       field,
+                       quiet = True,
+                      ):
+        return w_supply_select(item_repr, tablename, field, quiet)
+
 
 
