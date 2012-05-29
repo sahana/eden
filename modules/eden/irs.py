@@ -40,6 +40,7 @@ class S3IRSModel(S3Model):
 
     names = ["irs_icategory",
              "irs_ireport",
+             "irs_ireport_person",
              "irs_ireport_id"]
 
     def model(self):
@@ -246,12 +247,18 @@ class S3IRSModel(S3Model):
                                    #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
                                    represent = lambda opt: \
                                        irs_incident_type_opts.get(opt, opt)),
-                             # Better to use a plain text field than to clutter the PR
+                             self.hrm_human_resource_id(
+                                   #readable=False,
+                                   #writable=False,
+                                   label = T("Reported By (Staff)")
+                                    ),
+                             # Plain text field in case non-staff & don't want to clutter the PR
                              Field("person",
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Reporter Name"),
-                                   comment = (T("At/Visited Location (not virtual)"))),
+                                   #readable = False,
+                                   #writable = False,
+                                   label = T("Reported By (Not Staff)"),
+                                   #comment = (T("At/Visited Location (not virtual)"))
+                                   ),
                              Field("contact",
                                    readable = False,
                                    writable = False,
@@ -469,6 +476,19 @@ class S3IRSModel(S3Model):
                                 )
                             )
 
+        # Affected Persons
+        add_component("pr_person",
+                      irs_ireport=Storage(
+                                    link="irs_ireport_person",
+                                    joinby="ireport_id",
+                                    key="person_id",
+                                    actuate="link",
+                                    #actuate="embed",
+                                    #widget=S3AddPersonWidget(),
+                                    autodelete=False
+                                )
+                            )
+
         ireport_id = S3ReusableField("ireport_id", table,
                                      requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                      "irs_ireport.id",
@@ -503,6 +523,15 @@ class S3IRSModel(S3Model):
                   create_next=create_next,
                   update_next=URL(args=["[id]", "update"])
                   )
+
+        # -----------------------------------------------------------
+        # Affected Persons
+        tablename = "irs_ireport_person"
+        table = define_table(tablename,
+                             ireport_id(),
+                             self.pr_person_id(),
+                             s3.comments(),
+                             *s3.meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -1074,17 +1103,19 @@ def irs_rheader(r, tabs=[]):
         s3db = current.s3db
         #s3 = current.response.s3
         settings = current.deployment_settings
-        if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
-            hrm_label = T("Staff")
-        elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
-            hrm_label = T("Volunteers")
-        else:
-            hrm_label = T("Staff & Volunteers")
+        #if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
+        #    hrm_label = T("Staff")
+        #elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
+        #    hrm_label = T("Volunteers")
+        #else:
+        #    hrm_label = T("Staff & Volunteers")
+        hrm_label = T("Responder(s)")
             
         tabs = [(T("Report Details"), None),
                 (T("Photos"), "image"),
                 (T("Documents"), "document"),
                 (T("Vehicles"), "vehicle"),
+                (T("Affected Persons"), "person"),
                 (hrm_label, "human_resource"),
                 (T("Tasks"), "task"),
                ]

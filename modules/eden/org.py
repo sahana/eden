@@ -987,7 +987,8 @@ class S3FacilityModel(S3Model):
         Generic Site
     """
 
-    names = ["org_facility",
+    names = ["org_facility_type",
+             "org_facility",
              ]
 
     def model(self):
@@ -998,30 +999,73 @@ class S3FacilityModel(S3Model):
 
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
+        
+        define_table = self.define_table
+
+        # =============================================================================
+        # Facility Types (generic)
+        #
+        tablename = "org_facility_type"
+        table = define_table(tablename,
+                             Field("name"),
+                             s3.comments(),
+                             *s3.meta_fields()
+                             )
+
+        # CRUD strings
+        ADD_FAC = T("Add Facility Type")
+        LIST_FACS = T("List Facility types")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_FAC,
+            title_display = T("Facility Type Details"),
+            title_list = LIST_FACS,
+            title_update = T("Edit Facility Type"),
+            title_search = T("Search Facility types"),
+            title_upload = T("Import Facility types"),
+            subtitle_create = T("Add New Facility Type"),
+            subtitle_list = T("Facility types"),
+            label_list_button = LIST_FACS,
+            label_create_button = T("Add New Facility Type"),
+            label_delete_button = T("Delete Facility Type"),
+            msg_record_created = T("Facility Type added"),
+            msg_record_modified = T("Facility Type updated"),
+            msg_record_deleted = T("Facility Type deleted"),
+            msg_list_empty = T("No Facility types currently registered"))
 
         # =============================================================================
         # Facilities (generic)
         #
         tablename = "org_facility"
-        table = self.define_table(tablename,
-                                  self.super_link("site_id", "org_site"),
-                                  Field("name", notnull=True,
-                                        length=64,           # Mayon Compatibility
-                                        label = T("Name")),
-                                  Field("code",
-                                        length=10,
-                                        # Deployments that don't wants office codes can hide them
-                                        #readable=False,
-                                        #writable=False,
-                                        # Mayon compatibility
-                                        # @ToDo: Deployment Setting to add validator to make these unique
-                                        #notnull=True,
-                                        #unique=True,
-                                        label=T("Code")),
-                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  location_id(),
-                                  s3.comments(),
-                                  *(s3.address_fields() + s3.meta_fields()))
+        table = define_table(tablename,
+                             self.super_link("site_id", "org_site"),
+                             Field("name", notnull=True,
+                                   length=64,           # Mayon Compatibility
+                                   label = T("Name")),
+                             Field("code",
+                                   length=10,
+                                   # Deployments that don't wants office codes can hide them
+                                   #readable=False,
+                                   #writable=False,
+                                   # Mayon compatibility
+                                   # @ToDo: Deployment Setting to add validator to make these unique
+                                   #notnull=True,
+                                   #unique=True,
+                                   label=T("Code")),
+                             Field("facility_type_id", "list:reference org_facility_type",
+                                   requires = IS_NULL_OR(IS_ONE_OF(db, "org_facility_type.id",
+                                                                   "%(name)s",
+                                                                   sort=True,
+                                                                   multiple=True)),
+                                   represent = self.org_facility_type_represent,
+                                   comment = S3AddResourceLink(c="org",
+                                                               f="facility_type",
+                                                               label=ADD_FAC,
+                                                               tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
+                                   label=T("Type")),
+                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             location_id(),
+                             s3.comments(),
+                             *(s3.address_fields() + s3.meta_fields()))
 
         # CRUD strings
         ADD_FAC = T("Add Facility")
@@ -1052,6 +1096,41 @@ class S3FacilityModel(S3Model):
         #
         return Storage(
                 )
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_type_represent(opt):
+        """ Represent a facility type in option fields or list views """
+
+        db = current.db
+        table = db.org_facility_type
+        set = db(table.id > 0).select(table.id,
+                                      table.name).as_dict()
+
+        if isinstance(opt, (list, tuple)):
+            opts = opt
+            vals = [str(set.get(o)["name"]) for o in opts]
+            multiple = True
+        elif isinstance(opt, int):
+            opts = [opt]
+            vals = str(set.get(opt)["name"])
+            multiple = False
+        else:
+            try:
+                opt = int(opt)
+            except:
+                return current.messages.NONE
+            else:
+                opts = [opt]
+                vals = str(set.get(opt)["name"])
+                multiple = False
+
+        if multiple:
+            if len(opts) > 1:
+                vals = ", ".join(vals)
+            else:
+                vals = len(vals) and vals[0] or ""
+        return vals
 
 # =============================================================================
 class S3RoomModel(S3Model):

@@ -2152,8 +2152,8 @@ class S3FeatureLayerModel(S3Model):
                                                               T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records.")))),
                         gis_layer_folder()(),
                         # Disabled until re-implemented:
-                        #Field("polygons", "boolean", default=False,
-                        #      label=T("Display Polygons?")),
+                        Field("polygons", "boolean", default=False,
+                              label=T("Display Polygons?")),
                         gis_opacity()(),
                         # @ToDo: Expose the Graphic options
                         gis_refresh()(),

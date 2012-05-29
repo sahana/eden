@@ -110,7 +110,10 @@ class S3HRModel(S3Model):
                                          represent = lambda opt: \
                                             hrm_type_opts.get(opt,
                                                               UNKNOWN_OPT)),
-                                  #Field("code", label=T("Staff ID")),
+                                  Field("code",
+                                        #readable=False,
+                                        #writable=False,
+                                        label=T("Staff ID")),
                                   Field("job_title", label=T("Job Title")),
                                   #Field("job_title", "list:reference db.hrm_job_role", label=T("Job Title"),
                                   #      requires = IS_NULL_OR(IS_ONE_OF(db,
@@ -121,6 +124,10 @@ class S3HRModel(S3Model):
                                   #      represent = self.job_title_multirepresent, # @ToDo
                                   #      ),
                                   # Current status
+                                  Field("essential", "boolean",
+                                        #readable = False,
+                                        #writable = False,
+                                        label = T("Essential Staff?")),
                                   Field("status", "integer",
                                         requires = IS_IN_SET(hrm_status_opts,
                                                              zero=None),
@@ -264,6 +271,8 @@ class S3HRModel(S3Model):
                          (hierarchy["L2"], "L2"),
                         ]
 
+        # Redirect to the Details tabs after creation
+        hrm_url = URL(args=["[id]", "update"])
         self.configure(
             tablename,
             super_entity = "sit_trackable",
@@ -301,7 +310,9 @@ class S3HRModel(S3Model):
                 cols=report_fields,
                 facts=report_fields,
                 methods=["count", "list"],
-            )
+            ),
+            create_next = hrm_url,
+            update_next = hrm_url,
         )
 
         # ---------------------------------------------------------------------
@@ -774,6 +785,7 @@ class S3HRSkillModel(S3Model):
         system_roles = session.s3.system_roles
         ADMIN = system_roles.ADMIN
 
+        s3_string_represent = lambda str: str if str else NONE
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
 
@@ -1169,6 +1181,7 @@ class S3HRSkillModel(S3Model):
         #
         tablename = "hrm_course"
         table = define_table(tablename,
+                             Field("code"),
                              Field("name",
                                    length=128,
                                    notnull=True,
@@ -1244,8 +1257,9 @@ class S3HRSkillModel(S3Model):
                              Field("hours", "integer",
                                    label=T("Hours")),
                              # human_resource_id?
-                             #Field("instructor",
-                             #      label=T("Instructor")),
+                             Field("instructor",
+                                   label=T("Instructor"),
+                                   represent = s3_string_represent),
                              comments(),
                              *meta_fields())
 
@@ -1881,22 +1895,20 @@ S3FilterFieldChange({
         # Deletion and update have a different format
         try:
             id = record.vars.id
-            delete = False
         except:
             id = record.id
-            delete = True
 
         table = s3db.hrm_certification
         data = table(table.id == id)
 
-        if delete:
-            # I really wish this weren't neccesary, but I really need to get that person_id!
-            def reduction(a, b):
-                a.update({b["f"]: b["k"]})
-                return a
-            data = reduce(reduction, eval(data.deleted_fk), {})
-
-        person_id = data["person_id"]
+        try:
+            if data.deleted:
+                deleted_fk = json.loads(record.deleted_fk)
+                person_id = deleted_fk["person_id"]
+            else:
+                person_id = data["person_id"]
+        except:
+            return
 
         ctable = s3db.hrm_competency
         cstable = s3db.hrm_certificate_skill
@@ -2363,15 +2375,23 @@ def hrm_training_event_represent(id):
             (table.course_id == ctable.id)
     left = table.on(table.site_id == stable.site_id)
     event = db(query).select(ctable.name,
+                             ctable.code,
                              stable.name,
                              table.start_date,
-                             #table.instructor,
+                             table.instructor,
                              left = left,
                              limitby = (0, 1)).first()
     if event:
         represent = event.hrm_course.name
+        if event.hrm_course.code:
+            represent = "%s (%s)" % (represent, event.hrm_course.code)
+        instructor = event.hrm_training_event.instructor
         site = event.org_site.name
-        if site:
+        if instructor and site:
+            represent = "%s (%s - %s)" % (represent, instructor, site)
+        elif instructor:
+            represent = "%s (%s)" % (represent, instructor)
+        elif site:
             represent = "%s (%s)" % (represent, site)
         start_date = event.hrm_training_event.start_date
         if start_date:
@@ -2430,6 +2450,8 @@ def hrm_rheader(r, tabs=[]):
             else:
                 address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
+                    (T("Identity"), "identity"),
+                    (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
@@ -2451,6 +2473,9 @@ def hrm_rheader(r, tabs=[]):
                 address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
+                    (T("Identity"), "identity"),
+                    (T("Education"), "education"),
+                    (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
