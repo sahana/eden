@@ -46,8 +46,11 @@ def findstr(fileName):
     print "\n",fileName,"\n"
 
     fileContent = file.read()
-    st = parser.suite(fileContent)
-    stList = parser.st2list(st,line_info=1)
-    for element in stList:
-        parseList(element, 0)
+    fileContent = fileContent.replace("\r",'') + '\n'
 
+    try:
+      st = parser.suite(fileContent)
+      stList = parser.st2list(st,line_info=1)
+      for element in stList:
+        parseList(element, 0)
+    except:
