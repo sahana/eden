@@ -50,9 +50,9 @@
                 <xsl:value-of select="concat($prefix, '_', $name)"/>
             </xsl:variable>
             <xsl:choose>
+                <!-- skip if all resources have no latlon defined
                 <xsl:when test="not(//reference[@name='location'])">
-                    <!-- skip -->
-                </xsl:when>
+                </xsl:when> -->
                 <xsl:when test="count(./resource[@name=$resource])=1">
                     <xsl:apply-templates select="./resource[@name=$resource]"/>
                 </xsl:when>
