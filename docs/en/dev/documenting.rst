@@ -1,7 +1,7 @@
 Generating the documentation
 ============================
 
-e-cidadania documentation is generated through sphinx (1.1) in three languages
+e-cidadania documentation is generated through sphinx (1.1.x) in three languages
 by default, which are:
 
 - English
@@ -32,11 +32,12 @@ left the "typical" structure of sphinx projects, although they are just
 links to the english documentation. This trick allows us to publish the
 documentation in places like *`Read The Docs <http://readthedocs.org>`_*
 
-We divide the documentation in three big categories::
+We divide the documentation into four big categories::
 
-    dev/     -- Development or administration related (installation, configuration and deployment)
-    docs/    -- Usual documentation: user manual, administrator manual, etc.
-    theming/ -- Theming related tutorials, index of themes, etc.
+    dev/       -- Development or administration related (installation, configuration and deployment)
+    docs/      -- Usual documentation: user manual, administrator manual, etc.
+    theming/   -- Theming related tutorials, index of themes, etc.
+    reference/ -- Reference documentation generated from the code comments.
 
 The documentation is done to be the most automatic possible. The three
 languages are generated at the same time when `make html` is executed.

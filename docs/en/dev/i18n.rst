@@ -1,44 +1,46 @@
 Translations
 ============
 
-For the translation we use two tools:
+The translation for the e-cidadania platform can be done in two ways:
 
-- django-rosetta
+- `Transifex <http://transifex.net>`_
 - gettext
 
-Both ways of translating are simple thaks to the Django *middleware*.
+Both ways of translating are simple thanks to the Django *middleware*, a couple
+scripts and the transifex-client software.
 
 Instead of making one global translation file, we decided to keep one
-transaltion file for every application, this way even if the modules change
+translation file for every application, this way even if the modules change
 the translations will keep intact.
 
-Translating with rosetta
-------------------------
+Translating with Transifex
+--------------------------
 
-To make translations with rosetta, you will need to have an account on the system and
-belong to the **'translators'** group. Once you have done that, the rest is simple.
+To make translations with transifex you will need to have an account. After that
+you can visit the e-cidadania project page
+`here <https://www.transifex.net/projects/p/ecidadania/>`_.
 
-Just access to the `translation URL`_ and the first you will see is a list with the
-languages available to translate.
+After that you will need to sign up for a language team, and the administrator
+will have to approve it.
 
-.. _translation URL: http://ecidadania.org/rosetta
+Here is what you will see:
 
-.. image:: ../../images/rosetta1.png
-    :align: center
+*image here*
 
-Click on the component you want to translate and start translating (the translation is
-done from english to other languages). If you find yourself stuck you can use the
-option "Suggest" which will make a query to the Google Translate database and write
-for you the translation.
+You will have to select a language and after that, the component that you want
+to translate. We split the components like the modules of e-cidadania, to
+maintain the application integrity.
 
-.. warning:: Never trust the results of the "suggest" button. In most occasions
-             will be incorrect.
+Once you finished you don't have to do anything, just keep updating the
+translations until the string freeze period (usually 15 days before the release)
+
+.. note:: Section incomplete.
 
 Translating with gettext
 ------------------------
 
 Gettext is a well known tool by all the translators around the world. Its a standard.
-Thanks to the django *middleware* out work will be minimum, we only have to edit
+Thanks to the django *middleware* our work will be minimum, we only have to edit
 the .po files in the source files.
 
 .. image:: ../../images/gettext1.png
@@ -55,6 +57,9 @@ To translate, you must edit the PO file, which is a plain text file.
 
 The MO file is the compiled version of the translation so the machine can read it
 to use it.
+
+Once you edited the .po, you have to send a pull request to the repository, and
+that's all.
 
 .. warning:: Stablish a workflow for translators and explain it here.
 

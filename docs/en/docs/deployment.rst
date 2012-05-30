@@ -1,6 +1,17 @@
 Deployment
 ==========
 
+Installing extra modules
+------------------------
+
+e-cidadania comes with a basic set of modules that allow to make a complete
+participative process, but you may want to install other modules to have new
+features, like forums, chats, or any other kind of django application.
+
+Django does not support module hotplugging, nor e-cidadania. You will have to
+install all the modules you think you will need before putting e-cidadania in
+production.
+
 Apache 2
 --------
 
@@ -13,7 +24,7 @@ nginx + uWSGI
           since it's uWSGI who executes the e-cidadania instance while the server
           just serves the static content.
 
-.. warning:: This section is still on development.
+.. note:: This section is still on development.
 
 DreamHost
 ---------

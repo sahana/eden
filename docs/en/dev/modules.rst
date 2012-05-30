@@ -1,8 +1,11 @@
 Creating modules
 ================
 
-e-cidadania is extensible through modules, even if the installation procesdures
-are not working yet.
+e-cidadania is extensible through modules, which are nothing more than django
+apps.
+
+.. warning:: If you want to install modules, you will have to do it on deployment.
+             Django does not support modules hotplugging.
 
 Structure
 ---------

@@ -4,9 +4,8 @@ About this document
 :Authors:
 
     Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
-    Bithin
 
-:Corrections:
+:Fixes:
 
     Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
 
@@ -32,4 +31,4 @@ Thanks
 ------
 
 - NovaCaixaGalicia
-- Google
+- Google Inc.
