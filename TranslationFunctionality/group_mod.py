@@ -10,7 +10,7 @@ vflag=0
 def get_module_list():
    
    global mod
-   cont_dir = os.path.abspath("../controllers")
+   cont_dir = os.path.abspath("./UnitTest/controllers")
    mod_files = os.listdir(cont_dir)
    for f in mod_files:
       cur_file = os.path.join(cont_dir,f)
@@ -66,7 +66,8 @@ def _main():
 	      d[m] = []
       d["core"]=[]
 
-      group_files("../","core")
+      group_files("./UnitTest","core")
+
       for m in d.keys():
 	     print "\n"
 	     print "Module:",m
