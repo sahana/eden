@@ -1,3 +1,4 @@
+from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 from selenium.common.exceptions import NoSuchElementException
 from s3 import s3_debug
@@ -88,7 +89,7 @@ This can then be used to look at the value before and after
 to ensure that the totals have been removed from the warehouse.
 The stock row will be added to the *end* of the list of rows
 """
-        table = self.current.s3db["inv_inv_item"]
+        table = current.s3db["inv_inv_item"]
         for details in data:
             if details[0] == "send_inv_item_id":
                 inv_item_id = details[1]
