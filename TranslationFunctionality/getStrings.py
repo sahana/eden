@@ -7,6 +7,7 @@ import token
 
 tflag = 0
 mflag = 0
+sflag = 0
 bracket = 0;
 outstr=''
 
