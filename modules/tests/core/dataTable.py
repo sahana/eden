@@ -7,7 +7,8 @@ __all__ = ["dt_filter",
            "dt_action",
           ]
 
-# @todo Their are performance issues need to profile and find out in which functions are the bottlenecks
+# @ToDo: There are performance issues
+#        - need to profile and find out in which functions are the bottlenecks
  
 # Selenium WebDriver
 from selenium import webdriver
@@ -23,13 +24,14 @@ import time
 # -----------------------------------------------------------------------------
 def convert_repr_number (number):
     """
-        helper function to convert a string representation back to a number.
+        Helper function to convert a string representation back to a number.
         Assumptions:
          * It may have a thousand separator
          * It may have a decimal point
          * If it has a thousand separator then it will have a decimal point
         It will return false is the number doesn't look valid
     """
+
     sep = ""
     dec = ""
     part_one = "0"
@@ -60,7 +62,10 @@ def convert_repr_number (number):
 def dt_filter(search_string=" ",
               forceClear = True,
               quiet = True):
-    """ filter the dataTable """
+    """
+        Filter the dataTable
+    """
+
     if forceClear:
         if not dt_filter(forceClear = False,
                          quiet = quiet):
@@ -87,9 +92,12 @@ def dt_filter(search_string=" ",
 
 # -----------------------------------------------------------------------------
 def dt_row_cnt(check = (),
-              quiet = True,
-              utObj = None):
-    """ return the rows that are being displayed and the total rows in the dataTable """
+               quiet = True,
+               utObj = None):
+    """
+        return the rows that are being displayed and the total rows in the dataTable
+    """
+
     config = current.test_config
     browser = config.browser
 
@@ -133,6 +141,7 @@ def dt_row_cnt(check = (),
 def dt_data(row_list = None,
             add_header = False):
     """ return the data in the displayed dataTable """
+
     config = current.test_config
     browser = config.browser
 
@@ -162,6 +171,7 @@ def dt_data_item(row = 1,
                  tableID = "list",
                 ):
     """ Returns the data found in the cell of the dataTable """
+
     config = current.test_config
     browser = config.browser
 
@@ -209,6 +219,7 @@ def dt_find(search = "",
                 assert 0, "Unable to find any Plastic Sheets"
 
     """
+
     config = current.test_config
     browser = config.browser
 
@@ -284,7 +295,6 @@ def dt_find(search = "",
                     if first:
                         return result
     return result
-
         
 # -----------------------------------------------------------------------------
 def dt_links(row = 1,
@@ -292,6 +302,7 @@ def dt_links(row = 1,
              quiet = True
             ):
     """ Returns a list of links in the given row of the dataTable """
+
     config = current.test_config
     browser = config.browser
 
@@ -319,12 +330,14 @@ def dt_links(row = 1,
         column += 1
     return links
 
+# -----------------------------------------------------------------------------
 def dt_action(row = 1,
               action = "Open",
               column = 1,
               tableID = "list",
              ):
     """ click the action button in the dataTable """
+
     config = current.test_config
     browser = config.browser
 
@@ -336,3 +349,5 @@ def dt_action(row = 1,
         return False
     elem.click()
     return True
+
+# END =========================================================================
