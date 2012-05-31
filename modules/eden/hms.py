@@ -146,6 +146,7 @@ class HospitalDataModel(S3Model):
         tablename = "hms_hospital"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
+                             super_link("pe_id", "pr_pentity"),
                              super_link("site_id", "org_site"),
                              Field("paho_uuid",
                                    unique=True,
@@ -388,7 +389,7 @@ class HospitalDataModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  super_entity=("org_site", "doc_entity"),
+                  super_entity=("org_site", "doc_entity", "pr_pentity"),
                   search_method=hms_hospital_search,
                   list_fields=["id",
                                "gov_uuid",

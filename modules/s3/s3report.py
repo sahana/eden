@@ -3,8 +3,6 @@
 """
     S3 Reporting Framework
 
-    @author: Dominic König <dominic[at]aidiq[dot]com>
-
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -309,23 +307,13 @@ class S3Cube(S3CRUD):
             if not subtitle:
                 subtitle = crud_string(self.tablename, "subtitle_list")
 
-            # @todo: move JavaScript into s3.report.js
             if form is not None:
-                show_link = A(T("Show Report Options"),
-                            _href="#",
-                            _class=_show % "action-lnk",
-                            _id = "show-opts-btn",
-                            _onclick="""$('#reportform').removeClass('hide'); $('#show-opts-btn').addClass('hide'); $('#hide-opts-btn').removeClass('hide');""")
-                hide_link = A(T("Hide Report Options"),
-                            _href="#",
-                            _class=_hide % "action-lnk",
-                            _id = "hide-opts-btn",
-                            _onclick="""$('#reportform').addClass('hide'); $('#show-opts-btn').removeClass('hide'); $('#hide-opts-btn').addClass('hide');""")
-                form = DIV(DIV(show_link, hide_link),
-                           DIV(form,
-                               _class=_hide % "reportform",
-                               _id="reportform"),
-                               _style="margin-bottom: 5px;")
+                form = DIV(
+                    DIV(form,
+                        _id="reportform"
+                    ),
+                    _style="margin-bottom: 5px;"
+                )
             else:
                 form = ""
 
@@ -356,11 +344,11 @@ class S3Cube(S3CRUD):
         report_fact = report_options.get("facts", list_fields)
 
         _select_field = self._select_field
-        select_rows = _select_field(report_rows, _id="rows", _name="rows",
+        select_rows = _select_field(report_rows, _id="report-rows", _name="rows",
                                     form_values=form_values)
-        select_cols = _select_field(report_cols, _id="cols", _name="cols",
+        select_cols = _select_field(report_cols, _id="report-cols", _name="cols",
                                     form_values=form_values)
-        select_fact = _select_field(report_fact, _id="fact", _name="fact",
+        select_fact = _select_field(report_fact, _id="report-fact", _name="fact",
                                     form_values=form_values)
 
         # totals are "on" or True by default
@@ -370,12 +358,12 @@ class S3Cube(S3CRUD):
             if str(show_totals).lower() in ("false", "off"):
                 show_totals = False
 
-        show_totals = INPUT(_type="checkbox", _id="totals", _name="totals",
+        show_totals = INPUT(_type="checkbox", _id="report-totals", _name="totals",
                             value=show_totals)
 
         methods = report_options.get("methods")
         select_method = self._select_method(methods,
-                                            _id="aggregate",
+                                            _id="report-aggregate",
                                             _name="aggregate",
                                             form_values=form_values)
 
@@ -384,42 +372,49 @@ class S3Cube(S3CRUD):
         # Append filter widgets, if configured
         filter_widgets = self._build_filter_widgets(form_values)
         if filter_widgets:
-            form.append(TABLE(filter_widgets, _id="filter_options"))
+            form.append(
+                FIELDSET(
+                    LEGEND("Filter Options ",
+                        BUTTON("Show", _type="button", _class="toggle-text", _style="display:none"),
+                        BUTTON("Hide", _type="button", _class="toggle-text")
+                    ),
+                    TABLE(filter_widgets),
+                    _id="filter_options"
+                )
+            )
 
         # Append report options, always
-        form_report_options = TABLE(
+        form_report_options = FIELDSET(
+                LEGEND("Report Options ",
+                    BUTTON("Show", _type="button", _class="toggle-text"),
+                    BUTTON("Hide", _type="button", _class="toggle-text", _style="display:none")
+                ),
+                TABLE(
                     TR(
-                        TD(LABEL("Rows:"), _class="w2p_fl"),
-                        TD(LABEL("Columns:"), _class="w2p_fl"),
+                        TD(LABEL("Rows:", _for="report-rows"), _class="w2p_fl"),
+                        TD(select_rows),
                     ),
                     TR(
-                        TD(select_rows),
+                        TD(LABEL("Columns:", _for="report-cols"), _class="w2p_fl"),
                         TD(select_cols),
                     ),
                     TR(
-                        TD(LABEL("Value:"), _class="w2p_fl"),
-                        TD(LABEL("Function for Value:"), _class="w2p_fl"),
+                        TD(LABEL("Value:", _for="report-fact"), _class="w2p_fl"),
+                        TD(select_fact),
                     ),
                     TR(
-                        TD(select_fact),
+                        TD(LABEL("Function for Value:", _for="report-aggregate"), _class="w2p_fl"),
                         TD(select_method),
                     ),
                     TR(
-                        TD(LABEL("Show totals:"), _class="w2p_fl")
-                    ),
-                    TR(
+                        TD(LABEL("Show totals:", _for="report-totals"), _class="w2p_fl"),
                         TD(show_totals)
                     ),
-                    TR(
-                        INPUT(_value=T("Submit"), _type="submit"),
-                        # @todo: Reset-link to restore pre-defined parameters,
-                        #        show only if URL vars present
-                        #A(T("Reset"), _class="action-lnk"),
-                        _colspan=3
-                    ),
-                    _id="report_options"
-                )
+                ),
+                _id="report_options"
+            )
         form.append(form_report_options)
+        form.append(INPUT(_value=T("Submit"), _type="submit"))
 
         return form
 

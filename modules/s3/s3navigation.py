@@ -1572,8 +1572,14 @@ class S3ResourceHeader:
                             label = field.label
                         if field.represent is not None:
                             value = field.represent(value)
-                    tr.append(TH("%s: " % unicode(label)))
-                    tr.append(TD(unicode(value)))
+                    tr.append(TH("%s: " % label))
+                    v = value
+                    if not isinstance(v, basestring):
+                        try:
+                            v = unicode(v)
+                        except UnicodeEncodeError, UnicodeDecodeError:
+                            pass
+                    tr.append(TD(v))
                 trs.append(tr)
             rheader = DIV(TABLE(trs), rheader_tabs)
             return rheader
