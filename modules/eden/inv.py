@@ -115,6 +115,7 @@ class S3InventoryModel(S3Model):
     """
 
     names = ["inv_inv_item",
+             "inv_remove",
              "inv_item_id",
              "inv_item_represent",
              "inv_prep",
@@ -376,6 +377,7 @@ $(document).ready(function() {
         return Storage(
                     inv_item_id = inv_item_id,
                     inv_item_represent = self.inv_item_represent,
+                    inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                 )
     # -------------------------------------------------------------------------
@@ -421,6 +423,10 @@ $(document).ready(function() {
             The current total is what has already been removed for this
             transaction.
         """
+        db = current.db
+        s3db = current.s3db
+        inv_item_table = s3db.inv_inv_item
+        siptable = s3db.supply_item_pack
         inv_p_qnty = siptable[inv_rec.item_pack_id].quantity
         inv_qnty = inv_rec.quantity * inv_p_qnty
         cur_qnty = current_track_total * inv_p_qnty
@@ -440,7 +446,7 @@ $(document).ready(function() {
 
         if update:
             # update the levels in stock
-            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = new_qnty)
+            db(inv_item_table.id == inv_rec.id).update(quantity = new_qnty)
 
         return send_item_quantity
 
@@ -1627,37 +1633,47 @@ $(document).ready(function() {
         siptable = s3db.supply_item_pack
         supply_item_add = s3db.supply_item_add
         oldTotal = 0
+        id = form.vars.id
+        record = form.record
+
+        if form.vars.send_inv_item_id:
+            stock_item = inv_item_table[form.vars.send_inv_item_id]
+        elif record:
+            stock_item = record.send_inv_item_id
+        else:
+            # will get here for a recv (from external donor / local supplier)
+            stock_item = None
+
         # only modify the original inv. item total if we have a quantity on the form
-        # and a sent item record to indicate where it came from.
+        # and a stock item to take it from.
         # There will not be a quantity if it is being received since by then it is read only
         # It will be there on an import and so the value will be deducted correctly
-        if form.vars.quantity and form.vars.send_inv_item_id:
-            stock_item = inv_item_table[form.vars.send_inv_item_id]
+        if form.vars.quantity and stock_item:
             stock_quantity = stock_item.quantity
             stock_pack = siptable[stock_item.item_pack_id].quantity
-            if form.record:
-                if form.record.send_inv_item_id != None:
+            if record:
+                if record.send_inv_item_id != None:
                     # Items have already been removed from stock, so first put them back
-                    old_track_pack_quantity = siptable[form.record.item_pack_id].quantity
+                    old_track_pack_quantity = siptable[record.item_pack_id].quantity
                     stock_quantity = supply_item_add(stock_quantity,
                                                      stock_pack,
-                                                     form.record.quantity,
+                                                     record.quantity,
                                                      old_track_pack_quantity
                                                     )
-
-            new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
+            try:
+                new_track_pack_quantity = siptable[form.vars.item_pack_id].quantity
+            except:
+                new_track_pack_quantity = record.item_pack_id.quantity
             newTotal = supply_item_add(stock_quantity,
                                        stock_pack,
                                        - float(form.vars.quantity),
                                        new_track_pack_quantity
                                       )
-            db(inv_item_table.id == form.vars.send_inv_item_id).update(quantity = newTotal)
+            db(inv_item_table.id == stock_item).update(quantity = newTotal)
         if form.vars.send_id and form.vars.recv_id:
             db(rtable.id == form.vars.recv_id).update(send_ref = stable[form.vars.send_id].send_ref)
         # if this is linked to a request then copy the req_ref to the send item
-        id = form.vars.id
-        record = tracktable[id]
-        if record.req_item_id:
+        if record and record.req_item_id:
             req_id = ritable[record.req_item_id].req_id
             req_ref = rrtable[req_id].req_ref
             db(stable.id == form.vars.send_id).update(req_ref = req_ref)
@@ -1667,7 +1683,7 @@ $(document).ready(function() {
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        if tracktable[id].status == TRACK_STATUS_UNLOADING:
+        if record and record.status == TRACK_STATUS_UNLOADING:
             recv_rec = rtable[record.recv_id]
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
@@ -1981,15 +1997,15 @@ def inv_recv_crud_strings():
     else:
         recv_id_label = T("Receive Shipment")
         ADD_RECV = T("Add New Received Shipment")
-        LIST_RECV = T("List Received Shipments")
+        LIST_RECV = T("List Received and Incoming Shipments")
         current.response.s3.crud_strings["inv_recv"] = Storage(
             title_create = ADD_RECV,
             title_display = T("Received Shipment Details"),
             title_list = LIST_RECV,
             title_update = T("Edit Received Shipment"),
-            title_search = T("Search Received Shipments"),
+            title_search = T("Search Received and Incoming Shipments"),
             subtitle_create = ADD_RECV,
-            subtitle_list = T("Received Shipments"),
+            subtitle_list = T("Received and Incoming Shipments"),
             label_list_button = LIST_RECV,
             label_create_button = ADD_RECV,
             label_delete_button = T("Delete Received Shipment"),

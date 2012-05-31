@@ -66,6 +66,28 @@
         </option>
     </column>
 
+    <column name="HRMType">
+        <label>HRMType</label>
+        <label>PersonType</label>
+        <option value="1" name="staff">
+            <label>Staff</label>
+            <label>staff</label>
+        </option>
+        <option value="2" name="volunteer">
+            <label>Volunteer</label>
+            <label>volunteer</label>
+            <label>vol</label>
+            <label>Vol</label>
+        </option>
+        <option value="3" name="member">
+            <label>Member</label>
+            <label>member</label>
+            <label>Normal Member</label>
+            <label>Life Member</label>
+            <label>Honorary Member</label>
+        </option>
+    </column>
+
     <column name="Country">
         <label>country</label>
         <label>ISO2</label>

@@ -187,7 +187,8 @@ def project():
                 else:
                     # Unknown format - don't add extra validation
                     validate = False
-                script = """$('.form-container > form').submit(function () {
+                if validate:
+                    script = """$('.form-container > form').submit(function () {
     var start_date = this.start_date.value;
     var end_date = this.end_date.value;
     start_date = start_date.split('-');

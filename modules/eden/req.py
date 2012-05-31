@@ -2045,9 +2045,9 @@ def req_match():
     """
         Function to be called from controller functions to display all
         requests as a tab for a site.
-        @ToDo: Filter out requests from this site
     """
 
+    response = current.response
     request = current.request
     manager = current.manager
 
@@ -2103,6 +2103,7 @@ def req_match():
     else:
         rheader = None
 
+    response.s3.filter = (s3db.req_req.site_id != site_id)
     manager.configure("req_req", insertable=False)
     output = current.rest_controller("req", "req", rheader = rheader)
 

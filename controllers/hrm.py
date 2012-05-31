@@ -606,6 +606,8 @@ def person():
         pr_desc_table[field].writable = False
         pr_desc_table[field].readable = False
     # Now enable those that we want
+    pr_desc_table.ethnicity.writable = True
+    pr_desc_table.ethnicity.readable = True
     pr_desc_table.blood_type.writable = True
     pr_desc_table.blood_type.readable = True
     pr_desc_table.medical_conditions.writable = True
@@ -708,17 +710,17 @@ def person():
         # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
         table.occupation.readable = False
         table.occupation.writable = False
-        # Just have a Home Address
+#        # Just have a Home Address
         table = s3db.pr_address
-        table.type.default = 1
-        table.type.readable = False
-        table.type.writable = False
+#        table.type.default = 1
+#        table.type.readable = False
+#        table.type.writable = False
         _crud = s3.crud_strings.pr_address
         _crud.title_create = T("Add Home Address")
         _crud.title_update = T("Edit Home Address")
-        s3mgr.model.add_component("pr_address",
-                                  pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
-                                                  multiple=False))
+#        s3mgr.model.add_component("pr_address",
+#                                  pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
+#                                                  multiple=False))
         # Default type for HR
         table = s3db.hrm_human_resource
         table.type.default = 1
@@ -785,10 +787,16 @@ def person():
     # Import pre-process
     def import_prep(data, group=group):
         """
+            Removes the requires validation of the pr_identity which if a duplicate
+            is found fails before the de-duplication is resolved.
+
             Deletes all HR records (of the given group) of the organisation
             before processing a new data import, used for the import_prep
             hook in s3mgr
         """
+
+        # remove that pesky requires on pr_identity.value
+        s3db.pr_identity.value.requires = None
 
         request = current.request
 

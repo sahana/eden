@@ -551,8 +551,12 @@ def send():
                 # the stock item has already been selected so make it read only
                 if track_record and track_record.get("req_item_id"):
                     tracktable.send_inv_item_id.writable = False
-                    tracktable.item_pack_id.readable = False
                     tracktable.item_pack_id.writable = False
+                    stock_qnty = track_record.send_inv_item_id.quantity
+                    tracktable.quantity.comment = T("%d in stock" % stock_qnty)
+                    tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
+                                                                 track_record.send_inv_item_id,
+                                                                 track_record.item_pack_id)
                 # Hide the item id
                 tracktable.item_id.readable = False
             else:
