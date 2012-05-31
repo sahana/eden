@@ -590,6 +590,28 @@ def person():
     s3mgr.model.set_method("pr", resourcename,
                            method="contacts",
                            action=s3db.pr_contacts)
+    # Custom Method for Identity
+    s3mgr.model.set_method("pr", resourcename,
+                           method="identity")
+    # Custom Method for Education
+    s3mgr.model.set_method("pr", resourcename,
+                           method="education")
+    # Custom Method for Description
+    s3mgr.model.set_method("pr", resourcename,
+                           method="physical_description")
+    # hide all but those details that we want
+    # Lock all the fields
+    pr_desc_table = s3db.pr_physical_description
+    for field in pr_desc_table.fields:
+        pr_desc_table[field].writable = False
+        pr_desc_table[field].readable = False
+    # Now enable those that we want
+    pr_desc_table.blood_type.writable = True
+    pr_desc_table.blood_type.readable = True
+    pr_desc_table.medical_conditions.writable = True
+    pr_desc_table.medical_conditions.readable = True
+    pr_desc_table.other_details.writable = True
+    pr_desc_table.other_details.readable = True
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []

@@ -1,6 +1,6 @@
 from tests.web2unittest import SeleniumUnitTest
 from selenium.common.exceptions import NoSuchElementException
-
+from s3 import s3_debug
 
 class Logistics(SeleniumUnitTest):
     # These tests assume that regression/inv-mngt has been added to prepop
@@ -13,6 +13,7 @@ Helper method to add a inv_send record by the given user
         self.login(account=user, nexturl="inv/send/create")
         table = "inv_send"
         result = self.create(table, data)
+        s3_debug("WB reference: %s" % self.helper_inv_send_get_ref(result))
         return result
 
     def helper_inv_send_rec(self, result):
@@ -75,6 +76,7 @@ given send_id by the given user
             stock_after = result["after"].records[len(result["after"])-1].quantity
             stock_shipped = qnty
             self.assertTrue( stock_before - stock_after == stock_shipped, "Warehouse stock not properly adjusted, was %s should be %s but is recorded as %s" % (stock_before, stock_after, stock_before - stock_shipped))
+            s3_debug ("Stock level before %s, stock level after %s" % (stock_before, stock_after))
         return result
 
     # dbcallback for the inv_track item create function
@@ -135,7 +137,6 @@ The stock row will be added to the *end* of the list of rows
                 ),
                ]
         result = self.helper_inv_track_item("normal", send_id, data)
-        driver.find_element_by_link_text("Home").click()
 
 # def test_inventory(self):
 # """ Tests for Inventory """

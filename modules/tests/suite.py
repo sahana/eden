@@ -50,7 +50,6 @@ if test:
 # globals()[test]()
     print test
     suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
-    unittest.TextTestRunner(verbosity=2).run(suite)
 
 else:
     # Run all Tests
@@ -68,8 +67,19 @@ else:
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # Assign staff to Organization
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # Assign Staff to office
     suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # Assign Staff to warehouse
+
+try:
+    import HTMLTestRunner
+    fp = file('Sahana-Eden.html', 'wb')
+    runner = HTMLTestRunner.HTMLTestRunner(
+                                           stream=fp,
+                                           title='Sahana Eden',
+                                          )
+    runner.run(suite)
+except:
     unittest.TextTestRunner(verbosity=2).run(suite)
-    
+
+#if not test:
 #    # Inventory management (INV) tests
 #    inv001() # Setup Warehouses // needs more refining
 #    inv002() # Setup Items // needs more refining
@@ -80,6 +90,3 @@ else:
 #    
 #    # Assets management (ASSET) tests
 #    asset001() # Set up Assets
-    
-    # Log out of testing account
-logout()

@@ -35,6 +35,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonAddressModel",
            "S3PersonImageModel",
            "S3PersonIdentityModel",
+           "S3PersonEducationModel",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
@@ -759,6 +760,7 @@ class S3PersonModel(S3Model):
         # Components
         add_component("pr_group_membership", pr_person="person_id")
         add_component("pr_identity", pr_person="person_id")
+        add_component("pr_education", pr_person="person_id")
         add_component("pr_save_search", pr_person="person_id")
         add_component("msg_subscription", pr_person="person_id")
 
@@ -1709,7 +1711,9 @@ class S3PersonIdentityModel(S3Model):
                                         represent = lambda opt: \
                                                     pr_id_type_opts.get(opt,
                                                                         UNKNOWN_OPT)),
-                                  Field("value"),
+                                  Field("value", label = T("Number")),
+                                  Field("valid_from", "date"),
+                                  Field("valid_until", "date"),
                                   Field("description"),
                                   Field("country_code", length=4),
                                   Field("ia_name", label = T("Issuing Authority")),
@@ -1743,7 +1747,6 @@ class S3PersonIdentityModel(S3Model):
         self.configure(tablename,
                        list_fields=["id",
                                     "type",
-                                    "type",
                                     "value",
                                     "country_code",
                                     "ia_name"
@@ -1754,6 +1757,66 @@ class S3PersonIdentityModel(S3Model):
         #
         return Storage()
 
+# =============================================================================
+class S3PersonEducationModel(S3Model):
+    """ Education details for Persons """
+
+    names = ["pr_education"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        request = current.request
+        s3 = current.response.s3
+
+        person_id = self.pr_person_id
+
+        tablename = "pr_education"
+        table = self.define_table("pr_education",
+                                  person_id(label = T("Person"),
+                                            ondelete="CASCADE"),
+                                  Field("level", label=T("Level of Award")),
+                                  Field("award", label=T("Name of Award")),
+                                  Field("institute", label = T("Name of Institute")),
+                                  Field("year",),
+                                  Field("major"),
+                                  Field("grade"),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+
+        # CRUD Strings
+        ADD_IDENTITY = T("Add Educational Achievements")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_IDENTITY,
+            title_display = T("Education Details"),
+            title_list = T("Recorded Education Details"),
+            title_update = T("Edit Education Details"),
+            title_search = T("Search Education Details"),
+            subtitle_create = T("Add Education Detail"),
+            subtitle_list = T("Current Education Details"),
+            label_list_button = T("List Education Details"),
+            label_create_button = ADD_IDENTITY,
+            msg_record_created = T("Education details added"),
+            msg_record_modified = T("Education details updated"),
+            msg_record_deleted = T("Education details deleted"),
+            msg_list_empty = T("No education details currently registered"))
+
+        # Resource configuration
+        self.configure(tablename,
+                       list_fields=["id",
+                                    "level",
+                                    "award",
+                                    "major",
+                                    "grade",
+                                    "institute",
+                                   ])
+
+        # ---------------------------------------------------------------------
+        # Return model-global names to response.s3
+        #
+        return Storage()
 
 # =============================================================================
 class S3SavedSearch(S3Model):

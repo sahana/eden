@@ -17,6 +17,7 @@
 
            You can add a third argument &ignore_errors
          CSV fields:
+         Code............................hrm_course.code
          Name............................hrm_course.name
          Certificate.....................hrm_course_certificate.certificate_id
 
@@ -49,12 +50,14 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
+        <xsl:variable name="CourseCode" select="col[@field='Code']"/>
         <xsl:variable name="CourseName" select="col[@field='Name']"/>
         <xsl:variable name="CertName" select="col[@field='Certificate']/text()"/>
 
         <!-- HRM Course -->
         <resource name="hrm_course">
             <data field="name"><xsl:value-of select="$CourseName"/></data>
+            <data field="code"><xsl:value-of select="$CourseCode"/></data>
             <xsl:if test="$CertName!=''">
                 <resource name="hrm_course_certificate">
                     <reference field="certificate_id" resource="hrm_certificate">
