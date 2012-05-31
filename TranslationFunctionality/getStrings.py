@@ -56,18 +56,12 @@ def parseList(entry,level):
                    
     #        print "%s%s: %s %s" % (" "*level ,token.tok_name[id], value, entry[2])
 
-def _main():
+def findstr(fileName):
     """
       Using the Parse Tree to extract the strings to be translated
     """
-    if len(sys.argv) == 1:
-        print "Please add a python file to process"
-        return
-
     global tflag
     tflag=0
-
-    fileName = sys.argv[1]
 
     try:
         file = open(fileName)
@@ -78,12 +72,17 @@ def _main():
             file = open(fileName)
         except:
             return
+	    
+    print " \n FILE: " +  fileName + '\n'
     fileContent = file.read()
-    st = parser.suite(fileContent)
-    stList = parser.st2list(st,line_info=1)
-    print fileName
-    for element in stList:
-        parseList(element, 0)
+    fileContent = fileContent.replace("\r","") + '\n'
 
-if __name__ == '__main__':
-    _main()
+    try:
+      st = parser.suite(fileContent)
+      stList = parser.st2list(st,line_info=1)
+
+      for element in stList:
+         parseList(element, 0)
+
+    except:
+      return
