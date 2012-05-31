@@ -1326,8 +1326,7 @@ $('#%s').live('click', function() {
             form.append(DIV(_id="search-mode", _mode="advanced"))
 
         # Save Search Widget
-        if r.http == "POST" and \
-           session.auth and settings.get_save_search_widget():
+        if session.auth and settings.get_save_search_widget():
             save_search = self.save_search_widget(r, search_vars, **attr)
         else:
             save_search = DIV()
@@ -1416,8 +1415,6 @@ $('#%s').live('click', function() {
                     s3.start = 0
                     s3.limit = limit
 
-            # @ToDo: Don't wait for a POST as 1st screen includes (unfiltered) results now
-            #if r.http == "POST" and not errors:
             query = None
             if _location:
                 query = (table.location_id == s3db.gis_location.id)

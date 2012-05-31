@@ -73,6 +73,7 @@ def w_autocomplete(search,
             # end of looping through each autocomplete menu
         time.sleep(sleeptime)
 
+# -----------------------------------------------------------------------------
 def w_inv_item_select (item_repr,
                        tablename,
                        field,
@@ -102,6 +103,7 @@ def w_inv_item_select (item_repr,
             break
     return raw_value
 
+# -----------------------------------------------------------------------------
 def w_supply_select(item_repr,
                     tablename,
                     field,
@@ -123,6 +125,7 @@ def w_supply_select(item_repr,
             break
     return raw_value
 
+# -----------------------------------------------------------------------------
 def w_gis_location (item_repr,
                     field,
                     quiet = True,
@@ -149,4 +152,6 @@ def w_gis_location (item_repr,
         el = browser.find_element_by_id(el_id)
         el.send_keys(item_repr)
         raw_value = item_repr
-    return raw_value    
+    return raw_value
+
+# END =========================================================================

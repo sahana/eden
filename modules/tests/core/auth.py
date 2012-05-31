@@ -8,23 +8,33 @@ from gluon import current
 from s3 import s3_debug
 from .utils import *
 
+current.data["auth"] = {
+        "normal" : {
+                "email": "test@example.com",
+                "password": "eden",
+                "first_name": "Test",
+                "last_name": "User",
+            },
+        "admin" : {
+                "email": "admin@example.com",
+                "password": "testing",
+                "first_name": "Admin",
+                "last_name": "User",
+            },
+    }
+
 # -----------------------------------------------------------------------------
 def login(account="normal", nexturl=None):
     """ Login to the system """
 
     config = current.test_config
     browser = config.browser
+    data = current.data["auth"]
 
-    if isinstance(account,(list,tuple)):
-        email = account[0]
-        password = account[1]
-    if account == "normal":
-        email = "test@example.com"
-        password = "eden"
-    elif account == "admin":
-        email = "admin@example.com"
-        password = "testing"
-    elif isinstance(account, (tuple,list)) and len(account) == 2:
+    if account in data:
+        email = data[account]["email"]
+        password = data[account]["password"]
+    elif isinstance(account, (tuple, list)):
         email = account[0]
         password = account[1]
     else:
@@ -32,18 +42,18 @@ def login(account="normal", nexturl=None):
 
     # If the user is already logged in no need to do anything so return
     if browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
-        # if the url is different then move to the new url
+        # If the URL is different then move to the new URL
         if not browser.current_url.endswith(nexturl):
             url = "%s/%s" % (config.url, nexturl)
             browser.get(url)
         return
 
     if nexturl:
-        url = "%s/default/user/login?_next=%s" % (config.url, nexturl)
+        url = "%s/default/user/login?_next=/%s/%s" % \
+            (config.url, current.request.application, nexturl)
     else:
         url = "%s/default/user/login" % config.url
     browser.get(url)
-
 
     # Login
     elem = browser.find_element_by_id("auth_user_email")
@@ -99,21 +109,18 @@ def register(account="normal"):
 
     config = current.test_config
     browser = config.browser
+    data = current.data["auth"]
+
+    if account in data:
+        email = data[account]["email"]
+        first_name = data[account]["first_name"]
+        last_name = data[account]["last_name"]
+        password = data[account]["password"]
+    else:
+        raise NotImplementedError
 
     # Load homepage
     homepage()
-
-    if account == "normal":
-        first_name = "Test"
-        last_name = "User"
-        email = "test@example.com"
-    elif account == "admin":
-        first_name = "Admin"
-        last_name = "User"
-        email = "admin@example.com"
-    else:
-        raise NotImplementedError
-    password = "eden"
 
     # Register user
     elem = browser.find_element_by_id("auth_user_first_name")
