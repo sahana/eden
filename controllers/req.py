@@ -793,7 +793,7 @@ def send_req():
                               item_id = inv_i.item_id,
                               req_item_id = req_i.id,
                               item_pack_id = inv_i.item_pack_id,
-                              quantity = 0,
+                              quantity = send_item_quantity,
                               status = s3db.inv_tracking_status["IN_PROCESS"],
                               pack_value = inv_i.pack_value,
                               currency = inv_i.currency,

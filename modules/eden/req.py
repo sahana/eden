@@ -286,6 +286,8 @@ class S3RequestModel(S3Model):
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
                                   req_status("commit_status",
+                                             readable=False,
+                                             writable=False,
                                              label = T("Commit. Status")),
                                   req_status("transit_status",
                                              label = T("Transit Status")),
@@ -347,7 +349,7 @@ class S3RequestModel(S3Model):
         if settings.get_req_use_req_number():
             list_fields.append("req_ref")
         list_fields.append("priority")
-        list_fields.append("commit_status")
+        #list_fields.append("commit_status")
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
         list_fields.append("date_required")
@@ -2012,8 +2014,8 @@ def req_rheader(r, check_page = False):
                                TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),
-                                TH( "%s: " % table.commit_status.label),
-                                table.commit_status.represent(record.commit_status),
+                                #TH( "%s: " % table.commit_status.label),
+                                #table.commit_status.represent(record.commit_status),
                                 ),
                                TR(
                                 TH( "%s: " % table.date.label),

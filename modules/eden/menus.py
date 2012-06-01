@@ -1337,7 +1337,7 @@ class S3OptionsMenu:
                         M("New", m="create"),
                         M("List All"),
                         M("List All Requested Items", f="req_item"),
-                        M("List All Requested Skills", f="req_skill"),
+                        #M("List All Requested Skills", f="req_skill"),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
                     #M("Commitments", f="commit")(

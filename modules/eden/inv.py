@@ -1623,7 +1623,7 @@ $(document).ready(function() {
         if stable.kit == True:
 
            #get food pack contents
-           query = (ktable.parent_item_id == form.record.item_id)
+           query = (ktable.parent_item_id == form.vars.item_id)
            rows = db(query).select()
 
            #get quantity of selected contents on the food pack (supply_kit_item)
@@ -1647,8 +1647,8 @@ $(document).ready(function() {
                # find out how many kits we can make & store in kit_item
                kit_item[record.item_id] = total_amount / one_kit
                max_kits = min(kit_item.values())
-               if max_kits < form.record.quantity:
-                   form.errors.quantity = T("You can only make %d kits with the available stock" % max_kits)
+               if max_kits < form.vars.quantity:
+                   form.errors.quantity = T("You can only make %d kit(s) with the available stock" % max_kits)
                     #record2.quantity
 #                   item_total[record.item_id] =
 #           for record in rows:
