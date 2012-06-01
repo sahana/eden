@@ -368,11 +368,13 @@ class S3XLS(S3Codec):
                 elif coltype == "integer":
                     try:
                         value = int(value)
+                        style.num_format_str = "0"
                     except:
                         pass
                 elif coltype == "double":
                     try:
                         value = float(value)
+                        style.num_format_str = "0.00"
                     except:
                         pass
                 currentRow.write(colCnt, value, style)

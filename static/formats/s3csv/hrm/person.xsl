@@ -24,6 +24,13 @@
          Last Name......................optional.....person last name (required in some deployments)
          Initials.......................optional.....person initials
          DOB............................optional.....person date of birth
+         Father Name....................optional.....person father name
+         Mother Name....................optional.....person mother name
+         Religion.......................optional.....person religion
+         National ID....................optional.....person identity type = 2, value
+         Passport No....................optional.....person identity type = 1, value
+         Passport Country...............optional.....person identity
+         Passport Expiry Date...........optional.....person identity
          Email..........................required.....person email address
          Mobile Phone...................optional.....person mobile phone number
          Office Phone...................optional.....office phone number
@@ -38,9 +45,25 @@
          Home L2........................optional.....person home address L2
          Home L3........................optional.....person home address L3
          Home L4........................optional.....person home address L4
+         Permanent Address..............optional.....person permanent address
+         Permanent Postcode.............optional.....person permanent address postcode
+         Permanent Lat..................optional.....person permanent address latitude
+         Permanent Lon..................optional.....person permanent address longitude
+         Permanent Country..............optional.....person permanent address Country
+         Permanent L1...................optional.....person permanent address L1
+         Permanent L2...................optional.....person permanent address L2
+         Permanent L3...................optional.....person permanent address L3
+         Permanent L4...................optional.....person permanent address L4
          Skills.........................optional.....comma-separated list of skills
          Teams..........................optional.....comma-separated list of Groups
          Projects.......................optional.....comma-separated list of Projects (not yet implemented)
+         Level..........................optional.....person education level of award (highest)
+         Degree Name....................optional.....person education award
+         Major..........................optional.....person education major
+         Grade..........................optional.....person education grade
+         Year...........................optional.....person education year
+         Institute......................optional.....person education institute
+
 
          Column headers looked up in labels.xml:
 
@@ -58,8 +81,6 @@
     <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
-    <xsl:param name="mode"/>
-
     <xsl:variable name="TeamPrefix" select="'Team:'"/>
 
     <!-- ****************************************************************** -->
@@ -68,6 +89,18 @@
     <xsl:variable name="PersonGender">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="HRMType">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">HRMType</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="MemberType">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MemberType</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
 
@@ -241,6 +274,18 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="type">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$HRMType"/>
+            </xsl:call-template>
+        </xsl:variable>
+
+        <xsl:variable name="member">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MemberType"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:if test="position()=1">
             <xsl:for-each select="col[starts-with(@name, 'Course')]">
                 <xsl:call-template name="Course"/>
@@ -262,18 +307,78 @@
                     <xsl:attribute name="value"><xsl:value-of select="$gender"/></xsl:attribute>
                 </data>
             </xsl:if>
+            <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
+            <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+
+            <xsl:if test="col[@field='Religion']">
+                <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
+                <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
+                <xsl:variable name="religion">
+                    <xsl:value-of select="translate(col[@field='Religion'], $uppercase, $smallcase)"/>
+                </xsl:variable>
+                <data field="religion"><xsl:value-of select="$religion"/></data>
+            </xsl:if>
+
+            <!-- Identity Information -->
+            <xsl:call-template name="IdentityInformation"/>
 
             <!-- Contact Information -->
             <xsl:call-template name="ContactInformation"/>
 
             <!-- Address -->
-            <xsl:call-template name="HomeAddress"/>
+            <xsl:if test="col[@field='Home Address']!=''">
+                <xsl:call-template name="Address">
+                    <xsl:with-param name="address" select="col[@field='Home Address']/text()"/>
+                    <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
+                    <xsl:with-param name="type">1</xsl:with-param>
+                    <xsl:with-param name="l0" select="col[@field='Home Country']/text()"/>
+                    <xsl:with-param name="l1" select="col[@field='Home L1']/text()"/>
+                    <xsl:with-param name="l2" select="col[@field='Home L2']/text()"/>
+                    <xsl:with-param name="l3" select="col[@field='Home L3']/text()"/>
+                    <xsl:with-param name="l4" select="col[@field='Home L4']/text()"/>
+                </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="col[@field='Permanent Address']!=''">
+                <xsl:call-template name="Address">
+                    <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
+                    <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>
+                    <xsl:with-param name="type">2</xsl:with-param>
+                    <xsl:with-param name="l0" select="col[@field='Permanent Country']/text()"/>
+                    <xsl:with-param name="l1" select="col[@field='Permanent L1']/text()"/>
+                    <xsl:with-param name="l2" select="col[@field='Permanent L2']/text()"/>
+                    <xsl:with-param name="l3" select="col[@field='Permanent L3']/text()"/>
+                    <xsl:with-param name="l4" select="col[@field='Permanent L4']/text()"/>
+                </xsl:call-template>
+            </xsl:if>
 
             <!-- HR record -->
-            <xsl:call-template name="HumanResource">
-                <xsl:with-param name="OrgName" select="$OrgName"/>
-                <xsl:with-param name="BranchName" select="$BranchName"/>
-                <xsl:with-param name="OfficeName" select="$OfficeName"/>
+            <xsl:choose>
+                <xsl:when test="$type='3'">
+                    <xsl:call-template name="Member">
+                        <xsl:with-param name="OrgName" select="$OrgName"/>
+                        <xsl:with-param name="BranchName" select="$BranchName"/>
+                        <xsl:with-param name="type" select="$member"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:call-template name="HumanResource">
+                        <xsl:with-param name="OrgName" select="$OrgName"/>
+                        <xsl:with-param name="BranchName" select="$BranchName"/>
+                        <xsl:with-param name="OfficeName" select="$OfficeName"/>
+                        <xsl:with-param name="type" select="$type"/>
+                    </xsl:call-template>
+                </xsl:otherwise>
+            </xsl:choose>
+
+            <!-- Education -->
+            <xsl:call-template name="Education">
+                <xsl:with-param name="level" select="col[@field='Education Level']"/>
+                <xsl:with-param name="name" select="col[@field='Degree Name']"/>
+                <xsl:with-param name="major" select="col[@field='Major']"/>
+                <xsl:with-param name="grade" select="col[@field='Grade']"/>
+                <xsl:with-param name="year" select="col[@field='Year']"/>
+                <xsl:with-param name="institute" select="col[@field='Institute']"/>
             </xsl:call-template>
 
             <!-- Competencies -->
@@ -293,7 +398,66 @@
         </resource>
 
         <!-- Locations -->
-        <xsl:call-template name="Locations"/>
+        <xsl:if test="col[@field='Home Address']!=''">
+            <xsl:call-template name="Locations">
+                <xsl:with-param name="address" select="col[@field='Home Address']/text()"/>
+                <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
+                <xsl:with-param name="type">1</xsl:with-param>
+                <xsl:with-param name="l0" select="col[@field='Home Country']/text()"/>
+                <xsl:with-param name="l1" select="col[@field='Home L1']/text()"/>
+                <xsl:with-param name="l2" select="col[@field='Home L2']/text()"/>
+                <xsl:with-param name="l3" select="col[@field='Home L3']/text()"/>
+                <xsl:with-param name="l4" select="col[@field='Home L4']/text()"/>
+                <xsl:with-param name="lat" select="col[@field='Home Lat']/text()"/>
+                <xsl:with-param name="lon" select="col[@field='Home Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+        <xsl:if test="col[@field='Permanent Address']!=''">
+            <xsl:call-template name="Locations">
+                <xsl:with-param name="address" select="col[@field='Permanent Address']/text()"/>
+                <xsl:with-param name="postcode" select="col[@field='Permanent Postcode']/text()"/>
+                <xsl:with-param name="type">2</xsl:with-param>
+                <xsl:with-param name="l0" select="col[@field='Permanent Country']/text()"/>
+                <xsl:with-param name="l1" select="col[@field='Permanent L1']/text()"/>
+                <xsl:with-param name="l2" select="col[@field='Permanent L2']/text()"/>
+                <xsl:with-param name="l3" select="col[@field='Permanent L3']/text()"/>
+                <xsl:with-param name="l4" select="col[@field='Permanent L4']/text()"/>
+                <xsl:with-param name="lat" select="col[@field='Permanent Lat']/text()"/>
+                <xsl:with-param name="lon" select="col[@field='Permanent Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+    </xsl:template>
+    <!-- ****************************************************************** -->
+    <xsl:template name="Member">
+
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
+        <xsl:param name="type"/>
+
+        <resource name="member_membership">
+
+            <!-- Member data -->
+            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            <xsl:if test="$type!=0">
+                <data field="type"><xsl:value-of select="$type"/></data>
+            </xsl:if>
+
+            <!-- Link to Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </reference>
+
+        </resource>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -302,19 +466,8 @@
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
+        <xsl:param name="type"/>
         <xsl:variable name="Projects" select="col[@field='Projects']"/>
-
-        <xsl:variable name="type">
-            <xsl:choose>
-                <xsl:when test="col[@field='Type']='staff' or
-                                col[@field='Type']='Staff'">1</xsl:when>
-                <xsl:when test="col[@field='Type']='volunteer' or
-                                col[@field='Type']='Volunteer'">2</xsl:when>
-                <xsl:when test="$mode='staff'">1</xsl:when>
-                <xsl:when test="$mode='volunteer'">2</xsl:when>
-                <xsl:otherwise>0</xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
 
         <resource name="hrm_human_resource">
 
@@ -359,6 +512,43 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="IdentityInformation">
+        <xsl:if test="col[@field='National ID']!=''">
+            <resource name="pr_identity">
+                <data field="type" value="2"/>
+                <data field="value"><xsl:value-of select="col[@field='National ID']/text()"/></data>
+            </resource>
+        </xsl:if>
+
+        <xsl:if test="col[@field='Passport No']!=''">
+            <resource name="pr_identity">
+                <data field="type" value="1"/>
+                <data field="value"><xsl:value-of select="col[@field='Passport No']/text()"/></data>
+                <data field="valid_until"><xsl:value-of select="col[@field='Passport Expiry Date']/text()"/></data>
+                <xsl:variable name="passportCountry" select="col[@field='Passport Country']/text()"/>
+                <xsl:variable name="countrycode">
+                    <xsl:choose>
+                        <xsl:when test="string-length($passportCountry)!=2">
+                            <xsl:call-template name="countryname2iso">
+                                <xsl:with-param name="country">
+                                    <xsl:value-of select="$passportCountry"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="passportCountry"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+
+                <data field="country_code"><xsl:value-of select="$countrycode"/></data>
+
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+    
+    <!-- ****************************************************************** -->
     <xsl:template name="ContactInformation">
 
         <xsl:if test="col[@field='Email']!=''">
@@ -399,63 +589,81 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="HomeAddress">
+    <xsl:template name="Address">
+        <xsl:param name="address"/>
+        <xsl:param name="postcode"/>
+        <xsl:param name="type"/>
+        <xsl:param name="l0"/>
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+        <xsl:param name="l4"/>
+        
+        <xsl:variable name="tuid" select="concat('pr_address/', $address, '/', $type, '/', $l0, '/', $l1)"/>
 
-        <xsl:if test="col[@field='Home Address']!=''">
-            <resource name="pr_address">
-                <!-- Link to Location -->
-                <xsl:call-template name="LocationReference"/>
 
-                <!-- Home address -->
-                <data field="type">1</data>
+        <resource name="pr_address">
+            <!-- Link to Location -->
+            <xsl:call-template name="LocationReference">
+                <xsl:with-param name="address" select="$address"/>
+                <xsl:with-param name="l0" select="$l0"/>
+                <xsl:with-param name="l1" select="$l1"/>
+                <xsl:with-param name="l2" select="$l2"/>
+                <xsl:with-param name="l3" select="$l3"/>
+                <xsl:with-param name="l4" select="$l4"/>
+            </xsl:call-template>
 
-                <!-- Populate the fields directly which are normally populated onvalidation -->
-                <data field="building_name"><xsl:value-of select="col[@field='Home Address']"/></data>
-                <data field="address">
-                    <xsl:value-of select="col[@field='Home Address']"/>
-                </data>
-                <data field="postcode">
-                    <xsl:value-of select="col[@field='Home Postcode']"/>
-                </data>
-                <data field="L0">
-                    <xsl:value-of select="col[@field='Home Country']"/>
-                </data>
-                <data field="L1">
-                    <xsl:value-of select="col[@field='Home L1']"/>
-                </data>
-                <data field="L2">
-                    <xsl:value-of select="col[@field='Home L2']"/>
-                </data>
-                <data field="L3">
-                    <xsl:value-of select="col[@field='Home L3']"/>
-                </data>
-                <data field="L4">
-                    <xsl:value-of select="col[@field='Home L4']"/>
-                </data>
-            </resource>
-        </xsl:if>
+            <!-- Address Type -->
+            <data field="type">
+                <xsl:value-of select="$type"/>
+            </data>
+
+            <!-- Populate the fields directly which are normally populated onvalidation -->
+            <data field="building_name">
+                <xsl:value-of select="$address"/>
+            </data>
+            <data field="address">
+                <xsl:value-of select="$address"/>
+            </data>
+            <data field="postcode">
+                <xsl:value-of select="$postcode"/>
+            </data>
+            <data field="L0">
+                <xsl:value-of select="$l0"/>
+            </data>
+            <data field="L1">
+                <xsl:value-of select="$l1"/>
+            </data>
+            <data field="L2">
+                <xsl:value-of select="$l2"/>
+            </data>
+            <data field="L3">
+                <xsl:value-of select="$l3"/>
+            </data>
+            <data field="L4">
+                <xsl:value-of select="$l4"/>
+            </data>
+        </resource>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template name="LocationReference">
-
-        <xsl:variable name="Address" select="col[@field='Home Address']/text()"/>
-
-        <xsl:variable name="l0" select="col[@field='Home Country']/text()"/>
-        <xsl:variable name="l1" select="col[@field='Home L1']/text()"/>
-        <xsl:variable name="l2" select="col[@field='Home L2']/text()"/>
-        <xsl:variable name="l3" select="col[@field='Home L3']/text()"/>
-        <xsl:variable name="l4" select="col[@field='Home L4']/text()"/>
+        <xsl:param name="address"/>
+        <xsl:param name="l0"/>
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+        <xsl:param name="l4"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
         <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
-        <xsl:variable name="l5id" select="concat('Location: ', $Address)"/>
+        <xsl:variable name="l5id" select="concat('Location: ', $address)"/>
 
         <xsl:choose>
-            <xsl:when test="$Address!=''">
+            <xsl:when test="$address!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l5id"/>
@@ -519,19 +727,21 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
-
-        <xsl:variable name="Address" select="col[@field='Home Address']/text()"/>
-        <xsl:variable name="l0" select="col[@field='Home Country']/text()"/>
-        <xsl:variable name="l1" select="col[@field='Home L1']/text()"/>
-        <xsl:variable name="l2" select="col[@field='Home L2']/text()"/>
-        <xsl:variable name="l3" select="col[@field='Home L3']/text()"/>
-        <xsl:variable name="l4" select="col[@field='Home L4']/text()"/>
+        <xsl:param name="address"/>
+        <xsl:param name="postcode"/>
+        <xsl:param name="l0"/>
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+        <xsl:param name="l4"/>
+        <xsl:param name="lat"/>
+        <xsl:param name="lon"/>
 
         <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
         <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
         <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
-        <xsl:variable name="l5id" select="concat('Location: ', $Address)"/>
+        <xsl:variable name="l5id" select="concat('Location: ', $address)"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -670,7 +880,7 @@
         </xsl:if>
 
         <!-- Address Location -->
-        <xsl:if test="$Address!=''">
+        <xsl:if test="$address!=''">
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$l5id"/>
@@ -712,11 +922,11 @@
                         </reference>
                     </xsl:otherwise>
                 </xsl:choose>
-                <data field="name"><xsl:value-of select="$Address"/></data>
-                <data field="addr_street"><xsl:value-of select="$Address"/></data>
-                <data field="addr_postcode"><xsl:value-of select="col[@field='Home Postcode']"/></data>
-                <data field="lat"><xsl:value-of select="col[@field='Home Lat']"/></data>
-                <data field="lon"><xsl:value-of select="col[@field='Home Lon']"/></data>
+                <data field="name"><xsl:value-of select="$address"/></data>
+                <data field="addr_street"><xsl:value-of select="$address"/></data>
+                <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
+                <data field="lat"><xsl:value-of select="$lat"/></data>
+                <data field="lon"><xsl:value-of select="$lon"/></data>
             </resource>
         </xsl:if>
 
@@ -744,6 +954,41 @@
                 </resource>
             </xsl:when>
         </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Education">
+
+        <xsl:param name="level"/>
+        <xsl:param name="name"/>
+        <xsl:param name="major"/>
+        <xsl:param name="grade"/>
+        <xsl:param name="year"/>
+        <xsl:param name="institute"/>
+
+        <xsl:if test="$name and $name!=''">
+            <resource name="pr_education">
+                <data field="level">
+                    <xsl:value-of select="$level"/>
+                </data>
+                <data field="award">
+                    <xsl:value-of select="$name"/>
+                </data>
+                <data field="major">
+                    <xsl:value-of select="$major"/>
+                </data>
+                <data field="grade">
+                    <xsl:value-of select="$grade"/>
+                </data>
+                <data field="year">
+                    <xsl:value-of select="$year"/>
+                </data>
+                <data field="institute">
+                    <xsl:value-of select="$institute"/>
+                </data>
+            </resource>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
