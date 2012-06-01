@@ -1,8 +1,8 @@
 Installation
 ============
 
-e-cidadania installation is very simple and is done the same as any other django
-platforms.
+e-cidadania installation is very simple and is done almost in the same as any
+other django platforms.
 
 Requirements
 ------------
@@ -47,12 +47,13 @@ autogenerates a .zip and .tar.gz files based on the repository tags. You can
 find it in:
 
 ::
-    `https://github.com/cidadania/e-cidadania/downloads <https://github.com/cidadania/e-cidadania/downloads>`_
+
+    https://github.com/cidadania/e-cidadania/tags
 
 From repository
 ...............
 
-See :ref:`development version`
+See :ref:`dev-version`
 
 Stable version
 ..............
@@ -61,17 +62,17 @@ You can find the latest stable version in the download page in ecidadania.org::
 
     http://ecidadania.org/en/downloads
 
-.. _dev-version-label:
+.. _dev-version:
 
 Development version
 ...................
 
 Development version is available through various places. We use `GIT <http://git-scm.com/>`_
-as control version system, so you will have to install it in your computer.
+as version control system, so you will have to install it in your computer.
 
     **GitHub** *(official repository)*::
 
-        git clone git://github.com/oscarcp/e-cidadania.git
+        git clone git://github.com/cidadania/e-cidadania.git
 
     **Gitorious:** *(secondary repository)*::
 
@@ -92,15 +93,15 @@ configure in your CGI server how to execute it.
 In the case you want to do some testing of the e-cidadania platform before getting
 into proper deployment, you just hace to copy the *src/* directory and execute
 the following commands inside it since e-cidadania comes by default configured
-in a development enviroment::
+in a development environment.::
 
     ./manage.py syncdb # This will create all the database objects
     
     ./manage.py collectstatic # This will copy all the static content to *static/*
     
     ./manage.py runserver
-    
+
 This last command will execute the development server in the port 8000 of your
 machine, so you just need to type **localhost:8000" inside a web browser.
 
-Now you can continue to :doc:`Configuration"
+Now you can continue to :doc:`configuration`

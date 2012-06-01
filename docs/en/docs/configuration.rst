@@ -21,7 +21,7 @@ this settings are e-cidadania specific, we will specify here the ones you can
 modify safely.
 
 **SECRET_KEY** (hash)
-    It's **obligatory** to modify this value before deployment. Tis key is used
+    It's **obligatory** to modify this value before deployment. This key is used
     for generating the CSRF and some other security features in django.
 
 **MEDIA_ROOT** (directory)
@@ -145,3 +145,5 @@ Extensions
 
 Etensions are django applications that you can attach to e-cidadania to improve
 its functionalities.
+
+You can continue now to :doc:`deployment`
