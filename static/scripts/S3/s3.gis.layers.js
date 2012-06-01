@@ -1247,6 +1247,11 @@ function addTMSLayer(layer) {
 function addWFSLayer(layer) {
     var name = layer.name;
     var url = layer.url;
+    if ((undefined != layer.username) && (undefined != layer.password)) {
+        var username = layer.username;
+        var password = layer.password;
+        url = url.replace('://', '://' + username + ':' + password + '@');
+    }
     var title = layer.title;
     var featureType = layer.featureType;
     var featureNS = layer.featureNS;
@@ -1492,6 +1497,11 @@ function addWFSLayer(layer) {
 function addWMSLayer(layer) {
     var name = layer.name;
     var url = layer.url;
+    if ((undefined != layer.username) && (undefined != layer.password)) {
+        var username = layer.username;
+        var password = layer.password;
+        url = url.replace('://', '://' + username + ':' + password + '@');
+    }
     var layers = layer.layers;
     if (undefined != layer.visibility) {
         var visibility = layer.visibility;

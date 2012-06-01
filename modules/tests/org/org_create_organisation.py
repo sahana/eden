@@ -1,21 +1,22 @@
-# Set up Offices
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class org_create_office(SeleniumUnitTest):
-    def test_create_office(self, items=[0]):
+class org_create_organisation(SeleniumUnitTest):
+    def test_create_organisation(self, items=[0]):
         """
-            Create an Office
+            Create an Organisation
             
-            @param items: Office(s) to create from the data
+            @param items: Organisation(s) to create from the data
+
+            @ToDo: currently optimised for a single record
         """
         print "\n"
 
         # Configuration
-        tablename = "org_office"
-        url = "org/office/create"
+        tablename = "org_organisation"
+        url = "org/organisation/create"
         account = "normal"
-        data = current.data["office"]
+        data = current.data["organisation"]
 
         # Login, if not-already done so
         self.login(account=account, nexturl=url)
@@ -32,7 +33,7 @@ class org_create_office(SeleniumUnitTest):
             record = db(query).select(table.id,
                                       limitby=(0, 1)).first()
             if record:
-                print "org_create_office skipped as %s already exists in the db\n" % value
+                print "org_create_organisation skipped as %s already exists in the db\n" % value
                 return False
 
             # Create a record using the data

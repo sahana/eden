@@ -15,6 +15,8 @@ from selenium.common.exceptions import NoSuchElementException
 from gluon import current
 from gluon.storage import Storage
 
+current.data = Storage()
+
 # S3 Tests
 from tests.web2unittest import *
 from tests import *
@@ -22,7 +24,7 @@ from tests import *
 # Read Settings
 settings = current.deployment_settings
 public_url = settings.get_base_public_url()
-base_url = "%s/%s" % (public_url, request.application)
+base_url = "%s/%s" % (public_url, current.request.application)
 system_name = settings.get_system_name()
 
 # Store these to be available to modules
@@ -42,51 +44,57 @@ if args[1:]:
 else:
     test = None
 
+# Shortcut
+loadTests = unittest.TestLoader().loadTestsFromTestCase
+
 if test:
     # Run specified Test after logging in
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
     login(account="admin")
-# globals()[test]()
     print test
-    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[test])
+    suite = loadTests(globals()[test])
 
 else:
     # Run all Tests
-    # Log into admin testing account
-    login(account="admin")
 
-## @Graeme TEMP remove:     unittest.TestLoader().loadTestsFromTestCase(Logistics)
+    # Create Organisation
+    suite = loadTests(org_create_organisation)
 
-    suite = unittest.TestLoader().loadTestsFromTestCase(org_create_organization) # Create Organizations
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(org_create_office)) # Create Office
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_staff)) # Setup Staff
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_volunteer)) # Setup New Volunteer
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingcourse)) # Setup Training Course
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_setup_trainingevent)) # Setup Training Event
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_organizationstaff)) # Assign staff to Organization
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_officestaff)) # Assign Staff to office
-    suite.addTests(unittest.TestLoader().loadTestsFromTestCase(hrm_assign_warehousestaff)) # Assign Staff to warehouse
+    # Shortcut
+    addTests = suite.addTests
+    
+    # Create Office
+    addTests(loadTests(org_create_office))
+
+    # Setup Staff
+    addTests(loadTests(hrm_setup_staff))
+    # Setup New Volunteer
+    addTests(loadTests(hrm_setup_volunteer))
+    # Setup Training Course
+    addTests(loadTests(hrm_setup_trainingcourse))
+    # Setup Training Event
+    addTests(loadTests(hrm_setup_trainingevent))
+
+    # Assign Staff to Organisation
+    #addTests(loadTests(hrm_assign_organisationstaff))
+    # Assign Staff to Office
+    #addTests(loadTests(hrm_assign_officestaff))
+    # Assign Staff to Warehouse
+    #addTests(loadTests(hrm_assign_warehousestaff))
 
 try:
     import HTMLTestRunner
-    fp = file('Sahana-Eden.html', 'wb')
+    fp = file("Sahana-Eden.html", "wb")
     runner = HTMLTestRunner.HTMLTestRunner(
                                            stream=fp,
-                                           title='Sahana Eden',
+                                           title="Sahana Eden",
                                           )
     runner.run(suite)
 except:
     unittest.TextTestRunner(verbosity=2).run(suite)
 
-#if not test:
-#    # Inventory management (INV) tests
-#    inv001() # Setup Warehouses // needs more refining
-#    inv002() # Setup Items // needs more refining
-#    inv003() # Setup Catalogues // needs more refining
-#    inv004() # Setup Categories // needs more refining
-#    inv005() # Create Requests // needs more refining
-#    inv006() # Match Requests // needs more refining
-#    
-#    # Assets management (ASSET) tests
-#    asset001() # Set up Assets
+# Cleanup
+browser.close()
+
+# END =========================================================================
