@@ -640,6 +640,12 @@ class S3PersonModel(S3Model):
                                     comment = DIV(DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Local Name"),
                                                                         T("Name of the person in local language and script (optional)."))))),
+                             Field("father_name",
+                                   label = T("Name of Father"),
+                                  ),
+                             Field("mother_name",
+                                   label = T("Name of Mother"),
+                                  ),
                              pr_gender(label = T("Gender")),
                              Field("date_of_birth", "date",
                                    label = T("Date of Birth"),
@@ -1722,10 +1728,6 @@ class S3PersonIdentityModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields())
 
-        # Field configuration
-        table.value.requires = [IS_NOT_EMPTY(),
-                                IS_NOT_ONE_OF(db, "%s.value" % tablename)]
-
         # CRUD Strings
         ADD_IDENTITY = T("Add Identity")
         s3.crud_strings[tablename] = Storage(
@@ -1745,6 +1747,7 @@ class S3PersonIdentityModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
+                       deduplicate=self.identity_deduplicate,
                        list_fields=["id",
                                     "type",
                                     "value",
@@ -1756,6 +1759,32 @@ class S3PersonIdentityModel(S3Model):
         # Return model-global names to response.s3
         #
         return Storage()
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def identity_deduplicate(item):
+        """ Identity de-duplication """
+
+        if item.id:
+            return
+        if item.tablename == "pr_identity":
+            table = item.table
+            person_id = item.data.get("person_id", None)
+            id_type = item.data.get("type", None)
+            id_value = item.data.get("value", None)
+
+            if person_id is None:
+                return
+
+            query = (table.person_id == person_id) & \
+                    (table.type == id_type) & \
+                    (table.value == id_value) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3PersonEducationModel(S3Model):
@@ -1804,14 +1833,17 @@ class S3PersonEducationModel(S3Model):
             msg_list_empty = T("No education details currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
+        self.configure("pr_education",
                        list_fields=["id",
+                                    "year",
                                     "level",
                                     "award",
                                     "major",
                                     "grade",
                                     "institute",
-                                   ])
+                                   ],
+                      orderby = "~pr_education.year",
+                      sortby = [[1, 'desc']])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

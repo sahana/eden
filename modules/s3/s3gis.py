@@ -751,6 +751,9 @@ class GIS(object):
             results = {}
 
         id = feature_id
+        # if we don't have a feature or a feature id return the empty dict
+        if not feature_id and not feature:
+            return results
         if not feature_id and "path" not in feature and "parent" in feature:
             # gis_location_onvalidation on a Create => no ID yet
             # Read the Parent's path instead

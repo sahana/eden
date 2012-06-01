@@ -3458,6 +3458,7 @@ class S3Resource(object):
 
                 if stylesheet is not None:
                     t = xml.transform(t, stylesheet, **args)
+                    _debug(t)
                     if not t:
                         raise SyntaxError(xml.error)
 
