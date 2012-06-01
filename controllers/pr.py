@@ -377,6 +377,14 @@ def image():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def education():
+    """ RESTful CRUD controller """
+
+    tablename = "pr_education"
+    table = s3db[tablename]
+    return s3_rest_controller("pr", "education")
+
+# -----------------------------------------------------------------------------
 #def contact():
 #    """ RESTful CRUD controller """
 #

@@ -335,8 +335,19 @@ class S3RL_PDF(S3Codec):
                 row = []
                 cnt = 0
                 for field in fobjs:
-                    value = record[field._tablename][field.name]
                     repr = field.represent
+                    fname = field.name
+                    try:
+                        value = record[field._tablename][fname]
+                    except:
+                        # The above code doesn't work for virtual fields
+                        # So look through the results in the record
+                        value = ""
+                        tnames = record.keys()
+                        for tname in tnames:
+                            if fname in record[tname]:
+                                value = record[tname][fname]
+                                break
                     if repr:
                         try:
                             row.append(repr(value, show_link=False))

@@ -752,6 +752,7 @@ def send_req():
     # loop through each request item and find matched in the site inventory
     for req_i in req_items:
         query = (iitable.item_id == req_i.item_id) & \
+                (iitable.quantity > 0) & \
                 (iitable.site_id == site_id) & \
                 (iitable.deleted == False)
         inv_items = db(query).select(iitable.id,
@@ -778,7 +779,7 @@ def send_req():
             # get inv_item.pack_quantity
             if len(inv_items) == 1:
                 # Remove this total from the warehouse stock
-                send_item_quantity = inv_remove(inv_i, req_qnty_wanted)
+                send_item_quantity = s3db.inv_remove(inv_i, req_qnty_wanted)
             else:
                 send_item_quantity = 0
             comment = "%d items needed to match total request" % req_qnty_wanted
