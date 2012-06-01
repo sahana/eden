@@ -787,17 +787,10 @@ def person():
     # Import pre-process
     def import_prep(data, group=group):
         """
-            Removes the requires validation of the pr_identity which if a duplicate
-            is found fails before the de-duplication is resolved.
-
             Deletes all HR records (of the given group) of the organisation
             before processing a new data import, used for the import_prep
             hook in s3mgr
         """
-
-        # remove that pesky requires on pr_identity.value
-        s3db.pr_identity.value.requires = None
-
         request = current.request
 
         resource, tree = data

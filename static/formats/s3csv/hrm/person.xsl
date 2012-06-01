@@ -98,6 +98,12 @@
         </xsl:call-template>
     </xsl:variable>
 
+    <xsl:variable name="MemberType">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">MemberType</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="orgs"
@@ -274,6 +280,12 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="member">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$MemberType"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:if test="position()=1">
             <xsl:for-each select="col[starts-with(@name, 'Course')]">
                 <xsl:call-template name="Course"/>
@@ -298,12 +310,14 @@
             <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
             <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
 
-            <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
-            <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
-            <xsl:variable name="religion">
-                <xsl:value-of select="translate(col[@field='Religion'], $uppercase, $smallcase)"/>
-            </xsl:variable>
-            <data field="religion"><xsl:value-of select="$religion"/></data>
+            <xsl:if test="col[@field='Religion']">
+                <xsl:variable name="smallcase" select="'abcdefghijklmnopqrstuvwxyz'" />
+                <xsl:variable name="uppercase" select="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" />
+                <xsl:variable name="religion">
+                    <xsl:value-of select="translate(col[@field='Religion'], $uppercase, $smallcase)"/>
+                </xsl:variable>
+                <data field="religion"><xsl:value-of select="$religion"/></data>
+            </xsl:if>
 
             <!-- Identity Information -->
             <xsl:call-template name="IdentityInformation"/>
@@ -339,12 +353,23 @@
             </xsl:if>
 
             <!-- HR record -->
-            <xsl:call-template name="HumanResource">
-                <xsl:with-param name="OrgName" select="$OrgName"/>
-                <xsl:with-param name="BranchName" select="$BranchName"/>
-                <xsl:with-param name="OfficeName" select="$OfficeName"/>
-                <xsl:with-param name="type" select="$type"/>
-            </xsl:call-template>
+            <xsl:choose>
+                <xsl:when test="$type='3'">
+                    <xsl:call-template name="Member">
+                        <xsl:with-param name="OrgName" select="$OrgName"/>
+                        <xsl:with-param name="BranchName" select="$BranchName"/>
+                        <xsl:with-param name="type" select="$member"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:call-template name="HumanResource">
+                        <xsl:with-param name="OrgName" select="$OrgName"/>
+                        <xsl:with-param name="BranchName" select="$BranchName"/>
+                        <xsl:with-param name="OfficeName" select="$OfficeName"/>
+                        <xsl:with-param name="type" select="$type"/>
+                    </xsl:call-template>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- Education -->
             <xsl:call-template name="Education">
@@ -401,6 +426,38 @@
                 <xsl:with-param name="lon" select="col[@field='Permanent Lon']/text()"/>
             </xsl:call-template>
         </xsl:if>
+    </xsl:template>
+    <!-- ****************************************************************** -->
+    <xsl:template name="Member">
+
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
+        <xsl:param name="type"/>
+
+        <resource name="member_membership">
+
+            <!-- Member data -->
+            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            <xsl:if test="$type!=0">
+                <data field="type"><xsl:value-of select="$type"/></data>
+            </xsl:if>
+
+            <!-- Link to Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </reference>
+
+        </resource>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

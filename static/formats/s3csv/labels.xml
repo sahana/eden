@@ -69,6 +69,7 @@
     <column name="HRMType">
         <label>HRMType</label>
         <label>PersonType</label>
+        <label>Type</label>
         <option value="1" name="staff">
             <label>Staff</label>
             <label>staff</label>
@@ -84,6 +85,23 @@
             <label>member</label>
             <label>Normal Member</label>
             <label>Life Member</label>
+            <label>Honorary Member</label>
+        </option>
+    </column>
+
+    <column name="MemberType">
+        <label>HRMType</label>
+        <label>PersonType</label>
+        <label>Type</label>
+        <option value="1" name="Normal Member">
+            <label>Member</label>
+            <label>member</label>
+            <label>Normal Member</label>
+        </option>
+        <option value="2" name="Life Member">
+            <label>Life Member</label>
+        </option>
+        <option value="3" name="Honorary Member">
             <label>Honorary Member</label>
         </option>
     </column>

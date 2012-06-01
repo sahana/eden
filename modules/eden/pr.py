@@ -1728,10 +1728,6 @@ class S3PersonIdentityModel(S3Model):
                                   s3.comments(),
                                   *s3.meta_fields())
 
-        # Field configuration
-        table.value.requires = [IS_NOT_EMPTY(),
-                                IS_NOT_ONE_OF(db, "%s.value" % tablename)]
-
         # CRUD Strings
         ADD_IDENTITY = T("Add Identity")
         s3.crud_strings[tablename] = Storage(
@@ -1837,14 +1833,17 @@ class S3PersonEducationModel(S3Model):
             msg_list_empty = T("No education details currently registered"))
 
         # Resource configuration
-        self.configure(tablename,
+        self.configure("pr_education",
                        list_fields=["id",
+                                    "year",
                                     "level",
                                     "award",
                                     "major",
                                     "grade",
                                     "institute",
-                                   ])
+                                   ],
+                      orderby = "~pr_education.year",
+                      sortby = [[1, 'desc']])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
