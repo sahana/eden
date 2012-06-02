@@ -1,0 +1,29 @@
+<!-- regular table form for assigning roles to a user -->
+{{lbl=form.custom.label}}
+{{wid=form.custom.widget}}
+{{first_row = True}}
+{{for field in form.fields:}}
+	{{if field == "foreign_object":
+		continue}}
+	{{if wid[field]:}}
+		<tr>
+			{{if first_row:}}
+				{{first_row = False}}
+				{{if "foreign_object" in wid:}}
+					<td rowspan="{{=len(form.fields) - 2}}">
+						{{=wid["foreign_object"]}}
+					</td>
+				{{else:}}
+					<td rowspan="{{=len(form.fields) - 1}}">
+						{{=foreign_object["name"]}}
+					</td>
+				{{pass}}
+			{{pass}}
+			<td>{{=lbl[field]}}</td>
+			<td>{{=wid[field]}}</td>
+		</tr>
+	{{pass}}
+{{pass}}
+<tr>
+	<td colspan="3">{{=INPUT(_type='submit', _value=T('Assign Roles'))}}</td>
+</tr>

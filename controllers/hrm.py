@@ -619,7 +619,7 @@ def person():
     realms = auth.user is not None and auth.user.realms or []
     if ADMIN in realms or ORG_ADMIN in realms:
         s3mgr.model.set_method("pr", resourcename, method="roles",
-                               action=s3base.S3RoleMatrix())
+                               action=s3base.S3PersonRoleManager())
 
     if deployment_settings.has_module("asset"):
         # Assets as component of people
