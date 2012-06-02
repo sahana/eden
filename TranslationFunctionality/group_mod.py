@@ -4,17 +4,19 @@ import os
 import getStrings
 d = {}
 vflag=0
-
+rest_dirs = []
 
 def init():
 
-      global d
+      global d,rest_dirs
 
       mod = get_module_list()
 
       for m in mod:
 	      d[m]=[]
       d["core"]=[]
+
+      rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git"]
 
       group_files("../","core")
 
@@ -38,6 +40,9 @@ def group_files(currentDir,curmod):
 
       currentDir = os.path.abspath(currentDir)
       base_dir = os.path.basename(currentDir)
+
+      if base_dir in rest_dirs:
+             return
 
       if base_dir == "views":
             vflag=1
