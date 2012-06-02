@@ -6611,6 +6611,7 @@ class S3EntityRoleManager(S3Method):
             @param before: list of role_uids (current values for the user)
             @param after: list of role_uids (new values from the admin)
         """
+        auth = current.auth
         assign_role = auth.s3_assign_role
         retract_role = auth.s3_retract_role
 
