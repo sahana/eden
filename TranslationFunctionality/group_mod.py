@@ -2,19 +2,35 @@
 import sys
 import os
 import getStrings
-mod = []
 d = {}
 vflag=0
 
 
+def init():
+
+      global d
+
+      mod = get_module_list()
+
+      for m in mod:
+	      d[m]=[]
+      d["core"]=[]
+
+      group_files("../","core")
+
+
 def get_module_list():
    
-   global mod
+   mod = []
+
    cont_dir = os.path.abspath("../controllers")
    mod_files = os.listdir(cont_dir)
+
    for f in mod_files:
       cur_file = os.path.join(cont_dir,f)
       mod.append(f[:-3])
+
+   return mod
 
 def group_files(currentDir,curmod):
       
@@ -46,7 +62,7 @@ def group_files(currentDir,curmod):
 		  if base_dir=="s3":
 		      base = base[2:]	     
 
-		  if base in mod:
+		  if base in d.keys():
 		     d[base].append(curFile)
 		  else:
 		     d["core"].append(curFile)
@@ -57,23 +73,67 @@ def group_files(currentDir,curmod):
            vflag=0
 
 
+def get_files_by_module(module):
+        
+	if module in d.keys():
+             return d[module]
+	else:
+             print "Module '%s' doesn't exist!" %module
+	     return []
+
+def get_strings_by_file(filename):
+	
+	if os.path.isfile(filename):
+	   filename = os.path.abspath(filename)
+	else:
+	   errorstr =  "'%s' is not a valid file path!"%filename
+           return errorstr
+
+	if filename.endswith(".py") == True:
+	         getStrings.findstr(filename)
+	else:
+	        errorstr = "Please enter a '.py' file path"
+		return errorstr
+
+        return None
+
 
 def _main():
 
-      get_module_list()
+      if len(sys.argv) > 1:
 
-      for m in mod:
-	      d[m] = []
-      d["core"]=[]
+	   if sys.argv[1] == "-gml":
+	      l = get_module_list()
+	      for m in l:
+	         print m
 
-      group_files("../","core")
+	     
+	   elif sys.argv[1] == "-gfm":
+	     init()
+	     it = 2
+	     while it < len(sys.argv):
+                 files = get_files_by_module(sys.argv[it])
 
-      for m in d.keys():
-	     print "\n"
-	     print "Module:",m
-	     for f in d[m]:
-	         if f.endswith(".py") == True:
-	                getStrings.findstr(f)
+		 if len(files) != 0:
+		    print sys.argv[it]
+		    for f in files:
+			  print f
+		 print
+		 it += 1
+
+            
+           elif sys.argv[1] == "-gsf":
+	       it=2
+	       while it < len(sys.argv):
+		       val = get_strings_by_file(sys.argv[it])
+		       if val != None:
+		            print val
+		       it += 1
+
+	   else:
+		print "Please enter a valid option."
+
+
 
 
 if __name__ == '__main__':
