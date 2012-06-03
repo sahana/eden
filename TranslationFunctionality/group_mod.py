@@ -13,8 +13,9 @@ def init():
       mod = get_module_list()
 
       for m in mod:
-	      d[m]=[]
-      d["core"]=[]
+	      d[m] = []
+      d["core"] = []
+      d["special"] = []
 
       rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git"]
 
@@ -61,11 +62,12 @@ def group_files(currentDir,curmod):
 	  else:
 		  if vflag==1:
 		     base = curmod
+		  elif curFile.endswith("/eden/modules/eden/menus.py"):
+                     base = "special"
 		  else:
 		     base = os.path.splitext(f)[0]
-
-		  if base_dir=="s3":
-		      base = base[2:]	     
+                     if base_dir=="s3":
+		       base = base[2:]	     
 
 		  if base in d.keys():
 		     d[base].append(curFile)
@@ -86,21 +88,44 @@ def get_files_by_module(module):
              print "Module '%s' doesn't exist!" %module
 	     return []
 
+
+
+def get_strings_by_module(module):
+        
+	if module in d.keys():
+	     fileList = d[module]
+	else:
+             print "Module '%s' doesn't exist!" %module
+	     return []
+
+        strings = []
+
+	for f in fileList:
+	     if f.endswith(".py") == True:
+	          strings += getStrings.findstr(f,"ALL")
+	
+	fileList = d["special"]	  
+        for f in fileList:
+	     if f.endswith(".py") == True:
+	          strings += getStrings.findstr(f,module)
+
+	return strings
+
+
+
 def get_strings_by_file(filename):
 	
 	if os.path.isfile(filename):
 	   filename = os.path.abspath(filename)
 	else:
-	   errorstr =  "'%s' is not a valid file path!"%filename
-           return errorstr
+	   print  "'%s' is not a valid file path!"%filename
+           return []
 
 	if filename.endswith(".py") == True:
-	         getStrings.findstr(filename)
+	         return getStrings.findstr(filename, "ALL")
 	else:
-	        errorstr = "Please enter a '.py' file path"
-		return errorstr
-
-        return None
+	        print "Please enter a '.py' file path"
+		return []
 
 
 def _main():
@@ -120,7 +145,7 @@ def _main():
                  files = get_files_by_module(sys.argv[it])
 
 		 if len(files) != 0:
-		    print sys.argv[it]
+		    print "Module : " + sys.argv[it]
 		    for f in files:
 			  print f
 		 print
@@ -130,10 +155,23 @@ def _main():
            elif sys.argv[1] == "-gsf":
 	       it=2
 	       while it < len(sys.argv):
-		       val = get_strings_by_file(sys.argv[it])
-		       if val != None:
-		            print val
+		       strings = get_strings_by_file(sys.argv[it])
+		       print "File : " + sys.argv[it]
+		       for (l,s) in strings:
+		          print l,s
+
 		       it += 1
+          
+	   elif sys.argv[1] == "-gsm":
+                init()
+	        it=2
+		while it < len(sys.argv):
+			strings = get_strings_by_module(sys.argv[it])
+                        print "Module : " + sys.argv[it]
+			for (l,s) in strings:
+				print l,s
+
+		        it += 1
 
 	   else:
 		print "Please enter a valid option."
