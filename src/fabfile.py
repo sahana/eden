@@ -21,6 +21,12 @@ from fabric.api import local, settings, abort, run, cd, env
 from fabric.contrib.console import confirm
 from fabric.operations import put
 
+# Commands
+#
+# Tests only: fab test (inside the project dir)
+# Straight deploy (no testing): fab deploy:TYPE (type can be 'demo' or 'app')
+# Full deploy (well tested): fab full_deploy:TYPE
+
 env.hosts = ['188.40.90.250']
 
 def test():
