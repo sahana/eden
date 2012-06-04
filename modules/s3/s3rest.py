@@ -6100,6 +6100,8 @@ class S3TypeConverter:
             @raise ValueError: if the value conversion fails
         """
 
+        if isinstance(a, lazyT):
+            a = str(a)
         if b is None:
             return None
         if type(a) is type:
