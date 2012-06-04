@@ -373,16 +373,63 @@ def volunteer():
                   ]
     report_options = s3mgr.model.get_config(tablename,
                                             "report_options")
+    # Remove inappropriate filters from the Search widget
+    human_resource_search = s3mgr.model.get_config(tablename,
+                                                   "search_method")
+    # Remove Type
+    human_resource_search._S3Search__advanced.pop(1)
+    # Remove Facility
+    human_resource_search._S3Search__advanced.pop(6)
     if deployment_settings.get_hrm_experience() == "programme":
+        # Add Programme Virtual Fields
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+        # Add VF to List Fields
         list_fields.append((T("Programme"), "programme"))
         list_fields.append((T("Active?"), "active"))
-        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+        # Add VF to Report Options
         report_fields = report_options.rows
         report_fields.append((T("Programme"), "programme"))
         report_fields.append((T("Active?"), "active"))
         report_options.rows = report_fields
         report_options.cols = report_fields
         report_options.facts = report_fields
+        # Add VF to the Search Filters
+        # Remove deprecated Active/Obsolete
+        human_resource_search._S3Search__advanced.pop(1)
+        table.status.readable = False
+        table.status.writable = False
+        widget = s3base.S3SearchOptionsWidget(
+                            name="human_resource_search_active",
+                            label=T("Active?"),
+                            field="active",
+                            cols = 2,
+                            options = {
+                                    True:  T("Yes"),
+                                    False: T("No")
+                                }
+                          ),
+        search_widget = ("human_resource_search_active", widget[0])
+        human_resource_search._S3Search__advanced.insert(1, search_widget)
+        def hrm_programme_opts():
+            ptable = s3db.hrm_programme
+            organisation_id = auth.user.organisation_id
+            query = (ptable.deleted == False) & \
+                    (ptable.organisation_id == organisation_id)
+            opts = db(query).select(ptable.id,
+                                    ptable.name)
+            _dict = {}
+            for opt in opts:
+                _dict[opt.id] = opt.name
+            return _dict
+        widget = s3base.S3SearchOptionsWidget(
+                            name="human_resource_search_programme",
+                            label=T("Programme"),
+                            field="programme",
+                            cols = 2,
+                            options = hrm_programme_opts
+                          ),
+        search_widget = ("human_resource_search_programme", widget[0])
+        human_resource_search._S3Search__advanced.insert(5, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename].update(
@@ -396,13 +443,6 @@ def volunteer():
         label_create_button = T("Add Volunteer"),
         msg_record_created = T("Volunteer added"),
     )
-    # Remove inappropriate filters from the Search widget
-    human_resource_search = s3mgr.model.get_config(tablename,
-                                                   "search_method")
-    # Facility
-    human_resource_search._S3Search__advanced.pop(6)
-    # Type
-    human_resource_search._S3Search__advanced.pop(1)
     s3mgr.configure(tablename,
                     list_fields = list_fields,
                     report_options = report_options,

@@ -479,8 +479,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
             Configures the search option
 
             @param field: name(s) of the fields to search in
-            @param name: ?
-            @param options: value:label dictionary to populate the search widget
+            @param name: used to build the HTML ID of the widget
+            @param options: either a value:label dictionary to populate the
+                            search widget or a callable to create this
 
             @keyword label: a label for the search widget
             @keyword comment: a comment for the search widget
@@ -667,16 +668,20 @@ class S3SearchOptionsWidget(S3SearchWidget):
                     if not options:
                         options = letter_option
 
+                    if letter == "Z":
+                        to_letter = "Z"
                     # Are these options for a single letter or a range?
                     if to_letter != from_letter:
-                        letter = "%s - %s" % (from_letter, to_letter)
+                        _letter = "%s - %s" % (from_letter, to_letter)
+                    else:
+                        _letter = from_letter
                     # Letter Label
-                    widget.append(DIV(letter,
-                                       _id="%s_search_select_%s_label_%s" %
+                    widget.append(DIV(_letter,
+                                      _id="%s_search_select_%s_label_%s" %
                                                 (resource.name,
                                                  field_name,
                                                  from_letter),
-                                       _class="search_select_letter_label"))
+                                      _class="search_select_letter_label"))
 
                     opt_field = Storage(name=self.name,
                                         requires=IS_IN_SET(options,
@@ -695,7 +700,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
                     count = 0
                     options = []
-                    from_letter = None
+                    from_letter = letter
                 options += letter_option
                 to_letter = letter
 

@@ -1,15 +1,11 @@
 /**
     S3 Reporting Framework, Static JavaScript
 
-    @author: Dominic König <dominic[AT]aidiq[DOT]com>
-
     @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: jQuery
     @requires: jqplot
-
-    @status: work in progress
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation

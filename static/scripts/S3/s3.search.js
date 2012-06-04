@@ -176,22 +176,22 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $(".search_select_letter_widget").each(function() {
+    $('.search_select_letter_widget').each(function() {
         widget = $(this)
-        if ($(":checked", widget).length < 1) {
+        if ($(':checked', widget).length < 1) {
             $(this).hide();
         }
         else {
-            $(this).prev().toggleClass("expanded");
+            $(this).prev().toggleClass('expanded');
         }
     })
 
     /*
         Listen for click events on the expanding/collapsing letter widgets
     */
-    $(".search_select_letter_label").click( function() {
-        $(this).next("table").toggle();
-        $(this).toggleClass("expanded");
+    $('.search_select_letter_label').click( function() {
+        $(this).next('table').toggle();
+        $(this).toggleClass('expanded');
     })
 
     

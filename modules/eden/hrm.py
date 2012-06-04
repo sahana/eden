@@ -220,20 +220,22 @@ class S3HRModel(S3Model):
                         name="human_resource_search_type",
                         label=T("Type"),
                         field="type",
-                        cols = 2
+                        cols = 2,
+                        options = hrm_type_opts,
                       ),
                       S3SearchOptionsWidget(
                         name="human_resource_search_status",
                         label=T("Status"),
                         field="status",
-                        cols = 2
+                        cols = 2,
+                        options = hrm_status_opts,
                       ),
                       S3SearchOptionsWidget(
                         name="human_resource_search_org",
                         label=T("Organization"),
                         field="organisation_id",
                         represent =s3db.org_organisation_represent,
-                        cols = 3
+                        cols = 3,
                       ),
                       S3SearchLocationHierarchyWidget(
                         name="human_resource_search_L1",
@@ -249,10 +251,11 @@ class S3HRModel(S3Model):
                         name="human_resource_search_map",
                         label=T("Map"),
                       ),
+                      # Don't change the order of this without updating controllers/hrm/volunteer()
                       S3SearchOptionsWidget(
                         name="human_resource_search_site",
                         label=T("Facility"),
-                        field="site_id"
+                        field="site_id",
                       ),
                       # S3SearchSkillsWidget(
                         # name="human_resource_search_skills",
