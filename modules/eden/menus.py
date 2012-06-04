@@ -1132,7 +1132,7 @@ class S3OptionsMenu:
                     M("Members", f="membership")(
                         M("New", m="create"),
                         M("List All"),
-                        #M("Search", m="search"),
+                        M("Search", m="search"),
                         M("Import", f="person", m="import"),
                     ),
                 )

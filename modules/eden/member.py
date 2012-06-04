@@ -31,6 +31,7 @@ __all__ = ["S3MembersModel",
            "member_rheader"
           ]
 
+import datetime
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
@@ -103,11 +104,11 @@ class S3MembersModel(S3Model):
                                   Field("membership_fee", "double",
                                         label = T("Membership Fee"),
                                         ),
-                                  Field("membership_paid", "list:integer",
+                                  Field("membership_paid", "date",
                                         label = T("Membership Paid"),
-                                        # @ToDo: IS_NULL_OR()
-                                        # https://groups.google.com/d/topic/web2py/qLo16MRi0UY/discussion
-                                        requires = IS_LIST_OF(IS_IN_SET(year_opts)),
+                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        represent = s3_date_represent,
+                                        widget = S3DateWidget()
                                         ),
                                   # Location (from pr_address component)
                                   location_id(readable=False,
@@ -131,22 +132,96 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Member deleted"),
             msg_list_empty = T("No members currently registered"))
 
+        table.virtualfields.append(MemberVirtualFields())
+
+        member_search = S3Search(
+            simple=(self.member_search_simple_widget("simple")),
+            advanced=(self.member_search_simple_widget("advanced"),
+                      S3SearchOptionsWidget(
+                        name="member_search_type",
+                        label=T("Type"),
+                        field="type",
+                        cols = 3,
+                        options = member_type_opts,
+                      ),
+                      S3SearchOptionsWidget(
+                        name="member_search_paid",
+                        label=T("Paid"),
+                        field="paid",
+                        cols = 3,
+                        options = {
+                                T("paid"):T("paid"),
+                                T("overdue"):T("overdue"),
+                                T("expired"):T("expired"),
+                            },
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="member_search_L1",
+                        field="L1",
+                        cols = 3,
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="member_search_L2",
+                        field="L2",
+                        cols = 3,
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="member_search_L3",
+                        field="L3",
+                        cols = 3,
+                      ),
+                      S3SearchLocationHierarchyWidget(
+                        name="member_search_L4",
+                        field="L4",
+                        cols = 3,
+                      ),
+                      S3SearchLocationWidget(
+                        name="member_search_map",
+                        label=T("Map"),
+                      ),
+            )
+        )
+
         self.configure(tablename,
                        deduplicate = self.member_deduplicate,
                        onaccept = self.member_onaccept,
+                       search_method = member_search,
                        list_fields=[
                                 "person_id",
                                 "organisation_id",
                                 "type",
                                 "start_date",
-                                "end_date",
-                                "membership_paid",
-                                #@ToDo: virtual field to show if they are paid-up or not? (or rely on report?)
+                                # useful for testing the paid virtual field
+                                #"membership_paid",
+                                (T("Paid"), "paid"),
+                                (T("Email"), "email"),
+                                (T("Phone"), "phone"),
+                                "L1",
+                                "L2",
+                                "L3",
+                                "L4",
                             ])
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def member_search_simple_widget(type):
+
+        T = current.T
+
+        return S3SearchSimpleWidget(
+                    name = "member_search_simple_%s" % type,
+                    label = T("Name"),
+                    comment = T("You can search by person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+                    field = ["person_id$first_name",
+                             "person_id$middle_name",
+                             "person_id$last_name",
+                            ]
+                  )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -297,5 +372,117 @@ def member_rheader(r, tabs=[]):
             ), rheader_tabs)
 
     return rheader
+
+# =============================================================================
+class MemberVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = ["person_id",
+                    "start_date",
+                    "membership_paid",
+                    ]
+
+    # -------------------------------------------------------------------------
+    def paid(self):
+        """
+            Whether the member has paid within 12 months of start_date
+            anniversary
+
+            @ToDo: Formula should come from the deployment_template
+        """
+        try:
+            start_date = self.member_membership.start_date
+        except AttributeError:
+            # not available
+            start_date = None
+        try:
+            paid_date = self.member_membership.membership_paid
+        except AttributeError:
+            # not available
+            paid_date = None
+        if start_date:
+            T = current.T
+            PAID = T("paid")
+            OVERDUE = T("overdue")
+            LAPSED = T("expired")
+            year = datetime.timedelta(days=365)
+            lapsed = datetime.timedelta(days=183) # 6 months
+
+            now = current.request.utcnow.date()
+            now_month = now.month
+            start_month = start_date.month
+            if now_month > start_month:
+                due = datetime.date(now.year, start_month, start_date.day)
+            elif now_month == start_month:
+                now_day = now.day
+                start_day = start_date.day
+                if now_day > start_day:
+                    due = datetime.date(now.year, start_month, start_day)
+            else:
+                due = datetime.date((now.year - year), start_month, start_date.day)
+
+            if not paid_date:
+                # Never paid
+                if (now - due) > lapsed:
+                    return LAPSED
+                else:
+                    return OVERDUE
+
+            if paid_date > due:
+                return PAID
+            elif (due - paid_date) > lapsed:
+                return LAPSED
+            else:
+                return OVERDUE
+
+        return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def email(self):
+        """ Email addresses """
+        try:
+            person_id = self.member_membership.person_id
+        except AttributeError:
+            # not available
+            person_id = None
+        if person_id:
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (ctable.deleted == False) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ptable.id == person_id) & \
+                    (ctable.contact_method == "EMAIL")
+            contacts = current.db(query).select(ctable.value,
+                                                orderby=ctable.priority)
+            if contacts:
+                values = [contact.value for contact in contacts]
+                return ",".join(values)
+
+        return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def phone(self):
+        """ Phone numbers """
+        try:
+            person_id = self.member_membership.person_id
+        except AttributeError:
+            # not available
+            person_id = None
+        if person_id:
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (ctable.deleted == False) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ptable.id == person_id) & \
+                    (ctable.contact_method.belongs(["SMS", "HOME_PHONE", "WORK_PHONE"]))
+            contacts = current.db(query).select(ctable.value,
+                                                orderby=ctable.priority)
+            if contacts:
+                values = [contact.value for contact in contacts]
+                return ",".join(values)
+
+        return current.messages.NONE
 
 # END =========================================================================

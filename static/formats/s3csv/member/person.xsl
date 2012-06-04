@@ -30,7 +30,7 @@
          Lists..........................optional.....comma-separated list of Groups
          Start Date.....................optional.....Start Date
          Membership Fee.................optional.....Membership Fee
-         Years Paid.....................optional.....comma-separated list of Years that membership has been paid
+         Date Paid......................optional.....Date that membership was last paid
 
          Column headers looked up in labels.xml:
 
@@ -217,6 +217,9 @@
             <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             <data field="type"><xsl:value-of select="$type"/></data>
             <data field="membership_fee"><xsl:value-of select="col[@field='Membership Fee']"/></data>
+            <data field="membership_paid">
+                <xsl:value-of select="col[@field='Date Paid']"/>
+            </data>
 
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
@@ -231,18 +234,6 @@
                     </xsl:choose>
                 </xsl:attribute>
             </reference>
-
-            <!-- Years paid -->
-            <data field="membership_paid">
-                <xsl:attribute name="value">
-                    <xsl:text>[</xsl:text>
-                    <xsl:value-of select="col[@field='Years Paid']"/>
-                    <xsl:text>]</xsl:text>
-                </xsl:attribute>
-                <!-- Don't need this if specifying value
-                <xsl:value-of select="col[@field='Years Paid']"/>
-                -->
-            </data>
 
         </resource>
 

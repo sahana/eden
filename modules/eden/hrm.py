@@ -212,6 +212,27 @@ class S3HRModel(S3Model):
                                             ondelete = "RESTRICT"
                                             )
 
+        table.virtualfields.append(HRMVirtualFields())
+
+        def hrm_course_opts():
+            """
+                Provide the options for the HRM programme search filter
+
+                @ToDo: S3resource-based version to use accessible_realm-based
+                       filtering rather than crude 'this user's org'
+            """
+            ctable = s3db.hrm_course
+            organisation_id = current.auth.user.organisation_id
+            query = (ctable.deleted == False) & \
+                    ((ctable.organisation_id == organisation_id) | \
+                     (ctable.organisation_id == None))
+            opts = db(query).select(ctable.id,
+                                    ctable.name)
+            _dict = {}
+            for opt in opts:
+                _dict[opt.id] = opt.name
+            return _dict
+
         hrm_autocomplete_search = S3HRSearch()
         human_resource_search = S3Search(
             simple=(self.human_resource_search_simple_widget("simple")),
@@ -234,7 +255,7 @@ class S3HRModel(S3Model):
                         name="human_resource_search_org",
                         label=T("Organization"),
                         field="organisation_id",
-                        represent =s3db.org_organisation_represent,
+                        represent = s3db.org_organisation_represent,
                         cols = 3,
                       ),
                       S3SearchLocationHierarchyWidget(
@@ -257,6 +278,13 @@ class S3HRModel(S3Model):
                         label=T("Facility"),
                         field="site_id",
                       ),
+                      S3SearchOptionsWidget(
+                        name="human_resource_search_training",
+                        label=T("Training"),
+                        field="course",
+                        cols = 3,
+                        options = hrm_course_opts,
+                      ),
                       # S3SearchSkillsWidget(
                         # name="human_resource_search_skills",
                         # label=T("Skills"),
@@ -272,8 +300,6 @@ class S3HRModel(S3Model):
             )
         )
 
-        table.virtualfields.append(HRMVirtualFields())
-
         hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "organisation_id",
@@ -286,47 +312,46 @@ class S3HRModel(S3Model):
 
         # Redirect to the Details tabs after creation
         hrm_url = URL(args=["[id]", "update"])
-        self.configure(
-            tablename,
-            super_entity = "sit_trackable",
-            deletable = settings.get_hrm_deletable(),
-            search_method = human_resource_search,
-            onaccept = self.hrm_human_resource_onaccept,
-            ondelete = self.hrm_human_resource_ondelete,
-            deduplicate=self.hrm_human_resource_deduplicate,
-            report_options = Storage(
-                search=[
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_org",
-                        label=T("Organization"),
-                        field="organisation_id",
-                        represent = s3db.org_organisation_represent,
-                        cols = 3
-                      ),
-                    S3SearchLocationHierarchyWidget(
-                        name="human_resource_search_L1",
-                        field="L1",
-                        cols = 3,
+        self.configure(tablename,
+                    super_entity = "sit_trackable",
+                    deletable = settings.get_hrm_deletable(),
+                    search_method = human_resource_search,
+                    onaccept = self.hrm_human_resource_onaccept,
+                    ondelete = self.hrm_human_resource_ondelete,
+                    deduplicate=self.hrm_human_resource_deduplicate,
+                    report_options = Storage(
+                        search=[
+                              S3SearchOptionsWidget(
+                                name="human_resource_search_org",
+                                label=T("Organization"),
+                                field="organisation_id",
+                                represent = s3db.org_organisation_represent,
+                                cols = 3
+                              ),
+                            S3SearchLocationHierarchyWidget(
+                                name="human_resource_search_L1",
+                                field="L1",
+                                cols = 3,
+                            ),
+                            S3SearchLocationHierarchyWidget(
+                                name="human_resource_search_L2",
+                                field="L2",
+                                cols = 3,
+                            ),
+                            S3SearchOptionsWidget(
+                                name="human_resource_search_site",
+                                label=T("Facility"),
+                                field="site_id"
+                            ),
+                        ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
                     ),
-                    S3SearchLocationHierarchyWidget(
-                        name="human_resource_search_L2",
-                        field="L2",
-                        cols = 3,
-                    ),
-                    S3SearchOptionsWidget(
-                        name="human_resource_search_site",
-                        label=T("Facility"),
-                        field="site_id"
-                    ),
-                ],
-                rows=report_fields,
-                cols=report_fields,
-                facts=report_fields,
-                methods=["count", "list"],
-            ),
-            create_next = hrm_url,
-            update_next = hrm_url,
-        )
+                    create_next = hrm_url,
+                    update_next = hrm_url,
+                )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -2970,8 +2995,8 @@ class HRMVirtualFields:
     extra_fields = ["person_id"]
 
     # -------------------------------------------------------------------------
-    def course(self):
-        """ Which Training Courses the person has attended """
+    def certificate(self):
+        """ Which Certificates the person has gained """
         try:
             person_id = self.hrm_human_resource.person_id
         except AttributeError:
@@ -2979,27 +3004,18 @@ class HRMVirtualFields:
             person_id = None
         if person_id:
             s3db = current.s3db
-            table = s3db.hrm_training
-            etable = s3db.hrm_training_event
-            ctable = s3db.hrm_course
+            table = s3db.hrm_certification
+            ctable = s3db.hrm_certificate
             query = (table.deleted == False) & \
                     (table.person_id == person_id) & \
-                    (table.training_event_id == etable.id) & \
-                    (etable.course_id == ctable.id)
-            courses = current.db(query).select(ctable.name)
-            if courses:
-                output = []
-                for course in courses:
-                    output.append(course.name)
-                return output
+                    (table.certificate_id == ctable.id)
+            certs = current.db(query).select(ctable.name,
+                                             orderby=ctable.name)
+            if certs:
+                names = [cert.name for cert in certs]
+                return ",".join(names)
 
         return current.messages.NONE
-
-# =============================================================================
-class HRMProgrammeVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    extra_fields = ["person_id"]
 
     # -------------------------------------------------------------------------
     def course(self):
@@ -3018,14 +3034,68 @@ class HRMProgrammeVirtualFields:
                     (table.person_id == person_id) & \
                     (table.training_event_id == etable.id) & \
                     (etable.course_id == ctable.id)
-            courses = current.db(query).select(ctable.name)
+            courses = current.db(query).select(ctable.name,
+                                               orderby=ctable.name)
             if courses:
-                output = []
-                for course in courses:
-                    output.append(course.name)
-                return output
+                names = [course.name for course in courses]
+                return ",".join(names)
 
         return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def email(self):
+        """ Email addresses """
+        try:
+            person_id = self.hrm_human_resource.person_id
+        except AttributeError:
+            # not available
+            person_id = None
+        if person_id:
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (ctable.deleted == False) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ptable.id == person_id) & \
+                    (ctable.contact_method == "EMAIL")
+            contacts = current.db(query).select(ctable.value,
+                                                orderby=ctable.priority)
+            if contacts:
+                values = [contact.value for contact in contacts]
+                return ",".join(values)
+
+        return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    def phone(self):
+        """ Mobile phone number(s) """
+        try:
+            person_id = self.hrm_human_resource.person_id
+        except AttributeError:
+            # not available
+            person_id = None
+        if person_id:
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ctable = s3db.pr_contact
+            query = (ctable.deleted == False) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ptable.id == person_id) & \
+                    (ctable.contact_method == "SMS")
+                    #(ctable.contact_method.belongs(["SMS", "HOME_PHONE", "WORK_PHONE"]))
+            contacts = current.db(query).select(ctable.value,
+                                                orderby=ctable.priority)
+            if contacts:
+                values = [contact.value for contact in contacts]
+                return ",".join(values)
+
+        return current.messages.NONE
+
+# =============================================================================
+class HRMProgrammeVirtualFields:
+    """ Virtual fields as dimension classes for reports """
+
+    extra_fields = ["person_id"]
 
     # -------------------------------------------------------------------------
     def programme(self):
