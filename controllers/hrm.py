@@ -760,7 +760,7 @@ def person():
         list_fields.append("status")
 
     configure(tablename,
-              list_fields)
+              list_fields=list_fields)
 
     # Configure person table
     # - hide fields
