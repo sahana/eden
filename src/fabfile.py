@@ -17,8 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from fabric.api import local, settings, abort, run, cd
+from fabric.api import local, settings, abort, run, cd, env
 from fabric.contrib.console import confirm
+from fabric.operations import put
+
+env.hosts = ['188.40.90.250']
 
 def test():
     """
@@ -30,16 +33,32 @@ def test():
     if result.failed and not confirm("Tests failed. Continue anyway?"):
         abort("Aborting at user request.")
 
-def deploy_app():
+
+def deploy(type):
     """
-    Automate the deployment in the e-cidadania VPS.
+    Automate the deployment in the e-cidadania VPS. First it checks if the
+    directory exists. If not, creates a new clone. If it exists, makes a pull
+    and updates the code. After that it copies a local version of the production
+    configuration.
+
+    Type: demo, app
     """
-    src_dir = '/home/oscarcp/deploy/ecidadania-app'
+    print "WARNING: Remember that this deployment is untested. For full testing\
+and deployment use 'full_deploy' function\n"
+    src_dir = '/home/oscarcp/deploy/ecidadania-%s/' % type
+    with settings(warn_only=True):
+        if run("test -d %s" % src_dir).failed:
+            run("git clone git://github.com/cidadania/e-cidadania.git %s" % src_dir)
     with cd(src_dir):
         run("git pull")
+        put('~/devel/conf/ecidadania/%s/settings/*' % type, 'src/e_cidadania/settings/')
 
-def deploy_demo():
+
+def full_deploy(type):
     """
-    Automate the deployment of the demo in the e-cidadania VPS.
+    Full deploy will make all the necessary tests to guarantee that the platform
+    cam be updated, and after that, it will deploy the selected version in the
+    server.
     """
-    
+    test()
+    deploy(type)
