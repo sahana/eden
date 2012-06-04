@@ -2780,7 +2780,8 @@ class S3Resource(object):
 
         vfltr = self.get_filter()
         if vfltr is not None:
-            rows = self.sqltable(*fields, as_rows=True)
+            fs = [f.name for f in fields]
+            rows = self.sqltable(fields=fs, as_rows=True) or []
         else:
             query = self.get_query()
             rows = current.db(query).select(left=left, *fields)
@@ -6136,12 +6137,15 @@ class S3TypeConverter:
                 return [cnv(a[0], item) for item in b]
             else:
                 return b
+        if isinstance(b, (list, tuple)):
+            cnv = cls.convert
+            return [cnv(a, item) for item in b]
         if isinstance(a, basestring):
             return cls._str(b)
-        if isinstance(a, int):
-            return cls._int(b)
         if isinstance(a, bool):
             return cls._bool(b)
+        if isinstance(a, int):
+            return cls._int(b)
         if isinstance(a, long):
             return cls._long(b)
         if isinstance(a, float):
