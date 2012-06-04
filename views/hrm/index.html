@@ -61,9 +61,4 @@
     </div>
 </div>
 </div>
-{{if session.s3.debug:}}
-<script src="/{{=request.application}}/static/scripts/S3/s3.search.js" type="text/javascript" charset="utf-8"></script>
-{{else:}}
-<script src="/{{=request.application}}/static/scripts/S3/s3.search.min.js" type="text/javascript" charset="utf-8"></script>
-{{pass}}
 {{include "dataTables.html"}}
