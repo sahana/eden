@@ -64,4 +64,15 @@ DATABASES = {
 #MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
 #ECIDADANIA_MODULES += ('debug_toolbar',)
 
+TEST_APPS = (
+    # Apps which form a part of the testing framework of e-cidadania.
+    'django_nose',
+)
 
+# Override django's default test runner to use Nose test runner instead.            
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = ['tests', '-s']
+
+NOSE_PLUGINS = [
+    'tests.nose_plugins.DatabaseFlushPlugin',
+]
