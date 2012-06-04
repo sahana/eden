@@ -6,7 +6,7 @@
 import unittest
 
 from gluon import current
-from s3.s3search import S3SearchSimpleWidget
+from s3.s3search import S3SearchSimpleWidget, S3SearchOptionsWidget
 
 # =============================================================================
 class TestS3SearchSimpleWidget(unittest.TestCase):
@@ -54,13 +54,35 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
     def setUp(self):
         self.resource = current.manager.define_resource("hrm", "human_resource")
 
-    def test_query(self):
+    def testQuery(self):
         # Test the query method
         pass
 
-    def test_widget(self):
+    def testWidget(self):
         # Test the widget method
-        pass
+
+        # Test the widget method with a virtual field and custom options
+        widget = S3SearchOptionsWidget("virtual_field",
+                                       options={})
+        output = widget.widget(self.resource, {})
+        self.assertEqual(str(output),
+                         str(SPAN(T("No options available"),
+                                  _class="no-options-available")))
+
+        # Test the widget method with a virtual field and custom options
+        widget = S3SearchOptionsWidget("virtual_field",
+                                       options={1:"One"})
+        output = widget.widget(self.resource, {})
+        self.assertEqual(str(output),
+                         str(TABLE(TR(TD(LABEL(INPUT(_name="human_resource_search_select_virtual_field",
+                                                     _type="checkbox",
+                                                     _value="1"),
+                                               "One"))),
+                                   _class="generic-widget",
+                                   _id="None_human_resource_search_select_virtual_field",
+                                   _name="human_resource_search_select_virtual_field")))
+
+
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -79,6 +101,7 @@ if __name__ == "__main__":
 
     run_suite(
         TestS3SearchSimpleWidget,
+        TestS3SearchOptionsWidget,
     )
 
 # END ========================================================================
