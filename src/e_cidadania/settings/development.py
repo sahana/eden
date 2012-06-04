@@ -20,7 +20,7 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# Registration mail settings. Please use a differente mail server and account
+# Registration mail settings. Please use a different mail server and account
 # during development than in production.
 #EMAIL_HOST = ""
 #EMAIL_PORT=

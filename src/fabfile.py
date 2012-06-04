@@ -23,7 +23,7 @@ from fabric.operations import put
 
 # Commands
 #
-# Tests only: fab test (inside the project dir)
+# Testing only: fab test (inside the project dir)
 # Straight deploy (no testing): fab deploy:TYPE (type can be 'demo' or 'app')
 # Full deploy (well tested): fab full_deploy:TYPE
 
@@ -58,6 +58,9 @@ and deployment use 'full_deploy' function\n"
     with cd(src_dir):
         run("git pull")
         put('~/devel/conf/ecidadania/%s/settings/*' % type, 'src/e_cidadania/settings/')
+        with cd('src/'):
+            run('./manage.py syncdb')
+            run('./manage.py collectstatic')
 
 
 def full_deploy(type):
