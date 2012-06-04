@@ -3083,12 +3083,13 @@ def pr_contacts(r, **attr):
                 "SMS": 1,
                 "EMAIL": 2,
                 "WORK_PHONE": 3,
-                "SKYPE": 4,
-                "RADIO": 5,
-                "TWITTER": 6,
-                "FACEBOOK": 7,
-                "FAX": 8,
-                "OTHER": 9
+                "HOME_PHONE": 4,
+                "SKYPE": 5,
+                "RADIO": 6,
+                "TWITTER": 7,
+                "FACEBOOK": 8,
+                "FAX": 9,
+                "OTHER": 10
             }
         return keys[key[0]]
     items.sort(key=mysort)
