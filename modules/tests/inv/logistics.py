@@ -98,7 +98,7 @@ The stock row will be added to the *end* of the list of rows
         rows.records.append(stock_row)
         return rows
 
-    def test_001_send(self):
+    def test_send_workflow(self):
         """ Tests for Send Workflow """
         data = [("site_id",
                  "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
