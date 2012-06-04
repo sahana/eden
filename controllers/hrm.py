@@ -445,11 +445,10 @@ def volunteer():
             query = (ptable.deleted == False) & \
                     ((ptable.organisation_id == organisation_id) | \
                       (ptable.organisation_id == None))
-            opts = db(query).select(ptable.id,
-                                    ptable.name)
+            opts = db(query).select(ptable.name)
             _dict = {}
             for opt in opts:
-                _dict[opt.id] = opt.name
+                _dict[opt.name] = opt.name
             return _dict
         widget = s3base.S3SearchOptionsWidget(
                             name="human_resource_search_programme",
