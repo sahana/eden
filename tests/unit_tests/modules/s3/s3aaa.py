@@ -8,6 +8,7 @@
 import unittest
 
 from gluon import current
+from s3aaa import S3EntityRoleManager
 
 # =============================================================================
 class S3AuthTests(unittest.TestCase):
@@ -2667,6 +2668,68 @@ class S3AccessibleQueryTests(unittest.TestCase):
         auth.s3_delete_role("TESTDVIADMIN")
 
 
+# =============================================================================
+class S3EntityRoleManagerTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self):
+
+        # Test-login as system administrator
+        auth.s3_impersonate("admin@example.com")
+
+        self.rm = S3EntityRoleManager()
+
+        self.user_id = auth.s3_get_user_id("normaluser@example.com")
+        self.org_id = 1
+
+        auth.s3_assign_role(self.user_id, "staff_reader", for_pe=self.org_id)
+        auth.s3_assign_role(self.user_id, "project_editor", for_pe=self.org_id)
+
+    def testGetAssignedRoles(self):
+        self.assertEqual(self.rm.get_assigned_roles(entity_id=self.org_id),
+                         {self.user_id: ["staff_reader", "project_editor"]})
+
+        self.assertEqual(self.rm.get_assigned_roles(entity_id=self.org_id,
+                                                    user_id=self.user_id),
+                         {self.user_id: ["staff_reader", "project_editor"]})
+
+        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
+                         {self.org_id: ["staff_reader", "project_editor"]})
+
+        self.assertRaises(RuntimeError, self.rm.get_assigned_roles)
+
+    def testUpdateRoles(self):
+        # test that the before/after works
+        before = ["staff_reader", "project_editor"]
+        after = ["survey_reader"]
+
+        # Give the user a new set of roles
+        self.rm.update_roles(self.user_id,
+                             self.org_id,
+                             before,
+                             after)
+        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
+                         {self.org_id: after})
+
+        # Reverse the changes
+        self.rm.update_roles(self.user_id,
+                             self.org_id,
+                             after,
+                             before)
+        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
+                         {self.org_id: before})
+
+    def tearDown(self):
+        auth.s3_retract_role(self.user_id, "staff_reader", for_pe=self.org_id)
+        auth.s3_retract_role(self.user_id, "project_editor", for_pe=self.org_id)
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -2688,7 +2751,8 @@ if __name__ == "__main__":
         S3PermissionTests,
         S3HasPermissionTests,
         S3AccessibleQueryTests,
-        S3DelegationTests
+        S3DelegationTests,
+        S3EntityRoleManagerTests
     )
 
 # END ========================================================================

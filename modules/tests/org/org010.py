@@ -3,6 +3,7 @@ __all__ = ["org010"]
 
 # Selenium WebDriver
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 from gluon import current
@@ -38,7 +39,7 @@ def as_admin():
     select_user()
 
     # Set some new access levels
-    driver.find_element_by_id('role_volvol_read').click()
+    driver.find_element_by_id('role_volvol_reader').click()
     driver.find_element_by_id('role_projectproject_data_entry').click()
     driver.find_element_by_id('role_projectproject_data_entry').submit()
 
@@ -53,7 +54,7 @@ def as_orgadmin():
     driver = browser
 
     login()
-    open_organisation_roles()
+    open_organisation_roles(action="Details")
     select_user()
 
     # Reset those access levels back to None
@@ -68,33 +69,28 @@ def make_user_orgadmin():
     browser = config.browser
     driver = browser
 
-    # Manage the system roles for Test User
-    driver.find_element_by_link_text("Administration").click()
-    driver.find_element_by_link_text("Manage Users & Roles").click()
+    browser.get("%s/admin/user" % config.url)
 
-    # Go to the next page of the list
-    driver.find_element_by_xpath("//a[@id='list_next']").click()
-    driver.find_element_by_xpath("//a[@href='/eden/admin/user/25/roles']").click()
+    # Open the roles page for text@example.com user account
+    dt_filter("test@example.com")
+    dt_action(action="Roles")
 
     # Give org admin rights to Test User on Timor-Leste Red Cross Society
-    driver.find_element_by_xpath("//select[@name='group_id']/option[@value='6']").click()
-    driver.find_element_by_xpath("//select[@name='pe_id']/optgroup[2]/option[@value='77']").click()
-    driver.find_element_by_xpath("//select[@name='pe_id']/optgroup[2]/option[@value='77']").submit()
+    Select(driver.find_element_by_name("group_id")).select_by_visible_text("Organisation Admin")
+    Select(driver.find_element_by_name("pe_id")).select_by_visible_text("Timor-Leste Red Cross Society (Organization)")
+    driver.find_element_by_id("submit_add_button").click()
 
-def open_organisation_roles():
+def open_organisation_roles(action="Open"):
     config = current.test_config
     browser = config.browser
     driver = browser
 
     # Go to the organisation list
-    driver.find_element_by_link_text("Organizations").click()
-    driver.find_element_by_link_text("List Organizations").click()
+    browser.get("%s/org/organisation" % config.url)
 
-    # Go to the next page of the list
-    driver.find_element_by_xpath("//a[@id='list_next']").click()
-
-    # Select Timor-Leste from the list
-    driver.find_element_by_xpath("//a[contains(@href, '/organisation/35')]").click()
+    # Open the Timor-Leste organisation
+    dt_filter("Timor-Leste")
+    dt_action(action=action)
 
     # Go to the organisations' User Roles tab
     driver.find_element_by_link_text("User Roles").click()
@@ -105,5 +101,5 @@ def select_user():
     driver = browser
 
     # Select a user from the drop-down list
-    driver.find_element_by_xpath("//select[@name='user']/option[@value='4']").click()
-    driver.find_element_by_xpath("//select[@name='user']/option[@value='4']").submit()
+    Select(driver.find_element_by_name("user")).select_by_visible_text("test@example.com")
+    driver.find_element_by_xpath("//input[@type='submit']").click()

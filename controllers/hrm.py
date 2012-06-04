@@ -640,7 +640,7 @@ def person():
     realms = auth.user is not None and auth.user.realms or []
     if ADMIN in realms or ORG_ADMIN in realms:
         set_method("pr", resourcename, method="roles",
-                   action=s3base.S3RoleMatrix())
+                   action=s3base.S3PersonRoleManager())
 
     if deployment_settings.has_module("asset"):
         # Assets as component of people
@@ -1198,9 +1198,9 @@ def training():
         redirect(URL(f="index"))
 
     roles = session.s3.roles or []
-    table = s3db.hrm_training
     if ADMIN not in roles and \
        EDITOR not in roles:
+        table = s3db.hrm_training
         hrtable = s3db.hrm_human_resource
         orgtable = s3db.org_organisation
         orgs = session.s3.hrm.orgs
@@ -1262,7 +1262,10 @@ def programme():
 
 # -----------------------------------------------------------------------------
 def programme_hours():
-    """ Volunteer Programme Hours Controller """
+    """
+        Volunteer Programme Hours Controller
+        - just meant for Imports
+    """
 
     mode = session.s3.hrm.mode
     if mode is not None:
