@@ -57,6 +57,7 @@ except ImportError:
     raise
 
 from gluon import *
+from gluon.languages import lazyT
 from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
