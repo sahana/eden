@@ -69,6 +69,9 @@ organisation_type_opts = {
 
 # =============================================================================
 class S3OrganisationModel(S3Model):
+    """
+        Organisations & their Sectors
+    """
 
     names = ["org_sector",
              "org_sector_id",
@@ -428,6 +431,10 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Facilities
+        add_component("org_site",
+                      org_organisation="organisation_id")
+
         # Staff
         add_component("hrm_human_resource",
                       org_organisation="organisation_id")
@@ -779,7 +786,9 @@ class S3OrganisationModel(S3Model):
 
 # =============================================================================
 class S3SiteModel(S3Model):
-
+    """
+        Site Super-Entity
+    """
 
     names = ["org_site",
              "org_site_id",
@@ -1657,7 +1666,7 @@ def org_rheader(r, tabs=[]):
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
-                    (T("Offices"), "office"),
+                    (T("Facilities"), "site"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
                     (T("User Roles"), "users"),

@@ -588,7 +588,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         # Dummy field
         opt_field = Storage(name=self.name,
                             requires=IS_IN_SET(options,
-                                                 multiple=True))
+                                               multiple=True))
         MAX_OPTIONS = 20
         if len(opt_list) > MAX_OPTIONS:
             # Collapse list Alphabetically into letter headers

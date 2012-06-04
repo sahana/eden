@@ -603,6 +603,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("email_required", True)
 
+    def get_hrm_deletable(self):
+        """
+            If set to True then HRM records are deletable rather than just being able to be marked as obsolete
+        """
+        return self.hrm.get("deletable", False)
+
     def get_hrm_show_staff(self):
         """
             If set to True then HRM module exposes the Staff resource
@@ -623,6 +629,15 @@ class S3Config(Storage):
             - all skills use the same skill_type & hence the same set of competency levels
         """
         return self.hrm.get("skill_types", False)
+
+    def get_hrm_experience(self):
+        """
+            Which table to use for showing the experience of HRs
+            - currently supported options are:
+                * experience (default)
+                * programme (used by IFRC)
+        """
+        return self.hrm.get("experience", "experience")
 
     # -------------------------------------------------------------------------
     # Project Tracking

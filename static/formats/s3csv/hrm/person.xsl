@@ -9,7 +9,7 @@
 
          Organisation...................required.....organisation name
          Branch.........................optional.....branch organisation name
-         Type...........................optional.....HR type (staff|volunteer)
+         Type...........................optional.....HR type (staff|volunteer|member)
          Office.........................optional.....office name (required for staff)
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
@@ -54,23 +54,21 @@
          Permanent L2...................optional.....person permanent address L2
          Permanent L3...................optional.....person permanent address L3
          Permanent L4...................optional.....person permanent address L4
-         Skills.........................optional.....comma-separated list of skills
+         Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
-         Projects.......................optional.....comma-separated list of Projects (not yet implemented)
-         Level..........................optional.....person education level of award (highest)
+         Education Level................optional.....person education level of award (highest)
          Degree Name....................optional.....person education award
          Major..........................optional.....person education major
          Grade..........................optional.....person education grade
          Year...........................optional.....person education year
          Institute......................optional.....person education institute
 
-
          Column headers looked up in labels.xml:
 
          PersonGender...................optional.....person gender
+         JobTitle.......................optional.....HR Job Title/Volunteer Role/Position
 
-         @todo:
-
+         @ToDo:
             - add more labels.xml lookups
             - fix location hierarchy:
                 - use country name in location_onaccept to match L0?
@@ -98,6 +96,12 @@
         </xsl:call-template>
     </xsl:variable>
 
+    <xsl:variable name="JobTitle">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">JobTitle</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <xsl:variable name="MemberType">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">MemberType</xsl:with-param>
@@ -116,6 +120,10 @@
     <xsl:key name="offices"
              match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
+
+    <!--<xsl:key name="jobs"
+             match="row"
+             use="col[@field=$JobTitle]"/>-->
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -150,9 +158,80 @@
                 <xsl:call-template name="Office"/>
             </xsl:for-each>
 
+            <!-- Job Roles
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('jobs', col[@field=$JobTitle])[1])]">
+                <xsl:call-template name="JobRole">
+                    <xsl:with-param name="type">resource</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each> -->
+
             <!-- Process all table rows for person records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="JobRole">
+
+        <xsl:param name="type"/>
+
+        <xsl:variable name="JobName">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$JobTitle"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <xsl:if test="$JobName!=''">
+            <!-- Create the Job Role -->
+            <xsl:choose>
+                <xsl:when test="$type='reference'">
+                    <reference field="job_role_id" resource="hrm_job_role">
+                        <resource name="hrm_job_role">
+                            <!--
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$JobName"/>
+                            </xsl:attribute>-->
+
+                            <data field="name">
+                                <xsl:value-of select="$JobName"/>
+                            </data>
+
+                            <!-- Link to Organisation to filter lookup lists -->
+                            <xsl:if test="$OrgName!=''">
+                                <reference field="organisation_id" resource="org_organisation">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="$OrgName"/>
+                                    </xsl:attribute>
+                                </reference>
+                            </xsl:if>
+                        </resource>
+                    </reference>
+                </xsl:when>
+                <xsl:otherwise>
+                    <resource name="hrm_job_role">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$JobName"/>
+                        </xsl:attribute>
+
+                        <data field="name">
+                            <xsl:value-of select="$JobName"/>
+                        </data>
+
+                        <!-- Link to Organisation to filter lookup lists -->
+                        <xsl:if test="$OrgName!=''">
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="$OrgName"/>
+                                </xsl:attribute>
+                            </reference>
+                        </xsl:if>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
 
     </xsl:template>
 
@@ -427,6 +506,7 @@
             </xsl:call-template>
         </xsl:if>
     </xsl:template>
+
     <!-- ****************************************************************** -->
     <xsl:template name="Member">
 
@@ -467,16 +547,19 @@
         <xsl:param name="BranchName"/>
         <xsl:param name="OfficeName"/>
         <xsl:param name="type"/>
-        <xsl:variable name="Projects" select="col[@field='Projects']"/>
 
         <resource name="hrm_human_resource">
 
             <!-- HR data -->
-            <data field="job_title"><xsl:value-of select="col[@field='Job Title']"/></data>
             <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             <xsl:if test="$type!=0">
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
+
+            <!-- Link to Job Role -->
+            <xsl:call-template name="JobRole">
+                <xsl:with-param name="type">reference</xsl:with-param>
+            </xsl:call-template>
 
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
@@ -500,12 +583,6 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-
-            <!-- Projects -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="$Projects"/></xsl:with-param>
-                <xsl:with-param name="arg">project</xsl:with-param>
-            </xsl:call-template>
 
         </resource>
 
@@ -554,35 +631,45 @@
         <xsl:if test="col[@field='Email']!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="EMAIL"/>
-                <data field="value"><xsl:value-of select="col[@field='Email']/text()"/></data>
+                <data field="value">
+                    <xsl:value-of select="col[@field='Email']/text()"/>
+                </data>
             </resource>
         </xsl:if>
 
         <xsl:if test="col[@field='Mobile Phone']!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="SMS"/>
-                <data field="value"><xsl:value-of select="col[@field='Mobile Phone']/text()"/></data>
+                <data field="value">
+                    <xsl:value-of select="col[@field='Mobile Phone']/text()"/>
+                </data>
             </resource>
         </xsl:if>
 
         <xsl:if test="col[@field='Office Phone']!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="WORK_PHONE"/>
-                <data field="value"><xsl:value-of select="col[@field='Office Phone']/text()"/></data>
+                <data field="value">
+                    <xsl:value-of select="col[@field='Office Phone']/text()"/>
+                </data>
             </resource>
         </xsl:if>
 
         <xsl:if test="col[@field='Skype']!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="SKYPE"/>
-                <data field="value"><xsl:value-of select="col[@field='Skype']/text()"/></data>
+                <data field="value">
+                    <xsl:value-of select="col[@field='Skype']/text()"/>
+                </data>
             </resource>
         </xsl:if>
 
         <xsl:if test="col[@field='Callsign']!=''">
             <resource name="pr_contact">
                 <data field="contact_method" value="RADIO"/>
-                <data field="value"><xsl:value-of select="col[@field='Callsign']/text()"/></data>
+                <data field="value">
+                    <xsl:value-of select="col[@field='Callsign']/text()"/>
+                </data>
             </resource>
         </xsl:if>
 
@@ -599,7 +686,10 @@
         <xsl:param name="l3"/>
         <xsl:param name="l4"/>
         
-        <xsl:variable name="tuid" select="concat('pr_address/', $address, '/', $type, '/', $l0, '/', $l1)"/>
+        <xsl:variable name="tuid" select="concat('pr_address/',
+                                                 $address, '/',
+                                                 $type, '/',
+                                                 $l0, '/', $l1)"/>
 
 
         <resource name="pr_address">

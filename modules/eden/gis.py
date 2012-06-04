@@ -3592,8 +3592,10 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
                 represent_text = lat_lon_represent(location)
             if location.parent:
                 if represent_text:
-                    represent_text = "%s, %s" % \
-                        (represent_text, parent_represent(location))
+                    parent_repr = parent_represent(location)
+                    if parent_repr:
+                        represent_text = "%s, %s" % \
+                            (represent_text, parent_repr)
                 else:
                     represent_text = parent_represent(location)
             if not represent_text:
@@ -3609,9 +3611,11 @@ def gis_location_represent_row(location, showlink=True, simpletext=False):
 
     return represent
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def gis_location_represent(record, showlink=True, simpletext=False):
-    """ Represent a Location given either its id or full Row """
+    """
+        Represent a Location given either its id or full Row
+    """
 
     if not record:
         return current.messages.NONE
@@ -3636,10 +3640,12 @@ def gis_location_represent(record, showlink=True, simpletext=False):
 
     return gis_location_represent_row(location, showlink, simpletext)
 
+# -----------------------------------------------------------------------------
 def gis_location_lx_represent(record):
     """
-    Represent a location, given either its id or full Row, as a simple string
+        Represent a location, given either its id or full Row, as a simple string
     """
+
     if not record:
         return current.messages.None
 
@@ -3650,7 +3656,10 @@ def gis_location_lx_represent(record):
         s3db = current.s3db
         cache = s3db.cache
         table = s3db.gis_location
-        location = db(table.id == record).select(cache=cache, limitby=(0, 1)).first()
+        location = db(table.id == record).select(table.id,
+                                                 table.name,
+                                                 cache=cache,
+                                                 limitby=(0, 1)).first()
 
     parents = Storage()
     parents = current.gis.get_parent_per_level(parents,

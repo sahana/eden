@@ -770,19 +770,25 @@ class S3PersonModel(S3Model):
         add_component("pr_save_search", pr_person="person_id")
         add_component("msg_subscription", pr_person="person_id")
 
-        # HR Record as component of Persons
-        add_component("hrm_human_resource", pr_person="person_id")
         add_component("member_membership", pr_person="person_id")
 
-        # Skills as components of Persons
+        # HR Record
+        add_component("hrm_human_resource", pr_person="person_id")
+
+        # Skills
         add_component("hrm_certification", pr_person="person_id")
         add_component("hrm_competency", pr_person="person_id")
         add_component("hrm_credential", pr_person="person_id")
-        add_component("hrm_experience", pr_person="person_id")
         # @ToDo: Double link table to show the Courses attended?
         add_component("hrm_training", pr_person="person_id")
 
-        # Assets as component of persons
+        # Experience
+        add_component("hrm_experience", pr_person="person_id")
+        add_component("hrm_programme_hours", pr_person=Storage(
+                                                name="hours",
+                                                joinby="person_id"))
+
+        # Assets
         add_component("asset_asset", pr_person="assigned_to_id")
 
         # ---------------------------------------------------------------------
@@ -845,6 +851,7 @@ class S3PersonModel(S3Model):
             ctable = s3db.pr_contact
 
             # Match by first name and last name, and if given, by email address
+            # and/or mobile phone number
             fname = "first_name" in item.data and item.data.first_name
             lname = "last_name" in item.data and item.data.last_name
             if fname and lname:
@@ -863,15 +870,25 @@ class S3PersonModel(S3Model):
                 query = (ptable.first_name.lower() == fname.lower()) & \
                         (ptable.last_name.lower() == lname.lower())
                 email = False
+                sms = False
                 for citem in item.components:
                     if citem.tablename == "pr_contact":
                         if "contact_method" in citem.data and \
-                        citem.data.contact_method == "EMAIL":
+                           citem.data.contact_method == "EMAIL":
                             email = citem.data.value
+                        elif "contact_method" in citem.data and \
+                             citem.data.contact_method == "SMS":
+                            sms = citem.data.value
                 if email != False:
                     query = query & \
-                            (ptable.pe_id == ctable.pe_id) & \
                             (ctable.value.lower() == email.lower())
+                if sms != False:
+                    # @ToDo: Compare like current.msg.sanitise_phone(sms)
+                    query = query & \
+                            (ctable.value == sms)
+                if sms or email:
+                    query = query & \
+                            (ptable.pe_id == ctable.pe_id)
 
             else:
                 # Try Initials (this is a weak test but works well in small teams)
@@ -2854,19 +2871,25 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     return pe_str
 
 # =============================================================================
-def pr_person_represent(person_id):
-    """ Representation """
+def pr_person_represent(person_id, showlink=False):
+    """
+        Represent a Person in option fields or list views
 
-    table = current.s3db.pr_person
+        @param showlink: whether to make the output into a hyperlink
+    """
 
     if not person_id:
         return current.messages.NONE
     if isinstance(person_id, dict):
-        return s3_fullname(person_id.keys())
+        name = s3_fullname(person_id.keys())
     else:
         name = current.cache.ram("pr_person_%s" % person_id,
                                  lambda: s3_fullname(person_id),
                                  time_expire=60)
+    if showlink:
+        # @ToDo: Use pr controller for other usecases
+        name = A(name,
+                 _href = URL(c="hrm", f="person", args=[person_id]))
     return name
 
 # =============================================================================

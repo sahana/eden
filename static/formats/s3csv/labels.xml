@@ -89,6 +89,12 @@
         </option>
     </column>
 
+    <column name="JobTitle">
+        <label>Job Title</label>
+        <label>Position</label>
+        <label>Volunteer Role</label>
+    </column>
+
     <column name="MemberType">
         <label>HRMType</label>
         <label>PersonType</label>

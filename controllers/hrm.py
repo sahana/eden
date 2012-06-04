@@ -34,11 +34,11 @@ def index():
                     insertable=False,
                     list_fields=["id",
                                  "person_id",
-                                 "job_title",
+                                 "job_role_id",
                                  "type",
                                  "site_id"])
 
-    response.s3.filter = org_filter
+    s3.filter = org_filter
     # Parse the Request
     r = s3base.S3Request(s3mgr, prefix="hrm", name="human_resource")
     # Pre-process
@@ -53,7 +53,7 @@ def index():
     if r.representation == "aadata":
         return output
     # Post-process
-    response.s3.actions = [dict(label=str(T(messages["UPDATE"])),
+    s3.actions = [dict(label=str(T(messages["UPDATE"])),
                                 _class="action-btn",
                                 url=URL(f="person",
                                         args=["human_resource"],
@@ -108,7 +108,7 @@ def human_resource():
     if group == "volunteer":
         _type = table.type
         _type.default = 2
-        response.s3.filter = (_type == 2)
+        s3.filter = (_type == 2)
         _type.readable = False
         _type.writable = False
         _location = table.location_id
@@ -119,14 +119,14 @@ def human_resource():
         table.site_contact.readable = False
         list_fields = ["id",
                        "person_id",
-                       "job_title",
+                       "job_role_id",
                        "organisation_id",
                        "location_id",
                        "status",
                       ]
         s3mgr.configure(tablename,
                         list_fields = list_fields)
-        table.job_title.label = T("Volunteer Role")
+        table.job_role_id.label = T("Volunteer Role")
         s3.crud_strings[tablename].update(
             title_create = T("Add Volunteer"),
             title_display = T("Volunteer Information"),
@@ -151,14 +151,14 @@ def human_resource():
         # Default to Staff
         _type = table.type
         _type.default = 1
-        response.s3.filter = (_type == 1)
+        s3.filter = (_type == 1)
         _type.readable = False
         _type.writable = False
         table.site_id.writable = True
         table.site_id.readable = True
         list_fields = ["id",
                        "person_id",
-                       "job_title",
+                       "job_role_id",
                        "organisation_id",
                        "site_id",
                        "site_contact",
@@ -174,8 +174,8 @@ def human_resource():
             title_upload = T("Import Staff & Volunteers"),
         )
         if "expiring" in request.get_vars:
-            response.s3.filter = response.s3.filter & \
-                                 (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
+            s3.filter = s3.filter & \
+                (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
             s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
             # Remove the big Add button
             s3mgr.configure(tablename,
@@ -217,15 +217,15 @@ def human_resource():
                 redirect(URL(f="person",
                              vars=vars))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=False)
+                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
                 if "msg" in deployment_settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
-                    response.s3.actions.append({
+                    s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"hrm_id": "[id]"}),
                         "_class": "action-btn",
@@ -235,7 +235,7 @@ def human_resource():
             # Map Popups
             output = hrm_map_popup(r)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller()
     return output
@@ -251,22 +251,20 @@ def staff():
 
     _type = table.type
     _type.default = 1
-    response.s3.filter = (_type == 1)
+    s3.filter = (_type == 1)
     _type.readable = False
     _type.writable = False
     table.site_id.writable = True
     table.site_id.readable = True
     list_fields = ["id",
                    "person_id",
-                   "job_title",
+                   "job_role_id",
                    "organisation_id",
                    "site_id",
                    "site_contact",
                    "end_date",
                    "status",
                   ]
-    s3mgr.configure(tablename,
-                    list_fields = list_fields)
     s3.crud_strings[tablename].update(
         title_create = T("Add Staff Member"),
         title_list = T("Staff"),
@@ -274,8 +272,8 @@ def staff():
         title_upload = T("Import Staff"),
     )
     if "expiring" in request.get_vars:
-        response.s3.filter = response.s3.filter & \
-                             (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
+        s3.filter = s3.filter & \
+            (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
         s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
         # Remove the big Add button
         s3mgr.configure(tablename,
@@ -285,6 +283,7 @@ def staff():
                                                    "search_method")
     human_resource_search._S3Search__advanced.pop(1)
     s3mgr.configure(tablename,
+                    list_fields = list_fields,
                     search_method = human_resource_search)
 
     def prep(r):
@@ -305,9 +304,11 @@ def staff():
                 field.readable = False
 
             if r.method == "create" and r.component is None:
-                field = table.type
-                field.readable = False
-                field.writable = False
+                # Don't redirect
+                pass
+            elif r.method == "delete":
+                # Don't redirect
+                pass
             elif r.id:
                 # Redirect to person controller
                 vars = {
@@ -317,25 +318,26 @@ def staff():
                 redirect(URL(f="person",
                              vars=vars))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=False)
+                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
                 if "msg" in deployment_settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
-                    response.s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"hrm_id": "[id]"}),
-                        "_class": "action-btn",
-                        "label": str(T("Send Message"))})
+                    s3.actions.append({
+                            "url": URL(f="compose",
+                                       vars = {"hrm_id": "[id]"}),
+                            "_class": "action-btn",
+                            "label": str(T("Send Message"))
+                        })
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
             output = hrm_map_popup(r)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller("hrm", "human_resource")
     return output
@@ -351,7 +353,7 @@ def volunteer():
 
     _type = table.type
     _type.default = 2
-    response.s3.filter = (_type == 2)
+    s3.filter = (_type == 2)
     _type.readable = False
     _type.writable = False
     _location = table.location_id
@@ -360,16 +362,29 @@ def volunteer():
     _location.label = T("Home Address")
     table.site_contact.writable = False
     table.site_contact.readable = False
+    table.essential.writable = False
+    table.essential.readable = False
+    table.job_role_id.label = T("Volunteer Role")
     list_fields = ["id",
                    "person_id",
-                   "job_title",
+                   "job_role_id",
                    "organisation_id",
                    "location_id",
-                   "status",
                   ]
-    s3mgr.configure(tablename,
-                    list_fields = list_fields)
-    table.job_title.label = T("Volunteer Role")
+    report_options = s3mgr.model.get_config(tablename,
+                                            "report_options")
+    if deployment_settings.get_hrm_experience() == "programme":
+        list_fields.append((T("Programme"), "programme"))
+        list_fields.append((T("Active?"), "active"))
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+        report_fields = report_options.rows
+        report_fields.append((T("Programme"), "programme"))
+        report_fields.append((T("Active?"), "active"))
+        report_options.rows = report_fields
+        report_options.cols = report_fields
+        report_options.facts = report_fields
+    else:
+        list_fields.append("status")
     s3.crud_strings[tablename].update(
         title_create = T("Add Volunteer"),
         title_display = T("Volunteer Information"),
@@ -389,18 +404,19 @@ def volunteer():
     # Type
     human_resource_search._S3Search__advanced.pop(1)
     s3mgr.configure(tablename,
+                    list_fields = list_fields,
+                    report_options = report_options,
                     search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
-            # Assume staff only between 12-81
+            # Assume volunteers only between 12-81
             s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-
             table = r.table
             table.site_id.comment = DIV(DIV(_class="tooltip",
                                             _title="%s|%s|%s" % (T("Facility"),
-                                                                 T("The site where this position is based."),
-                                                                 T("Enter some characters to bring up a list of possible matches."))))
+                                                                T("The site where this position is based."),
+                                                                T("Enter some characters to bring up a list of possible matches."))))
             if r.method != "read":
                 # Don't want to see in Create forms
                 # inc list_create (list_fields over-rides)
@@ -409,9 +425,11 @@ def volunteer():
                 field.readable = False
 
             if r.method == "create" and r.component is None:
-                field = table.type
-                field.readable = False
-                field.writable = False
+                # Don't redirect
+                pass
+            elif r.method == "delete":
+                # Don't redirect
+                pass
             elif r.id:
                 # Redirect to person controller
                 vars = {
@@ -421,25 +439,26 @@ def volunteer():
                 redirect(URL(f="person",
                              vars=vars))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=False)
+                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
                 if "msg" in deployment_settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
-                    response.s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"hrm_id": "[id]"}),
-                        "_class": "action-btn",
-                        "label": str(T("Send Message"))})
+                    s3.actions.append({
+                            "url": URL(f="compose",
+                                       vars = {"hrm_id": "[id]"}),
+                            "_class": "action-btn",
+                            "label": str(T("Send Message"))
+                       })
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
             output = hrm_map_popup(r)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller("hrm", "human_resource")
     return output
@@ -464,9 +483,9 @@ def hrm_map_popup(r):
               TD(s3_fullname(r.record.person_id))))
 
     # Job Title
-    if r.record.job_title:
-        append(TR(TD(B("%s:" % r.table.job_title.label)),
-                  TD(r.record.job_title)))
+    if r.record.job_role_id:
+        append(TR(TD(B("%s:" % r.table.job_role_id.label)),
+                  TD(r.table.job_role_id.represent(r.record.job_role_id))))
 
     # Organization (better with just name rather than Represent)
     # @ToDo: Make this configurable - some deployments will only see
@@ -584,21 +603,23 @@ def person():
         @ToDo: Volunteers should be redirected to vol/person?
     """
 
+    configure = s3mgr.configure
+    set_method = s3mgr.model.set_method
     super_key = s3mgr.model.super_key
 
     # Custom Method for Contacts
-    s3mgr.model.set_method("pr", resourcename,
-                           method="contacts",
-                           action=s3db.pr_contacts)
+    set_method("pr", resourcename,
+               method="contacts",
+               action=s3db.pr_contacts)
     # Custom Method for Identity
-    s3mgr.model.set_method("pr", resourcename,
-                           method="identity")
+    set_method("pr", resourcename,
+               method="identity")
     # Custom Method for Education
-    s3mgr.model.set_method("pr", resourcename,
-                           method="education")
+    set_method("pr", resourcename,
+               method="education")
     # Custom Method for Description
-    s3mgr.model.set_method("pr", resourcename,
-                           method="physical_description")
+    set_method("pr", resourcename,
+               method="physical_description")
     # hide all but those details that we want
     # Lock all the fields
     pr_desc_table = s3db.pr_physical_description
@@ -618,8 +639,8 @@ def person():
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
     if ADMIN in realms or ORG_ADMIN in realms:
-        s3mgr.model.set_method("pr", resourcename, method="roles",
-                               action=s3base.S3RoleMatrix())
+        set_method("pr", resourcename, method="roles",
+                   action=s3base.S3RoleMatrix())
 
     if deployment_settings.has_module("asset"):
         # Assets as component of people
@@ -627,10 +648,10 @@ def person():
                                   pr_person="assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
-        s3mgr.configure("asset_asset",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
+        configure("asset_asset",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
 
     group = request.get_vars.get("group", "staff")
     hr_id = request.get_vars.get("human_resource.id", None)
@@ -666,6 +687,9 @@ def person():
             table.site_id.readable = True
         else:
             # Volunteer
+            table.job_role_id.label = T("Volunteer Role")
+            table.essential.writable = False
+            table.essential.readable = False
             table.location_id.writable = True
             table.location_id.readable = True
             table.location_id.label = T("Home Address")
@@ -674,35 +698,44 @@ def person():
         table.site_id.readable = True
 
     if session.s3.hrm.mode is not None:
-        s3mgr.configure(tablename,
-                        list_fields=["id",
-                                     "organisation_id",
-                                     "type",
-                                     "job_title",
-                                     "status",
-                                     "location_id",
-                                     "site_id"])
+        list_fields=["id",
+                     "organisation_id",
+                     "type",
+                     "job_role_id",
+                     "location_id",
+                     "site_id"]
     else:
-        s3mgr.configure(tablename,
-                        list_fields=["id",
-                                     "type",
-                                     "job_title",
-                                     "status",
-                                     "location_id",
-                                     "site_id"])
+        list_fields=["id",
+                     "type",
+                     "job_role_id",
+                     "location_id",
+                     "site_id"]
+
+    if group == "volunteer" and \
+       deployment_settings.get_hrm_experience() == "programme":
+        list_fields.append((T("Programme?"), "programme"))
+        list_fields.append((T("Active?"), "active"))
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+    else:
+        list_fields.append("status")
+
+    configure(tablename,
+              list_fields)
 
     # Configure person table
     # - hide fields
     tablename = "pr_person"
     table = s3db[tablename]
+    if deployment_settings.get_hrm_experience() == "programme":
+        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
     table.pe_label.readable = False
     table.pe_label.writable = False
     table.missing.readable = False
     table.missing.writable = False
     table.age_group.readable = False
     table.age_group.writable = False
-    s3mgr.configure(tablename,
-                    deletable=False)
+    configure(tablename,
+              deletable=False)
 
     if group == "staff":
         s3.crud_strings[tablename].update(
@@ -710,17 +743,17 @@ def person():
         # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
         table.occupation.readable = False
         table.occupation.writable = False
-#        # Just have a Home Address
+        # Just have a Home Address
         table = s3db.pr_address
-#        table.type.default = 1
-#        table.type.readable = False
-#        table.type.writable = False
+        #table.type.default = 1
+        #table.type.readable = False
+        #table.type.writable = False
         _crud = s3.crud_strings.pr_address
         _crud.title_create = T("Add Home Address")
         _crud.title_update = T("Edit Home Address")
-#        s3mgr.model.add_component("pr_address",
-#                                  pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
-#                                                  multiple=False))
+        #s3mgr.model.add_component("pr_address",
+        #                          pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
+        #                                          multiple=False))
         # Default type for HR
         table = s3db.hrm_human_resource
         table.type.default = 1
@@ -740,34 +773,35 @@ def person():
             title_display = T("Personal Profile"),
             title_update = T("Personal Profile"))
         # People can view their own HR data, but not edit it
-        s3mgr.configure("hrm_human_resource",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
-        s3mgr.configure("hrm_certification",
-                        insertable = True,
-                        editable = True,
-                        deletable = True)
-        s3mgr.configure("hrm_credential",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
-        s3mgr.configure("hrm_competency",
-                        insertable = True,  # Can add unconfirmed
-                        editable = False,
-                        deletable = False)
-        s3mgr.configure("hrm_training",    # Can add but not provide grade
-                        insertable = True,
-                        editable = False,
-                        deletable = False)
-        s3mgr.configure("hrm_experience",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
-        s3mgr.configure("pr_group_membership",
-                        insertable = False,
-                        editable = False,
-                        deletable = False)
+        configure("hrm_human_resource",
+                  insertable = False,
+                  editable = False,
+                  deletable = False
+                  )
+        configure("hrm_certification",
+                  insertable = True,
+                  editable = True,
+                  deletable = True)
+        configure("hrm_credential",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+        configure("hrm_competency",
+                  insertable = True,  # Can add unconfirmed
+                  editable = False,
+                  deletable = False)
+        configure("hrm_training",    # Can add but not provide grade
+                  insertable = True,
+                  editable = False,
+                  deletable = False)
+        configure("hrm_experience",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+        configure("pr_group_membership",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
@@ -782,7 +816,7 @@ def person():
                 title_update = T("Volunteer Details"))
 
     # Upload for configuration (add replace option)
-    response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
     # Import pre-process
     def import_prep(data, group=group):
@@ -798,7 +832,7 @@ def person():
         tag = xml.TAG
         att = xml.ATTRIBUTE
 
-        if response.s3.import_replace:
+        if s3.import_replace:
             if tree is not None:
                 if group == "staff":
                     group = 1
@@ -839,10 +873,10 @@ def person():
                 if r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
-                    s3mgr.configure("asset_asset",
-                                    insertable = False,
-                                    editable = False,
-                                    deletable = False)
+                    configure("asset_asset",
+                              insertable = False,
+                              editable = False,
+                              deletable = False)
             else:
                 # Assume volunteers only between 12-81
                 r.table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
@@ -867,12 +901,12 @@ def person():
                              args=["search"], vars={"group":group}))
             if hr_id and r.component_name == "human_resource":
                 r.component_id = hr_id
-            s3mgr.configure("hrm_human_resource",
-                            insertable = False)
+            configure("hrm_human_resource",
+                      insertable = False)
             if not r.component_id or r.method in ("create", "update"):
                 address_hide(s3db.pr_address)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # CRUD post-process
     def postp(r, output):
@@ -884,7 +918,7 @@ def person():
                                   _id="add-btn",
                                   _class="action-btn")
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     # REST Interface
     if session.s3.hrm.orgname and mode is None:
@@ -909,7 +943,7 @@ def person_search():
     s3mgr.configure("hrm_human_resource",
                     search_method = s3db.hrm_autocomplete_search,
                    )
-    response.s3.prep = lambda r: r.representation == "json" and \
+    s3.prep = lambda r: r.representation == "json" and \
                                  r.method == "search"
     return s3_rest_controller(module, "human_resource")
 
@@ -917,7 +951,6 @@ def person_search():
 # Teams
 # =============================================================================
 def group():
-
     """
         Team controller
         - uses the group table from PR
@@ -940,8 +973,8 @@ def group():
 
     # Only show Relief Teams
     # Do not show system groups
-    response.s3.filter = (table.system == False) & \
-                         (_group_type == 3)
+    s3.filter = (table.system == False) & \
+                (_group_type == 3)
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
@@ -996,14 +1029,14 @@ def group():
                 update_url = URL(args=["[id]", "group_membership"])
                 s3_action_buttons(r, deletable=False, update_url=update_url)
                 if "msg" in deployment_settings.modules:
-                    response.s3.actions.append({
+                    s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),
                         "_class": "action-btn",
                         "label": str(T("Send Notification"))})
 
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     tabs = [
             (T("Team Details"), None),
@@ -1030,7 +1063,7 @@ def job_role():
         if mode is not None:
             r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -1138,7 +1171,7 @@ def certificate():
         if mode is not None:
             r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller(rheader=s3db.hrm_rheader)
     return output
@@ -1165,16 +1198,16 @@ def training():
         redirect(URL(f="index"))
 
     roles = session.s3.roles or []
+    table = s3db.hrm_training
     if ADMIN not in roles and \
        EDITOR not in roles:
-        ttable = s3db.hrm_training
         hrtable = s3db.hrm_human_resource
         orgtable = s3db.org_organisation
         orgs = session.s3.hrm.orgs
-        query = (ttable.person_id == hrtable.person_id) & \
+        query = (table.person_id == hrtable.person_id) & \
                 (hrtable.organisation_id == orgtable.id) & \
                 (orgtable.pe_id.belongs(orgs))
-        response.s3.filter = query
+        s3.filter = query
 
     output = s3_rest_controller()
     return output
@@ -1210,9 +1243,33 @@ def training_event():
                 msg_list_empty = T("Currently no Participants registered"))
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    return output
+
+# =============================================================================
+def programme():
+    """ Volunteer Programmes Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
+def programme_hours():
+    """ Volunteer Programme Hours Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
     return output
 
 # =============================================================================
