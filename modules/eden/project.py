@@ -3499,7 +3499,7 @@ class S3ProjectCommunityVirtualfields:
             return None
 
     def name(self):
-        return current.gis.gis_location_lx_represent(self.project_community.location_id)
+        return current.s3db.gis_location_lx_represent(self.project_community.location_id)
 
     def L0(self):
         parents = Storage()

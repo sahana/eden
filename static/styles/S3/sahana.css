@@ -1312,12 +1312,9 @@ div#last_update {
     background-position: -64px -16px;
 }
 .expanded {
-    /*position: static;*/
-    height: 16px;
-    width: 16px;
-    float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
+    white-space:nowrap; /* prevent the label from wrapping */
 }
 /* Grow Input */
 li input + a {
@@ -1748,11 +1745,22 @@ a:visited:after {
 
 /* Search Form */
 .search_select_letter_label {
-    margin: 10px 0px 0px 20px;
+    margin: 10px 0px 0px 7px;
     padding-left: 20px;
-    height: 16px;
     background: url( ../../img/icon_blue_plus15px.png ) no-repeat;
+    cursor: pointer;
 }
 .search_select_letter_label.expanded {
     background: url( ../../img/icon_blue_minus15px.png ) no-repeat;
+}
+.search_select_letter_widget {
+    margin-left: 2em;
+}
+.search_select_letter_widget label {
+    white-space: nowrap;
+}
+/* when S3SearchOptionsWidget has nothing to show */
+.no-options-available {
+    color: #aaa;
+    font-style: italic;
 }

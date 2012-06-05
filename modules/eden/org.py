@@ -69,6 +69,9 @@ organisation_type_opts = {
 
 # =============================================================================
 class S3OrganisationModel(S3Model):
+    """
+        Organisations & their Sectors
+    """
 
     names = ["org_sector",
              "org_sector_id",
@@ -428,6 +431,10 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Facilities
+        add_component("org_site",
+                      org_organisation="organisation_id")
+
         # Staff
         add_component("hrm_human_resource",
                       org_organisation="organisation_id")
@@ -779,7 +786,9 @@ class S3OrganisationModel(S3Model):
 
 # =============================================================================
 class S3SiteModel(S3Model):
-
+    """
+        Site Super-Entity
+    """
 
     names = ["org_site",
              "org_site_id",
@@ -999,7 +1008,7 @@ class S3FacilityModel(S3Model):
 
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
-        
+
         define_table = self.define_table
 
         # =============================================================================
@@ -1559,7 +1568,7 @@ def org_organisation_logo(id, type="png"):
 def org_site_represent(id, show_link=True):
     """ Represent a Facility in option fields or list views """
 
-    
+
     db = current.db
     s3db = current.s3db
     represent = current.messages.NONE
@@ -1657,10 +1666,10 @@ def org_rheader(r, tabs=[]):
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
-                    (T("Offices"), "office"),
+                    (T("Facilities"), "site"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
-                    (T("User Roles"), "users"),
+                    (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
                    ]
 
@@ -1714,7 +1723,7 @@ def org_rheader(r, tabs=[]):
         except:
             pass
         tabs.append((T("Attachments"), "document"))
-        tabs.append((T("User Roles"), "users"))
+        tabs.append((T("User Roles"), "roles"))
 
 
         logo = org_organisation_logo(record.organisation_id)
@@ -1789,8 +1798,8 @@ def org_organisation_controller():
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
                     manager.model.set_method(r.prefix, r.name,
-                                             method="users",
-                                             action=S3RoleMatrix())
+                                             method="roles",
+                                             action=S3OrgRoleManager())
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
@@ -1932,8 +1941,8 @@ def org_office_controller():
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
                     manager.model.set_method(r.prefix, r.name,
-                                             method="users",
-                                             action=S3RoleMatrix())
+                                             method="roles",
+                                             action=S3OrgRoleManager())
 
             if settings.has_module("inv"):
                 # Don't include Warehouses in the type dropdown

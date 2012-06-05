@@ -2269,7 +2269,7 @@ class CheckboxesWidgetS3(OptionsWidget):
         if totals == 0:
             T = current.T
             opts.append(TR(TD(SPAN(T("no options available"),
-                                   _style="color:#AAA; font-style:italic;"),
+                                   _class="no-options-available"),
                               INPUT(_type="hidden",
                                     _name=field.name,
                                     _value=None))))
@@ -2277,10 +2277,13 @@ class CheckboxesWidgetS3(OptionsWidget):
         for r_index in range(rows):
             tds = []
             for k, v in options[r_index * cols:(r_index + 1) * cols]:
-                tds.append(TD(INPUT(_type="checkbox", _name=field.name,
-                                   requires=attr.get("requires", None),
-                                   hideerror=True, _value=k,
-                                   value=(str(k) in values)), v))
+                tds.append(TD(LABEL(INPUT(_type="checkbox",
+                                          _name=field.name,
+                                          requires=attr.get("requires", None),
+                                          hideerror=True,
+                                          _value=k,
+                                          value=(str(k) in values)),
+                                          v)))
             opts.append(TR(tds))
 
         if opts:

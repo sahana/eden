@@ -51,7 +51,8 @@ if test:
     # Run specified Test after logging in
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    login(account="admin")
+    
+    #login(account="admin")
     print test
     suite = loadTests(globals()[test])
 
@@ -60,13 +61,10 @@ else:
 
     # Create Organisation
     suite = loadTests(org_create_organisation)
-
     # Shortcut
     addTests = suite.addTests
-    
     # Create Office
     addTests(loadTests(org_create_office))
-
     # Setup Staff
     addTests(loadTests(hrm_setup_staff))
     # Setup New Volunteer
@@ -75,6 +73,9 @@ else:
     addTests(loadTests(hrm_setup_trainingcourse))
     # Setup Training Event
     addTests(loadTests(hrm_setup_trainingevent))
+    # Inventory tests
+    addTests(loadTests(Logistics))
+    addTests(loadTests(Logistics2))
 
     # Assign Staff to Organisation
     #addTests(loadTests(hrm_assign_organisationstaff))
@@ -95,6 +96,6 @@ except:
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup
-browser.close()
+#browser.close()
 
 # END =========================================================================

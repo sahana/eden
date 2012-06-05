@@ -31,7 +31,4 @@
 {{except:}}{{pass}}
 </div>
 {{try:}}{{=dashboard}}{{except:}}{{pass}}
-{{if session.s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.js"></script>{{else:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.min.js"></script>{{pass}}
 {{include "dataTables.html"}}

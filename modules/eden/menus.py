@@ -810,6 +810,7 @@ class S3OptionsMenu:
 
         show_staff = lambda i: settings.get_hrm_show_staff()
         show_vols = lambda i: settings.get_hrm_show_vols()
+        show_programmes = lambda i: s3.hrm.mode is None and settings.get_hrm_experience() == "programme"
 
         return M(c="hrm")(
                     M("Staff", f="staff",
@@ -881,6 +882,12 @@ class S3OptionsMenu:
                         M("New Certificate", m="create"),
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
+                    ),
+                    M("Programmes", f="programme",
+                      check=show_programmes)(
+                        M("New Programme", m="create"),
+                        M("List All"),
+                        M("Import Hours", f="programme_hours", m="import"),
                     ),
                     M("Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),

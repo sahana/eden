@@ -136,6 +136,7 @@ class S3MembersModel(S3Model):
                        onaccept = self.member_onaccept,
                        list_fields=[
                                 "person_id",
+                                "organisation_id",
                                 "type",
                                 "start_date",
                                 "end_date",

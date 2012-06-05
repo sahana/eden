@@ -1,6 +1,7 @@
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 from selenium.common.exceptions import NoSuchElementException
+from tests import *
 
 
 class Logistics2(SeleniumUnitTest):
@@ -21,7 +22,7 @@ Helper method to add a inv_send record by the given user
 Simple helper function to get the waybill reference of the newly
 created inv_send row so it can be used to filter dataTables
 """
-        # The newly created inv_send will be the first record in the "after" list
+        # The newly created inv_recv will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_recv = result["after"].records[0]
             return new_inv_recv.inv_recv
@@ -32,7 +33,7 @@ created inv_send row so it can be used to filter dataTables
 Simple helper function to get the waybill reference of the newly
 created inv_send row so it can be used to filter dataTables
 """
-        # The newly created inv_send will be the first record in the "after" list
+        # The newly created inv_recv will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_recv = result["after"].records[0]
             return new_inv_recv.inv_recv.id
@@ -43,11 +44,12 @@ created inv_send row so it can be used to filter dataTables
 Simple helper function to get the waybill reference of the newly
 created inv_send row so it can be used to filter dataTables
 """
-        # The newly created inv_send will be the first record in the "after" list
+        # The newly created inv_recv will be the first record in the "after" list
         if len(result["after"]) > 0:
             new_inv_recv = result["after"].records[0]
             return new_inv_recv.inv_send.send_ref
         return None
+
 
     def helper_inv_track_item(self, user, send_id, data, removed=True):
         """
@@ -76,6 +78,11 @@ given send_id by the given user
             stock_after = result["after"].records[len(result["after"])-1].quantity
             self.assertTrue( stock_before == stock_after, "Warehouse stock has been adjusted, from %s to %s, nothing should have been removed" % (stock_before, stock_after))
         return result
+    
+    def helper_inv_recv_shipment(self, user, send_id, data, removed=True):
+        
+        self.login(account=user, nexturl="inv/recv_process/%s" % send_id)
+
 
     # dbcallback for the inv_track item create function
     def dbcallback_getStockLevels(self, table, data, rows):
@@ -95,8 +102,8 @@ The stock row will be added to the *end* of the list of rows
         rows.records.append(stock_row)
         return rows
 
-    def test_001_send(self):
-        """ Tests for Send Workflow """
+    def test_receive_workflow(self):
+        """ Tests for Receive Workflow """
         data = [("send_ref",
                  "WB_TEST_000001",
                 ),
@@ -128,3 +135,6 @@ The stock row will be added to the *end* of the list of rows
                 ),
                ]
         result = self.helper_inv_track_item("normal", send_id, data)
+        result = self.helper_inv_recv_shipment("normal", send_id, data)
+        
+        
