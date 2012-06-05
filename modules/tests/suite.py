@@ -72,10 +72,10 @@ else:
     # Setup Training Course
     addTests(loadTests(hrm_setup_trainingcourse))
     # Setup Training Event
-    addTests(loadTests(hrm_setup_trainingevent))
+    #addTests(loadTests(hrm_setup_trainingevent))
     # Inventory tests
-    addTests(loadTests(Logistics))
-    addTests(loadTests(Logistics2))
+    #addTests(loadTests(Logistics))
+    #addTests(loadTests(Logistics2))
 
     # Assign Staff to Organisation
     #addTests(loadTests(hrm_assign_organisationstaff))
