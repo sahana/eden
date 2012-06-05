@@ -153,6 +153,7 @@ class S3PersonEntity(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  list_fields = ["instance_type", "type", "pe_label"],
                   editable=False,
                   deletable=False,
                   listadd=False,
@@ -172,6 +173,7 @@ class S3PersonEntity(S3Model):
         add_component("pr_image", pr_pentity=pe_id)
         add_component("pr_contact", pr_pentity=pe_id)
         add_component("pr_note", pr_pentity=pe_id)
+        add_component("pr_role", pr_pentity=pe_id)
         add_component("pr_physical_description",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
@@ -205,7 +207,7 @@ class S3PersonEntity(S3Model):
         # Role (Affiliates Group)
         #
         role_types = {
-            1:T("Organizational Units"),  # business hierarchy (reporting units)
+            1:T("Organization Units"),    # business hierarchy (reporting units)
             2:T("Membership"),            # membership role
             3:T("Association"),           # other non-reporting role
             9:T("Other")                  # other role type

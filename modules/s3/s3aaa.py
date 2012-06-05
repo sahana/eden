@@ -6522,14 +6522,14 @@ class S3EntityRoleManager(S3Method):
                 (utable.deleted != True) & \
                 (utable.id == mtable.user_id)
 
-        if entity_id:
-            field = utable.id
-            query &= (mtable.pe_id == entity_id)
-
         if user_id:
             field = mtable.pe_id
             query &= (mtable.user_id == user_id) & \
                      (mtable.pe_id != None)
+
+        if entity_id:
+            field = utable.id
+            query &= (mtable.pe_id == entity_id)
 
         rows = current.db(query).select(utable.id,
                                         gtable.uuid,
@@ -6828,10 +6828,10 @@ class S3PersonRoleManager(S3EntityRoleManager):
             # filter out options that already have roles assigned
             filtered_options = []
             for entity_type, entities in options.items():
-                entities = {entity_id: entity_name for entity_id, entity_name
-                                                     in entities.items()
-                                                     if entity_id
-                                                     not in self.assigned_roles}
+                entities = Storage([(entity_id, entity_name)
+                                    for entity_id, entity_name
+                                        in entities.items()
+                                    if entity_id not in self.assigned_roles])
                 filtered_options.append((nice_name(entity_type), entities))
 
             object_field = Field("foreign_object",
