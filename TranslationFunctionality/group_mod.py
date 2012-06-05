@@ -66,8 +66,10 @@ def group_files(currentDir,curmod):
                      base = "special"
 		  else:
 		     base = os.path.splitext(f)[0]
-                     if base_dir=="s3":
-		       base = base[2:]	     
+                     if base_dir == "s3" and "s3" in base:
+		       base = base[2:]
+		     elif base_dir == "models" and "_" in base:
+		       base = base.split('_')[1]
 
 		  if base in d.keys():
 		     d[base].append(curFile)
@@ -102,11 +104,13 @@ def get_strings_by_module(module):
 
 	for f in fileList:
 	     if f.endswith(".py") == True:
+                  strings.append( ("File: ",f) )
 	          strings += getStrings.findstr(f,"ALL")
 	
 	fileList = d["special"]	  
         for f in fileList:
 	     if f.endswith(".py") == True:
+                  strings.append( ("File: ",f) )
 	          strings += getStrings.findstr(f,module)
 
 	return strings
