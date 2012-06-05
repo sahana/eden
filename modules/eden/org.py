@@ -265,25 +265,15 @@ class S3OrganisationModel(S3Model):
                                                                   zero = SELECT_LOCATION)),
                                    represent = lambda code: \
                                         gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                             Field("logo_bmp",
+                             Field("logo",
                                    "upload",
-                                   requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(200, 200),
-                                                                    error_message=T("Upload an image file (bmp), max. 200x200 pixels!"))),
+                                   label = T("Logo"),
+                                   requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
+                                                                    error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
                                                IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
-                                   label = T("Logo (bitmap)"),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Logo"),
-                                                                   T("Logo of the organization. This should be a bmp file and it should be no larger than 200x200")))
-                                  ),
-                             Field("logo_png",
-                                   "upload",
-                                   requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(200, 200),
-                                                                    error_message=T("Upload an image file (png), max. 200x200 pixels!"))),
-                                               IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
-                                   label = T("Logo (png)"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Logo"),
-                                                                   T("Logo of the organization. This should be a png file and it should be no larger than 200x200")))
+                                                                   T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400")))
                                   ),
                              Field("website", label = T("Website"),
                                    requires = IS_NULL_OR(IS_URL()),
@@ -417,6 +407,8 @@ class S3OrganisationModel(S3Model):
             )
 
         configure(tablename,
+                  onaccept = self.org_organisation_onaccept,
+                  ondelete = self.org_organisation_ondelete,
                   super_entity = "pr_pentity",
                   search_method=organisation_search,
                   deduplicate=self.organisation_deduplicate,
@@ -514,6 +506,7 @@ class S3OrganisationModel(S3Model):
                                                              tooltip=ADD_DONOR_HELP),
                                    ondelete = "SET NULL")
 
+
         # ---------------------------------------------------------------------
         # Organisation Branches
         #
@@ -565,6 +558,42 @@ class S3OrganisationModel(S3Model):
                     org_sector_id = sector_id,
                     org_organisation_id = organisation_id,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_onaccept(form):
+        """
+            If a logo was uploaded then create the extra versions.
+        """
+        current.manager.load("image_library")
+        newfilename = form.vars.logo_newfilename
+        if newfilename:
+            image = form.request_vars.logo
+            current.manager.load("image_library")
+            current.response.s3.image_resize(image.file,
+                                             newfilename,
+                                             image.filename,
+                                             (None, 60),
+                                             )
+            current.response.s3.image_modify(image.file,
+                                             newfilename,
+                                             image.filename,
+                                             (None, 60),
+                                             "bmp",
+                                             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_ondelete(row):
+        db = current.db
+        s3db = current.s3db
+        current.manager.load("image_library")
+
+        table = s3db.org_organisation
+        query = (table.id == row.get('id'))
+        deleted_row = db(query).select(table.logo,
+                                       limitby=(0, 1)).first()
+        current.response.s3.image_delete_all(deleted_row.logo)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1545,20 +1574,22 @@ def org_organisation_logo(id, type="png"):
         table = current.s3db.org_organisation
         query = (table.id == id)
         record = current.db(query).select(limitby = (0, 1)).first()
-    field = "logo_png"
+
+    current.manager.load("image_library")
+    format = None
     if type == "bmp":
-        field = "logo_bmp"
-    if record and record[field]:
+        format = "bmp"
+    size = (None, 60)
+    image = current.response.s3.image_represent(record.logo, size=size)
+    url_small = URL(c="default", f="download", args=image)
+    if record and image:
         if record.acronym == None or record.acronym == "":
             alt = "%s logo" % record.name
         else:
             alt = "%s logo" % record.acronym
-        logo = IMG(_src=URL(c="default",
-                                f="download",
-                                args=record[field],
-                                ),
+        logo = IMG(_src=url_small,
                        _alt=alt,
-                       _height = "60px",
+                       _height = 60,
                       )
         return logo
     return DIV() # no logo so return an empty div

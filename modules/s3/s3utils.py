@@ -736,7 +736,11 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
             if image:
                 image = image.image
 
+    size = (50,50)
     if image:
+        current.manager.load("image_library")
+        image = current.response.s3.image_represent(image, size=size)
+        size = current.response.s3.image_size(image, size)
         url = URL(c="default", f="download",
                   args=image)
     elif email:
@@ -749,7 +753,9 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
 
     return IMG(_src=url,
                _class=_class,
-               _height=50, _width=50)
+               _width=size[0],
+               _height=size[1],
+              )
 
 # =============================================================================
 def s3_auth_user_represent(id):

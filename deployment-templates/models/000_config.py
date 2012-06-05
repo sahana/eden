@@ -502,6 +502,12 @@ deployment_settings.modules = OrderedDict([
             restricted = True,
             module_type = 1
         )),
+    # Required for storing modified images
+    ("image", Storage(
+            name_nice = "Note no Controller exists",
+            description = "Modified Image",
+            restricted = True,
+        )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
             name_nice = T("Staff & Volunteers"),

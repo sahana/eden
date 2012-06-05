@@ -42,6 +42,8 @@ __all__ = ["S3PersonEntity",
            # Representation Methods
            "pr_get_entities",
            "pr_pentity_represent",
+           "pr_image_represent",
+           "pr_url_represent",
            "pr_person_represent",
            "pr_person_comment",
            "pr_rheader",
@@ -1561,19 +1563,13 @@ class S3PersonImageModel(S3Model):
                                                       _title="%s|%s" % (T("Title"),
                                                                         T("Specify a descriptive title for the image.")))),
                                   Field("image", "upload", autodelete=True,
-                                        represent = lambda image: image and \
-                                                   DIV(A(IMG(_src=URL(c="default", f="download",
-                                                                       args=image),
-                                                              _height=60, _alt=T("View Image")),
-                                                              _href=URL(c="default", f="download",
-                                                                        args=image))) or T("No Image"),
+                                        represent = pr_image_represent,
                                         comment =  DIV(_class="tooltip",
                                                        _title="%s|%s" % (T("Image"),
                                                                          T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
                                   Field("url",
                                         label = T("URL"),
-                                        represent = lambda url: url and \
-                                                                DIV(A(IMG(_src=url, _height=60), _href=url)) or T("None"),
+                                        represent = pr_url_represent,
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("URL"),
                                                                        T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
@@ -1607,6 +1603,7 @@ class S3PersonImageModel(S3Model):
         self.configure(tablename,
                        onaccept = self.pr_image_onaccept,
                        onvalidation = self.pr_image_onvalidation,
+                       ondelete = self.pr_image_ondelete,
                        mark_required = ["url", "image"],
                        list_fields=["id",
                                     "title",
@@ -1641,6 +1638,19 @@ class S3PersonImageModel(S3Model):
         newfilename = vars.image_newfilename
         if profile == 'False':
             profile = False
+
+        if newfilename:
+            current.manager.load("image_library")
+            current.response.s3.image_resize(form.request_vars.image.file,
+                                             newfilename,
+                                             form.request_vars.image.filename,
+                                             (50, 50)
+                                             )
+            current.response.s3.image_resize(form.request_vars.image.file,
+                                             newfilename,
+                                             form.request_vars.image.filename,
+                                             (None, 60)
+                                             )
 
         if newfilename and not url:
             # Provide the link to the file in the URL field
@@ -1686,6 +1696,49 @@ class S3PersonImageModel(S3Model):
             form.errors.image = \
             form.errors.url = T("Either file upload or image URL required.")
         return
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_image_ondelete(row):
+        db = current.db
+        s3db = current.s3db
+        current.manager.load("image_library")
+
+        table = s3db.pr_image
+        query = (table.id == row.get('id'))
+        deleted_row = db(query).select(table.image,
+                                       limitby=(0, 1)).first()
+        current.response.s3.image_delete_all(deleted_row.image)
+
+# =============================================================================
+def pr_image_represent(image):
+    """ Representation """
+
+    current.manager.load("image_library")
+
+    if not image:
+        return current.messages.NONE
+    url_full = URL(c="default", f="download", args=image)
+    size = (None, 60)
+    image = current.response.s3.image_represent(image, size=size)
+    url_small = URL(c="default", f="download", args=image)
+
+    return DIV(A(IMG(_src=url_small, _height=60), _href=url_full))
+
+# =============================================================================
+def pr_url_represent(url):
+    """ Representation """
+
+    current.manager.load("image_library")
+
+    if not url:
+        return current.messages.NONE
+    parts = url.split("/")
+    image = parts[-1]
+    size = (None, 60)
+    image = current.response.s3.image_represent(image, size=size)
+    url_small = URL(c="default", f="download", args=image)
+
+    return DIV(A(IMG(_src=url_small, _height=60), _href=url))
 
 # =============================================================================
 class S3PersonIdentityModel(S3Model):
