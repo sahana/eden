@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import sys
 import os
 import parser
@@ -15,6 +16,54 @@ outstr= ''
 class_name=''
 func_name = ''
 findent = -1
+
+
+
+def parseS3cfg(spmod,strings,entry,modlist):
+
+	global tflag,sflag,fflag,bracket,outstr,func_name
+
+	if isinstance(entry,list):
+            id = entry[0]
+            value = entry[1]
+            if isinstance(value,list):
+		    for element in entry:
+		        parseS3cfg(spmod,strings,element,modlist)
+            else:
+               if fflag == 1:
+                   func_name = value
+                   fflag = 0
+	       elif token.tok_name[id] == "NAME" and value == "def":
+                   fflag = 1
+                  
+               elif token.tok_name[id] == "NAME" and value == "T":
+                   sflag = 1
+
+               elif sflag == 1:
+	          if token.tok_name[id] == "LPAR":
+		     tflag=1
+		     bracket=1
+	          sflag=0
+
+	       elif tflag == 1:
+	            if token.tok_name[id] == "LPAR":
+	                 bracket+=1
+	                 if bracket>1:
+	                    outstr += '('
+	            elif token.tok_name[id] == "RPAR":
+                         bracket-=1
+	                 if bracket>0:
+	                     outstr += ')'
+	                 else:
+		            if spmod == "core":
+                               if '_' not in func_name or func_name.split('_')[1] not in modlist:
+	                         strings.append( (entry[2], outstr) )  
+                            elif '_' in func_name and func_name.split('_')[1] == spmod:
+	                         strings.append( (entry[2], outstr) )
+	                    outstr=''
+	                    tflag=0
+	            elif bracket>0:
+	                outstr += value
 
 def parseMenu(spmod,strings,entry,level):
 
@@ -54,7 +103,7 @@ def parseMenu(spmod,strings,entry,level):
 		   bracket=1
 	        sflag=0
 
-	    elif tflag:
+	    elif tflag == 1:
 	         if token.tok_name[id] == "LPAR":
 	               bracket+=1
 	               if bracket>1:
@@ -108,7 +157,7 @@ def parseAll(strings,entry):
 		   bracket=1
 	        sflag=0
 
-	    elif tflag:
+	    elif tflag == 1:
 	         if token.tok_name[id] == "LPAR":
 	               bracket+=1
 	               if bracket>1:
@@ -140,7 +189,7 @@ def parseAll(strings,entry):
 
 	       
 
-def findstr(fileName,spmod):
+def findstr(fileName,spmod,modlist):
     """
       Using the Parse Tree to extract the strings to be translated
     """
@@ -157,6 +206,19 @@ def findstr(fileName,spmod):
     fileContent = file.read()
     fileContent = fileContent.replace("\r","") + '\n'
 
+
+    global tflag,sflag,cflag,fflag,bracket,outstr,mflag,class_name,func_name,findent
+    tflag = 0
+    mflag = 0
+    cflag = 0
+    fflag = 0
+    sflag = 0
+    bracket = 0;
+    outstr= ''
+    class_name=''
+    func_name = ''
+    findent = -1
+
     try:
       st = parser.suite(fileContent)
       stList = parser.st2list(st,line_info=1)
@@ -164,14 +226,17 @@ def findstr(fileName,spmod):
       strings = []
       
       if spmod == "ALL" :
-        for element in stList:
-           parseAll(strings,element)
+         for element in stList:
+            parseAll(strings,element)
       else:
         if fileName.endswith("/eden/modules/eden/menus.py") == True :
-          for element in stList:
-           parseMenu(spmod,strings,element,0)
+           for element in stList:
+              parseMenu(spmod,strings,element,0)
+        elif fileName.endswith("/eden/modules/s3cfg.py") == True:
+           for element in stList:
+              parseS3cfg(spmod,strings,element,modlist)
 
       return strings
 
     except:
-       return [] 
+      return [] 
