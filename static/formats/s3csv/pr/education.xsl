@@ -12,7 +12,7 @@
          Last Name......................optional.....person last name (required in some deployments)
          Initials.......................optional.....person initials
          Email..........................required.....person email address
-         Level..........................optional.....person education level of award
+         Education Level................optional.....person education level of award
          Degree Name....................optional.....person education award
          Major..........................optional.....person education major
          Grade..........................optional.....person education grade

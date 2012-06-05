@@ -122,8 +122,19 @@ def human_resource():
                        "job_role_id",
                        "organisation_id",
                        "location_id",
-                       "status",
+                       (T("Email"), "email"),
+                       (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                       (T("Trainings"), "course"),
+                       (T("Certificates"), "certificate")
                       ]
+        if deployment_settings.get_hrm_experience() == "programme":
+            # Add Programme Virtual Fields
+            table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+            # Add VF to List Fields
+            list_fields.append((T("Programme"), "programme"))
+            list_fields.append((T("Active?"), "active"))
+        else:
+            list_fields.append("status")
         s3mgr.configure(tablename,
                         list_fields = list_fields)
         table.job_role_id.label = T("Volunteer Role")
@@ -162,7 +173,11 @@ def human_resource():
                        "organisation_id",
                        "site_id",
                        "site_contact",
-                       "end_date",
+                       (T("Email"), "email"),
+                       (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                       (T("Trainings"), "course"),
+                       (T("Certificates"), "certificate"),
+                       (T("Contract End Date"), "end_date"),
                        "status",
                       ]
         s3mgr.configure(tablename,
@@ -262,7 +277,11 @@ def staff():
                    "organisation_id",
                    "site_id",
                    "site_contact",
-                   "end_date",
+                   (T("Email"), "email"),
+                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                   (T("Trainings"), "course"),
+                   (T("Certificates"), "certificate"),
+                   (T("Contract End Date"), "end_date"),
                    "status",
                   ]
     s3.crud_strings[tablename].update(
@@ -370,6 +389,10 @@ def volunteer():
                    "job_role_id",
                    "organisation_id",
                    "location_id",
+                   (T("Email"), "email"),
+                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                   (T("Trainings"), "course"),
+                   (T("Certificates"), "certificate")
                   ]
     report_options = s3mgr.model.get_config(tablename,
                                             "report_options")
@@ -411,15 +434,21 @@ def volunteer():
         search_widget = ("human_resource_search_active", widget[0])
         human_resource_search._S3Search__advanced.insert(1, search_widget)
         def hrm_programme_opts():
+            """
+                Provide the options for the HRM programme search filter
+
+                @ToDo: S3resource-based version to use accessible_realm-based
+                       filtering rather than crude 'this user's org'
+            """
             ptable = s3db.hrm_programme
             organisation_id = auth.user.organisation_id
             query = (ptable.deleted == False) & \
-                    (ptable.organisation_id == organisation_id)
-            opts = db(query).select(ptable.id,
-                                    ptable.name)
+                    ((ptable.organisation_id == organisation_id) | \
+                      (ptable.organisation_id == None))
+            opts = db(query).select(ptable.name)
             _dict = {}
             for opt in opts:
-                _dict[opt.id] = opt.name
+                _dict[opt.name] = opt.name
             return _dict
         widget = s3base.S3SearchOptionsWidget(
                             name="human_resource_search_programme",
@@ -429,7 +458,7 @@ def volunteer():
                             options = hrm_programme_opts
                           ),
         search_widget = ("human_resource_search_programme", widget[0])
-        human_resource_search._S3Search__advanced.insert(5, search_widget)
+        human_resource_search._S3Search__advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename].update(
