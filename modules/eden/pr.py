@@ -274,6 +274,8 @@ class S3PersonEntity(S3Model):
                                   label = T("Role"),
                                   ondelete = "CASCADE")
 
+        add_component("pr_affiliation", pr_role="role_id")
+
         # ---------------------------------------------------------------------
         # Affiliation
         #
@@ -2826,9 +2828,13 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     pe_str = T("None (no such record)")
 
     pe_table = s3db.pr_pentity
-    pe = db(pe_table.pe_id == id).select(pe_table.instance_type,
-                                         pe_table.pe_label,
-                                         limitby=(0, 1)).first()
+    if isinstance(id, Row):
+        pe = id
+        id = pe.pe_id
+    else:
+        pe = db(pe_table.pe_id == id).select(pe_table.instance_type,
+                                             pe_table.pe_label,
+                                             limitby=(0, 1)).first()
     if not pe:
         return pe_str
 
