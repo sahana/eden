@@ -6709,8 +6709,15 @@ class S3OrgRoleManager(S3EntityRoleManager):
         fields = super(S3OrgRoleManager, self).get_form_fields()
 
         if not self.user:
-            realm_users = {k : v for k, v in self.realm_users.items() if k not in self.assigned_roles}
-            nonrealm_users = {k : v for k, v in self.objects.items() if k not in self.assigned_roles and k not in self.realm_users}
+            assigned_roles = self.assigned_roles
+            realm_users = Storage([(k, v)
+                                    for k, v in self.realm_users.items()
+                                    if k not in assigned_roles])
+
+            nonrealm_users = Storage([(k, v)
+                                       for k, v in self.objects.items()
+                                       if k not in assigned_roles and \
+                                          k not in self.realm_users])
 
             options = [("", ""),
                        (T("Users in my Organisations"), realm_users),
