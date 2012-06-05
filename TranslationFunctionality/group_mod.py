@@ -13,11 +13,11 @@ def init():
       mod = get_module_list()
 
       for m in mod:
-	      d[m] = []
+	   d[m] = []
       d["core"] = []
       d["special"] = []
 
-      rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git"]
+      rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git", "TranslationFunctionality"]
 
       group_files("../","core")
 
@@ -62,7 +62,7 @@ def group_files(currentDir,curmod):
 	  else:
 		  if vflag==1:
 		     base = curmod
-		  elif curFile.endswith("/eden/modules/eden/menus.py"):
+		  elif curFile.endswith("/eden/modules/eden/menus.py") or curFile.endswith("/eden/modules/s3cfg.py"):
                      base = "special"
 		  else:
 		     base = os.path.splitext(f)[0]
@@ -104,14 +104,14 @@ def get_strings_by_module(module):
 
 	for f in fileList:
 	     if f.endswith(".py") == True:
-                  strings.append( ("File: ",f) )
-	          strings += getStrings.findstr(f,"ALL")
+                  strings.append( ("File:",f) )
+	          strings += getStrings.findstr(f,"ALL",get_module_list())
 	
 	fileList = d["special"]	  
         for f in fileList:
 	     if f.endswith(".py") == True:
-                  strings.append( ("File: ",f) )
-	          strings += getStrings.findstr(f,module)
+                  strings.append( ("File:",f) )
+	          strings += getStrings.findstr(f,module,get_module_list())
 
 	return strings
 
@@ -126,7 +126,7 @@ def get_strings_by_file(filename):
            return []
 
 	if filename.endswith(".py") == True:
-	         return getStrings.findstr(filename, "ALL")
+	         return getStrings.findstr(filename, "ALL", get_module_list())
 	else:
 	        print "Please enter a '.py' file path"
 		return []
