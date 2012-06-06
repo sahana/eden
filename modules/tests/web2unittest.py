@@ -167,7 +167,8 @@ class SeleniumUnitTest(Web2UnitTest):
         return dt_data(row_list, add_header)
 
     # -------------------------------------------------------------------------
-    def dt_find(search = "",
+    def dt_find(self,
+                search = "",
                 row = None,
                 column = None,
                 cellList = None,
@@ -187,7 +188,8 @@ class SeleniumUnitTest(Web2UnitTest):
         return dt_links(row, tableID, quiet)
 
     # -------------------------------------------------------------------------
-    def dt_action(row = 1,
+    def dt_action(self,
+                  row = 1,
                   action = "Open",
                   column = 1,
                   tableID = "list",

@@ -39,6 +39,7 @@ __all__ = ["S3PersonEntity",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
+           "S3Image",
            # Representation Methods
            "pr_get_entities",
            "pr_pentity_represent",
@@ -47,6 +48,7 @@ __all__ = ["S3PersonEntity",
            "pr_person_represent",
            "pr_person_comment",
            "pr_rheader",
+           "pr_image_represent",
            # Custom Resource Methods
            "pr_contacts",
            "pr_profile",
@@ -73,9 +75,17 @@ __all__ = ["S3PersonEntity",
            "pr_descendants",
            # Internal Path Tools
            "pr_rebuild_path",
-           "pr_role_rebuild_path"]
+           "pr_role_rebuild_path",
+           # Utility Methods
+           "pr_image_modify",
+           "pr_image_resize",
+           "pr_image_size",
+           "pr_image_delete_all",
+           "pr_image_format",
+           ]
 
 import re
+import os
 
 import gluon.contrib.simplejson as json
 
@@ -1640,13 +1650,13 @@ class S3PersonImageModel(S3Model):
             profile = False
 
         if newfilename:
-            current.manager.load("image_library")
-            current.response.s3.image_resize(form.request_vars.image.file,
+            current.manager.load("pr_image_library")
+            current.response.s3.pr_image_resize(form.request_vars.image.file,
                                              newfilename,
                                              form.request_vars.image.filename,
                                              (50, 50)
                                              )
-            current.response.s3.image_resize(form.request_vars.image.file,
+            current.response.s3.pr_image_resize(form.request_vars.image.file,
                                              newfilename,
                                              form.request_vars.image.filename,
                                              (None, 60)
@@ -1701,25 +1711,25 @@ class S3PersonImageModel(S3Model):
     def pr_image_ondelete(row):
         db = current.db
         s3db = current.s3db
-        current.manager.load("image_library")
+        current.manager.load("pr_image_library")
 
         table = s3db.pr_image
         query = (table.id == row.get('id'))
         deleted_row = db(query).select(table.image,
                                        limitby=(0, 1)).first()
-        current.response.s3.image_delete_all(deleted_row.image)
+        current.response.s3.pr_image_delete_all(deleted_row.image)
 
 # =============================================================================
 def pr_image_represent(image):
     """ Representation """
 
-    current.manager.load("image_library")
+    current.manager.load("pr_image_library")
 
     if not image:
         return current.messages.NONE
     url_full = URL(c="default", f="download", args=image)
     size = (None, 60)
-    image = current.response.s3.image_represent(image, size=size)
+    image = current.response.s3.pr_image_represent(image, size=size)
     url_small = URL(c="default", f="download", args=image)
 
     return DIV(A(IMG(_src=url_small, _height=60), _href=url_full))
@@ -1728,7 +1738,7 @@ def pr_image_represent(image):
 def pr_url_represent(url):
     """ Representation """
 
-    current.manager.load("image_library")
+    current.manager.load("pr_image_library")
 
     if not url:
         return current.messages.NONE
@@ -4419,5 +4429,232 @@ def pr_role_rebuild_path(role_id, skip=[], clear=False):
         db(query).update(path=None)
 
     return path
+
+
+# =============================================================================
+class S3Image(S3Model):
+    """
+        Image Model
+
+        This is used to store modified copies of images held in other tables.
+        The modifications can be:
+         * different file type (bmp, jpeg, gif, png etc)
+         * different size (thumbnails)
+
+        This has been included in the pr module because:
+        pr uses it (but so do other modules), pr is a compulsory module
+        and this should also be compuslory but didn't want to create a
+        new compulsory module just for this.
+    """
+    names = ["pr_image_library",
+            ]
+
+    def model(self):
+
+        db = current.db
+        T = current.T
+        s3 = current.response.s3
+        define_table = self.define_table
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        tablename = "pr_image_library"
+
+        table = define_table(tablename,
+                             # Original image file name
+                             Field("original_name"),
+                             # New image file name
+                             Field("new_name",
+                                   "upload",
+                                   autodelete=True,
+                                   ),
+                             # New file format name
+                             Field("format"),
+                             # New requested file dimensions
+                             Field("width",
+                                   "integer",
+                                  ),
+                             Field("height",
+                                   "integer",
+                                  ),
+                             # New actual file dimensions
+                             Field("actual_width",
+                                   "integer",
+                                  ),
+                             Field("actual_height",
+                                   "integer",
+                                  )
+                            )
+
+    # -------------------------------------------------------------------------
+
+def pr_image_represent(image_name,
+                    format = None,
+                    size = (),
+                   ):
+    """
+        Get the image that matches the required image type
+
+        @param image_name: the name of the original image
+        @param format:     the file format required
+        @param size:       the size of the image (width, height)
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.pr_image_library
+    query = (table.original_name == image_name)
+    if format:
+        query = query & (table.format == format)
+    if size:
+        query = query & (table.width == size[0]) & (table.height == size[1])
+    image = db(query).select(limitby=(0, 1)).first()
+    if image:
+        return image.new_name
+    else:
+        return image_name
+
+def pr_image_modify(image_file,
+                 image_name,
+                 original_name,
+                 size = (None, None),
+                 to_format = None,
+                ):
+    """
+        Resize the image passed in and store on the table
+
+        @param image_file:    the image stored in a file object
+        @param image_name:    the name of the original image
+        @param original_name: the original name of the file
+        @param size:          the required size of the image (width, height)
+        @param to_format:     the format of the image (jpeg, bmp, png, gif, etc.)
+    """
+    # Import the specialist libraries
+    try:
+        from PIL import Image
+        from PIL import ImageOps
+        from PIL import ImageStat
+        PILImported = True
+    except(ImportError):
+        try:
+            import Image
+            import ImageOps
+            import ImageStat
+            PILImported = True
+        except(ImportError):
+            PILImported = False
+    if PILImported:
+        from tempfile import TemporaryFile
+        s3db = current.s3db
+        table = s3db.pr_image_library
+
+        fileName, fileExtension = os.path.splitext(original_name)
+
+        image_file.seek(0)
+        im = Image.open(image_file)
+        thumb_size = []
+        if size[0] == None:
+            thumb_size.append(im.size[0])
+        else:
+            thumb_size.append(size[0])
+        if size[1] == None:
+            thumb_size.append(im.size[1])
+        else:
+            thumb_size.append(size[1])
+        im.thumbnail(thumb_size, Image.ANTIALIAS)
+
+        if to_format:
+            if to_format.upper() == "JPG":
+                to_format = "JPEG"
+            elif to_format.upper() == "BMP":
+                im = im.convert("RGB")
+        else:
+            to_format = fileExtension[1:]
+        save_im_name = "%s.%s" % (fileName, to_format)
+        tempFile = TemporaryFile()
+        im.save(tempFile,to_format)
+        tempFile.seek(0)
+        newfile = table.new_name.store(tempFile,
+                                       save_im_name,
+                                       table.new_name.uploadfolder
+                                      )
+        # rewind the original file so it can be read, if required
+        image_file.seek(0)
+        image_id = table.insert(original_name = image_name,
+                                new_name = newfile,
+                                format = to_format,
+                                width = size[0],
+                                height = size[1],
+                                actual_width = im.size[0],
+                                actual_height = im.size[1],
+                               )
+        return True
+    else:
+        return False
+
+def pr_image_resize(image_file,
+                 image_name,
+                 original_name,
+                 size,
+                ):
+    """
+        Resize the image passed in and store on the table
+
+        @param image_file:    the image stored in a file object
+        @param image_name:    the name of the original image
+        @param original_name: the original name of the file
+        @param size:          the required size of the image (width, height)
+    """
+    return pr_image_modify (image_file,
+                         image_name,
+                         original_name,
+                         size = size
+                        )
+
+def pr_image_size(image_name, size):
+    db = current.db
+    s3db = current.s3db
+
+    table = s3db.pr_image_library
+    query = (table.new_name == image_name)
+    image = db(query).select(limitby=(0, 1)).first()
+    if image:
+        return (image.actual_width, image.actual_height)
+    else:
+        return size
+
+def pr_image_delete_all(original_image_name):
+    """
+        Method to delete all the images that belong to
+        the original file.
+    """
+    if deployment_settings.get_security_archive_not_delete():
+       return
+    db = current.db
+    table = current.s3db.pr_image_library
+    query = (table.original_name == original_image_name)
+    set = db(query)
+    set.delete_uploaded_files()
+    set.delete()
+
+def pr_image_format(image_file,
+                 image_name,
+                 original_name,
+                 to_format,
+                ):
+    """
+        Change the file format of the image passed in and store on the table
+
+        @param image_file:    the image stored in a file object
+        @param image_name:    the name of the original image
+        @param original_name: the original name of the file
+        @param to_format:     the format of the image (jpeg, bmp, png, gif, etc.)
+    """
+    return pr_image_modify (image_file,
+                         image_name,
+                         original_name,
+                         to_format = to_format
+                        )
 
 # END =========================================================================
