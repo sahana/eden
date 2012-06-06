@@ -9,9 +9,9 @@ class Logistics(SeleniumUnitTest):
         - e.g. via demo/IFRC_Train
     """
 
-    ########################################################################
+    # -------------------------------------------------------------------------
     # Functions which runs specific workflows
-    ########################################################################
+    # 
     def helper_inv_send(self, user, data):
         """
             Helper method to add a inv_send record by the given user
@@ -22,6 +22,7 @@ class Logistics(SeleniumUnitTest):
         s3_debug("WB reference: %s" % self.helper_inv_send_get_ref(result))
         return result
 
+    # -------------------------------------------------------------------------
     def helper_inv_track_send_item(self, user, send_id, data, removed=True):
         """
             Helper method to add a track item to the inv_send with the
@@ -52,6 +53,7 @@ class Logistics(SeleniumUnitTest):
             s3_debug ("Stock level before %s, stock level after %s" % (stock_before, stock_after))
         return result
 
+    # -------------------------------------------------------------------------
     def helper_inv_receive(self, user, data):
         """
             Helper method to add a inv_send record by the given user
@@ -61,6 +63,7 @@ class Logistics(SeleniumUnitTest):
         result = self.create(table, data)
         return result
 
+    # -------------------------------------------------------------------------
     def helper_inv_track_recv_item(self, user, recv_id, data, removed=True):
         """
             Helper method to add a track item to the inv_recv with the
@@ -77,6 +80,7 @@ class Logistics(SeleniumUnitTest):
         result = self.create(table, data)
         return result
 
+    # -------------------------------------------------------------------------
     def helper_inv_recv_shipment(self, user, recv_id, data):
         """
             Helper method that will receive the shipment, adding the
@@ -142,9 +146,9 @@ class Logistics(SeleniumUnitTest):
                 s3_debug("%s not accounted for." % line["text"])
             
 
-    ########################################################################
+    # -------------------------------------------------------------------------
     # Functions which extract data from the create results
-    ########################################################################
+    #
     def helper_inv_send_rec(self, result):
         """
             Simple helper function to get the newly created inv_send row
@@ -155,6 +159,7 @@ class Logistics(SeleniumUnitTest):
             return new_inv_send.inv_send
         return None
 
+    # -------------------------------------------------------------------------
     def helper_inv_send_get_id(self, result):
         """
             Simple helper function to get the record id of the newly
@@ -166,6 +171,7 @@ class Logistics(SeleniumUnitTest):
             return new_inv_send.inv_send.id
         return None
 
+    # -------------------------------------------------------------------------
     def helper_inv_send_get_ref(self, result):
         """
             Simple helper function to get the waybill reference of the newly
@@ -177,6 +183,7 @@ class Logistics(SeleniumUnitTest):
             return new_inv_send.inv_send.send_ref
         return None
 
+    # -------------------------------------------------------------------------
     def helper_inv_recv_rec(self, result):
         """
             Simple helper function to get the newly created inv_recv row
@@ -187,6 +194,7 @@ class Logistics(SeleniumUnitTest):
             return new_inv_recv.inv_recv
         return None
 
+    # -------------------------------------------------------------------------
     def helper_inv_recv_get_id(self, result):
         """
             Simple helper function to get the record id of the newly
@@ -198,9 +206,9 @@ class Logistics(SeleniumUnitTest):
             return new_inv_recv.inv_recv.id
         return None
 
-    ########################################################################
+    # -------------------------------------------------------------------------
     # Callback used to retrieve additional data to the create results
-    ########################################################################
+    #
     def dbcallback_getStockLevels(self, table, data, rows):
         """
             Callback to add the total in stock for the selected item.
@@ -218,6 +226,7 @@ class Logistics(SeleniumUnitTest):
         rows.records.append(stock_row)
         return rows
 
+    # -------------------------------------------------------------------------
     def test010_send_workflow(self):
         """ Tests for Send Workflow """
         data = [("site_id",
@@ -259,6 +268,7 @@ class Logistics(SeleniumUnitTest):
                ]
         result = self.helper_inv_track_send_item("normal", send_id, data)
 
+    # -------------------------------------------------------------------------
     def test020_receive_workflow(self):
         """ Tests for Receive Workflow """
         recv_data = [("send_ref",
@@ -302,3 +312,5 @@ class Logistics(SeleniumUnitTest):
                          })
         # Receive the shipment
         self.helper_inv_recv_shipment("normal", recv_id, item_list)
+
+# END =========================================================================
