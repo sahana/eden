@@ -1255,10 +1255,11 @@ def recv_process():
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
-        # exclude the quantity so that it is not deleted from the warehouse again
         row=Storage(track_item)
-        del row.quantity
-        s3.inv_track_item_onaccept( Storage(vars=row ) )
+        s3.inv_track_item_onaccept( Storage(vars=Storage(id = row.id ),
+                                            record = row,
+                                           )
+                                  )
 
     session.confirmation = T("Shipment Items Received")
     redirect(URL(c = "inv",
