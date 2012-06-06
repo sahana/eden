@@ -6308,12 +6308,6 @@ class S3EntityRoleManager(S3Method):
             context = self.get_context_data(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
-
-        #@todo: remove this if not required - James
-        if r.http == "GET" and \
-           self.method not in ("create", "update", "delete"):
-            current.session.s3.cancel = r.url()
-
         return context
 
     # -------------------------------------------------------------------------
