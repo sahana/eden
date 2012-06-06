@@ -911,6 +911,8 @@ class S3OptionsMenu:
         inv_recv_list = crud_strings.inv_recv.subtitle_list
         inv_recv_search = crud_strings.inv_recv.title_search
 
+        use_commit = lambda i: current.deployment_settings.get_req_use_commit()
+
         return M()(
                     #M("Home", f="index"),
                     M("Warehouses", c="inv", f="warehouse")(
@@ -931,9 +933,12 @@ class S3OptionsMenu:
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
-                        M("Monetization", c="inv", f="inv_item", vars=dict(report="mon")),
-                        M("Summary of Releases", c="inv", f="inv_item", vars=dict(report="rel")),
-                        M("Summary of Incoming Supplies", c="inv", f="inv_item", vars=dict(report="inc")),
+                        M("Monetization", c="inv", f="inv_item",
+                          vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="inv_item",
+                          vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="inv_item",
+                          vars=dict(report="inc")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
@@ -969,10 +974,9 @@ class S3OptionsMenu:
                         M("New", m="create"),
                         M("List All"),
                         M("List All Requested Items", f="req_item"),
-                        M("List All Requested Skills", f="req_skill"),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
-                    M("Commitments", c="req", f="commit")(
+                    M("Commitments", c="req", f="commit", check=use_commit)(
                         M("List All")
                     ),
                 )
@@ -1385,15 +1389,20 @@ class S3OptionsMenu:
     def req(self):
         """ REQ / Request Management """
 
+        settings = current.deployment_settings
+        use_commit = lambda i: settings.get_req_use_commit()
+        req_skills = lambda i: "People" in settings.get_req_req_type()
+
         return M(c="req")(
                     M("Requests", f="req")(
                         M("New", m="create"),
                         M("List All"),
                         M("List All Requested Items", f="req_item"),
-                        M("List All Requested Skills", f="req_skill"),
+                        M("List All Requested Skills", f="req_skill",
+                          check=req_skills),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
-                    M("Commitments", f="commit")(
+                    M("Commitments", f="commit", check=use_commit)(
                         M("List All")
                     ),
                 )

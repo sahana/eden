@@ -91,6 +91,9 @@ class S3RequestModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        add_component = self.add_component
+        set_method = self.set_method
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -137,6 +140,8 @@ class S3RequestModel(S3Model):
             req_type_opts[3] = settings.get_req_type_hrm_label()
         #if settings.has_module("cr"):
         #    req_type_opts[4] = T("Shelter")
+
+        use_commit = settings.get_req_use_commit()
 
         # ---------------------------------------------------------------------
         # Requests
@@ -286,6 +291,8 @@ class S3RequestModel(S3Model):
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
                                   req_status("commit_status",
+                                             readable = not use_commit,
+                                             writable = not use_commit,
                                              label = T("Commit. Status")),
                                   req_status("transit_status",
                                              label = T("Transit Status")),
@@ -300,10 +307,11 @@ class S3RequestModel(S3Model):
 
         if len(req_type_opts) == 1:
             k,v = req_type_opts.popitem()
-            table.type.default = k
-            table.type.requires = k
-            table.type.writable = False
-            table.type.readable = False
+            field = table.type
+            field.default = k
+            field.requires = k
+            field.writable = False
+            field.readable = False
 
         if not settings.get_req_use_req_number():
             table.req_ref.readable = False
@@ -350,7 +358,8 @@ class S3RequestModel(S3Model):
         if settings.get_req_use_req_number():
             list_fields.append("req_ref")
         list_fields.append("priority")
-        list_fields.append("commit_status")
+        if use_commit:
+            list_fields.append("commit_status")
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
         list_fields.append("date_required")
@@ -425,33 +434,33 @@ $(function() {
           T("Details field is required!"))
         )
 
-        # Custom Methos
-        self.set_method(tablename,
-                        method = "check",
-                        action=self.req_check)
+        # Custom Methods
+        set_method(tablename,
+                   method = "check",
+                   action=self.req_check)
 
         # Print Forms
-        self.set_method(tablename,
-                        method="form",
-                        action=self.req_form)
+        set_method(tablename,
+                   method="form",
+                   action=self.req_form)
         # Components
         # Documents as a component of Requests
-        self.add_component("req_document",
-                           req_req="req_id")
+        add_component("req_document",
+                      req_req="req_id")
 
         # Request Items as component of Requests
-        self.add_component("req_req_item",
-                           req_req=dict(joinby="req_id",
-                                        multiple=multiple_req_items))
+        add_component("req_req_item",
+                      req_req=dict(joinby="req_id",
+                                   multiple=multiple_req_items))
 
         # Request Skills as component of Requests
-        self.add_component("req_req_skill",
-                           req_req=dict(joinby="req_id",
-                                        multiple=multiple_req_items))
+        add_component("req_req_skill",
+                      req_req=dict(joinby="req_id",
+                                   multiple=multiple_req_items))
 
         # Commitment as a component of Requests
-        self.add_component("req_commit",
-                           req_req="req_id")
+        add_component("req_commit",
+                      req_req="req_id")
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -903,6 +912,7 @@ class S3RequestItemModel(S3Model):
         settings = current.deployment_settings
 
         quantities_writable = settings.get_req_quantities_writable()
+        use_commit = settings.get_req_use_commit()
 
 
         # -----------------------------------------------------------------
@@ -929,19 +939,14 @@ class S3RequestItemModel(S3Model):
                                         "double",
                                         label = T("Quantity Committed"),
                                         represent = self.req_qnty_commit_represent,
-#                                        represent = lambda quantity_commit: \
-#                                            req_quantity_represent(quantity_commit,
-#                                                                   "commit"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
-                                        writable = quantities_writable),
+                                        readable = use_commit,
+                                        writable = use_commit and quantities_writable),
                                   Field("quantity_transit",
                                         "double",
                                         label = T("Quantity in Transit"),
                                         represent = self.req_qnty_transit_represent,
-#                                        represent = lambda quantity_transit: \
-#                                            req_quantity_represent(quantity_transit,
-#                                                                   "transit"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
@@ -949,9 +954,6 @@ class S3RequestItemModel(S3Model):
                                         "double",
                                         label = T("Quantity Fulfilled"),
                                         represent = self.req_qnty_fulfil_represent,
-#                                        represent = lambda quantity_fulfil: \
-#                                            req_quantity_represent(quantity_fulfil,
-#                                                                   "fulfil"),
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
@@ -1196,56 +1198,55 @@ class S3RequestSkillModel(S3Model):
         req_id = self.req_req_id
 
         quantities_writable = settings.get_req_quantities_writable()
+        use_commit = settings.get_req_use_commit()
+
+        define_table = self.define_table
+        meta_fields = s3.meta_fields
 
         # -----------------------------------------------------------------
         # Request Skills
         #
         tablename = "req_req_skill"
-        table = self.define_table(tablename,
-                                  req_id(),
-                                  Field("task",
-                                        readable=False,
-                                        writable=False, # Populated from req_req 'Purpose'
-                                        label = T("Task Details")),
-                                  multi_skill_id(label=T("Required Skills"),
-                                                 comment = T("Leave blank to request an unskilled person")
-                                                ),
-                                  # @ToDo: Add a minimum competency rating?
-                                  Field("quantity",
-                                        "integer",
-                                        default = 1,
-                                        label = T("Number of People Required"),
-                                        notnull = True),
-                                  site_id,
-                                  Field("quantity_commit",
-                                        "integer",
-                                        label = T("Quantity Committed"),
-                                        #represent = lambda quantity_commit: \
-                                         #req_quantity_represent(quantity_commit,
-                                         #                       "commit"),
-                                        default = 0,
-                                        writable = quantities_writable),
-                                  Field("quantity_transit",
-                                        "integer",
-                                       label = T("Quantity in Transit"),
-                                        #represent = lambda quantity_transit: \
-                                        # req_quantity_represent(quantity_transit,
-                                        #                        "transit"),
-                                        default = 0,
-                                        writable = quantities_writable),
-                                  Field("quantity_fulfil",
-                                        "integer",
-                                        label = T("Quantity Fulfilled"),
-                                        #represent = lambda quantity_fulfil: \
-                                        #  req_quantity_represent(quantity_fulfil,
-                                        #                         "fulfil"),
-                                        default = 0,
-                                        writable = quantities_writable),
-                                  s3.comments(label = T("Task Details"),
-                                              comment = DIV(_class="tooltip",
-                                                            _title="%s|%s" % (T("Task Details"),
-                                                                             T("Include any special requirements such as equipment which they need to bring.")))),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             req_id(),
+                             Field("task",
+                                   readable=False,
+                                   writable=False, # Populated from req_req 'Purpose'
+                                   label = T("Task Details")),
+                             multi_skill_id(label=T("Required Skills"),
+                                            comment = T("Leave blank to request an unskilled person")
+                                           ),
+                             # @ToDo: Add a minimum competency rating?
+                             Field("quantity",
+                                   "integer",
+                                   default = 1,
+                                   label = T("Number of People Required"),
+                                   notnull = True),
+                             site_id,
+                             Field("quantity_commit",
+                                   "integer",
+                                   label = T("Quantity Committed"),
+                                   default = 0,
+                                   readable = use_commit,
+                                   writable = use_commit and quantities_writable),
+                             Field("quantity_transit",
+                                   "integer",
+                                  label = T("Quantity in Transit"),
+                                   #represent = lambda quantity_transit: \
+                                   # req_quantity_represent(quantity_transit,
+                                   #                        "transit"),
+                                   default = 0,
+                                   writable = quantities_writable),
+                             Field("quantity_fulfil",
+                                   "integer",
+                                   label = T("Quantity Fulfilled"),
+                                   default = 0,
+                                   writable = quantities_writable),
+                             s3.comments(label = T("Task Details"),
+                                         comment = DIV(_class="tooltip",
+                                                       _title="%s|%s" % (T("Task Details"),
+                                                                        T("Include any special requirements such as equipment which they need to bring.")))),
+                             *meta_fields())
 
         table.site_id.label = T("Requested From")
 
@@ -1277,10 +1278,10 @@ class S3RequestSkillModel(S3Model):
         #        deployment_setting
         #
         tablename = "project_task_req"
-        table = self.define_table(tablename,
-                                  task_id(),
-                                  req_id(),
-                                  *s3.meta_fields())
+        table = define_table(tablename,
+                             task_id(),
+                             req_id(),
+                             *meta_fields())
 
         self.configure("req_req_skill",
                        onaccept=req_skill_onaccept,
@@ -1913,6 +1914,8 @@ def req_rheader(r, check_page = False):
                 s3 = current.response.s3
                 settings = current.deployment_settings
 
+                use_commit = settings.get_req_use_commit()
+
                 tabs = [(T("Edit Details"), None)]
                 if record.type == 1 and settings.has_module("inv"):
                     if settings.get_req_multiple_req_items():
@@ -1923,7 +1926,7 @@ def req_rheader(r, check_page = False):
                 elif record.type == 3 and settings.has_module("hrm"):
                     tabs.append((T("People"), "req_skill"))
                 tabs.append((T("Documents"), "document"))
-                if settings.get_req_use_commit():
+                if use_commit:
                     tabs.append((T("Commitments"), "commit"))
 
                 if not check_page:
@@ -2005,14 +2008,21 @@ def req_rheader(r, check_page = False):
                                      TD(table.req_ref.represent(record.req_ref))
                                     )
                                   )
-                rData = TABLE(
-                               headerTR,
-                               TR(
+                if use_commit:
+                    row = TR(
                                 TH("%s: " % table.date_required.label),
                                 table.date_required.represent(record.date_required),
                                 TH( "%s: " % table.commit_status.label),
                                 table.commit_status.represent(record.commit_status),
-                                ),
+                                )
+                else:
+                    row = TR(
+                                TH("%s: " % table.date_required.label),
+                                table.date_required.represent(record.date_required),
+                                )
+                rData = TABLE(
+                               headerTR,
+                               row,
                                TR(
                                 TH( "%s: " % table.date.label),
                                 table.date.represent(record.date),
@@ -2047,12 +2057,9 @@ def req_match():
         requests as a tab for a site.
     """
 
-    response = current.response
-    request = current.request
-    manager = current.manager
-
     s3db = current.s3db
     s3 = current.response.s3
+    request = current.request
 
     settings = current.deployment_settings
 
@@ -2068,31 +2075,38 @@ def req_match():
         return output
 
     site_id = s3db[tablename][id].site_id
-    s3.actions = [dict(url = URL(c = "req",
-                                 f = "req",
-                                 args = ["[id]","check"],
-                                 vars = {"site_id": site_id}
-                                 ),
-                       _class = "action-btn",
-                       label = str(T("Check")),
-                       ),
-                  dict(url = URL(c = "req",
-                                 f = "commit_req",
-                                 args = ["[id]"],
-                                 vars = {"site_id": site_id}
-                                 ),
-                       _class = "action-btn",
-                       label = str(T("Commit")),
-                       ),
-                  dict(url = URL(c = "req",
-                                 f = "send_req",
-                                 args = ["[id]"],
-                                 vars = {"site_id": site_id}
-                                 ),
-                       _class = "action-btn",
-                       label = str(T("Send")),
-                       )
-                  ]
+    actions = [
+            dict(url = URL(c = "req",
+                           f = "req",
+                           args = ["[id]","check"],
+                           vars = {"site_id": site_id}
+                           ),
+                 _class = "action-btn",
+                 label = str(T("Check")),
+                 )
+            ]
+    if settings.get_req_use_commit():
+        actions.append(
+            dict(url = URL(c = "req",
+                           f = "commit_req",
+                           args = ["[id]"],
+                           vars = {"site_id": site_id}
+                           ),
+                 _class = "action-btn",
+                 label = str(T("Commit")),
+                )
+            )
+    actions.append(
+            dict(url = URL(c = "req",
+                           f = "send_req",
+                           args = ["[id]"],
+                           vars = {"site_id": site_id}
+                           ),
+                 _class = "action-btn",
+                 label = str(T("Send")),
+                )
+        )
+    s3.actions = actions
 
     if tablename == "org_office":
         rheader = s3db.org_rheader
@@ -2103,8 +2117,8 @@ def req_match():
     else:
         rheader = None
 
-    response.s3.filter = (s3db.req_req.site_id != site_id)
-    manager.configure("req_req", insertable=False)
+    s3.filter = (s3db.req_req.site_id != site_id)
+    current.manager.configure("req_req", insertable=False)
     output = current.rest_controller("req", "req", rheader = rheader)
 
     if tablename == "org_office" and isinstance(output, dict):
