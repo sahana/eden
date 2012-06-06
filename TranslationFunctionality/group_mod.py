@@ -62,7 +62,7 @@ def group_files(currentDir,curmod):
 	  else:
 		  if vflag==1:
 		     base = curmod
-		  elif curFile.endswith("/eden/modules/eden/menus.py") or curFile.endswith("/eden/modules/s3cfg.py"):
+		  elif curFile.endswith("/eden/modules/eden/menus.py") or curFile.endswith("/eden/modules/s3cfg.py") or curFile.endswith("/eden/models/000_config.py"):
                      base = "special"
 		  else:
 		     base = os.path.splitext(f)[0]

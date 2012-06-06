@@ -15,8 +15,62 @@ bracket = 0;
 outstr= ''
 class_name=''
 func_name = ''
+mod_name = ' '
 findent = -1
 
+
+
+def parseConfig(spmod,strings,entry,modlist):
+
+	global tflag,sflag,fflag,bracket,outstr,func_name,mod_name
+
+	if isinstance(entry,list):
+            id = entry[0]
+	    value = entry[1]
+            if isinstance(value,list):
+		    for element in entry:
+		        parseConfig(spmod,strings,element,modlist)
+            else:
+               if fflag == 1 and token.tok_name[id] == "NAME":
+                   func_name = value
+                   fflag = 0
+
+               elif token.tok_name[id] == "NAME" and value == "deployment_settings":
+                   fflag = 1
+
+	       elif tflag == 0 and func_name == "modules" and token.tok_name[id] == "STRING":
+                    if value[1:-1] in modlist:
+	                 mod_name = value[1:-1]
+
+               elif token.tok_name[id] == "NAME" and value == "T":
+                   sflag = 1
+
+               elif sflag == 1:
+	          if token.tok_name[id] == "LPAR":
+		     tflag=1
+		     bracket=1
+	          sflag=0
+
+	       elif tflag == 1:
+	            if token.tok_name[id] == "LPAR":
+	                 bracket+=1
+	                 if bracket>1:
+	                    outstr += '('
+	            elif token.tok_name[id] == "RPAR":
+                         bracket-=1
+	                 if bracket>0:
+	                     outstr += ')'
+	                 else:
+		            if spmod == "core":
+                               if func_name != "modules" and func_name not in modlist:
+	                         strings.append( (entry[2], outstr) )  
+                            elif (func_name == "modules" and mod_name == spmod) or (func_name == spmod):
+	                         strings.append( (entry[2], outstr) )
+	                    outstr=''
+	                    tflag=0
+	            elif bracket>0:
+	                outstr += value
+                
 
 
 def parseS3cfg(spmod,strings,entry,modlist):
@@ -207,7 +261,7 @@ def findstr(fileName,spmod,modlist):
     fileContent = fileContent.replace("\r","") + '\n'
 
 
-    global tflag,sflag,cflag,fflag,bracket,outstr,mflag,class_name,func_name,findent
+    global tflag,sflag,cflag,fflag,bracket,outstr,mflag,mod_name,class_name,func_name,findent
     tflag = 0
     mflag = 0
     cflag = 0
@@ -215,8 +269,9 @@ def findstr(fileName,spmod,modlist):
     sflag = 0
     bracket = 0;
     outstr= ''
-    class_name=''
+    class_name= ''
     func_name = ''
+    mod_name = ''
     findent = -1
 
     try:
@@ -235,8 +290,11 @@ def findstr(fileName,spmod,modlist):
         elif fileName.endswith("/eden/modules/s3cfg.py") == True:
            for element in stList:
               parseS3cfg(spmod,strings,element,modlist)
+	elif fileName.endswith("/eden/models/000_config.py") == True:
+	   for element in stList:
+	      parseConfig(spmod,strings,element,modlist)
 
       return strings
 
     except:
-      return [] 
+      return []  
