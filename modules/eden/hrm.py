@@ -377,7 +377,7 @@ class S3HRModel(S3Model):
                              "person_id$middle_name",
                              "person_id$last_name",
                              #"person_id$occupation",
-                             "job_title"]
+                             "job_role_id$name"]
                   )
 
     # -------------------------------------------------------------------------
