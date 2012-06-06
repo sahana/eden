@@ -377,7 +377,8 @@ class S3HRModel(S3Model):
                              "person_id$middle_name",
                              "person_id$last_name",
                              #"person_id$occupation",
-                             "job_title"]
+                             "job_role_id$name",
+                            ]
                   )
 
     # -------------------------------------------------------------------------
@@ -1551,16 +1552,27 @@ class S3HRSkillModel(S3Model):
                       # label=T("Participant's Office"),
                       # field="person_id$site_id"
                     # ),
-                    S3SearchLocationHierarchyWidget(
-                      name="training_search_L1",
-                      field="person_id$L1",
-                      cols = 3,
-                    ),
-                    S3SearchLocationHierarchyWidget(
-                      name="training_search_L2",
-                      field="person_id$L2",
-                      cols = 3,
-                    ),
+
+                    # The person_id$L1 and person_id$L2 fields are empty
+                    # No data no point in searching...
+                    #S3SearchLocationHierarchyWidget(
+                    #  name="training_search_L1",
+                    #  field="person_id$L1",
+                    #  cols = 3,
+                    #),
+                    #S3SearchLocationHierarchyWidget(
+                    #  name="training_search_L2",
+                    #  field="person_id$L2",
+                    #  cols = 3,
+                    #),
+
+                    S3SearchOptionsWidget(
+                        name="training_search_site",
+                        label=T("Facility"),
+                        field="training_event_id$site_id",
+                        represent ="%(name)s",
+                        cols = 2
+                      ),
                     S3SearchOptionsWidget(
                       name="training_search_course",
                       label=T("Course"),

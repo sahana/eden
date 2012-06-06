@@ -45,4 +45,3 @@ class hrm_setup_volunteer(SeleniumUnitTest):
         time.sleep(5)
         browser.find_element_by_id("ui-menu-2-0").click()
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_link_text("Home").click()

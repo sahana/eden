@@ -565,17 +565,16 @@ class S3OrganisationModel(S3Model):
         """
             If a logo was uploaded then create the extra versions.
         """
-        current.manager.load("image_library")
         newfilename = form.vars.logo_newfilename
         if newfilename:
             image = form.request_vars.logo
-            current.manager.load("image_library")
-            current.response.s3.image_resize(image.file,
+            current.manager.load("pr_image_library")
+            current.response.s3.pr_image_resize(image.file,
                                              newfilename,
                                              image.filename,
                                              (None, 60),
                                              )
-            current.response.s3.image_modify(image.file,
+            current.response.s3.pr_image_modify(image.file,
                                              newfilename,
                                              image.filename,
                                              (None, 60),
@@ -587,13 +586,13 @@ class S3OrganisationModel(S3Model):
     def org_organisation_ondelete(row):
         db = current.db
         s3db = current.s3db
-        current.manager.load("image_library")
+        current.manager.load("pr_image_library")
 
         table = s3db.org_organisation
         query = (table.id == row.get('id'))
         deleted_row = db(query).select(table.logo,
                                        limitby=(0, 1)).first()
-        current.response.s3.image_delete_all(deleted_row.logo)
+        current.response.s3.pr_image_delete_all(deleted_row.logo)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1575,12 +1574,12 @@ def org_organisation_logo(id, type="png"):
         query = (table.id == id)
         record = current.db(query).select(limitby = (0, 1)).first()
 
-    current.manager.load("image_library")
+    current.manager.load("pr_image_library")
     format = None
     if type == "bmp":
         format = "bmp"
     size = (None, 60)
-    image = current.response.s3.image_represent(record.logo, size=size)
+    image = current.response.s3.pr_image_represent(record.logo, size=size)
     url_small = URL(c="default", f="download", args=image)
     if record and image:
         if record.acronym == None or record.acronym == "":
