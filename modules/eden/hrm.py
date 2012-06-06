@@ -377,7 +377,8 @@ class S3HRModel(S3Model):
                              "person_id$middle_name",
                              "person_id$last_name",
                              #"person_id$occupation",
-                             "job_role_id$name"]
+                             "job_role_id$name",
+                            ]
                   )
 
     # -------------------------------------------------------------------------
@@ -1539,7 +1540,7 @@ class S3HRSkillModel(S3Model):
                                  "comments",
                                 ]
                     ),
-                    # Needs Virtual Field support in S3OptionsWidget
+                    # Needs options lookup function for virtual field
                     #S3SearchOptionsWidget(
                     #  name="training_search_organisation",
                     #  label=T("Organization"),
@@ -1551,6 +1552,7 @@ class S3HRSkillModel(S3Model):
                       # label=T("Participant's Office"),
                       # field="person_id$site_id"
                     # ),
+
                     S3SearchLocationHierarchyWidget(
                       name="training_search_L1",
                       field="person_id$L1",
@@ -1561,6 +1563,14 @@ class S3HRSkillModel(S3Model):
                       field="person_id$L2",
                       cols = 3,
                     ),
+
+                    S3SearchOptionsWidget(
+                        name="training_search_site",
+                        label=T("Training Facility"),
+                        field="training_event_id$site_id",
+                        represent ="%(name)s",
+                        cols = 2
+                      ),
                     S3SearchOptionsWidget(
                       name="training_search_course",
                       label=T("Course"),

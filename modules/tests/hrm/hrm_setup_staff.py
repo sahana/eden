@@ -47,5 +47,3 @@ class hrm_setup_staff(SeleniumUnitTest):
                        "Bucharest RFAAT Centre (Test) (Office)",
                        False)
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_link_text("Home").click()
-
