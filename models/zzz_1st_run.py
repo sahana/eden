@@ -16,7 +16,7 @@ if len(pop_list) > 0:
     # Add core data as long as at least one populate setting is on
 
     if deployment_settings.get_auth_opt_in_to_email():
-        table = db["pr_group"]
+        table = db.pr_group
         for team in deployment_settings.get_auth_opt_in_team_list():
             table.insert(name = team, group_type = 5)
 
@@ -26,8 +26,8 @@ if len(pop_list) > 0:
         # SMS every minute
         s3task.schedule_task("process_outbox",
                              vars={"contact_method":"SMS"},
-                             period=60,  # seconds
-                             timeout=60, # seconds
+                             period=120,  # seconds
+                             timeout=120, # seconds
                              repeats=0   # unlimited
                             )
         # Emails every 5 minutes
@@ -132,7 +132,8 @@ if len(pop_list) > 0:
         # L0 Countries
         import_file = os.path.join(request.folder,
                                    "private",
-                                   "import",
+                                   "templates",
+                                   "default",
                                    "countries.csv")
         table.import_from_csv_file(open(import_file, "r")) #, id_map=True)
         query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
@@ -158,6 +159,7 @@ if len(pop_list) > 0:
     # Ensure DB population committed when running through shell
     db.commit()
 
+    # -------------------------------------------------------------------------
     # Prepopulate import (from CSV)
 
     # Override authorization
@@ -187,14 +189,14 @@ if len(pop_list) > 0:
         if isinstance(pop_setting, str):
             path = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 pop_setting)
             if os.path.exists(path):
                 bi.perform_tasks(path)
             else:
                 path = os.path.join(request.folder,
                                     "private",
-                                    "prepopulate",
+                                    "templates",
                                     "demo",
                                     pop_setting)
                 if os.path.exists(path):
@@ -205,7 +207,7 @@ if len(pop_list) > 0:
             # Populate with the default data
             path = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 "default")
             bi.perform_tasks(path)
 
@@ -213,7 +215,7 @@ if len(pop_list) > 0:
             # Populate data for the regression tests
             path = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 "regression")
             bi.perform_tasks(path)
             print >> sys.stdout, "Installed Regression Test Data"
@@ -230,7 +232,7 @@ if len(pop_list) > 0:
             # Populate data for the user roles
             path = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 "roles")
             bi.perform_tasks(path)
             end = datetime.datetime.now()
@@ -242,7 +244,7 @@ if len(pop_list) > 0:
             # Populate data for user specific data
             path = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 "user")
             bi.perform_tasks(path)
             end = datetime.datetime.now()
@@ -257,7 +259,7 @@ if len(pop_list) > 0:
             """
             file = os.path.join(request.folder,
                                 "private",
-                                "prepopulate",
+                                "templates",
                                 "demo",
                                 "demo_folders.cfg")
             source = open(file, "r")
@@ -278,7 +280,7 @@ if len(pop_list) > 0:
                         directory = details[1].strip('" ')
                         path = os.path.join(request.folder,
                                             "private",
-                                            "prepopulate",
+                                            "templates",
                                             "demo",
                                             directory)
                         demo = directory

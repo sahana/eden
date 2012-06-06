@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
 """
     1st RUN:
-
-    - Run update check if needed.
+    - Run update_check if needed.
     - Import the S3 Framework Extensions
-    - If needed, copy deployment specific templates to the live installation.
-      Developers: note that the templates are version-controlled, while their
-                  site-specific copies are not (to avoid leaking of sensitive
-                  or irrelevant information into the repository).
-                  If you add something new to these files, you should also
-                  make the change at deployment-templates and commit it.
+    - If needed, copy deployment templates to the live installation.
 """
-
-import os
 
 # -----------------------------------------------------------------------------
 # Perform update checks - will happen in 1st_run or on those upgrades when new
 # dependencies have been added.
 
 # Increment this when new dependencies are added
-# This will be compared to the version in the 0000_update_check.py 'canary' file.
+# This will be compared to the version in the 0000_template.py 'canary' file.
 CURRENT_UPDATE_CHECK_ID = 2
 update_check_needed = False
 try:
@@ -27,59 +19,54 @@ try:
         update_check_needed = True
 except NameError:
     update_check_needed = True
+
 if update_check_needed:
-    # Run update checks -- these are the update_check() functions from each
-    # Python file in private/update_check that has such a function.
-    from gluon.fileutils import listdir
-    update_check_path_parts = [
-        "applications", request.application, "private", "update_check"]
-    update_check_path = os.path.join(*update_check_path_parts)
-    update_check_import_path = ".".join(update_check_path_parts)
+    # Run update checks
+    from s3_update_check import update_check
     errors = []
     warnings = []
     # Supply the current (Web2py) environment. Pick out only the items that are
     # safe for the check functions to combine with their own environments, i.e.
     # not anything of the form __x__.
     environment = dict((k, v) for (k, v) in globals().iteritems() if not k.startswith("__"))
-    for filename in listdir(update_check_path, expression = ".*\.py$"):
-        try:
-            exec "from %s.%s import update_check" % \
-                 (update_check_import_path, filename[0:-3])
-        except ImportError:
-            continue
-        messages = update_check(environment)
-        errors.extend(messages.get("error_messages", []))
-        warnings.extend(messages.get("warning_messages", []))
+    # @ToDo:
+    #   For now only the default config template is automatically available
+    #   - we want a single place to select the config template & prepopulate setting
+    #   - however don't want too many unnecessary interrupts...needs more planning
+    TEMPLATE = "default"
+    messages = update_check(environment, template=TEMPLATE)
+    errors.extend(messages.get("error_messages", []))
+    warnings.extend(messages.get("warning_messages", []))
 
     # Catch-all check for dependency errors.
-    # @ToDo: This does not satisfy the goal of calling out all the setup errors
-    #        at once -- it will die on the first fatal error encountered.
+    # NB This does not satisfy the goal of calling out all the setup errors
+    #    at once - it will die on the first fatal error encountered.
     try:
         import s3 as s3base
     except Exception, e:
         errors.extend(e.message)
 
-    # Report (non-fatal) warnings.
+    import sys
+
     if warnings:
+        # Report (non-fatal) warnings.
         prefix = "\n%s: " % T("WARNING")
         msg = prefix + prefix.join(warnings)
-        import sys
         print >> sys.stderr, msg
-    # Report errors and stop.
+
     if errors:
+        # Report errors and stop.
         prefix = "\n%s: " % T("ACTION REQUIRED")
         msg = prefix + prefix.join(errors)
-        import sys
         print >> sys.stderr, msg
         raise HTTP(500, body=msg)
 
     # Create or update the canary file.
     from gluon import portalocker
-    canary = open(
-        "applications/%s/models/0000_update_check.py" % request.application,
-        "w")
+    canary = open("applications/%s/models/0000_template.py" % request.application, "w")
     portalocker.lock(canary, portalocker.LOCK_EX)
     statement = "CANARY_UPDATE_CHECK_ID = %s" % CURRENT_UPDATE_CHECK_ID
+
     canary.write(statement)
     canary.close()
 
