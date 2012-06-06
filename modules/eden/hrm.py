@@ -592,7 +592,7 @@ class S3HRJobModel(S3Model):
                                   # Only included in order to be able to set owned_by_entity to filter appropriately
                                   organisation_id(
                                                   default = auth.user and \
-                                                            org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                            self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
                                                             None,
                                                   readable = False,
                                                   writable = False,
@@ -1289,7 +1289,7 @@ class S3HRSkillModel(S3Model):
                              # Only included in order to be able to set owned_by_entity to filter appropriately
                              organisation_id(
                                              default = auth.user and \
-                                                       org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                       self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
                                                        None,
                                              readable = False,
                                              writable = False,
@@ -2447,7 +2447,7 @@ class S3HRProgrammeModel(S3Model):
                                   # Only included in order to be able to set owned_by_entity to filter appropriately
                                   organisation_id(
                                                   default = auth.user and \
-                                                            org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                            self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
                                                             None,
                                                   readable = False,
                                                   writable = False,

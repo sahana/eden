@@ -92,10 +92,10 @@ def w_inv_item_select (item_repr,
             break
     # Now wait for the pack_item to be populated
     el_id = "%s_%s" % (tablename, "item_pack_id")
-    el = browser.find_element_by_id(el_id)
     giveup = 0.0
     sleeptime = 0.2
-    while el.find_elements_by_tag_name("option")[0].text == "":
+    # Note the find is done in the loop to avoid an occasional error with the browser cache
+    while browser.find_element_by_id(el_id).find_elements_by_tag_name("option")[0].text == "":
         # The pack drop down hasn't been populated yet so sleep
         time.sleep(sleeptime)
         giveup += sleeptime
@@ -114,10 +114,10 @@ def w_supply_select(item_repr,
     # Now wait for the pack_item to be populated
     browser = current.test_config.browser
     el_id = "%s_%s" % (tablename, "item_pack_id")
-    el = browser.find_element_by_id(el_id)
     giveup = 0.0
     sleeptime = 0.2
-    while el.find_elements_by_tag_name("option")[0].text == "":
+    # Note the find is done in the loop to avoid an occasional error with the browser cache
+    while browser.find_element_by_id(el_id).find_elements_by_tag_name("option")[0].text == "":
         # The pack drop down hasn't been populated yet so sleep
         time.sleep(sleeptime)
         giveup += sleeptime
