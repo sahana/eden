@@ -3297,7 +3297,7 @@ class S3Resource(object):
         default = (None, None)
 
         # Do not export the record if it already is in the export map
-        if tablename in export_map and record.id in export_map[tablename]:
+        if tablename in export_map and record[table._id] in export_map[tablename]:
             return default
 
         # Do not export the record if it hasn't been modified since msince
