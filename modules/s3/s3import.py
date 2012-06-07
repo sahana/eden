@@ -1424,7 +1424,19 @@ class S3Importer(S3CRUD):
         if errors:
             details.append(TFOOT(TR(TH("%s:" % T("Errors")),
                                    TD(UL([LI(e) for e in errors])))))
-        output.append(details)
+        if rows == [] and components == []:
+            # At this stage we don't have anything to display to see if we can
+            # find something to show. This could be the case when a table being
+            # imported is a resolver for a many to many relationship
+            refdetail = TABLE(_class="importItem [id]")
+            references = element.findall("reference")
+            for reference in references:
+                tuid = reference.get("tuid")
+                resource = reference.get("resource")
+                refdetail.append(TR(TD(resource), TD(tuid)))
+            output.append(refdetail)
+        else:
+            output.append(details)
         return str(output)
 
     # -------------------------------------------------------------------------

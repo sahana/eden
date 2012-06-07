@@ -359,7 +359,7 @@ class S3BulkImporter(object):
             if csvPath != "":
                 path = os.path.join(request.folder,
                                     "private",
-                                    "prepopulate",
+                                    "templates",
                                     csvPath)
             csv = os.path.join(path, csvFile)
             xslFileName = details[3].strip('" ')
@@ -405,7 +405,7 @@ class S3BulkImporter(object):
             if csvPath != "":
                 path = os.path.join(current.request.folder,
                                     "private",
-                                    "prepopulate",
+                                    "templates",
                                     csvPath)
             csv = os.path.join(path, csvFile)
         extraArgs = None

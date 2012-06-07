@@ -19,15 +19,21 @@ class hrm_setup_volunteer(SeleniumUnitTest):
         browser.find_element_by_id("pr_person_first_name").send_keys("John")
         browser.find_element_by_id("pr_person_last_name").clear()
         browser.find_element_by_id("pr_person_last_name").send_keys("Thompson")
-        browser.find_element_by_css_selector("img.ui-datepicker-trigger").click()
-        browser.find_element_by_link_text("7").click()
+        browser.find_element_by_id("pr_person_date_of_birth").click()
+        browser.find_element_by_id("pr_person_date_of_birth").clear()
+        browser.find_element_by_id("pr_person_date_of_birth").send_keys("1982-11-01")
         browser.find_element_by_id("pr_person_gender").send_keys("male")
         browser.find_element_by_id("pr_person_occupation").clear()
         browser.find_element_by_id("pr_person_occupation").send_keys("Social Worker")
         browser.find_element_by_id("pr_person_email").clear()
         browser.find_element_by_id("pr_person_email").send_keys("test@notavalidemail.com")
-        browser.find_element_by_id("hrm_human_resource_job_title").clear()
-        browser.find_element_by_id("hrm_human_resource_job_title").send_keys("Distributor")
+        el = browser.find_element_by_id("hrm_human_resource_job_role_id")
+        for option in el.find_elements_by_tag_name("option"):
+            if option.text == "Child Care Worker, Part Time":
+                option.click()
+                #To check afterwards
+                #raw_value = int(option.get_attribute("Child Care Worker, Part Time"))
+                break
         browser.find_element_by_id("hrm_human_resource_start_date").click()
         browser.find_element_by_id("hrm_human_resource_start_date").clear()
         browser.find_element_by_id("hrm_human_resource_start_date").send_keys("2012-04-17")
@@ -39,4 +45,3 @@ class hrm_setup_volunteer(SeleniumUnitTest):
         time.sleep(5)
         browser.find_element_by_id("ui-menu-2-0").click()
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_link_text("Home").click()

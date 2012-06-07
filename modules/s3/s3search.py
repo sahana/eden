@@ -767,9 +767,6 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
 
             @keyword comment: a comment for the search widget
         """
-        super(S3SearchLocationHierarchyWidget, self).__init__(field,
-                                                              name,
-                                                              **attr)
 
         gis = current.gis
 
@@ -786,6 +783,10 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
             field = level = config.search_level or "L0"
 
         self.field = field
+
+        super(S3SearchLocationHierarchyWidget, self).__init__(field,
+                                                              name,
+                                                              **attr)
 
         label = gis.get_location_hierarchy()[level]
 

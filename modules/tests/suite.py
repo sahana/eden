@@ -33,6 +33,9 @@ config.system_name = system_name
 config.timeout = 5 # seconds
 config.url = base_url
 
+base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+config.base_dir = base_dir
+
 browser = config.browser = webdriver.Firefox()
 browser.implicitly_wait(config.timeout)
 
@@ -60,7 +63,7 @@ else:
     # Run all Tests
 
     # Create Organisation
-    suite = loadTests(org_create_organisation)
+    suite = loadTests(Org_Organisation)
     # Shortcut
     addTests = suite.addTests
     # Create Office
@@ -72,10 +75,9 @@ else:
     # Setup Training Course
     addTests(loadTests(hrm_setup_trainingcourse))
     # Setup Training Event
-    addTests(loadTests(hrm_setup_trainingevent))
+    #addTests(loadTests(hrm_setup_trainingevent))
     # Inventory tests
     addTests(loadTests(Logistics))
-    addTests(loadTests(Logistics2))
 
     # Assign Staff to Organisation
     #addTests(loadTests(hrm_assign_organisationstaff))
@@ -96,6 +98,6 @@ except:
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup
-#browser.close()
+browser.close()
 
 # END =========================================================================

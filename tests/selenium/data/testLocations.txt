@@ -1,2 +1,0 @@
-L1, L1
-L1inL0, L1, United Kingdom (Country)

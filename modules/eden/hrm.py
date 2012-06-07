@@ -377,7 +377,8 @@ class S3HRModel(S3Model):
                              "person_id$middle_name",
                              "person_id$last_name",
                              #"person_id$occupation",
-                             "job_title"]
+                             "job_role_id$name",
+                            ]
                   )
 
     # -------------------------------------------------------------------------
@@ -590,7 +591,9 @@ class S3HRJobModel(S3Model):
                                         label=T("Name")),
                                   # Only included in order to be able to set owned_by_entity to filter appropriately
                                   organisation_id(
-                                                  default = auth.user and auth.user.organisation_id or None,
+                                                  default = auth.user and \
+                                                            self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                            None,
                                                   readable = False,
                                                   writable = False,
                                                   ),
@@ -1285,7 +1288,9 @@ class S3HRSkillModel(S3Model):
                                    label=T("Name")),
                              # Only included in order to be able to set owned_by_entity to filter appropriately
                              organisation_id(
-                                             default = auth.user and auth.user.organisation_id or None,
+                                             default = auth.user and \
+                                                       self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                       None,
                                              readable = False,
                                              writable = False,
                                              ),
@@ -1539,7 +1544,7 @@ class S3HRSkillModel(S3Model):
                                  "comments",
                                 ]
                     ),
-                    # Needs Virtual Field support in S3OptionsWidget
+                    # Needs options lookup function for virtual field
                     #S3SearchOptionsWidget(
                     #  name="training_search_organisation",
                     #  label=T("Organization"),
@@ -1551,6 +1556,7 @@ class S3HRSkillModel(S3Model):
                       # label=T("Participant's Office"),
                       # field="person_id$site_id"
                     # ),
+
                     S3SearchLocationHierarchyWidget(
                       name="training_search_L1",
                       field="person_id$L1",
@@ -1561,6 +1567,14 @@ class S3HRSkillModel(S3Model):
                       field="person_id$L2",
                       cols = 3,
                     ),
+
+                    S3SearchOptionsWidget(
+                        name="training_search_site",
+                        label=T("Training Facility"),
+                        field="training_event_id$site_id",
+                        represent ="%(name)s",
+                        cols = 2
+                      ),
                     S3SearchOptionsWidget(
                       name="training_search_course",
                       label=T("Course"),
@@ -1591,6 +1605,7 @@ class S3HRSkillModel(S3Model):
                   onaccept=self.hrm_training_onaccept,
                   ondelete=self.hrm_training_onaccept,
                   search_method=training_search,
+                  deduplicate=self.hrm_training_duplicate,
                   report_options=Storage(
                       search=[
                         S3SearchLocationHierarchyWidget(
@@ -2171,14 +2186,78 @@ S3FilterFieldChange({
             return
         if job.tablename == "hrm_training_event":
             table = job.table
+            start_date = "start_date" in job.data and job.data.start_date
+            if not start_date:
+                return
             course_id = "course_id" in job.data and job.data.course_id
             site_id = "site_id" in job.data and job.data.site_id
-            start_date = "start_date" in job.data and job.data.start_date
+            # Need to provide a range of dates as otherwise second differences prevent matches
+            # - assume that if we have multiple training courses of the same
+            #   type at the same site then they start at least a minute apart
+            #
+            # @ToDo: refactor into a reusable function
+            year = start_date.year
+            month = start_date.month
+            day = start_date.day
+            hour = start_date.hour
+            minute = start_date.minute
+            start_start_date = datetime.datetime(year, month, day, hour, minute)
+            if minute < 58:
+                minute = minute + 1
+            elif hour < 23:
+                hour = hour + 1
+                minute = 0
+            elif (day == 28 and month == 2) or \
+                 (day == 30 and month in [4, 6, 9, 11]) or \
+                 (day == 31 and month in [1, 3, 5, 7, 8, 10, 12]):
+                month = month + 1
+                day = 1
+                hour = 0
+                minute = 0
+            else:
+                day = day + 1
+                hour = 0
+                minute = 0
+            start_end_date = datetime.datetime(year, month, day, hour, minute)
 
             query = (table.course_id == course_id) & \
-                    (table.start_date == start_date)
+                    (table.start_date >= start_start_date) & \
+                    (table.start_date < start_end_date)
             if site_id:
                 query = query & (table.site_id == site_id)
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.data.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_training_duplicate(job):
+        """
+          This callback will be called when importing records
+          it will look to see if the record being imported is a duplicate.
+
+          @param job: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+
+          Rules for finding a duplicate:
+           - Look for a record with the same person and event
+        """
+
+        # ignore this processing if the id is set
+        if job.id:
+            return
+        if job.tablename == "hrm_training":
+            table = job.table
+            training_event_id = "training_event_id" in job.data and job.data.training_event_id
+            person_id = "person_id" in job.data and job.data.person_id
+
+            query = (table.person_id == person_id) & \
+                    (table.training_event_id == training_event_id)
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
@@ -2367,7 +2446,9 @@ class S3HRProgrammeModel(S3Model):
                                         label=T("Name")),
                                   # Only included in order to be able to set owned_by_entity to filter appropriately
                                   organisation_id(
-                                                  default = auth.user and auth.user.organisation_id or None,
+                                                  default = auth.user and \
+                                                            self.org_root_organisation(organisation_id=auth.user.organisation_id) or \
+                                                            None,
                                                   readable = False,
                                                   writable = False,
                                                   ),

@@ -14,4 +14,3 @@ class hrm_setup_trainingcourse(SeleniumUnitTest):
         browser.find_element_by_id("hrm_course_name").clear()
         browser.find_element_by_id("hrm_course_name").send_keys("Emergency First Aid")
         browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_link_text("Home").click()

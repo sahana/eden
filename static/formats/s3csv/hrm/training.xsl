@@ -18,15 +18,16 @@
     <xsl:include href="./person.xsl"/>
 
     <!-- ****************************************************************** -->
-    <!-- Index for faster processing -->
+    <!-- Index for faster processing & deduplication -->
     <xsl:key name="courses" match="row" use="col[@field='Course']"/>
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="sites" match="row" use="col[@field='Facility']"/>
-    <xsl:key name="events"
-             match="row"
-             use="concat(col[@field='Facility'], '/',
-                         col[@field='Course'], '/',
-                         col[@field='Start'])"/>
+    <xsl:key name="persons" match="row" use="concat(col[@field='First Name'], '/',
+                                                    col[@field='Last Name'], '/',
+                                                    col[@field='Email'])"/>
+    <xsl:key name="events" match="row" use="concat(col[@field='Facility'], '/',
+                                                   col[@field='Course'], '/',
+                                                   col[@field='Start'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -57,6 +58,15 @@
                                                                col[@field='Course'], '/',
                                                                col[@field='Start']))[1])]">
                 <xsl:call-template name="Event"/>
+            </xsl:for-each>
+
+            <!-- Persons -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('persons',
+                                                        concat(col[@field='First Name'], '/',
+                                                               col[@field='Last Name'], '/',
+                                                               col[@field='Email']))[1])]">
+                <xsl:call-template name="Person"/>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -100,17 +110,38 @@
 
     <!-- ****************************************************************** -->
     <!-- Person Record -->
-    <xsl:template match="row">
-
-        <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
-        <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
-        <xsl:variable name="Start" select="col[@field='Start']/text()"/>
+    <xsl:template name="Person">
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$PersonGender"/>
             </xsl:call-template>
         </xsl:variable>
+
+        <resource name="pr_person">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat(col[@field='First Name'], '/',
+                                             col[@field='Last Name'], '/',
+                                             col[@field='Email'])"/>
+            </xsl:attribute>
+            <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
+            <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            <xsl:if test="$gender!=''">
+                <data field="gender">
+                    <xsl:attribute name="value"><xsl:value-of select="$gender"/></xsl:attribute>
+                </data>
+            </xsl:if>
+            <xsl:call-template name="ContactInformation"/>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="row">
+
+        <xsl:variable name="SiteName" select="col[@field='Facility']/text()"/>
+        <xsl:variable name="CourseName" select="col[@field='Course']/text()"/>
+        <xsl:variable name="Start" select="col[@field='Start']/text()"/>
 
         <resource name="hrm_training">
             <reference field="training_event_id" resource="hrm_training_event">
@@ -121,16 +152,11 @@
                 </xsl:attribute>
             </reference>
             <reference field="person_id" resource="pr_person">
-                <resource name="pr_person">
-                    <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
-                    <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
-                    <xsl:if test="$gender!=''">
-                        <data field="gender">
-                            <xsl:attribute name="value"><xsl:value-of select="$gender"/></xsl:attribute>
-                        </data>
-                    </xsl:if>
-                    <xsl:call-template name="ContactInformation"/>
-                </resource>
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat(col[@field='First Name'], '/',
+                                                 col[@field='Last Name'], '/',
+                                                 col[@field='Email'])"/>
+                </xsl:attribute>
             </reference>
         </resource>
 

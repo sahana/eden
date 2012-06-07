@@ -6308,12 +6308,6 @@ class S3EntityRoleManager(S3Method):
             context = self.get_context_data(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
-
-        #@todo: remove this if not required - James
-        if r.http == "GET" and \
-           self.method not in ("create", "update", "delete"):
-            current.session.s3.cancel = r.url()
-
         return context
 
     # -------------------------------------------------------------------------
@@ -6522,14 +6516,14 @@ class S3EntityRoleManager(S3Method):
                 (utable.deleted != True) & \
                 (utable.id == mtable.user_id)
 
-        if entity_id:
-            field = utable.id
-            query &= (mtable.pe_id == entity_id)
-
         if user_id:
             field = mtable.pe_id
             query &= (mtable.user_id == user_id) & \
                      (mtable.pe_id != None)
+
+        if entity_id:
+            field = utable.id
+            query &= (mtable.pe_id == entity_id)
 
         rows = current.db(query).select(utable.id,
                                         gtable.uuid,
@@ -6709,8 +6703,15 @@ class S3OrgRoleManager(S3EntityRoleManager):
         fields = super(S3OrgRoleManager, self).get_form_fields()
 
         if not self.user:
-            realm_users = {k : v for k, v in self.realm_users.items() if k not in self.assigned_roles}
-            nonrealm_users = {k : v for k, v in self.objects.items() if k not in self.assigned_roles and k not in self.realm_users}
+            assigned_roles = self.assigned_roles
+            realm_users = Storage([(k, v)
+                                    for k, v in self.realm_users.items()
+                                    if k not in assigned_roles])
+
+            nonrealm_users = Storage([(k, v)
+                                       for k, v in self.objects.items()
+                                       if k not in assigned_roles and \
+                                          k not in self.realm_users])
 
             options = [("", ""),
                        (T("Users in my Organisations"), realm_users),
@@ -6821,10 +6822,10 @@ class S3PersonRoleManager(S3EntityRoleManager):
             # filter out options that already have roles assigned
             filtered_options = []
             for entity_type, entities in options.items():
-                entities = {entity_id: entity_name for entity_id, entity_name
-                                                     in entities.items()
-                                                     if entity_id
-                                                     not in self.assigned_roles}
+                entities = Storage([(entity_id, entity_name)
+                                    for entity_id, entity_name
+                                        in entities.items()
+                                    if entity_id not in self.assigned_roles])
                 filtered_options.append((nice_name(entity_type), entities))
 
             object_field = Field("foreign_object",
