@@ -2401,7 +2401,7 @@ class S3HRExperienceModel(S3Model):
         #
         return Storage(
                 )
-    
+
 # =============================================================================
 class S3HRProgrammeModel(S3Model):
     """
@@ -2536,7 +2536,7 @@ class S3HRProgrammeModel(S3Model):
                     hrm_programme_virtual_fields = HRMProgrammeVirtualFields,
                     hrm_programme_person_virtual_fields = HRMProgrammePersonVirtualFields,
                 )
-    
+
 # =============================================================================
 def hrm_vars(module):
     """ Set session and response variables """
