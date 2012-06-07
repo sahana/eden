@@ -216,7 +216,7 @@ class S3Msg(object):
         contact_keywords = ["email", "mobile", "facility", "clinical",
                             "security", "phone", "status", "hospital",
                             "person", "organisation"]
-        
+
         pkeywords = primary_keywords+contact_keywords
         keywords = string.split(message)
         pquery = []
@@ -232,11 +232,11 @@ class S3Msg(object):
                 pquery.append(match)
             else:
                 name = word
-            
+
         # ---------------------------------------------------------------------
         # Person Search [get name person phone email]
         if "person" in pquery:
-            
+
             table = s3db.pr_person
             rows = db(table.id > 0).select(table.pe_id,
                                            table.first_name,
@@ -249,8 +249,8 @@ class S3Msg(object):
                    (soundex(str(name)) == soundex(str(row.last_name))):
                     presult = dict(name = row.first_name, id = row.pe_id)
                     result.append(presult)
-                    break    
-            
+                    break
+
             if len(result) > 1:
                 return T("Multiple Matches")
             if len(result) == 1:
@@ -271,7 +271,7 @@ class S3Msg(object):
                                                  limitby=(0, 1)).first()
                     reply = "%s Mobile->%s" % (reply,
                                                recipient.value)
-                    
+
             if len(result) == 0:
                 return T("No Match")
 
@@ -291,8 +291,8 @@ class S3Msg(object):
                    (soundex(name) == soundex(str(row.aka1))) or \
                    (soundex(name) == soundex(str(row.aka2))):
                     result.append(row)
-                    break    
-            
+                    break
+
 
             if len(result) > 1:
                 return T("Multiple Matches")
@@ -327,8 +327,8 @@ class S3Msg(object):
                 if (soundex(str(name)) == soundex(str(row.name))) or \
                    (soundex(str(name)) == soundex(str(row.acronym))):
                     result.append(row)
-                    break    
-            
+                    break
+
             if len(result) > 1:
                 return T("Multiple Matches")
 
@@ -361,19 +361,19 @@ class S3Msg(object):
 
         db = current.db
         ltable = current.s3db.msg_log
-        
+
         query = (ltable.is_parsed == False) & \
                 (ltable.inbound == True)
         rows = db(query).select()
-        
+
         for row in rows:
             message = row.message
             reply = self.parse_message(message)
             db(ltable.id == row.id).update(reply = reply,is_parsed = True)
-            
+
         return
-    
-    
+
+
     # =========================================================================
     # Outbound Messages
     # =========================================================================
@@ -1292,7 +1292,7 @@ class S3Msg(object):
         #
         # ToDos from the original version:
         # @ToDo: If there is a need to collect from non-compliant mailers then
-        # suggest using the robust Fetchmail to collect & store in a more 
+        # suggest using the robust Fetchmail to collect & store in a more
         # compliant mailer!
         # @ToDo: This doesn't handle MIME attachments.
 
@@ -1642,7 +1642,8 @@ class S3Compose(S3CRUD):
         #ltable.priority.label = T("Priority")
 
         if "pe_id" in table:
-            records = resource.sqltable(as_list=True, start=None, limit=None)
+            records = resource.sqltable(fields=["pe_id"],
+                                        as_list=True, start=None, limit=None)
             if records and table.virtualfields:
                 # Check for join
                 tablename = table._tablename
@@ -1657,9 +1658,11 @@ class S3Compose(S3CRUD):
                     recipients = [record["pe_id"] for record in records if record["pe_id"]]
             else:
                 recipients = [record["pe_id"] for record in records if record["pe_id"]]
+
         elif "person_id" in table:
             # @ToDo: Optimise through a Join
-            records = resource.sqltable(as_list=True, start=None, limit=None)
+            records = resource.sqltable(fields=["person_id"],
+                                        as_list=True, start=None, limit=None)
             if records and table.virtualfields:
                 # Check for join
                 tablename = table._tablename
