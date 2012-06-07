@@ -1,2 +1,0 @@
-Example.com, eCom, Private, Logistics, United Kingdom, www.example.com, 44 21 78453434, ships planes cars we do them all 
-Example.net, eNet, International NGO, Recovery, United States, www.example.net, , 

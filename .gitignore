@@ -6,6 +6,7 @@
 /databases/*
 /errors/*
 /models/000_config.py
+/models/0000_template.py
 /models/0000_update_check.py
 /sessions/*
 /uploads/*

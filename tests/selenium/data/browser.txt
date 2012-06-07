@@ -1,7 +1,0 @@
-Firefox, *chrome
-Internet Explorer, *piiexplore
-Safari, *safari
-Chrome, *googlechrome
-Opera, *opera
-Konqueror, *konqueror
-Unlisted Browser, *custom

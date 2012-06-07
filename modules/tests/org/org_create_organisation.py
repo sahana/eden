@@ -80,7 +80,7 @@ class Org_Organisation(SeleniumUnitTest):
             # Add the logo to the org
             el = browser.find_element_by_id("org_organisation_logo")
             logo_path = os.path.join(self.config.base_dir,
-                                     "private", "prepopulate", "regression",
+                                     "private", "templates", "regression",
                                      data["logo"])
             s3_debug("Logo path: %s" % logo_path)
             el.send_keys(logo_path)
