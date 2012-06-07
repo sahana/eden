@@ -5544,15 +5544,16 @@ class S3FieldSelector:
         """
 
         if isinstance(field, Field):
-            return row[field]
+            f = field
+            colname = str(field)
         elif isinstance(field, S3FieldSelector):
             lf = field.resolve(resource)
+            f = lf.field
             tname = lf.tname
             fname = lf.fname
             colname = lf.colname
         elif isinstance(field, dict):
-            if field.field is not None:
-                return row[field.field]
+            f = field.field
             tname = field.get("tname", None)
             fname = field.get("fname", None)
             if not fname:
@@ -5560,7 +5561,12 @@ class S3FieldSelector:
             colname = field.colname
         else:
             return field
-        if fname in row:
+        if f is not None:
+            try:
+                return row[f]
+            except KeyError:
+                raise KeyError("Field not found: %s" % colname)
+        elif fname in row:
             value = row[fname]
         elif tname is not None and \
              tname in row and fname in row[tname]:
@@ -5881,7 +5887,9 @@ class S3ResourceQuery:
             l = extract(lfield)
             r = extract(rfield)
         except KeyError, SyntaxError:
-            _debug(sys.exc_info()[1])
+            if current.session.s3.debug:
+                from s3utils import s3_debug
+                s3_debug(sys.exc_info()[1])
             return None
 
         if isinstance(left, S3FieldSelector):
