@@ -32,6 +32,7 @@ __all__ = ["S3HRModel",
            "S3HRSkillModel",
            "S3HRExperienceModel",
            "S3HRProgrammeModel",
+           "hrm_service_record",
            "hrm_hr_represent",
            "hrm_human_resource_represent",
            #"hrm_position_represent",
@@ -557,6 +558,104 @@ class S3HRModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
+
+# ---------------------------------------------------------------------
+def hrm_service_record (r, **attr):
+    """
+        Generate a Volunteer Service Record
+    """
+
+    def callback(r):
+        # Get the volunteer record
+        s3db = current.s3db
+        db = current.db
+
+        T = current.T
+
+        table = s3db.hrm_human_resource
+        prtable = s3db.pr_person
+        itable = s3db.pr_image
+        if r.record:
+            vol = r.record
+        else:
+            vol = table[r.id]
+        record = DIV()
+        # Build the person details 
+        person = DIV()
+        # logo  name         avatar
+        # logo  organistion  avatar
+        # details (three columns)
+        # contact  contact contact
+        # identity identity Description
+        logo = s3db.org_organisation_logo(vol.organisation_id)
+        vol_name = table.person_id.represent(vol.person_id)
+        org_name = table.organisation_id.represent(vol.organisation_id)
+        query = (prtable.id == vol.person_id) & \
+                (itable.pe_id == prtable.pe_id) & \
+                (itable.profile == True)
+#        set = db(query)
+#        rows = set.select()
+#        user = rows.first()
+#        query = (itable.pe_id == user.pe_id) & \
+#                (itable.profile == True)
+        image = db(query).select(itable.image,
+                                 limitby=(0, 1)).first()
+        if image:
+            image = image.image
+            size = (160, None)
+            image = s3db.pr_image_represent(image, size=size)
+            size = s3db.pr_image_size(image, size)
+            url = URL(c="default",
+                      f="download",
+                      args=image
+                     )
+            avatar = IMG(_src=url,
+                         _width=size[0],
+                         _height=size[1],
+                       )
+        innerTable = TABLE(TR(TD(T("Volunteer Service Record"))),
+                           TR(TD(vol_name)),
+                           TR(TD(org_name))
+                          )
+        table = TABLE(TR(TD(logo),
+                         TD(innerTable),
+                         TD(avatar),
+                        )
+                     )
+        
+        person.append(table)
+
+        record.append(person)
+
+        return record
+
+    s3db = current.s3db
+    table = s3db.hrm_human_resource
+
+    record = table[r.id]
+    if record.type == 2:
+        # volunteer
+        list_fields = ["person_id$first_name",
+                      ]
+        exporter = r.resource.exporter.pdf
+        return exporter(r,
+                        method = "list",
+#                            pdf_componentname = "inv_track_item",
+                        pdf_title = "Volunteer Service Record",
+#                            pdf_filename = send_ref,
+#                        list_fields = list_fields,
+                        pdf_hide_comments = True,
+                        pdf_header_padding = 12,
+#                        pdf_footer = inv_send_pdf_footer,
+#                        pdf_paper_alignment = "Landscape",
+                        pdf_table_autogrow = "B",
+                        pdf_callback = callback,
+                        **attr
+                       )
+    else:
+        # Staff
+        return None
+
 
 # =============================================================================
 class S3HRJobModel(S3Model):
@@ -2876,11 +2975,21 @@ def hrm_rheader(r, tabs=[]):
             active_row = TR(TH("%s:" % T("Active?")),
                             _active
                             )
+            service_record = TR(A( T("Service Record"),
+                                  _href = URL(c = "hrm",
+                                              f = "human_resource",
+                                              args = [hr, "form"]
+                                              ),
+                                  _id = "service_record",
+                                  _class = "action-btn"
+                                 )
+                                )
             _table = TABLE(TR(TH(name,
                                  _colspan=2)
                               ),
                            programme_row,
                            active_row,
+                           service_record,
                            )
         else:
             experience_tab = (T("Experience"), "experience")

@@ -95,6 +95,13 @@ def human_resource():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
+    # Generate Service Record
+    s3mgr.model.set_method("hrm",
+                           "human_resource",
+                           method="form",
+                           action=s3db.hrm_service_record
+                          )
+
     # Must specify a group to create HRs
     # Interactive
     group = request.vars.get("group", None)
@@ -203,6 +210,8 @@ def human_resource():
                         search_method = human_resource_search)
 
     def prep(r):
+        if r.method == "form":
+            return True
         if r.interactive:
             # Assume volunteers only between 12-81
             s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
@@ -366,7 +375,6 @@ def volunteer():
     """
         Volunteer Controller
     """
-
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
