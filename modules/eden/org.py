@@ -1879,6 +1879,8 @@ def org_organisation_controller():
 
     # Pre-process
     def prep(r):
+        if r.representation == "json":
+            r.table.pe_id.readable = True
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
 
