@@ -93,8 +93,16 @@ urlpatterns += i18n_patterns('',
     
     # For smart_selects app
     url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
+
+    # WARNING: This URLs aren't supposed to be here, but apparently on development
+    # they are needed
 )
 
 if settings.DEBUG:
     # Serve static files
     urlpatterns += staticfiles_urlpatterns()
+    # Serve uploaded files
+    urlpatterns += patterns('',
+        url(r'^uploads/(?P<path>.*)$', 'django.views.static.serve',
+            {'document_root': settings.MEDIA_ROOT}),
+        )
