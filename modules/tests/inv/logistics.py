@@ -1,4 +1,5 @@
 from gluon import current
+import unittest
 from tests.web2unittest import SeleniumUnitTest
 from selenium.common.exceptions import NoSuchElementException
 from s3 import s3_debug
@@ -54,6 +55,46 @@ class Logistics(SeleniumUnitTest):
             self.assertTrue( stock_before - stock_after == stock_shipped, "Warehouse stock not properly adjusted, was %s should be %s but is recorded as %s" % (stock_before, stock_after, stock_before - stock_shipped))
             s3_debug ("Stock level before %s, stock level after %s" % (stock_before, stock_after))
         return result
+
+    # -------------------------------------------------------------------------
+    def helper_inv_send_shipment(self, user, send_id):
+        """
+            Helper method to send a shipment with id of send_id
+        """
+        s3db = current.s3db
+        db = current.db
+        stable = s3db.inv_send
+        ititable = s3db.inv_track_item
+        # Get the current status
+        query = (stable.id == send_id)
+        record = db(query).select(stable.status,
+                                  limitby=(0, 1)).first()
+        send_status = record.status
+        query = (ititable.send_id == send_id)
+        item_records = db(query).select(ititable.status)
+        # check that the status is correct
+        self.assertTrue(send_status == 0, "Shipment is not status preparing")
+        s3_debug("Shipment status is: preparing")
+        for rec in item_records:
+            self.assertTrue(rec.status == 1, "Shipment item is not status preparing")
+        s3_debug("Shipment items are all of status: preparing")
+
+        # Now send the shipment on its way
+        self.login(account=user, nexturl="inv/send_process/%s" % send_id)
+
+        # Get the current status
+        query = (stable.id == send_id)
+        record = db(query).select(stable.status,
+                                  limitby=(0, 1)).first()
+        send_status = record.status
+        query = (ititable.send_id == send_id)
+        item_records = db(query).select(ititable.status)
+        # check that the status is correct
+        self.assertTrue(send_status == 2, "Shipment is not status sent")
+        s3_debug("Shipment status is: sent")
+        for rec in item_records:
+            self.assertTrue(rec.status == 2, "Shipment item is not status sent")
+        s3_debug("Shipment items are all of status: sent")
 
     # -------------------------------------------------------------------------
     def helper_inv_receive(self, user, data):
@@ -146,7 +187,76 @@ class Logistics(SeleniumUnitTest):
                 s3_debug("%s accounted for." % line["text"])
             else:
                 s3_debug("%s not accounted for." % line["text"])
-            
+
+    # -------------------------------------------------------------------------
+    def helper_inv_recv_sent_shipment(self, method, user, WB_ref, item_list):
+        """
+            Helper method that will receive the sent shipment.
+
+            This supports two methods:
+            method = "warehouse"
+            ====================
+            This requires going to the receiving warehouse
+            Selecting the shipment (using the WB reference)
+            Opening each item and selecting the received totals
+            Then receive the shipment
+
+            method = "search"
+            ====================
+            Search for all received shipments
+            Select the matching WB reference
+            Opening each item and selecting the received totals
+            Then receive the shipment
+
+            Finally:
+            It will get the stock in the warehouse before and then after
+            and check that the stock levels have been properly increased
+        """
+        
+        browser = self.browser
+        if method == "search":
+            self.login(account=user, nexturl="inv/recv/search")
+            # Find the WB reference in the dataTable (filter so only one is displayed)
+            el = browser.find_element_by_id("recv_search_simple")
+            el.send_keys(WB_ref)
+            # Submit the search
+            browser.find_element_by_css_selector("input[type='submit']").submit()
+            # Select the only row in the dataTable
+            if not self.dt_action():
+                fail("Unable to select the incoming shipment with reference %s" % WB_ref)
+        elif method == "warehouse":
+            return # not yet implemented
+        else:
+            fail("Unknown method of %s" % method)
+            return # invalid method
+        #####################################################
+        # We are now viewing the details of the receive item
+        #####################################################
+
+        # Now get the recv id from the url
+        url = browser.current_url
+        url_parts = url.split("/")
+        try:
+            recv_id = int(url_parts[-1])
+        except:
+            recv_id = int(url_parts[-2])
+        # Click on the items tab
+        self.login(account=user, nexturl="inv/recv/%s/track_item" % recv_id)
+        data = []
+        for item in item_list:
+            # Find the item in the dataTable
+            self.dt_filter(item[0])
+            self.dt_action()
+            el = browser.find_element_by_id("inv_track_item_recv_quantity")
+            el.send_keys(item[1])
+            text = "%s %s" % (item[1], item[0])
+            data.append({"text" : text,
+                         "record" : item[2]})
+            # Save the form
+            browser.find_element_by_css_selector("input[type='submit']").submit()
+        # Now receive the shipment and check the totals
+        self.helper_inv_recv_shipment(user, recv_id, data)
+
 
     # -------------------------------------------------------------------------
     # Functions which extract data from the create results
@@ -229,7 +339,8 @@ class Logistics(SeleniumUnitTest):
     # -------------------------------------------------------------------------
     def test010_send_workflow(self):
         """ Tests for Send Workflow """
-        data = [("site_id",
+        user = "normal"
+        send_data = [("site_id",
                  "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
                  "option",
                 ),
@@ -246,31 +357,36 @@ class Logistics(SeleniumUnitTest):
                  "autocomplete",
                 )
                ]
-        result = self.helper_inv_send("normal", data)
-        send_id = self.helper_inv_send_get_id(result)
+        item_data = [
+                     [("send_inv_item_id",
+                       "Blankets - 123457 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "3",
+                      ),
+                     ],
+                     [("send_inv_item_id",
+                       "Jerry Cans - 123461 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "7",
+                      ),
+                     ],
+                    ]
 
-        data = [("send_inv_item_id",
-                 "Blankets - 123457 - Australian Red Cross",
-                 "inv_widget",
-                ),
-                ("quantity",
-                 "3",
-                ),
-               ]
-        result = self.helper_inv_track_send_item("normal", send_id, data)
-        data = [("send_inv_item_id",
-                 "Jerry Cans - 123461 - Australian Red Cross",
-                 "inv_widget",
-                ),
-                ("quantity",
-                 "7",
-                ),
-               ]
-        result = self.helper_inv_track_send_item("normal", send_id, data)
+        result = self.helper_inv_send(user, send_data)
+        send_id = self.helper_inv_send_get_id(result)
+        for data in item_data:
+            result = self.helper_inv_track_send_item(user, send_id, data)
+        # Send the shipment
+        self.helper_inv_send_shipment(user, send_id)
 
     # -------------------------------------------------------------------------
     def test020_receive_workflow(self):
         """ Tests for Receive Workflow """
+        user = "normal"
         recv_data = [("send_ref",
                       "WB_TEST_000001",
                      ),
@@ -287,30 +403,107 @@ class Logistics(SeleniumUnitTest):
                      )
                     ]
 
-        item_data = [("item_id",
-                      "Blankets",
-                      "supply_widget",
-                     ),
-                     ("item_pack_id",
-                      "Piece",
-                      "option",
-                     ),
-                     ("quantity",
-                      "3",
-                     ),
+        item_data = [
+                     [
+                      ("item_id",
+                       "Blankets",
+                       "supply_widget",
+                      ),
+                      ("item_pack_id",
+                       "Piece",
+                       "option",
+                      ),
+                      ("quantity",
+                       "3",
+                      ),
+                     ]
                     ]
 
         # Create the receive shipment
-        result = self.helper_inv_receive("normal", recv_data)
+        result = self.helper_inv_receive(user, recv_data)
         recv_id = self.helper_inv_recv_get_id(result)
         # Add items to the shipment
         item_list = []
-        result = self.helper_inv_track_recv_item("normal", recv_id, item_data)
-        text = "%s %s" % (item_data[2][1], item_data[0][1])
-        item_list.append({"text": text,
-                          "record":result["after"].records[0]
-                         })
+        for data in item_data:
+            result = self.helper_inv_track_recv_item(user, recv_id, data)
+            text = "%s %s" % (data[2][1], data[0][1])
+            item_list.append({"text": text,
+                              "record":result["after"].records[0]
+                             })
         # Receive the shipment
-        self.helper_inv_recv_shipment("normal", recv_id, item_list)
+        self.helper_inv_recv_shipment(user, recv_id, item_list)
+
+    def test030_receive_workflow(self):
+        """ Tests for Send - Receive Workflow """
+        user = "normal"
+        method = "search"
+        send_data = [("site_id",
+                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "option",
+                ),
+                ("to_site_id",
+                 "Lospalos Warehouse (Warehouse)",
+                 "option",
+                ),
+                ("sender_id",
+                 "Beatriz de Carvalho",
+                 "autocomplete",
+                ),
+                ("recipient_id",
+                 "Liliana Otilia",
+                 "autocomplete",
+                )
+               ]
+        item_data = [
+                     [("send_inv_item_id",
+                       "Blankets - 123457 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "8",
+                      ),
+                     ],
+                     [("send_inv_item_id",
+                       "Jerry Cans - 123461 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "13",
+                      ),
+                     ],
+                     [("send_inv_item_id",
+                       "Kitchen Sets - 123458 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "4",
+                      ),
+                     ]
+                    ]
+        recv_data = [
+                     ["Blankets",
+                       "8",
+                      ],
+                     ["Jerry Cans",
+                       "13",
+                      ],
+                     ["Kitchen Sets",
+                       "4",
+                      ],
+                     ]
+        # Create the send record
+        send_result = self.helper_inv_send(user, send_data)
+        send_id = self.helper_inv_send_get_id(send_result)
+        send_ref= self.helper_inv_send_get_ref(send_result)
+        # Add the items to the send record
+        cnt = 0
+        for data in item_data:
+            item_result = self.helper_inv_track_send_item(user, send_id, data)
+            recv_data[cnt].append(item_result["after"].records[0])
+            cnt += 1
+        # Send the shipment
+        self.helper_inv_send_shipment(user, send_id)
+        # Receive the shipment
+        self.helper_inv_recv_sent_shipment(method, user, send_ref, recv_data)
 
 # END =========================================================================

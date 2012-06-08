@@ -838,6 +838,7 @@ def person():
     else:
         s3.crud_strings[tablename].update(
             title_upload = T("Import Volunteers"))
+        table.occupation.label = T("Previous Job")
         # Default type for HR
         table = db.hrm_human_resource
         table.type.default = 2

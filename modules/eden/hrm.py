@@ -575,6 +575,12 @@ def hrm_service_record (r, **attr):
         table = s3db.hrm_human_resource
         prtable = s3db.pr_person
         itable = s3db.pr_image
+        addrtable = s3db.pr_address
+        ectable = s3db.pr_contact_emergency
+        ctable = s3db.pr_contact
+        idtable = s3db.pr_identity
+        hrstable = s3db.hrm_programme_hours
+
         if r.record:
             vol = r.record
         else:
@@ -590,14 +596,11 @@ def hrm_service_record (r, **attr):
         logo = s3db.org_organisation_logo(vol.organisation_id)
         vol_name = table.person_id.represent(vol.person_id)
         org_name = table.organisation_id.represent(vol.organisation_id)
-        query = (prtable.id == vol.person_id) & \
-                (itable.pe_id == prtable.pe_id) & \
+        query = (prtable.id == vol.person_id)
+        pe_id = db(query).select(prtable.pe_id,
+                                 limitby=(0, 1)).first().pe_id
+        query = (itable.pe_id == pe_id) & \
                 (itable.profile == True)
-#        set = db(query)
-#        rows = set.select()
-#        user = rows.first()
-#        query = (itable.pe_id == user.pe_id) & \
-#                (itable.profile == True)
         image = db(query).select(itable.image,
                                  limitby=(0, 1)).first()
         if image:
@@ -613,7 +616,7 @@ def hrm_service_record (r, **attr):
                          _width=size[0],
                          _height=size[1],
                        )
-        innerTable = TABLE(TR(TD(T("Volunteer Service Record"))),
+        innerTable = TABLE(TR(TH(T("Volunteer Service Record"))),
                            TR(TD(vol_name)),
                            TR(TD(org_name))
                           )
@@ -624,8 +627,78 @@ def hrm_service_record (r, **attr):
                      )
         
         person.append(table)
+        # Now get the contact details
+        contact_details = DIV()
+
+        query = (addrtable.pe_id == pe_id)
+        addresses = db(query).select(orderby = addrtable.type,
+                                     limitby=(0, 2))
+        address_list = []
+        for address in addresses:
+            address = TABLE(TR(TH(addrtable.type.represent(address.type))),
+                            TR(address.address),
+                            TR(address.L3),
+                            TR(address.L2),
+                            TR(address.L1),
+                            )
+            address_list.append(address)
+        query = (ctable.pe_id == pe_id)
+        contacts = db(query).select(orderby = ctable.priority,
+                                    limitby=(0, 3))
+        contact_list = TABLE()
+        for contact in contacts:
+            contact_list.append(TH(ctable.contact_method.represent(contact.contact_method)))
+            contact_list.append(contact.value)
+
+        query = (ectable.pe_id == pe_id)
+        emergency = db(query).select(limitby=(0, 1)).first()
+        econtact = TABLE(TR(TH("Emergency Contact")),
+                         TR(emergency.name),
+                         TR(emergency.relationship),
+                         TR(emergency.phone),
+                        )
+
+
+        contact_row = TR()
+        if len(address_list) > 0:
+            contact_row.append(TD(address_list[0]))
+        if len(address_list) > 1:
+            contact_row.append(TD(address_list[1]))
+        contact_row.append(contact_list)
+        contact_row.append(econtact)
+
+        query = (idtable.person_id == vol.person_id) & \
+                (idtable.deleted == False)
+        rows = db(query).select()
+        id_row = TR()
+        for identity in rows:
+            id_row.append(TABLE(TR(TH(idtable.type.represent(identity.type))),
+                                TR(identity.value),
+                                TR(identity.valid_until),
+                                )
+                          )
+
+        query = (hrstable.person_id == vol.person_id) & \
+                (hrstable.deleted == False)
+        rows = db(query).select(orderby = ~hrstable.date)
+        hour_list = TABLE()
+        total = 0
+        for hours in rows:
+            hour_list.append(TR(hrstable.programme_id.represent(hours.programme_id),
+                                "%s" % hours.date,
+                                "%d" % hours.hours,
+                               )
+                            )
+            total += int(hours.hours)
+        if total > 0:
+            hour_list.append(TR(TD(""),TD("Total"), TD("%d" % total)))
+        
 
         record.append(person)
+        record.append(TABLE(contact_row))
+        record.append(TABLE(id_row))
+        record.append(hour_list)
+        
 
         return record
 

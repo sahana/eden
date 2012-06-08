@@ -937,14 +937,20 @@ class S3TrackingModel(S3Model):
                         name="recv_search_text_simple",
                         label=T("Search"),
                         comment=recv_search_comment,
-                        field=[ "from_person",
+                        field=[
+                                "sender_id$first_name",
+                                "sender_id$middle_name",
+                                "sender_id$last_name",
                                 "comments",
                                 "from_site_id$name",
                                 "recipient_id$first_name",
                                 "recipient_id$middle_name",
                                 "recipient_id$last_name",
-                                "site_id$name"
-                                ]
+                                "site_id$name",
+                                "recv_ref",
+                                "send_ref",
+                                "purchase_ref",
+                              ]
                       )),
             advanced=(S3SearchSimpleWidget(
                         name="recv_search_text_advanced",
