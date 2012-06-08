@@ -435,18 +435,13 @@ class S3DelphiModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        db = current.db
-
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "delphi_group":
             table = job.table
             name = "name" in job.data and job.data.name
 
             query = (table.name.lower().like('%%%s%%' % name.lower()))
-            _duplicate = db(query).select(table.id,
-                                          limitby=(0, 1)).first()
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
@@ -468,18 +463,13 @@ class S3DelphiModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        db = current.db
-
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "delphi_problem":
             table = job.table
             name = "name" in job.data and job.data.name
 
             query = (table.name.lower().like('%%%s%%' % name.lower()))
-            _duplicate = db(query).select(table.id,
-                                          limitby=(0, 1)).first()
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id

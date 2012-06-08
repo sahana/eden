@@ -205,9 +205,6 @@ class S3ScenarioModel(S3Model):
            - If the name exists then it's a duplicate
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "scenario_scenario":
             table = job.table
             if "name" in job.data:

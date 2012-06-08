@@ -2861,6 +2861,7 @@ def inv_adj_rheader(r):
             return rheader
     return None
 
+# =============================================================================
 # Generic function called by the duplicator methods to determine if the
 # record already exists on the database.
 def duplicator(job, query):
@@ -2873,21 +2874,16 @@ def duplicator(job, query):
 
       If the record is a duplicate then it will set the job method to update
     """
-    # ignore this processing if the id is set
-    if job.id:
-        return
-
-    db = current.db
 
     table = job.table
-    _duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+    _duplicate = current.db(query).select(table.id,
+                                          limitby=(0, 1)).first()
     if _duplicate:
         job.id = _duplicate.id
         job.data.id = _duplicate.id
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
-
 
 # =============================================================================
 class InvItemVirtualFields:

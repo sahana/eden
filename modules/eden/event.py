@@ -453,9 +453,6 @@ class S3EventModel(S3Model):
            - If the name exists then it's a duplicate
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "event_event":
             table = job.table
             if "name" in job.data:
@@ -506,9 +503,6 @@ class S3EventModel(S3Model):
            - If the Event & Name exists then it's a duplicate
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "event_incident":
             table = job.table
             if "name" in job.data and \

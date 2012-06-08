@@ -542,7 +542,7 @@ class S3HRModel(S3Model):
             data = item.data
 
             person_id = data.person_id
-            organisation_id = data.organisation_id
+            org = "organisation_id" in data and data.organisation_id
 
             # This allows only one HR record per person and organisation,
             # if multiple HR records of the same person with the same org
@@ -550,8 +550,10 @@ class S3HRModel(S3Model):
             # query (e.g. job title, or type):
 
             query = (hrtable.deleted != True) & \
-                    (hrtable.person_id == person_id) & \
-                    (hrtable.organisation_id == organisation_id)
+                    (hrtable.person_id == person_id)
+            if org:
+                query = query & \
+                    (hrtable.organisation_id == org)
             row = db(query).select(hrtable.id,
                                    limitby=(0, 1)).first()
             if row:
@@ -827,9 +829,6 @@ class S3HRJobModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_job_role":
             table = job.table
             name = "name" in job.data and job.data.name
@@ -1913,9 +1912,6 @@ S3FilterFieldChange({
            - Look for a record with the same person_id and skill_id
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_competency":
             table = job.table
             person = "person_id" in job.data and job.data.person_id
@@ -1946,9 +1942,6 @@ S3FilterFieldChange({
            - Look for a record with the same name, ignoring case
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_certificate":
             table = job.table
             name = "name" in job.data and job.data.name
@@ -2045,14 +2038,9 @@ S3FilterFieldChange({
            - Look for a record with the same name, ignoring case and skill_type
         """
 
-        s3db = current.s3db
-
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_competency_rating":
             table = job.table
-            stable = s3db.hrm_skill_type
+            stable = current.s3db.hrm_skill_type
             name = "name" in job.data and job.data.name
             skill = False
             for cjob in job.components:
@@ -2088,9 +2076,6 @@ S3FilterFieldChange({
            - Look for a record with the same name, ignoring case
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_course":
             table = job.table
             name = "name" in job.data and job.data.name
@@ -2119,9 +2104,6 @@ S3FilterFieldChange({
            - Look for a record with the same name, ignoring case
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_skill":
             table = job.table
             name = "name" in job.data and job.data.name
@@ -2150,9 +2132,6 @@ S3FilterFieldChange({
            - Look for a record with the same name, ignoring case
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_skill_type":
             table = job.table
             name = "name" in job.data and job.data.name
@@ -2181,9 +2160,6 @@ S3FilterFieldChange({
            - Look for a record with the same course name & date (& site, if-present)
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_training_event":
             table = job.table
             start_date = "start_date" in job.data and job.data.start_date
@@ -2248,9 +2224,6 @@ S3FilterFieldChange({
            - Look for a record with the same person and event
         """
 
-        # ignore this processing if the id is set
-        if job.id:
-            return
         if job.tablename == "hrm_training":
             table = job.table
             training_event_id = "training_event_id" in job.data and job.data.training_event_id
