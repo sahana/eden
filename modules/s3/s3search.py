@@ -270,6 +270,8 @@ class S3SearchSimpleWidget(S3SearchWidget):
             self.attr.update(_size="40")
         if "_name" not in self.attr:
             self.attr.update(_name="%s_search_simple" % resource.name)
+        if "_id" not in self.attr:
+            self.attr.update(_id="%s_search_simple" % resource.name)
         if autocomplete:
             self.attr.update(_autocomplete=autocomplete)
         self.attr.update(_type="text")
