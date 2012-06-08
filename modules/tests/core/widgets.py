@@ -17,6 +17,21 @@ from s3 import s3_debug
 
 import time
 
+def _autocomple_finish(el_id, browser):
+    giveup = 0.0
+    sleeptime = 0.2
+    el = browser.find_element_by_id(el_id)
+    while giveup < 60:
+        try:
+            if el.find_elements_by_tag_name("option")[0].text != "":
+                return
+        except: # StaleElementReferenceException
+            print "StaleElementReferenceException %s" % giveup
+            el = browser.find_element_by_id(el_id)
+        # The pack drop down hasn't been populated yet so sleep
+        time.sleep(sleeptime)
+        giveup += sleeptime
+
 # -----------------------------------------------------------------------------
 def w_autocomplete(search,
                    autocomplete,
@@ -92,15 +107,7 @@ def w_inv_item_select (item_repr,
             break
     # Now wait for the pack_item to be populated
     el_id = "%s_%s" % (tablename, "item_pack_id")
-    giveup = 0.0
-    sleeptime = 0.2
-    # Note the find is done in the loop to avoid an occasional error with the browser cache
-    while browser.find_element_by_id(el_id).find_elements_by_tag_name("option")[0].text == "":
-        # The pack drop down hasn't been populated yet so sleep
-        time.sleep(sleeptime)
-        giveup += sleeptime
-        if giveup > 60:
-            break
+    _autocomple_finish(el_id, browser)
     return raw_value
 
 # -----------------------------------------------------------------------------
@@ -114,15 +121,7 @@ def w_supply_select(item_repr,
     # Now wait for the pack_item to be populated
     browser = current.test_config.browser
     el_id = "%s_%s" % (tablename, "item_pack_id")
-    giveup = 0.0
-    sleeptime = 0.2
-    # Note the find is done in the loop to avoid an occasional error with the browser cache
-    while browser.find_element_by_id(el_id).find_elements_by_tag_name("option")[0].text == "":
-        # The pack drop down hasn't been populated yet so sleep
-        time.sleep(sleeptime)
-        giveup += sleeptime
-        if giveup > 60:
-            break
+    _autocomple_finish(el_id, browser)
     return raw_value
 
 # -----------------------------------------------------------------------------

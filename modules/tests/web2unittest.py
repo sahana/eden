@@ -190,7 +190,7 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def dt_action(self,
                   row = 1,
-                  action = "Open",
+                  action = None,
                   column = 1,
                   tableID = "list",
                  ):
