@@ -2856,7 +2856,7 @@ class S3Resource(object):
                    msince=None,
                    fields=None,
                    dereference=True,
-                   mcomponents=None,
+                   mcomponents=[],
                    rcomponents=None,
                    references=None,
                    stylesheet=None,
