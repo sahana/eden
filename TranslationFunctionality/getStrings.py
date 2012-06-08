@@ -6,240 +6,238 @@ import parser
 import symbol
 import token
 
-tflag = 0
-mflag = 0
-cflag = 0
-fflag = 0
-sflag = 0
-bracket = 0;
-outstr= ''
-class_name=''
-func_name = ''
-mod_name = ' '
-findent = -1
+class ParseFiles:
+
+        def __init__(self):
+
+            self.cflag = 0
+            self.fflag = 0
+            self.sflag = 0
+            self.tflag = 0
+            self.mflag = 0
+            self.bracket = 0
+            self.outstr = ''
+            self.class_name = ''
+            self.func_name = ''
+            self.mod_name = ''
+            self.findent = -1
+
+        def parseConfig(self,spmod,strings,entry,modlist):
 
 
-
-def parseConfig(spmod,strings,entry,modlist):
-
-	global tflag,sflag,fflag,bracket,outstr,func_name,mod_name
-
-	if isinstance(entry,list):
-            id = entry[0]
-	    value = entry[1]
-            if isinstance(value,list):
+            if isinstance(entry,list):
+               id = entry[0]
+	       value = entry[1]
+               if isinstance(value,list):
 		    for element in entry:
-		        parseConfig(spmod,strings,element,modlist)
-            else:
-               if fflag == 1 and token.tok_name[id] == "NAME":
-                   func_name = value
-                   fflag = 0
+		        self.parseConfig(spmod,strings,element,modlist)
+               else:
+                  if self.fflag == 1 and token.tok_name[id] == "NAME":
+                     self.func_name = value
+                     self.fflag = 0
 
-               elif token.tok_name[id] == "NAME" and value == "deployment_settings":
-                   fflag = 1
+                  elif token.tok_name[id] == "NAME" and value == "deployment_settings":
+                      self.fflag = 1
 
-	       elif tflag == 0 and func_name == "modules" and token.tok_name[id] == "STRING":
-                    if value[1:-1] in modlist:
-	                 mod_name = value[1:-1]
+	          elif self.tflag == 0 and self.func_name == "modules" and token.tok_name[id] == "STRING":
+                      if value[1:-1] in modlist:
+	                 self.mod_name = value[1:-1]
 
-               elif token.tok_name[id] == "NAME" and value == "T":
-                   sflag = 1
+                  elif token.tok_name[id] == "NAME" and value == "T":
+                      self.sflag = 1
 
-               elif sflag == 1:
-	          if token.tok_name[id] == "LPAR":
-		     tflag=1
-		     bracket=1
-	          sflag=0
+                  elif self.sflag == 1:
+	             if token.tok_name[id] == "LPAR":
+		        self.tflag=1
+		        self.bracket=1
+	             self.sflag=0
 
-	       elif tflag == 1:
-	            if token.tok_name[id] == "LPAR":
-	                 bracket+=1
-	                 if bracket>1:
-	                    outstr += '('
-	            elif token.tok_name[id] == "RPAR":
-                         bracket-=1
-	                 if bracket>0:
-	                     outstr += ')'
-	                 else:
-		            if spmod == "core":
-                               if func_name != "modules" and func_name not in modlist:
-	                         strings.append( (entry[2], outstr) )  
-                            elif (func_name == "modules" and mod_name == spmod) or (func_name == spmod):
-	                         strings.append( (entry[2], outstr) )
-	                    outstr=''
-	                    tflag=0
-	            elif bracket>0:
-	                outstr += value
+	          elif self.tflag == 1:
+	               if token.tok_name[id] == "LPAR":
+	                    self.bracket+=1
+	                    if self.bracket>1:
+	                       self.outstr += '('
+	               elif token.tok_name[id] == "RPAR":
+                            self.bracket-=1
+	                    if self.bracket>0:
+	                        self.outstr += ')'
+	                    else:
+		               if spmod == "core":
+                                  if self.func_name != "modules" and self.func_name not in modlist:
+	                            strings.append( (entry[2], self.outstr) )  
+                               elif (self.func_name == "modules" and self.mod_name == spmod) or (self.func_name == spmod):
+	                            strings.append( (entry[2], self.outstr) )
+	                       self.outstr=''
+	                       self.tflag=0
+	               elif self.bracket>0:
+	                   self.outstr += value
                 
 
 
-def parseS3cfg(spmod,strings,entry,modlist):
+        def parseS3cfg(self,spmod,strings,entry,modlist):
 
-	global tflag,sflag,fflag,bracket,outstr,func_name
-
-	if isinstance(entry,list):
-            id = entry[0]
-            value = entry[1]
-            if isinstance(value,list):
+             if isinstance(entry,list):
+                id = entry[0]
+                value = entry[1]
+                if isinstance(value,list):
 		    for element in entry:
-		        parseS3cfg(spmod,strings,element,modlist)
-            else:
-               if fflag == 1:
-                   func_name = value
-                   fflag = 0
-	       elif token.tok_name[id] == "NAME" and value == "def":
-                   fflag = 1
+		        self.parseS3cfg(spmod,strings,element,modlist)
+                else:
+                  if self.fflag == 1:
+                      self.func_name = value
+                      self.fflag = 0
+	          elif token.tok_name[id] == "NAME" and value == "def":
+                      self.fflag = 1
                   
-               elif token.tok_name[id] == "NAME" and value == "T":
-                   sflag = 1
+                  elif token.tok_name[id] == "NAME" and value == "T":
+                      self.sflag = 1
 
-               elif sflag == 1:
-	          if token.tok_name[id] == "LPAR":
-		     tflag=1
-		     bracket=1
-	          sflag=0
+                  elif self.sflag == 1:
+	             if token.tok_name[id] == "LPAR":
+		        self.tflag=1
+		        self.bracket=1
+	             self.sflag=0
 
-	       elif tflag == 1:
-	            if token.tok_name[id] == "LPAR":
-	                 bracket+=1
-	                 if bracket>1:
-	                    outstr += '('
-	            elif token.tok_name[id] == "RPAR":
-                         bracket-=1
-	                 if bracket>0:
-	                     outstr += ')'
-	                 else:
-		            if spmod == "core":
-                               if '_' not in func_name or func_name.split('_')[1] not in modlist:
-	                         strings.append( (entry[2], outstr) )  
-                            elif '_' in func_name and func_name.split('_')[1] == spmod:
-	                         strings.append( (entry[2], outstr) )
-	                    outstr=''
-	                    tflag=0
-	            elif bracket>0:
-	                outstr += value
+	          elif self.tflag == 1:
+	               if token.tok_name[id] == "LPAR":
+	                    self.bracket+=1
+	                    if self.bracket>1:
+	                       self.outstr += '('
+	               elif token.tok_name[id] == "RPAR":
+                            self.bracket-=1
+	                    if self.bracket>0:
+	                        self.outstr += ')'
+	                    else:
+		               if spmod == "core":
+                                  if '_' not in self.func_name or self.func_name.split('_')[1] not in modlist:
+	                            strings.append( (entry[2], self.outstr) )  
+                               elif '_' in self.func_name and self.func_name.split('_')[1] == spmod:
+	                            strings.append( (entry[2], self.outstr) )
+	                       self.outstr=''
+	                       self.tflag=0
+	               elif self.bracket>0:
+	                   self.outstr += value
 
-def parseMenu(spmod,strings,entry,level):
 
-    global tflag,sflag,cflag,fflag,bracket,outstr,mflag,class_name,func_name,findent
+        def parseMenu(self,spmod,strings,entry,level):
 
-    if isinstance(entry,list):
-        id = entry[0]
-        value = entry[1]
-        if isinstance(value,list):
-            for element in entry:
-                parseMenu(spmod,strings,element,level+1)
-        else:
-	    if cflag == 1:
-	       class_name = value
-	       cflag = 0
 
-	    elif token.tok_name[id] == "NAME" and value == "class":
-	       cflag = 1
+            if isinstance(entry,list):
+                id = entry[0]
+                value = entry[1]
+                if isinstance(value,list):
+                    for element in entry:
+                        self.parseMenu(spmod,strings,element,level+1)
+                else:
+	            if self.cflag == 1:
+	               self.class_name = value
+	               self.cflag = 0
+
+	            elif token.tok_name[id] == "NAME" and value == "class":
+	               self.cflag = 1
 	 
-            elif fflag == 1:
-               func_name = value
-               fflag=0
+                    elif self.fflag == 1:
+                       self.func_name = value
+                       self.fflag=0
 
-	    elif token.tok_name[id] == "NAME" and value == "def" and (findent == -1 or level == findent) :
-               if class_name == "S3OptionsMenu": 
-		 findent = level
-	         fflag = 1
-	       else:
-	         func_name = ''
-
-	    elif token.tok_name[id] == "NAME" and value == "T":
-	         sflag = 1
-
-	    elif sflag == 1:
-	        if token.tok_name[id] == "LPAR":
-		   tflag=1
-		   bracket=1
-	        sflag=0
-
-	    elif tflag == 1:
-	         if token.tok_name[id] == "LPAR":
-	               bracket+=1
-	               if bracket>1:
-	                   outstr += '('
-	         elif token.tok_name[id] == "RPAR":
-                       bracket-=1
-	               if bracket>0:
-	                    outstr += ')'
+	            elif token.tok_name[id] == "NAME" and value == "def" and (self.findent == -1 or level == self.findent) :
+                       if self.class_name == "S3OptionsMenu": 
+		         self.findent = level
+	                 self.fflag = 1
 	               else:
-		           if spmod == "core":
-                              if func_name == '':
-	                        strings.append( (entry[2], outstr) )  
-                           elif func_name == spmod:
-	                        strings.append( (entry[2], outstr) )
-	                   outstr=''
-	                   tflag=0
-	         elif bracket>0:
-	              outstr += value
+	                 self.func_name = ''
 
-            else:
-	       if token.tok_name[id] == "NAME" and value == "M":
-                    mflag = 1
-               elif mflag == 1:
-	          if token.tok_name[id] == "STRING":
-                      if spmod == "core":
-                         if func_name == '':
-                            strings.append( (entry[2], value) )  
-                      elif func_name == spmod:
-                            strings.append( (entry[2], value) )
-	          elif token.tok_name[id] == "EQUAL" or token.tok_name[id] == "RPAR":
-	              mflag = 0
+	            elif token.tok_name[id] == "NAME" and value == "T":
+	                 self.sflag = 1
+
+	            elif self.sflag == 1:
+	                if token.tok_name[id] == "LPAR":
+		           self.tflag=1
+		           self.bracket=1
+	                self.sflag=0
+
+	            elif self.tflag == 1:
+	                 if token.tok_name[id] == "LPAR":
+	                       self.bracket+=1
+	                       if self.bracket>1:
+	                           self.outstr += '('
+	                 elif token.tok_name[id] == "RPAR":
+                               self.bracket-=1
+	                       if self.bracket>0:
+	                            self.outstr += ')'
+	                       else:
+		                   if spmod == "core":
+                                      if self.func_name == '':
+	                                 strings.append( (entry[2], self.outstr) )  
+                                   elif self.func_name == spmod:
+	                                 strings.append( (entry[2], self.outstr) )
+	                           self.outstr=''
+	                           self.tflag=0
+	                 elif self.bracket>0:
+	                      self.outstr += value
+
+                    else:
+	               if token.tok_name[id] == "NAME" and value == "M":
+                            self.mflag = 1
+                       elif self.mflag == 1:
+	                  if token.tok_name[id] == "STRING":
+                              if spmod == "core":
+                                 if self.func_name == '':
+                                    strings.append( (entry[2], value) )  
+                              elif self.func_name == spmod:
+                                    strings.append( (entry[2], value) )
+	                  elif token.tok_name[id] == "EQUAL" or token.tok_name[id] == "RPAR":
+	                      self.mflag = 0
 
 
 
-def parseAll(strings,entry):
-    global tflag,sflag,bracket,outstr,mflag
+        def parseAll(self,strings,entry):
 
-    if isinstance(entry,list):
-        id = entry[0]
-        value = entry[1]
-        if isinstance(value,list):
-            for element in entry:
-                parseAll(strings,element)
-        else:
-	    if token.tok_name[id] == "NAME" and value == "T":
-	        sflag = 1
+            if isinstance(entry,list):
+                id = entry[0]
+                value = entry[1]
+                if isinstance(value,list):
+                    for element in entry:
+                        self.parseAll(strings,element)
+                else:
+	            if token.tok_name[id] == "NAME" and value == "T":
+	                self.sflag = 1
 
-	    elif sflag == 1:
-	        if token.tok_name[id] == "LPAR":
-		   tflag=1
-		   bracket=1
-	        sflag=0
+	            elif self.sflag == 1:
+	                if token.tok_name[id] == "LPAR":
+		           self.tflag=1
+		           self.bracket=1
+	                self.sflag=0
 
-	    elif tflag == 1:
-	         if token.tok_name[id] == "LPAR":
-	               bracket+=1
-	               if bracket>1:
-	                   outstr += '('
-	         elif token.tok_name[id] == "RPAR":
-                       bracket-=1
-	               if bracket>0:
-	                    outstr += ')'
-	               else:
-	                  strings.append( (entry[2], outstr) )
-	                  outstr=''
-	                  tflag=0
+	            elif self.tflag == 1:
+	                 if token.tok_name[id] == "LPAR":
+	                       self.bracket+=1
+	                       if self.bracket>1:
+	                           self.outstr += '('
+	                 elif token.tok_name[id] == "RPAR":
+                               self.bracket-=1
+	                       if self.bracket>0:
+	                            self.outstr += ')'
+	                       else:
+	                          strings.append( (entry[2], self.outstr) )
+	                          self.outstr=''
+	                          self.tflag=0
 
-	         elif bracket>0:
-	              outstr += value
+	                 elif self.bracket>0:
+	                      self.outstr += value
 
-            else:
+                    else:
 
-	       if token.tok_name[id] == "NAME" and value == "M":
-	          mflag = 1
+	               if token.tok_name[id] == "NAME" and value == "M":
+	                  self.mflag = 1
 
-	       elif mflag == 1:
+	               elif self.mflag == 1:
 
-	          if token.tok_name[id] == "STRING":
-	              strings.append( (entry[2], value) )
+	                  if token.tok_name[id] == "STRING":
+	                      strings.append( (entry[2], value) )
 
-	          elif token.tok_name[id] == "EQUAL" or token.tok_name[id] == "RPAR":
-	              mflag = 0
+	                  elif token.tok_name[id] == "EQUAL" or token.tok_name[id] == "RPAR":
+	                      self.mflag = 0
 
 	       
 
@@ -260,41 +258,29 @@ def findstr(fileName,spmod,modlist):
     fileContent = file.read()
     fileContent = fileContent.replace("\r","") + '\n'
 
-
-    global tflag,sflag,cflag,fflag,bracket,outstr,mflag,mod_name,class_name,func_name,findent
-    tflag = 0
-    mflag = 0
-    cflag = 0
-    fflag = 0
-    sflag = 0
-    bracket = 0;
-    outstr= ''
-    class_name= ''
-    func_name = ''
-    mod_name = ''
-    findent = -1
-
     try:
       st = parser.suite(fileContent)
       stList = parser.st2list(st,line_info=1)
-
+    
       strings = []
+
+      P = ParseFiles()
       
       if spmod == "ALL" :
          for element in stList:
-            parseAll(strings,element)
+            P.parseAll(strings,element)
       else:
         if fileName.endswith("/eden/modules/eden/menus.py") == True :
            for element in stList:
-              parseMenu(spmod,strings,element,0)
+              P.parseMenu(spmod,strings,element,0)
         elif fileName.endswith("/eden/modules/s3cfg.py") == True:
            for element in stList:
-              parseS3cfg(spmod,strings,element,modlist)
-	elif fileName.endswith("/eden/models/000_config.py") == True:
-	   for element in stList:
-	      parseConfig(spmod,strings,element,modlist)
+              P.parseS3cfg(spmod,strings,element,modlist)
+        elif fileName.endswith("/eden/models/000_config.py") == True:
+           for element in stList:
+              P.parseConfig(spmod,strings,element,modlist)
 
       return strings
 
     except:
-      return []  
+       return []    
