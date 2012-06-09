@@ -294,7 +294,7 @@ class EditProposalSet(UpdateView):
     template_name = 'proposals/proposalset_edit.html'
     
     def get_success_url(self):
-        return '/spaces/{0}/proposal/{1}/'.format(self.kwargs['space_name'], self.kwargs['set_id'])
+        return '/spaces/{0}/proposal/psets/{1}/'.format(self.kwargs['space_name'], self.kwargs['set_id'])
         
     def get_object(self):
         propset_id = self.kwargs['set_id']

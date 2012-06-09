@@ -44,7 +44,6 @@ class ProposalForm(ModelForm):
     class Meta:
         model = Proposal
 
-
 class VoteProposal(ModelForm):
 
     """
@@ -54,4 +53,4 @@ class VoteProposal(ModelForm):
         model = Proposal
         exclude = ('code', 'title', 'description', 'space', 'author', 'tags',
                    'latitude', 'longitude', 'closed', 'closed_by', 'close_reason',
-                   'anon_allowed', 'refurbished', 'budget', 'pub_date', 'mod_date')
+                   'anon_allowed', 'refurbished', 'budget', 'pub_date', 'mod_date','content_type','object_pk','content_object' )
