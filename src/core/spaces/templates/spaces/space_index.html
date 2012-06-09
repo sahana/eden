@@ -229,10 +229,20 @@
                 <div class="tab-pane" id="proposals">
                     <div class="row">
                         <div class="span8">
+                            <h4>{% trans "New ProposalSet" %}</h4>
+                            <ul class="unstyled">
+                                {% for proposalset in proposalsets %}
+                                <li><a href="{{ proposalset.get_absolute_url }}">{{ proposalset.name }}</a> {% trans "by" %} {{ proposalset.author }} {% trans " at " %} {{ proposalset.pub_date|date:"d F Y"}}</li>
+                                {% empty %}
+                                    <li>{% trans "No proposalset created "%}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="span8">
                             <h4>{% trans "New proposals" %}</h4>
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
-                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by"%} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
                                 {% endfor %}
