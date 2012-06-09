@@ -78,6 +78,7 @@ class Space(models.Model):
     # Modules
     mod_debate = models.BooleanField(_('Debate'))
     mod_proposals = models.BooleanField(_('Proposals'))
+    mod_proposalsets = models.BooleanField(_('ProposalSets'))
     mod_news = models.BooleanField(_('News'))
     mod_cal = models.BooleanField(_('Calendar'))
     mod_docs = models.BooleanField(_('Documents'))
