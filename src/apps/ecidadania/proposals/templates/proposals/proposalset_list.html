@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load comments %}
+
+{% block title %}{% trans "List all the proposal set" %}{% endblock %}
+{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
+{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="span8">
+            {% for pset in object_list %}
+                <div id="proposal-wrapper">
+                    {% if perms.proposals.add_proposalset %}
+                        <h3>Hi</h3>
+                        <div id="tools">
+                            <a href="{% url 'add-proposalset' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a>
+                            {% if perms.proposals.edit_proposalset %}
+                                <a href="{% url 'edit-proposalset' get_place.url pset.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a>
+                            {% endif %} 
+                            {% if perms.proposals.delete_proposalset %}
+                                <a href="{% url 'delete-proposalset' get_place.url pset.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div id="proposal">
+                        <div class="title"><a href="{{ pset.get_absolute_url }}">{{ pset.name }}</a></div>
+                        <div class="creator">{% trans "Created by " %} <a href="">{{ pset.author }}</a> {% trans " at " %} {{ pset.pub_date|date:"j/m/Y G:i" }} </div>
+                    </div>
+                    <div style="clear:left;"></div>
+                </div>
+            {% empty %}
+                <p>{% trans "There is no proposal set created" %}.</p>
+            {% endfor %}
+    
+            <hr />
+            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+  
+            {% if is_paginated %}
+                <div class="pagination">
+                    <span class="page-links">
+                        {% if page_obj.has_previous %}
+                            <a href="{% url 'list-proposalsets' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
+                        {% endif %}
+                        <span class="page-current">
+                            {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                        </span>
+                        {% if page_obj.has_next %}
+                            <a href="{% url 'list-proposalsets' get_place.url %}?page={{ page_obj.next_page_number }}">| {% trans "next" %} &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="span4">
+            <h4>Empty space!</h4>
+        </div>
+    </div>
+
+{% endblock %}
