@@ -25,7 +25,10 @@ Plase refer to the 'configuration' section of the documentation for guidance.
 """
 
 import os
-from e_cidadania.settings import __version__, __status__
+
+# e-cidadania version and current status
+__version__ = "0.1.5"
+__status__ = "RC 1"
 
 # Get the current working directory so we can fill automatically other variables.
 cwd = os.path.dirname(os.path.realpath(__file__)).strip('settings')
@@ -192,10 +195,9 @@ LOGGING = {
 # SELECT ENVIROMENT
 # Tell django what environment you will run. Options: development, production. 
 # Default: development
-from e_cidadania.settings.development import *
 
 # Combine all the apps in the django variable INSTALLED_APPS
-INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES + TEST_APPS
+INSTALLED_APPS = DJANGO_APPS + THIRDPARTY_APPS + ECIDADANIA_MODULES
 
 # Activate the new url syntax in django 1.3 which will be
 # compatible till 1.5

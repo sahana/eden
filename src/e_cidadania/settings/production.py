@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-DEBUG = False
+from e_cidadania.settings.defaults import *
 
 # Registration mail settings
 #EMAIL_HOST = ""

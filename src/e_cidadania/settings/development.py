@@ -17,8 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+#Import all the settings.defaults settings
+from e_cidadania.settings.defaults import *
 
 # Registration mail settings. Please use a different mail server and account
 # during development than in production.
@@ -76,3 +76,5 @@ NOSE_ARGS = ['tests', '-s']
 NOSE_PLUGINS = [
     'tests.nose_plugins.DatabaseFlushPlugin',
 ]
+
+INSTALLED_APPS += TEST_APPS

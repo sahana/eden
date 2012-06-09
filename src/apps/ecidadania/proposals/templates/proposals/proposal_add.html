@@ -36,7 +36,7 @@
                     {% endfor %}
                 {% endif %}
                 
-                <div class="clearfix {% if form.title.errors %}error{% endif%}"> 
+                <div class="clearfix {% if form.title.errors %}error{% endif %}"> 
                     <label for="prependedInput">{{ form.title.label }}</label> 
                     <div class="input"> 
                         {{ form.title }}
@@ -51,8 +51,22 @@
                         </span>
                     </div> 
                 </div>
-                
-                <div class="clearfix {% if form.description.errors %}error{% endif%}">
+                <div class="clearfix {% if form.proposalset.errors%}error{% endif %}">
+                    <label for="prependedInput">Proposal Set</label>
+                    <div class="input">
+                        {{ form.proposalset }}
+                        <span class="input">
+                            {% if form.proposalset.errors %}
+                                {% for error in form.proposalset.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.proposalset.help_text }}
+                            {% endif %}
+                        </span>
+                    </div>
+                 </div>                
+                 <div class="clearfix {% if form.description.errors %}error{% endif%}">
                     <label for="prependedInput">{{ form.description.label }}</label> 
                     <div class="input"> 
                         {{ form.description }}

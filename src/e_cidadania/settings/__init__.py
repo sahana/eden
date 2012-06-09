@@ -17,8 +17,15 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-# e-cidadania version and current status
-__version__ = "0.1.5"
-__status__ = "RC 1"
+import defaults
 
-from defaults import *
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+__version__ = defaults.__version__
+__status__ = defaults.__status__
+
+if DEBUG:
+    from development import *
+else:
+    from production import *
