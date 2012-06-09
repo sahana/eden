@@ -43,6 +43,7 @@ class ProposalForm(ModelForm):
     """
     class Meta:
         model = Proposal
+        exclude = ('contenttype','object_pk','content_object')
 
 class VoteProposal(ModelForm):
 
