@@ -52,10 +52,11 @@ class BaseProposalAbstractModel(models.Model):
     """
     content_type = models.ForeignKey(ContentType,
             verbose_name=_('content_type'),
-            related_name="content_type_set_for_%(class)s", null=True)
+            related_name="content_type_set_for_%(class)s", null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_pk = models.TextField(_('object ID'), null=True)
     content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
-
+    
     class Meta:
         abstract = True
 
