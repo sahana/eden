@@ -61,7 +61,7 @@ from core.spaces.models import Space, Entity, Document, Event, Intent
 from apps.ecidadania.news.models import Post
 from core.spaces.forms import SpaceForm, DocForm, EventForm, \
      EntityFormSet
-from apps.ecidadania.proposals.models import Proposal
+from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from django.conf import settings
@@ -261,6 +261,7 @@ class ViewSpaceIndex(DetailView):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
+        context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
         context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
         context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')[:10]
         context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
