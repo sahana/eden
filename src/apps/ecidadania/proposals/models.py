@@ -52,8 +52,8 @@ class BaseProposalAbstractModel(models.Model):
     """
     content_type = models.ForeignKey(ContentType,
             verbose_name=_('content_type'),
-            related_name="content_type_set_for_%(class)s" )
-    object_pk = models.TextField(_('object ID'))
+            related_name="content_type_set_for_%(class)s", null=True)
+    object_pk = models.TextField(_('object ID'), null=True)
     content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
 
     class Meta:
