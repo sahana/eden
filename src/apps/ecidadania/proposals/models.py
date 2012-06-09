@@ -59,13 +59,6 @@ class BaseProposalAbstractModel(models.Model):
     class Meta:
         abstract = True
 
-    def get_content_object_url(self):
-
-        return urlresolvers.reverse(
-            "proposal-url-redirect",
-            args = (self.content_type_id, self.object_pk)
-        )
-
 
 class Category(BaseProposalAbstractModel):
 
@@ -76,7 +69,7 @@ class Category(BaseProposalAbstractModel):
     pass
 
 
-class ProposalSet(BaseProposalAbstractModel):
+class ProposalSet(models.Model):
 
     """
     ProposalSet date model. This will contain a group of proposal
@@ -101,7 +94,7 @@ class ProposalSet(BaseProposalAbstractModel):
         verbose_name_plural = _('ProposalSets')
         get_latest_by = 'pub_date'
 
-
+    @models.permalink
     def get_absolute_url(self):
         return ('view-proposalset',(), {
             'space_name': self.space.url,
@@ -146,7 +139,7 @@ class Proposal(BaseProposalAbstractModel):
                                   related_name='proposal_closed_by')
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
-    merged = models.NullBooleanField(default=False, blank=True)
+    merged = models.NullBooleanField(default=False, blank=True, null=True)
     merged_proposals = models.ManyToManyField(ProposalSet, blank=True, null=True)
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
