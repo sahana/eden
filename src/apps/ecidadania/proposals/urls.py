@@ -47,9 +47,9 @@ urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^psets/(?P<set_id>\w+)/$'), ViewProposalSet.as_view(), name='view-proposalset'),
    
-    url(_(r'^psets/(?P<set_id>\w+/edit/$)'), EditProposalSet.as_view(), name='edit-proposalset'),
+    url(_(r'^psets/(?P<set_id>\w+)/edit/$'), EditProposalSet.as_view(), name='edit-proposalset'),
 
-    url(_(r'^psets/(?P<set_id>\w+/delete/$)'), DeleteProposalSet.as_view(), name='delete-proposalset'),
+    url(_(r'^psets/(?P<set_id>\w+)/delete/$'), DeleteProposalSet.as_view(), name='delete-proposalset'),
     
 )
 
