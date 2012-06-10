@@ -13,7 +13,6 @@
             {% for pset in object_list %}
                 <div id="proposal-wrapper">
                     {% if perms.proposals.add_proposalset %}
-                        <h3>Hi</h3>
                         <div id="tools">
                             <a href="{% url 'add-proposalset' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a>
                             {% if perms.proposals.edit_proposalset %}
