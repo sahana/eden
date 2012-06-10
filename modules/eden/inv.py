@@ -937,14 +937,20 @@ class S3TrackingModel(S3Model):
                         name="recv_search_text_simple",
                         label=T("Search"),
                         comment=recv_search_comment,
-                        field=[ "from_person",
+                        field=[
+                                "sender_id$first_name",
+                                "sender_id$middle_name",
+                                "sender_id$last_name",
                                 "comments",
                                 "from_site_id$name",
                                 "recipient_id$first_name",
                                 "recipient_id$middle_name",
                                 "recipient_id$last_name",
-                                "site_id$name"
-                                ]
+                                "site_id$name",
+                                "recv_ref",
+                                "send_ref",
+                                "purchase_ref",
+                              ]
                       )),
             advanced=(S3SearchSimpleWidget(
                         name="recv_search_text_advanced",
@@ -2861,6 +2867,7 @@ def inv_adj_rheader(r):
             return rheader
     return None
 
+# =============================================================================
 # Generic function called by the duplicator methods to determine if the
 # record already exists on the database.
 def duplicator(job, query):
@@ -2873,21 +2880,16 @@ def duplicator(job, query):
 
       If the record is a duplicate then it will set the job method to update
     """
-    # ignore this processing if the id is set
-    if job.id:
-        return
-
-    db = current.db
 
     table = job.table
-    _duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+    _duplicate = current.db(query).select(table.id,
+                                          limitby=(0, 1)).first()
     if _duplicate:
         job.id = _duplicate.id
         job.data.id = _duplicate.id
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
-
 
 # =============================================================================
 class InvItemVirtualFields:

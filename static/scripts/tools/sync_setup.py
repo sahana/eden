@@ -63,7 +63,7 @@ else:
 
 # Synchronization interval, minutes
 try:
-    sync_interval = os.environ["sync_interval"]
+    sync_interval = int(os.environ["sync_interval"])
 except KeyError:
     sync_interval = 2
 

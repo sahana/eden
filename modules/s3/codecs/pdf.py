@@ -114,8 +114,9 @@ class S3RL_PDF(S3Codec):
         """
             Export data as a PDF spreadsheet
 
-            @param r: either an S3Request object or a callback
+            @param r: the S3Request object
             @param attr: dictionary of parameters:
+                 * pdf_callback:    callback to be used rather than r
                  * list_fields:     Fields to include in list views
                  * pdf_componentname: The name of the component to use
                                          This should be a component of the resource
@@ -197,7 +198,11 @@ class S3RL_PDF(S3Codec):
         body_flowable = None
 
         doc.calc_body_size(header_flowable, footer_flowable)
-        if attr.get("pdf_componentname"):
+        callback = attr.get("pdf_callback")
+        if callback:
+            body_flowable = self.get_html_flowable(callback(r),
+                                                   doc.printable_width)
+        elif attr.get("pdf_componentname"):
             componentname = attr.get("pdf_componentname")
             (prefix, component) = componentname.split("_", 1) 
             resource = current.manager.define_resource(request.controller,
@@ -208,18 +213,14 @@ class S3RL_PDF(S3Codec):
 
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
-        elif isinstance(r, S3Request):
+        else:
             if r.component:
                 resource = r.component
             else:
                 resource = r.resource
             body_flowable = self.get_resource_flowable(resource,
                                                        doc)
-        else:
-            # Not a S3Request.
-            # it should be a callback which will generate some HTML
-            body_flowable = self.get_html_flowable(r(),
-                                                   doc.printable_width)
+            
         styleSheet = getSampleStyleSheet()
         self.normalstyle = styleSheet["Normal"]
         self.normalstyle.fontName = "Helvetica"

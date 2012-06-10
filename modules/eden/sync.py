@@ -502,7 +502,7 @@ class SyncDataModel(S3Model):
         s3db = current.s3db
 
         # Delete all resources in this repository
-        rtable = s3db.sync_resource
+        rtable = s3db.sync_task
         db(rtable.repository_id == row.id).update(deleted=True)
 
         # Delete all jobs for this repository

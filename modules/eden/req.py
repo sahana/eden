@@ -864,11 +864,6 @@ $(function() {
            - If the Request Number exists then it's a duplicate
         """
 
-        db = current.db
-
-        # ignore this processing if the id is set or there is no data
-        if job.id or job.data == None:
-            return
         if job.tablename == "req_req":
             table = job.table
             if "req_ref" in job.data:
@@ -877,8 +872,8 @@ $(function() {
                 return
 
             query = (table.req_ref == request_number)
-            _duplicate = db(query).select(table.id,
-                                          limitby=(0, 1)).first()
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
@@ -1135,14 +1130,9 @@ $(document).ready(function() {
            - The item is the same
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        # ignore this processing if the id is set or there is no data
-        if job.id or job.data == None:
-            return
         if job.tablename == "req_req_item":
             itable = job.table
+            s3db = current.s3db
             rtable = s3db.req_req
             stable = s3db.supply_item
             req_id = None
@@ -1169,8 +1159,8 @@ $(document).ready(function() {
             else:
                 return
 
-            _duplicate = db(query).select(itable.id,
-                                          limitby=(0, 1)).first()
+            _duplicate = current.db(query).select(itable.id,
+                                                  limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id

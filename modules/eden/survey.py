@@ -80,6 +80,7 @@ __all__ = ["S3TemplateModel",
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
+import gluon.contrib.simplejson as json
 from ..s3 import *
 
 import sys
@@ -88,11 +89,12 @@ from s3survey import survey_question_type, \
                      survey_analysis_type, \
                      _debug
 
+# =============================================================================
 def json2py(jsonstr):
     """
         Utility function to convert a string in json to a python structure
     """
-    import gluon.contrib.simplejson as json
+
     from xml.sax.saxutils import unescape
 
     if not isinstance(jsonstr, str):
@@ -108,10 +110,12 @@ def json2py(jsonstr):
         return pythonStructure
 survey_json2py = json2py
 
+# =============================================================================
 def json2list(jsonstr):
     """
         Used to modify a json string to a python list.
     """
+
     if jsonstr == "":
         valueList = []
     else:
@@ -124,6 +128,7 @@ def json2list(jsonstr):
     return valueList
 survey_json2list = json2list
 
+# =============================================================================
 class S3TemplateModel(S3Model):
     """
         Template model
@@ -148,12 +153,12 @@ class S3TemplateModel(S3Model):
                             4: T("Master")
                           }
 
-        """
-            The survey_template table
+        # ---------------------------------------------------------------------
+        # survey_template
+        #
+        # The template is the root table and acts as a container for
+        # the questions that will be used in a survey.
 
-            The template is the root table and acts as a container for
-            the questions that will be used in a survey.
-        """
         tablename = "survey_template"
         table = self.define_table(tablename,
                                    Field("name",
@@ -248,13 +253,13 @@ class S3TemplateModel(S3Model):
                         deduplicate = self.survey_template_duplicate,
                         )
 
-        """
-            The survey_sections table
+        # ---------------------------------------------------------------------
+        # survey_sections
+        #
+        # The questions can be grouped into sections this provides
+        # the description of the section and
+        # the position of the section within the template
 
-            The questions can be grouped into sections this provides
-            the description of the section and
-            the position of the section within the template
-        """
         tablename = "survey_section"
         table = self.define_table(tablename,
                                  Field("name",
@@ -305,7 +310,7 @@ class S3TemplateModel(S3Model):
             survey_template_status = template_status,
         )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Static so that calling it doesn't require loading the models
     @staticmethod
     def template_onvalidate(form):
@@ -313,14 +318,19 @@ class S3TemplateModel(S3Model):
             It is not valid to re-import a template that already has a
             status of Active or higher
         """
+
         template_id = form.vars.id
         template = survey_getTemplate(template_id)
         if template != None and template.status > 1:
             return False
         return True
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def addQuestion(template_id, name, code, notes, type, posn, metadata={}):
+        """
+        """
+
         db = current.db
         s3db = current.s3db
 
@@ -368,6 +378,7 @@ class S3TemplateModel(S3Model):
                                    posn = posn
                                   )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def template_onaccept(form):
         """
@@ -382,10 +393,12 @@ class S3TemplateModel(S3Model):
             The code for each question will start with "STD-" followed by
             the type of question.
         """
+
         if form.vars.id:
             template_id = form.vars.id
         else:
             return
+
         addQuestion = S3TemplateModel.addQuestion
         if form.vars.competion_qstn != None:
             name = form.vars.competion_qstn
@@ -434,19 +447,21 @@ class S3TemplateModel(S3Model):
                 posn += 1
                 addQuestion(template_id, name, code, "", type, posn, metadata)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_template_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
+
         if job.tablename == "survey_template":
             table = job.table
             name = "name" in job.data and job.data.name
             query =  table.name.lower().like('%%%s%%' % name.lower())
             return duplicator(job, query)
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_section_duplicate(job):
         """
@@ -456,7 +471,6 @@ class S3TemplateModel(S3Model):
            - and the same position within the template
            - however if their is a record with position of zero then that record should be updated
         """
-        db = current.db
 
         if job.tablename == "survey_section":
             table = job.table
@@ -465,33 +479,36 @@ class S3TemplateModel(S3Model):
             query = (table.name == name) & \
                     (table.template_id == template)
             posn = "posn" in job.data and job.data.posn
-            record = db(query & (table.posn == 0)).select(table.posn, limitby=(0, 1)).first()
+            query = query & (table.posn == 0)
+            record = current.db(query).select(table.posn,
+                                              limitby=(0, 1)).first()
             if not record:
                 query = query & (table.posn == posn)
             return duplicator(job, query)
 
-
 # =============================================================================
-
 def survey_template_represent(id):
     """
         Display the template name rather than the id
     """
+
     s3db = current.s3db
     table = s3db.survey_template
 
-    db = current.db
     query = (table.id == id)
-    record = db(query).select(table.name,limitby=(0, 1)).first()
+    record = current.db(query).select(table.name,
+                                      limitby=(0, 1)).first()
     if record:
         return record.name
     else:
         return None
 
+# =============================================================================
 def survey_template_rheader(r, tabs=[]):
     """
         The template rheader
     """
+
     s3db = current.s3db
     db = current.db
     T = current.T
@@ -508,7 +525,7 @@ def survey_template_rheader(r, tabs=[]):
             tabs = [(T("Basic Details"), "read"),
                     (T("Question Details"),"templateRead/"),
                     (T("Question Summary"),"templateSummary/"),
-#                            (T("Sections"), "section"),
+                    #(T("Sections"), "section"),
                    ]
             if auth.s3_has_permission("create", "survey_translate"):
                 tabs.append((T("Translate"),"translate"))
@@ -567,21 +584,22 @@ def survey_template_rheader(r, tabs=[]):
             return rheader
     return None
 
+# =============================================================================
 def survey_getTemplate(template_id):
     """
         Return the template data from the template id passed in
     """
-    s3db = current.s3db
-    db = current.db
 
-    table = s3db.survey_template
+    table = current.s3db.survey_template
     query = (table.id == template_id)
-    return db(query).select(limitby=(0, 1)).first()
+    return current.db(query).select(limitby=(0, 1)).first()
 
+# =============================================================================
 def survey_getTemplateFromSeries(series_id):
     """
         Return the template data from the series_id passed in
     """
+
     series = survey_getSeries(series_id)
     if series != None:
         template_id = series.template_id
@@ -589,23 +607,24 @@ def survey_getTemplateFromSeries(series_id):
     else:
         return None
 
+# =============================================================================
 def survey_getAllTemplates():
     """
         function to return all the templates on the database
     """
-    s3db = current.s3db
-    db = current.db
 
-    table = s3db.survey_template
-    row = db(table).select()
+    table = current.s3db.survey_template
+    row = current.db(table).select()
     return row
 
+# =============================================================================
 def survey_getAllWidgetsForTemplate(template_id):
     """
         function to return the widgets for each question for the given
         template. The widgets are returned in a dict with the key being
         the question code.
     """
+
     s3db = current.s3db
     db = current.db
 
@@ -631,7 +650,7 @@ def survey_getAllWidgetsForTemplate(template_id):
         question = {}
     return widgets
 
-
+# =============================================================================
 def survey_getAllSectionsForSeries(series_id):
     """
         function to return the list of sections for the given series
@@ -641,19 +660,21 @@ def survey_getAllSectionsForSeries(series_id):
         The data on each section is held in a dict and is as follows:
         section_id, name, template_id, and posn
     """
+
     row = survey_getSeries(series_id)
     template_id = row.template_id
     return survey_getAllSectionsForTemplate(template_id)
 
-
+# =============================================================================
 def survey_buildQuestionnaireFromTemplate(template_id):
     """
         build a form displaying all the questions for a given template_id
     """
-    s3 = current.response.s3
-    questions = survey_getAllQuestionsForTemplate(template_id)
-    return buildQuestionsForm(questions,readOnly=True)
 
+    questions = survey_getAllQuestionsForTemplate(template_id)
+    return buildQuestionsForm(questions, readOnly=True)
+
+# =============================================================================
 def survey_getAllSectionsForTemplate(template_id):
     """
         function to return the list of sections for the given template
@@ -663,16 +684,15 @@ def survey_getAllSectionsForTemplate(template_id):
         The data on each section is held in a dict and is as follows:
         section_id, name, template_id, and posn
     """
-    s3db = current.s3db
-    db = current.db
-    sectable = s3db.survey_section
+
+    sectable = current.s3db.survey_section
     query = (sectable.template_id == template_id)
 
-    rows = db(query).select(sectable.id,
-                            sectable.name,
-                            sectable.template_id,
-                            sectable.posn,
-                            orderby = sectable.posn)
+    rows = current.db(query).select(sectable.id,
+                                    sectable.name,
+                                    sectable.template_id,
+                                    sectable.posn,
+                                    orderby = sectable.posn)
     sections = []
     for sec in rows:
         sections.append({"section_id": sec.id,
@@ -683,24 +703,26 @@ def survey_getAllSectionsForTemplate(template_id):
                        )
     return sections
 
-
+# =============================================================================
 def survey_getWidgetFromQuestion(question_id):
     """
         Function that gets the right widget for the question
     """
-    s3db = current.s3db
-    db = current.db
-    qtable = s3db.survey_question
+
+    qtable = current.s3db.survey_question
     query = (qtable.id == question_id)
-    question = db(query).select(qtable.type,
-                                limitby=(0, 1)).first()
+    question = current.db(query).select(qtable.type,
+                                        limitby=(0, 1)).first()
     qstnType = question.type
     widgetObj = survey_question_type[qstnType](question_id)
     return widgetObj
 
-
+# =============================================================================
 def buildQuestionsForm(questions, complete_id=None, readOnly=False):
-    # Create the form, hard-coded table layout :(
+    """
+        Create the form, hard-coded table layout :(
+    """
+
     T = current.T
 
     form = FORM()
@@ -741,7 +763,11 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
         form.append(button)
     return form
 
+# =============================================================================
 def survey_build_template_summary(template_id):
+    """
+    """
+
     T = current.T
     s3 = current.response.s3
 
@@ -808,9 +834,7 @@ def survey_build_template_summary(template_id):
     s3.dataTableID = "template_summary"
     return table
 
-
-
-
+# =============================================================================
 class S3QuestionModel(S3Model):
     """
         Question Model
@@ -828,18 +852,20 @@ class S3QuestionModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        """ The survey_question table defines a question that will appear
-            within a section, and thus belong to the template.
+        # ---------------------------------------------------------------------
+        # survey_question
+        # Defines a question that will appear within a section, and thus belong
+        # to the template.
+        #
+        #    This holds the actual question and
+        #    A string code (unique within the template) is used to identify the question.
+        #
+        #    It will have a type from the questionType dictionary.
+        #    This type will determine the options that can be associated with it.
+        #    A question can belong to many different sections.
+        #    The notes are to help the enumerator and will typically appear as a
+        #    footnote in the printed form.
 
-            This holds the actual question and
-            A string code (unique within the template) is used to identify the question.
-
-            It will have a type from the questionType dictionary.
-            This type will determine the options that can be associated with it.
-            A question can belong to many different sections.
-            The notes are to help the enumerator and will typically appear as a
-            footnote in the printed form.
-        """
         tablename = "survey_question"
         table = self.define_table(tablename,
                                  Field("name",
@@ -891,19 +917,20 @@ class S3QuestionModel(S3Model):
                         )
 
 
-        """
-            The survey_question_metadata table is referenced by
-            the survey_question table and is used to manage
-            the metadata that will be associated with a question type.
-            For example: if the question type is option, then valid metadata
-            might be:
-            count: the number of options that will be presented: 3
-            1 : the first option                               : Female
-            2 : the second option                              : Male
-            3 : the third option                               : Not Specified
-            So in the above case a question record will be associated with four
-            question_metadata records.
-        """
+        # ---------------------------------------------------------------------
+        # survey_question_metadata
+        # referenced by
+        #    the survey_question table and is used to manage
+        #    the metadata that will be associated with a question type.
+        #    For example: if the question type is option, then valid metadata
+        #    might be:
+        #    count: the number of options that will be presented: 3
+        #    1 : the first option                               : Female
+        #    2 : the second option                              : Male
+        #    3 : the third option                               : Not Specified
+        #    So in the above case a question record will be associated with four
+        #    question_metadata records.
+
         tablename = "survey_question_metadata"
         table = self.define_table(tablename,
                                  Field("question_id",
@@ -945,13 +972,14 @@ class S3QuestionModel(S3Model):
                        deduplicate = self.survey_question_metadata_duplicate
                       )
 
-        """ The survey_question_list table is a resolver between
-            the survey_question and the survey_section tables.
-
-            Along with ids mapping back to these tables
-            it will have a code that can be used to reference the question
-            it will have the position that the question will appear in the template
-        """
+        # -------------------------------------------------------------------------
+        # The survey_question_list table is a resolver between
+        #    the survey_question and the survey_section tables.
+        #
+        #    Along with ids mapping back to these tables
+        #    it will have a code that can be used to reference the question
+        #    it will have the position that the question will appear in the template
+        
         tablename = "survey_question_list"
         template_id = self.survey_template_id
         table = self.define_table(tablename,
@@ -983,19 +1011,24 @@ class S3QuestionModel(S3Model):
                         deduplicate = self.survey_question_list_duplicate,
                         )
         # ---------------------------------------------------------------------
-        return Storage(survey_qstn_name_represent = self.qstn_name_represent)
+        return Storage(
+                survey_qstn_name_represent = self.qstn_name_represent
+            )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def qstn_name_represent(value):
         """
             return the question name, for locations in the gis hierarchy
             the localised name will be returned
         """
+
         if value == "L0" or value == "L1" or value == "L2" or value == "L3" or value == "L4":
             return current.gis.get_location_hierarchy(value)
         else:
             return value
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def question_onvalidate(form):
         """
@@ -1003,11 +1036,13 @@ class S3QuestionModel(S3Model):
             single quotes, rather than double quotes and so these need
             to be escaped to double quotes to make it valid JSON
         """
+
         from xml.sax.saxutils import unescape
         if form.vars.metadata != None:
             form.vars.metadata = unescape(form.vars.metadata,{"'":'"'})
         return True
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def question_onaccept(form):
         """
@@ -1017,11 +1052,10 @@ class S3QuestionModel(S3Model):
             table pair will be a record on that table.
 
         """
-        s3db = current.s3db
 
         if form.vars.metadata == None:
             return
-        qstntable = s3db.survey_question
+        qstntable = current.s3db.survey_question
         if form.vars.id:
             record = qstntable[form.vars.id]
         else:
@@ -1034,29 +1068,28 @@ class S3QuestionModel(S3Model):
                                   form.vars.metadata
                                  )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_question_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for the question code
         """
-        # ignore this processing if the id is set
-        if job.id:
-            return
+
         if job.tablename == "survey_question":
             table = job.table
             code = "code" in job.data and job.data.code
             query = (table.code == code)
             return duplicator(job, query)
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_question_metadata_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for the question_id and descriptor
         """
-        # ignore this processing if the id is set
+
         if job.tablename == "survey_question_metadata":
             table = job.table
             question = "question_id" in job.data and job.data.question_id
@@ -1065,17 +1098,15 @@ class S3QuestionModel(S3Model):
                     (table.question_id == question)
             return duplicator(job, query)
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def question_list_onaccept(form):
         """
             If a grid question is added to the the list then all of the
             grid children will need to be added as well
         """
-        db = current.db
-        s3db = current.s3db
 
-        qstntable = s3db.survey_question
+        qstntable = current.s3db.survey_question
         try:
             question_id = form.vars.question_id
             template_id = form.vars.template_id
@@ -1104,13 +1135,14 @@ class S3QuestionModel(S3Model):
                                            posn,
                                           )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_question_list_duplicate(job):
         """
           Rules for finding a duplicate:
            - The template_id, question_id and section_id are the same
         """
-        # ignore this processing if the id is set
+
         if job.tablename == "survey_question_list":
             table = job.table
             tid = "template_id" in job.data and job.data.template_id
@@ -1121,13 +1153,15 @@ class S3QuestionModel(S3Model):
                     (table.section_id == sid)
             return duplicator(job, query)
 
+# =============================================================================
 def survey_getQuestionFromCode(code, series_id=None):
     """
         function to return the question for the given series
         with the code that matches the one passed in
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     sertable = s3db.survey_series
     q_ltable = s3db.survey_question_list
@@ -1158,6 +1192,7 @@ def survey_getQuestionFromCode(code, series_id=None):
         question["posn"] = record.survey_question_list.posn
     return question
 
+# =============================================================================
 def survey_getAllQuestionsForTemplate(template_id):
     """
         function to return the list of questions for the given template
@@ -1167,8 +1202,9 @@ def survey_getAllQuestionsForTemplate(template_id):
         The data on a question that it returns is as follows:
         qstn_id, code, name, type, posn, section
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
     s3 = current.response.s3
 
     sectable = s3db.survey_section
@@ -1197,6 +1233,7 @@ def survey_getAllQuestionsForTemplate(template_id):
         questions.append(question)
     return questions
 
+# =============================================================================
 def survey_getAllQuestionsForSeries(series_id):
     """
         function to return the list of questions for the given series
@@ -1206,8 +1243,9 @@ def survey_getAllQuestionsForSeries(series_id):
         The data on a question that is returns is as follows:
         qstn_id, code, name, type, posn, section
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     sertable = s3db.survey_series
     query = db((sertable.id == series_id))
@@ -1216,6 +1254,7 @@ def survey_getAllQuestionsForSeries(series_id):
     questions = survey_getAllQuestionsForTemplate(template_id)
     return questions
 
+# =============================================================================
 def survey_getAllQuestionsForComplete(complete_id):
     """
         function to return a tuple of the list of questions and series_id
@@ -1227,8 +1266,9 @@ def survey_getAllQuestionsForComplete(complete_id):
         The data on a question that is returns is as follows:
         qstn_id, code, name, type, posn, section
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     comtable = s3db.survey_complete
     query = db((comtable.id == complete_id))
@@ -1237,7 +1277,11 @@ def survey_getAllQuestionsForComplete(complete_id):
     questions = survey_getAllQuestionsForSeries(series_id)
     return (questions, series_id)
 
+# =============================================================================
 def survey_get_series_questions_of_type(questionList, type):
+    """
+    """
+
     if isinstance(type, (list, tuple)):
         types = type
     else:
@@ -1254,13 +1298,15 @@ def survey_get_series_questions_of_type(questionList, type):
                 questions.append(question)
     return questions
 
+# =============================================================================
 def survey_getQuestionFromName(name, series_id):
     """
         function to return the question for the given series
         with the name that matches the one passed in
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     sertable = s3db.survey_series
     q_ltable = s3db.survey_question_list
@@ -1293,9 +1339,11 @@ def survey_getQuestionFromName(name, series_id):
     question["posn"] = record.survey_question_list.posn
     return question
 
-
+# =============================================================================
 def survey_updateMetaData (record, type, metadata):
-    import gluon.contrib.simplejson as json
+    """
+    """
+
     db = current.db
     s3db = current.s3db
 
@@ -1322,9 +1370,7 @@ def survey_updateMetaData (record, type, metadata):
         widgetObj = survey_question_type["Grid"]()
         widgetObj.insertChildren(record, metadataList)
 
-
-
-
+# =============================================================================
 class S3FormatterModel(S3Model):
     """
         The survey_formatter table defines the order in which the questions
@@ -1366,7 +1412,9 @@ class S3FormatterModel(S3Model):
         rowList = json2py(rules)
 
     """
+
     names = ["survey_formatter"]
+
     def model(self):
 
         db = current.db
@@ -1381,6 +1429,7 @@ class S3FormatterModel(S3Model):
             4: T("PDF"),
         }
 
+        # ---------------------------------------------------------------------
         tablename = "survey_formatter"
         table = self.define_table(tablename,
                                 template_id(),
@@ -1409,13 +1458,14 @@ class S3FormatterModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage()
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def formatter_onaccept(form):
         """
             If this is the formatter rules for the Background Information
             section then add the standard questions to the layout
         """
-        import gluon.contrib.simplejson as json
+
         db = current.db
         s3db = current.s3db
 
@@ -1446,12 +1496,14 @@ class S3FormatterModel(S3Model):
                 ftable = db.survey_formatter
                 db(ftable.id == form.vars.id).update(rules = rules)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_formatter_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for a record with the same template_id and section_id
         """
+
         if job.tablename == "survey_formatter":
             table = job.table
             tid = "template_id" in job.data and job.data.template_id
@@ -1460,6 +1512,7 @@ class S3FormatterModel(S3Model):
                     (table.section_id == sid)
             return duplicator(job, query)
 
+# =============================================================================
 def survey_getQstnLayoutRules(template_id,
                        section_id,
                        method = 1
@@ -1478,8 +1531,9 @@ def survey_getQstnLayoutRules(template_id,
         The function will return a list of rows. Each row is a list
         of question codes.
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     # search for layout rules on the survey_formatter table
     fmttable = s3db.survey_formatter
@@ -1518,7 +1572,7 @@ def survey_getQstnLayoutRules(template_id,
         rowList = json2py(rules)
     return rowList
 
-
+# =============================================================================
 class S3SeriesModel(S3Model):
     """
         Series Model
@@ -1537,19 +1591,20 @@ class S3SeriesModel(S3Model):
             1: T("Active"),
             2: T("Closed"),
         }
-        """
-            The survey_series table is used to hold all uses of a template
 
-            When a series is first created the template status will change from
-            Pending to Active and at the stage no further changes to the
-            template can be made.
+        # ---------------------------------------------------------------------
+        # The survey_series table is used to hold all uses of a template
+        #
+        #    When a series is first created the template status will change from
+        #    Pending to Active and at the stage no further changes to the
+        #    template can be made.
+        #
+        #    Typically a series will be created for an event, which may be a
+        #    response to a natural disaster, an exercise,
+        #    or regular data collection activity.
+        #
+        #    The series is a container for all the responses for the event
 
-            Typically a series will be created for an event, which may be a
-            response to a natural disaster, an exercise,
-            or regular data collection activity.
-
-            The series is a container for all the responses for the event
-        """
         tablename = "survey_series"
         template_id = self.survey_template_id
         person_id = self.pr_person_id
@@ -1631,40 +1686,48 @@ class S3SeriesModel(S3Model):
                         method="series_chart_download",
                         action=self.seriesChartDownload
                        )
+
+        # ---------------------------------------------------------------------
         # Return names to response.s3
         return Storage(
             survey_series_status = series_status,
         )
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def series_onaccept(form):
         """
             Ensure that the template status is set to Active
         """
-        db = current.db
-        s3db = current.s3db
-        table = s3db.survey_template
+
+        table = current.s3db.survey_template
 
         if form.vars.template_id:
             template_id = form.vars.template_id
         else:
             return
-        db(table.id == template_id).update(status = 2)
+        current.db(table.id == template_id).update(status = 2)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_series_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
+
         if job.tablename == "survey_series":
             table = job.table
             name = "name" in job.data and job.data.name
             query =  table.name.lower().like('%%%s%%' % name.lower())
             return duplicator(job, query)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def seriesSummary(r, **attr):
+        """
+        """
+
         db = current.db
         s3db = current.s3db
         request = current.request
@@ -1758,8 +1821,12 @@ class S3SeriesModel(S3Model):
         current.response.view = "survey/series_summary.html"
         return output
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def getChartName():
+        """
+        """
+
         import hashlib
         request = current.request
         end_part = "%s_%s" % (request.vars.numericQuestion,
@@ -1774,8 +1841,12 @@ class S3SeriesModel(S3Model):
                     )
         return chartName
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def seriesChartDownload(r, **attr):
+        """
+        """
+
         from gluon.contenttype import contenttype
 
         s3 = current.response.s3
@@ -1804,6 +1875,7 @@ class S3SeriesModel(S3Model):
             S3SeriesModel.drawChart(output, series_id, numQstnList, labelQuestion, outputFormat="png")
         return output["chart"]
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def seriesGraph(r, **attr):
         """
@@ -1817,9 +1889,10 @@ class S3SeriesModel(S3Model):
                 questions could be people injured and families displaced.
                 Then the results will be grouped by each geographical area.
         """
+
+        T = current.T
         s3 = current.response.s3
         request = current.request
-        T = current.T
         output = dict()
 
         # Draw the chart
@@ -1856,8 +1929,12 @@ class S3SeriesModel(S3Model):
 
         crud_strings = s3.crud_strings["survey_series"]
 
-        # Build the form
+        # ---------------------------------------------------------------------
         def addQstnChkboxToTR(numQstnList, qstn):
+            """
+                Build the form
+            """
+
             tr = TR()
             if numQstnList != None and qstn["code"] in numQstnList:
                 tr.append(INPUT(_type="checkbox",
@@ -1945,10 +2022,14 @@ $.post('%s',
         current.response.view = "survey/series_analysis.html"
         return output
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def drawChart(output, series_id, numQstnList, labelQuestion, outputFormat=None):
-        s3 = current.response.s3
+        """
+        """
+
         T = current.T
+        s3 = current.response.s3
         request = current.request
 
         getAnswers = survey_getAllAnswersForQuestionInSeries
@@ -2007,10 +2088,15 @@ $.post('%s',
                          )
             output["chartDownload"] = chartLink
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def seriesMap(r, **attr):
+        """
+        """
+
         from s3survey import S3AnalysisPriority
         import math
+
         s3 = current.response.s3
         request = current.request
         T = current.T
@@ -2202,9 +2288,13 @@ $.post('%s',
         return output
 
 
+# =============================================================================
 def survey_serieslist_dataTable_post(r):
-    s3 = current.response.s3
+    """
+    """
+
     T = current.T
+    s3 = current.response.s3
 
     S3CRUD.action_buttons(r)
     url = URL(c="survey",
@@ -2218,30 +2308,31 @@ def survey_serieslist_dataTable_post(r):
                        ),
                   ]
 
+# =============================================================================
 def survey_series_represent(value):
     """
         This will display the series name, rather than the id
     """
-    s3db = current.s3db
-    table = s3db.survey_series
 
-    db = current.db
-    query = db((table.id == value))
+    table = current.s3db.survey_series
+    query = current.db((table.id == value))
     row = query.select(table.name, limitby=(0, 1)).first()
     return row.name
 
+# =============================================================================
 def survey_series_rheader(r, tabs=[]):
     """
         The series rheader
     """
-    s3db = current.s3db
-    db = current.db
-    T = current.T
-    s3 = current.response.s3
-    request = current.request
-    auth = current.auth
 
     if r.representation == "html":
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+        request = current.request
+        auth = current.auth
 
         tablename, record = s3_rheader_resource(r)
         if not record:
@@ -2353,19 +2444,18 @@ def survey_series_rheader(r, tabs=[]):
             return rheader
     return None
 
+# =============================================================================
 def survey_getSeries(series_id):
     """
         function to return the series from a series id
     """
-    s3db = current.s3db
-    db = current.db
 
-    table = s3db.survey_series
-    query = db((table.id == series_id))
+    table = current.s3db.survey_series
+    query = current.db(table.id == series_id)
     row = query.select(limitby=(0, 1)).first()
     return row
 
-
+# =============================================================================
 def survey_getSeriesName(series_id):
     """
         function to return the series from a series id
@@ -2375,6 +2465,7 @@ def survey_getSeriesName(series_id):
         return record.name
     return ""
 
+# =============================================================================
 def survey_getAllSeries():
     """
         function to return all the series on the database
@@ -2386,6 +2477,7 @@ def survey_getAllSeries():
     row = db(table).select()
     return row
 
+# =============================================================================
 def survey_buildQuestionnaireFromSeries(series_id, complete_id=None):
     """
         build a form displaying all the questions for a given series_id
@@ -2395,14 +2487,20 @@ def survey_buildQuestionnaireFromSeries(series_id, complete_id=None):
     questions = survey_getAllQuestionsForSeries(series_id)
     return buildQuestionsForm(questions, complete_id)
 
+# =============================================================================
 def survey_save_answers_for_series(series_id, complete_id, vars):
     """
         function to save the list of answers for a completed series
     """
+
     questions = survey_getAllQuestionsForSeries(series_id)
     return saveAnswers(questions, series_id, complete_id, vars)
 
+# =============================================================================
 def saveAnswers(questions, series_id, complete_id, vars):
+    """
+    """
+
     s3db = current.s3db
     db = current.db
     text = ""
@@ -2423,8 +2521,11 @@ def saveAnswers(questions, series_id, complete_id, vars):
         S3CompleteModel.completeOnAccept(complete_id)
         return complete_id
 
-
+# =============================================================================
 def survey_getPriorityQuestionForSeries(series_id):
+    """
+    """
+
     templateRec = survey_getTemplateFromSeries(series_id)
     if templateRec != None:
         priorityQstnCode = templateRec["priority_qstn"]
@@ -2433,8 +2534,11 @@ def survey_getPriorityQuestionForSeries(series_id):
     else:
         return None
 
-
+# =============================================================================
 def buildSeriesSummary(series_id, posn_offset):
+    """
+    """
+
     T = current.T
     s3 = current.response.s3
 
@@ -2495,6 +2599,7 @@ def buildSeriesSummary(series_id, posn_offset):
     form = FORM(table, series, mode, selected)
     return form
 
+# =============================================================================
 class S3CompleteModel(S3Model):
     """
         Complete Model
@@ -2509,16 +2614,17 @@ class S3CompleteModel(S3Model):
         db = current.db
         T = current.T
         s3 = current.response.s3
-        """
-            The survey_complete table holds all of the answers for a completed
-            response. It has a link back to the series this response belongs to.
 
-            Whilst this table holds all of the answers in a text field during
-            the onaccept each answer is extracted and then stored in the
-            survey_answer table. This process of moving the answers to a
-            separate table makes it easier to analyse the answers
-            for a given question across all responses.
-        """
+        # ---------------------------------------------------------------------
+        #    The survey_complete table holds all of the answers for a completed
+        #    response. It has a link back to the series this response belongs to.
+        #
+        #    Whilst this table holds all of the answers in a text field during
+        #    the onaccept each answer is extracted and then stored in the
+        #    survey_answer table. This process of moving the answers to a
+        #    separate table makes it easier to analyse the answers
+        #    for a given question across all responses.
+
         tablename = "survey_complete"
         table = self.define_table(tablename,
                                 Field("series_id",
@@ -2569,10 +2675,10 @@ class S3CompleteModel(S3Model):
                                                  multiple=True)
                            )
 
-        """
-            The survey_answer table holds the answer for a single response
-            of a given question.
-        """
+        # ---------------------------------------------------------------------
+        # The survey_answer table holds the answer for a single response
+        #    of a given question.
+
         tablename = "survey_answer"
         table = self.define_table(tablename,
                                 Field("complete_id",
@@ -2615,6 +2721,7 @@ class S3CompleteModel(S3Model):
         return Storage()
 
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def extractAnswerFromAnswerList(answerList, qstnCode):
         """
@@ -2623,6 +2730,7 @@ class S3CompleteModel(S3Model):
             format created by the XSL stylesheet or by the function
             saveAnswers()
         """
+
         start = answerList.find(qstnCode)
         if start == -1:
             return None
@@ -2631,8 +2739,12 @@ class S3CompleteModel(S3Model):
         answer = answerList[start:end]
         return answer
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def complete_onvalidate(form):
+        """
+        """
+
         if "series_id" not in form.vars or form.vars.series_id == None:
             form.errors.series_id = T("Series details missing.")
             return False
@@ -2656,6 +2768,7 @@ class S3CompleteModel(S3Model):
                     form.errors.answer_list += msg
         return True
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def complete_onaccept(form):
         """
@@ -2667,13 +2780,18 @@ class S3CompleteModel(S3Model):
             This will also extract the default location question as
             defined by the template and store this in the location field
         """
+
         if form.vars.id:
             S3CompleteModel.completeOnAccept(form.vars.id)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def completeOnAccept(complete_id):
-        s3db = current.s3db
+        """
+        """
+
         db = current.db
+        s3db = current.s3db
         ##################################################################
         # Get the basic data that is needed
         ##################################################################
@@ -2703,18 +2821,21 @@ class S3CompleteModel(S3Model):
         locations = get_location_details(complete_id)
         S3CompleteModel.importLocations(locations)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def importAnswers(id, list):
         """
             private function used to save the answer_list stored in
             survey_complete into answer records held in survey_answer
         """
+
         import csv
         import os
         try:
             from cStringIO import StringIO    # Faster, where available
         except:
             from StringIO import StringIO
+
         strio = StringIO()
         strio.write(list)
         strio.seek(0)
@@ -2743,13 +2864,16 @@ class S3CompleteModel(S3Model):
         resource = s3mgr.define_resource("survey", "answer")
         resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def importLocations(location_dict):
         """
             private function used to save the locations to gis.location
         """
+
         import csv
         import os
+
         s3mgr = current.manager
         answer = []
         lastLocWidget = None
@@ -2795,12 +2919,14 @@ class S3CompleteModel(S3Model):
         resource = s3mgr.define_resource("gis", "location")
         resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_complete_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for a record with the same name, answer_list
         """
+
         if job.tablename == "survey_complete":
             table = job.table
             answers = "answer_list" in job.data and job.data.answer_list
@@ -2813,17 +2939,15 @@ class S3CompleteModel(S3Model):
                 # This can happen during an import if the wrong file is used.
                 return
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def answer_onaccept(form):
         """
             Some question types may require additional processing
         """
-        s3db = current.s3db
-        db = current.db
 
         if form.vars.complete_id and form.vars.question_id:
-            atable = s3db.survey_answer
+            atable = current.s3db.survey_answer
             complete_id = form.vars.complete_id
             question_id = form.vars.question_id
             value = form.vars.value
@@ -2832,14 +2956,16 @@ class S3CompleteModel(S3Model):
             if newValue != value:
                 query = (atable.question_id == question_id) & \
                         (atable.complete_id == complete_id)
-                db(query).update(value = newValue)
+                current.db(query).update(value = newValue)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def survey_answer_duplicate(job):
         """
           Rules for finding a duplicate:
            - Look for a record with the same complete_id and question_id
         """
+
         if job.tablename == "survey_answer":
             table = job.table
             qid = "question_id" in job.data and job.data.question_id
@@ -2848,7 +2974,7 @@ class S3CompleteModel(S3Model):
                     (table.complete_id == rid)
             return duplicator(job, query)
 
-
+# =============================================================================
 def survey_answerlist_dataTable_pre():
     # The answer list has been removed for the moment. Currently it
     # displays all answers for a summary it would be better to
@@ -2857,7 +2983,7 @@ def survey_answerlist_dataTable_pre():
     list_fields = ["created_on", "series_id", "location", "modified_by"]
     s3mgr.configure("survey_complete", list_fields=list_fields)
 
-
+# =============================================================================
 def survey_answerlist_dataTable_post(r):
     s3 = current.response.s3
     T = current.T
@@ -2872,16 +2998,15 @@ def survey_answerlist_dataTable_post(r):
                        ),
                   ]
 
+# =============================================================================
 def survey_answer_list_represent(value):
     """
         Display the answer list in a formatted table.
         Displaying the full question (rather than the code)
         and the answer.
     """
-    s3db = current.s3db
-    db = current.db
 
-    qtable = s3db.survey_question
+    qtable = current.s3db.survey_question
     answer_text = value
     list = answer_text.splitlines()
     result = TABLE()
@@ -2894,7 +3019,8 @@ def survey_answer_list_represent(value):
             question = questions[question]
         else:
             query = (qtable.code == question)
-            qstn = db(query).select(qtable.name, limitby=(0, 1)).first()
+            qstn = current.db(query).select(qtable.name,
+                                            limitby=(0, 1)).first()
             if qstn == None:
                 continue
             questions[question] = qstn.name
@@ -2903,13 +3029,16 @@ def survey_answer_list_represent(value):
         result.append(TR(TD(B(question)),TD(answer)))
     return result
 
+# =============================================================================
 def get_location_details(complete_id):
     """
         It will return a dict of values for all of the standard location
         questions that have been answered
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
+
     locations = {}
     comtable = s3db.survey_complete
     qsntable = s3db.survey_question
@@ -2928,13 +3057,15 @@ def get_location_details(complete_id):
             locations[locCode] = widgetObj
     return locations
 
+# =============================================================================
 def get_default_location(complete_id):
     """
         It will check each standard location question in
         the hierarchy until either one is found or none are found
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     comtable = s3db.survey_complete
     qsntable = s3db.survey_question
@@ -2954,14 +3085,15 @@ def get_default_location(complete_id):
     else:
         return None
 
-
+# =============================================================================
 def survey_getAllAnswersForQuestionInSeries(question_id, series_id):
     """
         function to return all the answers for a given question
         from with a specified series
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     ctable = s3db.survey_complete
     atable = s3db.survey_answer
@@ -2982,7 +3114,11 @@ def survey_getAllAnswersForQuestionInSeries(question_id, series_id):
         answers.append(answer)
     return answers
 
+# =============================================================================
 def buildTableFromCompletedList(dataSource):
+    """
+    """
+
     s3 = current.response.s3
 
     headers = dataSource[0]
@@ -3011,6 +3147,7 @@ def buildTableFromCompletedList(dataSource):
     s3.dataTableID = "completed_list"
     return table
 
+# =============================================================================
 def buildCompletedList(series_id, question_id_list):
     """
         build a list of completed items for the series including
@@ -3024,8 +3161,9 @@ def buildCompletedList(series_id, question_id_list):
         @param series_id: The id of the series
         @param question_id_list: The list of questions to display
     """
-    s3db = current.s3db
+
     db = current.db
+    s3db = current.s3db
 
     headers = []
     types = []
@@ -3057,12 +3195,13 @@ def buildCompletedList(series_id, question_id_list):
         qstn_posn += 1
     return [headers] + [types] + items
 
+# =============================================================================
 def getLocationList(series_id):
-    s3db = current.s3db
-    db = current.db
+    """
+    """
 
-    comtable = s3db.survey_complete
-    query = db(comtable.series_id == series_id)
+    comtable = current.s3db.survey_complete
+    query = current.db(comtable.series_id == series_id)
     rows = query.select()
     response_locations = []
     for row in rows:
@@ -3111,11 +3250,12 @@ def getLocationList(series_id):
                     response_locations.append(location)
     return response_locations
 
-
+# =============================================================================
 class S3TranslateModel(S3Model):
     """
         Translate Model
     """
+
     from gluon.languages import read_dict, write_dict
 
     names = ["survey_translate"]
@@ -3126,10 +3266,10 @@ class S3TranslateModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
-        """
-            The survey_translate table holds the details of the language
-            for which the template has been translated into.
-        """
+        # ---------------------------------------------------------------------
+        # The survey_translate table holds the details of the language
+        #    for which the template has been translated into.
+
         tablename = "survey_translate"
         template_id = self.survey_template_id
         LANG_HELP = T("This is the full name of the language and will be displayed to the user when selecting the template language.")
@@ -3167,7 +3307,7 @@ class S3TranslateModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage()
 
-
+    # -------------------------------------------------------------------------
     @staticmethod
     def translate_onaccept(form):
         """
@@ -3177,6 +3317,7 @@ class S3TranslateModel(S3Model):
             The translation strings need to be extracted from
             the spreadsheet and inserted into the language file.
         """
+
         T = current.T
         request =  current.request
         response = current.response
@@ -3236,40 +3377,39 @@ class S3TranslateModel(S3Model):
                 response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % \
                     dict(count_of=count, language=lang)
 
-
+# =============================================================================
 def survey_getTranslation(translation_id):
     """
         Return the template translation record for the id passed in
     """
-    s3db = current.s3db
-    db = current.db
 
-    table = s3db.survey_translate
+    table = current.s3db.survey_translate
     query = (table.id == translation_id)
-    return db(query).select(limitby=(0, 1)).first()
+    record = current.db(query).select(limitby=(0, 1)).first()
+    return record
 
+# =============================================================================
 def survey_getAllTranslationsForTemplate(template_id):
     """
         function to return all the translations for the given template
     """
-    s3db = current.s3db
-    db = current.db
 
-    table = s3db.survey_translate
+    table = current.s3db.survey_translate
     query = (table.template_id == template_id)
-    row = db(query).select()
+    row = current.db(query).select()
     return row
 
+# =============================================================================
 def survey_getAllTranslationsForSeries(series_id):
     """
         function to return all the translations for the given series
     """
+
     row = survey_getSeries(series_id)
     template_id = row.template_id
     return survey_getAllTranslationsForTemplate(template_id)
 
-
-
+# =============================================================================
 # Generic function called by the duplicator methods to determine if the
 # record already exists on the database.
 def duplicator(job, query):
@@ -3282,18 +3422,13 @@ def duplicator(job, query):
 
       If the record is a duplicate then it will set the job method to update
     """
-    # ignore this processing if the id is set
-    if job.id:
-        return
-
-    db = current.db
 
     table = job.table
-    _duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+    _duplicate = current.db(query).select(table.id,
+                                          limitby=(0, 1)).first()
     if _duplicate:
         job.id = _duplicate.id
         job.data.id = _duplicate.id
         job.method = job.METHOD.UPDATE
-
 
 # END =========================================================================

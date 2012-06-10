@@ -529,7 +529,8 @@ class S3XML(S3Codec):
                 ktablename = krecord.instance_type
                 uid = krecord[UID]
                 if ktablename == tablename and \
-                   UID in record and record[UID] == uid:
+                   UID in record and record[UID] == uid and \
+                   not current.manager.show_ids:
                     continue
                 uids = [uid]
             else:

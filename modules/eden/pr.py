@@ -1673,6 +1673,12 @@ class S3PersonImageModel(S3Model):
                             (None, 60)
                             )
 
+            pr_image_resize(_image.file,
+                            newfilename,
+                            _image.filename,
+                            (160, None)
+                            )
+
         if newfilename and not url:
             # Provide the link to the file in the URL field
             url = URL(c="default", f="download", args=newfilename)
@@ -4601,13 +4607,12 @@ def pr_image_modify(image_file,
             thumb_size.append(size[1])
         im.thumbnail(thumb_size, Image.ANTIALIAS)
 
-        if to_format:
-            if to_format.upper() == "JPG":
-                to_format = "JPEG"
-            elif to_format.upper() == "BMP":
-                im = im.convert("RGB")
-        else:
+        if not to_format:
             to_format = fileExtension[1:]
+        if to_format.upper() == "JPG":
+            to_format = "JPEG"
+        elif to_format.upper() == "BMP":
+            im = im.convert("RGB")
         save_im_name = "%s.%s" % (fileName, to_format)
         tempFile = TemporaryFile()
         im.save(tempFile,to_format)

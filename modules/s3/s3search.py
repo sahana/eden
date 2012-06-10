@@ -270,6 +270,8 @@ class S3SearchSimpleWidget(S3SearchWidget):
             self.attr.update(_size="40")
         if "_name" not in self.attr:
             self.attr.update(_name="%s_search_simple" % resource.name)
+        if "_id" not in self.attr:
+            self.attr.update(_id="%s_search_simple" % resource.name)
         if autocomplete:
             self.attr.update(_autocomplete=autocomplete)
         self.attr.update(_type="text")
@@ -749,7 +751,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             return None
 
 # =============================================================================
-
 class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
     """
         Displays a search widget which allows the user to search for records
@@ -782,13 +783,17 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
             config = gis.get_config()
             field = level = config.search_level or "L0"
 
+        hierarchy = gis.get_location_hierarchy()
+        if level in hierarchy:
+            label = hierarchy[level]
+        else:
+            label = level
+
         self.field = field
 
         super(S3SearchLocationHierarchyWidget, self).__init__(field,
                                                               name,
                                                               **attr)
-
-        label = gis.get_location_hierarchy()[level]
 
         self.attr = Storage(attr)
         self.attr["label"] = label
