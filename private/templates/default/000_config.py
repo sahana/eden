@@ -432,13 +432,25 @@ deployment_settings.L10n.decimal_separator = "."
 # Uncomment to use an alternate table for HR experience
 #deployment_settings.hrm.experience = "programme"
 
-# Project Tracking
+# Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-#deployment_settings.project.drr = True
-# Uncomment this to use settings suitable for use with IATI
-#deployment_settings.project.iati = True
+#deployment_settings.project.mode_3w = True
+# Uncomment this to use DRR (Disaster Risk Reduction) extensions
+#deployment_settings.project.mode_drr = True
+# Uncomment this to use settings suitable for detailed Task management
+#deployment_settings.project.mode_task = True
+# Uncomment this to use Codes for projects
+#deployment_settings.project.codes = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
+# Uncomment this to disable Sectors in projects
+#deployment_settings.project.sectors = False
+# Uncomment this to use Theme Percentages for projects
+#deployment_settings.project.theme_percentages = True
+# Uncomment this to use multiple Budgets per project
+#deployment_settings.project.multiple_budgets = True
+# Uncomment this to use multiple Organisations per project
+#deployment_settings.project.multiple_organisations = True
 # Uncomment this to customise
 #deployment_settings.project.organisation_roles = {
 #    1: T("Lead Implementer"), # T("Host National Society")

@@ -1271,7 +1271,7 @@ class S3OptionsMenu:
 
         project_menu = M(c="project")
 
-        if settings.get_project_drr():
+        if settings.get_project_mode_drr():
             project_menu(
                     M("Projects", f="project")(
                         M("Add New Project", m="create"),
@@ -1285,17 +1285,9 @@ class S3OptionsMenu:
                         M("Search Community Contacts", f="community_contact",
                           m="search"),
                     ),
-                    M("Activities", f="activity")(
-                        M("List All Activities"),
-                        M("Search Activities", m="search"),
-                    ),
                     M("Reports", f="report")(
-                        M("Who is doing What Where", f="activity", m="report"),
-                        M("Beneficiaries", f="beneficiary", m="report",
-                          vars=Storage(rows="project_id",
-                                       cols="beneficiary_type_id",
-                                       fact="number",
-                                       aggregate="sum")),
+                        M("Who is doing What Where", f="community", m="report"),
+                        M("Beneficiaries", f="beneficiary", m="report"),
                         M("Funding", f="organisation", args="report"),
                     ),
                     M("Import", f="index")(
@@ -1304,8 +1296,6 @@ class S3OptionsMenu:
                         M("Import Project Organizations", f="organisation",
                           m="import", p="create"),
                         M("Import Project Communities", f="community",
-                          m="import", p="create"),
-                        M("Import Project Activities", f="activity",
                           m="import", p="create"),
                     ),
                     M("Activity Types", f="activity_type")(
@@ -1327,7 +1317,7 @@ class S3OptionsMenu:
                     ),
                 )
 
-        elif settings.get_project_iati():
+        elif settings.get_project_mode_3w():
             project_menu(
                     M("Projects", f="project")(
                         M("Add New Project", m="create"),
@@ -1341,60 +1331,78 @@ class S3OptionsMenu:
                     ),
                 )
 
-        elif auth.s3_has_role("STAFF"):
+        elif settings.get_project_mode_task():
+            if auth.s3_has_role("STAFF"):
+                project_menu(
+                        M("Projects", f="project")(
+                            M("Add New Project", m="create"),
+                            M("List All Projects"),
+                            M("Open Tasks for Project", vars={"tasks":1}),
+                        ),
+                        M("Tasks", f="task")(
+                            M("Add New Task", m="create"),
+                            #M("List All Tasks"),
+                            M("Search All Tasks", m="search"),
+                        ),
+                        M("Daily Work", f="time")(
+                            M("My Logged Hours", vars={"mine":1}),
+                            M("Last Week's Work", m="report",
+                              vars=Storage(rows="person_id",
+                                           cols="day",
+                                           fact="hours",
+                                           aggregate="sum",
+                                           week=1)),
+                            M("My Open Tasks", f="task", vars={"mine":1}),
+                        ),
+                        M("Admin", restrict=[ADMIN])(
+                            M("Activity Types", f="activity_type"),
+                            M("Import Tasks", f="task", m="import", p="create"),
+                        ),
+                        M("Reports", f="report")(
+                            M("Activity Report", f="activity", m="report",
+                              vars=Storage(rows="project_id",
+                                           cols="name",
+                                           fact="time_actual",
+                                           aggregate="sum")),
+                            M("Project Time Report", f="time", m="report",
+                              vars=Storage(rows="project",
+                                           cols="person_id",
+                                           fact="hours",
+                                           aggregate="sum")),
+                        ),
+                    )
+            else:
+                project_menu(
+                        M("Projects", f="project")(
+                            M("List All Projects"),
+                            M("Open Tasks for Project", vars={"tasks":1}),
+                        ),
+                        M("Tasks", f="task")(
+                            M("Add New Task", m="create"),
+                            M("List All Tasks"),
+                            M("Search", m="search"),
+                        ),
+
+                    )
+
+        else:
             project_menu(
                     M("Projects", f="project")(
                         M("Add New Project", m="create"),
                         M("List All Projects"),
-                        M("Open Tasks for Project", vars={"tasks":1}),
-                    ),
-                    M("Tasks", f="task")(
-                        M("Add New Task", m="create"),
-                        #M("List All Tasks"),
-                        M("Search All Tasks", m="search"),
-                    ),
-                    M("Daily Work", f="time")(
-                        M("My Logged Hours", vars={"mine":1}),
-                        M("Last Week's Work", m="report",
-                          vars=Storage(rows="person_id",
-                                       cols="day",
-                                       fact="hours",
-                                       aggregate="sum",
-                                       week=1)),
-                        M("My Open Tasks", f="task", vars={"mine":1}),
-                    ),
-                    M("Admin", restrict=[ADMIN])(
-                        M("Activity Types", f="activity_type"),
-                        M("Organizations", f="organisation"),
-                        M("Import Tasks", f="task", m="import", p="create"),
-                    ),
-                    # Q: Shouldn't this be allowed for HR_ADMINs, too?
-                    M("Reports", restrict=[ADMIN], f="report")(
-                        M("Activity Report", f="activity", m="report",
-                          vars=Storage(rows="project_id",
-                                       cols="name",
-                                       fact="time_actual",
-                                       aggregate="sum")),
-                        M("Community Report", f="community", m="report"),
-                        M("Project Time Report", f="time", m="report",
-                          vars=Storage(rows="project",
-                                       cols="person_id",
-                                       fact="hours",
-                                       aggregate="sum")),
-                    ),
-                )
-        else:
-            project_menu(
-                    M("Projects", f="project")(
-                        M("List All Projects"),
-                        M("Open Tasks for Project", vars={"tasks":1}),
-                    ),
-                    M("Tasks", f="task")(
-                        M("Add New Task", m="create"),
-                        M("List All Tasks"),
                         M("Search", m="search"),
+                        M("Import", m="import", p="create"),
                     ),
-
+                    M("Activities", f="activity")(
+                        M("Add New Activity", m="create"),
+                        M("List All Activities"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Project Themes", f="theme")(
+                        M("Add New Theme", m="create"),
+                        M("List All Themes"),
+                    ),
                 )
 
         return project_menu

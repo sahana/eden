@@ -660,26 +660,51 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Project Tracking
-    def get_project_drr(self):
+    def get_project_mode_3w(self):
         """
-            Enable DRR project extensions
+            Enable 3W mode in the projects module
         """
-        return self.project.get("drr", False)
-    def get_project_iati(self):
+        return self.project.get("mode_3w", False)
+    def get_project_mode_task(self):
         """
-            Projects should record the percentage that they relate to their themes
+            Enable Tasks mode in the projects module
         """
-        return self.project.get("iati", False)
-    def get_project_community_activity(self):
+        return self.project.get("mode_task", False)
+    def get_project_mode_drr(self):
         """
-            Use 'Project Community' as a label for 'Project Activity'
+            Enable DRR mode in the projects module
         """
-        return self.project.get("community_activity", False)
+        return self.project.get("mode_drr", False)
+    def get_project_codes(self):
+        """
+            Use Codes in Projects
+        """
+        return self.project.get("codes", False)
     def get_project_milestones(self):
         """
             Use Milestones in Projects
         """
         return self.project.get("milestones", False)
+    def get_project_sectors(self):
+        """
+            Use Sectors in Projects
+        """
+        return self.project.get("sectors", True)
+    def get_project_theme_percentages(self):
+        """
+            Use Theme Percentages in Projects
+        """
+        return self.project.get("theme_percentages", False)
+    def get_project_multiple_budgets(self):
+        """
+            Use Multiple Budgets in Projects
+        """
+        return self.project.get("multiple_budgets", False)
+    def get_project_multiple_organisations(self):
+        """
+            Use Multiple Organisations in Projects
+        """
+        return self.project.get("multiple_organisations", False)
     def get_project_organisation_roles(self):
         T = current.T
         return self.project.get("organisation_roles", {

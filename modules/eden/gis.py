@@ -3617,7 +3617,7 @@ def gis_location_lx_represent(record):
     """
 
     if not record:
-        return current.messages.None
+        return current.messages.NONE
 
     if isinstance(record, Row):
         location = record
