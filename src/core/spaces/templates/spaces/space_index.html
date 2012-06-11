@@ -229,25 +229,23 @@
                 <div class="tab-pane" id="proposals">
                     <div class="row">
                         <div class="span8">
-                            <h4>{% trans "New ProposalSet" %}</h4>
-                            <ul class="unstyled">
-                                {% for proposalset in proposalsets %}
-                                <li><a href="{{ proposalset.get_absolute_url }}">{{ proposalset.name }}</a> {% trans "by" %} {{ proposalset.author }} {% trans " at " %} {{ proposalset.pub_date|date:"d F Y"}}</li>
-                                {% empty %}
-                                    <li>{% trans "No proposalset created "%}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="span8">
                             <h4>{% trans "New proposals" %}</h4>
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
-                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
                                 {% endfor %}
                             </ul>
-                            <h4>{% trans "Mixed proposals" %}</h4>
+                            <h4>{% trans "New proposal sets" %}</h4>
+                            <ul class="unstyled">
+                                {% for proposalset in proposalsets %}
+                                <li><a href="{{ proposalset.get_absolute_url }}">{{ proposalset.name }}</a> {% trans "by" %} {{ proposalset.author }} {% trans "at" %} {{ proposalset.pub_date|date:"d F Y"}}</li>
+                                {% empty %}
+                                <li>{% trans "No proposal sets available."%}</li>
+                                {% endfor %}
+                            </ul>
+                            <h4>{% trans "Merged proposals" %}</h4>
                             <h4>{% trans "Most commented" %}</h4>
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
@@ -257,7 +255,7 @@
                                 {% if perms.proposalsets.add_proposalset %}
                                     <li>
                                         <a href="{% url 'add-proposalset' get_place.url %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add New Proposal'%}" title="{% trans 'Add new proposal' %}"/>{% trans "Add Proposal Set" %}
+                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new proposal' %}" title="{% trans 'Add new proposal' %}"/>{% trans "Add proposal set" %}
                                         </a>
                                     </li>
                                 {% endif %}
@@ -270,9 +268,10 @@
                                     </li>
                                 {% endif %}
                             </ul>
-                            <h4>Otras opciones (traducir)</h4>
+                            <h4>{% trans "Other options" %}</h4>
                             <ul class="unstyled">
                                 <li><a href="{% url 'list-proposals' get_place.url %}">{% trans "View all proposals" %}</a></li>
+                                <li><a href="{% url 'list-proposalset' get_place.url %}">{% trans "View all proposal sets" %}</a></li>
                             </ul>
                         </div>
                     </div>
