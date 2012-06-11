@@ -6065,7 +6065,7 @@ class S3ResourceQuery:
                 if resource is not None:
                     n = "%s.%s" % (resource.alias, n)
                 else:
-                    return
+                    return url_query
             if o == self.LIKE:
                 v = v.replace("%", "*")
             if o == self.EQ:
@@ -6074,8 +6074,12 @@ class S3ResourceQuery:
                 operator = "__%s" % o
             if invert:
                 operator = "%s!" % operator
-            url_query["%s%s" % (n, operator)] = v
-            return
+            key = "%s%s" % (n, operator)
+            if key in url_query:
+                url_query[key] = "%s,%s" % (url_query[key], v)
+            else:
+                url_query[key] = v
+            return url_query
         if op == self.AND:
             lu = l.serialize_url()
             url_query.update(lu)

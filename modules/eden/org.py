@@ -1881,6 +1881,10 @@ def org_organisation_controller():
     def prep(r):
         if r.representation == "json":
             r.table.pe_id.readable = True
+            model = manager.model
+            list_fields = model.get_config(r.tablename, "list_fields") or []
+            model.configure(r.tablename, list_fields = list_fields + ["pe_id"])
+
         if r.interactive:
             r.table.country.default = gis.get_default_country("code")
 
