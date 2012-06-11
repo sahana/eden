@@ -37,7 +37,7 @@ def update_check(environment, template="default"):
     try:
         import xlrd
     except(ImportError):
-        warnings.append("S3XLS unresolved dependency: xlrd required for XLS export")
+        warnings.append("S3XLS unresolved dependency: xlrd required for XLS import")
     try:
         import xlwt
     except(ImportError):

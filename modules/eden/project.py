@@ -33,6 +33,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
            "S3ProjectAnnualBudgetModel",
+           "S3ProjectThemeModel",
            "project_rheader",
            "S3ProjectTaskVirtualfields"]
 
@@ -71,6 +72,7 @@ class S3ProjectModel(S3Model):
     """
 
     names = ["project_theme",
+             "project_theme_id",
              "project_hazard",
              "project_project",
              "project_activity_type",
@@ -100,12 +102,17 @@ class S3ProjectModel(S3Model):
         sector_id = self.org_sector_id
         human_resource_id = self.hrm_human_resource_id
 
+        NONE = current.messages.NONE
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Enable DRR extensions?
         drr = settings.get_project_drr()
         pca = settings.get_project_community_activity()
+
+        # Enable IATI extensions
+        iati = settings.get_project_iati()
 
         # Shortcuts
         add_component = self.add_component
@@ -118,7 +125,8 @@ class S3ProjectModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Theme
-        # @ToDo: Move to link table to move to S3ProjectDRRModel
+        # @ToDo: Move to S3ProjectThemeModel once direct link removed
+        #        - which needs an embedded widget UI
         #
         tablename = "project_theme"
         table = define_table(tablename,
@@ -126,7 +134,7 @@ class S3ProjectModel(S3Model):
                                    length=128,
                                    notnull=True,
                                    unique=True),
-                             Field("comments"),
+                             comments(),
                              format = "%(name)s",
                              *meta_fields())
 
@@ -138,7 +146,17 @@ class S3ProjectModel(S3Model):
 
         # Resource Configuration?
 
-        # Reusable Field
+        # Reusable Fields
+        theme_id = S3ReusableField("theme_id", db.project_theme,
+                                   label = T("Theme"),
+                                   sortby = "name",
+                                   requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                   "project_theme.id",
+                                                                   "%(name)s",
+                                                                   sort=True)),
+                                   represent = project_theme_represent,
+                                   ondelete = "RESTRICT")
+
         multi_theme_id = S3ReusableField("multi_theme_id",
                                          "list:reference project_theme",
                                          label = T("Themes"),
@@ -149,11 +167,13 @@ class S3ProjectModel(S3Model):
                                                                          sort=True,
                                                                          multiple=True)),
                                          represent = lambda opt, row=None: \
-                                                     self.multiref_represent(opt, "project_theme"),
-                                         default = [],
+                                            self.multiref_represent(opt, "project_theme"),
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
                                                   CheckboxesWidgetS3.widget(f, v, cols = 3))
+
+        # Projects
+        add_component("project_theme_percentage", project_theme="theme_id")
 
         # ---------------------------------------------------------------------
         # Hazard
@@ -165,7 +185,7 @@ class S3ProjectModel(S3Model):
                                    length=128,
                                    notnull=True,
                                    unique=True),
-                             Field("comments"),
+                             comments(),
                              format="%(name)s",
                              *meta_fields())
 
@@ -197,13 +217,12 @@ class S3ProjectModel(S3Model):
         #
 
         # HFA
-        # @todo: localization?
         project_hfa_opts = {
-            1: "HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation.",
-            2: "HFA2: Identify, assess and monitor disaster risks and enhance early warning.",
-            3: "HFA3: Use knowledge, innovation and education to build a culture of safety and resilience at all levels.",
-            4: "HFA4: Reduce the underlying risk factors.",
-            5: "HFA5: Strengthen disaster preparedness for effective response at all levels.",
+            1: T("HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation."),
+            2: T("HFA2: Identify, assess and monitor disaster risks and enhance early warning."),
+            3: T("HFA3: Use knowledge, innovation and education to build a culture of safety and resilience at all levels."),
+            4: T("HFA4: Reduce the underlying risk factors."),
+            5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
         }
 
         tablename = "project_project"
@@ -225,8 +244,8 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("code",
                                    label = T("Code"),
-                                   readable=False,
-                                   writable=False,
+                                   readable = True if iati else False,
+                                   writable = True if iati else False,
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
@@ -248,36 +267,41 @@ class S3ProjectModel(S3Model):
                                    writable=False,
                                    label = T("Duration")),
                              Field("calendar",
-                                   readable=False if drr else True,
-                                   writable=False if drr else True,
+                                   readable=False if drr or iati else True,
+                                   writable=False if drr or iati else True,
                                    label = T("Calendar"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Calendar"),
                                                                    T("URL to a Google Calendar to display on the project timeline.")))),
                              currency_type(
-                                       readable=False if drr else True,
-                                       writable=False if drr else True,
+                                       readable=False if drr or iati else True,
+                                       writable=False if drr or iati else True,
                                        ),
                              Field("budget", "double",
                                    # DRR handles on the Organisations Tab
-                                   readable=False if drr else True,
-                                   writable=False if drr else True,
+                                   readable=False if drr or iati else True,
+                                   writable=False if drr or iati else True,
                                    label = T("Budget"),
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              sector_id(
-                                       #readable=False,
-                                       #writable=False,
+                                       readable=False if iati else True,
+                                       writable=False if iati else True,
                                        widget=lambda f, v: \
                                        CheckboxesWidget.widget(f, v, cols=3)),
+                             #region_id(
+                             #          readable=iati,
+                             #          writable=iati
+                             #          ),
                              countries_id(
-                                          readable=drr,
-                                          writable=drr
+                                          readable=drr or iati,
+                                          writable=drr or iati
                                          ),
                              multi_hazard_id(
                                             readable=drr,
                                             writable=drr
                                             ),
+                             # @ToDo: Replace by link table: project_theme_percentage
                              multi_theme_id(
                                             readable=drr,
                                             writable=drr
@@ -388,6 +412,8 @@ class S3ProjectModel(S3Model):
         # Resource Configuration
         if drr:
             next = "organisation"
+        elif iati:
+            next = "theme_percentage"
         else:
             next = "activity"
 
@@ -403,6 +429,17 @@ class S3ProjectModel(S3Model):
                          "countries_id",
                          "multi_hazard_id",
                          "multi_theme_id",
+                        ]
+        elif iati:
+            table.virtualfields.append(S3ProjectThemeVirtualFields())
+            list_fields=["id",
+                         "code",
+                         "name",
+                         "organisation_id",
+                         "countries_id",
+                         "start_date",
+                         "end_date",
+                         (T("Aims"), "themes")
                         ]
         else:
             list_fields=["id",
@@ -437,6 +474,10 @@ class S3ProjectModel(S3Model):
         self.set_method(tablename,
                         method="timeline",
                         action=self.project_timeline)
+
+        self.set_method(tablename,
+                        method="map",
+                        action=self.project_map)
 
         # Components
         # Organisations
@@ -473,16 +514,20 @@ class S3ProjectModel(S3Model):
         # Human Resources
         add_component("project_human_resource", project_project="project_id")
 
+        # Themes
+        add_component("project_theme_percentage", project_project="project_id")
+
         # ---------------------------------------------------------------------
         # Project Human Resources
         #
         define_table("project_human_resource",
                      project_id(),
                      human_resource_id(),
-                     *s3.meta_fields()
+                     *meta_fields()
                     )
 
         configure("project_human_resource",
+                  onvalidation=self.project_human_resource_onvalidation,
                   list_fields=[
                       "project_id",
                       "human_resource_id$person_id",
@@ -490,7 +535,6 @@ class S3ProjectModel(S3Model):
                       "human_resource_id$job_title",
                       "human_resource_id$status"
                     ],
-                onvalidation=self.project_human_resource_onvalidation
                 )
 
         # ---------------------------------------------------------------------
@@ -593,7 +637,7 @@ class S3ProjectModel(S3Model):
                                                         T("hours"))),
                              comments(),
                              format="%(name)s",
-                             *(s3.lx_fields() + s3.meta_fields()))
+                             *(s3.lx_fields() + meta_fields()))
 
         # Field configuration
         if pca:
@@ -786,7 +830,7 @@ class S3ProjectModel(S3Model):
                              multi_activity_type_id(),
                              comments(),
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
-                             *(s3.lx_fields() + s3.meta_fields()))
+                             *(s3.lx_fields() + meta_fields()))
 
         # CRUD Strings
         COMMUNITY = T("Community")
@@ -983,6 +1027,7 @@ class S3ProjectModel(S3Model):
         #
         return dict(
             project_project_id = project_id,
+            project_theme_id = theme_id,
             project_activity_id = activity_id,
             project_community_id = community_id,
             project_multi_activity_id = multi_activity_id,
@@ -1071,23 +1116,14 @@ class S3ProjectModel(S3Model):
     def project_project_onvalidation(form):
         """ Form validation """
 
-        # if the project has an Host National Society organisation
-        # update organisation_id with its id
-
-        if not form.vars.code and "name" in form.vars:
+        vars = form.vars
+        if not vars.code and "name" in vars:
             # Populate code from name
-            form.vars.code = form.vars.name
+            vars.code = vars.name
         return
 
     # -------------------------------------------------------------------------
     @staticmethod
-
-
-
-
-
-
-
     def project_project_deduplicate(item):
         """ Import item de-duplication """
 
@@ -1165,6 +1201,45 @@ class S3ProjectModel(S3Model):
             response.view = "timeline.html"
             return output
 
+        else:
+            raise HTTP(501, BADMETHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_map(r, **attr):
+        """
+            Display the Projects on a Map
+        """
+
+        if r.representation == "html" and \
+           r.name == "project":
+
+            T = current.T
+            response = current.response
+            s3 = response.s3
+
+            # Pass vars to our JS code
+            s3.scripts.append(URL(c="static",
+                                  f="scripts",
+                                  args=["S3", "s3.project_map.js"]))
+
+            map = current.gis.show_map(
+                        collapsed = True
+                    )
+            instructions = T("")
+            form = FORM()
+            legend = DIV()
+
+            output = dict(
+                title = T("Projects Map"),
+                map = map,
+                instructions = instructions,
+                form = form,
+                legend = legend,
+            )
+
+            response.view = "project/map.html"
+            return output
         else:
             raise HTTP(501, BADMETHOD)
 
@@ -2932,35 +3007,26 @@ class S3ProjectAnnualBudgetModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-        currency_type = s3.currency_type
 
-        self.define_table(
-            "project_annual_budget",
-            self.project_project_id(requires=IS_ONE_OF(db,
-                                                       "project_project.id",
-                                                       "%(name)s")),
-            Field("year",
-                  "integer",
-                  default=None, # make it current year
-                  required=True,
-                  requires=IS_INT_IN_RANGE(1950, 3000),
-                  notnull=True,
-                  label="Year",
-                  comment=None,
-            ),
-            Field("amount",
-                  "double",
-                  default=0.00,
-                  required=True,
-                  requires=IS_FLOAT_AMOUNT(),
-                  notnull=True,
-                  label="Amount",
-                  comment=None,
-            ),
-            currency_type(required=True),
-            *s3.meta_fields()
-        )
-
+        self.define_table("project_annual_budget",
+                          self.project_project_id(requires=IS_ONE_OF(db,
+                                                                     "project_project.id",
+                                                                     "%(name)s")),
+                          Field("year", "integer",
+                                notnull = True,
+                                default = None, # make it current year
+                                requires = IS_INT_IN_RANGE(1950, 3000),
+                                label = T("Year"),
+                          ),
+                          Field("amount", "double",
+                                notnull = True,
+                                default = 0.00,
+                                requires = IS_FLOAT_AMOUNT(),
+                                label = T("Amount"),
+                          ),
+                          s3.currency_type(required=True),
+                          *s3.meta_fields()
+                        )
 
         # CRUD Strings
         s3.crud_strings["project_annual_budget"] = Storage(
@@ -2983,28 +3049,68 @@ class S3ProjectAnnualBudgetModel(S3Model):
         )
 
         self.configure("project_annual_budget",
-                       list_fields=[
-                            "id",
-                            "year",
-                            "amount",
-                            "currency_type",
-                        ]
+                       list_fields=["id",
+                                    "year",
+                                    "amount",
+                                    "currency_type",
+                                ]
+                        )
+
+        # Pass variables back to global scope (response.s3.*)
+        return dict(
         )
 
-        self.project_annual_budget_id = S3ReusableField(
-            "annual_budget_id", db.project_annual_budget,
-            label = T("Annual Budget"),
-            sortby="year",
-            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                            "project_annual_budget.id",
-                                            "%(name)s")),
-            represent = lambda id, row=None: \
-                (id and [db.project_annual_budget[id].year] or [NONE])[0],
-            comment = S3AddResourceLink(c="project",
-                f="annual_budget",
-                title="Add an Annual Budget",
-            ),
-            ondelete = "CASCADE"
+# =============================================================================
+class S3ProjectThemeModel(S3Model):
+    """
+        Project Theme Model
+
+        This model holds the % breakdown by theme (sector in IATI) for projects
+    """
+
+    names = ["project_theme_percentage"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        s3 = current.response.s3
+
+        self.define_table("project_theme_percentage",
+                          self.project_project_id(requires=IS_ONE_OF(db,
+                                                                     "project_project.id",
+                                                                     "%(name)s")),
+                          self.project_theme_id(requires=IS_ONE_OF(db,
+                                                                   "project_theme.id",
+                                                                   "%(name)s")),
+                          Field("percentage",
+                                "integer",
+                                label = T("Percentage"),
+                                default = 0,
+                                requires = IS_INT_IN_RANGE(0, 100),
+                          ),
+                          *s3.meta_fields()
+                        )
+
+
+        # CRUD Strings
+        s3.crud_strings["project_theme_percentage"] = Storage(
+            title_create = T("New Theme"),
+            title_display = T("Theme"),
+            title_list = T("List Themes"),
+            title_update = T("Edit Theme"),
+            title_search = T("Search Themes"),
+            title_upload = T("Import Theme data"),
+            title_report = T("Report on Themes"),
+            subtitle_create = T("Add a new theme"),
+            subtitle_list = T("List of all themes"),
+            subtitle_report = T("Theme Reports"),
+            label_list_button = T("List Themes"),
+            label_create_button = T("New Theme"),
+            msg_record_created = T("Theme added"),
+            msg_record_modified = T("Theme updated"),
+            msg_record_deleted = T("Theme removed"),
+            msg_list_empty = T("No themes found")
         )
 
         # Pass variables back to global scope (response.s3.*)
@@ -3079,65 +3185,57 @@ def project_rheader(r, tabs=[]):
     auth = current.auth
     settings = current.deployment_settings
     drr = settings.get_project_drr()
+    iati = settings.get_project_iati()
     pca = settings.get_project_community_activity()
     milestones = settings.get_project_milestones()
     if resourcename == "project":
         # Tabs
-        tabs = [(T("Basic Details"), None)]
-        append = tabs.append
-        if drr:
-            append((T("Organizations"), "organisation"))
-
         ADMIN = current.session.s3.system_roles.ADMIN
         admin = auth.s3_has_role(ADMIN)
         #staff = auth.s3_has_role("STAFF")
         staff = True
-        if staff or drr:
+
+        tabs = [(T("Basic Details"), None)]
+        append = tabs.append
+        if drr:
+            append((T("Organizations"), "organisation"))
+        if iati:
+            append((T("Aims"), "theme_percentage"))
+        if not iati and (staff or drr):
             append((T("Activities"), "activity"))
         if drr:
             append((T("Communities"), "community"))
         if staff and milestones:
             append((T("Milestones"), "milestone"))
-        if not drr:
+        if not drr and not iati:
             append((T("Tasks"), "task"))
         if drr:
             append((T("Documents"), "document"))
-        elif staff:
+        elif staff and not iati:
             append((T("Attachments"), "document"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
-        if staff:
+        if drr or iati:
             append((T("Annual Budgets"), "annual_budget"))
-        append((T("Staff"), "human_resource", dict(group="staff")))
-        append((T("Volunteers"), "human_resource", dict(group="volunteer")))
+        if not iati:
+            append((T("Staff"), "human_resource", dict(group="staff")))
+            append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
-        row3 = ""
-        if drr:
-            row2 = TR(
-                TH("%s: " % table.countries_id.label),
-                table.countries_id.represent(record.countries_id),
-                )
-        else:
-            row2 = TR(
-                TH("%s: " % table.organisation_id.label),
-                table.organisation_id.represent(record.organisation_id)
-                )
-            if record.end_date:
-                row3 = TR(
-                    TH("%s: " % table.end_date.label),
-                    table.end_date.represent(record.end_date)
-                    )
+        tbl = TABLE()
+        append = tbl.append
+        fields = ["code", "name", "organisation_id", "countries_id", "start_date", "end_date"]
+        for field in fields:
+            _field = table[field]
+            if _field.readable and record[field]:
+                represent = _field.represent(record[field]) if _field.represent else record[field]
+                append(TR(
+                            TH("%s: " % _field.label),
+                            represent
+                    ))
 
-        rheader = DIV(TABLE(
-            TR(
-               TH("%s: " % table.name.label),
-               record.name
-              ),
-            row2,
-            row3,
-            ), rheader_tabs)
+        rheader = DIV(tbl, rheader_tabs)
 
     elif resourcename == "activity":
         # @ToDo: integrate tabs?
@@ -3647,6 +3745,44 @@ class S3ProjectCommunityContactVirtualFields:
         return ", ".join([item.value for item in items])
 
 # =============================================================================
+class S3ProjectThemeVirtualFields:
+    """ Virtual fields for the project table """
+
+    extra_fields = []
+
+    def themes(self):
+        """
+            Themes associated with this Project
+        """
+
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ttable = s3db.project_theme
+        ltable = s3db.project_theme_percentage
+        query = (ltable.deleted != True) & \
+                (ltable.project_id == self.project_project.id) & \
+                (ltable.theme_id == ttable.id)
+        themes = current.db(query).select(ttable.name,
+                                          ltable.percentage)
+
+        if not themes:
+            return current.messages.NONE
+
+        represent = ""
+        for theme in themes:
+            name = theme.project_theme.name
+            percentage = theme.project_theme_percentage.percentage
+            if represent:
+                represent = "%s, %s (%s%s)" % (represent,
+                                               name,
+                                               percentage,
+                                               "%")
+            else:
+                represent = "%s (%s%s)" % (name, percentage, "%")
+                                  
+        return represent
+
+# =============================================================================
 class S3ProjectTaskVirtualfields:
     """ Virtual fields for the project_task table """
 
@@ -3730,23 +3866,47 @@ class S3ProjectTimeVirtualfields:
         return thisdate.date().strftime("%d %B")
 
 # =============================================================================
+def project_theme_represent(id):
+    """
+        Theme representation
+        - for multiple=False
+    """
+
+    if not id:
+        return current.messages.NONE
+    
+    if isinstance(id, Row):
+        # Do not repeat the lookup if already done by IS_ONE_OF
+        theme = id
+    else:
+        table = current.s3db.project_theme
+        theme = current.db(table.id == id).select(table.name,
+                                                  limitby=(0, 1)).first()
+
+    if not theme:
+        return current.messages.NONE
+
+    return theme.name
+
+# =============================================================================
 def multi_activity_represent(opt):
     """
         Activity representation
         for multiple=True options
     """
 
+    if not opt:
+        return current.messages.NONE
+
     db = current.db
     s3db = current.s3db
-
-    NONE = current.messages.NONE
 
     table = s3db.project_activity
     set = db(table.id > 0).select(table.id,
                                   table.name).as_dict()
 
     if not set:
-        return NONE
+        return current.messages.NONE
 
     if isinstance(opt, (list, tuple)):
         opts = opt
@@ -3758,7 +3918,7 @@ def multi_activity_represent(opt):
         opts = [opt]
         vals = str(set.get(opt)["name"])
     else:
-        return NONE
+        return current.messages.NONE
 
     if len(opts) > 1:
         vals = ", ".join(vals)

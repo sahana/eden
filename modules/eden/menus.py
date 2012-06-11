@@ -1275,7 +1275,7 @@ class S3OptionsMenu:
             project_menu(
                     M("Projects", f="project")(
                         M("Add New Project", m="create"),
-                        M("List All Projects", f="project"),
+                        M("List All Projects"),
                         M("Search", m="search"),
                     ),
                     M("Communities", f="community")(
@@ -1324,6 +1324,20 @@ class S3OptionsMenu:
                     M("Beneficiary Types", f="beneficiary_type")(
                         M("Add New Type", m="create"),
                         M("List All Types"),
+                    ),
+                )
+
+        elif settings.get_project_iati():
+            project_menu(
+                    M("Projects", f="project")(
+                        M("Add New Project", m="create"),
+                        M("List All Projects"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Project Themes", f="theme")(
+                        M("Add New Theme", m="create"),
+                        M("List All Themes"),
                     ),
                 )
 

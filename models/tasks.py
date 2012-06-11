@@ -27,6 +27,8 @@ tasks["download_kml"] = download_kml
 
 # -----------------------------------------------------------------------------
 if deployment_settings.has_module("msg"):
+
+    # -------------------------------------------------------------------------
     def process_outbox(contact_method, user_id=None):
         """
             Process Outbox
@@ -44,8 +46,7 @@ if deployment_settings.has_module("msg"):
 
     tasks["process_outbox"] = process_outbox
 
-# -----------------------------------------------------------------------------
-if deployment_settings.has_module("msg"):
+    # -------------------------------------------------------------------------
     def process_inbound_email(username):
         """
             Poll an inbound email source.
@@ -59,8 +60,7 @@ if deployment_settings.has_module("msg"):
 
     tasks["process_inbound_email"] = process_inbound_email
 
-# -----------------------------------------------------------------------------
-if deployment_settings.has_module("msg"):
+    # -------------------------------------------------------------------------
     def process_log():
         """
             Processes the msg_log for unparsed messages.
@@ -79,8 +79,7 @@ def sync_synchronize(repository_id, user_id=None, manual=False):
 
     auth.s3_impersonate(user_id)
 
-    s3mgr.load("sync_repository")
-    rtable = db.sync_repository
+    rtable = s3db.sync_repository
     query = (rtable.deleted != True) & \
             (rtable.id == repository_id)
     repository = db(query).select(limitby=(0, 1)).first()

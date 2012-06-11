@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          Project Activities (Communities) - CSV Import Stylesheet
 
-         2011-12-15 / Dominic König <dominic[AT]aidiq[DOT]com>
-
          CSV column...........Format..........Content
 
          Project..............string..........Project Name
@@ -45,10 +43,12 @@
                 <xsl:call-template name="Project"/>
             </xsl:for-each>
 
+            <!-- Beneficiary Types -->
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Beneficiaries')]">
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
 
+            <!-- Project Communities -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
     </xsl:template>

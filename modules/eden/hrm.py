@@ -3085,7 +3085,7 @@ def hrm_rheader(r, tabs=[]):
                     experience_tab,
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
-                    (T("User Roles"), "roles"),
+                    (T("Roles"), "roles"),
                    ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(A(s3_avatar_represent(record.id,

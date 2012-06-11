@@ -435,6 +435,8 @@ deployment_settings.L10n.decimal_separator = "."
 # Project Tracking
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #deployment_settings.project.drr = True
+# Uncomment this to use settings suitable for use with IATI
+#deployment_settings.project.iati = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
 # Uncomment this to customise

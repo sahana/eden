@@ -175,22 +175,22 @@ class S3Config(Storage):
     def get_aaa_role_modules(self):
         T = current.T
         return self.aaa.get("role_modules", OrderedDict([
-            ('staff', 'Staff'),
-            ('vol', 'Volunteers'),
-            ('member', 'Members'),
-            ('inv', 'Warehouses'),
-            ('asset', 'Assets'),
-            ('project', 'Projects'),
-            ('survey', 'Assessments'),
-            ('irs', 'Incidents')
+            ("staff", "Staff"),
+            ("vol", "Volunteers"),
+            ("member", "Members"),
+            ("inv", "Warehouses"),
+            ("asset", "Assets"),
+            ("project", "Projects"),
+            ("survey", "Assessments"),
+            ("irs", "Incidents")
         ]))
     def get_aaa_access_levels(self):
         T = current.T
         return self.aaa.get("access_levels", OrderedDict([
-            ('reader', 'Reader'),
-            ('data_entry', 'Data Entry'),
-            ('editor', 'Editor'),
-            ('super', 'Super Editor')
+            ("reader", "Reader"),
+            ("data_entry", "Data Entry"),
+            ("editor", "Editor"),
+            ("super", "Super Editor")
         ]))
 
     def get_security_archive_not_delete(self):
@@ -661,14 +661,25 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Project Tracking
     def get_project_drr(self):
+        """
+            Enable DRR project extensions
+        """
         return self.project.get("drr", False)
+    def get_project_iati(self):
+        """
+            Projects should record the percentage that they relate to their themes
+        """
+        return self.project.get("iati", False)
     def get_project_community_activity(self):
+        """
+            Use 'Project Community' as a label for 'Project Activity'
+        """
         return self.project.get("community_activity", False)
     def get_project_milestones(self):
+        """
+            Use Milestones in Projects
+        """
         return self.project.get("milestones", False)
-    # Save Search and Subscription
-    def get_save_search_widget(self):
-        return self.save_search.get("widget", True)
     def get_project_organisation_roles(self):
         T = current.T
         return self.project.get("organisation_roles", {
@@ -680,6 +691,14 @@ class S3Config(Storage):
             })
     def get_project_organisation_lead_role(self):
         return self.project.get("organisation_lead_role", 1)
+
+    # -------------------------------------------------------------------------
+    # Save Search and Subscription
+    def get_save_search_widget(self):
+        """
+            Enable the Saved Search widget
+        """
+        return self.save_search.get("widget", True)
 
     # -------------------------------------------------------------------------
     # Active modules list

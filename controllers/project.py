@@ -11,14 +11,17 @@ if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
 drr = deployment_settings.get_project_drr()
+iati = deployment_settings.get_project_iati()
 
 # =============================================================================
 def index():
     """ Module's Home Page """
 
     # Bypass home page & go direct to searching for Projects
-    if deployment_settings.get_project_drr():
-        return project()
+    if drr:
+        redirect(URL(f="project", args="search"))
+    elif iati:
+        redirect(URL(f="project"))
     else:
         redirect(URL(f="project", vars={"tasks":1}))
 
@@ -209,7 +212,9 @@ def project():
                 if validate:
                     response.s3.jquery_ready.append(script)
 
-                if not deployment_settings.get_project_drr():
+                if drr or iati:
+                    pass
+                else:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
                     s3mgr.crud.action_buttons(r,

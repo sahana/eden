@@ -28,7 +28,7 @@ if len(pop_list) > 0:
                              vars={"contact_method":"SMS"},
                              period=120,  # seconds
                              timeout=120, # seconds
-                             repeats=0   # unlimited
+                             repeats=0    # unlimited
                             )
         # Emails every 5 minutes
         s3task.schedule_task("process_outbox",
@@ -51,9 +51,9 @@ if len(pop_list) > 0:
 
         #Process the msg_log for unparsed messages.
         #s3task.schedule_task("process_log",
-        #                    period=300,  # seconds
-        #                    timeout=300, # seconds
-        #                    repeats=0    # unlimited
+        #                     period=300,  # seconds
+        #                     timeout=300, # seconds
+        #                     repeats=0    # unlimited
         #                     )
 
     # Person Registry

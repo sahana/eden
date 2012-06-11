@@ -244,7 +244,7 @@ s3.comments = s3_comments
 currency_type_opts = deployment_settings.get_fin_currencies()
 default_currency = deployment_settings.get_fin_currency_default()
 
-currency_type = S3ReusableField("currency_type", "string",
+currency_type = S3ReusableField("currency_type",
                                 length = 3,
                                 #notnull=True,
                                 requires = IS_IN_SET(currency_type_opts.keys(),
