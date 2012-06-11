@@ -18,10 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-
+from django.core.mail import EmailMessage
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.core.mail import EmailMessage
 
 def invite(request):
 
