@@ -28,7 +28,7 @@
 """
 
 __all__ = ["S3ProjectModel",
-           "S3ProjectDRRModel",
+           "S3Project3WModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
@@ -58,14 +58,15 @@ class S3ProjectModel(S3Model):
     """
         Project Model
 
-        Note: This module operates in 2 quite different modes:
-         - 'drr':   suitable for use by multinational organisations tracking
+        Note: This module can be extended by 2 different modes:
+         - '3w':   "Who's doing What Where
+                    suitable for use by multinational organisations tracking
                     projects at a high level
-         - non-drr: suitable for use by a smaller organsiation tracking tasks
-                    at a detailed level
+         - 'task':  Suitable for use by a smaller organsiation tracking tasks
+                    within projects
 
         This class contains the tables common to both uses
-        There are additional tabels in S3ProjectDRRModel and S3ProjectTaskModel
+        There are additional tabels in S3Project3WModel and S3ProjectTaskModel
         for the other 2 use cases
         There are also additional Classes for optional Link Tables
     """
@@ -103,10 +104,11 @@ class S3ProjectModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        # Enable DRR extensions?
-        drr = settings.get_project_drr()
-        pca = settings.get_project_community_activity()
+        mode_3w = settings.get_project_mode_3w()
+        mode_task = settings.get_project_mode_task()
+        mode_disaster = settings.get_project_mode_disaster()
 
+        
         # Shortcuts
         add_component = self.add_component
         comments = s3.comments
@@ -118,7 +120,6 @@ class S3ProjectModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Theme
-        # @ToDo: Move to link table to move to S3ProjectDRRModel
         #
         tablename = "project_theme"
         table = define_table(tablename,
@@ -157,7 +158,7 @@ class S3ProjectModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Hazard
-        # @ToDo: Move to link table to move to S3ProjectDRRModel
+        # @ToDo: Move to link table to move to S3ProjectDisasterModel
         #
         tablename = "project_hazard"
         table = define_table(tablename,
@@ -209,10 +210,10 @@ class S3ProjectModel(S3Model):
         tablename = "project_project"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
-                             # drr uses the separate project_organisation table
+                             # mode_3w uses the separate project_organisation table
                              organisation_id(
-                                          readable=False if drr else True,
-                                          writable=False if drr else True,
+                                          readable=False if mode_3w else True,
+                                          writable=False if mode_3w else True,
                                         ),
                              Field("name",
                                    label = T("Name"),
@@ -248,51 +249,49 @@ class S3ProjectModel(S3Model):
                                    writable=False,
                                    label = T("Duration")),
                              Field("calendar",
-                                   readable=False if drr else True,
-                                   writable=False if drr else True,
+                                   readable=mode_task,
+                                   writable=mode_task,
                                    label = T("Calendar"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Calendar"),
                                                                    T("URL to a Google Calendar to display on the project timeline.")))),
-                             currency_type(
-                                       readable=False if drr else True,
-                                       writable=False if drr else True,
-                                       ),
                              Field("budget", "double",
-                                   # DRR handles on the Organisations Tab
-                                   readable=False if drr else True,
-                                   writable=False if drr else True,
+                                   # 3W handles on the Organisations Tab
+                                   readable=False if mode_3w else True,
+                                   writable=False if mode_3w else True,
                                    label = T("Budget"),
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                             currency_type(
+                                       readable=False if mode_3w else True,
+                                       writable=False if mode_3w else True,
+                                       ),
                              sector_id(
-                                       #readable=False,
-                                       #writable=False,
+                                       readable=mode_3w,
+                                       writable=mode_3w,
                                        widget=lambda f, v: \
                                        CheckboxesWidget.widget(f, v, cols=3)),
                              countries_id(
-                                          readable=drr,
-                                          writable=drr
+                                          readable=mode_3w,
+                                          writable=mode_3w
                                          ),
                              multi_hazard_id(
-                                            readable=drr,
-                                            writable=drr
+                                            readable=mode_disaster,
+                                            writable=mode_disaster
                                             ),
                              multi_theme_id(
-                                            readable=drr,
-                                            writable=drr
+                                            readable=mode_3w,
+                                            writable=mode_3w
                                            ),
                              Field("hfa", "list:integer",
                                    label = T("HFA Priorities"),
-                                   readable=drr,
-                                   writable=drr,
+                                   readable=mode_disaster,
+                                   writable=mode_disaster,
                                    requires = IS_NULL_OR(IS_IN_SET(project_hfa_opts,
                                                                    multiple = True)),
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
                              Field("objectives", "text",
-                                   readable = drr,
-                                   writable = drr,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              comments(comment=DIV(_class="tooltip",
@@ -328,7 +327,7 @@ class S3ProjectModel(S3Model):
             sector = T("Cluster")
         else:
             sector = T("Sector")
-        if drr:
+        if mode_3w:
             project_search = S3Search(
                     advanced = (
                         S3SearchSimpleWidget(
@@ -386,40 +385,49 @@ class S3ProjectModel(S3Model):
                 )
 
         # Resource Configuration
-        if drr:
-            next = "organisation"
+        create_next = None 
+        list_fields = None
+        if mode_3w:
+            create_next = URL(c="project", f="project",
+                                   args=["[id]", "organisation"])
+        elif mode_task:
+            create_next = URL(c="project", f="project",
+                                   args=["[id]", "activity"])
         else:
-            next = "activity"
+            create_next = None
 
-        if drr:
+        list_fields=["id",
+                     "name"
+                     ]
+
+        if mode_3w:
             table.virtualfields.append(S3ProjectVirtualfields())
             LEAD_ROLE = settings.get_project_organisation_lead_role()
-            list_fields=["id",
-                         "name",
-                         (settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"),
-                         "sector_id",
-                         "start_date",
-                         "end_date",
-                         "countries_id",
-                         "multi_hazard_id",
-                         "multi_theme_id",
-                        ]
+            list_fields += [ (settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"),
+                             "sector_id",
+                             "countries_id",
+                             ]
         else:
-            list_fields=["id",
-                         "name",
-                         "organisation_id",
-                         "start_date",
-                         "end_date",
+            list_fields += [ "organisation_id" ]
+        if mode_disaster:
+            list_fields += ["multi_hazard_id",]
+        if mode_3w:
+            list_fields += [ "multi_theme_id",
+                             (T("Total Funding Amount"), "total_organisation_amount"),
+                             (T("Total Annual Budget"), "total_annual_budget"),
+                             ]
+                         
+        list_fields += [ "start_date",
+                         "end_date"
                         ]
 
         configure(tablename,
-                  super_entity="doc_entity",
-                  deduplicate=self.project_project_deduplicate,
-                  onvalidation=self.project_project_onvalidation,
-                  create_next=URL(c="project", f="project",
-                                  args=["[id]", next]),
-                  search_method=project_search,
-                  list_fields=list_fields)
+                  super_entity = "doc_entity",
+                  deduplicate = self.project_project_deduplicate,
+                  onvalidation = self.project_project_onvalidation,
+                  create_next = create_next,
+                  search_method = project_search,
+                  list_fields = list_fields)
 
         # Reusable Field
         project_id = S3ReusableField("project_id", db.project_project,
@@ -576,17 +584,18 @@ class S3ProjectModel(S3Model):
                                    label = T("Short Description"),
                                    requires=IS_NOT_EMPTY()),
                              location_id(
-                                   readable = drr,
-                                   writable = drr,
+                                   # Currently redundant give  activities will only be enabled if mode_task == True
+                                   readable = False if mode_task else True, 
+                                   writable = False if mode_task else True,
                                    widget = S3LocationSelectorWidget(hide_address=True)),
                              multi_activity_type_id(),
                              Field("time_estimated", "double",
-                                   readable=False if drr else True,
-                                   writable=False if drr else True,
+                                   readable=mode_task,
+                                   writable=mode_task,
                                    label = "%s (%s)" % (T("Time Estimate"),
                                                         T("hours"))),
                              Field("time_actual", "double",
-                                   readable=False if drr else True,
+                                   readable=mode_task,
                                    # Gets populated from constituent Tasks
                                    writable=False,
                                    label = "%s (%s)" % (T("Time Taken"),
@@ -594,13 +603,6 @@ class S3ProjectModel(S3Model):
                              comments(),
                              format="%(name)s",
                              *(s3.lx_fields() + s3.meta_fields()))
-
-        # Field configuration
-        if pca:
-            table.name.label = T("Name") # for list_fields
-            table.name.readable = False
-            table.name.writable = False
-            table.name.requires = None
 
         # CRUD Strings
         ACTIVITY = T("Activity")
@@ -627,61 +629,36 @@ class S3ProjectModel(S3Model):
         )
 
         # Virtual Fields
-        if drr:
+        if mode_task:
             table.virtualfields.append(S3ProjectActivityVirtualfields())
 
         # Search Method
-        if pca:
-            project_activity_search = S3Search(
-                    simple=(
-                        S3SearchSimpleWidget(
-                            name = "project_activity_search_text",
-                            label = T("Name"),
-                            comment = T("Search for a Community by name."),
-                            field = "location_id$name"
-                        ),
-                    ),
-                    advanced = (
-                        S3SearchSimpleWidget(
-                            name = "project_activity_search_text_advanced",
-                            label = T("Name"),
-                            comment = T("Search for a Community by name."),
-                            field = "location_id$name"
-                        ),
-                        S3SearchLocationHierarchyWidget(
-                            name="project_activity_search_L1",
-                            field="L1",
-                            cols = 3,
-                      ),
-                    )
-                )
-        else:
-            project_activity_search = S3Search(field="name")
+        project_activity_search = S3Search(field="name")
 
         # Resource Configuration
         report_fields = []
         append = report_fields.append
-        if drr:
+        if mode_task:
             append((T("Organization"), "organisation"))
         append((T("Project"), "project_id"))
-        if not pca:
-            append((T("Activity"), "name"))
+
+        append((T("Activity"), "name"))
         append((T("Activity Type"), "multi_activity_type_id"))
-        if drr:
-            append((T("Sector"), "project_id$sector_id"))
-            append((T("Theme"), "project_id$multi_theme_id"))
+        append((T("Sector"), "project_id$sector_id"))
+        append((T("Theme"), "project_id$multi_theme_id"))
+        if mode_disaster:
             append((T("Hazard"), "project_id$multi_hazard_id"))
             append((T("HFA"), "project_id$hfa"))
-            lh = current.gis.get_location_hierarchy()
-            lh = [(lh[opt], opt) for opt in lh]
-            report_fields.extend(lh)
-            append("location_id")
-            list_fields = ["name",
-                           "project_id",
-                           "multi_activity_type_id",
-                           "comments"
-                        ]
-        else:
+        lh = current.gis.get_location_hierarchy()
+        lh = [(lh[opt], opt) for opt in lh]
+        report_fields.extend(lh)
+        append("location_id")
+        list_fields = ["name",
+                       "project_id",
+                       "multi_activity_type_id",
+                       "comments"
+                    ]
+        if mode_task:
             append((T("Time Estimated"), "time_estimated"))
             append((T("Time Actual"), "time_actual"))
             list_fields = ["name",
@@ -690,20 +667,11 @@ class S3ProjectModel(S3Model):
                            "comments"
                         ]
 
-        if drr:
-            # disabled until beneficiaries are updated to support both
-            # communities and activities
-            #next = "beneficiary"
-            next = ""
-        else:
-            next = "task"
         configure(tablename,
                   super_entity="doc_entity",
                   create_next=URL(c="project", f="activity",
-                                  args=["[id]", next]),
+                                  args=["[id]", "task"]),
                   search_method=project_activity_search,
-                  onvalidation=self.project_activity_onvalidation,
-                  onaccept=self.project_activity_onaccept,
                   deduplicate=self.project_activity_deduplicate,
                   report_options=Storage(
                                          rows=report_fields,
@@ -784,6 +752,12 @@ class S3ProjectModel(S3Model):
                                    widget = S3LocationSelectorWidget(hide_address=True),
                                    represent=self.gis_location_lx_represent),
                              multi_activity_type_id(),
+                             Field("population",
+                                   "integer",
+                                   label = T("Population")),
+                             Field("number_families",
+                                   "integer",
+                                   label = T("Number of Families")),
                              comments(),
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
                              *(s3.lx_fields() + s3.meta_fields()))
@@ -813,35 +787,51 @@ class S3ProjectModel(S3Model):
         )
 
         # Search Method
-        project_community_search = S3Search(
-            advanced=(
-                S3SearchOptionsWidget(
-                    name = "project_community_search_project",
-                    label = T("Project"),
-                    field = "project_id",
-                    cols = 3
-                ),
-                S3SearchLocationHierarchyWidget(
-                    name="project_community_search_L0",
-                    field="L0",
-                    cols = 3
-                ),
-                S3SearchLocationHierarchyWidget(
-                    name="project_community_search_L1",
-                    field="L1",
-                    cols = 3
-                ),
-                S3SearchLocationHierarchyWidget(
-                    name="project_community_search_L2",
-                    field="L2",
-                    cols = 3
-                ),
-                S3SearchLocationHierarchyWidget(
-                    name="project_community_search_L3",
-                    field="L3",
-                    cols = 3
-                )
+        advanced_search = (
+            S3SearchSimpleWidget(
+                name = "project_community_search_text",
+                label = T("Name"),
+                comment = T("Search for a Community by name."),
+                field = "location_id$name"
+            ),
+            S3SearchOptionsWidget(
+                name = "project_community_search_project",
+                label = T("Project"),
+                field = "project_id",
+                cols = 3
+            ),
+            S3SearchLocationHierarchyWidget(
+                name="project_community_search_L0",
+                field="L0",
+                cols = 3
+            ),
+            S3SearchLocationHierarchyWidget(
+                name="project_community_search_L1",
+                field="L1",
+                cols = 3
+            ),
+            S3SearchLocationHierarchyWidget(
+                name="project_community_search_L2",
+                field="L2",
+                cols = 3
+            ),
+            S3SearchLocationHierarchyWidget(
+                name="project_community_search_L3",
+                field="L3",
+                cols = 3
             )
+        )
+        
+        project_community_search = S3Search(
+            simple = (
+                S3SearchSimpleWidget(
+                    name = "project_community_search_text",
+                    label = T("Name"),
+                    comment = T("Search for a Community by name."),
+                    field = "location_id$name"
+                ),
+            ),
+            advanced = advanced_search,
         )
 
         # Resource Configuration
@@ -858,12 +848,12 @@ class S3ProjectModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity",
                   create_next=URL(c="project", f="community",
-                                  args=["[id]"]),
+                                  args=["[id]","beneficiary"]),
                   search_method=project_community_search,
-                  onvalidation=self.project_community_onvalidation,
                   onaccept=self.project_community_onaccept,
                   deduplicate=self.project_community_deduplicate,
                   report_options=Storage(
+                                         search = advanced_search,
                                          rows=report_fields,
                                          cols=report_fields,
                                          facts=report_fields,
@@ -878,16 +868,20 @@ class S3ProjectModel(S3Model):
                   list_fields = list_fields,
                   )
 
+        def project_community_represent( id, row=None ):
+            return self.gis_location_lx_represent( 
+                       s3_get_db_field_value(tablename = "project_community",
+                                              fieldname = "location_id",
+                                              look_up_value = id)
+                        )
+
         # Reusable Field
         community_id = S3ReusableField("community_id", db.project_community,
                                       requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                       "project_community.id",
+                                                                      project_community_represent,
                                                                       sort=True)),
-                                      represent = lambda id, row=None: \
-                                                  self.gis_location_lx_represent(
-                                                    s3_get_db_field_value(tablename = "project_community",
-                                                                        fieldname = "location_id",
-                                                                        look_up_value = id)),
+                                      represent = project_community_represent,
                                       label = COMMUNITY,
                                       comment = S3AddResourceLink(ADD_COMMUNITY,
                                                                   c="project", f="community",
@@ -907,7 +901,6 @@ class S3ProjectModel(S3Model):
         # Beneficiaries
         add_component("project_beneficiary",
                       project_community="community_id")
-
 
         # ---------------------------------------------------------------------
         # Project Community Contact Person
@@ -1082,12 +1075,6 @@ class S3ProjectModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
 
-
-
-
-
-
-
     def project_project_deduplicate(item):
         """ Import item de-duplication """
 
@@ -1188,54 +1175,10 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_activity_onvalidation(form):
-        """
-        """
-
-        pca = current.deployment_settings.get_project_community_activity()
-
-        if pca:
-            location_id = form.vars.location_id
-            if location_id:
-                db = current.db
-                s3db = current.s3db
-                table = s3db.gis_location
-                query = (table.id == form.vars.location_id)
-                row = db(query).select(table.parent,
-                                       limitby=(0, 1)).first()
-                if row and row.parent:
-                    query = (table.id == row.parent)
-                    parent = db(query).select(table.name,
-                                              limitby=(0, 1)).first()
-                    if parent:
-                        form.vars.name = parent.name
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_onaccept(form):
-        """
-        """
-
-        pca = current.deployment_settings.get_project_community_activity()
-
-        if pca:
-            vars = form.vars
-            location_id = vars.location_id
-            if location_id:
-                # Populate the Lx fields
-                atable = current.s3db.project_activity
-                current.response.s3.lx_update(atable, vars.id)
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
 
         db = current.db
-        settings = current.deployment_settings
-        pca = settings.get_project_community_activity()
 
         if item.id:
             return
@@ -1243,25 +1186,16 @@ class S3ProjectModel(S3Model):
             return
         table = item.table
         duplicate = None
-        if pca:
-           if "project_id" in item.data and \
-              "location_id" in item.data:
-                # Match activity by project_id and location_id
-                project_id = item.data.project_id
-                location_id = item.data.location_id
-                query = (table.project_id == project_id) & \
-                        (table.location_id == location_id)
-                duplicate = db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        else:
-           if "project_id" in item.data and "name" in item.data:
-                # Match activity by project_id and name
-                project_id = item.data.project_id
-                name = item.data.name
-                query = (table.project_id == project_id) & \
-                        (table.name == name)
-                duplicate = db(query).select(table.id,
-                                             limitby=(0, 1)).first()
+        if "project_id" in item.data and "name" in item.data:
+            # Match activity by project_id and name
+            project_id = item.data.project_id
+            name = item.data.name
+            location_id = item.data.location_id
+            query = (table.project_id == project_id) & \
+                    (table.name == name) & \
+                    (table.location_id == location_id)
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1280,29 +1214,6 @@ class S3ProjectModel(S3Model):
             ctable = current.s3db.project_community
             current.response.s3.lx_update(ctable, form.vars.id)
 
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_community_onvalidation(form):
-        """
-        """
-
-        # location_id = form.vars.location_id
-
-        # if location_id:
-        #     db = current.db
-        #     s3db = current.s3db
-        #     table = s3db.gis_location
-        #     query = (table.id == form.vars.location_id)
-        #     row = db(query).select(table.parent,
-        #                            limitby=(0, 1)).first()
-        #     if row and row.parent:
-        #         query = (table.id == row.parent)
-        #         parent = db(query).select(table.name,
-        #                                   limitby=(0, 1)).first()
-        #         if parent:
-        #             form.vars.name = parent.name
         return
 
     # -------------------------------------------------------------------------
@@ -1358,16 +1269,15 @@ class S3ProjectModel(S3Model):
 
 
 # =============================================================================
-class S3ProjectDRRModel(S3Model):
+class S3Project3WModel(S3Model):
     """
-        Project DRR Model
+        Project 3W (Who's doing What Where) Model
 
-        This class contains the tabels suitable for use by multinational
+        This class contains the tables suitable for use by multinational
         organisations tracking projects at a high level
     """
 
     names = ["project_organisation",
-             #"project_site",
              "project_beneficiary_type",
              "project_beneficiary",
              "project_organisation_roles",
@@ -1388,8 +1298,6 @@ class S3ProjectDRRModel(S3Model):
         activity_id = self.project_activity_id
         community_id = self.project_community_id
         #multi_activity_type_id = self.project_multi_activity_type_id
-
-        pca = current.deployment_settings.get_project_community_activity()
 
         messages = current.messages
         NONE = messages.NONE
@@ -1637,21 +1545,26 @@ class S3ProjectDRRModel(S3Model):
                                     label=T("Project")
                                 ),
                                 S3SearchOptionsWidget(
-                                    field=["beneficiary_type_id"],
+                                    field="beneficiary_type_id",
                                     name="beneficiary_type_id",
                                     label=T("Beneficiary Type")
                                 ),
-                                # Can't search be VirtualFields currently
-                                # S3SearchLocationHierarchyWidget(
-                                    # name="beneficiary_search_L1",
-                                    # field="activity_id$L1",
-                                    # cols = 3,
-                                # ),
+                                S3SearchLocationHierarchyWidget(
+                                    name="beneficiary_search_L1",
+                                    field="community_id$L1",
+                                    cols = 3,
+                                ),
                             ],
                             rows=report_fields,
                             cols=report_fields,
                             facts=["number"],
-                            methods=["sum"]
+                            methods=["sum"],
+                            defaults=Storage( rows="project_id",
+                                              cols="beneficiary_type_id",
+                                              fact="number",
+                                              aggregate="sum",
+                                              totals=True
+                                              )
                         )
         )
 
@@ -3078,29 +2991,30 @@ def project_rheader(r, tabs=[]):
     T = current.T
     auth = current.auth
     settings = current.deployment_settings
-    drr = settings.get_project_drr()
-    pca = settings.get_project_community_activity()
+    mode_3w = settings.get_project_mode_3w()
+    mode_task = settings.get_project_mode_task()
+
     milestones = settings.get_project_milestones()
     if resourcename == "project":
         # Tabs
         tabs = [(T("Basic Details"), None)]
         append = tabs.append
-        if drr:
+        if mode_3w:
             append((T("Organizations"), "organisation"))
 
         ADMIN = current.session.s3.system_roles.ADMIN
         admin = auth.s3_has_role(ADMIN)
         #staff = auth.s3_has_role("STAFF")
         staff = True
-        if staff or drr:
+        if mode_task:
             append((T("Activities"), "activity"))
-        if drr:
+            append((T("Tasks"), "task"))
+        if mode_3w:
             append((T("Communities"), "community"))
+            append((T("Beneficiary"), "benefciary"))
         if staff and milestones:
             append((T("Milestones"), "milestone"))
-        if not drr:
-            append((T("Tasks"), "task"))
-        if drr:
+        if mode_3w:
             append((T("Documents"), "document"))
         elif staff:
             append((T("Attachments"), "document"))
@@ -3111,86 +3025,31 @@ def project_rheader(r, tabs=[]):
         append((T("Staff"), "human_resource", dict(group="staff")))
         append((T("Volunteers"), "human_resource", dict(group="volunteer")))
 
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-
-        row3 = ""
-        if drr:
-            row2 = TR(
-                TH("%s: " % table.countries_id.label),
-                table.countries_id.represent(record.countries_id),
-                )
-        else:
-            row2 = TR(
-                TH("%s: " % table.organisation_id.label),
-                table.organisation_id.represent(record.organisation_id)
-                )
+        rheader_fields = [["name"]]
+        if mode_3w:
+            rheader_fields.append(["countries_id"])
+        if mode_task:
+            rheader_fields.append(["organisation_id"])
             if record.end_date:
-                row3 = TR(
-                    TH("%s: " % table.end_date.label),
-                    table.end_date.represent(record.end_date)
-                    )
+                rheader_fields.append(["end_date"])
 
-        rheader = DIV(TABLE(
-            TR(
-               TH("%s: " % table.name.label),
-               record.name
-              ),
-            row2,
-            row3,
-            ), rheader_tabs)
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "activity":
         # @ToDo: integrate tabs?
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-        tbl = TABLE()
+        rheader_fields = []
         if record.project_id is not None:
-            tbl.append(
-                        TR(
-                            TH("%s: " % table.project_id.label),
-                            table.project_id.represent(record.project_id))
-                        )
-        if pca:
-            tbl.append(
-
-                        TR(
-                           TH("%s: " % table.location_id.label),
-                           table.location_id.represent(record.location_id)
-                          )
-                       )
-        else:
-            tbl.append(
-
-                        TR(
-                           TH("%s: " % table.name.label),
-                           record.name
-                          )
-                       )
-        rheader = DIV(tbl, rheader_tabs)
+            rheader_fields.append(["project_id"])
+        rheader_fields.append(["name"])
+        rheader_fields.append(["location_id"])
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "community":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-        tbl = TABLE()
+        rheader_fields = []
         if record.project_id is not None:
-            tbl.append(
-                        TR(
-                            TH("%s: " % table.project_id.label),
-                            table.project_id.represent(record.project_id))
-                        )
-        if True:
-            tbl.append(
-                        TR(
-                           TH("%s: " % table.location_id.label),
-                           table.location_id.represent(record.location_id)
-                          )
-                       )
-        else:
-            tbl.append(
-                        TR(
-                           TH("%s: " % table.name.label),
-                           record.name
-                          )
-                       )
-        rheader = DIV(tbl, rheader_tabs)
+            rheader_fields.append(["project_id"])
+        rheader_fields.append(["location_id"])
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "task":
         db = current.db
@@ -3398,6 +3257,32 @@ class S3ProjectVirtualfields:
         else:
             return None
 
+    def total_organisation_amount(self): 
+        """ Total of project_organisation amounts for project"""
+
+        db = current.db
+        s3db = current.s3db
+
+        potable = s3db.project_organisation
+
+        query = (potable.deleted != True) & \
+                (potable.project_id == self.project_project.id)
+        sum_field = potable.amount.sum()
+        return db(query).select(sum_field).first()[sum_field]
+    
+    def total_annual_budget(self):
+        """ Total of project_organisation amounts for project"""
+
+        db = current.db
+        s3db = current.s3db
+
+        pabtable = s3db.project_annual_budget
+
+        query = (pabtable.deleted != True) & \
+                (pabtable.project_id == self.project_project.id)
+        sum_field = pabtable.amount.sum()
+        return db(query).select(sum_field).first()[sum_field]
+        
 # =============================================================================
 class S3ProjectActivityVirtualfields:
     """ Virtual fields for the project_activity table """

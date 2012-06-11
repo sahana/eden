@@ -433,7 +433,7 @@ class S3OrganisationModel(S3Model):
                       org_organisation="organisation_id")
 
         # Projects
-        if settings.get_project_drr():
+        if settings.get_project_mode_3w():
             add_component("project_project",
                           org_organisation=Storage(
                                     link="project_organisation",

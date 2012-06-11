@@ -1271,7 +1271,7 @@ class S3OptionsMenu:
 
         project_menu = M(c="project")
 
-        if settings.get_project_drr():
+        if settings.get_project_mode_3w():
             project_menu(
                     M("Projects", f="project")(
                         M("Add New Project", m="create"),
@@ -1290,12 +1290,8 @@ class S3OptionsMenu:
                         M("Search Activities", m="search"),
                     ),
                     M("Reports", f="report")(
-                        M("Who is doing What Where", f="activity", m="report"),
-                        M("Beneficiaries", f="beneficiary", m="report",
-                          vars=Storage(rows="project_id",
-                                       cols="beneficiary_type_id",
-                                       fact="number",
-                                       aggregate="sum")),
+                        M("Who is doing What Where", f="community", m="report"),
+                        M("Beneficiaries", f="beneficiary", m="report"),
                         M("Funding", f="organisation", args="report"),
                     ),
                     M("Import", f="index")(

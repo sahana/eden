@@ -660,10 +660,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Project Tracking
-    def get_project_drr(self):
-        return self.project.get("drr", False)
-    def get_project_community_activity(self):
-        return self.project.get("community_activity", False)
+    def get_project_mode_3w(self):
+        return self.project.get("mode_3w", False)
+    def get_project_mode_task(self):
+        return self.project.get("mode_task", False)
+    def get_project_mode_disaster(self):
+        return self.project.get("mode_disaster", False)
     def get_project_milestones(self):
         return self.project.get("milestones", False)
     # Save Search and Subscription
