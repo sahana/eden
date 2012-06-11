@@ -31,6 +31,7 @@ class org_create_office(SeleniumUnitTest):
             query = (table[fieldname] == value) & (table.deleted == "F")
             record = db(query).select(table.id,
                                       limitby=(0, 1)).first()
+            
             if record:
                 print "org_create_office skipped as %s already exists in the db\n" % value
                 return False

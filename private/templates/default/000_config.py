@@ -432,9 +432,10 @@ deployment_settings.L10n.decimal_separator = "."
 # Uncomment to use an alternate table for HR experience
 #deployment_settings.hrm.experience = "programme"
 
-# Project Tracking
+# Project 
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-#deployment_settings.project.drr = True
+#deployment_settings.project.mode_3w = True
+#deployment_settings.project.mode_task = True
 # Uncomment this to use Milestones in project/task.
 #deployment_settings.project.milestones = True
 # Uncomment this to customise
