@@ -3,8 +3,21 @@
 {% load comments %}
 
 {% block title %}{% trans "List all the proposal set" %}{% endblock %}
-{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
-{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% endif %}
+{% endblock %}
+
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% endif %}
+{% endblock %}
+
+{% block space %}
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+{% endblock %}
 
 {% block content %}
 
@@ -14,7 +27,7 @@
                 <div id="proposal-wrapper">
                     {% if perms.proposals.add_proposalset %}
                         <div id="tools">
-                            <a href="{% url 'add-proposalset' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a>
+                            <a href="{% url 'add-proposalset' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal set' %}" title="{% trans 'Add proposal set' %}"/></a>
                             {% if perms.proposals.edit_proposalset %}
                                 <a href="{% url 'edit-proposalset' get_place.url pset.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a>
                             {% endif %} 
@@ -26,7 +39,7 @@
 
                     <div id="proposal">
                         <div class="title"><a href="{{ pset.get_absolute_url }}">{{ pset.name }}</a></div>
-                        <div class="creator">{% trans "Created by " %} <a href="">{{ pset.author }}</a> {% trans " at " %} {{ pset.pub_date|date:"j/m/Y G:i" }} </div>
+                        <div class="creator">{% trans "Created by" %} <a href="">{{ pset.author }}</a> {% trans "at" %} {{ pset.pub_date|date:"j/m/Y G:i" }} </div>
                     </div>
                     <div style="clear:left;"></div>
                 </div>
