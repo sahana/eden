@@ -1235,14 +1235,10 @@ def resource_duplicate(tablename, job, fields=None):
        - and the same comments, if there are any
     """
 
-    db = current.db
-
-    # ignore this processing if the id is set
-    if job.id:
-        return
     if job.tablename == tablename:
         table = job.table
         query = None
+        db = current.db
         if not fields:
             fields = [field.name for field in db[tablename]
                       if field.writable and field.name != "id"]

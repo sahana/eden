@@ -629,15 +629,6 @@ class S3LocationModel(S3Model):
                         form.errors["lon"] = lon_error
                         return
 
-        # ToDo: Check for probable duplicates
-        # http://eden.sahanafoundation.org/ticket/481
-        # name soundex
-        # parent
-        # radius
-        # response.warning = T("This appears to be a duplicate of ") + xxx (with appropriate representation including hyperlink to view full details - launch de-duplication UI?)
-        # form.errors["name"] = T("Duplicate?")
-        # Set flag to say that this has been confirmed as not a duplicate
-
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
 
@@ -682,13 +673,11 @@ class S3LocationModel(S3Model):
            - Else, Look for a record with the same name, ignoring case
                 and, if level exists in the import, the same level
                 and, if parent exists in the import, the same parent
+                
+            @ToDo: Check soundex? (only good in English)
+                   http://eden.sahanafoundation.org/ticket/481
         """
 
-        db = current.db
-
-        # ignore this processing if we have an id
-        if job.id:
-            return
         if job.tablename == "gis_location":
             table = job.table
             name = "name" in job.data and job.data.name or None
@@ -700,10 +689,18 @@ class S3LocationModel(S3Model):
             if not name:
                 return
 
+            # Don't try to update Countries
+            if level and level == "L0":
+                job.method = None
+                return
+
             # @ToDo: check the the lat and lon if they exist?
             #lat = "lat" in job.data and job.data.lat
             #lon = "lon" in job.data and job.data.lon
             _duplicate = None
+
+            db = current.db
+
             # In our current data these are not guaranteed unique, especially across countries
             # if code:
                 # query = (table.code.lower().like('%%%s%%' % code.lower()))
@@ -1532,18 +1529,14 @@ class S3GISConfigModel(S3Model):
 
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_config" and \
             "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
             query = (table.name.lower() == name.lower())
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1731,18 +1724,14 @@ class S3GISConfigModel(S3Model):
 
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_marker" and \
             "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
             query = (table.name.lower() == name.lower())
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1762,18 +1751,14 @@ class S3GISConfigModel(S3Model):
 
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_projection" and \
             "epsg" in item.data:
             # Match by epsg
             table = item.table
             epsg = item.data.epsg
             query = (table.epsg == epsg)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1793,18 +1778,14 @@ class S3GISConfigModel(S3Model):
 
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_symbology" and \
             "name" in item.data:
             # Match by name (all-lowercase)
             table = item.table
             name = item.data.name
             query = (table.name.lower() == name.lower())
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -2055,10 +2036,10 @@ class S3LayerEntityModel(S3Model):
 
         vars = form.vars
         base = vars.base
-        if base == 'False':
+        if base == "False":
             base = False
         enabled = vars.enabled
-        if enabled == 'False':
+        if enabled == "False":
             enabled = False
 
         if base and enabled:
@@ -2070,11 +2051,12 @@ class S3LayerEntityModel(S3Model):
                     (ltable.config_id == ctable.id)
             config = db(query).select(ctable.id,
                                       limitby=(0, 1)).first()
-            # Set all others in this config as not the default Base Layer
-            query  = (ltable.config_id == config.id) & \
-                     (ltable.base == True) & \
-                     (ltable.id != vars.id)
-            db(query).update(base = False)
+            if config:
+                # Set all others in this config as not the default Base Layer
+                query  = (ltable.config_id == config.id) & \
+                         (ltable.base == True) & \
+                         (ltable.id != vars.id)
+                db(query).update(base = False)
 
 # =============================================================================
 class S3FeatureLayerModel(S3Model):
@@ -2242,10 +2224,6 @@ class S3FeatureLayerModel(S3Model):
 
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_layer_feature":
             # Match if module, resource & filter are identical
             table = item.table
@@ -2256,8 +2234,8 @@ class S3FeatureLayerModel(S3Model):
             query = (table.module.lower() == module.lower()) & \
                     (table.resource.lower() == resource.lower()) & \
                     (table.filter == filter)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -3179,18 +3157,14 @@ class S3MapModel(S3Model):
           If the record is a duplicate then it will set the job method to update
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_layer_georss":
             # Match if url is identical
             table = item.table
             data = item.data
             url = data.url
             query = (table.url == url)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -3209,18 +3183,14 @@ class S3MapModel(S3Model):
           If the record is a duplicate then it will set the job method to update
         """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename == "gis_layer_kml":
             # Match if url is identical
             table = item.table
             data = item.data
             url = data.url
             query = (table.url == url)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE

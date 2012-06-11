@@ -332,7 +332,7 @@ def dt_links(row = 1,
 
 # -----------------------------------------------------------------------------
 def dt_action(row = 1,
-              action = "Open",
+              action = None,
               column = 1,
               tableID = "list",
              ):
@@ -342,12 +342,22 @@ def dt_action(row = 1,
     browser = config.browser
 
     # What looks like a fairly fragile xpath, but it should work unless DataTable changes
-    button = ".//*[@id='%s']/tbody/tr[%s]/td[%s]/a[contains(text(),'%s')]" % (tableID, row, column, action)
-    try:
-        elem = browser.find_element_by_xpath(button)
-    except:
-        return False
-    elem.click()
-    return True
-
+    if action:
+        button = ".//*[@id='%s']/tbody/tr[%s]/td[%s]/a[contains(text(),'%s')]" % (tableID, row, column, action)
+    else:
+        button = ".//*[@id='%s']/tbody/tr[%s]/td[%s]/a" % (tableID, row, column)
+    giveup = 0.0
+    sleeptime = 0.2
+    while giveup < 10.0:
+        try:
+            element = browser.find_element_by_xpath(button)
+            url = element.get_attribute("href")
+            if url:
+                browser.get(url)
+                return True
+        except Exception as inst:
+            print "%s with %s" % (type(inst), button)
+        time.sleep(sleeptime)
+        giveup += sleeptime
+    return False
 # END =========================================================================
