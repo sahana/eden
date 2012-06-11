@@ -52,7 +52,7 @@ urlpatterns += i18n_patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     # Index
-    url(r'^$', 'core.views.index_view', name='site-index'),
+    url(r'^$', 'core.views.index.index_view', name='site-index'),
 
     # User accounts
     url(_(r'^accounts/'), include('apps.thirdparty.userprofile.urls')),
