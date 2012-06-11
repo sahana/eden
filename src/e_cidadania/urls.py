@@ -23,13 +23,17 @@ Main URLs for the e-cidadania platform.
 
 from django.conf.urls import *
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
 
-from core.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
-                              DeletePost, ViewPost
+from core.views.index import IndexEntriesFeed
+from core.views.news import ListNews
+from core.views.post import AddPost
+from core.views.post import EditPost
+from core.views.post import DeletePost
+from core.views.post import ViewPost
 
 admin.autodiscover()
 
