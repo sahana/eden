@@ -2,11 +2,36 @@ Development Environment
 =======================
 
 This document explains how to set up the development environment for e-cidadania
-using buildout. The buildout scripts are presently available only on the
-gsoc2012 branch as it is still in development as part of GSoC 2012. 
+using buildout. The buildout scripts which were available only on the
+gsoc2012 branch as it was in development as part of GSoC 2012 have now been
+integrated with the master branch. The following document explains the process
+with respect to the master branch. 
 
+TL;DR
+-----
+
+Here are some quick steps to get you started.
+
+**Setting Up**
+
+    git clone https://github.com/ecidadania/e-cidadania
+    cd e-cidadania
+    python bootstrap.py
+    bin/buildout
+    
+**Running the development server**
+    
+    cd src
+    ../bin/django syncdb
+    ../bin/django collectstatic
+    ../bin/django runserver
+
+	
+	
 Steps
 -----
+
+Below are the steps explained in a greater detail.
 
 * Clone the official git repository of e-cidadania.
         
@@ -15,14 +40,6 @@ Steps
 * cd into the e-cidadania folder just cloned.
   
         ~$ cd e-cidadania
-
-* Switch to the gsoc2012 branch
-
-        ~/e-cidadania$ git checkout origin/gsoc2012
-  
-  If you wish to retain the commits you create, you should create a new branch as
-        
-        ~/e-cidadania$ git checkout -b new_branch_name
 
 * Just to be sure, when you do a ls, you should find a bootstrap.py python 
   module and a buildout.cfg buildout configuration file.
@@ -57,7 +74,7 @@ Steps
   buildout will download the django framework itself and other packages as
   defined in buildout.cfg. bin/django is a wrapper around manage.py and works
   exactly the same way as manage.py and it must be used to run any django
-  management command while you are in the development environment.
+  management commands while you are in the development environment.
   
   Note:
   On some linux systems, running bin/buildout fails when installing PIL. The solution
@@ -88,9 +105,9 @@ Thats it!
 Running the tests
 -----------------
 
-We have drifted away from the convential way of keeping the tests with the source
+We have drifted away from the Django way of keeping the tests with the source
 itself. All the tests are in a single folder called 'tests' which you can find
-at the root of e-cidadania. By default, the test runner is configure to run
+at the root of e-cidadania. By default, the test runner is configured to run
 all the tests present in the test folder.
 
 
