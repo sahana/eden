@@ -19,16 +19,18 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 
+from django.contrib import messages
+from django.contrib.syndication.views import Feed
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
-from django.contrib import messages
 
-from apps.ecidadania.news.models import Post
 from apps.ecidadania.news.forms import NewsForm
-from core.spaces.models import Space
+from apps.ecidadania.news.models import Post
 from apps.ecidadania.staticpages.models import StaticPage
+
+from core.spaces.models import Space
+
 from e_cidadania import settings
 
 
