@@ -21,7 +21,7 @@ import unittest
 
 from tests.data_seeder import seeder
 
-from core.spaces.models import Space
+from src.core.spaces.models import Space
 
 from django.contrib.auth.models import User
 
