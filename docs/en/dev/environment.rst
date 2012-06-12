@@ -3,7 +3,13 @@ Creating the environment
 
 For the people wanting to develop e-cidadania, we recommend to setup a new
 environment using buildout.
-	
+
+We assume you this this steps:
+
+ * Clone the repository (or download a copy of a stable release)
+ * Install all the required dependencies in *requierements.txt*
+
+If you didn't, please take a look to :doc:`../docs/installation`
 Steps
 -----
 
@@ -53,7 +59,7 @@ defined in buildout.cfg. bin/django is a wrapper around manage.py and works
 exactly the same way as manage.py and it must be used to run any django
 management commands while you are in the development environment.
   
-.. note:: On some linux systems, running bin/buildout fails when installing
+.. warning:: On some linux systems, running bin/buildout fails when installing
           PIL. The solution is to install python-imaging and in some
           environments python-devel too. Install python-imaging and re-run
           bin/buildout.

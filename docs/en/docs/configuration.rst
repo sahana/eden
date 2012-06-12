@@ -15,8 +15,8 @@ The e-cidadania setting have been splitted into four major files::
         development.py
         production.py
 
-__init__.py
------------
+__init__
+--------
 
 This file loads one configuration or another based on the *DEBUG* flag. You have
 to set this first.
@@ -25,8 +25,8 @@ to set this first.
     You have to set this value to *True* or *False* depending if you are testing
     or want to debug the e-cidadania platform.
 
-Defaults.py
------------
+defaults
+--------
 
 This file stablishes the common settings across the both environments. Most of
 this settings are e-cidadania specific, we will specify here the ones you can
@@ -70,8 +70,8 @@ This are the main settign that you will have to modify to make the deployment of
 e-cidadania, you shouldn't need to modify the rest unless you want a very
 specific deployment.
 
-development.py and production.py
---------------------------------
+development and production
+--------------------------
 
 *development.py* and *production.py* are minor configuration files with all the
 parameters we think you will need to make a development or production server.

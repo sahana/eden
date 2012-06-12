@@ -4,27 +4,6 @@ Installation
 e-cidadania installation is very simple and is done almost in the same as any
 other django platforms.
 
-Requirements
-------------
-
-- Apache, nginx, or any other web server with CGI suppport
-- FastCGI, CGI, Passenger or other CGI.
-
-**Dependencies**
-
-- Python 2.7.x
-- django 1.4.x
-- PIL *(Python Imaging Library)*
-- python-datetime *(version 1.5)*
-- django-tagging
-- django-grappelli
-- feedparser
-- pyyaml
-
-You can install all the required dependencies automatically with this command::
-
-    # pip install -r requirements.txt
-
 Downloading platform
 --------------------
 
@@ -77,28 +56,60 @@ as version control system, so you will have to install it in your computer.
     **Repo.or.cz** *(official mirror)*::
 
         git clone git://repo.or.cz/e_cidadania.git
-        
 
 Installing
 ----------
 
-.. note:: If you are going to develop in the e-cidadania project you should
-          install it this way: :doc:`../dev/environment`
+The installation process for e-cidadania is quite simple.
 
-There is no proper installation process in e-cidadania, you just need to copy
-the *src/* directory to the folder where you want it to be, and after that
-configure in your CGI server how to execute it.
+Requirements
+````````````
+- Apache, nginx, or any other web server with CGI suppport
+- FastCGI, CGI, Passenger or other CGI.
 
-In the case you want to do some testing of the e-cidadania platform before getting
-into proper deployment, you just hace to copy the *src/* directory and execute
-the following commands inside it since e-cidadania comes by default configured
-in a development environment.::
+**Dependencies**
 
-    ./manage.py syncdb # This will create all the database objects
-    
-    ./manage.py collectstatic # This will copy all the static content to *static/*
-    
-    ./manage.py runserver
+- Python 2.7.x
+- django 1.4.x
+- PIL *(Python Imaging Library)*
+- python-datetime *(version 1.5)*
+- django-tagging
+- django-grappelli
+- feedparser
+- pyyaml
+
+You can install all the required dependencies automatically with this command::
+
+    # pip install -r requirements.txt
+
+Most of the requirements are automatically installed this way, but there are
+some packages that need to be installed via the system packages, for example:
+
+* PIL
+
+.. warning:: There are reported errors for people that tried to install PIL from
+             pip instead from the official system package. The problem is due to
+             the lack of some features of PIL needed in e-cidadania.
+
+Platform
+````````
+There isn't a proper installation process in e-cidadania, you just have to copy
+the files to you preferred installation directory.
+
+If you're going to make tests or develop e-cidadania, it is better that you
+follow the instructions on how to build the development environment: :doc:`../dev/environment`
+
+If you are going to use it in production, or you just want to give e-cidadania
+a try follow this steps:
+
+.. note:: e-cidadania comes preconfigured for a development environment. You
+          will have to set the DEBUG flag to **False** in
+          *src/e_cidadania/settings/__init__.py*
+::
+
+    $ ./manage.py syncdb # This will create all the database objects
+    $ ./manage.py collectstatic # This will copy all the static content to *static/*
+    $ ./manage.py runserver
 
 This last command will execute the development server in the port 8000 of your
 machine, so you just need to type **localhost:8000" inside a web browser.

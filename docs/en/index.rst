@@ -18,7 +18,7 @@ and some external libraries.
 |Models|_
 
 .. |Models| image:: ../images/models.png
-.. _Models: http://postimage.org/image/z7b8s72c/full/
+.. _Models: http://i.imgur.com/BxHbK.png
 
 .. warning:: e-cidadania is in heavy development, because of that some parts
              of it may suffer changes, especially the data models and documentation
