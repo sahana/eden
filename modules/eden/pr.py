@@ -1545,17 +1545,6 @@ class S3PersonImageModel(S3Model):
                                         default = False,
                                         label = T("Profile Picture?")
                                         ),
-                                  Field("type", "integer",
-                                        requires = IS_IN_SET(pr_image_type_opts, zero=None),
-                                        default = 1,
-                                        label = T("Image Type"),
-                                        represent = lambda opt: pr_image_type_opts.get(opt,
-                                                                                        UNKNOWN_OPT)),
-                                  Field("title", label=T("Title"),
-                                        requires = IS_NOT_EMPTY(),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Title"),
-                                                                        T("Specify a descriptive title for the image.")))),
                                   Field("image", "upload", autodelete=True,
                                         represent = self.pr_image_represent,
                                         comment =  DIV(_class="tooltip",
@@ -1567,12 +1556,17 @@ class S3PersonImageModel(S3Model):
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("URL"),
                                                                        T("The URL of the image file. If you don't upload an image file, then you must specify its location here.")))),
-                                   Field("description",
-                                        label=T("Description"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Description"),
-                                                                        T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
-                                  s3.comments(),
+                                  Field("type", "integer",
+                                        requires = IS_IN_SET(pr_image_type_opts, zero=None),
+                                        default = 1,
+                                        label = T("Image Type"),
+                                        represent = lambda opt: pr_image_type_opts.get(opt,
+                                                                                        UNKNOWN_OPT)),
+                                  s3.comments("description",
+                                              label=T("Description"),
+                                              comment = DIV(_class="tooltip",
+                                                            _title="%s|%s" % (T("Description"),
+                                                                              T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
                                   *s3.meta_fields())
 
         # CRUD Strings
@@ -1642,7 +1636,7 @@ class S3PersonImageModel(S3Model):
         profile = vars.profile
         url = vars.url
         newfilename = vars.image_newfilename
-        if profile == 'False':
+        if profile == "False":
             profile = False
 
         if newfilename:
@@ -1663,12 +1657,6 @@ class S3PersonImageModel(S3Model):
                             _image.filename,
                             (160, None)
                             )
-
-        if newfilename and not url:
-            # Provide the link to the file in the URL field
-            url = URL(c="default", f="download", args=newfilename)
-            query = (table.id == id)
-            db(query).update(url = url)
 
         if profile:
             # Find the pe_id
@@ -1716,7 +1704,7 @@ class S3PersonImageModel(S3Model):
         s3db = current.s3db
 
         table = s3db.pr_image
-        query = (table.id == row.get('id'))
+        query = (table.id == row.get("id"))
         deleted_row = db(query).select(table.image,
                                        limitby=(0, 1)).first()
         s3db.pr_image_delete_all(deleted_row.image)

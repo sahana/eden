@@ -3131,8 +3131,6 @@ def hrm_rheader(r, tabs=[]):
         if group == "volunteer" and \
            current.deployment_settings.get_hrm_experience() == "programme":
             experience_tab = (T("Hours"), "hours")
-            programme_row = TR(
-                              )
             # Show all Hours spent on both Programmes & Trainings
             # - last month & last year
             now = current.request.utcnow
@@ -3259,7 +3257,8 @@ def hrm_rheader(r, tabs=[]):
                       A(s3_avatar_represent(record.id,
                                             "pr_person",
                                             _class="hrm_avatar"),
-                        _href=URL(f="person", args=[record.id, "image"]),
+                        _href=URL(f="person", args=[record.id, "image"],
+                                  vars = vars),
                         ),
                       tbl,
                       rheader_tabs)
