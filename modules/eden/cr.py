@@ -2,7 +2,7 @@
 
 """
     Shelter (Camp) Registry, model
-    
+
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -40,7 +40,7 @@ from eden.layouts import S3AddResourceLink
 T = current.T
 
 class S3CampDataModel(S3Model):
-    
+
     names = ["cr_shelter_type",
              "cr_shelter_service",
              "cr_shelter",
@@ -213,7 +213,7 @@ class S3CampDataModel(S3Model):
             1 : T("Closed"),
             2 : T("Open")
         }
-        
+
         tablename = "cr_shelter"
         table = db.define_table(tablename,
                                 self.super_link("site_id", "org_site"),
@@ -316,8 +316,10 @@ class S3CampDataModel(S3Model):
         # Add Shelters as component of Services, Types as a simple way
         # to get reports showing shelters per type, etc.
         self.add_component(tablename,
-                          cr_shelter_type="shelter_type_id",
-                          cr_shelter_service="shelter_service_id")
+                           cr_shelter_type="shelter_type_id")
+                           # @todo: can't use a list:reference type for a
+                           # component link => use a link table instead!
+                           #cr_shelter_service="shelter_service_id")
 
         self.configure(tablename,
                         super_entity="org_site",
@@ -341,7 +343,7 @@ class S3CampDataModel(S3Model):
         return Storage( ADD_SHELTER = ADD_SHELTER,
                         SHELTER_LABEL = SHELTER_LABEL
                         )
-        
+
     # -----------------------------------------------------------------------------
     def defaults(self):
         shelter_id = S3ReusableField("shelter_id", "integer",
@@ -352,12 +354,16 @@ class S3CampDataModel(S3Model):
 
 # -----------------------------------------------------------------------------
 def cr_shelter_rheader(r, tabs=[]):
-
     """ Resource Headers """
 
+    rheader = None
+    s3 = current.response.s3
+
     if r.representation == "html":
+
         s3db = current.s3db
         tablename, record = s3_rheader_resource(r)
+
         if tablename == "cr_shelter" and record:
             if not tabs:
                 tabs = [(T("Basic Details"), None),
@@ -402,8 +408,14 @@ def cr_shelter_rheader(r, tabs=[]):
                 # Inject the helptext script
             #    rheader.append(response.s3.req_helptext_script)
 
-            return rheader
-    return None
+        elif tablename == "cr_shelter_type" and record:
+
+            tabs = [(T("Basic Details"), None),
+                    (s3.crud_strings["cr_shelter"].subtitle_list, "shelter")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(rheader_tabs)
+
+    return rheader
 
 # END =========================================================================
 
