@@ -2,21 +2,33 @@ Configuration
 =============
 
 The e-cidadania platform is almost ready-to-use after unpacking, but you will have
-to edit the `settings.py` file if you want to install it in production.
+to edit the `settings.py` file if you want to install it in production. We
+explain here all the settings realted with the initial configuration of
+e-cidadania. If you want more detailed information about the settings, please
+take a look at the official django documentation at `http://docs.djangoproject.com`_
 
-The e-cidadania setting have been splitted into three major files:
-
-::
+The e-cidadania setting have been splitted into four major files::
 
     settings/
+        __init__.py
         defaults.py
         development.py
         production.py
-    
+
+__init__.py
+-----------
+
+This file loads one configuration or another based on the *DEBUG* flag. You have
+to set this first.
+
+**DEBUG** (boolean)
+    You have to set this value to *True* or *False* depending if you are testing
+    or want to debug the e-cidadania platform.
+
 Defaults.py
 -----------
 
-This file stablishes the common settings accross the both environments. Most of
+This file stablishes the common settings across the both environments. Most of
 this settings are e-cidadania specific, we will specify here the ones you can
 modify safely.
 
@@ -65,7 +77,7 @@ development.py and production.py
 parameters we think you will need to make a development or production server.
 
 Database
-........
+````````
 
 **Configuring the database**::
 
@@ -130,7 +142,7 @@ The settings are not meant to be modified by the administrator, but he can chang
 them if seen fit.
 
 User profiles
-.............
+`````````````
 
 *ACCOUNT_ACTIVATION_DAYS* (number)
 
