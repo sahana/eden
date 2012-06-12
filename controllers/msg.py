@@ -71,7 +71,6 @@ def outbox():
     s3.crud_strings[tablename] = Storage(
         title_list = T("View Outbox"),
         title_update = T("Edit Message"),
-        subtitle_list = T("Available Messages"),
         label_list_button = T("View Outbox"),
         label_delete_button = T("Delete Message"),
         msg_record_modified = T("Message updated"),
@@ -107,16 +106,14 @@ def log():
 
     # CRUD Strings
     ADD_MESSAGE = T("Add Message")
-    LIST_MESSAGES = T("List Messages")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_MESSAGE,
         title_display = T("Message Details"),
-        title_list = LIST_MESSAGES,
+        title_list = T("Messages"),
         title_update = T("Edit message"),
         title_search = T("Search messages"),
         subtitle_create = T("Send new message"),
-        subtitle_list = T("Messages"),
-        label_list_button = LIST_MESSAGES,
+        label_list_button = T("List Messages"),
         label_create_button = ADD_MESSAGE,
         msg_record_created = T("Message added"),
         msg_record_modified = T("Message updated"),
@@ -356,15 +353,13 @@ def modem_settings():
 
     # CRUD Strings
     ADD_SETTING = T("Add Setting")
-    VIEW_SETTINGS = T("View Settings")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_SETTING,
         title_display = T("Setting Details"),
-        title_list = VIEW_SETTINGS,
+        title_list = T("Settings"),
         title_update = T("Edit Modem Settings"),
         title_search = T("Search Settings"),
-        subtitle_list = T("Settings"),
-        label_list_button = VIEW_SETTINGS,
+        label_list_button = T("View Settings"),
         label_create_button = ADD_SETTING,
         msg_record_created = T("Setting added"),
         msg_record_modified = T("Modem settings updated"),

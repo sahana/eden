@@ -303,10 +303,6 @@ class S3Cube(S3CRUD):
             if not title:
                 title = crud_string(self.tablename, "title_list")
 
-            subtitle = crud_string(self.tablename, "subtitle_report")
-            if not subtitle:
-                subtitle = crud_string(self.tablename, "subtitle_list")
-
             if form is not None:
                 form = DIV(
                     DIV(form,
@@ -318,7 +314,6 @@ class S3Cube(S3CRUD):
                 form = ""
 
             output["title"] = title
-            output["subtitle"] = subtitle
             output["form"] = form
             response.view = self._view(r, "report.html")
 

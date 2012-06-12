@@ -89,16 +89,14 @@ class S3SupportModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST = T("New Support Request")
-        LIST_REQUESTS = T("List Support Requests")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
-            title_list = LIST_REQUESTS,
+            title_list = T("Support Requests"),
             title_update = T("Edit Request"),
             title_search = T("Search Support Requests"),
             subtitle_create = T("Add New Request"),
-            subtitle_list = T("Support Requests"),
-            label_list_button = LIST_REQUESTS,
+            label_list_button = T("List Support Requests"),
             label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Request added"),

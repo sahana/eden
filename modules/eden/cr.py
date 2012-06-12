@@ -76,17 +76,15 @@ class S3CampDataModel(S3Model):
         # CRUD strings
         if settings.get_ui_camp():
             ADD_SHELTER_TYPE = T("Add Camp Type")
-            LIST_SHELTER_TYPES = T("List Camp Types")
             SHELTER_TYPE_LABEL = T("Camp Type")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER_TYPE,
                 title_display = T("Camp Type Details"),
-                title_list = LIST_SHELTER_TYPES,
+                title_list = T("Camp Types"),
                 title_update = T("Edit Camp Type"),
                 title_search = T("Search Camp Types"),
                 subtitle_create = T("Add New Camp Type"),
-                subtitle_list = T("Camp Types"),
-                label_list_button = LIST_SHELTER_TYPES,
+                label_list_button = T("List Camp Types"),
                 label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Camp Type added"),
                 msg_record_modified = T("Camp Type updated"),
@@ -96,17 +94,15 @@ class S3CampDataModel(S3Model):
                 name_nice_plural = T("Camps"))
         else:
             ADD_SHELTER_TYPE = T("Add Shelter Type")
-            LIST_SHELTER_TYPES = T("List Shelter Types")
             SHELTER_TYPE_LABEL = T("Shelter Type")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER_TYPE,
                 title_display = T("Shelter Type Details"),
-                title_list = LIST_SHELTER_TYPES,
+                title_list = T("Shelter Types"),
                 title_update = T("Edit Shelter Type"),
                 title_search = T("Search Shelter Types"),
                 subtitle_create = T("Add New Shelter Type"),
-                subtitle_list = T("Shelter Types"),
-                label_list_button = LIST_SHELTER_TYPES,
+                label_list_button = T("List Shelter Types"),
                 label_create_button = ADD_SHELTER_TYPE,
                 msg_record_created = T("Shelter Type added"),
                 msg_record_modified = T("Shelter Type updated"),
@@ -139,17 +135,15 @@ class S3CampDataModel(S3Model):
         # CRUD strings
         if settings.get_ui_camp():
             ADD_SHELTER_SERVICE = T("Add Camp Service")
-            LIST_SHELTER_SERVICES = T("List Camp Services")
             SHELTER_SERVICE_LABEL = T("Camp Service")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER_SERVICE,
                 title_display = T("Camp Service Details"),
-                title_list = LIST_SHELTER_SERVICES,
+                title_list = T("Camp Services"),
                 title_update = T("Edit Camp Service"),
                 title_search = T("Search Camp Services"),
                 subtitle_create = T("Add New Camp Service"),
-                subtitle_list = T("Camp Services"),
-                label_list_button = LIST_SHELTER_SERVICES,
+                label_list_button = T("List Camp Services"),
                 label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Camp Service added"),
                 msg_record_modified = T("Camp Service updated"),
@@ -159,17 +153,15 @@ class S3CampDataModel(S3Model):
                 name_nice_plural = T("Camp Services"))
         else:
             ADD_SHELTER_SERVICE = T("Add Shelter Service")
-            LIST_SHELTER_SERVICES = T("List Shelter Services")
             SHELTER_SERVICE_LABEL = T("Shelter Service")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER_SERVICE,
                 title_display = T("Shelter Service Details"),
-                title_list = LIST_SHELTER_SERVICES,
+                title_list = T("Shelter Services"),
                 title_update = T("Edit Shelter Service"),
                 title_search = T("Search Shelter Services"),
                 subtitle_create = T("Add New Shelter Service"),
-                subtitle_list = T("Shelter Services"),
-                label_list_button = LIST_SHELTER_SERVICES,
+                label_list_button = T("List Shelter Services"),
                 label_create_button = ADD_SHELTER_SERVICE,
                 msg_record_created = T("Shelter Service added"),
                 msg_record_modified = T("Shelter Service updated"),
@@ -253,40 +245,36 @@ class S3CampDataModel(S3Model):
         # CRUD strings
         if settings.get_ui_camp():
             ADD_SHELTER = T("Add Camp")
-            LIST_SHELTERS = T("List Camps")
-            SHELTER_LABEL = T("Camp Service")
+            SHELTER_LABEL = T("Camp")
             SHELTER_HELP = T("The Camp this Request is from")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER,
                 title_display = T("Camp Details"),
-                title_list = LIST_SHELTERS,
+                title_list = T("Camps"),
                 title_update = T("Edit Camp"),
                 title_search = T("Search Camps"),
                 subtitle_create = T("Add New Camp"),
-                subtitle_list = T("Camps"),
-                label_list_button = LIST_SHELTERS,
+                label_list_button = T("List Camps"),
                 label_create_button = ADD_SHELTER,
                 msg_record_created = T("Camp added"),
                 msg_record_modified = T("Camp updated"),
                 msg_record_deleted = T("Camp deleted"),
                 msg_list_empty = T("No Camps currently registered"),
-                name_nice = T("Camp Service"),
-                name_nice_plural = T("Camp Services"))
+                name_nice = T("Camp"),
+                name_nice_plural = T("Camps"))
 
         else:
             ADD_SHELTER = T("Add Shelter")
-            LIST_SHELTERS = T("List Shelters")
-            SHELTER_LABEL = T("Shelter Service")
+            SHELTER_LABEL = T("Shelter")
             SHELTER_HELP = T("The Shelter this Request is from")
             s3.crud_strings[tablename] = Storage(
                 title_create = ADD_SHELTER,
                 title_display = T("Shelter Details"),
-                title_list = LIST_SHELTERS,
+                title_list = T("Shelters"),
                 title_update = T("Edit Shelter"),
                 title_search = T("Search Shelters"),
                 subtitle_create = T("Add New Shelter"),
-                subtitle_list = T("Shelters"),
-                label_list_button = LIST_SHELTERS,
+                label_list_button = T("List Shelters"),
                 label_create_button = ADD_SHELTER,
                 msg_record_created = T("Shelter added"),
                 msg_record_modified = T("Shelter updated"),

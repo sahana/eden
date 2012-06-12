@@ -91,16 +91,14 @@ if deployment_settings.has_module(module):
 
         # CRUD strings
         ADD_ASSESSMENT = T("Add Assessment")
-        LIST_ASSESSMENTS = T("List Assessments")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ASSESSMENT,
             title_display = T("Assessment Details"),
-            title_list = LIST_ASSESSMENTS,
+            title_list = T("Assessments"),
             title_update = T("Edit Assessment"),
             title_search = T("Search Assessments"),
             subtitle_create = T("Add New Assessment"),
-            subtitle_list = T("Assessments"),
-            label_list_button = LIST_ASSESSMENTS,
+            label_list_button = T("List Assessments"),
             label_create_button = ADD_ASSESSMENT,
             label_delete_button = T("Delete Assessment"),
             msg_record_created = T("Assessment added"),
@@ -129,16 +127,14 @@ if deployment_settings.has_module(module):
 
         # CRUD strings
         ADD_BASELINE_TYPE = T("Add Baseline Type")
-        LIST_BASELINE_TYPE = T("List Baseline Types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_BASELINE_TYPE,
             title_display = T("Baseline Type Details"),
-            title_list = LIST_BASELINE_TYPE,
+            title_list = T("Baseline Types"),
             title_update = T("Edit Baseline Type"),
             title_search = T("Search Baseline Type"),
             subtitle_create = T("Add New Baseline Type"),
-            subtitle_list = T("Baseline Types"),
-            label_list_button = LIST_BASELINE_TYPE,
+            label_list_button = T("List Baseline Types"),
             label_create_button = ADD_BASELINE_TYPE,
             label_delete_button = T("Delete Baseline Type"),
             msg_record_created = T("Baseline Type added"),
@@ -187,16 +183,14 @@ if deployment_settings.has_module(module):
 
         # CRUD strings
         ADD_BASELINE = T("Add Baseline")
-        LIST_BASELINE = T("List Baselines")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_BASELINE,
             title_display = T("Baselines Details"),
-            title_list = LIST_BASELINE,
+            title_list = T("Baselines"),
             title_update = T("Edit Baseline"),
             title_search = T("Search Baselines"),
             subtitle_create = T("Add New Baseline"),
-            subtitle_list = T("Baselines"),
-            label_list_button = LIST_BASELINE,
+            label_list_button = T("List Baselines"),
             label_create_button = ADD_BASELINE,
             label_delete_button = T("Delete Baseline"),
             msg_record_created = T("Baseline added"),
@@ -231,16 +225,14 @@ if deployment_settings.has_module(module):
 
         # CRUD strings
         ADD_ASSESS_SUMMARY = T("Add Assessment Summary")
-        LIST_ASSESS_SUMMARY = T("List Assessment Summaries")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ASSESS_SUMMARY,
             title_display = T("Assessment Summary Details"),
-            title_list = LIST_ASSESS_SUMMARY,
+            title_list = T("Assessment Summaries"),
             title_update = T("Edit Assessment Summary"),
             title_search = T("Search Assessment Summaries"),
             subtitle_create = T("Add New Assessment Summary"),
-            subtitle_list = T("Assessment Summaries"),
-            label_list_button = LIST_ASSESS_SUMMARY,
+            label_list_button = T("List Assessment Summaries"),
             label_create_button = ADD_ASSESS_SUMMARY,
             label_delete_button = T("Delete Assessment Summary"),
             msg_record_created = T("Assessment Summary added"),
@@ -281,16 +273,14 @@ if deployment_settings.has_module(module):
 
         # Section CRUD strings
         ADD_SECTION = T("Add Section")
-        LIST_SECTIONS = T("List Sections")
         rat_section_crud_strings = Storage(
             title_create = ADD_SECTION,
             title_display = T("Section Details"),
-            title_list = LIST_SECTIONS,
+            title_list = T("Sections"),
             title_update = "",
             title_search = T("Search Sections"),
             subtitle_create = "",
-            subtitle_list = T("Sections"),
-            label_list_button = LIST_SECTIONS,
+            label_list_button = T("List Sections"),
             label_create_button = ADD_SECTION,
             label_delete_button = T("Delete Section"),
             msg_record_created = T("Section updated"),
@@ -449,16 +439,14 @@ if deployment_settings.has_module(module):
 
         # CRUD strings
         ADD_ASSESSMENT = T("Add Rapid Assessment")
-        LIST_ASSESSMENTS = T("List Rapid Assessments")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ASSESSMENT,
             title_display = T("Rapid Assessment Details"),
-            title_list = LIST_ASSESSMENTS,
+            title_list = T("Rapid Assessments"),
             title_update = T("Edit Rapid Assessment"),
             title_search = T("Search Rapid Assessments"),
             subtitle_create = T("Add New Rapid Assessment"),
-            subtitle_list = T("Rapid Assessments"),
-            label_list_button = LIST_ASSESSMENTS,
+            label_list_button = T("List Rapid Assessments"),
             label_create_button = ADD_ASSESSMENT,
             label_delete_button = T("Delete Rapid Assessment"),
             msg_record_created = T("Rapid Assessment added"),
@@ -1850,11 +1838,10 @@ if deployment_settings.has_module(module):
     s3.crud_strings[tablename] = Storage(
         title_create = T("Add Population Statistic"),
         title_display = T("Population Statistic Details"),
-        title_list = T("List Population Statistics"),
+        title_list = T("Population Statistics"),
         title_update = T("Edit Population Statistic"),
         title_search = T("Search Population Statistics"),
         subtitle_create = T("Add New Population Statistic"),
-        subtitle_list = T("Population Statistics"),
         label_list_button = T("List Population Statistics"),
         label_create_button = T("Add Population Statistic"),
         label_delete_button = T("Delete Population Statistic"),

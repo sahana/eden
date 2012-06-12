@@ -165,7 +165,6 @@ def person():
     s3.crud_strings["pr_person"].update(
         title_display = T("Missing Person Details"),
         title_list = T("Missing Persons"),
-        subtitle_list = T("List of Missing Persons"),
         label_list_button = T("List Missing Persons"),
         msg_list_empty = T("No Persons found"),
         msg_no_match = T("No Persons currently reported missing"))
@@ -200,7 +199,7 @@ def person():
                 query = dvi_match_query(body_id)
                 r.resource.add_filter(query)
                 s3.crud_strings["pr_person"].update(
-                    subtitle_list = T("Candidate Matches for Body %s" % label),
+                    #subtitle_list = T("Candidate Matches for Body %s" % label),
                     msg_no_match = T("No matching records found"))
         return True
     response.s3.prep = prep

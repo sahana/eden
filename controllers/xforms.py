@@ -30,7 +30,7 @@ def create():
     instance_list = []
     bindings_list = []
     controllers_list = []
-    itext_list = [TAG["text"](TAG["value"](s3.crud_strings[_table].subtitle_list), _id="title"),]
+    itext_list = [TAG["text"](TAG["value"](s3.crud_strings[_table].title_list), _id="title"),]
 
     for field in table.fields:
         if field in ["id", "created_on", "modified_on", "uuid", "mci", "deleted",

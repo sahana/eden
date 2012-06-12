@@ -114,16 +114,14 @@ class S3VehicleModel(S3Model):
 
         # CRUD strings
         ADD_VEHICLE_DETAILS = T("Add Vehicle Detail")
-        LIST_VEHICLE_DETAILS = T("List Vehicle Details")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_VEHICLE_DETAILS,
             title_display = T("Vehicle Details"),
-            title_list = LIST_VEHICLE_DETAILS,
+            title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
             title_search = T("Search Vehicle Details"),
             subtitle_create = T("Add Vehicle Details"),
-            subtitle_list = T("Vehicle Details"),
-            label_list_button = LIST_VEHICLE_DETAILS,
+            label_list_button = T("List Vehicle Details"),
             label_create_button = ADD_VEHICLE_DETAILS,
             label_delete_button = T("Delete Vehicle Details"),
             msg_record_created = T("Vehicle Details added"),
@@ -163,16 +161,14 @@ class S3VehicleModel(S3Model):
 
         # CRUD strings
         ADD_GPS = T("Add GPS data")
-        LIST_GPS = T("List GPS data")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_GPS,
             title_display = T("GPS data"),
-            title_list = LIST_GPS,
+            title_list = T("GPS data"),
             title_update = T("Edit GPS data"),
             title_search = T("Search GPS data"),
             subtitle_create = T("Add GPS data"),
-            subtitle_list = T("GPS data"),
-            label_list_button = LIST_GPS,
+            label_list_button = T("List GPS data"),
             label_create_button = ADD_GPS,
             label_delete_button = T("Delete GPS data"),
             msg_record_created = T("GPS data added"),

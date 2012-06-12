@@ -557,16 +557,14 @@ s3.address_update = address_update
 # Default CRUD strings
 #
 ADD_RECORD = T("Add Record")
-LIST_RECORDS = T("List Records")
 s3.crud_strings = Storage(
     title_create = ADD_RECORD,
     title_display = T("Record Details"),
-    title_list = LIST_RECORDS,
+    title_list = T("Records"),
     title_update = T("Edit Record"),
     title_search = T("Search Records"),
     subtitle_create = T("Add New Record"),
-    subtitle_list = T("Available Records"),
-    label_list_button = LIST_RECORDS,
+    label_list_button = T("List Records"),
     label_create_button = ADD_RECORD,
     label_delete_button = T("Delete Record"),
     msg_record_created = T("Record added"),

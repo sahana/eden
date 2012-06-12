@@ -133,16 +133,14 @@ class S3DocumentLibrary(S3Model):
         # CRUD Strings
         DOCUMENT = T("Reference Document")
         ADD_DOCUMENT = T("Add Reference Document")
-        LIST_DOCUMENTS = T("List Documents")
         crud_strings[tablename] = Storage(
             title_create = ADD_DOCUMENT,
             title_display = T("Document Details"),
-            title_list = LIST_DOCUMENTS,
+            title_list = T("Documents"),
             title_update = T("Edit Document"),
             title_search = T("Search Documents"),
             subtitle_create = T("Add New Document"),
-            subtitle_list = DOCUMENT,
-            label_list_button = LIST_DOCUMENTS,
+            label_list_button = T("List Documents"),
             label_create_button = ADD_DOCUMENT,
             label_delete_button = T("Delete Document"),
             msg_record_created = T("Document added"),
@@ -212,16 +210,14 @@ class S3DocumentLibrary(S3Model):
 
        # CRUD Strings
         ADD_IMAGE = T("Add Photo")
-        LIST_IMAGES = T("List Photos")
         crud_strings[tablename] = Storage(
             title_create = ADD_IMAGE,
             title_display = T("Photo Details"),
-            title_list = LIST_IMAGES,
+            title_list = T("Photos"),
             title_update = T("Edit Photo"),
             title_search = T("Search Photos"),
             subtitle_create = T("Add New Photo"),
-            subtitle_list = T("Photo"),
-            label_list_button = LIST_IMAGES,
+            label_list_button = T("List Photos"),
             label_create_button = ADD_IMAGE,
             label_delete_button = T("Delete Photo"),
             msg_record_created = T("Photo added"),

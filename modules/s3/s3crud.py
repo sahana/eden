@@ -924,9 +924,9 @@ class S3CRUD(S3Method):
                 title = crud_string(r.tablename, "title_display")
             else:
                 title = crud_string(self.tablename, "title_list")
-            subtitle = crud_string(self.tablename, "subtitle_list")
+            #subtitle = crud_string(self.tablename, "subtitle_list")
             output["title"] = title
-            output["subtitle"] = subtitle
+            #output["subtitle"] = subtitle
 
             # Empty table - or just no match?
             if not items:
@@ -944,7 +944,7 @@ class S3CRUD(S3Method):
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    del output["subtitle"]
+                    #del output["subtitle"]
                     items = ""
                     s3.no_formats = True
 

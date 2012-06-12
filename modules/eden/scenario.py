@@ -82,16 +82,14 @@ class S3ScenarioModel(S3Model):
 
         # CRUD strings
         ADD_SCENARIO = T("New Scenario")
-        LIST_SCENARIOS = T("List Scenarios")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_SCENARIO,
             title_display = T("Scenario Details"),
-            title_list = LIST_SCENARIOS,
+            title_list = T("Scenarios"),
             title_update = T("Edit Scenario"),
             title_search = T("Search Scenarios"),
             subtitle_create = T("Add New Scenario"),
-            subtitle_list = T("Scenarios"),
-            label_list_button = LIST_SCENARIOS,
+            label_list_button = T("List Scenarios"),
             label_create_button = ADD_SCENARIO,
             label_delete_button = T("Delete Scenario"),
             msg_record_created = T("Scenario added"),
@@ -252,11 +250,10 @@ class S3ScenarioAssetModel(S3Model):
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Asset"),
             title_display = T("Asset Details"),
-            title_list = T("List Assets"),
+            title_list = T("Assets"),
             title_update = T("Edit Asset"),
             title_search = T("Search Assets"),
             subtitle_create = T("Add New Asset"),
-            subtitle_list = T("Assets"),
             label_list_button = T("List Assets"),
             label_create_button = T("Add Asset"),
             label_delete_button = T("Remove Asset from this scenario"),
@@ -299,11 +296,10 @@ class S3ScenarioHRModel(S3Model):
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Human Resource"),
             title_display = T("Human Resource Details"),
-            title_list = T("List Human Resources"),
+            title_list = T("Human Resources"),
             title_update = T("Edit Human Resource"),
             title_search = T("Search Human Resources"),
             subtitle_create = T("Add New Human Resource"),
-            subtitle_list = T("Human Resources"),
             label_list_button = T("List Human Resources"),
             label_create_button = T("Add Human Resource"),
             label_delete_button = T("Remove Human Resource from this scenario"),
@@ -347,11 +343,10 @@ class S3ScenarioMapModel(S3Model):
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Map Configuration"),
             title_display = T("Map Configuration Details"),
-            title_list = T("List Map Configurations"),
+            title_list = T("Map Configurations"),
             title_update = T("Edit Map Configuration"),
             title_search = T("Search Map Configurations"),
             subtitle_create = T("Add New Map Configuration"),
-            subtitle_list = T("Map Configurations"),
             label_list_button = T("List Map Configurations"),
             label_create_button = T("Add Map Configuration"),
             label_delete_button = T("Remove Map Configuration from this scenario"),
@@ -396,11 +391,10 @@ class S3ScenarioSiteModel(S3Model):
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Facility"),
             title_display = T("Facility Details"),
-            title_list = T("List Facilities"),
+            title_list = T("Facilities"),
             title_update = T("Edit Facility"),
             title_search = T("Search Facilities"),
             subtitle_create = T("Add New Facility"),
-            subtitle_list = T("Facilities"),
             label_list_button = T("List Facilities"),
             label_create_button = T("Add Facility"),
             label_delete_button = T("Remove Facility from this scenario"),
@@ -444,11 +438,10 @@ class S3ScenarioTaskModel(S3Model):
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Task"),
             title_display = T("Task Details"),
-            title_list = T("List Tasks"),
+            title_list = T("Tasks"),
             title_update = T("Edit Task"),
             title_search = T("Search Tasks"),
             subtitle_create = T("Add New Task"),
-            subtitle_list = T("Tasks"),
             label_list_button = T("List Tasks"),
             label_create_button = T("Add Task"),
             label_delete_button = T("Remove Task from this scenario"),

@@ -22,6 +22,7 @@
          Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
          Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
          Trackable............boolean.........Layer Trackable
+         Polygons.............boolean.........Layer Polygons
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -126,6 +127,9 @@
             <data field="resource"><xsl:value-of select="col[@field='Resource']"/></data>
             <xsl:if test="col[@field='Trackable']">
                 <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Polygons']">
+                <data field="polygons"><xsl:value-of select="col[@field='Polygons']"/></data>
             </xsl:if>
             <data field="controller"><xsl:value-of select="col[@field='Controller']"/></data>
             <data field="function"><xsl:value-of select="col[@field='Function']"/></data>

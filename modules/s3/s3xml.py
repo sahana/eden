@@ -665,6 +665,8 @@ class S3XML(S3Codec):
         popup_url = None
         tooltips = {}
         latlons = {}
+        wkts = {}
+        geojsons = {}
         if marker:
             try:
                 # Dict (provided by Feature Layers)
@@ -675,6 +677,8 @@ class S3XML(S3Codec):
                 popup_url = marker["popup_url"]
                 tooltips = marker["tooltips"]
                 latlons = marker["latlons"]
+                wkts = marker["wkts"]
+                geojsons = marker["geojsons"]
             except:
                 # String (provided by ?)
                 marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
@@ -702,16 +706,26 @@ class S3XML(S3Codec):
 
             LatLon = None
             WKT = None
+            # Use the value calculated in gis.get_marker_and_tooltip() if we can
             if latlons:
-                # Use the value calculated in gis.get_marker_and_tooltip()
                 LatLon = latlons[tablename][record.id]
                 lat = LatLon[0]
                 lon = LatLon[1]
+            elif geojsons:
+                WKT = True
+                geojson = polygons[tablename][record.id]
+                # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                geometry = etree.SubElement(element, "geometry")
+                geometry.set("value", geojson)
+            elif wkts:
+                WKT = True
+                wkt = wkts[tablename][record.id]
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkt
 
             elif "polygons" in get_vars:
-                # Display Polygons not Points
+                # Calculate the Polygons 1/feature since we didn't do it earlier
                 # e.g. Theme Layers
-                # @ToDo: Move this to GIS & do it 1/layer instead of 1/record
                 if WKTFIELD in fields:
                     query = (ktable.id == r_id)
                     if settings.get_gis_spatialdb():
@@ -736,8 +750,7 @@ class S3XML(S3Codec):
                         WKT = db(query).select(ktable[WKTFIELD],
                                                limitby=(0, 1))
                         if WKT:
-                            WKT = WKT.first()
-                            wkt = WKT[WKTFIELD]
+                            wkt = WKT.first()[WKTFIELD]
                             if wkt is None:
                                 continue
                             if current.auth.permission.format == "geojson":

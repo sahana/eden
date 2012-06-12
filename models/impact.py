@@ -36,16 +36,14 @@ if deployment_settings.has_module("assess"):
 
         # CRUD strings
         ADD_IMPACT_TYPE = T("Add Impact Type")
-        LIST_IMPACT_TYPE = T("List Impact Types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_IMPACT_TYPE,
             title_display = T("Impact Type Details"),
-            title_list = LIST_IMPACT_TYPE,
+            title_list = T("Impact Types"),
             title_update = T("Edit Impact Type"),
             title_search = T("Search Impact Type"),
             subtitle_create = T("Add New Impact Type"),
-            subtitle_list = T("Impact Types"),
-            label_list_button = LIST_IMPACT_TYPE,
+            label_list_button = T("List Impact Types"),
             label_create_button = ADD_IMPACT_TYPE,
             label_delete_button = T("Delete Impact Type"),
             msg_record_created = T("Impact Type added"),
@@ -96,16 +94,14 @@ if deployment_settings.has_module("assess"):
 
         # CRUD strings
         ADD_IMPACT = T("Add Impact")
-        LIST_IMPACT = T("List Impacts")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_IMPACT,
             title_display = T("Impact Details"),
-            title_list = LIST_IMPACT,
+            title_list = T("Impacts"),
             title_update = T("Edit Impact"),
             title_search = T("Search Impacts"),
             subtitle_create = T("Add New Impact"),
-            subtitle_list = T("Impacts"),
-            label_list_button = LIST_IMPACT,
+            label_list_button = T("List Impacts"),
             label_create_button = ADD_IMPACT,
             label_delete_button = T("Delete Impact"),
             msg_record_created = T("Impact added"),

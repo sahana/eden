@@ -67,23 +67,21 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_ZONE = T("Add Zone Type")
-        LIST_ZONES = T("List Zone types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ZONE,
             title_display = T("Zone Type Details"),
-            title_list = LIST_ZONES,
+            title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
-            title_search = T("Search Zone types"),
-            title_upload = T("Import Zone types"),
+            title_search = T("Search Zone Types"),
+            title_upload = T("Import Zone Types"),
             subtitle_create = T("Add New Zone Type"),
-            subtitle_list = T("Zone types"),
-            label_list_button = LIST_ZONES,
+            label_list_button = T("List Zone Types"),
             label_create_button = T("Add New Zone Type"),
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
             msg_record_deleted = T("Zone Type deleted"),
-            msg_list_empty = T("No Zone types currently registered"))
+            msg_list_empty = T("No Zone Types currently registered"))
 
         # -----------------------------------------------------------
         # Security Zones
@@ -107,23 +105,21 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_ZONE = T("Add Zone")
-        LIST_ZONES = T("List Zone types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ZONE,
             title_display = T("Zone Details"),
-            title_list = LIST_ZONES,
+            title_list = T("Zones"),
             title_update = T("Edit Zone"),
-            title_search = T("Search Zone types"),
-            title_upload = T("Import Zone types"),
+            title_search = T("Search Zones"),
+            title_upload = T("Import Zones"),
             subtitle_create = T("Add New Zone"),
-            subtitle_list = T("Zone types"),
-            label_list_button = LIST_ZONES,
+            label_list_button = T("List Zones"),
             label_create_button = T("Add New Zone"),
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
             msg_record_deleted = T("Zone deleted"),
-            msg_list_empty = T("No Zone types currently registered"))
+            msg_list_empty = T("No Zones currently registered"))
 
         # -----------------------------------------------------------
         # Security Staff Types
@@ -136,23 +132,21 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_STAFF = T("Add Staff Type")
-        LIST_STAFFS = T("List Staff types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_STAFF,
             title_display = T("Staff Type Details"),
-            title_list = LIST_STAFFS,
+            title_list = T("Staff Types"),
             title_update = T("Edit Staff Type"),
-            title_search = T("Search Staff types"),
-            title_upload = T("Import Staff types"),
+            title_search = T("Search Staff Types"),
+            title_upload = T("Import Staff Types"),
             subtitle_create = T("Add New Staff Type"),
-            subtitle_list = T("Staff types"),
-            label_list_button = LIST_STAFFS,
+            label_list_button = T("List Staff Types"),
             label_create_button = T("Add New Staff Type"),
             label_delete_button = T("Delete Staff Type"),
             msg_record_created = T("Staff Type added"),
             msg_record_modified = T("Staff Type updated"),
             msg_record_deleted = T("Staff Type deleted"),
-            msg_list_empty = T("No Staff types currently registered"))
+            msg_list_empty = T("No Staff Types currently registered"))
 
         # -----------------------------------------------------------
         # Security Staff
@@ -190,17 +184,15 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_STAFF = T("Add Security-Related Staff")
-        LIST_STAFFS = T("List Security-Related Staff")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_STAFF,
             title_display = T("Security-Related Staff Details"),
-            title_list = LIST_STAFFS,
+            title_list = T("Security-Related Staff"),
             title_update = T("Edit Security-Related Staff"),
             title_search = T("Search Security-Related Staff"),
             title_upload = T("Import Security-Related Staff"),
             subtitle_create = T("Add New Security-Related Staff"),
-            subtitle_list = T("Security-Related Staff"),
-            label_list_button = LIST_STAFFS,
+            label_list_button = T("List Security-Related Staff"),
             label_create_button = T("Add New Security-Related Staff"),
             label_delete_button = T("Delete Security-Related Staff"),
             msg_record_created = T("Security-Related Staff added"),

@@ -73,16 +73,14 @@ class S3DelphiModel(S3Model):
 
         # CRUD Strings
         ADD_GROUP = T("Add Group")
-        LIST_GROUPS = T("List Groups")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_GROUP,
             title_display = T("Group Details"),
-            title_list = LIST_GROUPS,
+            title_list = T("Groups"),
             title_update = T("Edit Group"),
             title_search = T("Search Groups"),
             subtitle_create = T("Add New Group"),
-            subtitle_list = T("Groups"),
-            label_list_button = LIST_GROUPS,
+            label_list_button = T("List Groups"),
             label_create_button = ADD_GROUP,
             label_delete_button = T("Delete Group"),
             msg_record_created = T("Group added"),
@@ -153,16 +151,14 @@ class S3DelphiModel(S3Model):
 
         # CRUD Strings
         ADD_MEMBERSHIP = T("Add Membership")
-        LIST_MEMBERSHIPS = T("List Memberships")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_MEMBERSHIP,
             title_display = T("Membership Details"),
-            title_list = LIST_MEMBERSHIPS,
+            title_list = T("Memberships"),
             title_update = T("Edit Membership"),
             title_search = T("Search Memberships"),
             subtitle_create = T("Add New Membership"),
-            subtitle_list = T("Memberships"),
-            label_list_button = LIST_MEMBERSHIPS,
+            label_list_button = T("List Memberships"),
             label_create_button = ADD_MEMBERSHIP,
             label_delete_button = T("Remove Membership"),
             msg_record_created = T("Membership added"),
@@ -199,16 +195,14 @@ class S3DelphiModel(S3Model):
 
         # CRUD Strings
         ADD_PROBLEM = T("Add Problem")
-        LIST_PROBLEMS = T("List Problems")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_PROBLEM,
             title_display = T("Problem Details"),
-            title_list = LIST_PROBLEMS,
+            title_list = T("Problems"),
             title_update = T("Edit Problem"),
             title_search = T("Search Problems"),
             subtitle_create = T("Add New Problem"),
-            subtitle_list = T("Problems"),
-            label_list_button = LIST_PROBLEMS,
+            label_list_button = T("List Problems"),
             label_create_button = ADD_PROBLEM,
             label_delete_button = T("Delete Problem"),
             msg_record_created = T("Problem added"),
@@ -260,16 +254,14 @@ class S3DelphiModel(S3Model):
 
         # CRUD Strings
         ADD_SOLUTION = T("Add Solution")
-        LIST_SOLUTIONS = T("List Solutions")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_SOLUTION,
             title_display = T("Solution Details"),
-            title_list = LIST_SOLUTIONS,
+            title_list = T("Solutions"),
             title_update = T("Edit Solution"),
             title_search = T("Search Solutions"),
             subtitle_create = T("Add New Solution"),
-            subtitle_list = T("Solutions"),
-            label_list_button = LIST_SOLUTIONS,
+            label_list_button = T("List Solutions"),
             label_create_button = ADD_SOLUTION,
             label_delete_button = T("Delete Solution"),
             msg_record_created = T("Solution added"),

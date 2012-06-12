@@ -377,29 +377,28 @@ class S3InboundEmailModel(S3Model):
         # Incoming Email
         tablename = "msg_email_inbox"
         table = self.define_table(tablename,
-                                  Field('sender', notnull=True),
-                                  Field('subject', length=78),    # RFC 2822
-                                  Field('body', 'text'),
+                                  Field("sender", notnull=True),
+                                  Field("subject", length=78),    # RFC 2822
+                                  Field("body", "text"),
                                   *s3.meta_fields())
         table.sender.requires = IS_EMAIL()
-        table.sender.label = T('Sender')
+        table.sender.label = T("Sender")
         #table.sender.comment = SPAN("*", _class="req")
-        table.subject.label = T('Subject')
-        table.body.label = T('Body')
-        VIEW_EMAIL_INBOX = T('View Email InBox')
+        table.subject.label = T("Subject")
+        table.body.label = T("Body")
+        VIEW_EMAIL_INBOX = T("View Email InBox")
         s3.crud_strings[tablename] = Storage(
-            #title_create = T('Add Incoming Email'),
-            title_display = T('Email Details'),
+            #title_create = T("Add Incoming Email"),
+            title_display = T("Email Details"),
             title_list = VIEW_EMAIL_INBOX,
-            #title_update = T('Edit Email'),
-            title_search = T('Search Email InBox'),
-            subtitle_list = T('Email InBox'),
+            #title_update = T("Edit Email"),
+            title_search = T("Search Email InBox"),
             label_list_button = VIEW_EMAIL_INBOX,
-            #label_create_button = T('Add Incoming Email'),
-            #msg_record_created = T('Email added'),
-            #msg_record_modified = T('Email updated'),
-            msg_record_deleted = T('Email deleted'),
-            msg_list_empty = T('No Emails currently in InBox'))
+            #label_create_button = T("Add Incoming Email"),
+            #msg_record_created = T("Email added"),
+            #msg_record_modified = T("Email updated"),
+            msg_record_deleted = T("Email deleted"),
+            msg_list_empty = T("No Emails currently in InBox"))
 
         # Status
         tablename = "msg_inbound_email_status"
@@ -520,13 +519,13 @@ class S3SubscriptionModel(S3Model):
         # @ToDo: CRUD Strings
         tablename = "msg_subscription"
         table = self.define_table(tablename,
-                                  Field("user_id","integer",
+                                  Field("user_id", "integer",
                                         default = auth.user_id,
                                         requires = IS_NOT_IN_DB(db, "msg_subscription.user_id"),
                                         readable = False,
                                         writable = False
                                         ),
-                                  Field("subscribe_mode","integer",
+                                  Field("subscribe_mode", "integer",
                                         default = 1,
                                         represent = lambda opt: \
                                             msg_subscription_mode_opts.get(opt, None),

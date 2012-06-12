@@ -8,7 +8,7 @@
   <li><a href='{{=URL(c="inv", f="warehouse")}}'>{{=T("Warehouses")}}</a>
   <li><a href='{{=URL(c="org", f="office")}}'>{{=T("Offices")}}</a>
 {{if deployment_settings.has_module("cr"):}}
-  <li><a href='{{=URL(c="cr", f="shelter")}}'>{{=s3.crud_strings["cr_shelter"].subtitle_list}}</a>
+  <li><a href='{{=URL(c="cr", f="shelter")}}'>{{=s3.crud_strings["cr_shelter"].name_nice_plural}}</a>
 {{pass}}
 {{if deployment_settings.has_module("hms"):}}
   <li><a href='{{=URL(c="hms", f="hospital")}}'>{{=T("Hospitals")}}</a>

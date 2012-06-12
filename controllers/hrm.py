@@ -1028,16 +1028,14 @@ def group():
 
     # CRUD Strings
     ADD_TEAM = T("Add Team")
-    LIST_TEAMS = T("List Teams")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_TEAM,
         title_display = T("Team Details"),
-        title_list = LIST_TEAMS,
+        title_list = T("Teams"),
         title_update = T("Edit Team"),
         title_search = T("Search Teams"),
         subtitle_create = T("Add New Team"),
-        subtitle_list = T("Teams"),
-        label_list_button = LIST_TEAMS,
+        label_list_button = T("List Teams"),
         label_create_button = T("Add New Team"),
         label_search_button = T("Search Teams"),
         msg_record_created = T("Team added"),
@@ -1052,7 +1050,6 @@ def group():
         title_update = T("Edit Membership"),
         title_search = T("Search Member"),
         subtitle_create = T("Add New Member"),
-        subtitle_list = T("Current Team Members"),
         label_list_button = T("List Members"),
         label_create_button = T("Add Team Member"),
         label_delete_button = T("Delete Membership"),
@@ -1282,7 +1279,6 @@ def training_event():
                 title_search = T("Search Participants"),
                 title_upload = T("Import Participant Participants"),
                 subtitle_create = T("Add Participant"),
-                subtitle_list = T("Participants"),
                 label_list_button = T("List Participants"),
                 label_create_button = T("Add New Participant"),
                 label_delete_button = T("Delete Participant"),

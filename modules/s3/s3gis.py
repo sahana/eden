@@ -1904,6 +1904,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
+        gis = current.gis
 
         ftable = s3db.gis_layer_feature
         ltable = s3db.gis_layer_symbology
@@ -1913,7 +1914,7 @@ class GIS(object):
             symbology_id = current.response.s3.gis.config.symbology_id
         except:
             # Config not initialised yet
-            config = current.gis.get_config()
+            config = gis.get_config()
             symbology_id = config.symbology_id
 
         if layer_id:
@@ -2017,6 +2018,8 @@ class GIS(object):
             if DEBUG:
                 start = datetime.datetime.now()
             latlons = {}
+            wkts = {}
+            geojsons = {}
             if trackable:
                 # Use S3Track
                 ids = resource._ids
@@ -2034,8 +2037,6 @@ class GIS(object):
                         latlons[id] = (_latlons[index].lat, _latlons[index].lon)
                         index += 1
 
-            # @ToDo: Support Polygons in Feature Layers
-            #elif polygons:
             if not latlons:
                 gtable = s3db.gis_location
                 if "location_id" in table.fields:
@@ -2046,17 +2047,57 @@ class GIS(object):
                     query = (table.id.belongs(resource._ids)) & \
                             (table.site_id == stable.id) & \
                             (stable.location_id == gtable.id)
+                elif "countries_id" in table.fields:
+                    query = (table.id.belongs(resource._ids)) & \
+                            (table.location_id.belongs(table.countries_id))
                 else:
                     # Can't display this resource on the Map
                     return None
-                rows = db(query).select(table.id,
-                                        gtable.lat,
-                                        gtable.lon)
-                for row in rows:
-                    latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
+
+                if polygons:
+                    if current.deployment_settings.get_gis_spatialdb():
+                        if current.auth.permission.format == "geojson":
+                            # Do the Simplify & GeoJSON direct from the DB
+                            rows = db(query).select(table.id,
+                                                    gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+                            for row in rows:
+                                geojsons[row[tablename].id] = row["gis_location"].geojson
+                        else:
+                            # Do the Simplify direct from the DB
+                            rows = db(query).select(table.id,
+                                                    gtable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"))
+                            for row in rows:
+                                wkts[row[tablename].id] = row["gis_location"].wkt
+                    else:
+                        rows = db(query).select(table.id,
+                                                gtable.wkt)
+                        if current.auth.permission.format == "geojson":
+                            for row in rows:
+                                # Simplify the polygon to reduce download size
+                                geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                                geojsons[row[tablename].id] = geojson
+                        else:
+                            for row in rows:
+                                # Simplify the polygon to reduce download size
+                                # & also to work around the recursion limit in libxslt
+                                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                                wkt = gis.simplify(row["gis_location"].wkt)
+                                wkts[row[tablename].id] = wkt
+
+                else:
+                    # Points
+                    rows = db(query).select(table.id,
+                                            gtable.lat,
+                                            gtable.lon)
+                    for row in rows:
+                        latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
 
             _latlons = {}
             _latlons[tablename] = latlons
+            _wkts = {}
+            _wkts[tablename] = wkts
+            _geojsons = {}
+            _geojsons[tablename] = geojsons
 
             if DEBUG:
                 end = datetime.datetime.now()
@@ -2068,6 +2109,8 @@ class GIS(object):
             return dict(marker = marker,
                         gps_marker = gps_marker,
                         latlons = _latlons,
+                        wkts = _wkts,
+                        geojsons = _geojsons,
                         tooltips = tooltips,
                         popup_label = popup_label,
                         popup_url = popup_url,
@@ -4249,13 +4292,13 @@ S3.gis.layers_feature_queries[%i] = {
     "url": "%s"%s%s%s%s%s
 }
 """ % (counter,
-        name,
-        url,
-        visibility,
-        markerLayer,
-        opacity,
-        cluster_distance,
-        cluster_threshold)
+       name,
+       url,
+       visibility,
+       markerLayer,
+       opacity,
+       cluster_distance,
+       cluster_threshold)
 
         if catalogue_layers:
             # Add all Layers from the Catalogue

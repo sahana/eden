@@ -41,7 +41,7 @@ def project():
         # Return simplified controller to pick a Project for which to list the Open Tasks
         table = s3db.project_project
         s3.crud_strings["project_project"].title_list = T("Open Tasks for Project")
-        s3.crud_strings["project_project"].subtitle_list = T("Select Project")
+        #s3.crud_strings["project_project"].sub_title_list = T("Select Project")
         s3mgr.LABEL.READ = "Select"
         s3mgr.LABEL.UPDATE = "Select"
         s3mgr.configure("project_project",

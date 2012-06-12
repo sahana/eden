@@ -7,7 +7,7 @@
 /* Global vars */
 
 $(document).ready(function() {
-    $('#project_map_theme_id').change(function() {
+    $('#project_theme_id').change(function() {
         // Update the Layer accordingly
     });
 });

@@ -128,16 +128,14 @@ def user():
 
     # CRUD Strings
     ADD_USER = T("Add User")
-    LIST_USERS = T("List Users")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_USER,
         title_display = T("User Details"),
-        title_list = LIST_USERS,
+        title_list = T("Users"),
         title_update = T("Edit User"),
         title_search = T("Search Users"),
         subtitle_create = T("Add New User"),
-        subtitle_list = T("Users"),
-        label_list_button = LIST_USERS,
+        label_list_button = T("List Users"),
         label_create_button = ADD_USER,
         label_delete_button = T("Delete User"),
         msg_record_created = T("User added"),
@@ -286,16 +284,14 @@ def group():
 
     # CRUD Strings
     ADD_ROLE = T("Add Role")
-    LIST_ROLES = T("List Roles")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_ROLE,
         title_display = T("Role Details"),
-        title_list = LIST_ROLES,
+        title_list = T("Roles"),
         title_update = T("Edit Role"),
         title_search = T("Search Roles"),
         subtitle_create = T("Add New Role"),
-        subtitle_list = T("Roles"),
-        label_list_button = LIST_ROLES,
+        label_list_button = T("List Roles"),
         label_create_button = ADD_ROLE,
         msg_record_created = T("Role added"),
         msg_record_modified = T("Role updated"),
@@ -321,11 +317,10 @@ def organisation():
     s3.crud_strings[tablename] = Storage(
         title_create = T("Add Organization Domain"),
         title_display = T("Organization Domain Details"),
-        title_list = T("List Organization Domains"),
+        title_list = T("Organization Domains"),
         title_update = T("Edit Organization Domain"),
         title_search = T("Search Organization Domains"),
         subtitle_create = T("Add New Organization Domain"),
-        subtitle_list = T("Organization Domains"),
         label_list_button = T("List Organization Domains"),
         label_create_button = T("Add Organization Domain"),
         label_delete_button = T("Delete Organization Domain"),

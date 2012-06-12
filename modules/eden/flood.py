@@ -95,16 +95,14 @@ class S3FloodModel(S3Model):
                              *meta_fields())
 
         ADD_GAUGE = T("Add Gauge")
-        LIST_GAUGES = T("List Gauges")
         crud_strings[tablename] = Storage(
             title_create = ADD_GAUGE,
             title_display = T("Gauge Details"),
-            title_list = LIST_GAUGES,
+            title_list = T("Gauges"),
             title_update = T("Edit Gauge"),
             title_search = T("Search Gauges"),
             subtitle_create = T("Add New Gauge"),
-            subtitle_list = T("Gauges"),
-            label_list_button = LIST_GAUGES,
+            label_list_button = T("List Gauges"),
             label_create_button = ADD_GAUGE,
             msg_record_created = T("Gauge added"),
             msg_record_modified = T("Gauge updated"),
@@ -125,16 +123,14 @@ class S3FloodModel(S3Model):
 
         # CRUD strings
         ADD_RIVER = T("Add River")
-        LIST_RIVERS = T("List Rivers")
         crud_strings[tablename] = Storage(
             title_create = ADD_RIVER,
             title_display = T("River Details"),
-            title_list = LIST_RIVERS,
+            title_list = T("Rivers"),
             title_update = T("Edit River"),
             title_search = T("Search Rivers"),
             subtitle_create = T("Add New River"),
-            subtitle_list = T("Rivers"),
-            label_list_button = LIST_RIVERS,
+            label_list_button = T("List Rivers"),
             label_create_button = ADD_RIVER,
             msg_record_created = T("River added"),
             msg_record_modified = T("River updated"),

@@ -195,17 +195,15 @@ class S3AssetModel(S3Model):
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
-        LIST_ASSET = T("List Assets")
         crud_strings[tablename] = Storage(
             title_create = ADD_ASSET,
             title_display = T("Asset Details"),
-            title_list = LIST_ASSET,
+            title_list =  T("Assets"),
             title_update = T("Edit Asset"),
             title_search = T("Search Assets"),
             title_upload = T("Import Assets"),
             subtitle_create = T("Add New Asset"),
-            subtitle_list = T("Assets"),
-            label_list_button = LIST_ASSET,
+            label_list_button =  T("List Assets"),
             label_create_button = ADD_ASSET,
             label_delete_button = T("Delete Asset"),
             msg_record_created = T("Asset added"),
@@ -459,20 +457,18 @@ $(document).ready(function() {
 
 
         # CRUD strings
-        ADD_ASSIGN = T("New Asset Log Entry") # Change Label?
-        LIST_ASSIGN = T("Asset Log")
+        ADD_ASSIGN = T("New Entry in Asset Log")
         crud_strings[tablename] = Storage(
             title_create = ADD_ASSIGN,
             title_display = T("Asset Log Details"),
-            title_list = LIST_ASSIGN,
+            title_list = T("Asset Log"),
             title_update = T("Edit Asset Log Entry"),
             title_search = T("Search Asset Log"),
             subtitle_create = ADD_ASSIGN,
-            subtitle_list = T("Asset Log"),
-            label_list_button = LIST_ASSIGN,
+            label_list_button = T("Asset Log"),
             label_create_button = ADD_ASSIGN,
             label_delete_button = T("Delete Asset Log Entry"),
-            msg_record_created = T("Asset Log Entry created"), # Change Label?
+            msg_record_created = T("Entry added to Asset Log"),
             msg_record_modified = T("Asset Log Entry updated"),
             msg_record_deleted = T("Asset Log Entry deleted"),
             msg_list_empty = T("Asset Log Empty"))

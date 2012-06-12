@@ -516,7 +516,6 @@ class S3OptionsMenu:
         session = current.session
         ADMIN = session.s3.system_roles.ADMIN
 
-        # @ToDo - Fix s3.crud_strings["cr_shelter"].subtitle_list
         settings = current.deployment_settings
         if settings.get_ui_camp():
             shelter = "Camps"
@@ -908,7 +907,7 @@ class S3OptionsMenu:
 
         current.s3db.inv_recv_crud_strings()
         crud_strings = current.response.s3.crud_strings
-        inv_recv_list = crud_strings.inv_recv.subtitle_list
+        inv_recv_list = crud_strings.inv_recv.title_list
         inv_recv_search = crud_strings.inv_recv.title_search
 
         use_commit = lambda i: current.deployment_settings.get_req_use_commit()

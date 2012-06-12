@@ -330,17 +330,15 @@ class S3IRSModel(S3Model):
                              *(s3.lx_fields() + meta_fields()))
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
-        LIST_INC_REPORTS = T("List Incident Reports")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_INC_REPORT,
             title_display = T("Incident Report Details"),
-            title_list = LIST_INC_REPORTS,
+            title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
             title_upload = T("Import Incident Reports"),
             title_search = T("Search Incident Reports"),
             subtitle_create = T("Add New Incident Report"),
-            subtitle_list = T("Incident Reports"),
-            label_list_button = LIST_INC_REPORTS,
+            label_list_button = T("List Incident Reports"),
             label_create_button = ADD_INC_REPORT,
             label_delete_button = T("Delete Incident Report"),
             msg_record_created = T("Incident Report added"),
@@ -882,7 +880,7 @@ S3.timeline.now = '""", now.isoformat(), """';
                         TD(INPUT(_type="checkbox", _name="ignore_errors", _id="ignore_errors"))),
                         TR("", INPUT(_type="submit", _value=T("Import")))))
 
-            label_list_btn = S3CRUD.crud_string(r.tablename, "title_list")
+            label_list_btn = S3CRUD.crud_string(r.tablename, "label_list_button")
             list_btn = A(label_list_btn,
                          _href=r.url(method="", vars=None),
                          _class="action-btn")

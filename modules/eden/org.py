@@ -121,11 +121,10 @@ class S3OrganisationModel(S3Model):
             crud_strings[tablename] = Storage(
                 title_create = T("Add Cluster"),
                 title_display = T("Cluster Details"),
-                title_list = T("List Clusters"),
+                title_list = T("Clusters"),
                 title_update = T("Edit Cluster"),
                 title_search = T("Search Clusters"),
                 subtitle_create = T("Add New Cluster"),
-                subtitle_list = T("Clusters"),
                 label_list_button = T("List Clusters"),
                 label_create_button = T("Add New Cluster"),
                 label_delete_button = T("Delete Cluster"),
@@ -138,11 +137,10 @@ class S3OrganisationModel(S3Model):
             crud_strings[tablename] = Storage(
                 title_create = T("Add Sector"),
                 title_display = T("Sector Details"),
-                title_list = T("List Sectors"),
+                title_list = T("Sectors"),
                 title_update = T("Edit Sector"),
                 title_search = T("Search Sectors"),
                 subtitle_create = T("Add New Sector"),
-                subtitle_list = T("Sectors"),
                 label_list_button = T("List Sectors"),
                 label_create_button = T("Add New Sector"),
                 label_delete_button = T("Delete Sector"),
@@ -182,11 +180,10 @@ class S3OrganisationModel(S3Model):
             # crud_strings[tablename] = Storage(
                 # title_create = T("Add Cluster Subsector"),
                 # title_display = T("Cluster Subsector Details"),
-                # title_list = T("List Cluster Subsectors"),
+                # title_list = T("Cluster Subsectors"),
                 # title_update = T("Edit Cluster Subsector"),
                 # title_search = T("Search Cluster Subsectors"),
                 # subtitle_create = T("Add New Cluster Subsector"),
-                # subtitle_list = T("Cluster Subsectors"),
                 # label_list_button = T("List Cluster Subsectors"),
                 # label_create_button = T("Add Cluster Subsector"),
                 # label_delete_button = T("Delete Cluster Subsector"),
@@ -199,11 +196,10 @@ class S3OrganisationModel(S3Model):
             # crud_strings[tablename] = Storage(
                 # title_create = T("Add Subsector"),
                 # title_display = T("Subsector Details"),
-                # title_list = T("List Subsectors"),
+                # title_list = T("Subsectors"),
                 # title_update = T("Edit Subsector"),
                 # title_search = T("Search Subsectors"),
                 # subtitle_create = T("Add New Subsector"),
-                # subtitle_list = T("Subsectors"),
                 # label_list_button = T("List Subsectors"),
                 # label_create_button = T("Add Subsector"),
                 # label_delete_button = T("Delete Subsector"),
@@ -296,17 +292,15 @@ class S3OrganisationModel(S3Model):
 
         # CRUD strings
         ADD_ORGANIZATION = T("Add Organization")
-        LIST_ORGANIZATIONS = T("List Organizations")
         crud_strings[tablename] = Storage(
             title_create = ADD_ORGANIZATION,
             title_display = T("Organization Details"),
-            title_list = LIST_ORGANIZATIONS,
+            title_list = T("Organizations"),
             title_update = T("Edit Organization"),
             title_search = T("Search Organizations"),
             title_upload = T("Import Organizations"),
             subtitle_create = T("Add New Organization"),
-            subtitle_list = T("Organizations"),
-            label_list_button = LIST_ORGANIZATIONS,
+            label_list_button = T("List Organizations"),
             label_create_button = T("Add New Organization"),
             label_delete_button = T("Delete Organization"),
             msg_record_created = T("Organization added"),
@@ -520,17 +514,15 @@ class S3OrganisationModel(S3Model):
 
         # CRUD strings
         ADD_BRANCH = T("Add Branch Organization")
-        LIST_BRANCHES = T("List Branch Organizations")
         crud_strings[tablename] = Storage(
             title_create = ADD_BRANCH,
             title_display = T("Branch Organization Details"),
-            title_list = LIST_BRANCHES,
+            title_list = T("Branch Organizations"),
             title_update = T("Edit Branch Organization"),
             title_search = T("Search Branch Organizations"),
             title_upload = T("Import Branch Organizations"),
             subtitle_create = T("Add New Branch Organization"),
-            subtitle_list = T("Branch Organizations"),
-            label_list_button = LIST_BRANCHES,
+            label_list_button = T("List Branch Organizations"),
             label_create_button = T("Add New Branch"),
             label_delete_button = T("Delete Branch"),
             msg_record_created = T("Branch Organization added"),
@@ -1055,23 +1047,21 @@ class S3FacilityModel(S3Model):
 
         # CRUD strings
         ADD_FAC = T("Add Facility Type")
-        LIST_FACS = T("List Facility types")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_FAC,
             title_display = T("Facility Type Details"),
-            title_list = LIST_FACS,
+            title_list = T("Facility Types"),
             title_update = T("Edit Facility Type"),
-            title_search = T("Search Facility types"),
-            title_upload = T("Import Facility types"),
+            title_search = T("Search Facility Types"),
+            title_upload = T("Import Facility Types"),
             subtitle_create = T("Add New Facility Type"),
-            subtitle_list = T("Facility types"),
-            label_list_button = LIST_FACS,
+            label_list_button = T("List Facility Types"),
             label_create_button = T("Add New Facility Type"),
             label_delete_button = T("Delete Facility Type"),
             msg_record_created = T("Facility Type added"),
             msg_record_modified = T("Facility Type updated"),
             msg_record_deleted = T("Facility Type deleted"),
-            msg_list_empty = T("No Facility types currently registered"))
+            msg_list_empty = T("No Facility Types currently registered"))
 
         # =============================================================================
         # Facilities (generic)
@@ -1110,17 +1100,15 @@ class S3FacilityModel(S3Model):
 
         # CRUD strings
         ADD_FAC = T("Add Facility")
-        LIST_FACS = T("List Facilities")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_FAC,
             title_display = T("Facility Details"),
-            title_list = LIST_FACS,
+            title_list = T("Facilities"),
             title_update = T("Edit Facility"),
             title_search = T("Search Facilities"),
             title_upload = T("Import Facilities"),
             subtitle_create = T("Add New Facility"),
-            subtitle_list = T("Facilities"),
-            label_list_button = LIST_FACS,
+            label_list_button = T("List Facilities"),
             label_create_button = T("Add New Facility"),
             label_delete_button = T("Delete Facility"),
             msg_record_created = T("Facility added"),
@@ -1205,16 +1193,14 @@ class S3RoomModel(S3Model):
 
         # CRUD strings
         ADD_ROOM = T("Add Room")
-        LIST_ROOMS = T("List Rooms")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_ROOM,
             title_display = T("Room Details"),
-            title_list = LIST_ROOMS,
+            title_list = T("Rooms"),
             title_update = T("Edit Room"),
             title_search = T("Search Rooms"),
             subtitle_create = T("Add New Room"),
-            subtitle_list = T("Rooms"),
-            label_list_button = LIST_ROOMS,
+            label_list_button = T("List Rooms"),
             label_create_button = ADD_ROOM,
             label_delete_button = T("Delete Room"),
             msg_record_created = T("Room added"),
@@ -1371,17 +1357,15 @@ class S3OfficeModel(S3Model):
             table.building_name.readable = False
 
         # CRUD strings
-        LIST_OFFICES = T("List Offices")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_OFFICE,
             title_display = T("Office Details"),
-            title_list = LIST_OFFICES,
+            title_list = T("Offices"),
             title_update = T("Edit Office"),
             title_search = T("Search Offices"),
             title_upload = T("Import Offices"),
             subtitle_create = T("Add New Office"),
-            subtitle_list = T("Offices"),
-            label_list_button = LIST_OFFICES,
+            label_list_button = T("List Offices"),
             label_create_button = T("Add New Office"),
             label_delete_button = T("Delete Office"),
             msg_record_created = T("Office added"),
@@ -1391,17 +1375,15 @@ class S3OfficeModel(S3Model):
 
         # CRUD strings
         ADD_WH = T("Add Warehouse")
-        LIST_WH = T("List Warehouses")
         warehouse_crud_strings = Storage(
             title_create = ADD_WH,
             title_display = T("Warehouse Details"),
-            title_list = LIST_WH,
+            title_list = T("Warehouses"),
             title_update = T("Edit Warehouse"),
             title_search = T("Search Warehouses"),
             title_upload = T("Import Warehouses"),
             subtitle_create = T("Add New Warehouse"),
-            subtitle_list = T("Warehouses"),
-            label_list_button = LIST_WH,
+            label_list_button = T("List Warehouses"),
             label_create_button = T("Add New Warehouse"),
             label_delete_button = T("Delete Warehouse"),
             msg_record_created = T("Warehouse added"),

@@ -136,7 +136,7 @@ if site_type == "active":
     if record:
         vars.update(user_id = record.user_id)
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now()
     then = now + datetime.timedelta(days=365)
     scheduler_task_id = current.s3task.schedule_task(task,
                                                      function_name=function_name,

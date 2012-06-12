@@ -198,7 +198,6 @@ def donor():
         title_update = T("Edit Donor"),
         title_search = T("Search Donors"),
         subtitle_create = T("Add New Donor"),
-        subtitle_list = T("Donors"),
         label_list_button = T("List Donors"),
         label_create_button = ADD_DONOR,
         label_delete_button = T("Delete Donor"),

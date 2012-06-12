@@ -113,17 +113,15 @@ class S3FireStationModel(S3Model):
 
         # CRUD strings
         ADD_FIRE_STATION = T("Add Fire Station")
-        LIST_FIRE_STATIONS = T("List of Fire Stations")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_FIRE_STATION,
             title_display = T("Fire Station Details"),
-            title_list = LIST_FIRE_STATIONS,
+            title_list = T("Fire Stations"),
             title_update = T("Edit Station Details"),
             title_search = T("Search for Fire Station"),
             title_upload = T("Upload Fire Stations List"),
             subtitle_create = T("Add New Fire Station"),
-            subtitle_list = T("Fire Stations"),
-            label_list_button = LIST_FIRE_STATIONS,
+            label_list_button = T("List Fire Stations"),
             label_create_button = ADD_FIRE_STATION,
             label_delete_button = T("Delete Fire Station"),
             msg_record_created = T("Fire Station added"),
@@ -154,17 +152,15 @@ class S3FireStationModel(S3Model):
 
         # CRUD strings
         ADD_VEHICLE = T("Add Vehicle")
-        LIST_VEHICLES = T("List of Vehicles")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_VEHICLE,
             title_display = T("Vehicle Details"),
-            title_list = LIST_VEHICLES,
+            title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
             title_search = T("Search for Vehicles"),
             title_upload = T("Upload Vehicles List"),
             subtitle_create = T("Add New Vehicle"),
-            subtitle_list = T("Vehicles"),
-            label_list_button = LIST_VEHICLES,
+            label_list_button = T("List Vehicles"),
             label_create_button = ADD_VEHICLE,
             label_delete_button = T("Delete Vehicle"),
             msg_record_created = T("Vehicle added"),

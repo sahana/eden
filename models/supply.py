@@ -46,11 +46,10 @@ def item_entity_controller():
     s3.crud_strings[tablename] = Storage(
         title_create = T("Add Item"),
         title_display = T("Item Details"),
-        title_list = T("List Items"),
+        title_list = T("Items"),
         title_update = T("Edit Item"),
         title_search = T("Search Items"),
         subtitle_create = T("Add New Item"),
-        subtitle_list = T("Items"),
         label_list_button = T("List Items"),
         label_create_button = T("Add Item"),
         label_delete_button = T("Delete Item"),

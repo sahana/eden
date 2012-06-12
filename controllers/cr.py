@@ -34,7 +34,7 @@ def shelter_type():
     """
 
     tabs = [(T("Basic Details"), None),
-            (s3.crud_strings["cr_shelter"].subtitle_list, "shelter")]
+            (s3.crud_strings["cr_shelter"].title_list, "shelter")]
 
     rheader = lambda r: s3db.cr_shelter_rheader(r, tabs=tabs)
 
@@ -51,7 +51,7 @@ def shelter_service():
     """
 
     tabs = [(T("Basic Details"), None),
-            (s3.crud_strings["cr_shelter"].subtitle_list, "shelter")]
+            (s3.crud_strings["cr_shelter"].title_list, "shelter")]
 
     rheader = lambda r: s3db.cr_shelter_rheader(r, tabs=tabs)
 
@@ -239,7 +239,6 @@ def cr_shelter_prep(r):
                     title_update = T("Edit Registration"),
                     title_search = T("Search Registations"),
                     subtitle_create = REGISTER_LABEL,
-                    subtitle_list = T("Current Registrations"),
                     label_list_button = T("List Registrations"),
                     label_create_button = T("Register Person"),
                     msg_record_created = T("Registration added"),

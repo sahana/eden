@@ -319,16 +319,14 @@ class S3RequestModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST = T("Make Request")
-        LIST_REQUEST = T("List Requests")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
-            title_list = LIST_REQUEST,
+            title_list = T("Requests"),
             title_update = T("Edit Request"),
             title_search = T("Search Requests"),
             subtitle_create = ADD_REQUEST,
-            subtitle_list = T("Requests"),
-            label_list_button = LIST_REQUEST,
+            label_list_button = T("List Requests"),
             label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Request Added"),
@@ -966,16 +964,14 @@ class S3RequestItemModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST_ITEM = T("Add New Item to Request")
-        LIST_REQUEST_ITEM = T("List of Items in Request")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST_ITEM,
             title_display = T("Request Item Details"),
-            title_list = LIST_REQUEST_ITEM,
+            title_list = T("Items in Request"),
             title_update = T("Edit Item in Request"),
             title_search = T("Search Items in Request"),
             subtitle_create = T("Add New Item to Request"),
-            subtitle_list = T("Items in Request"),
-            label_list_button = LIST_REQUEST_ITEM,
+            label_list_button = T("List Items in Request"),
             label_create_button = ADD_REQUEST_ITEM,
             label_delete_button = T("Delete Item from Request"),
             msg_record_created = T("Item(s) added to Request"),
@@ -1245,16 +1241,14 @@ class S3RequestSkillModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST_SKILL = T("Add Skill to Request")
-        LIST_REQUEST_SKILL = T("List Requested Skills")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST_SKILL,
             title_display = T("Requested Skill Details"),
-            title_list = LIST_REQUEST_SKILL,
+            title_list = T("Requested Skills"),
             title_update = T("Edit Requested Skill"),
             title_search = T("Search Requested Skills"),
             subtitle_create = T("Request New People"),
-            subtitle_list = T("Requested Skills"),
-            label_list_button = LIST_REQUEST_SKILL,
+            label_list_button = T("List Requested Skills"),
             label_create_button = ADD_REQUEST_SKILL,
             label_delete_button = T("Remove Skill from Request"),
             msg_record_created = T("Skill added to Request"),
@@ -1387,16 +1381,14 @@ class S3CommitModel(S3Model):
 
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
-        LIST_COMMIT = T("List Commitments")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_COMMIT,
             title_display = T("Commitment Details"),
-            title_list = LIST_COMMIT,
+            title_list = T("Commitments"),
             title_update = T("Edit Commitment"),
             title_search = T("Search Commitments"),
             subtitle_create = ADD_COMMIT,
-            subtitle_list = T("Commitments"),
-            label_list_button = LIST_COMMIT,
+            label_list_button = T("List Commitments"),
             label_create_button = ADD_COMMIT,
             label_delete_button = T("Delete Commitment"),
             msg_record_created = T("Commitment Added"),
@@ -1562,16 +1554,14 @@ class S3CommitItemModel(S3Model):
 
         # CRUD strings
         ADD_COMMIT_ITEM = T("Add Item to Commitment")
-        LIST_COMMIT_ITEM = T("List Commitment Items")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_COMMIT_ITEM,
             title_display = T("Commitment Item Details"),
-            title_list = LIST_COMMIT_ITEM,
+            title_list = T("Commitment Items"),
             title_update = T("Edit Commitment Item"),
             title_search = T("Search Commitment Items"),
             subtitle_create = T("Add New Commitment Item"),
-            subtitle_list = T("Commitment Items"),
-            label_list_button = LIST_COMMIT_ITEM,
+            label_list_button = T("List Commitment Items"),
             label_create_button = ADD_COMMIT_ITEM,
             label_delete_button = T("Delete Commitment Item"),
             msg_record_created = T("Commitment Item added"),
@@ -1661,16 +1651,14 @@ class S3CommitPersonModel(S3Model):
 
         # CRUD strings
         ADD_COMMIT_PERSON = T("Add Person to Commitment")
-        LIST_COMMIT_PERSON = T("List Committed People")
         s3.crud_strings[tablename] = Storage(
             title_create = ADD_COMMIT_PERSON,
             title_display = T("Committed Person Details"),
-            title_list = LIST_COMMIT_PERSON,
+            title_list = T("Committed People"),
             title_update = T("Edit Committed Person"),
             title_search = T("Search Committed People"),
             subtitle_create = T("Add New Person to Commitment"),
-            subtitle_list = T("Committed People"),
-            label_list_button = LIST_COMMIT_PERSON,
+            label_list_button = T("List Committed People"),
             label_create_button = ADD_COMMIT_PERSON,
             label_delete_button = T("Remove Person from Commitment"),
             msg_record_created = T("Person added to Commitment"),

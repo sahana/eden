@@ -84,16 +84,14 @@ def vehicle():
 
     # CRUD strings
     ADD_VEHICLE = T("Add Vehicle")
-    LIST_VEHICLE = T("List Vehicles")
     s3.crud_strings[tablename] = Storage(
         title_create = ADD_VEHICLE,
         title_display = T("Vehicle Details"),
-        title_list = LIST_VEHICLE,
+        title_list = T("Vehicles"),
         title_update = T("Edit Vehicle"),
         title_search = T("Search Vehicles"),
         subtitle_create = T("Add New Vehicle"),
-        subtitle_list = T("Vehicles"),
-        label_list_button = LIST_VEHICLE,
+        label_list_button = T("List Vehicles"),
         label_create_button = ADD_VEHICLE,
         label_delete_button = T("Delete Vehicle"),
         msg_record_created = T("Vehicle added"),

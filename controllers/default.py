@@ -156,7 +156,7 @@ def index():
 
     if deployment_settings.has_module("cr"):
         s3mgr.load("cr_shelter")
-        SHELTERS = s3.crud_strings["cr_shelter"].subtitle_list
+        SHELTERS = s3.crud_strings["cr_shelter"].title_list
     else:
         SHELTERS = ""
 

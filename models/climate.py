@@ -313,11 +313,10 @@ if deployment_settings.has_module("climate"):
         s3.crud_strings[table_name] = Storage(
             title_create = CREATE,
             title_display = T(entity+" Details"),
-            title_list = LIST,
+            title_list = T(entities),
             title_update = T("Edit "+entity),
             title_search = T("Search "+entities),
             subtitle_create = CREATE,
-            subtitle_list = T(entities),
             label_list_button = LIST,
             label_create_button = CREATE,
             label_delete_button = T("Remove "+entity),

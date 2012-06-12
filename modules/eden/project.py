@@ -339,12 +339,11 @@ class S3ProjectModel(S3Model):
         crud_strings[tablename] = Storage(
             title_create = ADD_PROJECT,
             title_display = T("Project Details"),
-            title_list = T("List Projects"),
+            title_list = T("Projects"),
             title_update = T("Edit Project"),
             title_search = T("Search Projects"),
             title_upload = T("Import Project List"),
             subtitle_create = T("Add New Project"),
-            subtitle_list = T("Projects"),
             subtitle_upload = T("Upload Project List"),
             label_list_button = T("List Projects"),
             label_create_button = ADD_PROJECT,
@@ -541,16 +540,14 @@ class S3ProjectModel(S3Model):
 
         # CRUD Strings
         ADD_ACTIVITY_TYPE = T("Add Activity Type")
-        LIST_ACTIVITY_TYPES = T("List of Activity Types")
         crud_strings[tablename] = Storage(
             title_create = ADD_ACTIVITY_TYPE,
             title_display = T("Activity Type"),
-            title_list = LIST_ACTIVITY_TYPES,
+            title_list = T("Activity Types"),
             title_update = T("Edit Activity Type"),
             title_search = T("Search for Activity Type"),
             subtitle_create = T("Add New Activity Type"),
-            subtitle_list = T("All Activity Types"),
-            label_list_button = LIST_ACTIVITY_TYPES,
+            label_list_button = T("List Activity Types"),
             label_create_button = ADD_ACTIVITY_TYPE,
             msg_record_created = T("Activity Type Added"),
             msg_record_modified = T("Activity Type Updated"),
@@ -627,19 +624,16 @@ class S3ProjectModel(S3Model):
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
         ADD_ACTIVITY = T("Add Activity")
-        LIST_ACTIVITIES = T("List Activities")
         crud_strings[tablename] = Storage(
             title_create = ADD_ACTIVITY,
             title_display = T("Activity Details"),
-            title_list = LIST_ACTIVITIES,
+            title_list = T("Activities"),
             title_update = T("Edit Activity"),
             title_search = T("Search Activities"),
             title_upload = T("Import Activity Data"),
             title_report = T("Activity Report"),
             subtitle_create = T("Add New Activity"),
-            subtitle_list = T("Activities"),
-            subtitle_report = T("Activities"),
-            label_list_button = LIST_ACTIVITIES,
+            label_list_button = T("List Activities"),
             label_create_button = ADD_ACTIVITY,
             msg_record_created = T("Activity Added"),
             msg_record_modified = T("Activity Updated"),
@@ -888,25 +882,49 @@ class S3ProjectModel(S3Model):
     def project_map(r, **attr):
         """
             Display the Projects on a Map
+            - currently assumes that theme_percentages=True
+
+            @ToDo: Browse by Year
         """
 
         if r.representation == "html" and \
            r.name == "project":
 
             T = current.T
+            db = current.db
+            s3db = current.s3db
             response = current.response
-            s3 = response.s3
 
-            # Pass vars to our JS code
-            s3.scripts.append(URL(c="static",
-                                  f="scripts",
-                                  args=["S3", "s3.project_map.js"]))
+            ptable = s3db.project_project
+            ttable = s3db.project_theme
+            tptable = s3db.project_theme_percentage
+            ltable = s3db.gis_location
+
+            
+
+            # The Layer of Projects to show on the Map
+            # Pass through attributes that we don't need for the 1st level of mapping, so that they can be used without a screen refresh
+            layer = {}
 
             map = current.gis.show_map(
-                        collapsed = True
+                        collapsed = True,
+                        layers = [layer],
                     )
             instructions = T("")
-            form = FORM()
+            themes_dropdown = SELECT(_multiple=True,
+                                     _id="project_theme_id",
+                                     _style="height:80px;")
+            append = themes_dropdown.append
+            table = current.s3db.project_theme
+            themes = current.db(table.deleted == False).select(table.id,
+                                                               table.name,
+                                                               orderby=table.name)
+            for theme in themes:
+                append(OPTION(theme.name,
+                              _value=theme.id,
+                              _selected="selected"))
+
+            form = FORM(themes_dropdown)
             legend = DIV()
 
             output = dict(
@@ -917,10 +935,77 @@ class S3ProjectModel(S3Model):
                 legend = legend,
             )
 
+            # Add Static JS
+            response.s3.scripts.append(URL(c="static",
+                                           f="scripts",
+                                           args=["S3", "s3.project_map.js"]))
+
             response.view = "project/map.html"
             return output
         else:
             raise HTTP(501, BADMETHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_polygons(r, **attr):
+        """
+            Export Projects as Country-level GeoJSON Polygons to view on the map
+            - currently assumes that theme_percentages=True
+        """
+
+        db = current.db
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ttable = s3db.project_theme
+        tptable = s3db.project_theme_percentage
+        ltable = s3db.gis_location
+
+        vars = current.request.get_vars
+
+        themes = db(ttable.deleted == False).select(ttable.id,
+                                                    ttable.name,
+                                                    orderby = ttable.name)
+
+        # Total the Budget spent by Theme for each country
+        countries = {}
+        query = (ptable.deleted == False) & \
+                (tptable.project_id == ptable.id)
+        #if "theme_id" in vars:
+        #    query = query & (tptable.id.belongs(vars.theme_id))
+        projects = db(query).select()
+        for project in projects:
+            # Only show those projects which are only within 1 country
+            _countries = project.project_project.countries_id
+            if len(_countries) == 1:
+                country = _countries[0]
+                if country in countries:
+                    budget = project.project_project.total_annual_budget
+                    theme = project.project_theme_percentage.theme_id
+                    percentage = project.project_theme_percentage.percentage
+                    countries[country][theme] += budget * percentage
+                else:
+                    name = db(ltable.id == country).select(ltable.name).first().name
+                    countries[country] = dict(name = name)
+                    # Init all themes to 0
+                    for theme in themes:
+                        countries[country][theme.id] = 0
+                    # Add value for this record
+                    budget = project.project_project.total_annual_budget
+                    theme = project.project_theme_percentage.theme_id
+                    percentage = project.project_theme_percentage.percentage
+                    countries[country][theme] += budget * percentage
+
+        query = (ltable.id.belongs(countries))
+        locations = db(query).select(ltable.id,
+                                     ltable.wkt)
+        for location in locations:
+            pass
+
+        # Convert to GeoJSON
+        output = json.dumps({})
+
+        current.response.headers["Content-Type"] = "application/json"
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1116,19 +1201,16 @@ class S3Project3WModel(S3Model):
         COMMUNITY = T("Community")
         COMMUNITY_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
         ADD_COMMUNITY = T("Add Community")
-        LIST_COMMUNITIES = T("List Communities")
         crud_strings[tablename] = Storage(
                 title_create = ADD_COMMUNITY,
                 title_display = T("Community Details"),
-                title_list = LIST_COMMUNITIES,
+                title_list = T("Communities"),
                 title_update = T("Edit Community Details"),
                 title_search = T("Search Community"),
                 title_upload = T("Import Community Data"),
                 title_report = T("Who is doing What Where"),
                 subtitle_create = T("Add New Community"),
-                subtitle_list = T("Communities"),
-                subtitle_report = T("Communities"),
-                label_list_button = LIST_COMMUNITIES,
+                label_list_button = T("List Communities"),
                 label_create_button = ADD_COMMUNITY,
                 msg_record_created = T("Community Added"),
                 msg_record_modified = T("Community Updated"),
@@ -1260,17 +1342,15 @@ class S3Project3WModel(S3Model):
 
         # CRUD Strings
         ADD_CONTACT = T("Add Contact")
-        LIST_CONTACTS = T("List Contacts")
         LIST_OF_CONTACTS = T("Community Contacts")
         crud_strings[tablename] = Storage(
             title_create = ADD_CONTACT,
             title_display = T("Contact Details"),
-            title_list = LIST_CONTACTS,
+            title_list = T("Contacts"),
             title_update = T("Edit Contact Details"),
             title_search = T("Search Contacts"),
             subtitle_create = T("Add New Contact"),
-            subtitle_list = LIST_OF_CONTACTS,
-            label_list_button = LIST_CONTACTS,
+            label_list_button = T("List Contacts"),
             label_create_button = ADD_CONTACT,
             msg_record_created = T("Contact Added"),
             msg_record_modified = T("Contact Updated"),
@@ -1330,16 +1410,14 @@ class S3Project3WModel(S3Model):
 
         # CRUD Strings
         ADD_BNF_TYPE = T("Add Beneficiary Type")
-        LIST_BNF_TYPE = T("List Beneficiary Types")
         crud_strings[tablename] = Storage(
             title_create = ADD_BNF_TYPE,
             title_display = T("Beneficiary Type"),
-            title_list = LIST_BNF_TYPE,
+            title_list = T("Beneficiary Types"),
             title_update = T("Edit Beneficiary Type"),
             title_search = T("Search Beneficiary Types"),
             subtitle_create = T("Add New Beneficiary Type"),
-            subtitle_list = T("Beneficiary Types"),
-            label_list_button = LIST_BNF_TYPE,
+            label_list_button = T("List Beneficiary Types"),
             label_create_button = ADD_BNF_TYPE,
             msg_record_created = T("Beneficiary Type Added"),
             msg_record_modified = T("Beneficiary Type Updated"),
@@ -1384,17 +1462,15 @@ class S3Project3WModel(S3Model):
 
         # CRUD Strings
         ADD_BNF = T("Add Beneficiaries")
-        LIST_BNF = T("List Beneficiaries")
         crud_strings[tablename] = Storage(
             title_create = ADD_BNF,
             title_display = T("Beneficiaries Details"),
-            title_list = LIST_BNF,
+            title_list = T("Beneficiaries"),
             title_update = T("Edit Beneficiaries"),
             title_search = T("Search Beneficiaries"),
             title_report = T("Beneficiary Report"),
             subtitle_create = T("Add New Beneficiaries"),
-            subtitle_list = T("Beneficiaries"),
-            label_list_button = LIST_BNF,
+            label_list_button = T("List Beneficiaries"),
             label_create_button = ADD_BNF,
             msg_record_created = T("Beneficiaries Added"),
             msg_record_modified = T("Beneficiaries Updated"),
@@ -1507,19 +1583,16 @@ class S3Project3WModel(S3Model):
 
         # CRUD Strings
         ADD_PROJECT_ORG = T("Add Organization to Project")
-        LIST_PROJECT_ORG = T("List Project Organizations")
         crud_strings[tablename] = Storage(
             title_create = ADD_PROJECT_ORG,
             title_display = T("Project Organization Details"),
-            title_list = LIST_PROJECT_ORG,
+            title_list = T("Project Organizations"),
             title_update = T("Edit Project Organization"),
             title_search = T("Search Project Organizations"),
             title_upload = T("Import Project Organizations"),
             title_report = T("Funding Report"),
             subtitle_create = T("Add Organization to Project"),
-            subtitle_list = T("Project Organizations"),
-            subtitle_report = T("Funding"),
-            label_list_button = LIST_PROJECT_ORG,
+            label_list_button = T("List Project Organizations"),
             label_create_button = ADD_PROJECT_ORG,
             label_delete_button = T("Remove Organization from Project"),
             msg_record_created = T("Organization added to Project"),
@@ -1856,14 +1929,12 @@ class S3ProjectAnnualBudgetModel(S3Model):
         s3.crud_strings["project_annual_budget"] = Storage(
             title_create = T("New Annual Budget"),
             title_display = T("Annual Budget"),
-            title_list = T("List Annual Budgets"),
+            title_list = T("Annual Budgets"),
             title_update = T("Edit Annual Budget"),
             title_search = T("Search Annual Budgets"),
             title_upload = T("Import Annual Budget data"),
             title_report = T("Report on Annual Budgets"),
             subtitle_create = T("Add a new annual budget"),
-            subtitle_list = T("List of all annual budgets"),
-            subtitle_report = T("Annual Budget Reports"),
             label_list_button = T("List Annual Budgets"),
             label_create_button = T("New Annual Budget"),
             msg_record_created = T("New annual budget created"),
@@ -1938,14 +2009,12 @@ class S3ProjectThemeModel(S3Model):
         s3.crud_strings["project_theme_percentage"] = Storage(
             title_create = T("New Theme"),
             title_display = T("Theme"),
-            title_list = T("List Themes"),
+            title_list = T("Themes"),
             title_update = T("Edit Theme"),
             title_search = T("Search Themes"),
             title_upload = T("Import Theme data"),
             title_report = T("Report on Themes"),
             subtitle_create = T("Add a new theme"),
-            subtitle_list = T("List of all themes"),
-            subtitle_report = T("Theme Reports"),
             label_list_button = T("List Themes"),
             label_create_button = T("New Theme"),
             msg_record_created = T("Theme added"),
@@ -2032,13 +2101,11 @@ class S3ProjectTaskModel(S3Model):
         crud_strings[tablename] = Storage(
             title_create = ADD_MILESTONE,
             title_display = T("Milestone Details"),
-            title_list = T("List Milestones"),
+            title_list = T("Milestones"),
             title_update = T("Edit Milestone"),
             title_search = T("Search Milestones"),
             title_upload = T("Import Milestone Data"),
             subtitle_create = T("Add New Milestone"),
-            subtitle_list = T("Milestones"),
-            subtitle_report = T("Milestones"),
             label_list_button = T("List Milestones"),
             label_create_button = ADD_MILESTONE,
             msg_record_created = T("Milestone Added"),
@@ -2194,17 +2261,15 @@ class S3ProjectTaskModel(S3Model):
 
         # CRUD Strings
         ADD_TASK = T("Add Task")
-        LIST_TASKS = T("List Tasks")
         crud_strings[tablename] = Storage(
             title_create = ADD_TASK,
             title_display = T("Task Details"),
-            title_list = LIST_TASKS,
+            title_list = T("Tasks"),
             title_update = T("Edit Task"),
             title_search = T("Search Tasks"),
             title_upload = T("Import Tasks"),
             subtitle_create = T("Add New Task"),
-            subtitle_list = T("Tasks"),
-            label_list_button = LIST_TASKS,
+            label_list_button = T("List Tasks"),
             label_create_button = ADD_TASK,
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),
@@ -2489,14 +2554,12 @@ class S3ProjectTaskModel(S3Model):
         crud_strings[tablename] = Storage(
             title_create = ADD_TIME,
             title_display = T("Logged Time Details"),
-            title_list = T("List Logged Time"),
+            title_list = T("Logged Time"),
             title_update = T("Edit Logged Time"),
             title_search = T("Search Logged Time"),
             title_upload = T("Import Logged Time data"),
             title_report = T("Last Week's Work"),
             subtitle_create = T("Log New Time"),
-            subtitle_list = T("Logged Time"),
-            subtitle_report = T("Logged Time"),
             label_list_button = T("List Logged Time"),
             label_create_button = ADD_TIME,
             msg_record_created = T("Time Logged"),
@@ -3352,7 +3415,7 @@ class S3ProjectBudgetVirtualFields:
     """ Virtual fields for the project_project table when multi_budgets=True """
 
     def total_annual_budget(self):
-        """ Total of project_organisation amounts for project"""
+        """ Total of all annual budgets for project"""
 
         db = current.db
         s3db = current.s3db

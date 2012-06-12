@@ -2001,8 +2001,7 @@ class S3PDF(S3Method):
         self.output = StringIO()
         self.layoutEtree = etree.Element("s3ocrlayout")
         try:
-            pdfTitle = manager.s3.crud_strings[\
-                self.tablename].subtitle_list.decode("utf-8")
+            pdfTitle = manager.s3.crud_strings[self.tablename].title_list.decode("utf-8")
         except:
                 pdfTitle = self.resource.tablename
 
