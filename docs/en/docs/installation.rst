@@ -12,8 +12,8 @@ Requirements
 
 **Dependencies**
 
-- Python 2.7 or later (not 3.x series)
-- django 1.4
+- Python 2.7.x
+- django 1.4.x
 - PIL *(Python Imaging Library)*
 - python-datetime *(version 1.5)*
 - django-tagging
@@ -21,9 +21,7 @@ Requirements
 - feedparser
 - pyyaml
 
-You can install all the required dependencies automatically with this command:
-
-::
+You can install all the required dependencies automatically with this command::
 
     # pip install -r requirements.txt
 
@@ -31,7 +29,7 @@ Downloading platform
 --------------------
 
 Official download page
-......................
+``````````````````````
 
 .. note:: The download section in the official website is not available yet.
 
@@ -40,23 +38,21 @@ the `downloads <http://ecidadania.org/downloads>`_ page in the website and downl
 the latest stable or development versions, ready to use.
 
 GitHub packages
-...............
+```````````````
 
 Other way of downloading it is through the Github downloads page, which
 autogenerates a .zip and .tar.gz files based on the repository tags. You can
-find it in:
-
-::
+find it in::
 
     https://github.com/cidadania/e-cidadania/tags
 
 From repository
-...............
+```````````````
 
 See :ref:`dev-version`
 
 Stable version
-..............
+``````````````
 
 You can find the latest stable version in the download page in ecidadania.org::
 
@@ -65,7 +61,7 @@ You can find the latest stable version in the download page in ecidadania.org::
 .. _dev-version:
 
 Development version
-...................
+```````````````````
 
 Development version is available through various places. We use `GIT <http://git-scm.com/>`_
 as version control system, so you will have to install it in your computer.
@@ -85,6 +81,9 @@ as version control system, so you will have to install it in your computer.
 
 Installing
 ----------
+
+.. note:: If you are going to develop in the e-cidadania project you should
+          install it this way: :doc:`../dev/environment`
 
 There is no proper installation process in e-cidadania, you just need to copy
 the *src/* directory to the folder where you want it to be, and after that
