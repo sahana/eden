@@ -172,26 +172,13 @@ class S3HRModel(S3Model):
                                             hrm_human_resource_represent,
                                             orderby="hrm_human_resource.type"))
 
-        if not settings.get_hrm_show_staff():
-            title_list = T("Volunteers")
-            title_search = T("Search Volunteers")
-            title_upload = T("Import Volunteers")
-        elif not settings.get_hrm_show_vols():
-            title_list = T("Staff")
-            title_search = T("Search Staff")
-            title_upload = T("Import Staff")
-        else:
-            title_list = T("Staff & Volunteers")
-            title_search = T("Search Staff & Volunteers")
-            title_upload = T("Import Staff & Volunteers")
-
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Staff Member"),
             title_display = T("Staff Member Details"),
-            title_list = title_list,
+            title_list = T("Staff & Volunteers"),
             title_update = T("Edit Record"),
-            title_search = title_search,
-            title_upload = title_upload,
+            title_search = T("Search Staff & Volunteers"),
+            title_upload =T("Search Staff & Volunteers"),
             subtitle_create = T("Add New Staff Member"),
             subtitle_list = T("Staff Members"),
             label_list_button = T("List All Records"),
@@ -201,6 +188,45 @@ class S3HRModel(S3Model):
             msg_record_modified = T("Record updated"),
             msg_record_deleted = T("Record deleted"),
             msg_list_empty = T("No staff or volunteers currently registered"))
+        
+        s3.crud_strings["hrm_staff"] = Storage(
+            title_create = T("Add Staff Member"),
+            title_display = T("Staff Member Details"),
+            title_list = T("Staff"),
+            title_update = T("Edit Staff Member Details"),
+            title_search = T("Search Staff"),
+            title_upload = T("Import Staff"),
+            subtitle_create = T("Add New Staff Member"),
+            subtitle_list = T("Staff Members"),
+            label_list_button = T("List All Staff Members"),
+            label_create_button = T("Add Staff Member"),
+            label_delete_button = T("Delete Staff Member"),
+            msg_record_created = T("Staff member added"),
+            msg_record_modified = T("Staff Member Details updated"),
+            msg_record_deleted = T("Staff Member deleted"),
+            msg_list_empty = T("No Staff currently registered"))
+
+        s3.crud_strings["hrm_volunteer"] = Storage(
+            title_create = T("Add Volunteer"),
+            title_display = T("Volunteer Details"),
+            title_list = T("Volunteers"),
+            title_update = T("Edit Volunteer Details"),
+            title_search = T("Search Volunteers"),
+            title_upload = T("Import Volunteers"),
+            subtitle_create = T("Add New Volunteer"),
+            subtitle_list = T("Volunteers"),
+            label_list_button = T("List All Volunteers"),
+            label_create_button = T("Add Volunteer"),
+            label_delete_button = T("Delete Volunteer"),
+            msg_record_created = T("Volunteer added"),
+            msg_record_modified = T("Volunteer Details updated"),
+            msg_record_deleted = T("Volunteer deleted"),
+            msg_list_empty = T("No Volunteers currently registered"))
+        
+        if not settings.get_hrm_show_staff():
+            s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
+        elif not settings.get_hrm_show_vols():
+            s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
 
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,
@@ -3085,7 +3111,7 @@ def hrm_rheader(r, tabs=[]):
                     experience_tab,
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
-                    (T("User Roles"), "roles"),
+                    (T("Roles"), "roles"),
                    ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(A(s3_avatar_represent(record.id,

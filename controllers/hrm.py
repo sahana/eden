@@ -145,15 +145,7 @@ def human_resource():
         s3mgr.configure(tablename,
                         list_fields = list_fields)
         table.job_role_id.label = T("Volunteer Role")
-        s3.crud_strings[tablename].update(
-            title_create = T("Add Volunteer"),
-            title_display = T("Volunteer Information"),
-            title_list = T("Volunteers"),
-            title_search = T("Search Volunteers"),
-            subtitle_create = T("Add New Volunteer"),
-            subtitle_list = T("Volunteers"),
-            label_create_button = T("Add Volunteer"),
-            msg_record_created = T("Volunteer added"))
+        s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
         # Remove inappropriate filters from the Search widget
         human_resource_search = s3mgr.model.get_config(tablename,
                                                        "search_method")
@@ -179,7 +171,7 @@ def human_resource():
                        "job_role_id",
                        "organisation_id",
                        "site_id",
-                       "site_contact",
+                       #"site_contact",
                        (T("Email"), "email"),
                        (deployment_settings.get_ui_label_mobile_phone(), "phone"),
                        (T("Trainings"), "course"),
@@ -189,12 +181,7 @@ def human_resource():
                       ]
         s3mgr.configure(tablename,
                         list_fields = list_fields)
-        s3.crud_strings[tablename].update(
-            title_create = T("Add Staff Member"),
-            title_list = T("Staff"),
-            title_search = T("Search Staff"),
-            title_upload = T("Import Staff & Volunteers"),
-        )
+        s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
         if "expiring" in request.get_vars:
             s3.filter = s3.filter & \
                 (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
@@ -285,7 +272,7 @@ def staff():
                    "job_role_id",
                    "organisation_id",
                    "site_id",
-                   "site_contact",
+                   #"site_contact",
                    (T("Email"), "email"),
                    (deployment_settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
@@ -293,12 +280,7 @@ def staff():
                    (T("Contract End Date"), "end_date"),
                    "status",
                   ]
-    s3.crud_strings[tablename].update(
-        title_create = T("Add Staff Member"),
-        title_list = T("Staff"),
-        title_search = T("Search Staff"),
-        title_upload = T("Import Staff"),
-    )
+    s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
     if "expiring" in request.get_vars:
         s3.filter = s3.filter & \
             (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
@@ -469,17 +451,7 @@ def volunteer():
         human_resource_search._S3Search__advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
-    s3.crud_strings[tablename].update(
-        title_create = T("Add Volunteer"),
-        title_display = T("Volunteer Information"),
-        title_list = T("Volunteers"),
-        title_search = T("Search Volunteers"),
-        title_upload = T("Import Volunteers"),
-        subtitle_create = T("Add New Volunteer"),
-        subtitle_list = T("Volunteers"),
-        label_create_button = T("Add Volunteer"),
-        msg_record_created = T("Volunteer added"),
-    )
+    s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
     s3mgr.configure(tablename,
                     list_fields = list_fields,
                     report_options = report_options,

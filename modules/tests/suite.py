@@ -81,6 +81,9 @@ else:
     #addTests(loadTests(hrm_setup_trainingevent))
     # Inventory tests
     addTests(loadTests(Logistics))
+    
+    # Create Project
+    addTests(loadTests(project_create))
 
     # Assign Staff to Organisation
     #addTests(loadTests(hrm_assign_organisationstaff))

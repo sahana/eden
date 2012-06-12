@@ -3,4 +3,4 @@ from org import *
 from hrm import *
 from inv import *
 from asset import *
-from proj import *
+from project import *

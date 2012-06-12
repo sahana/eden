@@ -833,7 +833,7 @@ class S3Importer(S3CRUD):
         s3.filter = (self.table.job_id == job_id) & \
                     (self.table.tablename == self.controller_tablename)
 
-        # get a list of the records that have an error of None
+        # Get a list of the records that have an error of None
         query =  (self.table.job_id == job_id) & \
                  (self.table.tablename == self.controller_tablename)
         rows = current.db(query).select(self.table.id, self.table.error)
@@ -855,7 +855,7 @@ class S3Importer(S3CRUD):
         if self.request.representation == "aadata":
             return output
 
-        # Highlight rows in erro in red
+        # Highlight rows in error in red
         s3.dataTableStyleWarning = error_list
 
         s3.dataTableSelectable = True

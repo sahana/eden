@@ -1,0 +1,31 @@
+{{extend "layout.html"}}
+{{try:}}
+ {{=H2(title)}}
+{{except:}}
+ {{pass}}
+<div>
+ <div id='project_map-form' class='project_map-form'>
+     <div class='project_map-priority-selector' style='float:left'>
+      {{try:}}
+       {{=form}}
+      {{except:}}
+       {{pass}}
+     </div>
+     <div id='project_map-legend' class='project_map-legend' style='float:right'>
+       {{try:}}
+         {{=legend}}
+       {{except:}}
+         {{pass}}
+     </div>
+ </div>
+ <div id='project_map-container' class='project_map-container' style='clear:both; padding-top:10px'>
+ {{try:}}
+  {{=P(instructions)}}
+ {{except:}}
+  {{pass}}
+  {{try:}}
+   {{=map}}
+  {{except:}}
+   {{pass}}
+ </div>
+</div>

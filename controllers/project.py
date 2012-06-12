@@ -10,17 +10,19 @@ resourcename = request.function
 if module not in deployment_settings.modules:
     raise HTTP(404, body="Module disabled: %s" % module)
 
-drr = deployment_settings.get_project_drr()
+mode_task = deployment_settings.get_project_mode_task()
 
 # =============================================================================
 def index():
     """ Module's Home Page """
 
     # Bypass home page & go direct to searching for Projects
-    if deployment_settings.get_project_drr():
-        return project()
-    else:
+    if deployment_settings.get_project_mode_drr():
+        redirect(URL(f="project", args="search"))
+    elif mode_task:
         redirect(URL(f="project", vars={"tasks":1}))
+    else:
+        redirect(URL(f="project"))
 
     module_name = deployment_settings.modules[module].name_nice
     response.title = module_name
@@ -76,14 +78,6 @@ def project():
 
     # Pre-process
     def prep(r):
-        btable = s3db.project_beneficiary
-        btable.community_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                    "project_community.id",
-                                                    "%(name)s",
-                                                    filterby="project_id",
-                                                    filter_opts=[r.id],
-                                                    sort=True))
-
         if r.interactive:
             if r.component is not None:
                 if r.component_name == "organisation":
@@ -131,8 +125,18 @@ def project():
                     if group:
                         if group == "staff":
                             group = 1
+                            db.project_human_resource.human_resource_id.label = T("Staff")
+                            s3.crud_strings["project_human_resource"] = s3.crud_strings["hrm_staff"]
+                            s3.crud_strings["project_human_resource"].update(
+                                subtitle_create = T("Add Staff Member to Project")
+                                )
                         elif group == "volunteer":
                             group = 2
+                            db.project_human_resource.human_resource_id.label = T("Volunteer")
+                            s3.crud_strings["project_human_resource"] = s3.crud_strings["hrm_volunteer"]
+                            s3.crud_strings["project_human_resource"].update(
+                                subtitle_create = T("Add Volunteer to Project")
+                                )
 
                         # Use the group to filter the component list
                         filter_by_type = (db.hrm_human_resource.type == group)
@@ -209,7 +213,7 @@ def project():
                 if validate:
                     response.s3.jquery_ready.append(script)
 
-                if not deployment_settings.get_project_drr():
+                if mode_task:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
                     s3mgr.crud.action_buttons(r,
@@ -240,7 +244,7 @@ def hazard():
 def organisation():
     """ RESTful CRUD controller """
 
-    if drr:
+    if deployment_settings.get_project_multiple_organsiations():
         s3mgr.configure("project_organisation",
                         insertable=False,
                         editable=False,
@@ -343,21 +347,20 @@ def activity():
 
     tabs = [(T("Details"), None),
             (T("Contact Persons"), "contact")]
-    if drr:
-        #tabs.append((T("Beneficiaries"), "beneficiary"))
-        tabs.append((T("Documents"), "document"))
-    else:
+    if mode_task:
         tabs.append((T("Tasks"), "task"))
-        #tabs.append((T("Attachments"), "document"))
+        tabs.append((T("Attachments"), "document"))
+    else:
+        tabs.append((T("Documents"), "document"))
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(rheader=rheader,
                               csv_template="activity")
 
-
+# -----------------------------------------------------------------------------
 def community():
     """
-    RESTful CRUD controller to display project community information
+        RESTful CRUD controller to display project community information
     """
     tablename = "%s_%s" % (module, resourcename)
     table = s3db[tablename]
@@ -404,8 +407,8 @@ def community():
     response.s3.postp = postp
 
     tabs = [(T("Details"), None),
-            (T("Contact Persons"), "contact"),
             (T("Beneficiaries"), "beneficiary"),
+            (T("Contact People"), "contact"),
             ]
 
     rheader = lambda r: s3db.project_rheader(r, tabs)
