@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load comments %}
+
+{% block title %}{% trans "View Proposal Set" %}{% endblock %}
+{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
+{% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="span8">
+            {% for p in proposalset %}
+                <div id="proposal-wrapper">
+                    {% if perms.proposals.add_proposal %}
+                        <div id="tools">
+                            <a href="{% url 'add-proposal' get_place.url %}"><img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add proposal' %}" title="{% trans 'Add proposal' %}"/></a> 
+                            {% if perms.proposals.edit_proposal %}
+                                <a href="{% url 'edit-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/></a> 
+                            {% endif %}
+                            {% if perms.proposals.delete_proposal %}
+                                <a href="{% url 'delete-proposal' get_place.url p.id %}"><img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/></a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="span1">
+                        <p style="line-height:30px;font-size:30px;margin-left:5px;">{{ p.support_votes__count }}</p>
+                        <button style="margin-left:-15px;" onclick="upvote({{ p.id }})" class="btn btn-small" {% if user in p.support_votes.all %}disabled="disabled"{% endif %}>{% trans "support" %}</button>
+                    </div>
+
+                    <!-- Here goes the voting button -->
+                    <div id="proposal">
+                        <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
+                        <div class="message">{{ p.message|truncatewords:12 }}</div>
+                        {% get_comment_count for p as comment_count %}
+                        <div class="creator">{% trans "proposed by " %} <a href="{% url 'profile_public' p.author %}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ p.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></div>
+                    </div>
+                    {% comment %}
+                        The following div is to make the wrapper to wrap everything.
+                    {% endcomment %}
+                    <div style="clear:left;"></div>
+                </div>
+            {% empty %}
+                <p>{% trans "There is no proposals in this set" %}.</p>
+            {% endfor %}
+    
+            <hr />
+            <a href="/" class="btn small">&laquo; {% trans "Go back" %}</a>
+  
+            {% if is_paginated %}
+                <div class="pagination">
+                    <span class="page-links">
+                        {% if page_obj.has_previous %}
+                            <a href="{% url 'list-proposals' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
+                        {% endif %}
+                        <span class="page-current">
+                            {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+                        </span>
+                        {% if page_obj.has_next %}
+                            <a href="{% url 'list-proposals' get_place.url %}?page={{ page_obj.next_page_number }}">| {% trans "next" %} &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+        <div class="span4">
+            <h4>Empty space!</h4>
+        </div>
+    </div>
+
+{% endblock %}
