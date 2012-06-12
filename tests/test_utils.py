@@ -109,17 +109,6 @@ class ECDTestCase(TestCase):
                                     email=email)
         return super_user
     
-    def create_logged_in_super_user(self, username='admin', password='admin_pass',
-                                    email='logged_in_dmin@test.com', 
-                                    properties=None):
-        """Creates, saves, logs in and returns a super user.
-        """
-        self.create_super_user(username=username, password=password,
-                                email=email, properties=properties)
-        self.logout()
-        super_user = self.login(username=username, password=password, email=email)
-        return super_user 
-    
     def login(self, username, password, email=None):
         """Logs in a user with the given username and password. If the user is 
         not present in the database, it will be created and logged in.
