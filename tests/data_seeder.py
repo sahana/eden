@@ -19,7 +19,9 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from mockups import Mockup
+from mockups.helpers import register
 
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -40,6 +42,10 @@ class DataSeeder(object):
     
     We presently wrap our methods around Mockup. 
     """
+    
+    def __init__(self):
+        #Register User with Mockup
+        register(User, Mockup)
     
     def seed(self, model, constraints=None, follow_fk=None, generate_fk=None,
              follow_m2m=None, factory=None, model_properties=None, commit=True):
