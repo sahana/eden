@@ -21,9 +21,12 @@
 import httplib
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 
 from django.test import Client
 from django.test import TestCase
+
+from django.utils.encoding import smart_str
 
 from tests.data_seeder import seeder
 
@@ -111,16 +114,27 @@ class ECDTestCase(TestCase):
             return True
     
         return False
-        
-    def get(self, url, data={}, follow=False, **extra):
+    
+    def getURL(self, name, args=None, kwargs=None):
+        """Returns the url for the given `name` which may be a function name or
+        url name.
+        """
+        return reverse(name, args=args, kwargs=kwargs)
+    
+    def get(self, url=None, url_name=None, data={}, follow=False, **extra):
         """
         Performs a get to the given url and returns the response.
         """
+        if url is None and url_name is None:
+            raise Exception("Please pass either url or url name")
+            
+        if url_name:
+            url = self.getURL(url_name)
         
         response = self.client.get(url, data=data, follow=follow, extra=extra)
         return response
     
-    def post(self, url, data={}, content_type, follow=False, **extra):
+    def post(self, url, content_type,  data={}, follow=False, **extra):
         """
         Performs a post to the supplied url and returns the response.
         """
@@ -129,10 +143,13 @@ class ECDTestCase(TestCase):
                                     follow=follow, extra=extra)
         return response
     
-    def printResponse(self):
-        """Prints response.
+    def printResponse(self, response):
+        """Prints the response to the terminal.
+        We need this method because the response is a unicode string and
+        results in exception when printed directly i.e print response.
         """
-        pass
+        
+        return smart_str(response)
     
     
     def assertResponseCode(self, response, status_code):
