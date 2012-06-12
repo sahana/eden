@@ -233,10 +233,11 @@ class ViewProposalSet(ListView):
     """
     paginate_by = 50
     context_object_name = 'proposalset'
+    template_name = 'proposals/proposalset_detail.html'
     
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_name'])
-        objects = get_object_or_404(Proposal, proposalset=self.kwargs['set_id'])
+        objects = Proposal.objects.all().filter(proposalset=self.kwargs['set_id'])
         return objects
     
     def get_context_data(self, **kwargs):
