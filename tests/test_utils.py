@@ -66,7 +66,8 @@ class ECDTestCase(TestCase):
                                 model_properties=properties, commit=True)
         return obj_list
     
-    def create_user(self, username, password, email=None, properties=None):
+    def create_user(self, username, password, email=None, properties=None,
+                    logged_in=False):
         """Creates, saves and returns a user with a given username, password
         and email. If `properties` is supplied, it will be applied to the 
         created user.
@@ -78,10 +79,17 @@ class ECDTestCase(TestCase):
             for key in properties:
                 setattr(user, key, properties[key])
             user.save()
+            
+        if logged_in:
+            # log out the current user
+            self.logout()
+            # log in the new user
+            user = self.login(username=username, password=password, email=email)
         return user
     
     def create_super_user(self, username='admin', password='admin_pass', 
-                          email='admin@test.com', properties=None):
+                          email='admin@test.com', properties=None, 
+                          logged_in=False):
         """Creates, saves and returns  a super user with a given username, 
         password and email. If `properties` is supplied, it will be applied
         to the created user.
@@ -95,6 +103,10 @@ class ECDTestCase(TestCase):
                 setattr(super_user, key, properties[key])
             super_user.save()
         
+        if logged_in:
+            self.logout()
+            super_user = self.login(username=username, password=password, 
+                                    email=email)
         return super_user
     
     def create_logged_in_super_user(self, username='admin', password='admin_pass',
@@ -104,7 +116,7 @@ class ECDTestCase(TestCase):
         """
         self.create_super_user(username=username, password=password,
                                 email=email, properties=properties)
-        
+        self.logout()
         super_user = self.login(username=username, password=password, email=email)
         return super_user 
     
@@ -165,14 +177,13 @@ class ECDTestCase(TestCase):
         response = self.client.get(url, data=data, follow=follow, extra=extra)
         return response
     
-    def post(self, url, content_type='multipart/form-data',  data={}, 
-             follow=False, **extra):
+    def post(self, url,  data={}, follow=False, **extra):
         """
         Performs a post to the supplied url and returns the response.
         """
         
-        response = self.client.post(path=url, data=data, content_type=content_type,
-                                    follow=follow, extra=extra)
+        response = self.client.post(path=url, data=data, follow=follow, 
+                                    extra=extra)
         return response
     
     def printResponse(self, response):
