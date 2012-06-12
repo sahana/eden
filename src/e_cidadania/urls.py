@@ -65,7 +65,7 @@ urlpatterns += i18n_patterns('',
     url(_(r'^spaces/'), include('core.spaces.urls')),
     
     # Invitations
-    url(_(r'^invite/'), 'core.views.invite.ivite', name='invite'),
+    url(_(r'^invite/'), 'core.views.invite.invite', name='invite'),
     
     # News (this view of news is only for the index)
     url(_(r'^news/$'), ListNews.as_view(), name='list-site-news'),
