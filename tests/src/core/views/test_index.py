@@ -18,11 +18,12 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
+from e_cidadania import url_names
 
 from tests.test_utils import ECDTestCase
 
 
-class IndexTestCase(ECDTestCase):
+class IndexTestCase(ECDTestCase):   
     """Class to test index related views.
     """
     
@@ -30,7 +31,12 @@ class IndexTestCase(ECDTestCase):
         """Tests the index view.
         """
         
-        #url = self.getUrl(url_names.SITE_INDEX)
-        url = '/'
-        response = self.get(url)
+        response = self.get(url_name=url_names.SITE_INDEX)
+        self.assertResponseOK(response)
+    
+    def testIndexEntriesFeed(self):
+        """Tests the index entries feed view.
+        """
+        
+        response = self.get(url_name=url_names.SITE_FEED)
         self.assertResponseOK(response)
