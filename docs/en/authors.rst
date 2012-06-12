@@ -3,11 +3,17 @@ About this document
 
 :Authors:
 
-    Oscar Carballal Prego <oscar.carballal@cidadania.coop> <info@oscarcp.com>
+    Oscar Carballal Prego <oscar.carballal@cidadania.coop>
 
 :Fixes:
 
     Ana Lorenzo Vila <ana.lorenzo@cidadania.coop>
+
+    Bithin A. <bithin2007@gmail.com>
+
+    Arvind S. Raj <sraj.arvind@gmail.com>
+
+    Praveen Kumar <praveen97uma@gmail.com>
 
 Translations
 ............
@@ -30,5 +36,4 @@ Translations
 Thanks
 ------
 
-- NovaCaixaGalicia
 - Google Inc.
