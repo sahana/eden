@@ -72,13 +72,41 @@ class ECDTestCase(TestCase):
         created user.
         """
         
-        user = User.objects.create_user(username, password, email)
-        
+        user = User.objects.create_user(username=username, password=password, 
+                                        email=email)
         if properties:
             for key in properties:
                 setattr(user, key, properties[key])
             user.save()
         return user
+    
+    def create_super_user(self, username='admin', password='admin_pass', 
+                          email='admin@test.com', properties=None):
+        """Creates, saves and returns  a super user with a given username, 
+        password and email. If `properties` is supplied, it will be applied
+        to the created user.
+        """
+        
+        super_user = User.objects.create_superuser(username=username,
+                                                   password=password, 
+                                                   email=email)
+        if properties:
+            for key in properties:
+                setattr(super_user, key, properties[key])
+            super_user.save()
+        
+        return super_user
+    
+    def create_logged_in_super_user(self, username='admin', password='admin_pass',
+                                    email='logged_in_dmin@test.com', 
+                                    properties=None):
+        """Creates, saves, logs in and returns a super user.
+        """
+        self.create_super_user(username=username, password=password,
+                                email=email, properties=properties)
+        
+        super_user = self.login(username=username, password=password, email=email)
+        return super_user 
     
     def login(self, username, password, email=None):
         """Logs in a user with the given username and password. If the user is 
@@ -92,9 +120,12 @@ class ECDTestCase(TestCase):
         except Exception:
             user = None
         if user is None:
-            user = self.create_user(username, password, email)
+            user = self.create_user(username=username, password=password, 
+                                    email=email)
         
         self.client.login(username=username, password=password)
+        
+        return user
     
     def logout(self):
         """Logs out the currently logged in user.
@@ -134,7 +165,8 @@ class ECDTestCase(TestCase):
         response = self.client.get(url, data=data, follow=follow, extra=extra)
         return response
     
-    def post(self, url, content_type,  data={}, follow=False, **extra):
+    def post(self, url, content_type='multipart/form-data',  data={}, 
+             follow=False, **extra):
         """
         Performs a post to the supplied url and returns the response.
         """
