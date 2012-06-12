@@ -48,7 +48,7 @@ class NewsViewTest(ECDTestCase):
         self.assertResponseRedirect(response)
         
         # Log in a superuser with username as 'admin' and password as `password`
-        self.create_logged_in_super_user()
+        self.create_super_user(logged_in=True)
         response = self.get(url_name=url_names.ADD_SITE_POST)
         self.assertResponseOK(response)
     
@@ -67,7 +67,7 @@ class NewsViewTest(ECDTestCase):
         
         post = self.seed(models.Post)
         url = self.getURL(url_names.EDIT_SITE_POST, kwargs={'post_id': post.id})
-        self.create_logged_in_super_user()
+        self.create_super_user(logged_in=True)
         response = self.get(url)
         self.assertResponseOK(response)
            
@@ -78,6 +78,6 @@ class NewsViewTest(ECDTestCase):
         post = self.seed(models.Post)
         url = self.getURL(url_names.DELETE_SITE_POST, 
                           kwargs={'post_id': post.id})
-        self.create_logged_in_super_user()
+        self.create_super_user(logged_in=True)
         response = self.get(url)
         self.assertResponseOK(response)
