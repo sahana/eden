@@ -706,7 +706,6 @@ div.form-container form select {
 }
 div.form-container form input[type="checkbox"],
 div.form-container form input[type="radio"] {
-    padding: 1px;
     margin: 2px 5px;
 }
 div.form-container form fieldset {
@@ -1763,4 +1762,8 @@ a:visited:after {
 .no-options-available {
     color: #aaa;
     font-style: italic;
+}
+
+.checkboxes-widget-s3 input {
+    float: left;
 }
