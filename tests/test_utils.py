@@ -40,7 +40,7 @@ class ECDTestCase(TestCase):
         """Performs set up for the tests.
         """
         
-        self.client = Client(enforce_csrf_checks=True)
+        self.client = Client(enforce_csrf_checks=False)
     
     def seed(self, model, properties=None, constraints=None, follow_fk=None, 
              generate_fk=None, follow_m2m=None, factory=None, commit=True):
