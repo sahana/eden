@@ -2498,30 +2498,48 @@ S3FilterFieldChange({
         if delete:
             deleted_fks = json.loads(data.deleted_fk)
             person_id = deleted_fks["person_id"]
-            type = record.type
         else:
             person_id = data["person_id"]
-            type = record.vars.type
 
-        if type == 2 and \
-           current.deployment_settings.get_hrm_experience() == "programme":
-            # Update Hours
-            ptable = s3db.hrm_programme_hours
-            if delete:
-                date = record.start_date.date()
-                hours = record.hours
-                query = (ptable.person_id == person_id) & \
-                        (ptable.date == date) & \
-                        (ptable.hours == hours) & \
-                        (ptable.training == True)
-                db(query).update(deleted=True)
-            else:
-                date = record.vars.start_date.date()
-                hours = record.vars.hours
-                ptable.insert(person_id = person_id,
-                              date = date,
-                              hours = hours,
-                              training = True)
+        if current.deployment_settings.get_hrm_experience() == "programme":
+            # Check if this person is a volunteer
+            hrtable = s3db.hrm_human_resource
+            query = (hrtable.person_id == person_id) & \
+                    (hrtable.deleted == False)
+            vol = db(query).select(hrtable.type,
+                                   limitby=(0, 1)).first()
+
+            if vol and vol.type == 2:
+                 # Update Hours
+                ptable = s3db.hrm_programme_hours
+                tetable = s3db.hrm_training_event
+                if delete:
+                    training_event_id = deleted_fks["training_event_id"]
+                    query = (tetable.id == training_event_id)
+                    record = db(query).select(tetable.start_date,
+                                              tetable.hours,
+                                              limitby=(0, 1)).first()
+                    if record:
+                        date = record.start_date.date()
+                        hours = record.hours
+                        query = (ptable.person_id == person_id) & \
+                                (ptable.date == date) & \
+                                (ptable.hours == hours) & \
+                                (ptable.training == True)
+                        db(query).update(deleted=True)
+                else:
+                    training_event_id = data["training_event_id"]
+                    query = (tetable.id == training_event_id)
+                    record = db(query).select(tetable.start_date,
+                                              tetable.hours,
+                                              limitby=(0, 1)).first()
+                    if record:
+                        date = record.start_date.date()
+                        hours = record.hours
+                        ptable.insert(person_id = person_id,
+                                      date = date,
+                                      hours = hours,
+                                      training = True)
 
         # Update Certifications
         ctable = s3db.hrm_certification
@@ -2772,7 +2790,7 @@ class S3HRProgrammeModel(S3Model):
 
         self.configure(tablename,
                        list_fields=["id",
-                                    "training"
+                                    "training",
                                     "programme_id",
                                     "date",
                                     "hours",

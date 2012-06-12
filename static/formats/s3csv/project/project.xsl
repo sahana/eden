@@ -20,10 +20,14 @@
          Hazards..............comma-sep list..List of Hazard names
          HFA..................comma-sep list..List of HFA priorities (integer numbers)
          Budget:XXXX..........float...........Budget for year XXX (multiple allowed)
+         FPFirstName..........string..........First Name of Focal Person
+         FPLastName...........string..........Last Name of Focal Person
+         FPEmail..............string..........Email Address of Focal Person
+         FPMobilePhone........string..........Mobile Phone Number of Focal Person
 
-         IATI:
+         theme_percentages=True:
          Theme:XXXX...........string..........% of the Project targetting Theme XXX (multiple allowed)
-         or DRR:
+         theme_percentages=False:
          Themes...............comma-sep list..List of Theme names
 
     *********************************************************************** -->
@@ -73,6 +77,9 @@
         <xsl:variable name="Hazards" select="col[@field='Hazards']"/>
         <xsl:variable name="Themes" select="col[@field='Themes']"/>
         <xsl:variable name="HFA" select="col[@field='HFA']"/>
+
+        <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
+        <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
 
         <!-- Projects -->
         <resource name="project_project">
@@ -205,6 +212,16 @@
                     </resource>
                 </xsl:if>
             </xsl:for-each>
+
+            <!-- Focal Point -->
+            <xsl:if test="$FirstName!=''">
+                <reference field="human_resource_id" resource="hrm_human_resource">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('HR:', $LastName, ',', $FirstName)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
         </resource>
 
         <xsl:call-template name="splitList">
@@ -221,6 +238,10 @@
             <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
             <xsl:with-param name="arg">theme</xsl:with-param>
         </xsl:call-template>
+
+        <xsl:if test="$FirstName!=''">
+            <xsl:call-template name="FocalPerson"/>
+        </xsl:if>
 
     </xsl:template>
 
@@ -304,6 +325,55 @@
                 <data field="name"><xsl:value-of select="$Theme"/></data>
             </resource>
         </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="FocalPerson">
+        <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
+        <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
+        <xsl:variable name="Email" select="col[@field='FPEmail']/text()"/>
+        <xsl:variable name="MobilePhone" select="col[@field='FPMobilePhone']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="pr_person">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Person:', $LastName, ',', $FirstName)"/>
+            </xsl:attribute>
+            <data field="first_name"><xsl:value-of select="$FirstName"/></data>
+            <data field="last_name"><xsl:value-of select="$LastName"/></data>
+            <xsl:if test="$Email!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="EMAIL"/>
+                    <data field="value"><xsl:value-of select="$Email"/></data>
+                </resource>
+            </xsl:if>
+            <xsl:if test="$MobilePhone!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="SMS"/>
+                    <data field="value"><xsl:value-of select="$MobilePhone"/></data>
+                </resource>
+            </xsl:if>
+        </resource>
+
+        <resource name="hrm_human_resource">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('HR:', $LastName, ',', $FirstName)"/>
+            </xsl:attribute>
+            <data field="type">1</data> <!-- Staff -->
+            <!-- Link to Organisation -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+
+                    <xsl:value-of select="concat('ProjectOrganisation:', $OrgName)"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="person_id" resource="pr_person">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Person:', $LastName, ',', $FirstName)"/>
+                </xsl:attribute>
+            </reference>
+        </resource>
 
     </xsl:template>
 
