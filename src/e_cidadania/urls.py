@@ -30,10 +30,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from core.views.index import IndexEntriesFeed
 from core.views.news import ListNews
-from core.views.post import AddPost
-from core.views.post import EditPost
-from core.views.post import DeletePost
-from core.views.post import ViewPost
+from core.views.news import AddPost
+from core.views.news import EditPost
+from core.views.news import DeletePost
+from core.views.news import ViewPost
 
 admin.autodiscover()
 
