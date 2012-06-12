@@ -41,7 +41,8 @@ def login(account="normal", nexturl=None):
         raise NotImplementedError
 
     # If the user is already logged in no need to do anything so return
-    if browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
+    if browser.page_source != None and \
+       browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
         # If the URL is different then move to the new URL
         if not browser.current_url.endswith(nexturl):
             url = "%s/%s" % (config.url, nexturl)
@@ -73,7 +74,7 @@ def login(account="normal", nexturl=None):
     else:
         s3_debug(elem.text)
         return True
-        
+
 # -----------------------------------------------------------------------------
 def logout():
     """ Logout """

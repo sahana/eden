@@ -36,7 +36,10 @@ config.url = base_url
 base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
 config.base_dir = base_dir
 
-browser = config.browser = webdriver.Firefox()
+fp = webdriver.FirefoxProfile()
+fp.set_preference("network.proxy.type", 0)
+
+browser = config.browser = webdriver.Firefox(firefox_profile=fp)
 browser.implicitly_wait(config.timeout)
 
 # Do we have any command-line arguments?
@@ -54,7 +57,7 @@ if test:
     # Run specified Test after logging in
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    
+
     #login(account="admin")
     print test
     suite = loadTests(globals()[test])
