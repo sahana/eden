@@ -12,7 +12,7 @@ Installation
 
 Since e-cidadania 0.1.5 RC1 e-cidadania includes an automated buildout system.
 If you want to install it to do testing or development you should see
-`this instructions <https://github.com/cidadania/e-cidadania/blob/gsoc2012/docs/en/dev/environment.rst>`_
+`these instructions <https://github.com/cidadania/e-cidadania/blob/gsoc2012/docs/en/dev/environment.rst>`_
 
 If you don't want to create an isolated development environment,
 * Download the source code from git, or from the official webpage.
