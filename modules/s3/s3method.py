@@ -140,7 +140,8 @@ class S3Method(object):
             self.next = self.next.replace(placeholder, self.resource.lastid)
             placeholder = "[id]"
             self.next = self.next.replace(placeholder, self.resource.lastid)
-        r.next = self.next
+        if not current.response.error:
+            r.next = self.next
 
         # Add additional view variables (e.g. rheader)
         self._extend_view(output, r, **attr)

@@ -1291,6 +1291,9 @@ class S3CRUD(S3Method):
                         response.error = "%s\n%s: %s" % \
                             (response.error, fieldname, form.errors[fieldname])
 
+            elif request.http == "POST":
+                response.error = current.T("Invalid form (re-opened in another window?)")
+
         if not logged and not form.errors:
             audit("read", prefix, name,
                   record=record_id, representation=format)
