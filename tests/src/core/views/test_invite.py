@@ -37,3 +37,12 @@ class InviteViewTest(ECDTestCase):
         url = self.getURL(url_names.INVITE)
         response = self.get(url)
         self.assertResponseOK(response)
+        
+        post_data = {'email_addr': 'test@gmail.com', 'mail_msg':'test'}
+        response = self.post(url, data=post_data)
+        self.assertResponseForbidden(response)
+        
+        #self.create_user('test_user', 'user_pass', logged_in=True)
+        self.create_logged_in_super_user()
+        response = self.post(url, data=post_data)
+        self.assertResponseForbidden(response)
