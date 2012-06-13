@@ -172,27 +172,30 @@ class S3AuthTests(unittest.TestCase):
             org3 = s3db.pr_get_pe_id("org_organisation", 3)
 
             # Add the user as OU descendant of org3
-            user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
-            self.assertNotEqual(user, None)
-            s3db.pr_add_affiliation(org3, user, role="TestStaff")
+            user_id = auth.s3_get_user_id("normaluser@example.com")
+            user_pe = auth.s3_user_pe_id(user_id)
+            self.assertNotEqual(user_pe, None)
+            s3db.pr_add_affiliation(org3, user_pe, role="TestStaff")
 
             # Create a Test auth_group and delegate it to the TestPartners
             role = auth.s3_create_role("Test Group", uid="TESTGROUP")
+            auth.s3_assign_role(user_id, role)
 
             # We use delegations (policy 8)
             deployment_settings.security.policy = 8
             auth.permission = s3base.S3Permission(auth)
 
-            auth.s3_delegate_role("TESTGROUP", org1, receiver=org3)
-
             # Impersonate as normal user
             auth.s3_impersonate("normaluser@example.com")
+
+            auth.s3_delegate_role("TESTGROUP", org1, receiver=org3)
 
             # Check the realms
             realms = auth.user.realms.keys()
             self.assertTrue(2 in realms)
             self.assertTrue(3 in realms)
-            self.assertEqual(len(realms), 2)
+            self.assertTrue(role in realms)
+            self.assertEqual(len(realms), 3)
 
             for r in auth.user.realms:
                 if r == role:
@@ -859,9 +862,10 @@ class S3PermissionTests(unittest.TestCase):
             self.assertNotEqual(partners, None)
 
             # Add the user as OU descendant of org3
-            user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
-            self.assertNotEqual(user, None)
-            s3db.pr_add_affiliation(org3, user, role="TestStaff")
+            user_id = auth.s3_get_user_id("normaluser@example.com")
+            user_pe = auth.s3_user_pe_id(user_id)
+            self.assertNotEqual(user_pe, None)
+            s3db.pr_add_affiliation(org3, user_pe, role="TestStaff")
 
             # Create a TESTGROUP and assign a table ACL
             acl = auth.permission
@@ -869,6 +873,8 @@ class S3PermissionTests(unittest.TestCase):
                                        dict(c="org", f="office", uacl=acl.ALL, oacl=acl.ALL),
                                        dict(t="org_office", uacl=acl.READ, oacl=acl.ALL),
                                        uid="TESTGROUP")
+
+            auth.s3_assign_role(user_id, role)
 
             # We use delegations (policy 8)
             deployment_settings.security.policy = 8
@@ -2299,17 +2305,19 @@ class S3AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id > 0)")
         query = accessible_query("update",table,  c="dvi", f="body")
+        keys = auth.user.realms.keys()
+        self.assertTrue(self.dvi_reader in keys)
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, ",".join(map(str,keys))))
         query = accessible_query("delete", table, c="dvi", f="body")
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, ",".join(map(str,keys))))
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
@@ -2347,11 +2355,13 @@ class S3AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id > 0)")
         query = accessible_query("update",table,  c="dvi", f="body")
+        keys = auth.user.realms.keys()
+        self.assertTrue(self.dvi_reader in keys)
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, ",".join(map(str,keys))))
         query = accessible_query("delete", table, c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id = 0)")
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
