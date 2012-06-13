@@ -483,7 +483,7 @@ class S3HRModel(S3Model):
 
         # Affiliation and record ownership
         s3db.pr_update_affiliations(htable, record)
-        s3db.pr_set_record_owner(htable, record)
+        auth.s3_set_record_owner(htable, record, force_update=True)
 
         site_id = record.site_id
         if record.type == 1 and site_id:
