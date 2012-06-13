@@ -58,16 +58,16 @@ def add_new_debate(request, space_name):
     """
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
-    
+
     .. versionadded:: 0.1.5
 
     :attributes: debate_form, row_formset, column_formset
     :context: form, rowform, colform, get_place, debateid
     """
     place = get_object_or_404(Space, url=space_name)
-    
+
     # Define FormSets
-    
+
     # This class is used to make empty formset forms required
     # See http://stackoverflow.com/questions/2406537/django-formsets-make-first-required/4951032#4951032
     class RequiredFormSet(BaseFormSet):
@@ -80,7 +80,7 @@ def add_new_debate(request, space_name):
 
     RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet, can_delete=True)
     ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet, can_delete=True)
-   
+
     debate_form = DebateForm(request.POST or None)
     row_formset = RowFormSet(request.POST or None, prefix="rowform")
     column_formset = ColumnFormSet(request.POST or None, prefix="colform")
@@ -145,8 +145,8 @@ def create_note(request, space_name):
     .. versionadded:: 0.1.5
     """
     note_form = NoteForm(request.POST or None)
-        
-    if request.method == "POST" and request.is_ajax:        
+
+    if request.method == "POST" and request.is_ajax:
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
@@ -170,7 +170,7 @@ def create_note(request, space_name):
             + str(note_form.errors)
     else:
         msg = "The petition was not POST."
-        
+
     return HttpResponse(json.dumps(msg), mimetype="application/json")
 
 
@@ -198,15 +198,15 @@ def update_note(request, space_name):
             note_form_uncommited.title = request.POST['title']
             note_form_uncommited.message = request.POST['message']
             note_form_uncommited.last_mod_author = request.user
-        
+
             note_form_uncommited.save()
             msg = "The note has been updated."
         else:
             msg = "The form is not valid, check field(s): " + note_form.errors
     else:
         msg = "There was some error in the petition."
-        
-    return HttpResponse(msg)
+
+return HttpResponse(msg)
 
 
 def update_position(request, space_name):
@@ -253,7 +253,7 @@ def delete_note(request, space_name):
 class ViewDebate(DetailView):
     """
     View a debate.
-    
+
     :context: get_place, notes, columns, rows
     """
     context_object_name = 'debate'
@@ -261,12 +261,12 @@ class ViewDebate(DetailView):
 
     def get_object(self):
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        
+
         # Check debate dates
         if datetime.date.today() >= debate.end_date or datetime.date.today() <  debate.start_date:
             self.template_name = 'debate/debate_outdated.html'
             #return Debate.objects.none()
-        
+
         return debate
 
     def get_context_data(self, **kwargs):
@@ -298,7 +298,7 @@ class ViewDebate(DetailView):
 class ListDebates(ListView):
     """
     Return a list of debates for the current space.
-    
+
     :context: get_place
     """
     paginate_by = 10
