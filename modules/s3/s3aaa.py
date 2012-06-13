@@ -6798,7 +6798,8 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
             @return: dictionary of assigned roles with entity pe_id as the keys
         """
-        return super(S3PersonRoleManager, self).get_assigned_roles(user_id=self.user["id"])
+        user_id = current.auth.user.id
+        return super(S3PersonRoleManager, self).get_assigned_roles(user_id=user_id)
 
     # -------------------------------------------------------------------------
     def get_form_fields(self):

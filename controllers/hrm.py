@@ -371,6 +371,10 @@ def volunteer():
     _location.label = T("Home Address")
     table.site_contact.writable = False
     table.site_contact.readable = False
+    table.code.writable = False
+    table.code.readable = False
+    table.department.writable = False
+    table.department.readable = False
     table.essential.writable = False
     table.essential.readable = False
     table.job_role_id.label = T("Volunteer Role")
@@ -669,7 +673,7 @@ def person():
     # Custom Method for Description
     set_method("pr", resourcename,
                method="physical_description")
-    # hide all but those details that we want
+    # Hide all but those details that we want
     # Lock all the fields
     pr_desc_table = s3db.pr_physical_description
     for field in pr_desc_table.fields:
@@ -737,6 +741,10 @@ def person():
         else:
             # Volunteer
             table.job_role_id.label = T("Volunteer Role")
+            table.code.writable = False
+            table.code.readable = False
+            table.department.writable = False
+            table.department.readable = False
             table.essential.writable = False
             table.essential.readable = False
             table.location_id.writable = True

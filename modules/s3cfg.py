@@ -497,7 +497,15 @@ class S3Config(Storage):
     def get_ui_autocomplete(self):
         """ Currently Unused """
         return self.ui.get("autocomplete", False)
+    def get_ui_read_label(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
+        return self.ui.get("read_label", "Open")
     def get_ui_update_label(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
         return self.ui.get("update_label", "Open")
     def get_ui_cluster(self):
         """ UN-style deployment? """
