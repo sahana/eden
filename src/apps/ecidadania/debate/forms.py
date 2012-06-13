@@ -30,9 +30,9 @@ class DebateForm(ModelForm):
 
     """
     Returns an empty form for creating a new Debate.
-    
+
     :rtype: HTML Form
-    
+
     .. versionadded:: 0.1b
     """
     class Meta:
@@ -59,9 +59,9 @@ class NoteForm(ModelForm):
     """
     Returns an HTML Form to create or edit a new 'note' or 'proposal' like it's
     called on the sociologists argot.
-    
+
     :rtype: HTML Form
-    
+
     .. versionadded:: 0.1b
     """
     class Meta:
