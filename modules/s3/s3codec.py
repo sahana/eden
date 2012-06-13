@@ -235,4 +235,38 @@ class S3Codec(object):
 
         return "%s}" % output
 
+    # New variant below
+
+    #@staticmethod
+    #def json_message(success=True,
+                     #statuscode="200",
+                     #message=None,
+                     #**kwargs):
+        #"""
+            #Provide a nicely-formatted JSON Message
+
+            #@param success: action succeeded or failed
+            #@param status_code: the HTTP status code
+            #@param message: the message text
+            #@param kwargs: other elements for the message
+
+            #@keyword tree: result tree to enclose (as JSON)
+        #"""
+
+        #status = success and "success" or "failed"
+        #code = str(statuscode)
+
+        #output = {"status": status, "statuscode": code}
+
+        #tree = kwargs.get("tree", None)
+        #if message:
+            #output["message"] = message
+        #for k, v in kwargs.items():
+            #if k != "tree":
+                #output[k] = unicode(v)
+        #output = json.dumps(output)
+        #if message and tree:
+            #output = output[:-1] + '"tree"; %s}' % tree
+        #return output
+
 # End =========================================================================
