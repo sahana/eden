@@ -18,7 +18,7 @@ and some external libraries.
 |Models|_
 
 .. |Models| image:: ../images/models.png
-.. _Models: http://postimage.org/image/z7b8s72c/full/
+.. _Models: http://i.imgur.com/BxHbK.png
 
 .. warning:: e-cidadania is in heavy development, because of that some parts
              of it may suffer changes, especially the data models and documentation
@@ -57,6 +57,7 @@ Development
 .. toctree::
     :maxdepth: 2
 
+    dev/environment
     dev/styleguide
     dev/useraccounts
     dev/modules
@@ -75,24 +76,17 @@ Reference
     reference/proposals
     reference/news
 
-Finale
-======
-
 Getting help
 ------------
 
-- Try looking the `FAQ <http://app.ecidadania.org/faq>`_.
+- Try looking the `FAQ <http://ecidadania.org/faq>`_.
 - e-cidadania mailing lists
 
   * ecidadania-users@freelists.org
   * ecidadania-dev@freelists.org
   * ecidadania-es@freelists.org
 
-- Bug reporting in the e-cidadania `bug tracker <http://dev.ecidadania.org>`_ or
+- Bug reporting in the e-cidadania `bug tracker <http://code.ecidadania.org>`_ or
   contact us through e-mail at soporte@ecidadania.org
 
-.. toctree::
-    :maxdepth: 1
-
-    authors
-
+:doc:`authors`

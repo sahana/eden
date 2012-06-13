@@ -1,3 +1,4 @@
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010-2012 Cidadania S. Coop. Galega
@@ -17,7 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 
 from nose.plugins import Plugin
 

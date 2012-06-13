@@ -1,3 +1,4 @@
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010-2012 Cidadania S. Coop. Galega
@@ -17,26 +18,25 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-"""
-This file demonstrates two different styles of tests (one doctest and one
-unittest). These will both pass when you run "manage.py test".
+from e_cidadania import url_names
 
-Replace these with more appropriate tests for your application.
-"""
+from tests.test_utils import ECDTestCase
 
-from django.test import TestCase
 
-class SimpleTest(TestCase):
-    def test_basic_addition(self):
+class IndexTestCase(ECDTestCase):   
+    """Class to test index related views.
+    """
+    
+    def testIndexView(self):
+        """Tests the index view.
         """
-        Tests that 1 + 1 always equals 2.
+        
+        response = self.get(url_name=url_names.SITE_INDEX)
+        self.assertResponseOK(response)
+    
+    def testIndexEntriesFeed(self):
+        """Tests the index entries feed view.
         """
-        self.failUnlessEqual(1 + 1, 2)
-
-__test__ = {"doctest": """
-Another way to test that 1 + 1 is equal to 2.
-
->>> 1 + 1 == 2
-True
-"""}
-
+        
+        response = self.get(url_name=url_names.SITE_FEED)
+        self.assertResponseOK(response)

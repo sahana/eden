@@ -148,7 +148,7 @@ THIRDPARTY_APPS = (
     'apps.thirdparty.smart_selects',
     'apps.thirdparty.userprofile',
     'apps.thirdparty.tagging',
-    #'django_extensions',
+    'django_extensions',
 )
 
 ECIDADANIA_MODULES = (
