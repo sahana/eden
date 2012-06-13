@@ -187,7 +187,7 @@ class S3HRModel(S3Model):
             msg_record_modified = T("Record updated"),
             msg_record_deleted = T("Record deleted"),
             msg_list_empty = T("No staff or volunteers currently registered"))
-        
+
         s3.crud_strings["hrm_staff"] = Storage(
             title_create = T("Add Staff Member"),
             title_display = T("Staff Member Details"),
@@ -219,7 +219,7 @@ class S3HRModel(S3Model):
             msg_record_modified = T("Volunteer Details updated"),
             msg_record_deleted = T("Volunteer deleted"),
             msg_list_empty = T("No Volunteers currently registered"))
-        
+
         if not settings.get_hrm_show_staff():
             s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
         elif not settings.get_hrm_show_vols():
@@ -481,8 +481,9 @@ class S3HRModel(S3Model):
 
         data = Storage()
 
-        # Affiliation
+        # Affiliation and record ownership
         s3db.pr_update_affiliations(htable, record)
+        auth.s3_set_record_owner(htable, record, force_update=True)
 
         site_id = record.site_id
         if record.type == 1 and site_id:
@@ -603,7 +604,7 @@ def hrm_service_record (r, **attr):
         person_id = vol.person_id
         organisation_id = vol.organisation_id
 
-        # Person details 
+        # Person details
         table = s3db.hrm_human_resource
         prtable = s3db.pr_person
         org_name = table.organisation_id.represent(organisation_id)
@@ -619,7 +620,7 @@ def hrm_service_record (r, **attr):
         person_details = TABLE(TR(TD(logo),
                                   TD(innerTable)
                                   ))
-        
+
         # Photo
         itable = s3db.pr_image
         query = (itable.pe_id == pe_id) & \
@@ -748,7 +749,7 @@ def hrm_service_record (r, **attr):
                                 date = tetable.start_date.represent(row.start_date),
                                 hours = row.hours,
                             )
-        
+
         # Combined Hours
         _hours = {}
         hour_list = TABLE(TR(TD(T("Programme")), TD(T("Course")), TD(T("Date")), TD(T("Hours"))))
@@ -2806,7 +2807,7 @@ class S3HRProgrammeModel(S3Model):
                                     "hours",
                                 ]
                         )
-        
+
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
