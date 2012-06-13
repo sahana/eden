@@ -273,7 +273,7 @@ class ViewDebate(DetailView):
         """
         """
         context = super(ViewDebate, self).get_context_data(**kwargs)
-        columns = Column.objectsfilter(debate=self.kwargs['debate_id'])
+        columns = Column.objects.filter(debate=self.kwargs['debate_id'])
         rows = Row.objects.filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
