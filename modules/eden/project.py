@@ -34,7 +34,8 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskIReportModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectThemeModel",
-           "project_rheader"
+           "project_rheader",
+           "project_task_controller",
            ]
 
 import datetime
@@ -3104,248 +3105,6 @@ def project_assignee_represent(id):
     return output
 
 # =============================================================================
-def project_rheader(r, tabs=[]):
-    """ Project Resource Headers - used in Project & Budget modules """
-
-    if r.representation != "html":
-        # RHeaders only used in interactive views
-        return None
-    record = r.record
-    if record is None:
-        # List or Create form: rheader makes no sense here
-        return None
-
-    table = r.table
-    resourcename = r.name
-    T = current.T
-    auth = current.auth
-    settings = current.deployment_settings
-    
-    if resourcename == "project":
-        mode_3w = settings.get_project_mode_3w()
-        mode_drr = settings.get_project_mode_drr()
-        mode_task = settings.get_project_mode_task()
-
-        # Tabs
-        ADMIN = current.session.s3.system_roles.ADMIN
-        admin = auth.s3_has_role(ADMIN)
-        #staff = auth.s3_has_role("STAFF")
-        staff = True
-
-        tabs = [(T("Basic Details"), None)]
-        append = tabs.append
-        if settings.get_project_multiple_organisations():
-            append((T("Organizations"), "organisation"))
-        if settings.get_project_theme_percentages():
-            append((T("Themes"), "theme_percentage"))
-        if mode_drr:
-            append((T("Communities"), "community"))
-        else:
-            append((T("Activities"), "activity"))
-        if settings.get_project_milestones():
-            append((T("Milestones"), "milestone"))
-        if mode_task:
-            append((T("Tasks"), "task"))
-        if record.calendar:
-            append((T("Calendar"), "timeline"))
-        if settings.get_project_multiple_budgets():
-            append((T("Annual Budgets"), "annual_budget"))
-        if mode_3w:
-            append((T("Documents"), "document"))
-        else:
-            append((T("Attachments"), "document"))
-        if settings.get_hrm_show_staff():
-            append((T("Staff"), "human_resource", dict(group="staff")))
-        if settings.get_hrm_show_vols():
-            append((T("Volunteers"), "human_resource", dict(group="volunteer")))
-
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-
-        tbl = TABLE()
-        append = tbl.append
-        fields = ["code", "name", "organisation_id", "countries_id", "start_date", "end_date"]
-        for field in fields:
-            _field = table[field]
-            if _field.readable and record[field]:
-                represent = _field.represent(record[field]) if _field.represent else record[field]
-                append(TR(
-                            TH("%s: " % _field.label),
-                            represent
-                    ))
-
-        rheader = DIV(tbl, rheader_tabs)
-
-    elif resourcename == "activity":
-        # @ToDo: integrate tabs?
-        rheader_fields = []
-        if record.project_id is not None:
-            rheader_fields.append(["project_id"])
-        rheader_fields.append(["name"])
-        rheader_fields.append(["location_id"])
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "community":
-        rheader_fields = []
-        if record.project_id is not None:
-            rheader_fields.append(["project_id"])
-        rheader_fields.append(["location_id"])
-        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-
-    elif resourcename == "task":
-        db = current.db
-        s3db = current.s3db
-
-        # Tabs
-        tabs = [(T("Details"), None)]
-        append = tabs.append
-        staff = auth.s3_has_role("STAFF")
-        if staff:
-            append((T("Time"), "time")),
-        #append((T("Comments"), "discuss"))
-        append((T("Attachments"), "document"))
-        if settings.has_module("msg"):
-            append((T("Notify"), "dispatch"))
-        #(T("Roles"), "job_role"),
-        #(T("Assignments"), "human_resource"),
-        #(T("Requests"), "req")
-
-        rheader_tabs = s3_rheader_tabs(r, tabs)
-
-        # RHeader
-        ptable = s3db.project_project
-        ltable = s3db.project_task_project
-        query = (ltable.deleted == False) & \
-                (ltable.task_id == r.id) & \
-                (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.id,
-                                   limitby=(0, 1)).first()
-        if project:
-            project = TR(
-                            TH("%s: " % T("Project")),
-                            s3db.project_project_represent(project.id)
-                        )
-        else:
-            project = ""
-
-        atable = s3db.project_activity
-        ltable = s3db.project_task_activity
-        query = (ltable.deleted == False) & \
-                (ltable.task_id == r.id) & \
-                (ltable.activity_id == atable.id)
-        activity = db(query).select(atable.name,
-                                    limitby=(0, 1)).first()
-        if activity:
-            activity = TR(
-                            TH("%s: " % T("Activity")),
-                            activity.name
-                        )
-        else:
-            activity = ""
-
-        if record.description:
-            description = TR(
-                            TH("%s: " % table.description.label),
-                            record.description
-                        )
-        else:
-            description = ""
-
-        if record.site_id:
-            facility = TR(
-                            TH("%s: " % table.site_id.label),
-                            table.site_id.represent(record.site_id),
-                        )
-        else:
-            facility = ""
-
-        if record.location_id:
-            location = TR(
-                            TH("%s: " % table.location_id.label),
-                            table.location_id.represent(record.location_id),
-                        )
-        else:
-            location = ""
-
-        if record.pe_id:
-            assignee = TR(
-                            TH("%s: " % table.pe_id.label),
-                            s3db.pr_pentity_represent(record.pe_id,
-                                                      show_label=False),
-                        )
-        else:
-            assignee = ""
-
-        if record.created_by:
-            creator = TR(
-                            TH("%s: " % T("Created by")),
-                            s3db.pr_pentity_represent(record.created_by, show_label=False),
-                        )
-        else:
-            creator = ""
-
-        if record.time_estimated:
-            time_estimated = TR(
-                            TH("%s: " % table.time_estimated.label),
-                            record.time_estimated
-                        )
-        else:
-            time_estimated = ""
-
-        if record.time_actual:
-            time_actual = TR(
-                            TH("%s: " % table.time_actual.label),
-                            record.time_actual
-                        )
-        else:
-            time_actual = ""
-
-        # Comments
-        # if r.method == "discuss":
-            # comments = ""
-        # else:
-            # ctable = s3db.project_comment
-            # query = (ctable.deleted == False) & \
-                    # (ctable.task_id == r.id)
-            # comments = db(query).select(ctable.body).last()
-            # if comments:
-                # try:
-                    # markup = etree.XML(comments.body)
-                    # text = markup.xpath(".//text()")
-                    # if text:
-                        # text = " ".join(text)
-                    # else:
-                        # text = ""
-                # except etree.XMLSyntaxError:
-                    # t = html.fromstring(comments.body)
-                    # text = t.text_content()
-                # comments = TR(
-                                # TH("%s: " % T("Latest Comment")),
-                                # A(text,
-                                  # _href=URL(args=[r.id, "discuss"]))
-                            # )
-            # else:
-                # comments = ""
-
-        rheader = DIV(TABLE(
-            project,
-            activity,
-            TR(
-                TH("%s: " % table.name.label),
-                record.name,
-                ),
-            description,
-            facility,
-            location,
-            assignee,
-            creator,
-            time_estimated,
-            time_actual,
-            #comments,
-            ), rheader_tabs)
-
-    return rheader
-
-# =============================================================================
 def task_notify(form):
     """
         If the task is assigned to someone then notify them
@@ -3856,5 +3615,513 @@ def multi_activity_represent(opt):
     else:
         vals = len(vals) and vals[0] or ""
     return vals
+
+# =============================================================================
+def project_ckeditor():
+    """ Load the Project Comments JS """
+
+    s3 = current.response.s3
+
+    ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
+    s3.scripts.append(ckeditor)
+    adapter = URL(c="static", f="ckeditor", args=["adapters", "jquery.js"])
+    s3.scripts.append(adapter)
+
+    # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
+    js = "".join(("""
+S3.i18n.reply = '""", str(current.T("Reply")), """';
+var img_path = S3.Ap.concat('/static/img/jCollapsible/');
+var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
+function comment_reply(id) {
+    $('#project_comment_task_id__row').hide();
+    $('#project_comment_task_id__row1').hide();
+    $('#comment-title').html(S3.i18n.reply);
+    var editor = $('#project_comment_body').ckeditorGet();
+    editor.destroy();
+    $('#project_comment_body').ckeditor(ck_config);
+    $('#comment-form').insertAfter($('#comment-' + id));
+    $('#project_comment_parent').val(id);
+    var task_id = $('#comment-' + id).attr('task_id');
+    $('#project_comment_task_id').val(task_id);
+}"""))
+
+    s3.js_global.append(js)
+
+# =============================================================================
+def project_discuss(r, **attr):
+    """ Custom Method to manage the discussion of a Task """
+
+    id = r.id
+
+    # Add the RHeader to maintain consistency with the other pages
+    rheader = project_rheader(r)
+
+    # Load the Project Comments JS
+    project_ckeditor()
+
+    current.response.view = "project/discuss.html"
+    return dict(rheader=rheader,
+                resourcename="task",
+                id=id)
+
+# =============================================================================
+def project_rheader(r, tabs=[]):
+    """ Project Resource Headers - used in Project & Budget modules """
+
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+    record = r.record
+    if record is None:
+        # List or Create form: rheader makes no sense here
+        return None
+
+    table = r.table
+    resourcename = r.name
+    T = current.T
+    auth = current.auth
+    settings = current.deployment_settings
+    
+    if resourcename == "project":
+        mode_3w = settings.get_project_mode_3w()
+        mode_drr = settings.get_project_mode_drr()
+        mode_task = settings.get_project_mode_task()
+
+        # Tabs
+        ADMIN = current.session.s3.system_roles.ADMIN
+        admin = auth.s3_has_role(ADMIN)
+        #staff = auth.s3_has_role("STAFF")
+        staff = True
+
+        tabs = [(T("Basic Details"), None)]
+        append = tabs.append
+        if settings.get_project_multiple_organisations():
+            append((T("Organizations"), "organisation"))
+        if settings.get_project_theme_percentages():
+            append((T("Themes"), "theme_percentage"))
+        if mode_drr:
+            append((T("Communities"), "community"))
+        else:
+            append((T("Activities"), "activity"))
+        if settings.get_project_milestones():
+            append((T("Milestones"), "milestone"))
+        if mode_task:
+            append((T("Tasks"), "task"))
+        if record.calendar:
+            append((T("Calendar"), "timeline"))
+        if settings.get_project_multiple_budgets():
+            append((T("Annual Budgets"), "annual_budget"))
+        if mode_3w:
+            append((T("Documents"), "document"))
+        else:
+            append((T("Attachments"), "document"))
+        if settings.get_hrm_show_staff():
+            append((T("Staff"), "human_resource", dict(group="staff")))
+        if settings.has_module("vol"):
+            append((T("Volunteers"), "human_resource", dict(group="volunteer")))
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        tbl = TABLE()
+        append = tbl.append
+        fields = ["code", "name", "organisation_id", "countries_id", "start_date", "end_date"]
+        for field in fields:
+            _field = table[field]
+            if _field.readable and record[field]:
+                represent = _field.represent(record[field]) if _field.represent else record[field]
+                append(TR(
+                            TH("%s: " % _field.label),
+                            represent
+                    ))
+
+        rheader = DIV(tbl, rheader_tabs)
+
+    elif resourcename == "activity":
+        # @ToDo: integrate tabs?
+        rheader_fields = []
+        if record.project_id is not None:
+            rheader_fields.append(["project_id"])
+        rheader_fields.append(["name"])
+        rheader_fields.append(["location_id"])
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    elif resourcename == "community":
+        rheader_fields = []
+        if record.project_id is not None:
+            rheader_fields.append(["project_id"])
+        rheader_fields.append(["location_id"])
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    elif resourcename == "task":
+        db = current.db
+        s3db = current.s3db
+
+        # Tabs
+        tabs = [(T("Details"), None)]
+        append = tabs.append
+        staff = auth.s3_has_role("STAFF")
+        if staff:
+            append((T("Time"), "time")),
+        #append((T("Comments"), "discuss"))
+        append((T("Attachments"), "document"))
+        if settings.has_module("msg"):
+            append((T("Notify"), "dispatch"))
+        #(T("Roles"), "job_role"),
+        #(T("Assignments"), "human_resource"),
+        #(T("Requests"), "req")
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        # RHeader
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+        query = (ltable.deleted == False) & \
+                (ltable.task_id == r.id) & \
+                (ltable.project_id == ptable.id)
+        project = db(query).select(ptable.id,
+                                   limitby=(0, 1)).first()
+        if project:
+            project = TR(
+                            TH("%s: " % T("Project")),
+                            s3db.project_project_represent(project.id)
+                        )
+        else:
+            project = ""
+
+        atable = s3db.project_activity
+        ltable = s3db.project_task_activity
+        query = (ltable.deleted == False) & \
+                (ltable.task_id == r.id) & \
+                (ltable.activity_id == atable.id)
+        activity = db(query).select(atable.name,
+                                    limitby=(0, 1)).first()
+        if activity:
+            activity = TR(
+                            TH("%s: " % T("Activity")),
+                            activity.name
+                        )
+        else:
+            activity = ""
+
+        if record.description:
+            description = TR(
+                            TH("%s: " % table.description.label),
+                            record.description
+                        )
+        else:
+            description = ""
+
+        if record.site_id:
+            facility = TR(
+                            TH("%s: " % table.site_id.label),
+                            table.site_id.represent(record.site_id),
+                        )
+        else:
+            facility = ""
+
+        if record.location_id:
+            location = TR(
+                            TH("%s: " % table.location_id.label),
+                            table.location_id.represent(record.location_id),
+                        )
+        else:
+            location = ""
+
+        if record.pe_id:
+            assignee = TR(
+                            TH("%s: " % table.pe_id.label),
+                            s3db.pr_pentity_represent(record.pe_id,
+                                                      show_label=False),
+                        )
+        else:
+            assignee = ""
+
+        if record.created_by:
+            creator = TR(
+                            TH("%s: " % T("Created by")),
+                            s3db.pr_pentity_represent(record.created_by, show_label=False),
+                        )
+        else:
+            creator = ""
+
+        if record.time_estimated:
+            time_estimated = TR(
+                            TH("%s: " % table.time_estimated.label),
+                            record.time_estimated
+                        )
+        else:
+            time_estimated = ""
+
+        if record.time_actual:
+            time_actual = TR(
+                            TH("%s: " % table.time_actual.label),
+                            record.time_actual
+                        )
+        else:
+            time_actual = ""
+
+        # Comments
+        # if r.method == "discuss":
+            # comments = ""
+        # else:
+            # ctable = s3db.project_comment
+            # query = (ctable.deleted == False) & \
+                    # (ctable.task_id == r.id)
+            # comments = db(query).select(ctable.body).last()
+            # if comments:
+                # try:
+                    # markup = etree.XML(comments.body)
+                    # text = markup.xpath(".//text()")
+                    # if text:
+                        # text = " ".join(text)
+                    # else:
+                        # text = ""
+                # except etree.XMLSyntaxError:
+                    # t = html.fromstring(comments.body)
+                    # text = t.text_content()
+                # comments = TR(
+                                # TH("%s: " % T("Latest Comment")),
+                                # A(text,
+                                  # _href=URL(args=[r.id, "discuss"]))
+                            # )
+            # else:
+                # comments = ""
+
+        rheader = DIV(TABLE(
+            project,
+            activity,
+            TR(
+                TH("%s: " % table.name.label),
+                record.name,
+                ),
+            description,
+            facility,
+            location,
+            assignee,
+            creator,
+            time_estimated,
+            time_actual,
+            #comments,
+            ), rheader_tabs)
+
+    return rheader
+
+# =============================================================================
+def project_task_controller():
+    """
+        Tasks Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    s3_rest_controller = current.rest_controller
+
+    T = current.T
+    auth = current.auth
+    request = current.request
+    session = current.session
+    s3 = current.response.s3
+    db = current.db
+    s3db = current.s3db
+    s3mgr = current.manager
+
+    tablename = "project_task"
+    table = s3db[tablename]
+    # Custom Method to add Comments
+    s3mgr.model.set_method("project", "task",
+                           method="discuss",
+                           action=project_discuss)
+
+    statuses = s3.project_task_active_statuses
+    crud_strings = s3.crud_strings[tablename]
+    if "mine" in request.get_vars:
+        # Show the Open Tasks for this User
+        crud_strings.title_list = T("My Open Tasks")
+        crud_strings.msg_list_empty = T("No Tasks Assigned")
+        s3mgr.configure(tablename,
+                        copyable=False,
+                        listadd=False)
+        try:
+            # Add Virtual Fields
+            list_fields = s3mgr.model.get_config(tablename,
+                                                 "list_fields")
+            list_fields.insert(4, (T("Project"), "project"))
+            # Hide the Assignee column (always us)
+            list_fields.remove("pe_id")
+            # Hide the Status column (always 'assigned' or 'reopened')
+            list_fields.remove("status")
+            s3mgr.configure(tablename,
+                            list_fields=list_fields)
+        except:
+            pass
+        if auth.user:
+            pe_id = auth.user.pe_id
+            s3.filter = (table.pe_id == pe_id) & \
+                        (table.status.belongs(statuses))
+    elif "project" in request.get_vars:
+        # Show Open Tasks for this Project
+        project = request.get_vars.project
+        ptable = s3db.project_project
+        try:
+            name = db(ptable.id == project).select(ptable.name,
+                                                   limitby=(0, 1)).first().name
+        except:
+            session.error = T("Project not Found")
+            redirect(URL(args=None, vars=None))
+        crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
+        crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
+        crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
+        # Add Virtual Fields
+        list_fields = s3mgr.model.get_config(tablename,
+                                             "list_fields")
+        list_fields.insert(2, (T("Activity"), "activity"))
+        s3mgr.configure(tablename,
+                        # Block Add until we get the injectable component lookups
+                        insertable=False,
+                        deletable=False,
+                        copyable=False,
+                        #search_method=task_search,
+                        list_fields=list_fields)
+        ltable = s3db.project_task_project
+        response.s3.filter = (ltable.project_id == project) & \
+                             (ltable.task_id == table.id) & \
+                             (table.status.belongs(statuses))
+    else:
+        crud_strings.title_list = T("All Tasks")
+        crud_strings.title_search = T("All Tasks")
+        list_fields = s3mgr.model.get_config(tablename,
+                                             "list_fields")
+        list_fields.insert(2, (T("Project"), "project"))
+        list_fields.insert(3, (T("Activity"), "activity"))
+        s3mgr.configure(tablename,
+                        report_options=Storage(
+                            search=[
+                                s3base.S3SearchOptionsWidget(
+                                    field="project",
+                                    name="project",
+                                    label=T("Project")
+                                )
+                            ]
+                        ),
+                        list_fields=list_fields)
+        if "open" in request.get_vars:
+            # Show Only Open Tasks
+            crud_strings.title_list = T("All Open Tasks")
+            s3.filter = (table.status.belongs(statuses))
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.record:
+                # Put the Comments in the RFooter
+                project_ckeditor()
+                s3.rfooter = LOAD("project", "comments.load", args=["task", r.id], ajax=True)
+            if r.component:
+                if r.component_name == "req":
+                    if deployment_settings.has_module("hrm"):
+                        r.component.table.type.default = 3
+                    if r.method != "update" and r.method != "read":
+                        # Hide fields which don't make sense in a Create form
+                        s3db.req_create_form_mods()
+                elif r.component_name == "human_resource":
+                    r.component.table.type.default = 2
+            else:
+                if not auth.s3_has_role("STAFF"):
+                    # Hide fields to avoid confusion (both of inputters & recipients)
+                    table = r.table
+                    field = table.source
+                    field.readable = field.writable = False
+                    field = table.pe_id
+                    field.readable = field.writable = False
+                    field = table.date_due
+                    field.readable = field.writable = False
+                    field = table.milestone_id
+                    field.readable = field.writable = False
+                    field = table.time_estimated
+                    field.readable = field.writable = False
+                    field = table.time_actual
+                    field.readable = field.writable = False
+                    field = table.status
+                    field.readable = field.writable = False
+        return True
+    s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive:
+            if r.method != "import":
+                update_url = URL(args=["[id]"], vars=request.get_vars)
+                s3mgr.crud.action_buttons(r,
+                                          update_url=update_url)
+                if not r.component and \
+                   r.method != "search" and \
+                   "form" in output:
+                    # Insert fields to control the Project & Activity
+                    sep = ": "
+                    if auth.s3_has_role("STAFF"):
+                        # Activity not easy for non-Staff to know about, so don't add
+                        table = s3db.project_task_activity
+                        field = table.activity_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.activity_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.activity_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = "%s_%s" % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        activity = s3.crud.formstyle(row_id, label, widget, field.comment)
+                        try:
+                            output["form"][0].insert(0, activity[1])
+                        except:
+                            # A non-standard formstyle with just a single row
+                            pass
+                        try:
+                            output["form"][0].insert(0, activity[0])
+                        except:
+                            pass
+                        s3.scripts.append("%s/s3.project.js" % s3_script_dir)
+                    if "project" in request.get_vars:
+                        widget = INPUT(value=request.get_vars.project, _name="project_id")
+                        project = s3.crud.formstyle("project_task_project__row", "", widget, "")
+                    else:
+                        table = s3db.project_task_project
+                        field = table.project_id
+                        if r.record:
+                            query = (table.task_id == r.record.id)
+                            default = db(query).select(table.project_id,
+                                                       limitby=(0, 1)).first()
+                            if default:
+                                default = default.project_id
+                        else:
+                            default = field.default
+                        widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                        field_id = "%s_%s" % (table._tablename, field.name)
+                        label = field.label
+                        label = LABEL(label, label and sep, _for=field_id,
+                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                        comment = field.comment if auth.s3_has_role("STAFF") else ""
+                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                        project = s3.crud.formstyle(row_id, label, widget, comment)
+                    try:
+                        output["form"][0].insert(0, project[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(0, project[0])
+                    except:
+                        pass
+
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller("project", "task",
+                              rheader=s3db.project_rheader)
 
 # END =========================================================================

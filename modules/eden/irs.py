@@ -965,10 +965,12 @@ class S3IRSResponseModel(S3Model):
         human_resource_id = self.hrm_human_resource_id
         location_id = self.gis_location_id
         ireport_id = self.irs_ireport_id
-        
-        if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
+
+        hrm = settings.get_hrm_show_staff()
+        vol = settings.has_module("vol")
+        if hrm and not vol:
             hrm_label = T("Staff")
-        elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
+        elif vol and not hrm:
             hrm_label = T("Volunteer")
         else:
             hrm_label = T("Staff/Volunteer")
@@ -1101,12 +1103,6 @@ def irs_rheader(r, tabs=[]):
         s3db = current.s3db
         #s3 = current.response.s3
         settings = current.deployment_settings
-        #if settings.get_hrm_show_staff() and not settings.get_hrm_show_vols():
-        #    hrm_label = T("Staff")
-        #elif settings.get_hrm_show_vols() and not settings.get_hrm_show_staff():
-        #    hrm_label = T("Volunteers")
-        #else:
-        #    hrm_label = T("Staff & Volunteers")
         hrm_label = T("Responder(s)")
             
         tabs = [(T("Report Details"), None),

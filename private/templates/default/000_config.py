@@ -422,8 +422,6 @@ deployment_settings.L10n.decimal_separator = "."
 #deployment_settings.hrm.deletable = True
 # Uncomment to hide the Staff resource
 #deployment_settings.hrm.show_staff = False
-# Uncomment to hide the Volunteer resource
-#deployment_settings.hrm.show_vols = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #deployment_settings.hrm.skill_types = True
 # Uncomment to use an alternate table for HR experience

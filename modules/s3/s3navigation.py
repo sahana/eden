@@ -27,7 +27,6 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @status: work in progress - help welcome!
     @todo: - re-write tabs and popup links as S3NavigationItems
            - refine check_selected (e.g. must be False if link=False)
            - implement collapse-flag (render only components in a TAG[""])

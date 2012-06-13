@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Human Resource Management
+    Volunteer Management
 """
 module = request.controller
 resourcename = request.function
@@ -21,7 +21,7 @@ def index():
         redirect(URL(f="person"))
     else:
         # Bypass home page & go direct to searchable list of Volunteers
-        redirect(URL(f="staff", args="search"))
+        redirect(URL(f="volunteer", args="search"))
 
 # =============================================================================
 # People
@@ -35,43 +35,60 @@ def human_resource():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
-    # Default to Staff
+    # Generate Service Record
+    s3mgr.model.set_method("hrm",
+                           "human_resource",
+                           method="form",
+                           action=s3db.hrm_service_record
+                          )
+
+    
     _type = table.type
-    _type.default = 1
-    s3.filter = (_type == 1)
+    _type.default = 2
+    s3.filter = (_type == 2)
     _type.readable = False
     _type.writable = False
-    table.site_id.writable = True
-    table.site_id.readable = True
+    _location = table.location_id
+    _location.writable = True
+    _location.readable = True
+    _location.label = T("Home Address")
+    table.site_contact.writable = False
+    table.site_contact.readable = False
     list_fields = ["id",
                    "person_id",
                    "job_role_id",
                    "organisation_id",
-                   "site_id",
-                   #"site_contact",
+                   "location_id",
                    (T("Email"), "email"),
                    (deployment_settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate"),
-                   (T("Contract End Date"), "end_date"),
-                   "status",
+                   (T("Certificates"), "certificate")
                   ]
+    if deployment_settings.get_hrm_experience() == "programme":
+        # Add Programme Virtual Fields
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+        # Add VF to List Fields
+        list_fields.append((T("Programme"), "programme"))
+        list_fields.append((T("Active?"), "active"))
+    else:
+        list_fields.append("status")
     s3mgr.configure(tablename,
                     list_fields = list_fields)
-    if "expiring" in request.get_vars:
-        s3.filter = s3.filter & \
-            (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
-        s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
-        # Remove the big Add button
-        s3mgr.configure(tablename,
-                        insertable=False)
+    table.job_role_id.label = T("Volunteer Role")
+    # Remove inappropriate filters from the Search widget
+    human_resource_search = s3mgr.model.get_config(tablename,
+                                                   "search_method")
+    # Facility
+    human_resource_search._S3Search__advanced.pop(5)
+    s3mgr.configure(tablename,
+                    search_method = human_resource_search)
 
     def prep(r):
         if r.method == "form":
             return True
         if r.interactive:
-            # Assume staff only between 16-81
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
+            # Assume volunteers only between 12-81
+            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
             table = r.table
             table.site_id.comment = DIV(DIV(_class="tooltip",
@@ -91,7 +108,7 @@ def human_resource():
                 # Redirect to person controller
                 vars = {
                         "human_resource.id" : r.id,
-                        "group" : "staff"
+                        "group" : "volunteer"
                         }
                 redirect(URL(f="person",
                              vars=vars))
@@ -116,62 +133,123 @@ def human_resource():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", "human_resource")
     return output
 
 # -----------------------------------------------------------------------------
-def staff():
+def volunteer():
     """
-        Staff Controller
+        Volunteer Controller
     """
-
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
     _type = table.type
-    _type.default = 1
-    s3.filter = (_type == 1)
-    table.site_id.writable = True
-    table.site_id.readable = True
+    _type.default = 2
+    s3.filter = (_type == 2)
+    _location = table.location_id
+    _location.writable = True
+    _location.readable = True
+    _location.label = T("Home Address")
+    table.site_contact.writable = False
+    table.site_contact.readable = False
+    table.code.writable = False
+    table.code.readable = False
+    table.department.writable = False
+    table.department.readable = False
+    table.essential.writable = False
+    table.essential.readable = False
+    table.job_role_id.label = T("Volunteer Role")
     list_fields = ["id",
                    "person_id",
                    "job_role_id",
                    "organisation_id",
-                   "site_id",
-                   #"site_contact",
+                   "location_id",
                    (T("Email"), "email"),
                    (deployment_settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate"),
-                   (T("Contract End Date"), "end_date"),
-                   "status",
+                   (T("Certificates"), "certificate")
                   ]
-    s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
-    if "expiring" in request.get_vars:
-        s3.filter = s3.filter & \
-            (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
-        s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
-        # Remove the big Add button
-        s3mgr.configure(tablename,
-                        insertable=False)
-    # Remove Type filter from the Search widget
+    report_options = s3mgr.model.get_config(tablename,
+                                            "report_options")
+    # Remove inappropriate filters from the Search widget
     human_resource_search = s3mgr.model.get_config(tablename,
                                                    "search_method")
-    human_resource_search._S3Search__advanced.pop(1)
+    # Remove Facility
+    human_resource_search._S3Search__advanced.pop(5)
+    if deployment_settings.get_hrm_experience() == "programme":
+        # Add Programme Virtual Fields
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+        # Add VF to List Fields
+        list_fields.append((T("Programme"), "programme"))
+        list_fields.append((T("Active?"), "active"))
+        # Add VF to Report Options
+        report_fields = report_options.rows
+        report_fields.append((T("Programme"), "programme"))
+        report_fields.append((T("Active?"), "active"))
+        report_options.rows = report_fields
+        report_options.cols = report_fields
+        report_options.facts = report_fields
+        # Add VF to the Search Filters
+        # Remove deprecated Active/Obsolete
+        human_resource_search._S3Search__advanced.pop(1)
+        table.status.readable = False
+        table.status.writable = False
+        widget = s3base.S3SearchOptionsWidget(
+                            name="human_resource_search_active",
+                            label=T("Active?"),
+                            field="active",
+                            cols = 2,
+                            options = {
+                                    True:  T("Yes"),
+                                    False: T("No")
+                                }
+                          ),
+        search_widget = ("human_resource_search_active", widget[0])
+        human_resource_search._S3Search__advanced.insert(1, search_widget)
+        def hrm_programme_opts():
+            """
+                Provide the options for the HRM programme search filter
+
+                @ToDo: S3resource-based version to use accessible_realm-based
+                       filtering rather than crude 'this user's org'
+            """
+            ptable = s3db.hrm_programme
+            organisation_id = auth.user.organisation_id
+            query = (ptable.deleted == False) & \
+                    ((ptable.organisation_id == organisation_id) | \
+                      (ptable.organisation_id == None))
+            opts = db(query).select(ptable.name)
+            _dict = {}
+            for opt in opts:
+                _dict[opt.name] = opt.name
+            return _dict
+        widget = s3base.S3SearchOptionsWidget(
+                            name="human_resource_search_programme",
+                            label=T("Programme"),
+                            field="programme",
+                            cols = 2,
+                            options = hrm_programme_opts
+                          ),
+        search_widget = ("human_resource_search_programme", widget[0])
+        human_resource_search._S3Search__advanced.insert(3, search_widget)
+    else:
+        list_fields.append("status")
+    s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
     s3mgr.configure(tablename,
                     list_fields = list_fields,
+                    report_options = report_options,
                     search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
-            # Assume staff only between 16-81
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
-
+            # Assume volunteers only between 12-81
+            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
             table = r.table
             table.site_id.comment = DIV(DIV(_class="tooltip",
                                             _title="%s|%s|%s" % (T("Facility"),
-                                                                 T("The site where this position is based."),
-                                                                 T("Enter some characters to bring up a list of possible matches."))))
+                                                                T("The site where this position is based."),
+                                                                T("Enter some characters to bring up a list of possible matches."))))
             if r.method != "read":
                 # Don't want to see in Create forms
                 # inc list_create (list_fields over-rides)
@@ -189,7 +267,7 @@ def staff():
                 # Redirect to person controller
                 vars = {
                     "human_resource.id": r.id,
-                    "group": "staff"
+                    "group": "volunteer"
                 }
                 redirect(URL(f="person",
                              vars=vars))
@@ -207,7 +285,7 @@ def staff():
                                        vars = {"hrm_id": "[id]"}),
                             "_class": "action-btn",
                             "label": str(T("Send Message"))
-                        })
+                       })
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
@@ -276,7 +354,7 @@ def person():
                   editable = False,
                   deletable = False)
 
-    group = request.get_vars.get("group", "staff")
+    group = request.get_vars.get("group", "volunteer")
     hr_id = request.get_vars.get("human_resource.id", None)
     if not str(hr_id).isdigit():
         hr_id = None
@@ -305,29 +383,35 @@ def person():
                                     filterby="organisation_id",
                                     filter_opts=[session.s3.hrm.org]))
     if hr_id:
-        table.site_id.writable = True
-        table.site_id.readable = True
-    else:
+        table.job_role_id.label = T("Volunteer Role")
+        table.code.writable = False
+        table.code.readable = False
+        table.department.writable = False
+        table.department.readable = False
+        table.essential.writable = False
+        table.essential.readable = False
+        table.location_id.writable = True
         table.location_id.readable = True
-        table.site_id.readable = True
+        table.location_id.label = T("Home Address")
 
     if session.s3.hrm.mode is not None:
         list_fields=["id",
                      "organisation_id",
-                     "type",
                      "job_role_id",
                      "location_id",
-                     "site_id",
-                     "status"
-                     ]
+                     "site_id"]
     else:
         list_fields=["id",
-                     "type",
                      "job_role_id",
                      "location_id",
-                     "site_id",
-                     "status"
-                     ]
+                     "site_id"]
+
+    if deployment_settings.get_hrm_experience() == "programme":
+        list_fields.append((T("Programme?"), "programme"))
+        list_fields.append((T("Active?"), "active"))
+        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
+    else:
+        list_fields.append("status")
 
     configure(tablename,
               list_fields=list_fields)
@@ -348,25 +432,12 @@ def person():
               deletable=False)
 
     s3.crud_strings[tablename].update(
-        title_upload = T("Import Staff"))
-    # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-    table.occupation.readable = False
-    table.occupation.writable = False
-    # Just have a Home Address
-    table = s3db.pr_address
-    #table.type.default = 1
-    #table.type.readable = False
-    #table.type.writable = False
-    _crud = s3.crud_strings.pr_address
-    _crud.title_create = T("Add Home Address")
-    _crud.title_update = T("Edit Home Address")
-    #s3mgr.model.add_component("pr_address",
-    #                          pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
-    #                                          multiple=False))
+        title_upload = T("Import Volunteers"))
+    table.occupation.label = T("Previous Job")
     # Default type for HR
-    table = s3db.hrm_human_resource
-    table.type.default = 1
-    request.get_vars.update(xsltmode="staff")
+    table = db.hrm_human_resource
+    table.type.default = 2
+    request.get_vars.update(xsltmode="volunteer")
 
     if session.s3.hrm.mode is not None:
         # Configure for personal mode
@@ -407,15 +478,10 @@ def person():
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
-            title_upload = T("Import Staff & Volunteers"))
-        if group == "staff":
-            s3.crud_strings[tablename].update(
-                title_display = T("Staff Member Details"),
-                title_update = T("Staff Member Details"))
-        elif group == "volunteer":
-            s3.crud_strings[tablename].update(
-                title_display = T("Volunteer Details"),
-                title_update = T("Volunteer Details"))
+            title_display = T("Volunteer Details"),
+            title_update = T("Volunteer Details"),
+            title_upload = T("Import Volunteers"),
+            )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -542,12 +608,13 @@ def person_search():
         - limited to just search.json for use in Autocompletes
         - allows differential access permissions
     """
+
     s3mgr.configure("hrm_human_resource",
                     search_method = s3db.hrm_autocomplete_search,
                    )
     s3.prep = lambda r: r.representation == "json" and \
                         r.method == "search"
-    return s3_rest_controller(module, "human_resource")
+    return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
 # Teams
@@ -664,7 +731,7 @@ def job_role():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # =============================================================================
@@ -678,7 +745,7 @@ def skill():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -690,7 +757,7 @@ def skill_type():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -702,7 +769,7 @@ def competency_rating():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -714,7 +781,7 @@ def skill_provision():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -726,7 +793,8 @@ def course():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    output = s3_rest_controller("hrm", resourcename,
+                                rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -738,7 +806,7 @@ def course_certificate():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -752,7 +820,8 @@ def certificate():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    output = s3_rest_controller("hrm", resourcename,
+                                rheader=s3db.hrm_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -764,7 +833,7 @@ def certificate_skill():
         session.error = T("Access denied")
         redirect(URL(f="index"))
 
-    output = s3_rest_controller()
+    output = s3_rest_controller("hrm", resourcename)
     return output
 
 # -----------------------------------------------------------------------------
@@ -816,6 +885,42 @@ def staff_org_site_json():
 
     response.headers["Content-Type"] = "application/json"
     return records.json()
+
+# =============================================================================
+def programme():
+    """ Volunteer Programmes Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller("hrm", resourcename,
+                                rheader=s3db.hrm_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
+def programme_hours():
+    """
+        Volunteer Programme Hours Controller
+        - just meant for Imports
+    """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller("hrm", resourcename)
+    return output
+
+# =============================================================================
+def task():
+    """
+        Tasks controller
+    """
+
+    return s3db.project_task_controller()
 
 # =============================================================================
 # Messaging

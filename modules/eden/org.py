@@ -32,12 +32,12 @@ __all__ = ["S3OrganisationModel",
            "S3FacilityModel",
            "S3RoomModel",
            "S3OfficeModel",
-           "org_organisation_represent",
            "org_organisation_logo",
-           "org_rheader",
-           "org_site_represent",
-           "org_organisation_controller",
            "org_root_organisation",
+           "org_organisation_represent",
+           "org_site_represent",
+           "org_rheader",
+           "org_organisation_controller",
            "org_office_controller",
            ]
 
@@ -1483,66 +1483,6 @@ class S3OfficeModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
-    """
-        Represent an Organisation in option fields or list views
-
-        @param showlink: whether to make the output into a hyperlink
-        @param acronym: whether to show any acronym present
-        @param parent: whether to show the parent Org for branches
-    """
-
-    db = current.db
-    s3db = current.s3db
-
-    if not parent and isinstance(id, Row):
-        # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
-        org = id
-    elif parent:
-        otable = s3db.org_organisation
-        btable = s3db.org_organisation_branch
-        query = (otable.id == id)
-        left = btable.on(btable.branch_id == otable.id)
-        org = db(query).select(otable.name,
-                               otable.acronym,
-                               btable.organisation_id,
-                               left = left,
-                               limitby = (0, 1)).first()
-    else:
-        otable = s3db.org_organisation
-        query = (otable.id == id)
-        org = db(query).select(otable.name,
-                               otable.acronym,
-                               limitby = (0, 1)).first()
-
-    if org:
-        if parent:
-            represent = org.org_organisation.name
-            if "org_organisation_branch" in org:
-                # We're a Branch
-                query = (otable.id == org.org_organisation_branch.organisation_id)
-                parent = db(query).select(otable.name,
-                                          limitby = (0, 1)).first()
-                if parent:
-                    represent = "%s > %s" % (parent.name,
-                                            represent)
-            elif acronym and org.org_organisation.acronym:
-                represent = "%s (%s)" % (represent,
-                                         org.org_organisation.acronym)
-        else:
-            represent = org.name
-            if acronym and org.acronym:
-                represent = "%s (%s)" % (represent,
-                                         org.acronym)
-        if showlink:
-            represent = A(represent,
-                          _href = URL(c="org", f="organisation", args = [id]))
-    else:
-        represent = current.messages.NONE
-
-    return represent
-
-# =============================================================================
 def org_organisation_logo(id, type="png"):
     """
         Return a logo of the organisation with the given id, if one exists
@@ -1636,6 +1576,66 @@ def org_root_organisation(organisation_id=None, pe_id=None):
             return (row.id, row.pe_id)
 
     return None, None
+
+# =============================================================================
+def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
+    """
+        Represent an Organisation in option fields or list views
+
+        @param showlink: whether to make the output into a hyperlink
+        @param acronym: whether to show any acronym present
+        @param parent: whether to show the parent Org for branches
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    if not parent and isinstance(id, Row):
+        # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
+        org = id
+    elif parent:
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
+        query = (otable.id == id)
+        left = btable.on(btable.branch_id == otable.id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               btable.organisation_id,
+                               left = left,
+                               limitby = (0, 1)).first()
+    else:
+        otable = s3db.org_organisation
+        query = (otable.id == id)
+        org = db(query).select(otable.name,
+                               otable.acronym,
+                               limitby = (0, 1)).first()
+
+    if org:
+        if parent:
+            represent = org.org_organisation.name
+            if "org_organisation_branch" in org:
+                # We're a Branch
+                query = (otable.id == org.org_organisation_branch.organisation_id)
+                parent = db(query).select(otable.name,
+                                          limitby = (0, 1)).first()
+                if parent:
+                    represent = "%s > %s" % (parent.name,
+                                            represent)
+            elif acronym and org.org_organisation.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.org_organisation.acronym)
+        else:
+            represent = org.name
+            if acronym and org.acronym:
+                represent = "%s (%s)" % (represent,
+                                         org.acronym)
+        if showlink:
+            represent = A(represent,
+                          _href = URL(c="org", f="organisation", args = [id]))
+    else:
+        represent = current.messages.NONE
+
+    return represent
 
 # =============================================================================
 def org_site_represent(id, show_link=True):

@@ -46,6 +46,7 @@ import eden.support
 import eden.survey
 import eden.sync
 import eden.vehicle
+import eden.vol
 
 # =============================================================================
 # Import S3 meta fields into global namespace

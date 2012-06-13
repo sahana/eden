@@ -2,8 +2,6 @@
 
 """
     GIS Controllers
-
-    @author: Fran Boon <fran@aidiq.com>
 """
 
 module = request.controller

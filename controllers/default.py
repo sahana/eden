@@ -167,7 +167,7 @@ def index():
                 ["facility", T("Hospitals"), "hms", "hospital"],
                 ["facility", T("Offices"), "org", "office"],
                 ["sit", T("Staff"), "hrm", "staff"],
-                ["sit", T("Volunteers"), "hrm", "volunteer"],
+                ["sit", T("Volunteers"), "vol", "volunteer"],
                 ["sit", T("Incidents"), "irs", "ireport"],
                 ["sit", T("Assessments"), "survey", "series"],
                 ["sit", T("Assets"), "asset", "asset"],
@@ -196,16 +196,16 @@ def index():
     for div, label, app, function in menu_btns:
         if deployment_settings.has_module(app):
             # @ToDo: Also check permissions (e.g. for anonymous users)
-            menu_divs[div].append(A( DIV(label,
-                                         _class = "menu-btn-r"),
-                                     _class = "menu-btn-l",
-                                     _href = URL(app,function)
+            menu_divs[div].append(A(DIV(label,
+                                        _class = "menu-btn-r"),
+                                    _class = "menu-btn-l",
+                                    _href = URL(app,function)
                                     )
                                  )
 
     div_arrow = DIV(IMG(_src = "/%s/static/img/arrow_blue_right.png" % \
-                               request.application),
-                          _class = "div_arrow")
+                                request.application),
+                    _class = "div_arrow")
     sit_dec_res_box = DIV(menu_divs["sit"],
                           div_arrow,
                           menu_divs["dec"],
@@ -216,11 +216,11 @@ def index():
                      #div_additional,
                     )
     facility_box  = menu_divs["facility"]
-    facility_box.append( A( IMG(_src = "/%s/static/img/map_icon_128.png" % \
+    facility_box.append(A(IMG(_src = "/%s/static/img/map_icon_128.png" % \
                                     request.application),
-                            _href = URL(c="gis", f="index"),
-                            _title = T("Map")
-                            )
+                          _href = URL(c="gis", f="index"),
+                          _title = T("Map")
+                          )
                         )
 
     datatable_ajax_source = ""

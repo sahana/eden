@@ -638,15 +638,10 @@ class S3Config(Storage):
 
     def get_hrm_show_staff(self):
         """
-            If set to True then HRM module exposes the Staff resource
+            If set to True then show 'Staff' options when HRM enabled
+            - needs a separate setting as vol requires hrm, but we may only wish to show Volunteers
         """
         return self.hrm.get("show_staff", True)
-
-    def get_hrm_show_vols(self):
-        """
-            If set to True then HRM module exposes the Volunteer resource
-        """
-        return self.hrm.get("show_vols", True)
 
     def get_hrm_skill_types(self):
         """
@@ -673,46 +668,55 @@ class S3Config(Storage):
             Enable 3W mode in the projects module
         """
         return self.project.get("mode_3w", False)
+
     def get_project_mode_task(self):
         """
             Enable Tasks mode in the projects module
         """
         return self.project.get("mode_task", False)
+
     def get_project_mode_drr(self):
         """
             Enable DRR mode in the projects module
         """
         return self.project.get("mode_drr", False)
+
     def get_project_codes(self):
         """
             Use Codes in Projects
         """
         return self.project.get("codes", False)
+
     def get_project_milestones(self):
         """
             Use Milestones in Projects
         """
         return self.project.get("milestones", False)
+
     def get_project_sectors(self):
         """
             Use Sectors in Projects
         """
         return self.project.get("sectors", True)
+
     def get_project_theme_percentages(self):
         """
             Use Theme Percentages in Projects
         """
         return self.project.get("theme_percentages", False)
+
     def get_project_multiple_budgets(self):
         """
             Use Multiple Budgets in Projects
         """
         return self.project.get("multiple_budgets", False)
+
     def get_project_multiple_organisations(self):
         """
             Use Multiple Organisations in Projects
         """
         return self.project.get("multiple_organisations", False)
+
     def get_project_organisation_roles(self):
         T = current.T
         return self.project.get("organisation_roles", {
@@ -722,6 +726,7 @@ class S3Config(Storage):
                 4: T("Customer"), # T("Beneficiary")?
                 5: T("Supplier"), # T("Beneficiary")?
             })
+
     def get_project_organisation_lead_role(self):
         return self.project.get("organisation_lead_role", 1)
 

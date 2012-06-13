@@ -796,7 +796,6 @@ class S3OptionsMenu:
     def hrm(self):
         """ HRM / Human Resources Management """
 
-        settings = current.deployment_settings
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
 
@@ -807,13 +806,9 @@ class S3OptionsMenu:
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
 
-        show_staff = lambda i: settings.get_hrm_show_staff()
-        show_vols = lambda i: settings.get_hrm_show_vols()
-        show_programmes = lambda i: s3.hrm.mode is None and settings.get_hrm_experience() == "programme"
-
         return M(c="hrm")(
                     M("Staff", f="staff",
-                      check=[manager_mode, show_staff])(
+                      check=[manager_mode])(
                         M("New Staff Member", m="create"),
                         M("List All"),
                         M("Search", m="search"),
@@ -827,8 +822,80 @@ class S3OptionsMenu:
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
+                    M("Teams", f="group",
+                      check=manager_mode)(
+                        M("New Team", m="create"),
+                        M("List All"),
+                    ),
+                    M("Job Role Catalog", f="job_role",
+                      check=manager_mode)(
+                        M("New Job Role", m="create"),
+                        M("List All"),
+                    ),
+                    M("Skill Catalog", f="skill",
+                      check=manager_mode)(
+                        M("New Skill", m="create"),
+                        M("List All"),
+                        #M("Skill Provisions", f="skill_provision"),
+                    ),
+                    M("Training Events", f="training_event",
+                      check=manager_mode)(
+                        M("New Training Event", m="create"),
+                        M("List All Training Events"),
+                        M("Search Training Events", m="search"),
+                        M("Search Training Participants", f="training",
+                          m="search"),
+                        M("Training Report", f="training", m="report",
+                          vars=dict(rows="training_event_id$course_id",
+                                    cols="month",
+                                    fact="person_id",
+                                    aggregate="count")),
+                        M("Import Participant List", f="training", m="import"),
+                    ),
+                    M("Training Course Catalog", f="course",
+                      check=manager_mode)(
+                        M("New Training Course", m="create"),
+                        M("List All"),
+                        #M("Course Certificates", f="course_certificate"),
+                    ),
+                    M("Certificate Catalog", f="certificate",
+                      check=manager_mode)(
+                        M("New Certificate", m="create"),
+                        M("List All"),
+                        #M("Skill Equivalence", f="certificate_skill"),
+                    ),
+                    M("Personal Profile", f="person",
+                      check=personal_mode, vars=dict(mode="personal")),
+                    # This provides the link to switch to the manager mode:
+                    M("Staff Management", f="index",
+                      check=[personal_mode, is_org_admin]),
+                    # This provides the link to switch to the personal mode:
+                    M("Personal Profile", f="person",
+                      check=manager_mode, vars=dict(mode="personal"))
+                )
+
+    # -------------------------------------------------------------------------
+    def vol(self):
+        """ Volunteer Management """
+
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
+
+        # Custom conditions for the check-hook, as lambdas in order
+        # to have them checked only immediately before rendering:
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+
+        settings = current.deployment_settings
+        show_programmes = lambda i: settings.get_hrm_experience() == "programme"
+        show_tasks = lambda i: settings.has_module("project") and \
+                               settings.get_project_mode_task()
+
+        return M(c="vol")(
                     M("Volunteers", f="volunteer",
-                      check=[manager_mode, show_vols])(
+                      check=[manager_mode])(
                         M("New Volunteer", m="create"),
                         M("List All"),
                         M("Search", m="search"),
@@ -883,15 +950,19 @@ class S3OptionsMenu:
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Programmes", f="programme",
-                      check=show_programmes)(
+                      check=[manager_mode, show_programmes])(
                         M("New Programme", m="create"),
                         M("List All"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
-                    M("Profile", f="person",
+                    M("My Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
+                    M("My Tasks", f="task",
+                      check=[personal_mode, show_tasks],
+                      vars=dict(mode="personal",
+                                mine=1)),
                     # This provides the link to switch to the manager mode:
-                    M("Human Resources", f="index",
+                    M("Volunteer Management", f="index",
                       check=[personal_mode, is_org_admin]),
                     # This provides the link to switch to the personal mode:
                     M("Personal Profile", f="person",
@@ -1446,24 +1517,6 @@ class S3OptionsMenu:
                         M("List All"),
                         M("Search", m="search"),
                     ),
-                )
-
-    # -------------------------------------------------------------------------
-    def vol(self):
-        """ VOL / Volunteer """
-
-        # @todo: this module does not longer exist - remove menu?
-
-        settings = current.deployment_settings
-
-        # Custom conditions
-        logged_in = lambda i: current.auth.user is not None
-        hrm_enabled = lambda i: settings.has_module("hrm")
-        project_enabled = lambda i: settings.has_module("project")
-
-        return M(c="vol")(
-                    M("My Details", f="person", check=[logged_in, hrm_enabled]),
-                    M("My Tasks", f="task", check=[logged_in, project_enabled]),
                 )
 
     # -------------------------------------------------------------------------

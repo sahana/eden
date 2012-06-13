@@ -10,7 +10,7 @@ module = request.controller
 prefix = request.controller
 resourcename = request.function
 
-if prefix not in deployment_settings.modules:
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % prefix)
 
 MISSING = str(T("Missing"))
