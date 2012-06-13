@@ -206,7 +206,7 @@ def update_note(request, space_name):
     else:
         msg = "There was some error in the petition."
 
-return HttpResponse(msg)
+    return HttpResponse(msg)
 
 
 def update_position(request, space_name):
