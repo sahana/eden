@@ -82,17 +82,17 @@
                 </span>
             </div>
         </div>
-        <div class="clearfix {% if form.scope.errors %}error{% endif%}">
-            <label for="prependedInput">{{ form.scope.label }}</label>
+        <div class="clearfix {% if form.theme.errors %}error{% endif%}">
+            <label for="prependedInput">{{ form.theme.label }}</label>
             <div class="input">
-                {{ form.scope }}
+                {{ form.theme }}
                 <span class="help-inline">
-                    {% if form.scope.errors %}
-                    {% for error in form.scope.errors %}
+                    {% if form.theme.errors %}
+                    {% for error in form.theme.errors %}
                     {{ error|escape }}
                     {% endfor %}
                     {% else %}
-                    {{ form.scope.help_text }}
+                    {{ form.theme.help_text }}
                     {% endif %}
                 </span>
             </div>
