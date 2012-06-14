@@ -1,0 +1,87 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+#   <hugo.deslongchamps@googlemail.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: e-cidadania\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2012-06-14 11:43+0200\n"
+"PO-Revision-Date: 2012-06-13 17:19+0000\n"
+"Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
+"Language-Team: French (http://www.transifex.net/projects/p/ecidadania/language/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+
+#: models.py:35
+msgid "Male"
+msgstr "Homme"
+
+#: models.py:36
+msgid "Female"
+msgstr "Femme"
+
+#: models.py:44
+msgid "Interes"
+msgstr "Intérêts"
+
+#: models.py:56
+msgid "Name"
+msgstr "Prénom"
+
+#: models.py:57
+msgid "Surname"
+msgstr "Nom"
+
+#: models.py:58
+msgid "Gender"
+msgstr "Sexe"
+
+#: models.py:61
+msgid "Birth date"
+msgstr "Date de naissance"
+
+#: models.py:79
+msgid "District"
+msgstr "Quartier"
+
+#: models.py:82
+msgid "Address"
+msgstr "Adresse"
+
+#: models.py:83
+msgid "Number"
+msgstr "Numéro"
+
+#: models.py:85
+msgid "Floor"
+msgstr "Etage"
+
+#: models.py:86
+msgid "Letter"
+msgstr "Lettre"
+
+#: models.py:89
+msgid "Phone 1"
+msgstr "Telephone 1"
+
+#: models.py:94 models.py:100
+msgid "9 digits maximum"
+msgstr "9 chiffres maximum"
+
+#: models.py:95
+msgid "Phone 2"
+msgstr "Telephone 2"
+
+#: models.py:102
+msgid "Identification document"
+msgstr "Document d'identification"
+
+#: models.py:105
+msgid "Website"
+msgstr "Site web"

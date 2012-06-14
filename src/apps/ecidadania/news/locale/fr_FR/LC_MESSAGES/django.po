@@ -1,0 +1,197 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+#   <hugo.deslongchamps@googlemail.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: e-cidadania\n"
+"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
+"POT-Creation-Date: 2012-06-14 11:43+0200\n"
+"PO-Revision-Date: 2012-06-13 20:43+0000\n"
+"Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
+"Language-Team: French (http://www.transifex.net/projects/p/ecidadania/language/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+
+#: admin.py:37
+msgid "Other data"
+msgstr "Autres Données"
+
+#: models.py:33
+msgid "Title"
+msgstr "Titre"
+
+#: models.py:34
+msgid "Text"
+msgstr "Texte"
+
+#: models.py:35
+msgid "Date"
+msgstr "Date"
+
+#: models.py:36
+msgid "Last update"
+msgstr "Dernière actualisation"
+
+#: models.py:37
+msgid "Author"
+msgstr "Ateur"
+
+#: models.py:39
+msgid "Publish in index page"
+msgstr "Publier sur la page de l'indexe"
+
+#: models.py:40
+msgid "Publish in"
+msgstr "Publier sur"
+
+#: models.py:42
+msgid "If you want to post to the index leave this blank"
+msgstr "Si vous voulez poster sur l'indexe, laissez ceci vide"
+
+#: urls.py:28
+msgid "^add/$"
+msgstr "^ajouter/"
+
+#: urls.py:30
+msgid "^(?P<post_id>\\d+)/delete/$"
+msgstr "^(?P<post_id>\\d+)/supprimer/$"
+
+#: urls.py:32
+msgid "^(?P<post_id>\\d+)/edit/$"
+msgstr "^(?P<post_id>\\d+)/editer/$"
+
+#: templates/news/news_list.html:4
+msgid "News list"
+msgstr "Nouvelle Liste"
+
+#: templates/news/news_list.html:33
+msgid "News archive"
+msgstr "Archive des actualités"
+
+#: templates/news/news_list.html:44
+msgid "There are no posts in this space."
+msgstr "Il n'y a pas de posts sur cet espace."
+
+#: templates/news/news_list.html:51
+msgid "previous"
+msgstr "précédent"
+
+#: templates/news/news_list.html:54
+msgid "of"
+msgstr "de"
+
+#: templates/news/news_list.html:57
+msgid "next"
+msgstr "suivant"
+
+#: templates/news/news_list.html:64 templates/news/post_add.html:112
+#: templates/news/post_confirm_delete.html:37
+#: templates/news/post_edit.html:139
+msgid "Go back"
+msgstr "Revenir en arrière"
+
+#: templates/news/post_add.html:5 templates/news/post_add.html.py:29
+msgid "Add new post"
+msgstr "Ajouter un nouveau post"
+
+#: templates/news/post_add.html:113 templates/news/post_edit.html:140
+msgid "Publish"
+msgstr "Publier"
+
+#: templates/news/post_add.html:118
+msgid "How to add new posts"
+msgstr "Comment ajouter un nouveau post"
+
+#: templates/news/post_add.html:120
+msgid "Title:"
+msgstr "Titre;"
+
+#: templates/news/post_add.html:120
+msgid "An spectacular title! (100 characters)"
+msgstr "Un titre spectaculaire ! (100 caractères)"
+
+#: templates/news/post_add.html:121
+msgid "Text:"
+msgstr "Texte;"
+
+#: templates/news/post_add.html:121
+msgid "Your story."
+msgstr "Votre Histoire."
+
+#: templates/news/post_add.html:122
+msgid "Tags:"
+msgstr "Tags;"
+
+#: templates/news/post_add.html:122
+msgid "Please use them carefully, you are limited to 4 tags."
+msgstr "Utilisez les avec prudence, vous êtes limité à 4 tags."
+
+#: templates/news/post_add.html:123
+msgid "Publish in index:"
+msgstr "Publier dans l'indexe;"
+
+#: templates/news/post_add.html:123
+msgid ""
+"If you mark this, the post will appear in the spaces index page AND in the "
+"main index."
+msgstr "Si vous marquez ceci, ce post apparaîtra dans la page d'indexe ET dans l'indexe princial."
+
+#: templates/news/post_confirm_delete.html:4
+msgid "Delete news"
+msgstr "Supprimer l'actualité"
+
+#: templates/news/post_confirm_delete.html:32
+msgid "Delete post"
+msgstr "Supprimer le post"
+
+#: templates/news/post_confirm_delete.html:34
+msgid ""
+"Are you sure you want to delete this post? This action cannot be undone."
+msgstr "Etes-vous sûr de vouloir supprimer ce poste? Cette action ne peut être défaite."
+
+#: templates/news/post_confirm_delete.html:38
+#: templates/news/post_detail.html:40 templates/news/post_detail_index.html:40
+msgid "Delete"
+msgstr "Supprimer"
+
+#: templates/news/post_detail.html:35 templates/news/post_detail_index.html:35
+msgid "Edit"
+msgstr "Editer"
+
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
+msgid "Written by"
+msgstr "Ecrit par"
+
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
+msgid "on"
+msgstr "sur"
+
+#: templates/news/post_detail.html:45 templates/news/post_detail_index.html:45
+msgid "comments"
+msgstr "commentaires"
+
+#: templates/news/post_detail.html:53 templates/news/post_detail_index.html:53
+msgid "Recent posts"
+msgstr "Posts récents"
+
+#: templates/news/post_detail.html:54 templates/news/post_detail_index.html:54
+msgid "Related posts"
+msgstr "Posts reliés"
+
+#: templates/news/post_detail.html:55 templates/news/post_detail_index.html:55
+msgid "Share this post"
+msgstr "Partager ce post"
+
+#: templates/news/post_edit.html:5
+msgid "Edit news"
+msgstr "Editer l'actualité"
+
+#: templates/news/post_edit.html:28
+msgid "Edit post"
+msgstr "Editer le poste"
