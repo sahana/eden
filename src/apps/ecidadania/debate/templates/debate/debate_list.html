@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Debates in " %}{{ get_place.name }}{% endblock %}
+{% with get_place.name as space_name %}
+{% with get_place.url as space_url %}
+
+{% block title %}{% trans "Debates in " %}{{ space_name }}{% endblock %}
 
 {% block content %}
 
     <div class="row">
         <div class="span12">
-            <h3>{% trans "Debates in" %} {{ get_place.name }}</h3>
-            
+            <h3>{% trans "Debates in" %} {{ space_name }}</h3>
+
             {% for debate in object_list %}
                 <div id="spaceitem">
                     <h6 class="spacetitle"><a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a></h6>
@@ -17,27 +20,29 @@
             {% empty %}
                 <p>{% trans "There are no debates." %}</p>
             {% endfor %}
-            
+
             <hr />
             <a href="{% url 'space-index' get_place.url %}" class="btn small">&laquo; {% trans "Go back" %}</a>
-            
+
             {% if is_paginated %}
             <div class="pagination">
                 <span class="page-links">
                     {% if page_obj.has_previous %}
-                        <a href="{% url 'list-debates' get_place.url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
+                        <a href="{% url 'list-debates' space_url %}?page={{ page_obj.previous_page_number }}">&laquo; {% trans "previous" %} | </a>
                     {% endif %}
                     <span class="page-current">
                         {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
                     </span>
                     {% if page_obj.has_next %}
-                        <a href="{% url 'list-debates' get_place.url %}?page={{ page_obj.next_page_number }}"> | {% trans "next" %} &raquo;</a>
+                        <a href="{% url 'list-debates' space_url %}?page={{ page_obj.next_page_number }}"> | {% trans "next" %} &raquo;</a>
                     {% endif %}
                 </span>
             </div>
-            {% endif %}   
+            {% endif %}
         </div>
     </div>
 
 {% endblock %}
+{% endwith %}
+{% endwith %}
 
