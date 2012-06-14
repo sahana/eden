@@ -5,7 +5,8 @@
 }
 .olLayerGoogleV3.olLayerGoogleCopyright {
     bottom: 0px;
-    right: 0px !important;
+    /* Leave space for the MousePosition */
+    right: 110px !important;
 }
 .olLayerGooglePoweredBy {
     left: 2px;

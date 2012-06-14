@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -50,23 +50,6 @@ OpenLayers.Protocol.CSW.v2_0_2 = OpenLayers.Class(OpenLayers.Protocol, {
         }
         this.format = null;
         OpenLayers.Protocol.prototype.destroy.apply(this);
-    },
-
-    /**
-     * Method: createCallback
-     * Returns a function that applies the given public method with resp and
-     *     options arguments.
-     *
-     * Parameters:
-     * method - {Function} The method to be applied by the callback.
-     * response - {<OpenLayers.Protocol.Response>} The protocol response object.
-     * options - {Object} Options sent to the protocol method (read, create,
-     *     update, or delete).
-     */
-    createCallback: function(method, response, options) {
-        return OpenLayers.Function.bind(function() {
-            method.apply(this, [response, options]);
-        }, this);
     },
 
     /**

@@ -232,13 +232,13 @@ settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 1,
     #   )),
-    #("flood", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
-    #("member", Storage(
+    ("flood", Storage(
+            name_nice = T("Flood Warnings"),
+            #description = "Flood Gauges show water levels in various parts of the country",
+            restricted = False,
+            module_type = 10
+        )),
+    `#("member", Storage(
     #       name_nice = T("Members"),
     #       #description = "Membership Management System",
     #       restricted = True,

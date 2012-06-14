@@ -5322,8 +5322,8 @@ class GoogleLayer(Layer):
                 # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
                 add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
             else:
-                # v3 API
-                add_script("http://maps.google.com/maps/api/js?v=3.6&sensor=false")
+                # v3 API (3.7 is frozen, 3.8 release & 3.9 is nightly)
+                add_script("http://maps.google.com/maps/api/js?v=3.7&sensor=false")
                 if "StreetviewButton" in output:
                     # Streetview doesn't work with v2 API
                     output["StreetviewButton"] = str(T("Click where you want to open Streetview"))

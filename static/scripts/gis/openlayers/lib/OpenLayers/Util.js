@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -559,12 +559,6 @@ OpenLayers.Util.urlAppend = function(url, paramStr) {
     return newUrl;
 };
 
-/**
- * Property: ImgPath
- * {String} Default is ''.
- */
-OpenLayers.ImgPath = '';
-
 /** 
  * Function: getImagesLocation
  * 
@@ -933,7 +927,7 @@ OpenLayers.Util.lastSeqID = 0;
  *     prefix (defaults to "id_") appended with the counter value.
  * 
  * Parameters:
- * prefix {String} Optionsal string to prefix unique id. Default is "id_".
+ * prefix - {String} Optional string to prefix unique id. Default is "id_".
  * 
  * Returns:
  * {String} A unique id string, built on the passed in prefix.
@@ -1250,6 +1244,9 @@ OpenLayers.Util.pagePosition =  function(forElement) {
  * document.body or document.documentElement, depending on the document's
  * compatibility mode (see
  * http://code.google.com/p/doctype/wiki/ArticleClientViewportElement)
+ *
+ * Returns:
+ * {DOMElement}
  */
 OpenLayers.Util.getViewportElement = function() {
     var viewportElement = arguments.callee.viewportElement;
@@ -1436,6 +1433,15 @@ OpenLayers.IS_GECKO = (function() {
 })();
 
 /**
+ * Constant: CANVAS_SUPPORTED
+ * {Boolean} True if canvas 2d is supported.
+ */
+OpenLayers.CANVAS_SUPPORTED = (function() {
+    var elem = document.createElement('canvas');
+    return !!(elem.getContext && elem.getContext('2d'));
+})();
+
+/**
  * Constant: BROWSER_NAME
  * {String}
  * A substring of the navigator.userAgent property.  Depending on the userAgent
@@ -1520,6 +1526,33 @@ OpenLayers.Util.getRenderedDimensions = function(contentHTML, size, options) {
         
     var containerElement = (options && options.containerElement) 
     	? options.containerElement : document.body;
+    
+    // Opera and IE7 can't handle a node with position:aboslute if it inherits
+    // position:absolute from a parent.
+    var parentHasPositionAbsolute = false;
+    var superContainer = null;
+    var parent = containerElement;
+    while (parent && parent.tagName.toLowerCase()!="body") {
+        var parentPosition = OpenLayers.Element.getStyle(parent, "position");
+        if(parentPosition == "absolute") {
+            parentHasPositionAbsolute = true;
+            break;
+        } else if (parentPosition && parentPosition != "static") {
+            break;
+        }
+        parent = parent.parentNode;
+    }
+    if(parentHasPositionAbsolute && (containerElement.clientHeight === 0 || 
+                                     containerElement.clientWidth === 0) ){
+        superContainer = document.createElement("div");
+        superContainer.style.visibility = "hidden";
+        superContainer.style.position = "absolute";
+        superContainer.style.overflow = "visible";
+        superContainer.style.width = document.body.clientWidth + "px";
+        superContainer.style.height = document.body.clientHeight + "px";
+        superContainer.appendChild(container);
+    }
+    container.style.position = "absolute";
 
     //fix a dimension, if specified.
     if (size) {
@@ -1554,25 +1587,10 @@ OpenLayers.Util.getRenderedDimensions = function(contentHTML, size, options) {
     container.appendChild(content);
     
     // append container to body for rendering
-    containerElement.appendChild(container);
-    
-    // Opera and IE7 can't handle a node with position:aboslute if it inherits
-    // position:absolute from a parent.
-    var parentHasPositionAbsolute = false;
-    var parent = container.parentNode;
-    while (parent && parent.tagName.toLowerCase()!="body") {
-        var parentPosition = OpenLayers.Element.getStyle(parent, "position");
-        if(parentPosition == "absolute") {
-            parentHasPositionAbsolute = true;
-            break;
-        } else if (parentPosition && parentPosition != "static") {
-            break;
-        }
-        parent = parent.parentNode;
-    }
-
-    if(!parentHasPositionAbsolute) {
-        container.style.position = "absolute";
+    if (superContainer) {
+        containerElement.appendChild(superContainer);
+    } else {
+        containerElement.appendChild(container);
     }
     
     // calculate scroll width of content and add corners and shadow width
@@ -1589,7 +1607,12 @@ OpenLayers.Util.getRenderedDimensions = function(contentHTML, size, options) {
 
     // remove elements
     container.removeChild(content);
-    containerElement.removeChild(container);
+    if (superContainer) {
+        superContainer.removeChild(container);
+        containerElement.removeChild(superContainer);
+    } else {
+        containerElement.removeChild(container);
+    }
     
     return new OpenLayers.Size(w, h);
 };

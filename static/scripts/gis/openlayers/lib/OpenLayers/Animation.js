@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. 
  *
  * @requires OpenLayers/SingleFile.js
@@ -14,6 +14,16 @@
  *     browser's scheduled repaints where requestAnimationFrame is available.
  */
 OpenLayers.Animation = (function(window) {
+    
+    /**
+     * Property: isNative
+     * {Boolean} true if a native requestAnimationFrame function is available
+     */
+    var isNative = !!(window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame);
     
     /**
      * Function: requestFrame
@@ -72,7 +82,7 @@ OpenLayers.Animation = (function(window) {
             } else {
                 delete loops[id];
             }
-        }
+        };
         requestFrame(loops[id], element);
         return id;
     }
@@ -82,13 +92,14 @@ OpenLayers.Animation = (function(window) {
      * Terminates an animation loop started with <start>.
      *
      * Parameters:
-     * {Number} Identifier returned from <start>.
+     * id - {Number} Identifier returned from <start>.
      */
     function stop(id) {
         delete loops[id];
     }
     
     return {
+        isNative: isNative,
         requestFrame: requestFrame,
         start: start,
         stop: stop

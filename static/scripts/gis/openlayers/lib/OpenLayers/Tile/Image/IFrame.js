@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -65,7 +65,11 @@ OpenLayers.Tile.Image.IFrame = {
                 // And if we had an iframe we also remove the event pane.
 
                 if(fromIFrame) {
+                    this.blankImageUrl = this._blankImageUrl;
                     this.frame.removeChild(this.frame.firstChild);
+                } else {
+                    this._blankImageUrl = this.blankImageUrl;
+                    this.blankImageUrl = "about:blank";
                 }
             }
         }
@@ -85,7 +89,7 @@ OpenLayers.Tile.Image.IFrame = {
                 style.width = "100%";
                 style.height = "100%";
                 style.zIndex = 1;
-                style.backgroundImage = "url(" + this.blankImageUrl + ")";
+                style.backgroundImage = "url(" + this._blankImageUrl + ")";
                 this.frame.appendChild(eventPane);
             }
 
@@ -133,7 +137,7 @@ OpenLayers.Tile.Image.IFrame = {
             return OpenLayers.Tile.Image.prototype.getImage.apply(this, arguments);
         }
     },
-
+    
     /**
      * Method: createRequestForm
      * Create the html <form> element with width, height, bbox and all 
@@ -190,6 +194,19 @@ OpenLayers.Tile.Image.IFrame = {
             }
         } else {
             OpenLayers.Tile.Image.prototype.setImgSrc.apply(this, arguments);
+        }
+    },
+    
+    /**
+     * Method: onImageLoad
+     * Handler for the image onload event
+     */
+    onImageLoad: function() {
+        //TODO de-uglify opacity handling
+        OpenLayers.Tile.Image.prototype.onImageLoad.apply(this, arguments);
+        if (this.useIFrame === true) {
+            this.imgDiv.style.opacity = 1;
+            this.frame.style.opacity = this.layer.opacity;
         }
     },
 

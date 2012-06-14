@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -8,6 +8,7 @@
  * @requires OpenLayers/Util.js
  * @requires OpenLayers/Events.js
  * @requires OpenLayers/Tween.js
+ * @requires OpenLayers/Projection.js
  */
 
 /**
@@ -34,6 +35,9 @@ OpenLayers.Map = OpenLayers.Class({
     },
 
     /**
+     * APIProperty: events
+     * {<OpenLayers.Events>}
+     *
      * Register a listener for a particular event with the following syntax:
      * (code)
      * map.events.register(type, obj, listener);
@@ -43,43 +47,42 @@ OpenLayers.Map = OpenLayers.Class({
      *     properties of this event depends on exactly what happened.
      *
      * All event objects have at least the following properties:
-     *  - *object* {Object} A reference to map.events.object.
-     *  - *element* {DOMElement} A reference to map.events.element.
+     * object - {Object} A reference to map.events.object.
+     * element - {DOMElement} A reference to map.events.element.
      *
      * Browser events have the following additional properties:
-     *  - *xy* {<OpenLayers.Pixel>} The pixel location of the event (relative
-     *      to the the map viewport).
-     *  - other properties that come with browser events
+     * xy - {<OpenLayers.Pixel>} The pixel location of the event (relative
+     *     to the the map viewport).
      *
      * Supported map event types:
-     *  - *preaddlayer* triggered before a layer has been added.  The event
-     *      object will include a *layer* property that references the layer  
-     *      to be added. When a listener returns "false" the adding will be 
-     *      aborted.
-     *  - *addlayer* triggered after a layer has been added.  The event object
-     *      will include a *layer* property that references the added layer.
-     *  - *preremovelayer* triggered before a layer has been removed. The event
-     *      object will include a *layer* property that references the layer  
-     *      to be removed. When a listener returns "false" the removal will be 
-     *      aborted.
-     *  - *removelayer* triggered after a layer has been removed.  The event
-     *      object will include a *layer* property that references the removed
-     *      layer.
-     *  - *changelayer* triggered after a layer name change, order change,
-     *      opacity change, params change, visibility change (due to resolution
-     *      thresholds) or attribution change (due to extent change). Listeners
-     *      will receive an event object with *layer* and *property* properties.
-     *      The *layer* property will be a reference to the changed layer. The
-     *      *property* property will be a key to the changed property (name,
-     *      order, opacity, params, visibility or attribution).
-     *  - *movestart* triggered after the start of a drag, pan, or zoom
-     *  - *move* triggered after each drag, pan, or zoom
-     *  - *moveend* triggered after a drag, pan, or zoom completes
-     *  - *zoomend* triggered after a zoom completes
-     *  - *mouseover* triggered after mouseover the map
-     *  - *mouseout* triggered after mouseout the map
-     *  - *mousemove* triggered after mousemove the map
-     *  - *changebaselayer* triggered after the base layer changes
+     * preaddlayer - triggered before a layer has been added.  The event
+     *     object will include a *layer* property that references the layer  
+     *     to be added. When a listener returns "false" the adding will be 
+     *     aborted.
+     * addlayer - triggered after a layer has been added.  The event object
+     *     will include a *layer* property that references the added layer.
+     * preremovelayer - triggered before a layer has been removed. The event
+     *     object will include a *layer* property that references the layer  
+     *     to be removed. When a listener returns "false" the removal will be 
+     *     aborted.
+     * removelayer - triggered after a layer has been removed.  The event
+     *     object will include a *layer* property that references the removed
+     *     layer.
+     * changelayer - triggered after a layer name change, order change,
+     *     opacity change, params change, visibility change (due to resolution
+     *     thresholds) or attribution change (due to extent change). Listeners
+     *     will receive an event object with *layer* and *property* properties.
+     *     The *layer* property will be a reference to the changed layer. The
+     *     *property* property will be a key to the changed property (name,
+     *     order, opacity, params, visibility or attribution).
+     * movestart - triggered after the start of a drag, pan, or zoom
+     * move - triggered after each drag, pan, or zoom
+     * moveend - triggered after a drag, pan, or zoom completes
+     * zoomend - triggered after a zoom completes
+     * mouseover - triggered after mouseover the map
+     * mouseout - triggered after mouseout the map
+     * mousemove - triggered after mousemove the map
+     * changebaselayer - triggered after the base layer changes
      */
 
     /**
@@ -190,9 +193,9 @@ OpenLayers.Map = OpenLayers.Class({
      * {Array(<OpenLayers.Control>)} List of controls associated with the map.
      *
      * If not provided in the map options at construction, the map will
-     *     be given the following controls by default:
-     *  - <OpenLayers.Control.Navigation>
-     *  - <OpenLayers.Control.PanZoom>
+     *     by default be given the following controls if present in the build:
+     *  - <OpenLayers.Control.Navigation> or <OpenLayers.Control.TouchNavigation>
+     *  - <OpenLayers.Control.Zoom> or <OpenLayers.Control.PanZoom>
      *  - <OpenLayers.Control.ArgParser>
      *  - <OpenLayers.Control.Attribution>
      */
@@ -236,6 +239,12 @@ OpenLayers.Map = OpenLayers.Class({
      */
     panRatio: 1.5,    
 
+    /**
+     * APIProperty: options
+     * {Object} The options object passed to the class constructor. Read-only.
+     */
+    options: null,
+
   // Options
 
     /**
@@ -247,18 +256,23 @@ OpenLayers.Map = OpenLayers.Class({
 
     /**
      * APIProperty: projection
-     * {String} Set in the map options to override the default projection 
-     *          string this map - also set maxExtent, maxResolution, and 
-     *          units if appropriate.  Default is "EPSG:4326".
+     * {String} Set in the map options to specify the default projection 
+     *          for layers added to this map. When using a projection other than EPSG:4326
+     *          (CRS:84, Geographic) or EPSG:3857 (EPSG:900913, Web Mercator),
+     *          also set maxExtent, maxResolution or resolutions.  Default is "EPSG:4326".
+     *          Note that the projection of the map is usually determined
+     *          by that of the current baseLayer (see <baseLayer> and <getProjectionObject>).
      */
     projection: "EPSG:4326",    
         
     /**
      * APIProperty: units
-     * {String} The map units.  Defaults to 'degrees'.  Possible values are
-     *          'degrees' (or 'dd'), 'm', 'ft', 'km', 'mi', 'inches'.
+     * {String} The map units.  Possible values are 'degrees' (or 'dd'), 'm', 
+     *     'ft', 'km', 'mi', 'inches'.  Normally taken from the projection.
+     *     Only required if both map and layers do not define a projection,
+     *     or if they define a projection which does not define units
      */
-    units: 'degrees',
+    units: null,
 
     /**
      * APIProperty: resolutions
@@ -271,12 +285,10 @@ OpenLayers.Map = OpenLayers.Class({
 
     /**
      * APIProperty: maxResolution
-     * {Float} Default max is 360 deg / 256 px, which corresponds to
-     *          zoom level 0 on gmaps.  Specify a different value in the map 
-     *          options if you are not using a geographic projection and 
-     *          displaying the whole world.
+     * {Float} Required if you are not displaying the whole world on a tile
+     * with the size specified in <tileSize>.
      */
-    maxResolution: 1.40625,
+    maxResolution: null,
 
     /**
      * APIProperty: minResolution
@@ -298,7 +310,9 @@ OpenLayers.Map = OpenLayers.Class({
 
     /**
      * APIProperty: maxExtent
-     * {<OpenLayers.Bounds>} The maximum extent for the map.  Defaults to the
+     * {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
+     *     The maximum extent for the map.  Defaults to the
      *     whole world in decimal degrees (-180, -90, 180, 90).  Specify a 
      *     different extent in the map options if you are not using a geographic
      *     projection and displaying the whole  world. To restrict user panning
@@ -309,13 +323,17 @@ OpenLayers.Map = OpenLayers.Class({
     
     /**
      * APIProperty: minExtent
-     * {<OpenLayers.Bounds>}
+     * {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
+     *     The minimum extent for the map.  Defaults to null.
      */
     minExtent: null,
     
     /**
      * APIProperty: restrictedExtent
-     * {<OpenLayers.Bounds>} Limit map navigation to this extent where possible.
+     * {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
+     *     Limit map navigation to this extent where possible.
      *     If a non-null restrictedExtent is set, panning will be restricted
      *     to the given bounds.  In addition, zooming to a resolution that
      *     displays more than the restricted extent will center the map
@@ -342,7 +360,8 @@ OpenLayers.Map = OpenLayers.Class({
     
     /** 
      * APIProperty: displayProjection
-     * {<OpenLayers.Projection>} Requires proj4js support.Projection used by
+     * {<OpenLayers.Projection>} Requires proj4js support for projections other
+     *     than EPSG:4326 or EPSG:900913/EPSG:3857. Projection used by
      *     several controls to display data to user. If this property is set,
      *     it will be set on any control which has a null displayProjection
      *     property at the time the control is added to the map. 
@@ -426,6 +445,24 @@ OpenLayers.Map = OpenLayers.Class({
      *     provided or if you intend to call the <render> method later.
      * options - {Object} Optional object with properties to tag onto the map.
      *
+     * Valid options (in addition to the listed API properties):
+     * center - {<OpenLayers.LonLat>|Array} The default initial center of the map.
+     *     If provided as array, the first value is the x coordinate,
+     *     and the 2nd value is the y coordinate.
+     *     Only specify if <layers> is provided.
+     *     Note that if an ArgParser/Permalink control is present,
+     *     and the querystring contains coordinates, center will be set
+     *     by that, and this option will be ignored.
+     * zoom - {Number} The initial zoom level for the map. Only specify if
+     *     <layers> is provided.
+     *     Note that if an ArgParser/Permalink control is present,
+     *     and the querystring contains a zoom level, zoom will be set
+     *     by that, and this option will be ignored.
+     * extent - {<OpenLayers.Bounds>|Array} The initial extent of the map.
+     *     If provided as an array, the array should consist of
+     *     four values (left, bottom, right, top).
+     *     Only specify if <center> and <zoom> are not provided.
+     * 
      * Examples:
      * (code)
      * // create a map with default options in an element with the id "map1"
@@ -433,28 +470,26 @@ OpenLayers.Map = OpenLayers.Class({
      *
      * // create a map with non-default options in an element with id "map2"
      * var options = {
+     *     projection: "EPSG:3857",
      *     maxExtent: new OpenLayers.Bounds(-200000, -200000, 200000, 200000),
-     *     maxResolution: 156543,
-     *     units: 'm',
-     *     projection: "EPSG:41001"
+     *     center: new OpenLayers.LonLat(-12356463.476333, 5621521.4854095)
      * };
      * var map = new OpenLayers.Map("map2", options);
      *
-     * // map with non-default options - same as above but with a single argument
+     * // map with non-default options - same as above but with a single argument,
+     * // a restricted extent, and using arrays for bounds and center
      * var map = new OpenLayers.Map({
      *     div: "map_id",
-     *     maxExtent: new OpenLayers.Bounds(-200000, -200000, 200000, 200000),
-     *     maxResolution: 156543,
-     *     units: 'm',
-     *     projection: "EPSG:41001"
+     *     projection: "EPSG:3857",
+     *     maxExtent: [-18924313.432222, -15538711.094146, 18924313.432222, 15538711.094146],
+     *     restrictedExtent: [-13358338.893333, -9608371.5085962, 13358338.893333, 9608371.5085962],
+     *     center: [-12356463.476333, 5621521.4854095]
      * });
      *
      * // create a map without a reference to a container - call render later
      * var map = new OpenLayers.Map({
-     *     maxExtent: new OpenLayers.Bounds(-200000, -200000, 200000, 200000),
-     *     maxResolution: 156543,
-     *     units: 'm',
-     *     projection: "EPSG:41001"
+     *     projection: "EPSG:3857",
+     *     maxExtent: new OpenLayers.Bounds(-200000, -200000, 200000, 200000)
      * });
      * (end)
      */    
@@ -471,22 +506,33 @@ OpenLayers.Map = OpenLayers.Class({
         this.tileSize = new OpenLayers.Size(OpenLayers.Map.TILE_WIDTH,
                                             OpenLayers.Map.TILE_HEIGHT);
         
-        this.maxExtent = new OpenLayers.Bounds(-180, -90, 180, 90);
-        
         this.paddingForPopups = new OpenLayers.Bounds(15, 15, 15, 15);
 
         this.theme = OpenLayers._getScriptLocation() + 
                              'theme/default/style.css'; 
 
+        // backup original options
+        this.options = OpenLayers.Util.extend({}, options);
+
         // now override default options 
         OpenLayers.Util.extend(this, options);
         
-        // allow extents to be arrays
+        var projCode = this.projection instanceof OpenLayers.Projection ?
+            this.projection.projCode : this.projection;
+        OpenLayers.Util.applyDefaults(this, OpenLayers.Projection.defaults[projCode]);
+        
+        // allow extents and center to be arrays
         if (this.maxExtent && !(this.maxExtent instanceof OpenLayers.Bounds)) {
             this.maxExtent = new OpenLayers.Bounds(this.maxExtent);
         }
+        if (this.minExtent && !(this.minExtent instanceof OpenLayers.Bounds)) {
+            this.minExtent = new OpenLayers.Bounds(this.minExtent);
+        }
         if (this.restrictedExtent && !(this.restrictedExtent instanceof OpenLayers.Bounds)) {
             this.restrictedExtent = new OpenLayers.Bounds(this.restrictedExtent);
+        }
+        if (this.center && !(this.center instanceof OpenLayers.LonLat)) {
+            this.center = new OpenLayers.LonLat(this.center);
         }
 
         // initialize layers array
@@ -534,8 +580,8 @@ OpenLayers.Map = OpenLayers.Class({
  
         // Because Mozilla does not support the "resize" event for elements 
         // other than "window", we need to put a hack here. 
-        if (OpenLayers.String.contains(navigator.appName, "Microsoft")) {
-            // If IE, register the resize on the div
+        if (parseFloat(navigator.appVersion.split("MSIE")[1]) < 9) {
+            // If IE < 9, register the resize on the div
             this.events.register("resize", this, this.updateSize);
         } else {
             // Else updateSize on catching the window's resize
@@ -570,15 +616,27 @@ OpenLayers.Map = OpenLayers.Class({
             }
         }
         
-        if (this.controls == null) {
+        if (this.controls == null) { // default controls
+            this.controls = [];
             if (OpenLayers.Control != null) { // running full or lite?
-                this.controls = [ new OpenLayers.Control.Navigation(),
-                                  new OpenLayers.Control.PanZoom(),
-                                  new OpenLayers.Control.ArgParser(),
-                                  new OpenLayers.Control.Attribution()
-                                ];
-            } else {
-                this.controls = [];
+                // Navigation or TouchNavigation depending on what is in build
+                if (OpenLayers.Control.Navigation) {
+                    this.controls.push(new OpenLayers.Control.Navigation());
+                } else if (OpenLayers.Control.TouchNavigation) {
+                    this.controls.push(new OpenLayers.Control.TouchNavigation());
+                }
+                if (OpenLayers.Control.Zoom) {
+                    this.controls.push(new OpenLayers.Control.Zoom());
+                } else if (OpenLayers.Control.PanZoom) {
+                    this.controls.push(new OpenLayers.Control.PanZoom());
+                }
+
+                if (OpenLayers.Control.ArgParser) {
+                    this.controls.push(new OpenLayers.Control.ArgParser());
+                }
+                if (OpenLayers.Control.Attribution) {
+                    this.controls.push(new OpenLayers.Control.Attribution());
+                }
             }
         }
 
@@ -598,19 +656,30 @@ OpenLayers.Map = OpenLayers.Class({
         if (options && options.layers) {
             /** 
              * If you have set options.center, the map center property will be
-             * set at this point.  However, since setCenter has not been caleld,
+             * set at this point.  However, since setCenter has not been called,
              * addLayers gets confused.  So we delete the map center in this 
              * case.  Because the check below uses options.center, it will
              * be properly set below.
              */
             delete this.center;
-            this.addLayers(options.layers);        
+            this.addLayers(options.layers);
             // set center (and optionally zoom)
-            if (options.center) {
+            if (options.center && !this.getCenter()) {
                 // zoom can be undefined here
                 this.setCenter(options.center, options.zoom);
             }
         }
+    },
+
+    /** 
+     * APIMethod: getViewport
+     * Get the DOMElement representing the view port.
+     *
+     * Returns:
+     * {DOMElement}
+     */
+    getViewport: function() {
+        return this.viewPortDiv;
     },
     
     /**
@@ -708,6 +777,7 @@ OpenLayers.Map = OpenLayers.Class({
         this.events.destroy();
         this.events = null;
 
+        this.options = null;
     },
 
     /**
@@ -1161,6 +1231,11 @@ OpenLayers.Map = OpenLayers.Class({
                 
                 if(!this.allOverlays || this.baseLayer.visibility) {
                     this.baseLayer.setVisibility(true);
+                    // Layer may previously have been visible but not in range.
+                    // In this case we need to redraw it to make it visible.
+                    if (this.baseLayer.inRange === false) {
+                        this.baseLayer.redraw();
+                    }
                 }
 
                 // recenter the map
@@ -1559,8 +1634,10 @@ OpenLayers.Map = OpenLayers.Class({
                     this.panTo(newCenterLonLat);
                 } else {
                     this.moveTo(newCenterLonLat);
-                    this.dragging = false;
-                    this.events.triggerEvent("moveend");
+                    if(this.dragging) {
+                        this.dragging = false;
+                        this.events.triggerEvent("moveend");
+                    }
                 }    
             }
         }        
@@ -1618,7 +1695,9 @@ OpenLayers.Map = OpenLayers.Class({
      * Set the map center (and optionally, the zoom level).
      * 
      * Parameters:
-     * lonlat - {<OpenLayers.LonLat>} The new center location.
+     * lonlat - {<OpenLayers.LonLat>|Array} The new center location.
+     *     If provided as array, the first value is the x coordinate,
+     *     and the 2nd value is the y coordinate.
      * zoom - {Integer} Optional zoom level.
      * dragging - {Boolean} Specifies whether or not to trigger 
      *                      movestart/end events
@@ -1726,7 +1805,7 @@ OpenLayers.Map = OpenLayers.Class({
      * options - {Object}
      */
     moveTo: function(lonlat, zoom, options) {
-        if (!(lonlat instanceof OpenLayers.LonLat)) {
+        if (lonlat != null && !(lonlat instanceof OpenLayers.LonLat)) {
             lonlat = new OpenLayers.LonLat(lonlat);
         }
         if (!options) { 
@@ -2238,7 +2317,8 @@ OpenLayers.Map = OpenLayers.Class({
      * Zoom to the passed in bounds, recenter
      * 
      * Parameters:
-     * bounds - {<OpenLayers.Bounds>}
+     * bounds - {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
      * closest - {Boolean} Find the zoom level that most closely fits the 
      *     specified bounds. Note that this may result in a zoom that does 
      *     not exactly contain the entire extent.
@@ -2277,7 +2357,7 @@ OpenLayers.Map = OpenLayers.Class({
      * Zoom to the full extent and recenter.
      *
      * Parameters:
-     * options - 
+     * options - {Object}
      * 
      * Allowed Options:
      * restricted - {Boolean} True to zoom to restricted extent if it is 

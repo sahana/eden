@@ -136,6 +136,7 @@ OpenLayers.Layer.ArcGIS93Rest = OpenLayers.Class(OpenLayers.Layer.Grid, {
         if (srid == 900913) {
             srid = 3857;
         }
+
         var imageSize = this.getImageSize(); 
         var newParams = {
             'BBOX': bounds.toBBOX(),
