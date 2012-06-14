@@ -168,6 +168,7 @@ if os.path.exists(path):
 
 # e.g.
 #settings.base.prepopulate = ["IFRC_Train"]
+#settings.security.policy = 7 # Organisation-ACLs
 
 # =============================================================================
 # A version number to tell update_check if there is a need to refresh the
