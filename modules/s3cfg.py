@@ -155,16 +155,22 @@ class S3Config(Storage):
             organisation_id = None
         return organisation_id
     def get_auth_registration_requests_image(self):
-        " Have the registration form request an Image "
+        """ Have the registration form request an Image """
         return self.auth.get("registration_requests_image", False)
     def get_auth_registration_roles(self):
-        " The list of role UUIDs to assign to newly-registered users "
+        """ The list of role UUIDs to assign to newly-registered users """
         return self.auth.get("registration_roles", [])
     def get_auth_registration_volunteer(self):
-        " Redirect the newly-registered user to their volunteer details page "
+        """ Redirect the newly-registered user to their volunteer details page """
         return self.auth.get("registration_volunteer", False)
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", True)
+    def get_auth_record_approval(self):
+        """ Use record approval (False by default) """
+        return self.auth.get("record_approcal", False)
+    def get_auth_record_approver_role(self):
+        """ UID of the record approver role """
+        return self.auth.get("record_approver_role", "APPROVER")
 
     # @ToDo: Deprecate
     def get_aaa_default_uacl(self):
