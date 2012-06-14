@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-24 10:12+0200\n"
+"POT-Creation-Date: 2012-06-14 12:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -90,39 +90,39 @@ msgstr ""
 msgid "Recent Actions"
 msgstr ""
 
-#: urls.py:58
+#: urls.py:62
 msgid "^accounts/"
 msgstr ""
 
-#: urls.py:61
+#: urls.py:65
 msgid "^spaces/"
 msgstr ""
 
-#: urls.py:64
+#: urls.py:68
 msgid "^invite/"
 msgstr ""
 
-#: urls.py:67
+#: urls.py:71
 msgid "^news/$"
 msgstr ""
 
-#: urls.py:69
+#: urls.py:73
 msgid "^news/add/$"
 msgstr ""
 
-#: urls.py:71
+#: urls.py:75
 msgid "^news/(?P<post_id>\\w+)/delete/$"
 msgstr ""
 
-#: urls.py:74
+#: urls.py:78
 msgid "^news/(?P<post_id>\\w+)/edit/$"
 msgstr ""
 
-#: urls.py:77
+#: urls.py:81
 msgid "^news/(?P<post_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:86
+#: urls.py:90
 msgid "^comments/"
 msgstr ""
 

@@ -41,9 +41,10 @@ LOGIN_REDIRECT_URL = '/accounts/'
 
 # Languages for the platform.
 LANGUAGES = (
-    ('es_ES', 'Espanol'),
+    ('es_ES', 'Español'),
     ('en_GB', 'English'),
     ('gl_ES', 'Galego'),
+    ('fr_FR', 'Français')
 )
 
 SITE_ID = 1

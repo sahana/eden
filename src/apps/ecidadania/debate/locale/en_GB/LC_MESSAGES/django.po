@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-24 10:12+0200\n"
+"POT-Creation-Date: 2012-06-14 12:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgid "Description"
 msgstr ""
 
 #: models.py:44
-msgid "Scope"
+msgid "Theme"
 msgstr ""
 
 #: models.py:47 models.py:110
@@ -183,7 +183,7 @@ msgid "Description:"
 msgstr ""
 
 #: templates/debate/debate_view.html:24
-msgid "Scope:"
+msgid "Theme:"
 msgstr ""
 
 #: templates/debate/debate_view.html:27
