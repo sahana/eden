@@ -119,18 +119,23 @@ def get_strings_by_module(module):
 	     return []
 
         strings = []
+	tmpstr = []
 
 	for f in fileList:
 	     if f.endswith(".py") == True:
-                  strings.append( ("File:",f) )
-	          strings += getStrings.findstr(f,"ALL",get_module_list())
+	          tmpstr = getStrings.findstr(f,"ALL",get_module_list())
+		  for s in tmpstr:
+		      strings.append( ( f+":"+str(s[0]) , s[1]) ) 
+		      
+
 	
         # Handling "special" files separately
 	fileList = d["special"]	  
         for f in fileList:
 	     if f.endswith(".py") == True:
-                  strings.append( ("File:",f) )
-	          strings += getStrings.findstr(f,module,get_module_list())
+                  tmpstr = getStrings.findstr(f,module,get_module_list())
+	          for s in tmpstr:
+		      strings.append( (f+":"+str(s[0]), s[1]) )
 
 	return strings
 
