@@ -2237,7 +2237,7 @@ class S3Resource(object):
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             left = left_joins
@@ -2765,7 +2765,7 @@ class S3Resource(object):
         distinct = self.rfilter.distinct
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             left = left_joins
@@ -3110,7 +3110,6 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
-                                              msince=msince,
                                               marker=marker)
 
                     # Mark as referenced element (for XSLT)
@@ -4568,7 +4567,7 @@ class S3Resource(object):
         # Sort left joins and add to attributes
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             attributes.update(left=left_joins)
@@ -5350,7 +5349,7 @@ class S3ResourceFilter:
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(resource.sortleft)
             except:
                 pass
             left = left_joins
@@ -5396,7 +5395,7 @@ class S3ResourceFilter:
         left_joins = self.get_left_joins()
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(resource.sortleft)
             except:
                 pass
             left = left_joins

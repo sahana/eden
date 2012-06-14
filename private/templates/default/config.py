@@ -17,7 +17,7 @@ T = current.T
 # Pre-Populate
 # http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/PrePopulate
 # Configure/disable pre-population of the database.
-# To pre-populate the database On 1st run should specify directory(s) in 
+# To pre-populate the database On 1st run should specify directory(s) in
 # /private/templates/
 # eg:
 # ["default"] (1 is a shortcut for this)
@@ -58,6 +58,10 @@ T = current.T
 #settings.auth.registration_organisation_default = "My Organisation"
 # Uncomment & populate these to set the default roles assigned to newly-registered users
 #settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
+# Uncomment this to enable record approval
+#settings.auth.record_approval = True
+# Uncomment & populate this to set an alternative record approver role
+#settings.auth.record_approver_role = "APPROVER"
 # Uncomment this to request an image when users register
 #settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
