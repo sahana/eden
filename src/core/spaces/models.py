@@ -66,19 +66,12 @@ class Space(models.Model):
                          help_text = _('Valid extensions are jpg, jpeg, png and gif'))
     banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
                            help_text = _('Valid extensions are jpg, jpeg, png and gif'))
-#    logo = models.ImageField(upload_to='spaces/logos',
-#                             verbose_name=_('Logotype'),
-#                             help_text=_('100x75 pixels'))
-#    banner = models.ImageField(upload_to='spaces/banners',
-#                               verbose_name=_('Banner'),
-#                               help_text=_('75px height'))
     public = models.BooleanField(_('Public space'))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
     mod_debate = models.BooleanField(_('Debate'))
     mod_proposals = models.BooleanField(_('Proposals'))
-    mod_proposalsets = models.BooleanField(_('ProposalSets'))
     mod_news = models.BooleanField(_('News'))
     mod_cal = models.BooleanField(_('Calendar'))
     mod_docs = models.BooleanField(_('Documents'))
