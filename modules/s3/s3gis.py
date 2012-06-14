@@ -2075,14 +2075,16 @@ class GIS(object):
                             for row in rows:
                                 # Simplify the polygon to reduce download size
                                 geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
-                                geojsons[row[tablename].id] = geojson
+                                if geojson:
+                                    geojsons[row[tablename].id] = geojson
                         else:
                             for row in rows:
                                 # Simplify the polygon to reduce download size
                                 # & also to work around the recursion limit in libxslt
                                 # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
                                 wkt = gis.simplify(row["gis_location"].wkt)
-                                wkts[row[tablename].id] = wkt
+                                if wkt:
+                                    wkts[row[tablename].id] = wkt
 
                 else:
                     # Points
@@ -2348,6 +2350,44 @@ class GIS(object):
                 represent = value
 
             return represent
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_theme_geojson(resource):
+        """
+            Lookup Theme Layer polygons once per layer and not per-record
+        """
+
+        db = current.db
+        s3db = current.s3db
+        tablename = "gis_theme_data"
+        table = s3db.gis_theme_data
+        gtable = s3db.gis_location
+        query = (table.id.belongs(resource._ids)) & \
+                (table.location_id == gtable.id)
+
+        geojsons = {}
+        if current.deployment_settings.get_gis_spatialdb():
+            # Do the Simplify & GeoJSON direct from the DB
+            rows = db(query).select(table.id,
+                                    gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+            for row in rows:
+                geojsons[row[tablename].id] = row["gis_location"].geojson
+        else:
+            rows = db(query).select(table.id,
+                                    gtable.wkt)
+            gis = current.gis
+            for row in rows:
+                # Simplify the polygon to reduce download size
+                geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                if geojson:
+                    geojsons[row[tablename].id] = geojson
+
+            _geojsons = {}
+            _geojsons[tablename] = geojsons
+
+            # return 'marker'
+            return dict(geojsons = _geojsons)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3657,7 +3697,10 @@ class GIS(object):
         except:
             s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
-        shape = wkt_loads(wkt)
+        try:
+            shape = wkt_loads(wkt)
+        except:
+            return None
         simplified = shape.simplify(tolerance, preserve_topology)
         if output == "wkt":
             output = simplified.to_wkt()

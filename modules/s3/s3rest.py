@@ -3015,8 +3015,13 @@ class S3Resource(object):
         if layer_id:
             # We're being called as a GIS Feature Layer, so do lookup per layer
             # and not per-record
-            # Marker, Popup & LatLon
+            # Marker, Popup & LatLon/WKT
             marker = current.gis.get_marker_and_popup(layer_id, self)
+        elif self.tablename == "gis_theme_data" and \
+             current.auth.permission.format == "geojson":
+            # Theme Layer, so do lookup per layer
+            # and not per-record
+            marker = current.gis.get_theme_geojson(self)
         else:
             # Marker provided in request
             # Q: What does this?
