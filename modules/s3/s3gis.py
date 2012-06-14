@@ -2390,7 +2390,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
-                           source="gadm",
+                           source="gadmv1",
                            countries=[],
                            levels=["L0", "L1", "L2"]
                           ):
@@ -2405,32 +2405,49 @@ class GIS(object):
                            defaults to all 3 supported levels
         """
 
-        if source != "gadm":
+        if source == "gadmv1":
+            try:
+                from osgeo import ogr
+            except:
+                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                return
+
+            if "L0" in levels:
+                self.import_gadm1_L0(ogr, countries=countries)
+            if "L1" in levels:
+                self.import_gadm1(ogr, "L1", countries=countries)
+            if "L2" in levels:
+                self.import_gadm1(ogr, "L2", countries=countries)
+
+            s3_debug("All done!")
+
+        elif source == "gadmv1":
+            try:
+                from osgeo import ogr
+            except:
+                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                return
+
+            if "L0" in levels:
+                self.import_gadm2(ogr, "L0", countries=countries)
+            if "L1" in levels:
+                self.import_gadm2(ogr, "L1", countries=countries)
+            if "L2" in levels:
+                self.import_gadm2(ogr, "L2", countries=countries)
+
+            s3_debug("All done!")
+        
+        else:
             s3_debug("Only GADM is currently supported")
             return
-
-        try:
-            from osgeo import ogr
-        except:
-            s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
-            return
-
-        if "L0" in levels:
-            self.import_gadm_L0(ogr, countries=countries)
-        if "L1" in levels:
-            self.import_gadm(ogr, "L1", countries=countries)
-        if "L2" in levels:
-            self.import_gadm(ogr, "L2", countries=countries)
-
-        s3_debug("All done!")
 
         return
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def import_gadm_L0(ogr, countries=[]):
+    def import_gadm1_L0(ogr, countries=[]):
         """
-           Import L0 Admin Boundaries into the Locations table from GADM
+           Import L0 Admin Boundaries into the Locations table from GADMv1
            - designed to be called from import_admin_areas()
            - assumes that basic prepop has been done, so that no new records need to be created
 
@@ -2564,9 +2581,9 @@ class GIS(object):
         return
 
     # -------------------------------------------------------------------------
-    def import_gadm(self, ogr, level="L1", countries=[]):
+    def import_gadm1(self, ogr, level="L1", countries=[]):
         """
-            Import L1 Admin Boundaries into the Locations table from GADM
+            Import L1 Admin Boundaries into the Locations table from GADMv1
             - designed to be called from import_admin_areas()
             - assumes a fresh database with just Countries imported
 
@@ -2919,6 +2936,162 @@ class GIS(object):
         except MemoryError:
             # If doing all L2s, it can break memory limits - how can we avoid this?
             s3_debug("Memory error when trying to update_location_tree()!")
+
+        db.commit()
+
+        # Revert back to the working directory as before.
+        os.chdir(old_working_directory)
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_gadm2(ogr, level="L0", countries=[]):
+        """
+            Import Admin Boundaries into the Locations table from GADMv2
+            - designed to be called from import_admin_areas()
+            - assumes that basic prepop has been done, so that no new L0 records need to be created
+
+            @param ogr - The OGR Python module
+            @param level - The OGR Python module
+            @param countries - List of ISO2 countrycodes to download data for
+                               defaults to all countries
+
+            @ToDo: Complete this
+                - not currently possible to get all data from the 1 file easily
+                - no ISO2
+                - only the lowest available levels accessible
+                - use GADMv1 for L0, L1, L2 & GADMv2 for specific lower?
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
+
+        url = "http://gadm.org/data2/gadm_v2_shp.zip"
+        zipfile = "gadm_v2_shp.zip"
+        shapefile = "gadm2"
+        
+        if level == "L0":
+            codeField = "ISO2"   # This field is used to uniquely identify the L0 for updates
+            code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
+        elif level == "L1":
+            nameField = "NAME_1"
+            codeField = "ID_1"   # This field is used to uniquely identify the L1 for updates
+            code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
+            parent = "L0"
+            parentCode = "code2"
+        elif level == "L2":
+            nameField = "NAME_2"
+            codeField = "ID_2"   # This field is used to uniquely identify the L2 for updates
+            code2Field = "ID_1"  # This field is used to uniquely identify the L1 for parenting the L2s
+            parent = "L1"
+            parentCode = "code"
+        else:
+            s3_debug("Level %s not supported!" % level)
+            return
+
+        # Copy the current working directory to revert back to later
+        old_working_directory = os.getcwd()
+
+        # Create the working directory
+        if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp/GADMv2 as a cache
+            TEMP = os.path.join(os.getcwd(), "temp")
+        else:
+            import tempfile
+            TEMP = tempfile.gettempdir()
+        tempPath = os.path.join(TEMP, "GADMv2")
+        try:
+            os.mkdir(tempPath)
+        except OSError:
+            # Folder already exists - reuse
+            pass
+
+        # Set the current working directory
+        os.chdir(tempPath)
+
+        layerName = shapefile
+
+        # Check if file has already been downloaded
+        fileName = zipfile
+        if not os.path.isfile(fileName):
+            # Download the file
+            s3_debug("Downloading %s" % url)
+            try:
+                file = fetch(url)
+            except urllib2.URLError, exception:
+                s3_debug(exception)
+                return
+            fp = StringIO(file)
+        else:
+            s3_debug("Using existing file %s" % fileName)
+            fp = open(fileName)
+
+        # Unzip it
+        s3_debug("Unzipping %s" % layerName)
+        myfile = zipfile.ZipFile(fp)
+        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+            fileName = "%s.%s" % (layerName, ext)
+            file = myfile.read(fileName)
+            f = open(fileName, "w")
+            f.write(file)
+            f.close()
+        myfile.close()
+
+        # Use OGR to read Shapefile
+        s3_debug("Opening %s.shp" % layerName)
+        ds = ogr.Open("%s.shp" % layerName)
+        if ds is None:
+            s3_debug("Open failed.\n")
+            return
+
+        lyr = ds.GetLayerByName(layerName)
+
+        lyr.ResetReading()
+
+        for feat in lyr:
+            code = feat.GetField(codeField)
+            if not code:
+                # Skip the entries which aren't countries
+                continue
+            if countries and code not in countries:
+                # Skip the countries which we're not interested in
+                continue
+
+            geom = feat.GetGeometryRef()
+            if geom is not None:
+                if geom.GetGeometryType() == ogr.wkbPoint:
+                    pass
+                else:
+                    query = (table.code == code)
+                    wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
+                    code2 = feat.GetField(code2Field)
+                    area = feat.GetField("Shape_Area")
+                    try:
+                        db(query).update(gis_feature_type=gis_feature_type,
+                                         wkt=wkt,
+                                         code2=code2,
+                                         area=area)
+                    except db._adapter.driver.OperationalError, exception:
+                        s3_debug(exception)
+
+            else:
+                s3_debug("No geometry\n")
+
+        # Close the shapefile
+        ds.Destroy()
 
         db.commit()
 

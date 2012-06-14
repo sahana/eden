@@ -41,6 +41,7 @@ __all__ = ["S3HRModel",
            "hrm_service_record",
            "hrm_rheader",
            "hrm_training_event_controller",
+           "hrm_training_controller",
            ]
 
 import datetime

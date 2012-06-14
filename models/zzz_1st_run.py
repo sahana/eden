@@ -197,7 +197,6 @@ if len(pop_list) > 0:
                 path = os.path.join(request.folder,
                                     "private",
                                     "templates",
-                                    "demo",
                                     pop_setting)
                 if os.path.exists(path):
                     bi.perform_tasks(path)
@@ -253,26 +252,23 @@ if len(pop_list) > 0:
                                     (duration)
 
         elif pop_setting >= 20:
-            # Populate data for a deployment default demo
-            """
-                Read the demo_folders file and extract the folder for the specific demo
-            """
+            # Populate data for a template
+            # Read the folders.cfg file and extract the folder for the specific template
             file = os.path.join(request.folder,
                                 "private",
                                 "templates",
-                                "demo",
-                                "demo_folders.cfg")
+                                "folders.cfg")
             source = open(file, "r")
             values = source.readlines()
             source.close()
-            demo = ""
-            for demos in values:
+            template = ""
+            for templates in values:
                 # strip out the new line
-                demos = demos.strip()
-                if demos == "":
+                templates = templates.strip()
+                if templates == "":
                     continue
                 # split at the comma
-                details = demos.split(",")
+                details = templates.split(",")
                 if len(details) == 2:
                      # remove any spaces and enclosing double quote
                     index = details[0].strip('" ')
@@ -281,16 +277,15 @@ if len(pop_list) > 0:
                         path = os.path.join(request.folder,
                                             "private",
                                             "templates",
-                                            "demo",
                                             directory)
-                        demo = directory
+                        template = directory
                         if os.path.exists(path):
                             bi.perform_tasks(path)
                         else:
-                            print >> sys.stderr, "Unable to install demo %s no demo directory found" \
+                            print >> sys.stderr, "Unable to install template %s no template directory found" \
                                                     % index
-            if demo == "":
-                print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" \
+            if template == "":
+                print >> sys.stderr, "Unable to install a template with of an id '%s', please check 000_config and folders.cfg" \
                                         % pop_setting
             else:
                 end = datetime.datetime.now()
@@ -298,12 +293,12 @@ if len(pop_list) > 0:
                 try:
                     # Python-2.7
                     duration = '{:.2f}'.format(duration.total_seconds()/60)
-                    print >> sys.stdout, "Installed demo '%s' completed in %s mins" % \
-                                            (demo, duration)
+                    print >> sys.stdout, "Installed template '%s' completed in %s mins" % \
+                                            (template, duration)
                 except AttributeError:
                     # older Python
-                    print >> sys.stdout, "Installed demo '%s' completed in %s" % \
-                                            (demo, duration)
+                    print >> sys.stdout, "Installed template '%s' completed in %s" % \
+                                            (template, duration)
         grandTotalEnd = datetime.datetime.now()
         duration = grandTotalEnd - grandTotalStart
         try:

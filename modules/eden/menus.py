@@ -841,8 +841,8 @@ class S3OptionsMenu:
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("New Training Event", m="create"),
-                        M("List All Training Events"),
-                        M("Search Training Events", m="search"),
+                        M("List All"),
+                        M("Search", m="search"),
                         M("Search Training Participants", f="training",
                           m="search"),
                         M("Training Report", f="training", m="report",
@@ -926,8 +926,8 @@ class S3OptionsMenu:
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("New Training Event", m="create"),
-                        M("List All Training Events"),
-                        M("Search Training Events", m="search"),
+                        M("List All"),
+                        M("Search", m="search"),
                         M("Search Training Participants", f="training",
                           m="search"),
                         M("Training Report", f="training", m="report",

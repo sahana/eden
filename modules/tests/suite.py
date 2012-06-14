@@ -36,19 +36,29 @@ config.url = base_url
 base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
 config.base_dir = base_dir
 
-fp = webdriver.FirefoxProfile()
-fp.set_preference("network.proxy.type", 0)
-
-browser = config.browser = webdriver.Firefox(firefox_profile=fp)
-browser.implicitly_wait(config.timeout)
-
+test = None
+remote = None
 # Do we have any command-line arguments?
 args = sys.argv
 if args[1:]:
     # The 1st argument is taken to be the test name:
     test = args[1]
+    if args[2:]:
+        # The 2nd argument is taken to be a remote server:
+        # @ToDo:
+        #  Need to change this so can do remote for whole suite (normal case)
+        #  - convert to proper params
+        remote = args[2]
+
+if remote:
+    # @ToDo
+    browser = config.browser = webdriver.Remote()
 else:
-    test = None
+    fp = webdriver.FirefoxProfile()
+    fp.set_preference("network.proxy.type", 0)
+    browser = config.browser = webdriver.Firefox(firefox_profile=fp)
+
+browser.implicitly_wait(config.timeout)
 
 # Shortcut
 loadTests = unittest.TestLoader().loadTestsFromTestCase

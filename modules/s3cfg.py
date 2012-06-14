@@ -51,7 +51,6 @@ class S3Config(Storage):
         self.frontpage.rss = []
         self.fin = Storage()
         self.gis = Storage()
-        self.osm = Storage()    # Backwards-compatiblity, deprecate soon
         self.mail = Storage()
         self.twitter = Storage()
         self.L10n = Storage()
@@ -67,26 +66,36 @@ class S3Config(Storage):
         self.project = Storage()
         self.save_search = Storage()
 
-        T = current.T
+    # -------------------------------------------------------------------------
+    # Template
+    def get_template(self):
+        """
+            Which deployment template to use for config.py, parser.py, menus.py, etc
+            http://eden.sahanafoundation.org/wiki/BluePrint/Templates
+        """
+        return self.base.get("template", "default")
 
-        # These are copied from modules/s3/s3aaa.py
-        self.aaa.acl =  Storage(CREATE = 0x0001,
-                                READ   = 0x0002,
-                                UPDATE = 0x0004,
-                                DELETE = 0x0008,
-                                ALL = 0x000F    # CREATE | READ | UPDATE | DELETE
-                                )
-        self.CURRENCIES = {
-            "USD" :T("United States Dollars"),
-            "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds"),
-            "CHF" :T("Swiss Francs")
-        }
+    def exec_template(self, path):
+        """
+            Execute the template
+        """
+        #from gluon.compileapp import build_environment
+        from gluon.fileutils import read_file
+        from gluon.restricted import restricted
+        #environment = build_environment(request, response, session)
+        code = read_file(path)
+        #restricted(code, environment, layer=path)
+        restricted(code, layer=path)
+        return
 
     # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
+        """
+            salt to encrypt passwords - normally randmosied during 1st run
+        """
         return self.auth.get("hmac_key", "akeytochange")
+
     def get_auth_facebook(self):
         """
             Read the FaceBook OAuth settings
@@ -98,9 +107,11 @@ class S3Config(Storage):
             return dict(id=id, secret=secret)
         else:
             return False
+
     def get_auth_gmail_domains(self):
         """ List of domains which can use GMail SMTP for Authentication """
         return self.auth.get("gmail_domains", [])
+
     def get_auth_google(self):
         """
             Read the Google OAuth settings
@@ -112,6 +123,7 @@ class S3Config(Storage):
             return dict(id=id, secret=secret)
         else:
             return False
+
     def get_auth_openid(self):
         return self.auth.get("openid", False)
     def get_auth_registration_requires_verification(self):
@@ -166,13 +178,11 @@ class S3Config(Storage):
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", True)
 
-    # @ToDo: Deprecate
-    def get_aaa_default_uacl(self):
-        return self.aaa.get("default_uacl", self.aaa.acl.READ)
-    def get_aaa_default_oacl(self):
-        return self.aaa.get("default_oacl", self.aaa.acl.READ |
-                                            self.aaa.acl.UPDATE)
     def get_aaa_role_modules(self):
+        """
+            Which modules are includes in the Role Manager
+            - to assign discrete permissions to via UI
+        """
         T = current.T
         return self.aaa.get("role_modules", OrderedDict([
             ("staff", "Staff"),
@@ -185,6 +195,9 @@ class S3Config(Storage):
             ("irs", "Incidents")
         ]))
     def get_aaa_access_levels(self):
+        """
+            Access levels for the Role Manager UI
+        """
         T = current.T
         return self.aaa.get("access_levels", OrderedDict([
             ("reader", "Reader"),
@@ -267,7 +280,13 @@ class S3Config(Storage):
     # Finance settings
     # @ToDo: Make these customisable per User/Facility
     def get_fin_currencies(self):
-        return self.fin.get("currencies", self.CURRENCIES)
+        T = current.T
+        currencies = {
+            "EUR" :T("Euros"),
+            "GBP" :T("Great British Pounds"),
+            "USD" :T("United States Dollars"),
+        }
+        return self.fin.get("currencies", currencies)
     def get_fin_currency_default(self):
         return self.fin.get("currency_default", "USD") # Dollars
     def get_fin_currency_writable(self):

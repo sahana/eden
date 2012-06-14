@@ -28,8 +28,7 @@ if len(pop_list) > 0:
     create_role = auth.s3_create_role
     update_acls = auth.s3_update_acls
 
-    default_uacl = deployment_settings.get_aaa_default_uacl()
-    default_oacl = deployment_settings.get_aaa_default_oacl()
+    default_oacl = acl.READ|acl.UPDATE
 
     # Do not remove or change order of these 5 definitions (System Roles):
     create_role("Administrator",

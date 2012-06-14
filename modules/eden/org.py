@@ -2074,6 +2074,7 @@ def org_office_controller():
         rheader = s3db.inv_warehouse_rheader
     else:
         rheader = s3db.org_rheader
-    return s3_rest_controller("org", "office", rheader=rheader)
+    output = s3_rest_controller("org", "office", rheader=rheader)
+    return output
 
 # END =========================================================================
