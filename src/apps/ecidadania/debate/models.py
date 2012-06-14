@@ -41,7 +41,7 @@ class Debate(models.Model):
     """
     title = models.CharField(_('Title'), max_length=200, unique=True)
     description = models.TextField(_('Description'), blank=True, null=True)
-    scope = models.CharField(_('Scope'), blank=True, null=True, max_length=100)
+    theme = models.CharField(_('Theme'), blank=True, null=True, max_length=100)
 
     space = models.ForeignKey(Space, blank=True, null=True)
     date = models.DateTimeField(_('Date created'), auto_now_add=True)
