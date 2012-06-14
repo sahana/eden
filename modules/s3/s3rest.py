@@ -3110,7 +3110,6 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
-                                              msince=msince,
                                               marker=marker)
 
                     # Mark as referenced element (for XSLT)
