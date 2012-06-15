@@ -22,6 +22,20 @@ if len(pop_list) > 0:
 
     # Scheduled Tasks
     if deployment_settings.has_module("msg"):
+        
+        #Message Parsing Tasks for each enabled workflows 
+        #for workflow in deployment_settings.get_parser_enabled():
+            #workflow = int(workflow.split("_")[1])
+            #s3task.schedule_task("parse_workflow",
+                                 #vars={"workflow": workflow},
+                                 #period=300,  # seconds
+                                 #timeout=300, # seconds
+                                 #repeats=0    # unlimited
+                                 #)
+                        
+                        
+                
+                
         # Send Messages from Outbox
         # SMS every minute
         s3task.schedule_task("process_outbox",
@@ -49,13 +63,7 @@ if len(pop_list) > 0:
         #                     repeats=0    # unlimited
         #                    )
 
-        #Process the msg_log for unparsed messages.
-        #s3task.schedule_task("process_log",
-        #                     period=300,  # seconds
-        #                     timeout=300, # seconds
-        #                     repeats=0    # unlimited
-        #                     )
-
+        
     # Person Registry
     tablename = "pr_person"
     table = db[tablename]

@@ -35,6 +35,7 @@ __all__ = ["S3MessagingModel",
            "S3TropoModel",
            "S3TwitterModel",
            "S3XFormsModel",
+           "S3ParsingModel"
         ]
 
 from gluon import *
@@ -71,6 +72,10 @@ class S3MessagingModel(S3Model):
             2:T("Medium"),
             1:T("Low")
         }
+        source_task_id = S3ReusableField("source_task_id", db.scheduler_task,
+                                             requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
+                                             ondelete = "RESTRICT")
+        
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         # ---------------------------------------------------------------------
@@ -100,7 +105,8 @@ class S3MessagingModel(S3Model):
                                             (status and ["Parsed"] or ["Not Parsed"])[0],
                                         label = T("Parsing Status")),
                                   Field("reply", "text" ,
-                                        label = T("Reply")),                                        
+                                        label = T("Reply")),
+                                  source_task_id(label="Source ID"),                                                                         
                                   *s3.meta_fields())
 
         self.configure(tablename,
@@ -118,7 +124,8 @@ class S3MessagingModel(S3Model):
                                     #"actioned_comments",
                                     #"priority",
                                     "is_parsed",
-                                    "reply"
+                                    "reply",
+                                    "source_task_id"
                                     ])
 
         # Components
@@ -716,5 +723,40 @@ class S3XFormsModel(S3Model):
 
         # ---------------------------------------------------------------------
         return Storage()
+    
+# ---------------------------------------------------------------------
+        
+class S3ParsingModel(S3Model):
+    """
+        Message Parsing Model
+    """
+
+    names = ["msg_workflow"]
+
+    def model(self):
+
+        T = current.T
+        s3 = current.response.s3
+        db = current.db
+        # Reusable Source Task ID
+        source_task_id = S3ReusableField("source_task_id", db.scheduler_task,
+                                     requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
+                                     ondelete = "RESTRICT")
+        # Reusable Workflow Task ID
+        workflow_task_id = S3ReusableField("workflow_task_id", db.scheduler_task,
+                                     requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
+                                     ondelete = "RESTRICT")
+
+        tablename = "msg_workflow"
+        table = self.define_table(tablename,
+                                source_task_id(),
+                                workflow_task_id(),
+                                *s3.meta_fields())
+        
+
+        return Storage()
+ 
+
+
 
 # END =========================================================================
