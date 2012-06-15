@@ -1623,11 +1623,7 @@ class S3CRUD(S3Method):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
                 rows = db(query).select(table._id)
-                restrict = []
-                for row in rows:
-                    row_id = row.get("id", None)
-                    if row_id:
-                        restrict.append(str(row_id))
+                restrict = [str(row[table._id]) for row in rows]
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn", restrict=restrict)
             else:
