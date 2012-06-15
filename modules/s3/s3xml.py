@@ -670,15 +670,15 @@ class S3XML(S3Codec):
         if marker:
             try:
                 # Dict (provided by Feature Layers)
-                _marker = marker["marker"]
+                _marker = marker.get("marker", None)
                 if _marker:
                     marker_url = "%s/%s" % (download_url, _marker)
-                symbol = marker["gps_marker"] or symbol
-                popup_url = marker["popup_url"]
-                tooltips = marker["tooltips"]
-                latlons = marker["latlons"]
-                wkts = marker["wkts"]
-                geojsons = marker["geojsons"]
+                symbol = marker.get("gps_marker", None) or symbol
+                popup_url = marker.get("popup_url", None)
+                tooltips = marker.get("tooltips", None)
+                latlons = marker.get("latlons", None)
+                wkts = marker.get("wkts", None)
+                geojsons = marker.get("geojsons", None)
             except:
                 # String (provided by ?)
                 marker_url = "%s/gis_marker.image.%s.png" % (download_url, marker)
@@ -706,17 +706,18 @@ class S3XML(S3Codec):
 
             LatLon = None
             WKT = None
-            # Use the value calculated in gis.get_marker_and_tooltip() if we can
+            # Use the value calculated in gis.get_marker_and_popup/get_theme_wkt if we can
             if latlons:
                 LatLon = latlons[tablename][record.id]
                 lat = LatLon[0]
                 lon = LatLon[1]
             elif geojsons:
                 WKT = True
-                geojson = polygons[tablename][record.id]
-                # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                geometry = etree.SubElement(element, "geometry")
-                geometry.set("value", geojson)
+                geojson = geojsons[tablename].get(record.id, None)
+                if geojson:
+                    # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
+                    geometry = etree.SubElement(element, "geometry")
+                    geometry.set("value", geojson)
             elif wkts:
                 WKT = True
                 wkt = wkts[tablename][record.id]
@@ -725,7 +726,7 @@ class S3XML(S3Codec):
 
             elif "polygons" in get_vars:
                 # Calculate the Polygons 1/feature since we didn't do it earlier
-                # e.g. Theme Layers
+                # - no current case for this
                 if WKTFIELD in fields:
                     query = (ktable.id == r_id)
                     if settings.get_gis_spatialdb():

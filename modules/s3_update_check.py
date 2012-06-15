@@ -1,8 +1,22 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 
-def update_check(environment, template="default"):
+try:
+    from gluon import current
+except ImportError:
+    print >> sys.stderr, """
+The installed version of Web2py is too old -- it does not define current.
+Please upgrade Web2py to a more recent version.
+"""
+
+# Version of 000_config.py
+# Increment this if the user should update their running instance
+VERSION = 1
+
+#def update_check(environment, template="default"):
+def update_check():
     """
         Check whether the dependencies are sufficient to run Eden
 
@@ -11,9 +25,8 @@ def update_check(environment, template="default"):
     """
 
     # Get Web2py environment into our globals.
-    globals().update(**environment)
-
-    app_path = os.path.join("applications", request.application)
+    #globals().update(**environment)
+    request = current.request
 
     # Fatal errors
     errors = []
@@ -73,17 +86,9 @@ def update_check(environment, template="default"):
     # -------------------------------------------------------------------------
     # Check Web2Py version
     #
-    # Currently, the minimum usable Web2py is determined by the existence of
-    # the global "current".
-    try:
-        from gluon import current
-    except ImportError:
-        errors.append(
-            "The installed version of Web2py is too old -- it does not define current."
-            "\nPlease upgrade Web2py to a more recent version.")
-
-    # We also warn if the Scheduler is available
-    web2py_minimum_version = "Version 1.99.2 (2011-09-26 00:51:34) stable"
+    # Currently, the minimum usable Web2py is determined by whether the
+    # Scheduler is available
+    web2py_minimum_version = "Version 1.99.3 (2011-10-27 13:23:13)"
     web2py_version_ok = True
     try:
         from gluon.fileutils import parse_version
@@ -102,6 +107,7 @@ def update_check(environment, template="default"):
 
     # -------------------------------------------------------------------------
     # Create required directories if needed
+    app_path = request.folder
     databases_dir = os.path.join(app_path, "databases")
     try:
         os.stat(databases_dir)
@@ -111,16 +117,9 @@ def update_check(environment, template="default"):
 
     # -------------------------------------------------------------------------
     # Copy in Templates
-    # - currently 000_config.py
+    # - 000_config.py (machine-specific settings)
+    # - rest are run in-place
     #
-    # To change which folder is used to source the file(s), create a
-    # file models/0000_update_check.py with TEMPLATE = "foldername"
-    #
-    # @ToDo: Add:
-    #        - Theme: CSS, views/layout.html, modules/eden/layouts.py
-    #        - Menus: modules/eden/menus.py, models/01_menu.py
-    #        - Parser for Inbound messages: http://eden.sahanafoundation.org/wiki/BluePrint/Messaging/CERTSMSParsing
-
     template_folder = os.path.join(app_path, "private", "templates")
     
     template_files = {
@@ -131,7 +130,7 @@ def update_check(environment, template="default"):
     copied_from_template = []
 
     for t in template_files:
-        src_path = os.path.join(template_folder, template, t)
+        src_path = os.path.join(template_folder, t)
         dst_path = os.path.join(app_path, template_files[t])
         try:
             os.stat(dst_path)
@@ -170,10 +169,24 @@ def update_check(environment, template="default"):
                         break
             if has_edited and (edited != "True"):
                 errors.append("Please edit %s before starting the system." % t)
-            # @ToDo: Check if it's up to date (i.e. a critical update requirement)
-            #version_pattern = r"VERSION_\w*\s*=\s*([0-9]+)"
-            #version_matcher = re.compile(version_pattern).match
-            #has_version = False
+            # Check if it's up to date (i.e. a critical update requirement)
+            version_pattern = r"VERSION =\s*([0-9]+)"
+            version_matcher = re.compile(version_pattern).match
+            has_version = False
+            with open(dst_path) as f:
+                for line in f:
+                    version_result = version_matcher(line)
+                    if version_result:
+                        has_version = True
+                        version = version_result.group(1)
+                        break
+            if not has_version:
+                error = "Your %s is using settings from the old templates system. Please switch to the new templates system: http://eden.sahanafoundation.org/wiki/BluePrint/Templates" % t
+                errors.append(error)
+            elif int(version) != VERSION:
+                error = "Your %s is using settings from template version %s. Please update with new settings from template version %s before starting the system." % \
+                                (t, version, VERSION)
+                errors.append(error)
 
     if copied_from_template:
         errors.append(
@@ -182,4 +195,4 @@ def update_check(environment, template="default"):
 
     return {"error_messages": errors, "warning_messages": warnings}
 
-# =============================================================================
+# END =========================================================================

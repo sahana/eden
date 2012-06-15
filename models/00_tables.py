@@ -46,6 +46,7 @@ import eden.support
 import eden.survey
 import eden.sync
 import eden.vehicle
+import eden.vol
 
 # =============================================================================
 # Import S3 meta fields into global namespace
@@ -80,9 +81,18 @@ s3_meta_modified_by = S3ReusableField("modified_by", db.auth_user,
                                       represent=s3_auth_user_represent,
                                       ondelete="RESTRICT")
 
+# Approver of a record
+s3_meta_approved_by = S3ReusableField("approved_by", db.auth_user,
+                                      readable=False,
+                                      writable=False,
+                                      requires=None,
+                                      represent=s3_auth_user_represent,
+                                      ondelete="RESTRICT")
+
 def s3_authorstamp():
     return (s3_meta_created_by(),
-            s3_meta_modified_by())
+            s3_meta_modified_by(),
+            s3_meta_approved_by())
 
 # =============================================================================
 # Record ownership meta-fields
@@ -150,6 +160,7 @@ def s3_meta_fields():
               s3_meta_modified_on(),
               s3_meta_created_by(),
               s3_meta_modified_by(),
+              s3_meta_approved_by(),
               s3_meta_owned_by_user(),
               s3_meta_owned_by_group(),
               s3_meta_owned_by_entity())
@@ -169,6 +180,7 @@ response.s3.all_meta_field_names = [field.name for field in
      s3_meta_modified_on(),
      s3_meta_created_by(),
      s3_meta_modified_by(),
+     s3_meta_approved_by(),
      s3_meta_owned_by_user(),
      s3_meta_owned_by_group(),
      s3_meta_owned_by_entity(),

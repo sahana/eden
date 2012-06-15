@@ -1976,7 +1976,7 @@ class S3Resource(object):
             table = s3db[tablename]
         except:
             manager.error = "Undefined table: %s" % tablename
-            raise KeyError(manager.error)
+            raise # KeyError(manager.error)
         self.tablename = tablename
         self.table = table
         # Table alias (needed for self-joins)
@@ -2056,6 +2056,7 @@ class S3Resource(object):
         self.job = None
         self.error = None
         self.error_tree = None
+        self.import_count = 0
 
         # Search
         self.search = model.get_config(self.tablename, "search_method", None)
@@ -2236,7 +2237,7 @@ class S3Resource(object):
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             left = left_joins
@@ -2764,7 +2765,7 @@ class S3Resource(object):
         distinct = self.rfilter.distinct
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             left = left_joins
@@ -3014,8 +3015,13 @@ class S3Resource(object):
         if layer_id:
             # We're being called as a GIS Feature Layer, so do lookup per layer
             # and not per-record
-            # Marker, Popup & LatLon
+            # Marker, Popup & LatLon/WKT
             marker = current.gis.get_marker_and_popup(layer_id, self)
+        elif self.tablename == "gis_theme_data" and \
+             current.auth.permission.format == "geojson":
+            # Theme Layer, so do lookup per layer
+            # and not per-record
+            marker = current.gis.get_theme_geojson(self)
         else:
             # Marker provided in request
             # Q: What does this?
@@ -3109,7 +3115,6 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               skip=skip,
-                                              msince=msince,
                                               marker=marker)
 
                     # Mark as referenced element (for XSLT)
@@ -3680,6 +3685,7 @@ class S3Resource(object):
         # Commit the import job
         import_job.commit(ignore_errors=ignore_errors)
         self.error = import_job.error
+        self.import_count += import_job.count
         if self.error:
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error
@@ -4566,7 +4572,7 @@ class S3Resource(object):
         # Sort left joins and add to attributes
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(self.sortleft)
             except:
                 pass
             attributes.update(left=left_joins)
@@ -5348,7 +5354,7 @@ class S3ResourceFilter:
                 left_joins.append(join)
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(resource.sortleft)
             except:
                 pass
             left = left_joins
@@ -5394,7 +5400,7 @@ class S3ResourceFilter:
         left_joins = self.get_left_joins()
         if left_joins:
             try:
-                left_joins.sort(self.__sortleft)
+                left_joins.sort(resource.sortleft)
             except:
                 pass
             left = left_joins

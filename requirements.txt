@@ -1,9 +1,11 @@
 python-dateutil>=1.5
 lxml>=2.2.8
 xlwt>=0.7.2
-Shapely>=1.2.11
+Shapely>=1.2.14
 PIL>=1.1.7
-reportlab>=2.4
-pyserial>=2.5
-tweepy>=1.7.1
+reportlab>=2.5
+pyserial>=2.6
+tweepy>=1.9
 xlrd>=0.7.1
+numpy>=1.6.2
+selenium>=2.23.0

@@ -377,7 +377,7 @@ class S3AutocompleteWidget(FormWidget):
     """
 
     def __init__(self,
-                 prefix,
+                 module,
                  resourcename,
                  fieldname = "name",
                  link_filter = "",
@@ -385,7 +385,7 @@ class S3AutocompleteWidget(FormWidget):
                  delay = 450,     # milliseconds
                  min_length = 2): # Increase this for large deployments
 
-        self.prefix = prefix
+        self.module = module
         self.resourcename = resourcename
         self.fieldname = fieldname
         self.link_filter = link_filter
@@ -415,7 +415,7 @@ class S3AutocompleteWidget(FormWidget):
 
         # Script defined in static/scripts/S3/S3.js
         js_autocomplete = "S3.autocomplete('%s','%s','%s','%s','%s','%s',%s,%s);\n" % \
-            (self.fieldname, self.prefix, self.resourcename, real_input,
+            (self.fieldname, self.module, self.resourcename, real_input,
              self.link_filter, self.post_process, self.delay, self.min_length)
 
         if value:
@@ -2461,11 +2461,11 @@ class S3AutocompleteOrAddWidget(FormWidget):
         - an add widget which is used to add an object.
             It fills the field with that object after successful addition
     """
-    def __init__(
-        self,
-        autocomplete_widget,
-        add_widget
-    ):
+    def __init__(self,
+                 autocomplete_widget,
+                 add_widget
+                ):
+
         self.autocomplete_widget = autocomplete_widget
         self.add_widget = add_widget
 
@@ -2491,15 +2491,14 @@ class S3AddObjectWidget(FormWidget):
             after a successful submission, the response callback is handed the
             response.
     """
-    def __init__(
-        self,
-        form_url,
-        table_name,
+    def __init__(self,
+                 form_url,
+                 table_name,
+                 dummy_field_selector,
+                 on_show,
+                 on_hide
+                ):
 
-        dummy_field_selector,
-        on_show,
-        on_hide
-    ):
         self.form_url = form_url
         self.table_name = table_name
 

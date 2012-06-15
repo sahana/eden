@@ -131,7 +131,6 @@ class S3DocumentLibrary(S3Model):
         #                                              T("Has data from this Reference Document been entered into Sahana?")))
 
         # CRUD Strings
-        DOCUMENT = T("Reference Document")
         ADD_DOCUMENT = T("Add Reference Document")
         crud_strings[tablename] = Storage(
             title_create = ADD_DOCUMENT,

@@ -1,8 +1,9 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
- * full text of the license.
- *
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
+ * full text of the license. */
+
+/**
  * @requires OpenLayers/BaseTypes/Class.js
  * @requires OpenLayers/Animation.js
  */
@@ -178,6 +179,9 @@ OpenLayers.Easing.Linear = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeIn: function(t, b, c, d) {
         return c*t/d + b;
@@ -191,6 +195,9 @@ OpenLayers.Easing.Linear = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeOut: function(t, b, c, d) {
         return c*t/d + b;
@@ -204,6 +211,9 @@ OpenLayers.Easing.Linear = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeInOut: function(t, b, c, d) {
         return c*t/d + b;
@@ -225,6 +235,9 @@ OpenLayers.Easing.Expo = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeIn: function(t, b, c, d) {
         return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
@@ -238,6 +251,9 @@ OpenLayers.Easing.Expo = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeOut: function(t, b, c, d) {
         return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
@@ -251,6 +267,9 @@ OpenLayers.Easing.Expo = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeInOut: function(t, b, c, d) {
         if (t==0) return b;
@@ -275,6 +294,9 @@ OpenLayers.Easing.Quad = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeIn: function(t, b, c, d) {
         return c*(t/=d)*t + b;
@@ -288,6 +310,9 @@ OpenLayers.Easing.Quad = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeOut: function(t, b, c, d) {
         return -c *(t/=d)*(t-2) + b;
@@ -301,6 +326,9 @@ OpenLayers.Easing.Quad = {
      * b - {Float} beginning position
      * c - {Float} total change
      * d - {Float} duration of the transition
+     *
+     * Returns:
+     * {Float}
      */
     easeInOut: function(t, b, c, d) {
         if ((t/=d/2) < 1) return c/2*t*t + b;

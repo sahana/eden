@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -21,11 +21,22 @@
  */
 OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
 
-    /**
-     * Supported event types:
-     *  - *beforefeaturehighlighted* Triggered before a feature is highlighted
-     *  - *featurehighlighted* Triggered when a feature is highlighted
-     *  - *featureunhighlighted* Triggered when a feature is unhighlighted
+    /** 
+     * APIProperty: events
+     * {<OpenLayers.Events>} Events instance for listeners and triggering
+     *     control specific events.
+     *
+     * Register a listener for a particular event with the following syntax:
+     * (code)
+     * control.events.register(type, obj, listener);
+     * (end)
+     *
+     * Supported event types (in addition to those from <OpenLayers.Control.events>):
+     * beforefeaturehighlighted - Triggered before a feature is highlighted
+     * featurehighlighted - Triggered when a feature is highlighted
+     * featureunhighlighted - Triggered when a feature is unhighlighted
+     * boxselectionstart - Triggered before box selection starts
+     * boxselectionend - Triggered after box selection ends
      */
     
     /**
@@ -556,6 +567,7 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
             var prevMultiple = this.multiple;
             this.multiple = true;
             var layers = this.layers || [this.layer];
+            this.events.triggerEvent("boxselectionstart", {layers: layers}); 
             var layer;
             for(var l=0; l<layers.length; ++l) {
                 layer = layers[l];
@@ -577,6 +589,7 @@ OpenLayers.Control.SelectFeature = OpenLayers.Class(OpenLayers.Control, {
                 }
             }
             this.multiple = prevMultiple;
+            this.events.triggerEvent("boxselectionend", {layers: layers}); 
         }
     },
 

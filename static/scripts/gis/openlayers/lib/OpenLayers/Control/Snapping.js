@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -17,16 +17,17 @@
  */
 OpenLayers.Control.Snapping = OpenLayers.Class(OpenLayers.Control, {
 
-    /**
+    /** 
+     * APIProperty: events
+     * {<OpenLayers.Events>} Events instance for listeners and triggering
+     *     control specific events.
+     *
      * Register a listener for a particular event with the following syntax:
      * (code)
      * control.events.register(type, obj, listener);
      * (end)
      *
-     * Listeners will be called with a reference to an event object.  The
-     *     properties of this event depends on exactly what happened.
-     *
-     * Supported control event types (in addition to those from <OpenLayers.Control>):
+     * Supported event types (in addition to those from <OpenLayers.Control.events>):
      * beforesnap - Triggered before a snap occurs.  Listeners receive an
      *     event object with *point*, *x*, *y*, *distance*, *layer*, and
      *     *snapType* properties.  The point property will be original point

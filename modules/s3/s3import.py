@@ -2652,6 +2652,8 @@ class S3ImportJob():
         self.job_table = None
         self.item_table = None
 
+        self.count = 0 # number of records imported
+
         # Import strategy
         self.strategy = strategy
         if self.strategy is None:
@@ -3057,6 +3059,8 @@ class S3ImportJob():
                     self.error_tree.append(deepcopy(element))
                 if not ignore_errors:
                     return False
+            elif item.tablename == self.table._tablename:
+                self.count += 1
         return True
 
     # -------------------------------------------------------------------------

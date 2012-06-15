@@ -830,6 +830,9 @@ div#table-container {
    display: block;
    width: 100%;
    overflow: auto;
+   /* Bring in line with export formats */
+   margin-top: -1px;
+   min-width: 640px;
 }
 div#table-container table {
    display: block;
@@ -861,7 +864,6 @@ div#table-container td.totals_header {
     font-weight: bold;
 }
 
-
 #list_formats {
     float: left;
     margin-bottom: 10px;
@@ -872,12 +874,6 @@ div#table-container td.totals_header {
 }
 
 /* dataTables Styling */
-/* Bring in line with export formats */
-#table-container {
-    margin-top: -1px;
-    min-width: 640px;
-    /* min-width: 700px; */
-}
 .dataTable {
     /* min-width: 700px; */
     width: 100%;

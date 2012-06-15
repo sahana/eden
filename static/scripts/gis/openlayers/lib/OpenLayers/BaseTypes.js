@@ -1,7 +1,11 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
+
+/**
+ * @requires OpenLayers/SingleFile.js
+ */
 
 /** 
  * Header: OpenLayers Base Types
@@ -183,7 +187,10 @@ OpenLayers.String = {
      * APIFunction: numericIf
      * Converts a string that appears to be a numeric value into a number.
      * 
-     * Returns
+     * Parameters:
+     * value - {String}
+     *
+     * Returns:
      * {Number|String} a Number if the passed value is a number, a String
      *     otherwise. 
      */

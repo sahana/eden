@@ -11,7 +11,7 @@
 module = request.controller
 resourcename = request.function
 
-if module not in deployment_settings.modules:
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # S3 framework functions

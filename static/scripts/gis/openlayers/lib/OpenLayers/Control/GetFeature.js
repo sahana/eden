@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -169,8 +169,17 @@ OpenLayers.Control.GetFeature = OpenLayers.Class(OpenLayers.Control, {
      */
     filterType: OpenLayers.Filter.Spatial.BBOX,
 
-    /**
-     * Supported event types:
+    /** 
+     * APIProperty: events
+     * {<OpenLayers.Events>} Events instance for listeners and triggering
+     *     control specific events.
+     *
+     * Register a listener for a particular event with the following syntax:
+     * (code)
+     * control.events.register(type, obj, listener);
+     * (end)
+     *
+     * Supported event types (in addition to those from <OpenLayers.Control.events>):
      * beforefeatureselected - Triggered when <click> is true before a
      *      feature is selected. The event object has a feature property with
      *      the feature about to select
@@ -324,11 +333,11 @@ OpenLayers.Control.GetFeature = OpenLayers.Class(OpenLayers.Control, {
     },
     
     /**
-     * Method selectHover
+     * Method: selectHover
      * Callback from the handlers.hover set up when <hover> selection is on
      *
      * Parameters:
-     * evt {Object} - event object with an xy property
+     * evt - {Object} event object with an xy property
      */
     selectHover: function(evt) {
         var bounds = this.pixelToBounds(evt.xy);
@@ -450,7 +459,7 @@ OpenLayers.Control.GetFeature = OpenLayers.Class(OpenLayers.Control, {
      * Sets the multiple and toggle modifiers according to the current event
      * 
      * Parameters:
-     * evt {<OpenLayers.Event>}
+     * evt - {<OpenLayers.Event>}
      */
     setModifiers: function(evt) {
         this.modifiers = {

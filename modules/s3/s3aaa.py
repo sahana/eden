@@ -2946,7 +2946,7 @@ class AuthS3(Auth):
             return None
 
     # -------------------------------------------------------------------------
-    def s3_set_record_owner(self, table, record, **fields):
+    def s3_set_record_owner(self, table, record, force_update=False, **fields):
         """
             Update the record owner, to be called from CRUD and Importer
 
@@ -3059,7 +3059,7 @@ class AuthS3(Auth):
         if OENT in fields_in_table:
             if OENT in fields:
                 data[OENT] = fields[OENT]
-            elif not row[OENT]:
+            elif not row[OENT] or force_update:
                 # Check for type-specific handler to find the owner entity
                 handler = model.get_config(tablename, "owner_entity")
                 if callable(handler):
@@ -6798,7 +6798,8 @@ class S3PersonRoleManager(S3EntityRoleManager):
 
             @return: dictionary of assigned roles with entity pe_id as the keys
         """
-        return super(S3PersonRoleManager, self).get_assigned_roles(user_id=self.user["id"])
+        user_id = current.auth.user.id
+        return super(S3PersonRoleManager, self).get_assigned_roles(user_id=user_id)
 
     # -------------------------------------------------------------------------
     def get_form_fields(self):

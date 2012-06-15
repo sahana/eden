@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /** 
@@ -202,7 +202,7 @@ OpenLayers.Control.OverviewMap = OpenLayers.Class(OpenLayers.Control, {
      */    
     draw: function() {
         OpenLayers.Control.prototype.draw.apply(this, arguments);
-        if(!(this.layers.length > 0)) {
+        if (this.layers.length === 0) {
             if (this.map.baseLayer) {
                 var layer = this.map.baseLayer.clone();
                 this.layers = [layer];
@@ -352,11 +352,11 @@ OpenLayers.Control.OverviewMap = OpenLayers.Class(OpenLayers.Control, {
      * evt - {Event}
      */
     onButtonClick: function(evt) {
-        if (evt.button === this.minimizeDiv) {
+        if (evt.buttonElement === this.minimizeDiv) {
             this.minimizeControl();
-        } else if (evt.button === this.maximizeDiv) {
+        } else if (evt.buttonElement === this.maximizeDiv) {
             this.maximizeControl();
-        };
+        }
     },
 
     /**
@@ -628,12 +628,14 @@ OpenLayers.Control.OverviewMap = OpenLayers.Class(OpenLayers.Control, {
      * translated into pixel bounds for the overview map
      */
     getRectBoundsFromMapBounds: function(lonLatBounds) {
-        var leftBottomLonLat = new OpenLayers.LonLat(lonLatBounds.left,
-                                                     lonLatBounds.bottom);
-        var rightTopLonLat = new OpenLayers.LonLat(lonLatBounds.right,
-                                                   lonLatBounds.top);
-        var leftBottomPx = this.getOverviewPxFromLonLat(leftBottomLonLat);
-        var rightTopPx = this.getOverviewPxFromLonLat(rightTopLonLat);
+        var leftBottomPx = this.getOverviewPxFromLonLat({
+            lon: lonLatBounds.left,
+            lat: lonLatBounds.bottom
+        });
+        var rightTopPx = this.getOverviewPxFromLonLat({
+            lon: lonLatBounds.right,
+            lat: lonLatBounds.top
+        });
         var bounds = null;
         if (leftBottomPx && rightTopPx) {
             bounds = new OpenLayers.Bounds(leftBottomPx.x, leftBottomPx.y,
@@ -699,7 +701,8 @@ OpenLayers.Control.OverviewMap = OpenLayers.Class(OpenLayers.Control, {
      * Get a pixel location from a map location
      *
      * Parameters:
-     * lonlat - {<OpenLayers.LonLat>}
+     * lonlat - {<OpenLayers.LonLat>|Object} OpenLayers.LonLat or an
+     *     object with a 'lon' and 'lat' properties.
      *
      * Returns:
      * {Object} Location which is the passed-in OpenLayers.LonLat, 
