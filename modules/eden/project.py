@@ -322,8 +322,8 @@ class S3ProjectModel(S3Model):
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
                              Field("objectives", "text",
-                                   readable = mode_drr,
-                                   writable = mode_drr,
+                                   readable = mode_3w,
+                                   writable = mode_3w,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              comments(comment=DIV(_class="tooltip",
@@ -1164,6 +1164,9 @@ class S3Project3WModel(S3Model):
         #activity_id = self.project_activity_id
         multi_activity_type_id = self.project_multi_activity_type_id
         currency_type = s3.currency_type
+        
+        s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         messages = current.messages
         NONE = messages.NONE
@@ -1457,6 +1460,18 @@ class S3Project3WModel(S3Model):
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("start_date", "date",
+                                   label = T("Start date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
                              comments(),
                              *meta_fields())
 
@@ -3138,9 +3153,10 @@ def project_rheader(r, tabs=[]):
             append((T("Organizations"), "organisation"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme_percentage"))
-        if mode_drr:
+        if mode_3w:
             append((T("Communities"), "community"))
-        else:
+            append((T("Beneficiaries"), "beneficiary"))
+        if mode_task:
             append((T("Activities"), "activity"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))

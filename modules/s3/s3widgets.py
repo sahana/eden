@@ -1001,7 +1001,7 @@ def S3GenericAutocompleteTemplate(
 
     js_autocomplete = "".join((
             """
-var data = { val:$('#%(dummy_input)s').val(), accept:false };
+var %(real_input)s_data = { val:$('#%(dummy_input)s').val(), accept:false };
 var get_name = %(name_getter)s;
 var get_id = %(id_getter)s;
 $('#%(dummy_input)s').autocomplete({
@@ -1027,7 +1027,7 @@ $('#%(dummy_input)s').autocomplete({
         """ % locals(),
         post_process or "",
         """
-        data.accept = true;
+        %(real_input)s_data.accept = true;
         return false;
     }
 })
@@ -1040,14 +1040,14 @@ $('#%(dummy_input)s').autocomplete({
 $('#%(dummy_input)s').blur(function() {
     if (!$('#%(dummy_input)s').val()) {
         $('#%(real_input)s').val('').change();
-        data.accept = true;
+        %(real_input)s_data.accept = true;
     }
-    if (!data.accept) {
-        $('#%(dummy_input)s').val(data.val);
+    if (!%(real_input)s_data.accept) {
+        $('#%(dummy_input)s').val(%(real_input)s_data.val);
     } else {
-        data.val = $('#%(dummy_input)s').val();
+        %(real_input)s_data.val = $('#%(dummy_input)s').val();
     }
-    data.accept = false;
+    %(real_input)s_data.accept = false;
 });""" % locals()))
 
     if value:

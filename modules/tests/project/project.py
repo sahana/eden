@@ -30,11 +30,16 @@
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class project_create(SeleniumUnitTest):
-    def test_project_create(self):
+class Project(SeleniumUnitTest):
+    def test_project001_create_project(self):
         """
             @case: Project001
             @description: Create a Project
+            
+            * Create Project
+            * Create Project Organisation 
+            * Create Project Community
+            * Create Project Beneficiary
         """
         print "\n"
 
@@ -43,7 +48,7 @@ class project_create(SeleniumUnitTest):
         
         self.create("project_project", 
                     [( "name",
-                       "Test Project" )]
+                       "Community Strengthening through Dance" )]
                      )
         self.create("project_organisation", 
                     [( "organisation_id",
@@ -104,6 +109,7 @@ class project_create(SeleniumUnitTest):
                      ( "lon",
                        "0",
                        "gis_location"),
+                     # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
                      ( "population",
                        "1000"),
                      ( "number_families",

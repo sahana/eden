@@ -82,8 +82,11 @@ else:
     # Inventory tests
     addTests(loadTests(Logistics))
     
-    # Create Project
-    addTests(loadTests(project_create))
+    # Project Tests
+    addTests(loadTests(Project))
+
+    # Asset Tests
+    addTests(loadTests(Asset))
 
     # Assign Staff to Organisation
     #addTests(loadTests(hrm_assign_organisationstaff))

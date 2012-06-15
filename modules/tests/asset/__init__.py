@@ -1,1 +1,1 @@
-from asset001 import *
+from asset import *

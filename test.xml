@@ -1,0 +1,550 @@
+<s3xml>
+  <resource name="org_organisation" tuid="ADPC">
+    <data field="name">ADPC</data>
+  </resource>
+  <resource name="project_project" tuid="DRRPP 5">
+    <data field="name">DRRPP 5</data>
+    <reference field="organisation_id" resource="org_organisation" tuid="ADPC"/>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Configuration">
+    <data field="name">Configuration</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Auth">
+    <data field="name">Auth</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Data Model">
+    <data field="name">Data Model</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Reporting">
+    <data field="name">Reporting</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Search">
+    <data field="name">Search</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Theme">
+    <data field="name">Theme</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: UI">
+    <data field="name">UI</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Data Migration">
+    <data field="name">Data Migration</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: RMS Integration">
+    <data field="name">RMS Integration</data>
+  </resource>
+  <resource name="project_activity_type" tuid="ActivityType: Server">
+    <data field="name">Server</data>
+  </resource>
+  <resource name="project_activity" tuid="Coding">
+    <data field="name">Coding</data>
+    <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    <reference field="multi_activity_type_id" resource="project_activity_type" tuid="[&quot;ActivityType: Configuration&quot;]"/>
+  </resource>
+  <resource name="project_activity" tuid="Infrastructure">
+    <data field="name">Infrastructure</data>
+    <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    <reference field="multi_activity_type_id" resource="project_activity_type" tuid="[&quot;ActivityType: Data Migration&quot;]"/>
+  </resource>
+  <resource name="pr_person" tuid="JO">
+    <data field="initials">JO</data>
+  </resource>
+  <resource name="pr_person" tuid="DK">
+    <data field="initials">DK</data>
+  </resource>
+  <resource name="pr_person" tuid="FB">
+    <data field="initials">FB</data>
+  </resource>
+  <resource name="pr_person" tuid="KH">
+    <data field="initials">KH</data>
+  </resource>
+  <resource name="project_milestone" tuid="MS A">
+    <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    <data field="name">MS A</data>
+  </resource>
+  <resource name="project_milestone" tuid="MS B">
+    <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    <data field="name">MS B</data>
+  </resource>
+  <resource name="project_milestone" tuid="MS C">
+    <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    <data field="name">MS C</data>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">000_config</data>
+    <data field="description">Disable Modules</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-12</data>
+    <data field="time_estimated">1</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Menu</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-12</data>
+    <data field="time_estimated">2</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Custom Pages</data>
+    <data field="description">Project Analysis, My Page, Regional Organisations</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-13</data>
+    <data field="time_estimated">3</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS C"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Home Page</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">3</data>
+    <data field="date_due">2012-06-14</data>
+    <data field="time_estimated">4</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Approving Records - Framework</data>
+    <data field="description">15 Hours</data>
+    <data field="source"/>
+    <data field="priority">4</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-15</data>
+    <data field="time_estimated">5</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Registration Workflow</data>
+    <data field="description">Ensure that the it matches the current workflow in the DRR PP</data>
+    <data field="source"/>
+    <data field="priority">4</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">6</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Regional Organisations</data>
+    <data field="description">Merge drrpp_organisation with org_organisation</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">7</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Committees, Forums, Mechanism, Meetings and Networks</data>
+    <data field="description">drrpp_group -&amp;gt; ??? org_organisation? Discuss with the list</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">8</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">DRR Frameworks</data>
+    <data field="description">drrpp_framework -&amp;gt; project_framework?</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">9</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Search</data>
+    <data field="description">Implement search form on http://drrprojects.net/drrp/drrpp/project/list with S3Search</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">10</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Matrix Report</data>
+    <data field="description">Implement http://drrprojects.net/drrp/drrpp/project/matrix with S3Report</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">11</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Pivot Report list results should expand/collapse with JS</data>
+    <data field="description">Is this the SearchOptionsWidgets? No - this is the lists in the cells of the pivot table</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">12</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Create a Search Filter from a pivot table cell</data>
+    <data field="description">See: http://drrprojects.net/drrp/drrpp/project/matrix</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-06-30</data>
+    <data field="time_estimated">13</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Graphs</data>
+    <data field="description">Implement this with S3Report &amp;amp; revise UI</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">14</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Navigation between List-Matrix-Graph-Map</data>
+    <data field="description">Should be able to navigate between these, preserving the Search</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">15</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Check for invalid characters in Excel Report</data>
+    <data field="description">Small Task - this may not be necessary anymore</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">16</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Map</data>
+    <data field="description">Add S3Search form above the map. Is this on a Custom feature_queries map? Currently yes - but it could be implemented differently</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">17</data>
+    <reference field="pe_id" resource="pr_person" tuid="FB"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS C"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Subscription to Searchs</data>
+    <data field="description">There is existing functionality for this, but I think that this will need to be revised and extended</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">18</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Theme</data>
+    <data field="description">Implement the current DRRPP theme at the same time as investigating how we can better support multiple themes</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">19</data>
+    <reference field="pe_id" resource="pr_person" tuid="KH"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Implement Site Map</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">20</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Adding Components on the main form via JS</data>
+    <data field="description">See: http://drrprojects.net/drrp/drrpp/project/create?set_status_id=2 &amp;gt; Partner Organisation</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">21</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Truncate &amp;amp; Expand cells in dataTables in JS</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">22</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Check-Box Widget which shows details</data>
+    <data field="description">eg for Hazards &amp;amp; Themes</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">23</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Support 2 Data Tables on a single page</data>
+    <data field="description">http://drrprojects.net/drrp/drrpp/organisations</data>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">24</data>
+    <reference field="pe_id" resource="pr_person" tuid="JO"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Coding"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Write scripts to migrate data</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">25</data>
+    <reference field="pe_id" resource="pr_person" tuid="FB"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Infrastructure"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS B"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Export IFRC Projects to RMS</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">26</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Infrastructure"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Set up Sync with RMS Projects</data>
+    <data field="description">Have functionality in RMS to &amp;quot;publish&amp;quot; projects (Perhaps could be the same as approving a project)</data>
+    <data field="source"/>
+    <data field="priority">3</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">27</data>
+    <reference field="pe_id" resource="pr_person" tuid="DK"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Infrastructure"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+  <resource name="project_task" created_on="" modified_on="" created_by="MH" modified_by="MH">
+    <data field="name">Install new version on ADPC Server</data>
+    <data field="description"/>
+    <data field="source"/>
+    <data field="priority">2</data>
+    <data field="status">2</data>
+    <data field="date_due">2012-07-31</data>
+    <data field="time_estimated">28</data>
+    <reference field="pe_id" resource="pr_person" tuid="FB"/>
+    <resource name="project_task_project">
+      <reference field="project_id" resource="project_project" tuid="DRRPP 5"/>
+    </resource>
+    <resource name="project_task_activity">
+      <reference field="activity_id" resource="project_activity" tuid="Infrastructure"/>
+    </resource>
+    <reference field="milestone_id" resource="project_milestone" tuid="MS A"/>
+  </resource>
+</s3xml>
+

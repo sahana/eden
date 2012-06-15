@@ -179,7 +179,7 @@ class S3AssetModel(S3Model):
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
                              Field("purchase_price", "double",
-                                   default=0.00,
+                                   #default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              currency_type("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
@@ -279,6 +279,8 @@ class S3AssetModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  create_next = URL(c="asset", f="asset",
+                                    args=["[id]"]),
                   super_entity=("supply_item_entity", "sit_trackable"),
                   search_method=asset_search,
                         report_options=Storage(
