@@ -65,7 +65,7 @@ class S3Config(Storage):
         self.hrm = Storage()
         self.project = Storage()
         self.save_search = Storage()
-
+        self.parser = Storage()
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -770,7 +770,12 @@ class S3Config(Storage):
             Enable the Saved Search widget
         """
         return self.save_search.get("widget", True)
-
+    # -------------------------------------------------------------------------
+    # Message Parser Settings
+    def get_parser_enabled(self):
+            return self.parser.get("parser_enabled")
+    
+    
     # -------------------------------------------------------------------------
     # Active modules list
     def has_module(self, module_name):

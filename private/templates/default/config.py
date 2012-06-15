@@ -338,6 +338,10 @@ settings.L10n.decimal_separator = "."
 # Terms of Service to be able to Register on the system
 #settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
 
+#Message Parser Settings
+#Add the enabled parsing workflows to the list below
+#settings.parser.parser_enabled = ["parser_1", "parser_2", "parser_3"]
+
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled
 # Modules menu is defined in modules/eden/menu.py
