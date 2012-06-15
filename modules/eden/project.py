@@ -3714,7 +3714,7 @@ def project_rheader(r, tabs=[]):
             append((T("Organizations"), "organisation"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme_percentage"))
-       if mode_3w:
+        if mode_3w:
             append((T("Communities"), "community"))
             append((T("Beneficiaries"), "beneficiary"))
         if mode_task:

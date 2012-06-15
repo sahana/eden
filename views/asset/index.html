@@ -2,16 +2,33 @@
 <div id='home'>
 <h2>{{=T("Asset Management")}}</h2>
 <p>{{=T("Assets are resources which are not consumable but are expected back, so they need tracking.")}}</p>
-<h3>{{=T("Assets")}}:</h3>
+<div class='col2left'>
+<h3>{{=T("Add")}}:</h3>
 <ul>
-  <li><a href='{{=URL(c="asset", f="asset", args="create")}}'>{{=T("Create New Asset")}}</a>
-  <li><a href='{{=URL(c="asset", f="asset")}}'>{{=T("List All Assets")}}</a>
-  <li><a href='{{=URL(c="asset", f="asset", args="search")}}'>{{=T("Search Assets")}}</a>
-  <li><a href='{{=URL(c="asset", f="asset", args="import")}}'>{{=T("Import Assets")}}</a>
-</ul>
-<h3>{{=T("Catalog Items")}}:</h3>
-<ul>
-  <li><a href='{{=URL(c="asset", f="item", args="create")}}'>{{=T("Create New Catalog Item")}}</a>
-  <li><a href='{{=URL(c="asset", f="item")}}'>{{=T("List All Catalog Items")}}</a>
+  <li><a href='{{=URL(c="asset", f="asset", args="create")}}'>{{=T("Asset")}}</a>
+  <li><a href='{{=URL(c="asset", f="item", args="create")}}'>{{=T("Item")}}</a>
 </ul>
 </div>
+<div class='col2right'>
+<h3>{{=T("List")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="asset", f="asset")}}'>{{=T("Assets")}}</a>
+  <li><a href='{{=URL(c="asset", f="item")}}'>{{=T("Items")}}</a>
+</ul>
+</div>
+<div class='col2left'>
+<h3>{{=T("Search")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="asset", f="asset", args="search")}}'>{{=T("Assets")}}</a>
+  <li><a href='{{=URL(c="asset", f="asset", args="search")}}'>{{=T("Items")}}</a>
+</ul>
+</div>
+<div class='col2right'>
+<h3>{{=T("Report")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="asset", f="asset", args="report")}}'>{{=T("Assets")}}</a>
+  <li><a href='{{=URL(c="asset", f="asset", args="report")}}'>{{=T("Items")}}</a>
+</ul>
+</div>
+</div>
+
