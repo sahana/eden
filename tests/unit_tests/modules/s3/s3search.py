@@ -6,7 +6,7 @@
 import unittest
 
 from gluon import current
-from s3.s3search import S3SearchSimpleWidget, S3SearchOptionsWidget
+from s3.s3search import S3SearchSimpleWidget, S3SearchOptionsWidget, S3SearchMinMaxWidget
 
 # =============================================================================
 class TestS3SearchSimpleWidget(unittest.TestCase):
@@ -39,11 +39,19 @@ class TestS3SearchSimpleWidget(unittest.TestCase):
     def test_widget(self):
         # Test the default HTML widget
         self.assertEqual(str(self.widget.widget(self.resource)),
-                         '<input name="human_resource_search_simple" size="20" type="text" />')
+                         str(INPUT(_id="human_resource_search_simple",
+                                   _name="human_resource_search_simple",
+                                   _size="20",
+                                   _type="text")))
 
         # Test the widget with extra values
-        self.assertEqual(str(self.widget.widget(self.resource, value="search string")),
-                         '<input name="human_resource_search_simple" size="20" type="text" value="search string" />')
+        self.assertEqual(str(self.widget.widget(self.resource,
+                                                value="search string")),
+                         str(INPUT(_id="human_resource_search_simple",
+                                   _name="human_resource_search_simple",
+                                   _size="20",
+                                   _type="text",
+                                   _value="search string")))
 
 # =============================================================================
 class TestS3SearchOptionsWidget(unittest.TestCase):
@@ -82,6 +90,37 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
                                    _id="None_human_resource_search_select_virtual_field",
                                    _name="human_resource_search_select_virtual_field")))
 
+# =============================================================================
+class TestS3SearchMinMaxWidget(unittest.TestCase):
+    """
+        Test S3SearchOptionsWidget
+    """
+
+    def setUp(self):
+        #self.resource = current.manager.define_resource("inv", "track_item")
+        pass
+
+    def testQuery(self):
+        # Test the query method
+        pass
+
+    def testWidgetLabel(self):
+        # Test the widget label method
+        output = S3SearchMinMaxWidget.widget_label(dict(name="wname",
+                                                        label="wlabel"))
+
+        self.assertEqual(str(output),
+                         str(LABEL("wlabel", _for="id-wname")))
+
+    def testWidgetInput(self):
+        # Test the widget label method
+        output = S3SearchMinMaxWidget.widget_input(dict(name="wname",
+                                                        label="wlabel",
+                                                        requires="",
+                                                        attributes=dict(_class="wclass")))
+
+        self.assertEqual(str(output),
+                         str(INPUT(_name="wname", _id="id-wname", _class="wclass")))
 
 
 # =============================================================================
@@ -102,6 +141,7 @@ if __name__ == "__main__":
     run_suite(
         TestS3SearchSimpleWidget,
         TestS3SearchOptionsWidget,
+        TestS3SearchMinMaxWidget,
     )
 
 # END ========================================================================

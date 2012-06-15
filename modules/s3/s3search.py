@@ -340,12 +340,10 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param vars: the URL GET variables as dict
         """
-
-        self.names = []
-
         T = current.T
         settings = current.deployment_settings
 
+        self.names = []
         self.method = self.attr.get("method", "range")
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
@@ -356,7 +354,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         search_field = self.search_field.values()
         if not search_field:
             return SPAN(T("no options available"),
-                        _style="color:#AAA; font-style:italic;")
+                        _class="no-options-available")
 
         search_field = search_field[0][0]
 
@@ -377,47 +375,78 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             raise SyntaxError("Unsupported search field type")
 
         self.attr.update(_type="text")
-        if select_min:
-            name = "min_%s" % search_field.name
-            self.attr.update(_name=name, _id=name)
-            self.names.append(name)
-            input_min = INPUT(requires=requires, **self.attr)
-        if select_max:
-            name = "max_%s" % search_field.name
-            self.attr.update(_name=name, _id=name)
-            self.names.append(name)
-            input_max = INPUT(requires=requires, **self.attr)
         trl = TR(_class="sublabels")
         tri = TR()
-        if input_min is not None:
-            trl.append(T("min"))
-            tri.append(input_min)
-        if input_max is not None:
-            trl.append(T("max"))
-            tri.append(input_max)
-        w = DIV(TABLE(trl, tri))
+
+        # dictionaries for storing details of the input elements
+        name = self.attr["_name"]
+        self.widmin = dict(name="%s_min" % name,
+                           label=T("min"),
+                           requires=requires,
+                           attributes=self.attr)
+        self.widmax = dict(name="%s_max" % name,
+                           label=T("max"),
+                           requires=requires,
+                           attributes=self.attr)
+
+        if select_min:
+            min_label = self.widget_label(self.widmin)
+            min_input = self.widget_input(self.widmin)
+
+            self.names.append(self.widmin["name"])
+            trl.append(min_label)
+            tri.append(min_input)
+
+        if select_max:
+            max_label = self.widget_label(self.widmax)
+            max_input = self.widget_input(self.widmax)
+
+            self.names.append(self.widmax["name"])
+            trl.append(max_label)
+            tri.append(max_input)
+
+        w = TABLE(trl, tri, _class="s3searchminmaxwidget")
+
         return w
+
+    @staticmethod
+    def widget_label(widget):
+        """
+            @param widget: dict with the name, label, requires and
+                            attributes for the input element
+            @return: LABEL
+        """
+        return LABEL(widget["label"], _for="id-%s" % widget["name"])
+
+    @staticmethod
+    def widget_input(widget):
+        """
+            @param widget: dict with the name, label, requires and
+                            attributes for the input element
+            @return: INPUT
+        """
+        attr = widget["attributes"].copy()
+        attr.update(_name=widget["name"],
+                    _id="id-%s" % widget["name"])
+        return INPUT(requires=widget["requires"], **attr)
 
     # -------------------------------------------------------------------------
     def validate(self, resource, value):
         """
             Validate the input values of the widget
         """
-
-        errors = dict()
-
         T = current.T
-        tablename = self.search_field.keys()[0]
-        search_field = self.search_field[tablename][0]
+        errors = dict()
 
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
         if select_min and select_max:
-            vmin = value.get("min_%s" % search_field.name, None)
-            vmax = value.get("max_%s" % search_field.name, None)
+            vmin = value.get(self.widmin["name"], None)
+            vmax = value.get(self.widmax["name"], None)
+
             if vmax is not None and vmin is not None and vmin > vmax:
-                errors["max_%s" % search_field.name] = \
+                errors[self.widmax["name"]] = \
                      T("Maximum must be greater than minimum")
 
         return errors or None
@@ -430,21 +459,18 @@ class S3SearchMinMaxWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param value: the value returned from the widget
         """
-        tablename = self.search_field.keys()[0]
-        search_field = self.search_field[tablename][0]
-
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
         min_query = max_query = query = None
 
         if select_min:
-            v = value.get("min_%s" % search_field.name, None)
+            v = value.get(self.widmin["name"], None)
             if v is not None and str(v):
                 min_query = S3FieldSelector(self.field) >= v
 
         if select_max:
-            v = value.get("max_%s" % search_field.name, None)
+            v = value.get(self.widmax["name"], None)
             if v is not None and str(v):
                 max_query = S3FieldSelector(self.field) <= v
 
