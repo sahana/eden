@@ -3593,6 +3593,9 @@ def gis_location_represent(record, showlink=True, simpletext=False):
 def gis_location_lx_represent(record):
     """
         Represent a location, given either its id or full Row, as a simple string
+
+        @param record: database record
+        @return: string
     """
 
     if not record:

@@ -2979,7 +2979,7 @@ class S3EmbedComponentWidget(FormWidget):
             select = "select_component($('#%s').val());" % real_input
             if pp is not None:
                 select = "%s%s" % (pp, select)
-            widget = S3AutocompleteWidget(prefix=prefix,
+            widget = S3AutocompleteWidget(prefix,
                                           resourcename=resourcename,
                                           fieldname=self.autocomplete,
                                           link_filter=self.link_filter,
