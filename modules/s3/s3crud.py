@@ -8,8 +8,6 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -933,10 +931,10 @@ class S3CRUD(S3Method):
                 if "deleted" in self.table:
                     available_records = current.db(self.table.deleted == False)
                 else:
-                    available_records = current.db(self.table.id > 0)
+                    available_records = current.db(self.table._id > 0)
                 #if available_records.count():
                 # This is faster:
-                if available_records.select(self.table.id,
+                if available_records.select(self.table._id,
                                             limitby=(0, 1)).first():
                     items = crud_string(self.tablename, "msg_no_match")
                 else:
