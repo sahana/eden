@@ -2551,9 +2551,10 @@ class S3HRProgrammeModel(S3Model):
                                    label=T("Hours")),
                              # Training records are auto-populated
                              Field("training", "boolean",
-                                   label = T("Training?"),
+                                   label = T("Type"),
                                    default=False,
-                                   represent = lambda opt: T("Yes") if opt else T("No"),
+                                   represent = lambda opt: \
+                                        T("Training") if opt else T("Work"),
                                    readable=False,
                                    writable=False),
                              comments(comment=None),

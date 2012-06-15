@@ -28,6 +28,9 @@ T = current.T
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
 #settings.base.prepopulate = 1
 
+# Theme (folder to use for views/layout.html)
+#settings.base.theme = "default"
+
 # Authentication settings
 # These settings should be changed _after_ the 1st (admin) user is
 # registered in order to secure the deployment

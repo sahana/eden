@@ -76,7 +76,6 @@ except ImportError:
     s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
 # =============================================================================
-
 class S3SearchWidget(object):
     """
         Search Widget for interactive search (base class)
@@ -243,7 +242,6 @@ class S3SearchWidget(object):
         self.search_field = search_field
 
 # =============================================================================
-
 class S3SearchSimpleWidget(S3SearchWidget):
     """
         Simple full-text search widget
@@ -327,7 +325,6 @@ class S3SearchSimpleWidget(S3SearchWidget):
 
 
 # =============================================================================
-
 class S3SearchMinMaxWidget(S3SearchWidget):
     """
         Min/Max search widget for numeric fields
@@ -485,7 +482,6 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         return query
 
 # =============================================================================
-
 class S3SearchOptionsWidget(S3SearchWidget):
     """
         Option select widget for option or boolean fields
@@ -827,7 +823,6 @@ class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
             self.attr["_name"] = name
 
 # =============================================================================
-
 class S3SearchLocationWidget(S3SearchWidget):
     """
         Interactive location search widget
@@ -949,7 +944,6 @@ class S3SearchLocationWidget(S3SearchWidget):
             return None
 
 # =============================================================================
-
 class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
         Options Widget to search for HRMs with specified Credentials
@@ -978,7 +972,6 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
             return None
 
 # =============================================================================
-
 class S3SearchSkillsWidget(S3SearchOptionsWidget):
     """
         Options Widget to search for HRMs with specified Skills
@@ -1013,7 +1006,6 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
             return None
 
 # =============================================================================
-
 class S3Search(S3CRUD):
     """
         RESTful Search Method for S3Resources
@@ -1445,8 +1437,6 @@ $('#%s').live('click', function() {
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
-        _location = "location_id" in table
-        _site = "site_id" in table
         if items:
             if not s3.no_sspag:
                 # Pre-populate SSPag cache (avoids the 1st Ajax request)
@@ -1472,48 +1462,6 @@ $('#%s').live('click', function() {
                     response.aadata = json(aadata)
                     s3.start = 0
                     s3.limit = limit
-
-            query = None
-            if _location:
-                query = (table.location_id == s3db.gis_location.id)
-            elif _site:
-                stable = s3db.org_site
-                query = (table.site_id == stable.id) & \
-                        (stable.location_id == s3db.gis_location.id)
-            if query:
-                resource.add_filter(query)
-                features = resource.select()
-                # get the Marker & Popup details per-Layer if we can
-                marker = gis.get_marker_and_popup(resource=resource)
-                if marker:
-                    popup_label = marker["popup_label"]
-                    popup_fields = marker["popup_fields"]
-                    marker = marker["marker"]
-
-                for feature in features:
-                    record = feature[tablename]
-                    # Add a popup_url per feature
-                    feature.popup_url = "%s.plain" % URL(r.prefix, r.name,
-                                                         args=record.id)
-                    if not marker:
-                        # We need to add the marker individually to each feature
-                        _marker = gis.get_marker_and_popup(resource=resource,
-                                                           record=record)
-                        feature.marker = _marker["marker"]
-                        popup_label = _marker["popup_label"]
-                        popup_fields = _marker["popup_fields"]
-
-                    # Build the HTML for the onHover Tooltip
-                    feature.popup_label = gis.get_popup_tooltip(table,
-                                                                record,
-                                                                popup_label,
-                                                                popup_fields)
-
-                feature_queries = [{"name"   : T("Search results"),
-                                    "query"  : features,
-                                    "marker" : marker}]
-                # Calculate an appropriate BBox
-                bounds = gis.get_bounds(features=features)
 
         elif not items:
             items = self.crud_string(tablename, "msg_no_match")
@@ -1544,7 +1492,8 @@ $('#%s').live('click', function() {
             list_formats = ""
             tabs = []
 
-        if _location or _site:
+        if "location_id" in table or \
+           "site_id" in table:
             # Add a map for search results
             # (this same map is also used by the Map Search Widget, if-present)
             if list_formats:
@@ -1557,34 +1506,34 @@ $('#%s').live('click', function() {
                                     )
             if tabs:
                 tabs.append((T("Map"), "map"))
-            if bounds:
-                # We have some features returned
-                map_popup = gis.show_map(
-                                        feature_queries=feature_queries,
-                                        catalogue_layers=True,
-                                        legend=True,
-                                        toolbar=True,
-                                        collapsed=True,
-                                        bbox=bounds,
-                                        #search = True,
-                                        window=True,
-                                        window_hide=True
-                                        )
+            # Build URL to load the features onto the map
+            if query:
+                vars = query.serialize_url(resource=resource)
             else:
-                # We have no features returned
-                # Load the Map anyway for the Search Widget
-                map_popup = gis.show_map(
-                                        # Added by search widget onClick in s3.dataTables.js
-                                        #add_polygon = True,
-                                        #add_polygon_active = True,
-                                        catalogue_layers=True,
-                                        legend=True,
-                                        toolbar=True,
-                                        collapsed=True,
-                                        #search = True,
-                                        window=True,
-                                        window_hide=True
-                                        )
+                vars = None
+            url = URL(extension="geojson",
+                      args=None,
+                      vars=vars)
+            feature_resources = [{
+                    "name"   : T("Search Results"),
+                    "id"     : "search_results",
+                    "url"    : url,
+                    "active" : False, # Gets activated when the Map is opened up
+                    "marker" : gis.get_marker(request.controller, request.function)
+                }]
+            map_popup = gis.show_map(
+                                    feature_resources=feature_resources,
+                                    # Added by search widget onClick in s3.dataTables.js
+                                    #add_polygon = True,
+                                    #add_polygon_active = True,
+                                    catalogue_layers=True,
+                                    legend=True,
+                                    toolbar=True,
+                                    collapsed=True,
+                                    #search = True,
+                                    window=True,
+                                    window_hide=True
+                                    )
             s3.dataTableMap = map_popup
 
         if "pe_id" in table or "person_id" in table:

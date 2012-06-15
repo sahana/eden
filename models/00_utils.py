@@ -199,8 +199,8 @@ def s3_filename(filename):
 def s3_include_debug():
     """
         Generates html to include:
-            the js scripts listed in ../static/scripts/tools/sahana.js.cfg
-            the css listed in ../static/scripts/tools/sahana.css.cfg
+            the js scripts listed in /static/scripts/tools/sahana.js.cfg
+            the css listed in /private/templates/<template>/css.cfg
     """
 
     # Disable printing
@@ -213,12 +213,15 @@ def s3_include_debug():
         def close(self): pass
 
     save_stdout = sys.stdout
-    # redirect all print deals
+    # Redirect all prints
     sys.stdout = dummyStream()
 
-    scripts_dir_path = "applications/%s/static/scripts" % request.application
+    folder = request.folder
+    appname = request.application
+    theme = settings.get_theme()
 
-    # Get list of script files
+    # JavaScript
+    scripts_dir_path = "%s/static/scripts" % folder
     sys.path.append( "%s/tools" % scripts_dir_path)
     import mergejsmf
 
@@ -230,25 +233,23 @@ def s3_include_debug():
     configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir_path
     (fs, files) = mergejsmf.getFiles(configDictCore, configFilename)
 
-    # Enable print
+    # Restore prints
     sys.stdout = save_stdout
 
     include = ""
     for file in files:
         include = '%s\n<script src="/%s/static/scripts/%s" type="text/javascript"></script>' \
-            % ( include,
-                request.application,
-                file)
+            % (include, appname, file)
 
+    # CSS
     include = "%s\n <!-- CSS Syles -->" % include
-    f = open("%s/tools/sahana.css.cfg" % scripts_dir_path, "r")
+    css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
+    f = open(css_cfg, "r")
     files = f.readlines()
-    for file in files[:-1]:
+    files = files[:-1]
+    for file in files:
         include = '%s\n<link href="/%s/static/styles/%s" rel="stylesheet" type="text/css" />' \
-            % ( include,
-                request.application,
-                file[:-1]
-               )
+            % (include, appname, file[:-1])
     f.close()
 
     return XML(include)
@@ -280,7 +281,6 @@ def s3_table_links(reference):
 # -----------------------------------------------------------------------------
 # CRUD functions
 # -----------------------------------------------------------------------------
-
 def s3_barchart(r, **attr):
     """
         Provide simple barcharts for resource attributes
@@ -397,7 +397,6 @@ def s3_import_prep(import_data):
 s3mgr.import_prep = s3_import_prep
 
 # -----------------------------------------------------------------------------
-
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
         Helper function to apply the S3Resource REST interface
@@ -520,6 +519,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     return output
 
+# Enable access to this function from modules
 current.rest_controller = s3_rest_controller
 
 # END =========================================================================

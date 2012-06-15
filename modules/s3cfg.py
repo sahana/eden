@@ -89,6 +89,14 @@ class S3Config(Storage):
         return
 
     # -------------------------------------------------------------------------
+    # Theme
+    def get_theme(self):
+        """
+            Which templates folder to use for views/layout.html
+        """
+        return self.base.get("theme", "default")
+
+    # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
         """

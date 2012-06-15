@@ -1,11 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
+# run as:
+#   python web2py.py -S eden -M -R applications/eden/static/scripts/tools/build.sahana.py
+# or
+#   python web2py.py -S eden -M -R applications/eden/static/scripts/tools/build.sahana.py -A gis
+#
 #
 # Built with code/inspiration from MapFish, OpenLayers & Michael Crute
 #
 
+try:
+    theme = settings.get_theme()
+except:
+    print "ERROR: File now needs to be run in the web2py environment in order to pick up which theme to build"
+    exit()
+
+import os
 import sys
+import shutil
+
+SCRIPTPATH = os.path.join(request.folder, "static", "scripts", "tools")
+os.chdir(SCRIPTPATH)
+
 sys.path.append("./")
 
 # For JS
@@ -14,10 +31,6 @@ import jsmin, mergejs
 
 # For CSS
 import re
-
-# For file moves
-import shutil
-import os
 
 def mergeCSS(inputFilenames, outputFilename):
     output = ""
@@ -113,10 +126,6 @@ def dojs(dogis = False, warnings = True):
     configFilename = "sahana.js.cfg"
     outputFilename = "S3.min.js"
 
-    sourceDirectorydataTables = "../S3"
-    configFilenamedataTables = "sahana.js.dataTables.cfg"
-    outputFilenamedataTables = "s3.dataTables.min.js"
-
     # Merge JS files
     print "Merging Core libraries."
     merged = mergejs.run(sourceDirectory, None, configFilename)
@@ -146,6 +155,9 @@ def dojs(dogis = False, warnings = True):
 
     # Also do dataTables
     print "Compressing dataTables"
+    sourceDirectorydataTables = "../S3"
+    configFilenamedataTables = "sahana.js.dataTables.cfg"
+    outputFilenamedataTables = "s3.dataTables.min.js"
     mergeddataTables = mergejs.run(sourceDirectorydataTables,
                                    None,
                                    configFilenamedataTables)
@@ -388,9 +400,13 @@ def dojs(dogis = False, warnings = True):
 
 def docss():
     """ Compresses the  CSS files """
+
     listCSS = []
 
-    f = open("sahana.css.cfg", "r")
+    theme = settings.get_theme()
+    print "Using theme %s" % theme
+    css_cfg = os.path.join("..", "..", "..", "private", "templates", theme, "css.cfg")
+    f = open(css_cfg, "r")
     files = f.readlines()
     f.close()
     for file in files[:-1]:
@@ -409,13 +425,15 @@ def docss():
     compressCSS(mergedCSS, outputFilenameCSS)
 
     # Move files to correct locations
+    if theme == "default":
+        theme = "S3"
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../styles/S3/%s" % outputFilenameCSS)
+        os.remove("../../styles/%s/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/S3")
+    shutil.move(outputFilenameCSS, "../../styles/%s" % theme)
 
 def main(argv):
     try:

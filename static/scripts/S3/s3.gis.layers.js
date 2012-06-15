@@ -122,6 +122,12 @@ function addLayers() {
             addGeoJSONLayer(S3.gis.layers_feature_queries[i]);
         }
     }
+    // Feature Resources (e.g. Search Results))
+    if (S3.gis.layers_feature_resources) {
+        for (i = 0; i < S3.gis.layers_feature_resources.length; i++) {
+            addGeoJSONLayer(S3.gis.layers_feature_resources[i]);
+        }
+    }
     // Feature Layers from Catalogue
     if (S3.gis.layers_features) {
         for (i = 0; i < S3.gis.layers_features.length; i++) {
@@ -330,7 +336,8 @@ OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Clus
 });
 
 // GeoJSON
-// Used also by internal Feature Layers, Feature Queries & GeoRSS feeds
+// Used also by internal Feature Layers, Feature Queries, Feature Resources
+// & GeoRSS feeds
 function addGeoJSONLayer(layer) {
     var name = layer.name;
     var url = layer.url;
@@ -686,7 +693,7 @@ function addGeoJSONLayer(layer) {
             ],
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
-            // These is used to Save State
+            // These is used to Save State & locate Layer to Activate/Refresh
             s3_layer_id: layer.id,
             s3_layer_type: layer_type,
             s3_style: style,
