@@ -1973,14 +1973,14 @@ class GIS(object):
             if popup_fields:
                 represents = {}
                 for fieldname in popup_fields:
-                    try:
+                    if fieldname in table:
                         field = table[fieldname]
-                    except:
-                        # This field isn't in the table
-                        popup_fields.remove(fieldname)
-                    else:
                         _represents = GIS.get_representation(field, resource)
                         represents[fieldname] = _represents
+                    else:
+                        # Assume a virtual field
+                        represents[fieldname] = None
+                        
 
             tooltips = {}
             for record in resource:
@@ -1988,16 +1988,25 @@ class GIS(object):
                 if popup_fields:
                     first = True
                     for fieldname in popup_fields:
-                        value = record[fieldname]
+                        try:
+                            value = record[fieldname]
+                        except KeyError:
+                            continue
+                        field_reps = represents[fieldname] 
+                        if field_reps:
+                            try:
+                                represent = field_reps[value]
+                            except:
+                                # list:string
+                                represent = field_reps[str(value)]
+                        else:
+                            # Virtual Field
+                            represent = value
                         if first:
-                            tooltip = "%s %s" % (represents[fieldname][value], tooltip)
+                            tooltip = "%s %s" % (represent, tooltip)
                             first = False
                         elif value:
-                            try:
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
-                            except:
-                                # list: type
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
+                            tooltip = "%s<br />%s" % (tooltip, represent)
 
                 tooltips[record.id] = tooltip
 

@@ -281,8 +281,8 @@ class S3AssetModel(S3Model):
         configure(tablename,
                   super_entity=("supply_item_entity", "sit_trackable"),
                   search_method=asset_search,
-                        report_options=Storage(
-                            search=[
+                  report_options=Storage(
+                        search=[
                                 S3SearchLocationHierarchyWidget(
                                     name="asset_search_L1",
                                     field="L1",
@@ -300,11 +300,11 @@ class S3AssetModel(S3Model):
                                     cols = 3
                                 ),
                             ],
-                            rows=report_fields,
-                            cols=report_fields,
-                            facts=report_fields,
-                            methods=["count", "list"],
-                            defaults=Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
+                        defaults=Storage(
                                 aggregate="count",
                                 cols="L1",
                                 fact="number",

@@ -399,9 +399,9 @@ def community():
             for field in fields:
                 item.append(TR(TD(field.label), TD(represent(record, field))))
             hierarchy = gis.get_location_hierarchy()
-            item.append(TR(TD(hierarchy["L4"]), TD(record["name"])))
-            for field in ["L3", "L2", "L1"]:
-                item.append(TR(TD(hierarchy[field]), TD(record[field])))
+            for field in ["L4", "L3", "L2", "L1"]:
+                if field in hierarchy and record[field]:
+                    item.append(TR(TD(hierarchy[field]), TD(record[field])))
             output["item"] = item
         return output
     response.s3.postp = postp

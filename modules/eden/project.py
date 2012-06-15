@@ -1198,6 +1198,8 @@ class S3Project3WModel(S3Model):
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
                              *(s3.lx_fields() + meta_fields()))
 
+        table.virtualfields.append(S3ProjectCommunityVirtualFields())
+
         # CRUD Strings
         COMMUNITY = T("Community")
         COMMUNITY_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
@@ -1269,6 +1271,7 @@ class S3Project3WModel(S3Model):
 
         # Resource Configuration
         report_fields = [(T("Location"), "location_id"),
+                         (T("Organization"), "organisation"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
                         ]
@@ -3287,51 +3290,10 @@ class S3ProjectCommunityVirtualFields:
             return None
 
     def name(self):
+        """
+            Name for Map onHover popups
+        """
         return current.s3db.gis_location_lx_represent(self.project_community.location_id)
-
-    def L0(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L0" in parents:
-            return parents["L0"]
-        else:
-            return None
-
-    def L1(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L1" in parents:
-            return parents["L1"]
-        else:
-            return None
-
-    def L2(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L2" in parents:
-            return parents["L2"]
-        else:
-            return None
-
-    def L3(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L3" in parents:
-            return parents["L3"]
-        else:
-            return None
 
 # =============================================================================
 class S3ProjectBeneficiaryVirtualFields:
