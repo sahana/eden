@@ -813,11 +813,6 @@ class S3XML(S3Codec):
                     else:
                         attr[ATTRIBUTE.popup] = tooltip
 
-                elif popup_label in record:
-                    # Feature Queries
-                    # This is the pre-generated HTML for the onHover Tooltip
-                    attr[ATTRIBUTE.popup] = record[popup_label]
-
     # -------------------------------------------------------------------------
     def resource(self, parent, table, record,
                  fields=[],
