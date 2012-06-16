@@ -52,6 +52,9 @@ from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
 from core.spaces.models import Space
 
+# Cache helpers
+from helpers.cache import get_or_insert_in_cache
+
 
 def add_new_debate(request, space_name):
 
@@ -304,7 +307,11 @@ class ListDebates(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        current_space = get_or_insert_in_cache(
+                "space",
+                self.kwargs['space_name'],
+                Space,
+                url=self.kwargs['space_name'])
         debates = Debate.objects.filter(space=current_space)
 
         # Here must go a validation so a user registered to the space
@@ -315,5 +322,9 @@ class ListDebates(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListDebates, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_or_insert_in_cache(
+                "space",
+                self.kwargs['space_name'],
+                Space,
+                url=self.kwargs['space_name'])
         return context
