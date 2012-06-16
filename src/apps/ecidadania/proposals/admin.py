@@ -56,7 +56,7 @@ class ProposalAdmin(admin.ModelAdmin):
     
     fieldsets = [
         (None, {'fields':
-            ['code', 'title', 'description', 'tags', 'support_votes']}),
+            ['code', 'title', 'proposalset' ,'description', 'tags', 'support_votes']}),
         
         (_('Location'), {'fields':
             ['latitude', 'longitude']}),
