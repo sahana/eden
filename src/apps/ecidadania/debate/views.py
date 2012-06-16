@@ -45,7 +45,6 @@ from django.contrib import messages
 from django.template import RequestContext
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.cache import cache
 
 # Application models
 from apps.ecidadania.debate.models import Debate, Note, Row, Column
@@ -276,10 +275,10 @@ class ViewDebate(DetailView):
     def get_context_data(self, **kwargs):
         """
         """
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.filter(debate=self.kwargs['debate_id'])
         rows = Row.objects.filter(debate=self.kwargs['debate_id'])
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         notes = Note.objects.filter(debate=current_debate.pk)
         try:
@@ -314,9 +313,6 @@ class ListDebates(ListView):
                 Space,
                 url=self.kwargs['space_name'])
         debates = Debate.objects.filter(space=current_space)
-        # Stores the space -if it doesn't already exist- 
-        # in the cache for use in get_context_data()
-        cache.add(self.kwargs['space_name'], current_space)
 
         # Here must go a validation so a user registered to the space
         # can always see the debate list. While an anonymous or not
