@@ -52,25 +52,22 @@ from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
 from core.spaces.models import Space
 
-# Cache helpers
-from helpers.cache import get_or_insert_in_cache
-
 
 def add_new_debate(request, space_name):
 
     """
     Create a new debate. This function returns two forms to create
     a complete debate, debate form and phases formset.
-
+    
     .. versionadded:: 0.1.5
 
     :attributes: debate_form, row_formset, column_formset
     :context: form, rowform, colform, get_place, debateid
     """
     place = get_object_or_404(Space, url=space_name)
-
+    
     # Define FormSets
-
+    
     # This class is used to make empty formset forms required
     # See http://stackoverflow.com/questions/2406537/django-formsets-make-first-required/4951032#4951032
     class RequiredFormSet(BaseFormSet):
@@ -83,7 +80,7 @@ def add_new_debate(request, space_name):
 
     RowFormSet = formset_factory(RowForm, max_num=10, formset=RequiredFormSet, can_delete=True)
     ColumnFormSet = formset_factory(ColumnForm, max_num=10, formset=RequiredFormSet, can_delete=True)
-
+   
     debate_form = DebateForm(request.POST or None)
     row_formset = RowFormSet(request.POST or None, prefix="rowform")
     column_formset = ColumnFormSet(request.POST or None, prefix="colform")
@@ -148,8 +145,8 @@ def create_note(request, space_name):
     .. versionadded:: 0.1.5
     """
     note_form = NoteForm(request.POST or None)
-
-    if request.method == "POST" and request.is_ajax:
+        
+    if request.method == "POST" and request.is_ajax:        
         if note_form.is_valid():
             note_form_uncommited = note_form.save(commit=False)
             note_form_uncommited.author = request.user
@@ -173,7 +170,7 @@ def create_note(request, space_name):
             + str(note_form.errors)
     else:
         msg = "The petition was not POST."
-
+        
     return HttpResponse(json.dumps(msg), mimetype="application/json")
 
 
@@ -201,14 +198,14 @@ def update_note(request, space_name):
             note_form_uncommited.title = request.POST['title']
             note_form_uncommited.message = request.POST['message']
             note_form_uncommited.last_mod_author = request.user
-
+        
             note_form_uncommited.save()
             msg = "The note has been updated."
         else:
             msg = "The form is not valid, check field(s): " + note_form.errors
     else:
         msg = "There was some error in the petition."
-
+        
     return HttpResponse(msg)
 
 
@@ -256,7 +253,7 @@ def delete_note(request, space_name):
 class ViewDebate(DetailView):
     """
     View a debate.
-
+    
     :context: get_place, notes, columns, rows
     """
     context_object_name = 'debate'
@@ -264,23 +261,23 @@ class ViewDebate(DetailView):
 
     def get_object(self):
         debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-
+        
         # Check debate dates
         if datetime.date.today() >= debate.end_date or datetime.date.today() <  debate.start_date:
             self.template_name = 'debate/debate_outdated.html'
             #return Debate.objects.none()
-
+        
         return debate
 
     def get_context_data(self, **kwargs):
         """
         """
         context = super(ViewDebate, self).get_context_data(**kwargs)
-        columns = Column.objects.filter(debate=self.kwargs['debate_id'])
-        rows = Row.objects.filter(debate=self.kwargs['debate_id'])
+        columns = Column.objects.all().filter(debate=self.kwargs['debate_id'])
+        rows = Row.objects.all().filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        notes = Note.objects.filter(debate=current_debate.pk)
+        notes = Note.objects.all().filter(debate=current_debate.pk)
         try:
             last_note = Note.objects.latest('id')
         except:
@@ -301,18 +298,14 @@ class ViewDebate(DetailView):
 class ListDebates(ListView):
     """
     Return a list of debates for the current space.
-
+    
     :context: get_place
     """
     paginate_by = 10
 
     def get_queryset(self):
-        current_space = get_or_insert_in_cache(
-                "space",
-                self.kwargs['space_name'],
-                Space,
-                url=self.kwargs['space_name'])
-        debates = Debate.objects.filter(space=current_space)
+        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        debates = Debate.objects.all().filter(space=current_space)
 
         # Here must go a validation so a user registered to the space
         # can always see the debate list. While an anonymous or not
@@ -322,10 +315,5 @@ class ListDebates(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListDebates, self).get_context_data(**kwargs)
-        context['get_place'] = get_or_insert_in_cache(
-                "space",
-                self.kwargs['space_name'],
-                Space,
-                url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
         return context
-
