@@ -1150,6 +1150,7 @@ class S3Msg(object):
 
         inbound_status_table = s3db.msg_inbound_email_status
         inbox_table = s3db.msg_email_inbox
+        log_table = s3db.msg_log
 
         # Read-in configuration from Database
         settings = db(s3db.msg_inbound_email_settings.username == username).select(limitby=(0, 1)).first()
@@ -1221,9 +1222,11 @@ class S3Msg(object):
                     subject = ""
                 # Parse out the 'Body'
                 textParts = msg.get_payload()
-                body = textParts[0].get_payload()
+                body = textParts[0]
                 # Store in DB
                 inbox_table.insert(sender=sender, subject=subject, body=body)
+                log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                
                 if delete:
                     # Add it to the list of messages to delete later
                     dellist.append(number)
@@ -1291,9 +1294,11 @@ class S3Msg(object):
                             subject = ""
                         # Parse out the 'Body'
                         textParts = msg.get_payload()
-                        body = textParts[0].get_payload()
+                        body = textParts[0]
                         # Store in DB
                         inbox_table.insert(sender=sender, subject=subject, body=body)
+                        log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                        
                         if delete:
                             # Add it to the list of messages to delete later
                             dellist.append(num)
@@ -1304,7 +1309,17 @@ class S3Msg(object):
                 typ, response = M.store(number, "+FLAGS", r"(\Deleted)")
             M.close()
             M.logout()
-
+    # =============================================================================
+    @staticmethod
+    def source_id(username):
+        """ Extracts the source_task_id from a given message. """
+        
+        db = current.db
+        table = db["scheduler_task"]
+        records = db(table.id > 0).select()
+        for record in records:
+            if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
+                return record.id
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """
