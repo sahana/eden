@@ -284,35 +284,35 @@ class S3AssetModel(S3Model):
                   super_entity=("supply_item_entity", "sit_trackable"),
                   search_method=asset_search,
                   report_options=Storage(
-                      search=[
-                          S3SearchLocationHierarchyWidget(
-                              name="asset_search_L1",
-                              field="L1",
-                              cols = 3
-                          ),
-                          S3SearchLocationHierarchyWidget(
-                              name="asset_search_L2",
-                              field="L2",
-                              cols = 3
-                          ),
-                          S3SearchOptionsWidget(
-                              name="asset_search_item_category",
-                              field="item_id$item_category_id",
-                              label=T("Category"),
-                              cols = 3
-                          ),
-                      ],
-                      rows=report_fields,
-                      cols=report_fields,
-                      facts=report_fields,
-                      methods=["count", "list"],
-                      defaults=Storage(
-                          aggregate="count",
-                          cols="L1",
-                          fact="number",
-                          rows="item_id$item_category_id"
-                      )
-                  ),
+                        search=[
+                                S3SearchLocationHierarchyWidget(
+                                    name="asset_search_L1",
+                                    field="L1",
+                                    cols = 3
+                                ),
+                                S3SearchLocationHierarchyWidget(
+                                    name="asset_search_L2",
+                                    field="L2",
+                                    cols = 3
+                                ),
+                                S3SearchOptionsWidget(
+                                    name="asset_search_item_category",
+                                    field="item_id$item_category_id",
+                                    label=T("Category"),
+                                    cols = 3
+                                ),
+                            ],
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
+                        defaults=Storage(
+                                aggregate="count",
+                                cols="L1",
+                                fact="number",
+                                rows="item_id$item_category_id"
+                            )
+                        ),
                   list_fields=["id",
                                "number",
                                "item_id$item_category_id",

@@ -1364,6 +1364,7 @@ class S3OfficeModel(S3Model):
             title_update = T("Edit Office"),
             title_search = T("Search Offices"),
             title_upload = T("Import Offices"),
+            title_map = T("Map of Offices"),
             subtitle_create = T("Add New Office"),
             label_list_button = T("List Offices"),
             label_create_button = T("Add New Office"),

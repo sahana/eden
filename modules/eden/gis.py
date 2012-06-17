@@ -2066,12 +2066,13 @@ class S3FeatureLayerModel(S3Model):
                         self.super_link("layer_id", "gis_layer_entity"),
                         name_field()(),
                         Field("description", label=T("Description")),
+                        # Kept for backwards-compatibility
                         Field("module",
-                              requires = IS_NOT_EMPTY(),
-                              label = T("Module")),
+                              readable=False,
+                              writable=False),
                         Field("resource",
-                              requires = IS_NOT_EMPTY(),
-                              label = T("Resource")),
+                              readable=False,
+                              writable=False),
                         Field("trackable", "boolean",
                               label = T("Trackable"),
                               default = False,
@@ -2080,15 +2081,17 @@ class S3FeatureLayerModel(S3Model):
                                                               T("Whether the resource should be tracked using S3Track rather than just using the Base Location")))),
                         # REST Query added to Map JS to call back to server
                         Field("controller",
+                              requires = IS_NOT_EMPTY(),
                               label = T("Controller"),
                               comment = DIV(_class="tooltip",
                                             _title="%s|%s /" % (T("Controller"),
-                                                                T("Optional: The URL to call to access the Features, if different to the Module.")))),
+                                                                T("Part of the URL to call to access the Features")))),
                         Field("function",
+                              requires = IS_NOT_EMPTY(),
                               label = T("Function"),
                               comment = DIV(_class="tooltip",
                                             _title="%s|%s /" % (T("Function"),
-                                                                T("Optional: The URL to call to access the Features, if different to the Resource.")))),
+                                                                T("Part of the URL to call to access the Features")))),
                         Field("filter",
                               label = T("REST Filter"),
                               comment = DIV(_class="stickytip",
@@ -2116,7 +2119,6 @@ class S3FeatureLayerModel(S3Model):
                                             _title="%s|%s" % (T("Popup Fields"),
                                                               T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records.")))),
                         gis_layer_folder()(),
-                        # Disabled until re-implemented:
                         Field("polygons", "boolean", default=False,
                               label=T("Display Polygons?")),
                         gis_opacity()(),
@@ -2206,14 +2208,14 @@ class S3FeatureLayerModel(S3Model):
         """
 
         if item.tablename == "gis_layer_feature":
-            # Match if module, resource & filter are identical
+            # Match if controller, function & filter are identical
             table = item.table
             data = item.data
-            module = data.module
-            resource = data.resource
+            controller = data.controller
+            function = data.function
             filter = data.filter
-            query = (table.module.lower() == module.lower()) & \
-                    (table.resource.lower() == resource.lower()) & \
+            query = (table.controller.lower() == controller.lower()) & \
+                    (table.function.lower() == function.lower()) & \
                     (table.filter == filter)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -3593,6 +3595,9 @@ def gis_location_represent(record, showlink=True, simpletext=False):
 def gis_location_lx_represent(record):
     """
         Represent a location, given either its id or full Row, as a simple string
+
+        @param record: database record
+        @return: string
     """
 
     if not record:

@@ -34,6 +34,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskIReportModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectThemeModel",
+           "project_project_represent",
            "project_rheader",
            "project_task_controller",
            ]
@@ -44,6 +45,7 @@ from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
+from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from gluon.contrib import simplejson as json
 from ..s3 import *
 from layouts import *
@@ -87,7 +89,6 @@ class S3ProjectModel(S3Model):
              "project_activity_id",
              "project_multi_activity_id",
              "project_multi_activity_type_id",
-             "project_project_represent",
              ]
 
     def model(self):
@@ -175,7 +176,7 @@ class S3ProjectModel(S3Model):
                                                                          sort=True,
                                                                          multiple=True)),
                                          represent = lambda opt, row=None: \
-                                            self.multiref_represent(opt, "project_theme"),
+                                            multiref_represent(opt, "project_theme"),
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
                                             CheckboxesWidgetS3.widget(f, v,
@@ -218,7 +219,7 @@ class S3ProjectModel(S3Model):
                                                                           sort=True,
                                                                           multiple=True)),
                                           represent = lambda opt, row=None: \
-                                            self.multiref_represent(opt, "project_hazard"),
+                                            multiref_represent(opt, "project_hazard"),
                                           ondelete = "RESTRICT",
                                           widget = lambda f, v: \
                                             CheckboxesWidgetS3.widget(f, v,
@@ -359,8 +360,9 @@ class S3ProjectModel(S3Model):
         advanced = [S3SearchSimpleWidget(
                         name = "project_search_text_advanced",
                         label = T("Description"),
-                        comment = T("Search for a Project by description."),
+                        comment = T("Search for a Project by name, code, or description."),
                         field = ["name",
+                                 "code",
                                  "description",
                                 ]
                         )]
@@ -415,10 +417,11 @@ class S3ProjectModel(S3Model):
             create_next = URL(c="project", f="project",
                               args=["[id]"])
 
-        list_fields = ["id",
-                       "name"
-                       ]
+        list_fields = ["id"]
         append = list_fields.append
+        if use_codes:
+            append("code")
+        append("name")
         if multi_orgs:
             table.virtualfields.append(S3ProjectOrganisationVirtualFields())
             LEAD_ROLE = settings.get_project_organisation_lead_role()
@@ -454,7 +457,7 @@ class S3ProjectModel(S3Model):
                                      sortby="name",
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "project_project.id",
                                                                      "%(name)s")),
-                                     represent = self.project_represent,
+                                     represent = project_project_represent,
                                      comment = S3AddResourceLink(c="project", f="project",
                                                                  tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
                                      label = T("Project"),
@@ -589,8 +592,7 @@ class S3ProjectModel(S3Model):
                                                                                  sort=True,
                                                                                  multiple=True)),
                                                  represent = lambda opt, row=None: \
-                                                             self.multiref_represent(opt,
-                                                                                     "project_activity_type"),
+                                                    multiref_represent(opt, "project_activity_type"),
                                                  widget = lambda f, v: \
                                                     CheckboxesWidgetS3.widget(f, v, col=3),
                                                  ondelete = "RESTRICT")
@@ -761,7 +763,6 @@ class S3ProjectModel(S3Model):
             project_multi_activity_type_id = multi_activity_type_id,
             project_theme_id = theme_id,
             project_hfa_opts = project_hfa_opts,
-            project_project_represent = self.project_represent,
         )
 
     # -------------------------------------------------------------------------
@@ -779,65 +780,8 @@ class S3ProjectModel(S3Model):
         return Storage(
             project_project_id = lambda: dummy("project_id"),
             project_activity_id = lambda: dummy("activity_id"),
-            project_project_represent = lambda v, r: current.messages.NONE,
             project_multi_activity_id = multi_activity_id
         )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def multiref_represent(opts, tablename, represent_string = "%(name)s"):
-        """
-            Represent a list of references
-
-            @param opt: the current value or list of values
-            @param tablename: the referenced table
-            @param represent_string: format string to represent the records
-        """
-
-        DEFAULT = ""
-
-        db = current.db
-        s3db = current.s3db
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
-        table = s3db.table(tablename, None)
-        if table is None:
-            return DEFAULT
-
-        if not isinstance(opts, (list, tuple)):
-            opts = [opts]
-
-        rows = db(table.id.belongs(opts)).select()
-        rstr = Storage([(str(row.id), row) for row in rows])
-        keys = rstr.keys()
-        represent = lambda o: str(o) in keys and \
-                              represent_string % rstr[str(o)] or UNKNOWN_OPT
-        vals = [represent(o) for o in opts]
-
-        if len(opts) > 1:
-            vals = ", ".join(vals)
-        else:
-            vals = len(vals) and vals[0] or DEFAULT
-
-        return vals
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_represent(id, row=None, show_link=True):
-        """ FK representation """
-
-        db = current.db
-        NONE = current.messages.NONE
-
-        if id:
-            val = (id and [db.project_project[id].name] or [NONE])[0]
-            if not show_link:
-                return val
-            return A(val, _href = URL(c="project",
-                                      f="project",
-                                      args=[id]))
-        else:
-            return NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -857,32 +801,32 @@ class S3ProjectModel(S3Model):
     def project_project_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.id:
-            return
-        if item.tablename == "project_project" and \
-            "name" in item.data:
-            # Match project by name (all-lowercase)
+        if item.tablename == "project_project":
+            data = item.data
             table = item.table
-            name = item.data.name
-            try:
-                query = (table.name.lower() == name.lower())
-            except AttributeError, exception:
-                s3_debug("project_deduplicate", exception.message)
+            # If we have a code, then assume this is unique, however the same
+            # project name may be used in multiple locations
+            if "code" in data and data.code:
+                query = (table.code.lower() == data.code.lower())
+            elif "name" in data and data.name:
+                query = (table.name.lower() == data.name.lower())
             else:
-                duplicate = current.db(query).select(table.id,
-                                                     table.name,
-                                                     limitby=(0, 1)).first()
-                if duplicate:
-                    item.id = duplicate.id
-                    item.data.name = duplicate.name
-                    item.method = item.METHOD.UPDATE
+                # Nothing we can work with
+                return
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
         return
 
     # -------------------------------------------------------------------------
     @staticmethod
     def project_map(r, **attr):
         """
-            Display the Projects on a Map
+            Display a filterable set of Projects on a Map
+            - assumes mode_3w
             - currently assumes that theme_percentages=True
 
             @ToDo: Browse by Year
@@ -901,17 +845,7 @@ class S3ProjectModel(S3Model):
             tptable = s3db.project_theme_percentage
             ltable = s3db.gis_location
 
-            
-
-            # The Layer of Projects to show on the Map
-            # Pass through attributes that we don't need for the 1st level of mapping, so that they can be used without a screen refresh
-            layer = {}
-
-            map = current.gis.show_map(
-                        collapsed = True,
-                        layers = [layer],
-                    )
-            instructions = T("")
+            # Search Widget
             themes_dropdown = SELECT(_multiple=True,
                                      _id="project_theme_id",
                                      _style="height:80px;")
@@ -926,14 +860,30 @@ class S3ProjectModel(S3Model):
                               _selected="selected"))
 
             form = FORM(themes_dropdown)
-            legend = DIV()
+
+            # Map
+            # The Layer of Projects to show on the Map
+            # @ToDo: Create a URL to the project_polygons custom method & use that
+            # @ToDo: Pass through attributes that we don't need for the 1st level of mapping
+            #        so that they can be used without a screen refresh
+            url = URL(f="community", extension="geojson")
+            layer = {
+                    "name"   : T("Projects"),
+                    "id"     : "projects",
+                    "url"    : url,
+                    "active" : True,
+                    #"marker" : None,
+                }
+
+            map = current.gis.show_map(
+                        collapsed = True,
+                        feature_resources = [layer],
+                    )
 
             output = dict(
                 title = T("Projects Map"),
-                map = map,
-                instructions = instructions,
                 form = form,
-                legend = legend,
+                map = map,
             )
 
             # Add Static JS
@@ -941,7 +891,7 @@ class S3ProjectModel(S3Model):
                                            f="scripts",
                                            args=["S3", "s3.project_map.js"]))
 
-            response.view = "project/map.html"
+            response.view = "map.html"
             return output
         else:
             raise HTTP(501, BADMETHOD)
@@ -1157,13 +1107,14 @@ class S3Project3WModel(S3Model):
         db = current.db
         s3 = current.response.s3
         settings = current.deployment_settings
+        theme_percentages = settings.get_project_theme_percentages()
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
         project_id = self.project_project_id
-        #activity_id = self.project_activity_id
         multi_activity_type_id = self.project_multi_activity_type_id
+        multi_theme_percentage_id = self.project_multi_theme_percentage_id
         currency_type = s3.currency_type
         
         s3_date_format = settings.get_L10n_date_format()
@@ -1183,6 +1134,9 @@ class S3Project3WModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Community
         #
+        # @ToDo: Rename as project_location?
+        #      'project_community' is OK for L4, maybe L3, but not for L0/L1/L2
+        #
         tablename = "project_community"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -1192,14 +1146,27 @@ class S3Project3WModel(S3Model):
                                    writable = True,
                                    widget = S3LocationSelectorWidget(hide_address=True),
                                    represent = self.gis_location_lx_represent),
-                             multi_activity_type_id(),
+                             multi_activity_type_id(
+                                    # Probably want a diff deployemnt_setting, but this will do for now
+                                    readable = not theme_percentages,
+                                    writable = not theme_percentages,
+                                ),
+                             # Field populated by project_theme_percentage_onaccept()
+                             multi_theme_percentage_id(
+                                    readable = theme_percentages,
+                                    writable = False,
+                                ),
+                             # @ToDo: This duplicates the data in gis_location
                              Field("population", "integer",
                                    label = T("Population")),
+                             # @ToDo: Replace with a 'family size' value & auto-calculate?
                              Field("number_families", "integer",
                                    label = T("Number of Families")),
                              comments(),
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
                              *(s3.lx_fields() + meta_fields()))
+
+        table.virtualfields.append(S3ProjectCommunityVirtualFields())
 
         # CRUD Strings
         COMMUNITY = T("Community")
@@ -1213,6 +1180,7 @@ class S3Project3WModel(S3Model):
                 title_search = T("Search Community"),
                 title_upload = T("Import Community Data"),
                 title_report = T("Who is doing What Where"),
+                title_map = T("Map of Projects"),
                 subtitle_create = T("Add New Community"),
                 label_list_button = T("List Communities"),
                 label_create_button = ADD_COMMUNITY,
@@ -1223,19 +1191,61 @@ class S3Project3WModel(S3Model):
         )
 
         # Search Method
-        advanced_search = (
-            S3SearchSimpleWidget(
+        simple = S3SearchSimpleWidget(
                 name = "project_community_search_text",
                 label = T("Name"),
-                comment = T("Search for a Community by name."),
-                field = "location_id$name"
-            ),
-            S3SearchOptionsWidget(
-                name = "project_community_search_project",
-                label = T("Project"),
-                field = "project_id",
-                cols = 3
-            ),
+                comment = T("Search for a Project by name, code, location, or description."),
+                field = ["location_id$L0",
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         "location_id$L4",
+                         "project_id$name",
+                         "project_id$code",
+                         "project_id$description",
+                        ]
+            )
+        def project_theme_opts():
+            """
+                Provide the options for the Theme search filter
+            """
+            table = current.s3db.project_theme
+            query = (table.deleted == False)
+            opts = db(query).select(table.id,
+                                    table.name,
+                                    orderby=table.name)
+            od = OrderedDict()
+            for opt in opts:
+                od[opt.id] = opt.name
+            return od
+
+        if theme_percentages:
+            theme_search = S3SearchOptionsWidget(
+                    name = "project_community_search_theme",
+                    label = T("Theme"),
+                    #field = "multi_theme_percentage_id$theme_id",
+                    field = "multi_theme_percentage_id",
+                    cols = 1,
+                    options = project_theme_opts,
+                )
+        else:
+            theme_search = S3SearchOptionsWidget(
+                    name = "project_community_search_theme",
+                    label = T("Theme"),
+                    field = "project_id$multi_theme_id",
+                    cols = 1,
+                    options = project_theme_opts,
+                )
+        advanced_search = (
+            simple,
+            # This is only suitable for deployments with a few projects
+            #S3SearchOptionsWidget(
+            #    name = "project_community_search_project",
+            #    label = T("Project"),
+            #    field = "project_id",
+            #    cols = 3
+            #),
+            theme_search,
             S3SearchLocationHierarchyWidget(
                 name="project_community_search_L0",
                 field="L0",
@@ -1259,27 +1269,24 @@ class S3Project3WModel(S3Model):
         )
         
         project_community_search = S3Search(
-            simple = (
-                S3SearchSimpleWidget(
-                    name = "project_community_search_text",
-                    label = T("Name"),
-                    comment = T("Search for a Community by name."),
-                    field = "location_id$name"
-                ),
-            ),
+            simple = (simple),
             advanced = advanced_search,
         )
 
         # Resource Configuration
         report_fields = [(T("Location"), "location_id"),
+                         (T("Organization"), "organisation"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
                         ]
         list_fields = ["location_id",
                        "project_id",
-                       "multi_activity_type_id",
-                       "comments"
                        ]
+        if theme_percentages:
+            list_fields.append("multi_theme_percentage_id")
+        else:
+            list_fields.append("multi_activity_type_id")
+        list_fields.append("comments")
 
         configure(tablename,
                   super_entity="doc_entity",
@@ -1317,7 +1324,10 @@ class S3Project3WModel(S3Model):
                                                                   tooltip=COMMUNITY_TOOLTIP),
                                       ondelete = "CASCADE")
 
-        # Project Community Contact Persons
+        # Components
+        add_component("project_beneficiary",
+                      project_community="community_id")
+
         add_component("pr_person",
                       project_community=Storage(
                             name="contact",
@@ -1326,10 +1336,6 @@ class S3Project3WModel(S3Model):
                             key="person_id",
                             actuate="hide",
                             autodelete=False))
-
-        # Beneficiaries
-        add_component("project_beneficiary",
-                      project_community="community_id")
 
         # ---------------------------------------------------------------------
         # Project Community Contact Person
@@ -1698,21 +1704,20 @@ class S3Project3WModel(S3Model):
     def project_beneficiary_deduplicate(item):
         """ Import item de-duplication """
 
-        db = current.db
-
-        if item.id:
+        if item.tablename != "project_beneficiary":
             return
-        if item.tablename == "project_beneficiary" and \
-            "beneficiary_type_id" in item.data and \
-            "community_id" in item.data:
+
+        data = item.data
+        if "beneficiary_type_id" in data and \
+           "community_id" in data:
             # Match beneficiary by type and activity_id
             table = item.table
-            beneficiary_type_id = item.data.beneficiary_type_id
-            community_id = item.data.community_id
+            beneficiary_type_id = data.beneficiary_type_id
+            community_id = data.community_id
             query = (table.beneficiary_type_id == beneficiary_type_id) & \
                     (table.community_id == community_id)
-            duplicate = db(query).select(table.id,
-                                            limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1750,27 +1755,24 @@ class S3Project3WModel(S3Model):
     def project_community_deduplicate(item):
         """ Import item de-duplication """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename != "project_community":
             return
-        table = item.table
-        duplicate = None
 
-        if "project_id" in item.data and \
-                "location_id" in item.data:
+        data = item.data
+        if "project_id" in data and \
+           "location_id" in data:
             # Match community by project_id and location_id
-            project_id = item.data.project_id
-            location_id = item.data.location_id
+            project_id = data.project_id
+            location_id = data.location_id
+            table = item.table
             query = (table.project_id == project_id) & \
                     (table.location_id == location_id)
-            duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
 
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
         return
 
@@ -1876,21 +1878,19 @@ class S3Project3WModel(S3Model):
     def project_organisation_deduplicate(item):
         """ Import item de-duplication """
 
-        db = current.db
-
-        if item.id:
+        if item.tablename != "project_organisation":
             return
-        if item.tablename == "project_organisation" and \
-            "project_id" in item.data and \
-            "organisation_id" in item.data:
+        data = item.data
+        if "project_id" in data and \
+           "organisation_id" in data:
             # Match project by org_id and project_id
             table = item.table
-            project_id = item.data.project_id
-            organisation_id = item.data.organisation_id
+            project_id = data.project_id
+            organisation_id = data.organisation_id
             query = (table.project_id == project_id) & \
                     (table.organisation_id == organisation_id)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1996,7 +1996,9 @@ class S3ProjectThemeModel(S3Model):
         This model holds the % breakdown by theme (sector in IATI) for projects
     """
 
-    names = ["project_theme_percentage"]
+    names = ["project_theme_percentage",
+             "project_multi_theme_percentage_id"
+             ]
 
     def model(self):
 
@@ -2004,13 +2006,17 @@ class S3ProjectThemeModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        self.define_table("project_theme_percentage",
-                          self.project_project_id(requires=IS_ONE_OF(db,
-                                                                     "project_project.id",
-                                                                     "%(name)s")),
-                          self.project_theme_id(requires=IS_ONE_OF(db,
-                                                                   "project_theme.id",
-                                                                   "%(name)s")),
+        project_id = self.project_project_id
+        theme_id = self.project_theme_id
+
+        tablename = "project_theme_percentage"
+        self.define_table(tablename,
+                          project_id(requires=IS_ONE_OF(db,
+                                                        "project_project.id",
+                                                        "%(name)s")),
+                          theme_id(requires=IS_ONE_OF(db,
+                                                      "project_theme.id",
+                                                      "%(name)s")),
                           Field("percentage",
                                 "integer",
                                 label = T("Percentage"),
@@ -2022,7 +2028,7 @@ class S3ProjectThemeModel(S3Model):
 
 
         # CRUD Strings
-        s3.crud_strings["project_theme_percentage"] = Storage(
+        s3.crud_strings[tablename] = Storage(
             title_create = T("New Theme"),
             title_display = T("Theme"),
             title_list = T("Themes"),
@@ -2039,9 +2045,51 @@ class S3ProjectThemeModel(S3Model):
             msg_list_empty = T("No themes found")
         )
 
+        self.configure(tablename,
+                       onaccept=self.project_theme_percentage_onaccept)
+
+        # Multiple for theme_percentages=False
+        multi_theme_percentage_id = S3ReusableField("multi_theme_percentage_id",
+                            "list:reference project_theme_percentage",
+                            label = T("Themes"),
+                            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                "project_theme_percentage.id",
+                                                "%(id)s",
+                                                multiple=True)),
+                            represent = multi_theme_percentage_represent,
+                            ondelete = "SET NULL",
+                            )
+
         # Pass variables back to global scope (response.s3.*)
         return dict(
+            project_multi_theme_percentage_id = multi_theme_percentage_id,
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_percentage_onaccept(form):
+        """
+            Record creation post-processing
+
+            Update the percentages of all the Project's Communities.
+        """
+
+        project_id = form.vars.project_id
+        if not project_id:
+            return
+        db = current.db
+        s3db = current.s3db
+        # Calculate the list of Percentages for this Project
+        table = s3db.project_theme_percentage
+        query = (table.deleted == False) & \
+                (table.project_id == project_id)
+        rows = db(query).select(table.id)
+        percentages = [row.id for row in rows]
+
+        # Update the Project's Communities
+        table = s3db.project_community
+        query = (table.project_id == project_id)
+        db(query).update(multi_theme_percentage_id = percentages)
 
 # =============================================================================
 class S3ProjectTaskModel(S3Model):
@@ -3002,6 +3050,7 @@ class S3ProjectTaskIReportModel(S3Model):
         Project Task IReport Model
 
         This class holds the table used to link Tasks with Incident Reports.
+        @ToDo: Link to Incidents instead?
     """
 
     names = ["project_task_ireport",
@@ -3070,16 +3119,39 @@ class S3ProjectTaskIReportModel(S3Model):
         return
 
 # =============================================================================
+def project_project_represent(id, row=None, show_link=True):
+    """ FK representation """
+
+    if not row and id:
+        table = current.s3db.project_project
+        row = current.db(table.id == id).select(table.name,
+                                                table.code,
+                                                limitby=(0, 1)).first()
+    if row:
+        if current.deployment_settings.get_project_codes():
+            repr = "%s: %s" % (row.code, row.name)
+        else:
+            repr = row.name
+        if not show_link:
+            return repr
+        return A(repr, _href = URL(c="project",
+                                   f="project",
+                                   args=[id]))
+    else:
+        return current.messages.NONE
+
+# =============================================================================
 def project_assignee_represent(id):
     """ Represent the Person a Task is assigned-to or list views """
 
-    db = current.db
-    s3db = current.s3db
-    cache = s3db.cache
     output = current.messages.NONE
 
     if not id:
         return output
+
+    db = current.db
+    s3db = current.s3db
+    cache = s3db.cache
 
     if isinstance(id, Row):
         instance_type = id.instance_type
@@ -3120,6 +3192,134 @@ def project_assignee_represent(id):
     return output
 
 # =============================================================================
+def project_theme_represent(id):
+    """
+        Theme representation
+        - for multiple=False
+    """
+
+    if not id:
+        return current.messages.NONE
+    
+    if isinstance(id, Row):
+        # Do not repeat the lookup if already done by IS_ONE_OF
+        theme = id
+    else:
+        table = current.s3db.project_theme
+        theme = current.db(table.id == id).select(table.name,
+                                                  limitby=(0, 1)).first()
+
+    if not theme:
+        return current.messages.NONE
+
+    return theme.name
+
+# =============================================================================
+def multiref_represent(opts, tablename, represent_string = "%(name)s"):
+    """
+        Represent a list of references
+
+        @param opt: the current value or list of values
+        @param tablename: the referenced table
+        @param represent_string: format string to represent the records
+    """
+
+    DEFAULT = ""
+
+    s3db = current.s3db
+    table = s3db.table(tablename, None)
+    if table is None:
+        return DEFAULT
+
+    if not isinstance(opts, (list, tuple)):
+        opts = [opts]
+
+    rows = current.db(table.id.belongs(opts)).select()
+    rstr = Storage([(str(row.id), row) for row in rows])
+    keys = rstr.keys()
+    represent = lambda o: str(o) in keys and \
+                          represent_string % rstr[str(o)] or \
+                          current.messages.UNKNOWN_OPT
+    vals = [represent(o) for o in opts]
+
+    if len(opts) > 1:
+        vals = ", ".join(vals)
+    else:
+        vals = len(vals) and vals[0] or DEFAULT
+
+    return vals
+
+# =============================================================================
+def multi_activity_represent(opt):
+    """
+        Activity representation
+        for multiple=True options
+    """
+
+    if not opt:
+        return current.messages.NONE
+
+    table = current.s3db.project_activity
+    set = current.db(table.id > 0).select(table.id,
+                                          table.name).as_dict()
+
+    if not set:
+        return current.messages.NONE
+
+    if isinstance(opt, (list, tuple)):
+        opts = opt
+        try:
+            vals = [str(set.get(o)["name"]) for o in opts]
+        except:
+            return None
+    elif isinstance(opt, int):
+        opts = [opt]
+        vals = str(set.get(opt)["name"])
+    else:
+        return current.messages.NONE
+
+    if len(opts) > 1:
+        vals = ", ".join(vals)
+    else:
+        vals = len(vals) and vals[0] or ""
+    return vals
+
+# =============================================================================
+def multi_theme_percentage_represent(id):
+    """
+        Representation for Theme Percentages
+        for multiple=True options
+    """
+
+    if not id:
+        return current.messages.NONE
+
+    s3db = current.s3db
+    table = s3db.project_theme_percentage
+    ttable = s3db.project_theme
+
+    def represent_row(row):
+        return "%s (%s%s)" % (row.project_theme.name,
+                              row.project_theme_percentage.percentage,
+                              "%")
+
+    if isinstance(id, (list, tuple)):
+        query = (table.id.belongs(id)) & \
+                (ttable.id == table.theme_id)
+        rows = current.db(query).select(table.percentage,
+                                        ttable.name)
+        repr = ", ".join(represent_row(row) for row in rows)
+    else:
+        query = (table.id == id) & \
+                (ttable.id == table.theme_id)
+        row = current.db(query).select(table.percentage,
+                                       ttable.name).first()
+        if row:
+            return represent_row(row)
+        else:
+            return current.messages.NONE
+
+# =============================================================================
 def task_notify(form):
     """
         If the task is assigned to someone then notify them
@@ -3152,9 +3352,7 @@ class S3ProjectOrganisationVirtualFields:
     def organisation(self):
         """ Name of the lead organisation of the project """
 
-        db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
         settings = current.deployment_settings
         LEAD_ROLE = settings.get_project_organisation_lead_role()
 
@@ -3164,8 +3362,8 @@ class S3ProjectOrganisationVirtualFields:
                 (ltable.project_id == self.project_project.id) & \
                 (ltable.role == LEAD_ROLE) & \
                 (ltable.organisation_id == otable.id)
-        org = db(query).select(otable.name,
-                               limitby=(0, 1)).first()
+        org = current.db(query).select(otable.name,
+                                       limitby=(0, 1)).first()
         if org:
             return org.name
         else:
@@ -3174,15 +3372,11 @@ class S3ProjectOrganisationVirtualFields:
     def total_organisation_amount(self): 
         """ Total of project_organisation amounts for project"""
 
-        db = current.db
-        s3db = current.s3db
-
-        potable = s3db.project_organisation
-
+        potable = current.s3db.project_organisation
         query = (potable.deleted != True) & \
                 (potable.project_id == self.project_project.id)
         sum_field = potable.amount.sum()
-        return db(query).select(sum_field).first()[sum_field]
+        return current.db(query).select(sum_field).first()[sum_field]
     
 # =============================================================================
 class S3ProjectBudgetVirtualFields:
@@ -3191,15 +3385,11 @@ class S3ProjectBudgetVirtualFields:
     def total_annual_budget(self):
         """ Total of all annual budgets for project"""
 
-        db = current.db
-        s3db = current.s3db
-
-        pabtable = s3db.project_annual_budget
-
+        pabtable = current.s3db.project_annual_budget
         query = (pabtable.deleted != True) & \
                 (pabtable.project_id == self.project_project.id)
         sum_field = pabtable.amount.sum()
-        return db(query).select(sum_field).first()[sum_field]
+        return current.db(query).select(sum_field).first()[sum_field]
         
 # =============================================================================
 class S3ProjectActivityVirtualFields:
@@ -3210,12 +3400,10 @@ class S3ProjectActivityVirtualFields:
     def organisation(self):
         """ Name of the lead organisation of the project """
 
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
         settings = current.deployment_settings
         LEAD_ROLE = settings.get_project_organisation_lead_role()
 
+        s3db = current.s3db
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
 
@@ -3223,8 +3411,8 @@ class S3ProjectActivityVirtualFields:
                 (ltable.project_id == self.project_activity.project_id) & \
                 (ltable.role == LEAD_ROLE) & \
                 (ltable.organisation_id == otable.id)
-        org = db(query).select(otable.name,
-                               limitby=(0, 1)).first()
+        org = current.db(query).select(otable.name,
+                                       limitby=(0, 1)).first()
         if org:
             return org.name
         else:
@@ -3283,70 +3471,61 @@ class S3ProjectCommunityVirtualFields:
     def organisation(self):
         """ Name of the lead organisation of the project """
 
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
+        settings = current.deployment_settings
+        LEAD_ROLE = settings.get_project_organisation_lead_role()
 
+        s3db = current.s3db
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
-        LEAD_ROLE = s3.project_organisation_lead_role
         query = (ltable.deleted != True) & \
                 (ltable.project_id == self.project_community.project_id) & \
                 (ltable.role == LEAD_ROLE) & \
                 (ltable.organisation_id == otable.id)
-        org = db(query).select(otable.name,
-                               limitby=(0, 1)).first()
+        org = current.db(query).select(otable.name,
+                                       limitby=(0, 1)).first()
         if org:
             return org.name
         else:
             return None
 
+    # def themes(self):
+        # """ Themes of the project """
+
+        # s3db = current.s3db
+        # ttable = s3db.project_theme
+        # themes = None
+        # if current.deployment_settings.get_project_theme_percentages():
+            # tptable = s3db.project_theme_percentage
+            # query = (tptable.project_id == self.project_community.project_id) & \
+                    # (ttable.id == tptable.theme_id)
+            # themes = current.db(query).select(ttable.name)
+        # else:
+            # db = current.db
+            # # 1st pull-back the themes
+            # ptable = s3db.project_project
+            # query = (ptable.id == self.project_community.project_id)
+            # project = db(query).select(ptable.multi_theme_id,
+                                       # limitby=(0, 1)).first()
+            # if project and project.multi_theme_id:
+                # theme_ids = [theme_id for theme_id in project.multi_theme_id]
+                # query = (ttable.id.belongs(theme_ids))
+                # themes = db(query).select(ttable.name)
+
+        # if themes:
+            # return [theme.name for theme in themes]
+        # else:
+            # return None
+
     def name(self):
-        return current.s3db.gis_location_lx_represent(self.project_community.location_id)
+        """
+            Name for Map onHover popups
+        """
 
-    def L0(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L0" in parents:
-            return parents["L0"]
-        else:
-            return None
+        record = self.project_community
+        location = current.s3db.gis_location_lx_represent(record.location_id)
+        project = project_project_represent(record.project_id, show_link=False)
 
-    def L1(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L1" in parents:
-            return parents["L1"]
-        else:
-            return None
-
-    def L2(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L2" in parents:
-            return parents["L2"]
-        else:
-            return None
-
-    def L3(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_community.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L3" in parents:
-            return parents["L3"]
-        else:
-            return None
+        return "%s (%s)" % (project, location)
 
 # =============================================================================
 class S3ProjectBeneficiaryVirtualFields:
@@ -3360,14 +3539,12 @@ class S3ProjectBeneficiaryVirtualFields:
             Grab the first location from the database for this community and
             return the location tree
         """
-        db = current.db
-        s3db = current.s3db
 
-        # The project_community database table
-        ctable = s3db.project_community
+        ctable = current.s3db.project_community
         query = (ctable.id == community_id)
 
-        community = db(query).select(ctable.location_id, limitby=(0,1)).first()
+        community = current.db(query).select(ctable.location_id,
+                                             limitby=(0,1)).first()
 
         parents = Storage()
         if community:
@@ -3419,9 +3596,7 @@ class S3ProjectCommunityContactVirtualFields:
 
     def email(self):
 
-        db = current.db
         s3db = current.s3db
-
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
 
@@ -3430,14 +3605,12 @@ class S3ProjectCommunityContactVirtualFields:
                 (ptable.id == person_id) & \
                 (ctable.pe_id == ptable.pe_id) & \
                 (ctable.contact_method == "EMAIL")
-        items = db(query).select(ctable.value)
+        items = current.db(query).select(ctable.value)
         return ", ".join([item.value for item in items])
 
     def sms(self):
 
-        db = current.db
         s3db = current.s3db
-
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
 
@@ -3446,7 +3619,7 @@ class S3ProjectCommunityContactVirtualFields:
                 (ptable.id == person_id) & \
                 (ctable.pe_id == ptable.pe_id) & \
                 (ctable.contact_method == "SMS")
-        items = db(query).select(ctable.value)
+        items = current.db(query).select(ctable.value)
         return ", ".join([item.value for item in items])
 
 # =============================================================================
@@ -3534,16 +3707,14 @@ class S3ProjectTimeVirtualFields:
             - used by the 'Project Time' report
         """
 
-        db = current.db
         s3db = current.s3db
-
         ptable = s3db.project_project
         ltable = s3db.project_task_project
         query = (ltable.deleted != True) & \
                 (ltable.task_id == self.project_time.task_id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.name,
-                                   limitby=(0, 1)).first()
+        project = current.db(query).select(ptable.name,
+                                           limitby=(0, 1)).first()
         if project:
             return project.name
         else:
@@ -3555,13 +3726,12 @@ class S3ProjectTimeVirtualFields:
             - used by the 'Last Week's Work' report
         """
 
-        T = current.T
-        now = current.request.utcnow
         thisdate = self.project_time.date
 
         if not thisdate:
             return "-"
 
+        now = current.request.utcnow
         week = datetime.timedelta(days=7)
         if thisdate < (now - week):
             # Ignore data older than the last week
@@ -3569,67 +3739,6 @@ class S3ProjectTimeVirtualFields:
             return "-"
 
         return thisdate.date().strftime("%d %B")
-
-# =============================================================================
-def project_theme_represent(id):
-    """
-        Theme representation
-        - for multiple=False
-    """
-
-    if not id:
-        return current.messages.NONE
-    
-    if isinstance(id, Row):
-        # Do not repeat the lookup if already done by IS_ONE_OF
-        theme = id
-    else:
-        table = current.s3db.project_theme
-        theme = current.db(table.id == id).select(table.name,
-                                                  limitby=(0, 1)).first()
-
-    if not theme:
-        return current.messages.NONE
-
-    return theme.name
-
-# =============================================================================
-def multi_activity_represent(opt):
-    """
-        Activity representation
-        for multiple=True options
-    """
-
-    if not opt:
-        return current.messages.NONE
-
-    db = current.db
-    s3db = current.s3db
-
-    table = s3db.project_activity
-    set = db(table.id > 0).select(table.id,
-                                  table.name).as_dict()
-
-    if not set:
-        return current.messages.NONE
-
-    if isinstance(opt, (list, tuple)):
-        opts = opt
-        try:
-            vals = [str(set.get(o)["name"]) for o in opts]
-        except:
-            return None
-    elif isinstance(opt, int):
-        opts = [opt]
-        vals = str(set.get(opt)["name"])
-    else:
-        return current.messages.NONE
-
-    if len(opts) > 1:
-        vals = ", ".join(vals)
-    else:
-        vals = len(vals) and vals[0] or ""
-    return vals
 
 # =============================================================================
 def project_ckeditor():
@@ -3717,11 +3826,10 @@ def project_rheader(r, tabs=[]):
         if mode_3w:
             append((T("Communities"), "community"))
             append((T("Beneficiaries"), "beneficiary"))
-        if mode_task:
-            append((T("Activities"), "activity"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))
         if mode_task:
+            append((T("Activities"), "activity"))
             append((T("Tasks"), "task"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
@@ -3799,7 +3907,7 @@ def project_rheader(r, tabs=[]):
         if project:
             project = TR(
                             TH("%s: " % T("Project")),
-                            s3db.project_project_represent(project.id)
+                            project_project_represent(project.id)
                         )
         else:
             project = ""

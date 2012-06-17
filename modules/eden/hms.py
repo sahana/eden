@@ -347,6 +347,7 @@ class HospitalDataModel(S3Model):
             title_list = T("Hospitals"),
             title_update = T("Edit Hospital"),
             title_search = T("Find Hospital"),
+            title_map = T("Map of Hospitals"),
             subtitle_create = T("Add New Hospital"),
             label_list_button = T("List Hospitals"),
             label_create_button = ADD_HOSPITAL,

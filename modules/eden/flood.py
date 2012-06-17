@@ -101,6 +101,7 @@ class S3FloodModel(S3Model):
             title_list = T("Gauges"),
             title_update = T("Edit Gauge"),
             title_search = T("Search Gauges"),
+            title_map = T("Map of Gauges"),
             subtitle_create = T("Add New Gauge"),
             label_list_button = T("List Gauges"),
             label_create_button = ADD_GAUGE,

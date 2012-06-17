@@ -337,6 +337,7 @@ class S3IRSModel(S3Model):
             title_update = T("Edit Incident Report"),
             title_upload = T("Import Incident Reports"),
             title_search = T("Search Incident Reports"),
+            title_map = T("Map of Incident Reports"),
             subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
             label_create_button = ADD_INC_REPORT,

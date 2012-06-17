@@ -3,6 +3,7 @@
 """
     Volunteer Management
 """
+
 module = request.controller
 resourcename = request.function
 
@@ -79,7 +80,7 @@ def human_resource():
     human_resource_search = s3mgr.model.get_config(tablename,
                                                    "search_method")
     # Facility
-    human_resource_search._S3Search__advanced.pop(5)
+    human_resource_search.advanced.pop(5)
     s3mgr.configure(tablename,
                     search_method = human_resource_search)
 
@@ -176,7 +177,7 @@ def volunteer():
     human_resource_search = s3mgr.model.get_config(tablename,
                                                    "search_method")
     # Remove Facility
-    human_resource_search._S3Search__advanced.pop(5)
+    human_resource_search.advanced.pop(5)
     if deployment_settings.get_hrm_experience() == "programme":
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
@@ -192,7 +193,7 @@ def volunteer():
         report_options.facts = report_fields
         # Add VF to the Search Filters
         # Remove deprecated Active/Obsolete
-        human_resource_search._S3Search__advanced.pop(1)
+        human_resource_search.advanced.pop(1)
         table.status.readable = False
         table.status.writable = False
         widget = s3base.S3SearchOptionsWidget(
@@ -206,7 +207,7 @@ def volunteer():
                                 }
                           ),
         search_widget = ("human_resource_search_active", widget[0])
-        human_resource_search._S3Search__advanced.insert(1, search_widget)
+        human_resource_search.advanced.insert(1, search_widget)
         def hrm_programme_opts():
             """
                 Provide the options for the HRM programme search filter
@@ -232,7 +233,7 @@ def volunteer():
                             options = hrm_programme_opts
                           ),
         search_widget = ("human_resource_search_programme", widget[0])
-        human_resource_search._S3Search__advanced.insert(3, search_widget)
+        human_resource_search.advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]

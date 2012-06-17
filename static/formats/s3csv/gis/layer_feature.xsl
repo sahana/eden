@@ -12,10 +12,8 @@
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
          GPS Marker...........string..........Layer Symbology GPS Marker
-         Module...............string..........Layer Module
-         Resource.............string..........Layer Resource
-         Controller...........string..........Layer Controller (optional override for Module)
-         Function.............string..........Layer Function (optional override for Resource)
+         Controller...........string..........Layer Controller
+         Function.............string..........Layer Function
          Popup Label..........string..........Layer Popup Label
          Popup Fields.........string..........Layer Popup Fields
          REST Filter..........string..........Layer Filter (for Map JS calling back to server)
@@ -123,8 +121,6 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="module"><xsl:value-of select="col[@field='Module']"/></data>
-            <data field="resource"><xsl:value-of select="col[@field='Resource']"/></data>
             <xsl:if test="col[@field='Trackable']">
                 <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
             </xsl:if>

@@ -20,6 +20,9 @@ settings.base.prepopulate = ["IFRC_Train"]
 settings.base.system_name = T("Resource Management System")
 settings.base.system_name_short = T("Resource Management System")
 
+# Theme (folder to use for views/layout.html)
+settings.base.theme = "IFRC"
+
 # L10n settings
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),

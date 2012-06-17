@@ -60,17 +60,17 @@ if deployment_settings.has_module("msg"):
 
     tasks["process_inbound_email"] = process_inbound_email
 
-    # -------------------------------------------------------------------------
-    def process_log():
+    # -----------------------------------------------------------------------------
+    def parse_workflow(workflow):
         """
-            Processes the msg_log for unparsed messages.
+        Processes the msg_log for unparsed messages.
         """
         # Run the Task
-        result = msg.process_log()
+        result = msg.parse_import(workflow)
         return result
+        
+    tasks["parse_workflow"] = parse_workflow
     
-    tasks["process_log"] = process_log
-
 # -----------------------------------------------------------------------------
 def sync_synchronize(repository_id, user_id=None, manual=False):
     """

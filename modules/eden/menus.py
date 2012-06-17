@@ -529,6 +529,7 @@ class S3OptionsMenu:
                     M(shelter, f="shelter")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         # @ToDo Search by type, services, location, available space
                         #M("Search", m="search"),
                         M("Import", m="import"),
@@ -650,11 +651,15 @@ class S3OptionsMenu:
 
         return M()(
                     M("Scenarios", c="scenario", f="scenario")(
-                        M("New Scenario", m="create"),
+                        M("New", m="create"),
                         M("View All"),
                     ),
                     M("Events", c="event", f="event")(
-                        M("New Event", m="create"),
+                        M("New", m="create"),
+                        M("View All")
+                    ),
+                    M("Incidents", c="incident", f="event")(
+                        M("New", m="create"),
                         M("View All")
                     )
                 )
@@ -667,6 +672,7 @@ class S3OptionsMenu:
                     M("Fire Stations", f="station")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Search", m="search"),
                         M("Import Stations", m="import"),
                         M("Import Vehicles", f="station_vehicle", m="import"),
@@ -674,6 +680,7 @@ class S3OptionsMenu:
                     M("Water Sources", f="water_source")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Search", m="search"),
                         M("Import", m="import"),
                     ),
@@ -693,6 +700,7 @@ class S3OptionsMenu:
                     M("Gauges", f="gauge")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         #M("Search", m="search"),
                         M("Import", m="import"),
                     ),
@@ -785,6 +793,7 @@ class S3OptionsMenu:
                     M("Hospitals", f="hospital", m="search")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Search", m="search"),
                         #SEP(),
                         #M("Show Map", c="gis", f="map_viewing_client",
@@ -810,7 +819,7 @@ class S3OptionsMenu:
         return M(c="hrm")(
                     M("Staff", f="staff",
                       check=[manager_mode])(
-                        M("Add Staff", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", f="person", m="import",
@@ -818,23 +827,23 @@ class S3OptionsMenu:
                     ),
                     M("Teams", f="group",
                       check=manager_mode)(
-                        M("Add Team", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     M("Job Role Catalog", f="job_role",
                       check=manager_mode)(
-                        M("Add Job Role", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     M("Skill Catalog", f="skill",
                       check=manager_mode)(
-                        M("Add Skill", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
-                        M("Add Training Event", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Search Training Participants", f="training",
@@ -844,13 +853,13 @@ class S3OptionsMenu:
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
-                        M("Add Training Course", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
-                        M("Add Certificate", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
@@ -893,7 +902,7 @@ class S3OptionsMenu:
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
                       check=[manager_mode])(
-                        M("Add Volunteer", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", f="person", m="import",
@@ -901,23 +910,23 @@ class S3OptionsMenu:
                     ),
                     M("Teams", f="group",
                       check=manager_mode)(
-                        M("Add Team", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     M("Job Role Catalog", f="job_role",
                       check=manager_mode)(
-                        M("Add Job Role", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     M("Skill Catalog", f="skill",
                       check=manager_mode)(
-                        M("Add Skill", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
-                        M("Add Training Event", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Search Training Participants", f="training",
@@ -926,19 +935,19 @@ class S3OptionsMenu:
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
-                        M("Add Training Course", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
-                        M("Add Certificate", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Programmes", f="programme",
                       check=[manager_mode, show_programmes])(
-                        M("Add Programme", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
@@ -1058,6 +1067,7 @@ class S3OptionsMenu:
                         M("Add Icident Report", m="create"),
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
+                        M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
                         M("Search", m="search"),
@@ -1089,6 +1099,7 @@ class S3OptionsMenu:
                         M("New", m="create"),
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
+                        M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
                         M("Search", m="search"),
@@ -1267,6 +1278,7 @@ class S3OptionsMenu:
                     M("Offices", f="office")(
                         M("Add Office", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Search", m="search"),
                         M("Import", m="import")
                     ),
@@ -1332,162 +1344,119 @@ class S3OptionsMenu:
 
         settings = current.deployment_settings
 
-        project_menu = M(c="project")
+        menu = M(c="project")
 
-        if settings.get_project_mode_drr():
-            project_menu(
-                    M("Projects", f="project")(
-                        M("Add Project", m="create"),
-                        M("List All Projects"),
-                        M("Search", m="search"),
-                    ),
-                    M("Communities", f="community")(
-                        M("List All"),
-                        M("Search", m="search"),
-                        M("Search Community Contacts", f="community_contact",
-                          m="search"),
-                    ),
-                    M("Reports", f="report")(
-                        M("Who is doing What Where", f="community", m="report"),
-                        M("Beneficiaries", f="beneficiary", m="report"),
-                        M("Funding", f="organisation", args="report"),
-                    ),
-                    M("Import", f="index")(
-                        M("Import Projects", f="project",
-                          m="import", p="create"),
-                        M("Import Project Organizations", f="organisation",
-                          m="import", p="create"),
-                        M("Import Project Communities", f="community",
-                          m="import", p="create"),
-                    ),
-                    M("Activity Types", f="activity_type")(
-                        M("Add Activity Type", m="create"),
-                        M("List All"),
-                        #M("Search", m="search")
-                    ),
-                    M("Hazards", f="hazard")(
-                        M("Add Hazard", m="create"),
-                        M("List All"),
-                    ),
-                    M("Project Themes", f="theme")(
-                        M("Add Theme", m="create"),
-                        M("List All"),
-                    ),
-                    M("Beneficiary Types", f="beneficiary_type")(
-                        M("Add Beneficiary Type", m="create"),
-                        M("List All"),
-                    ),
+        if settings.get_project_mode_3w():
+            menu(
+                 M("Projects", f="project")(
+                    M("New", m="create"),
+                    M("List All"),
+                    M("Map", f="community", m="map"),
+                    M("Search", m="search"),
+                 ),
+                 M("Communities", f="community")(
+                    M("List All"),
+                    M("Search", m="search"),
+                    M("List All Community Contacts", f="community_contact"),
+                    M("Search Community Contacts", f="community_contact",
+                      m="search"),
+                 ),
+                 M("Reports", f="report")(
+                    M("Who is doing What Where", f="community", m="report"),
+                    M("Beneficiaries", f="beneficiary", m="report"),
+                    M("Funding", f="organisation", args="report"),
+                 ),
+                 M("Import", f="index", p="create")(
+                    M("Import Projects", f="project",
+                      m="import", p="create"),
+                    M("Import Project Organizations", f="organisation",
+                      m="import", p="create"),
+                    M("Import Project Communities", f="community",
+                      m="import", p="create"),
+                 ),
+                 M("Themes", f="theme")(
+                    M("New", m="create"),
+                    M("List All"),
+                 ),
+                 M("Activity Types", f="activity_type")(
+                    M("New", m="create"),
+                    M("List All"),
+                    #M("Search", m="search")
+                 ),
+                 M("Beneficiary Types", f="beneficiary_type")(
+                    M("New", m="create"),
+                    M("List All"),
+                 ),
                 )
 
-        elif settings.get_project_mode_3w():
-            project_menu(
-                    M("Projects", f="project")(
-                        M("Add Project", m="create"),
+            if settings.get_project_mode_drr():
+                menu(
+                     M("Hazards", f="hazard")(
+                        M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Communities", f="community")(
-                        M("List All"),
-                        M("Search Communities", m="search"),
-                        M("Search Community Contacts", f="community_contact",
-                          m="search"),
-                    ),
-                    M("Reports", f="report")(
-                        M("Who is doing What Where", f="community", m="report"),
-                        M("Beneficiaries", f="beneficiary", m="report"),
-                        M("Funding", f="organisation", args="report"),
-                    ),
-                    M("Project Themes", f="theme")(
-                        M("Add New Theme", m="create"),
-                        M("List All"),
-                    ),
-                    M("Activity Types", f="activity_type")(
-                        M("Add New Activity Type", m="create"),
-                        M("List All"),
-                        #M("Search", m="search")
-                    ),
-                    M("Beneficiary Types", f="beneficiary_type")(
-                        M("Add New Beneficiary Types", m="create"),
-                        M("List All"),
-                    ),
-                )
+                     )
+                    )
+            # if settings.get_project_sectors():
+                # menu(
+                     # M("Sectors", c="org", f="sector")(
+                        # M("New", m="create"),
+                        # M("List All"),
+                     # )
+                    # )
 
         elif settings.get_project_mode_task():
+            menu(
+                 M("Projects", f="project")(
+                    M("New", m="create"),
+                    M("List All"),
+                    M("Open Tasks for Project", vars={"tasks":1}),
+                 ),
+                 M("Tasks", f="task")(
+                    M("New", m="create"),
+                    #M("List All Tasks"),
+                    M("Search", m="search"),
+                 ),
+                )
             if auth.s3_has_role("STAFF"):
-                project_menu(
-                        M("Projects", f="project")(
-                            M("Add Project", m="create"),
-                            M("List All"),
-                            M("Open Tasks for Project", vars={"tasks":1}),
-                        ),
-                        M("Tasks", f="task")(
-                            M("Add Task", m="create"),
-                            #M("List All Tasks"),
-                            M("Search", m="search"),
-                        ),
-                        M("Daily Work", f="time")(
-                            M("My Logged Hours", vars={"mine":1}),
-                            M("Last Week's Work", m="report",
-                              vars=Storage(rows="person_id",
-                                           cols="day",
-                                           fact="hours",
-                                           aggregate="sum",
-                                           week=1)),
-                            M("My Open Tasks", f="task", vars={"mine":1}),
-                        ),
-                        M("Admin", restrict=[ADMIN])(
-                            M("Activity Types", f="activity_type"),
-                            M("Import Tasks", f="task", m="import", p="create"),
-                        ),
-                        M("Reports", f="report")(
-                            M("Activity Report", f="activity", m="report",
-                              vars=Storage(rows="project_id",
-                                           cols="name",
-                                           fact="time_actual",
-                                           aggregate="sum")),
-                            M("Project Time Report", f="time", m="report",
-                              vars=Storage(rows="project",
-                                           cols="person_id",
-                                           fact="hours",
-                                           aggregate="sum")),
-                        ),
+                menu(
+                     M("Daily Work", f="time")(
+                        M("My Logged Hours", vars={"mine":1}),
+                        M("Last Week's Work", m="report",
+                          vars=Storage(rows="person_id",
+                                       cols="day",
+                                       fact="hours",
+                                       aggregate="sum",
+                                       week=1)),
+                        M("My Open Tasks", f="task", vars={"mine":1}),
+                     ),
+                     M("Admin", restrict=[ADMIN])(
+                        M("Activity Types", f="activity_type"),
+                        M("Import Tasks", f="task", m="import", p="create"),
+                     ),
+                     M("Reports", f="report")(
+                        M("Activity Report", f="activity", m="report",
+                          vars=Storage(rows="project_id",
+                                       cols="name",
+                                       fact="time_actual",
+                                       aggregate="sum")),
+                        M("Project Time Report", f="time", m="report",
+                          vars=Storage(rows="project",
+                                       cols="person_id",
+                                       fact="hours",
+                                       aggregate="sum")),
+                     ),
                     )
-            else:
-                project_menu(
-                        M("Projects", f="project")(
-                            M("List All"),
-                            M("Open Tasks for Project", vars={"tasks":1}),
-                        ),
-                        M("Tasks", f="task")(
-                            M("Add Task", m="create"),
-                            M("List All"),
-                            M("Search", m="search"),
-                        ),
-
-                    )
-
         else:
-            project_menu(
-                    M("Projects", f="project")(
-                        M("Add Project", m="create"),
-                        M("List All Projects"),
-                        M("Search", m="search"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Activities", f="activity")(
-                        M("Add Activity", m="create"),
-                        M("List All Activities"),
-                        M("Search", m="search"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    M("Project Themes", f="theme")(
-                        M("Add Theme", m="create"),
-                        M("List All Themes"),
-                    ),
+            menu(
+                 M("Projects", f="project")(
+                    M("New", m="create"),
+                    M("List All"),
+                    M("Search", m="search"),
+                    M("Import", m="import", p="create"),
+                 ),
                 )
 
-        return project_menu
+        return menu
 
     # -------------------------------------------------------------------------
     def req(self):
@@ -1527,6 +1496,7 @@ class S3OptionsMenu:
                     M("Vehicles", f="vehicle")(
                         M("New", m="create"),
                         M("List All"),
+                        M("Map", m="map"),
                         M("Search", m="search"),
                     ),
                 )

@@ -65,7 +65,7 @@ class S3Config(Storage):
         self.hrm = Storage()
         self.project = Storage()
         self.save_search = Storage()
-
+        self.parser = Storage()
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -87,6 +87,14 @@ class S3Config(Storage):
         #restricted(code, environment, layer=path)
         restricted(code, layer=path)
         return
+
+    # -------------------------------------------------------------------------
+    # Theme
+    def get_theme(self):
+        """
+            Which templates folder to use for views/layout.html
+        """
+        return self.base.get("theme", "default")
 
     # -------------------------------------------------------------------------
     # Auth settings
@@ -643,7 +651,7 @@ class S3Config(Storage):
         return self.inv.get("catalog_default", "Other Items")
 
     # -------------------------------------------------------------------------
-    # Organsiation
+    # Organisation
     def get_org_site_code_len(self):
         return self.org.get("site_code_len", 10)
 
@@ -702,7 +710,7 @@ class S3Config(Storage):
 
     def get_project_mode_drr(self):
         """
-            Enable DRR mode in the projects module
+            Enable DRR extensions in the projects module
         """
         return self.project.get("mode_drr", False)
 
@@ -762,7 +770,12 @@ class S3Config(Storage):
             Enable the Saved Search widget
         """
         return self.save_search.get("widget", True)
-
+    # -------------------------------------------------------------------------
+    # Message Parser Settings
+    def get_parser_enabled(self):
+            return self.parser.get("parser_enabled")
+    
+    
     # -------------------------------------------------------------------------
     # Active modules list
     def has_module(self, module_name):

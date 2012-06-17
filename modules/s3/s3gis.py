@@ -3,8 +3,6 @@
 """
     GIS Module
 
-    @version: 0.9.0
-
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
@@ -33,7 +31,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS", "GoogleGeocoder", "YahooGeocoder"]
+__all__ = ["GIS", "S3Map", "GoogleGeocoder", "YahooGeocoder"]
 
 import os
 import re
@@ -67,7 +65,7 @@ from gluon.tools import fetch
 import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3method import S3Method
+from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
@@ -1876,90 +1874,122 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_marker():
+    def get_marker(controller=None,
+                   function=None,
+                   ):
         """
-            Returns the default Marker
-            - called by S3XML.gis_encode()
+            Returns a Marker dict
+            - called by S3REST: S3Resource.export_tree() for non-geojson resources
+            - called by S3Search
         """
 
-        return Marker().as_dict()
+        marker = None
+        if controller and function:
+            # Lookup marker in the gis_feature table
+            db = current.db
+            s3db = current.s3db
+            ftable = s3db.gis_layer_feature
+            ltable = s3db.gis_layer_symbology
+            mtable = s3db.gis_marker
+            try:
+                symbology_id = current.response.s3.gis.config.symbology_id
+            except:
+                # Config not initialised yet
+                config = current.gis.get_config()
+                symbology_id = config.symbology_id
+            query = (ftable.controller == controller) & \
+                    (ftable.function == function) & \
+                    (ftable.id == ltable.layer_id) & \
+                    (ltable.symbology_id == symbology_id) & \
+                    (ltable.marker_id == mtable.id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      ltable.gps_marker).first()
+            if marker:
+                _marker = marker["gis_marker"]
+                marker = dict(image=_marker.image,
+                              height=_marker.height,
+                              width=_marker.width,
+                              gps_marker=marker["gis_layer_symbology"].gps_marker
+                              )
+
+        if not marker:
+            # Default
+            marker = Marker().as_dict()
+
+        return marker
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_marker_and_popup(layer_id=None, # Used by S3REST: S3Resource.export_tree()
-                             resource=None, # Used by S3REST & S3Search
-                             record=None    # Used by S3Search: search_interactive()
-                            ):
+    def get_locations_and_popups(resource,
+                                 layer_id=None
+                                 ):
         """
-            Returns the marker, popup_fields and popup_label for a Map Layer
+            Returns the locations and popup tooltips for a Map Layer
+            e.g. Feature Layers or Search results (Feature Resources)
 
-            Used by S3REST: S3Resource.export_tree():
-            @param: layer_id - db.gis_layer_feature.id
-            @param: resource - S3Resource instance
-
-            Used by S3Search: search_interactive():
-            @param: resource - S3Resource instance
-            @param: record - the record for a resource
+            Called by S3REST: S3Resource.export_tree()
+            @param: resource - S3Resource instance (required)
+            @param: layer_id - db.gis_layer_feature.id (Feature Layers only)
         """
+
+        if DEBUG:
+            start = datetime.datetime.now()
 
         db = current.db
         s3db = current.s3db
         gis = current.gis
 
-        ftable = s3db.gis_layer_feature
-        ltable = s3db.gis_layer_symbology
-        mtable = s3db.gis_marker
+        format = current.auth.permission.format
 
-        try:
-            symbology_id = current.response.s3.gis.config.symbology_id
-        except:
-            # Config not initialised yet
-            config = gis.get_config()
-            symbology_id = config.symbology_id
+        ftable = s3db.gis_layer_feature
+
+        layer = None
 
         if layer_id:
             # Feature Layer called by S3REST: S3Resource.export_tree()
-            if DEBUG:
-                start = datetime.datetime.now()
-            query = (ftable.id == layer_id) & \
-                    (ftable.layer_id == ltable.layer_id) & \
-                    (ltable.marker_id == mtable.id) & \
-                    (ltable.symbology_id == symbology_id)
-            layer = db(query).select(mtable.image,
-                                     ltable.gps_marker,
-                                     ftable.controller,
-                                     ftable.function,
-                                     ftable.trackable,
+            query = (ftable.id == layer_id)
+            layer = db(query).select(ftable.trackable,
                                      ftable.polygons,
                                      ftable.popup_label,
                                      ftable.popup_fields,
                                      limitby=(0, 1)).first()
 
-            if layer:
-                marker = layer.gis_marker.image
-                gps_marker = layer.gis_layer_symbology.gps_marker
-                frow = layer.gis_layer_feature
-                popup_label = frow.popup_label
-                popup_fields = frow.popup_fields
-                trackable = frow.trackable
-                polygons = frow.polygons
-                controller = frow.controller or resource.prefix
-                function = frow.function or resource.name
-            else:
-                marker = None
-                gps_marker = None
-                popup_label = ""
-                popup_fields = "name"
-                trackable = False
-                polygons = False
-                controller = resource.prefix
-                function = resource.name
+        else:
+            # e.g. Search results loaded as a Feature Resource layer
+            request = current.request
+            query = (ftable.controller == request.controller) & \
+                    (ftable.function == request.function)
 
-            popup_url = URL(controller, function).split(".", 1)[0]
+            layers = db(query).select(ftable.trackable,
+                                      ftable.polygons,
+                                      ftable.popup_label,
+                                      ftable.popup_fields,
+                                      )
+            if len(layers) > 1:
+                # We can't provide details for the whole layer, but need to do a per-record check
+                # Suggest creating separate controllers to avoid this problem
+                return None
+            elif layers:
+                layer = layers.first()
 
-            table = resource.table
-            tablename = resource.tablename
+        if layer:
+            popup_label = layer.popup_label
+            popup_fields = layer.popup_fields
+            trackable = layer.trackable
+            polygons = layer.polygons
+        else:
+            popup_label = ""
+            popup_fields = "name"
+            trackable = False
+            polygons = False
 
+        table = resource.table
+        tablename = resource.tablename
+
+        tooltips = {}
+        if format == "geojson":
             # Build the Popup Tooltips now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
             if popup_label:
@@ -1973,31 +2003,40 @@ class GIS(object):
             if popup_fields:
                 represents = {}
                 for fieldname in popup_fields:
-                    try:
+                    if fieldname in table:
                         field = table[fieldname]
-                    except:
-                        # This field isn't in the table
-                        popup_fields.remove(fieldname)
-                    else:
                         _represents = GIS.get_representation(field, resource)
                         represents[fieldname] = _represents
+                    else:
+                        # Assume a virtual field
+                        represents[fieldname] = None
 
-            tooltips = {}
             for record in resource:
                 tooltip = _tooltip
                 if popup_fields:
                     first = True
                     for fieldname in popup_fields:
-                        value = record[fieldname]
+                        try:
+                            value = record[fieldname]
+                        except KeyError:
+                            continue
+                        if not value:
+                            continue
+                        field_reps = represents[fieldname] 
+                        if field_reps:
+                            try:
+                                represent = field_reps[value]
+                            except:
+                                # list:string
+                                represent = field_reps[str(value)]
+                        else:
+                            # Virtual Field
+                            represent = value
                         if first:
-                            tooltip = "%s %s" % (represents[fieldname][value], tooltip)
+                            tooltip = "%s %s" % (represent, tooltip)
                             first = False
                         elif value:
-                            try:
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
-                            except:
-                                # list: type
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
+                            tooltip = "%s<br />%s" % (tooltip, represent)
 
                 tooltips[record.id] = tooltip
 
@@ -2010,232 +2049,107 @@ class GIS(object):
                 query = (ftable.id == layer_id)
                 layer_name = db(query).select(ftable.name,
                                               limitby=(0, 1)).first().name
-                _debug("marker/tooltip lookup of layer %s completed in %s seconds" % \
+                _debug("tooltip lookup of layer %s completed in %s seconds" % \
                         (layer_name, duration))
 
-            # Lookup the LatLons now so that it can be done as a single
-            # query rather than per record
-            if DEBUG:
-                start = datetime.datetime.now()
-            latlons = {}
-            wkts = {}
-            geojsons = {}
-            if trackable:
-                # Use S3Track
-                ids = resource._ids
-                try:
-                    tracker = S3Trackable(table, record_id=ids)
-                except SyntaxError:
-                    # This table isn't trackable
-                    pass
-                else:
-                    gtable = s3db.gis_location
-                    _latlons = tracker.get_location(_fields=[gtable.lat,
-                                                             gtable.lon])
-                    index = 0
-                    for id in ids:
-                        latlons[id] = (_latlons[index].lat, _latlons[index].lon)
-                        index += 1
-
-            if not latlons:
+        # Lookup the LatLons now so that it can be done as a single
+        # query rather than per record
+        if DEBUG:
+            start = datetime.datetime.now()
+        latlons = {}
+        wkts = {}
+        geojsons = {}
+        if trackable:
+            # Use S3Track
+            ids = resource._ids
+            try:
+                tracker = S3Trackable(table, record_id=ids)
+            except SyntaxError:
+                # This table isn't trackable
+                pass
+            else:
                 gtable = s3db.gis_location
-                if "location_id" in table.fields:
-                    query = (table.id.belongs(resource._ids)) & \
-                            (table.location_id == gtable.id)
-                elif "site_id" in table.fields:
-                    stable = s3db.org_site
-                    query = (table.id.belongs(resource._ids)) & \
-                            (table.site_id == stable.id) & \
-                            (stable.location_id == gtable.id)
-                elif "countries_id" in table.fields:
-                    query = (table.id.belongs(resource._ids)) & \
-                            (table.location_id.belongs(table.countries_id))
-                else:
-                    # Can't display this resource on the Map
-                    return None
+                _latlons = tracker.get_location(_fields=[gtable.lat,
+                                                         gtable.lon])
+                index = 0
+                for id in ids:
+                    latlons[id] = (_latlons[index].lat, _latlons[index].lon)
+                    index += 1
 
-                if polygons:
-                    if current.deployment_settings.get_gis_spatialdb():
-                        if current.auth.permission.format == "geojson":
-                            # Do the Simplify & GeoJSON direct from the DB
-                            rows = db(query).select(table.id,
-                                                    gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
-                            for row in rows:
-                                geojsons[row[tablename].id] = row["gis_location"].geojson
-                        else:
-                            # Do the Simplify direct from the DB
-                            rows = db(query).select(table.id,
-                                                    gtable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"))
-                            for row in rows:
-                                wkts[row[tablename].id] = row["gis_location"].wkt
-                    else:
-                        rows = db(query).select(table.id,
-                                                gtable.wkt)
-                        if current.auth.permission.format == "geojson":
-                            for row in rows:
-                                # Simplify the polygon to reduce download size
-                                geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
-                                if geojson:
-                                    geojsons[row[tablename].id] = geojson
-                        else:
-                            for row in rows:
-                                # Simplify the polygon to reduce download size
-                                # & also to work around the recursion limit in libxslt
-                                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                                wkt = gis.simplify(row["gis_location"].wkt)
-                                if wkt:
-                                    wkts[row[tablename].id] = wkt
-
-                else:
-                    # Points
-                    rows = db(query).select(table.id,
-                                            gtable.lat,
-                                            gtable.lon)
-                    for row in rows:
-                        latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
-
-            _latlons = {}
-            _latlons[tablename] = latlons
-            _wkts = {}
-            _wkts[tablename] = wkts
-            _geojsons = {}
-            _geojsons[tablename] = geojsons
-
-            if DEBUG:
-                end = datetime.datetime.now()
-                duration = end - start
-                duration = '{:.2f}'.format(duration.total_seconds())
-                _debug("latlons lookup of layer %s completed in %s seconds" % \
-                        (layer_name, duration))
-
-            return dict(marker = marker,
-                        gps_marker = gps_marker,
-                        latlons = _latlons,
-                        wkts = _wkts,
-                        geojsons = _geojsons,
-                        tooltips = tooltips,
-                        popup_label = popup_label,
-                        popup_url = popup_url,
-                        )
-
-        elif resource:
-            # Search results called by S3Search: search_interactive()
-            # @ToDo: Refactor to return tooltips instead of popup_fields
-            def get_layers(tablename):
-                (module, resourcename) = tablename.split("_", 1)
-                query = (ftable.module == module) & \
-                        (ftable.resource == resourcename) & \
-                        (ftable.layer_id == ltable.layer_id)
-
-                left = [
-                        mtable.on((ltable.marker_id == mtable.id) & \
-                                  (ltable.symbology_id == symbology_id))
-                        ]
-
-                layers = db(query).select(mtable.image,
-                                          mtable.height,
-                                          mtable.width,
-                                          #ltable.gps_marker,
-                                          ftable.filter_field,
-                                          ftable.filter_value,
-                                          ftable.popup_label,
-                                          ftable.popup_fields,
-                                          left=left)
-                return layers
-
-            tablename = resource.tablename
-            layers = current.cache.ram("%s_marker" % tablename,
-                                       lambda: get_layers(tablename),
-                                       time_expire=60)
-            if not record and len(layers) > 1:
-                # We can't provide details for the whole table, but need to do a per-record check
+        if not latlons:
+            gtable = s3db.gis_location
+            if "location_id" in table.fields:
+                query = (table.id.belongs(resource._ids)) & \
+                        (table.location_id == gtable.id)
+            elif "site_id" in table.fields:
+                stable = s3db.org_site
+                query = (table.id.belongs(resource._ids)) & \
+                        (table.site_id == stable.id) & \
+                        (stable.location_id == gtable.id)
+            else:
+                # Can't display this resource on the Map
                 return None
-            for row in layers:
-                frow = row.gis_layer_feature
-                if not record or not frow.filter_field:
-                    # We only have 1 row
-                    marker = row.gis_marker
-                    if not marker.image:
-                        # Use Default Marker
-                        marker = Marker().as_dict()
-                    return dict(marker = marker,
-                                #gps_marker = row.gis_layer_symbology.gps_marker,
-                                popup_label = frow.popup_label,
-                                popup_fields = frow.popup_fields,
-                                )
-                # Check if the record matches the filter
-                if str(record[frow.filter_field]) == frow.filter_value:
-                    marker = row.gis_marker
-                    if not marker.image:
-                        # Use Default Marker
-                        marker = Marker().as_dict()
-                    return dict(marker = marker,
-                                #gps_marker = row.gis_layer_symbology.gps_marker,
-                                popup_label = frow.popup_label,
-                                popup_fields = frow.popup_fields,
-                                )
-            # No Feature Layer defined or
-            # Row doesn't match any of the filters
-            # Default Marker
-            marker = Marker().as_dict()
-            return dict(marker = marker,
-                        #gps_marker = row.gis_layer_symbology.gps_marker,
-                        popup_label = tablename or "",
-                        popup_fields = None,
-                        )
 
-        else:
-            s3_debug("gis.get_marker_and_popup", "Invalid arguments")
-            return None
+            if polygons:
+                if current.deployment_settings.get_gis_spatialdb():
+                    if format == "geojson":
+                        # Do the Simplify & GeoJSON direct from the DB
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+                        for row in rows:
+                            geojsons[row[tablename].id] = row["gis_location"].geojson
+                    else:
+                        # Do the Simplify direct from the DB
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"))
+                        for row in rows:
+                            wkts[row[tablename].id] = row["gis_location"].wkt
+                else:
+                    rows = db(query).select(table.id,
+                                            gtable.wkt)
+                    if format == "geojson":
+                        for row in rows:
+                            # Simplify the polygon to reduce download size
+                            geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                            if geojson:
+                                geojsons[row[tablename].id] = geojson
+                    else:
+                        for row in rows:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(row["gis_location"].wkt)
+                            if wkt:
+                                wkts[row[tablename].id] = wkt
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_popup_tooltip(table, record, popup_label, popup_fields):
-        """
-            Returns the HTML popup_tooltip for a Map feature
+            else:
+                # Points
+                rows = db(query).select(table.id,
+                                        gtable.lat,
+                                        gtable.lon)
+                for row in rows:
+                    latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
 
-            Was used by S3XML.gis_encode()
-            Still used by S3Search: search_interactive()
+        _latlons = {}
+        _latlons[tablename] = latlons
+        _wkts = {}
+        _wkts[tablename] = wkts
+        _geojsons = {}
+        _geojsons[tablename] = geojsons
 
-            @param: table
-            @param: record
-            @param: popup_label
-            @param: popup_fields
-        """
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("latlons lookup of layer %s completed in %s seconds" % \
+                    (layer_name, duration))
 
-        if popup_label:
-            tooltip = "(%s)" % current.T(popup_label)
-        else:
-            tooltip = ""
-
-        if popup_fields:
-            popup_fields = popup_fields.split("/")
-            fieldname = popup_fields[0]
-            try:
-                value = record[fieldname]
-                if value:
-                    field = table[fieldname]
-                    represent = GIS.get_representation(field, value=value)
-                    tooltip = "%s %s" % (represent, tooltip)
-            except:
-                # This field isn't in the table
-                pass
-        else:
-            popup_fields = []
-
-        for fieldname in popup_fields:
-            try:
-                if fieldname != popup_fields[0]:
-                    value = record[fieldname]
-                    if value:
-                        field = table[fieldname]
-                        represent = GIS.get_representation(field, value=value)
-                        tooltip = "%s<br />%s" % (tooltip, represent)
-            except:
-                # This field isn't in the table
-                pass
-
-        return tooltip
+        # Used by S3XML's gis_encode()
+        return dict(latlons = _latlons,
+                    wkts = _wkts,
+                    geojsons = _geojsons,
+                    tooltips = tooltips,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2245,7 +2159,7 @@ class GIS(object):
         """
             Return a quick representation for a Field based on it's value
             - faster than field.represent(value)
-            Used by get_popup_tooltip()
+            Used by get_locations_and_popup()
 
             @ToDo: Move out of S3GIS
         """
@@ -2356,6 +2270,8 @@ class GIS(object):
     def get_theme_geojson(resource):
         """
             Lookup Theme Layer polygons once per layer and not per-record
+
+            Called by S3REST: S3Resource.export_tree()
         """
 
         db = current.db
@@ -2386,7 +2302,7 @@ class GIS(object):
             _geojsons = {}
             _geojsons[tablename] = geojsons
 
-            # return 'marker'
+            # return 'locations'
             return dict(geojsons = _geojsons)
 
     # -------------------------------------------------------------------------
@@ -3726,6 +3642,7 @@ class GIS(object):
                   add_polygon_active = False,
                   features = [],
                   feature_queries = [],
+                  feature_resources = [],
                   wms_browser = {},
                   catalogue_layers = False,
                   legend = False,
@@ -3754,10 +3671,10 @@ class GIS(object):
             @param width: Width of viewport (if not provided then the default deployment setting is used)
             @param bbox: default Bounding Box of viewport (if not provided then the Lat/Lon/Zoom are used) (Dict):
                 {
-                "max_lat" : float,
-                "max_lon" : float,
-                "min_lat" : float,
-                "min_lon" : float
+                 "max_lat" : float,
+                 "max_lon" : float,
+                 "min_lat" : float,
+                 "min_lon" : float
                 }
             @param lat: default Latitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
             @param lon: default Longitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
@@ -3769,25 +3686,36 @@ class GIS(object):
             @param add_polygon_active: Whether the DrawFeature control should be active by default
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
                 [{
-                    lat: lat,
-                    lon: lon
+                  "lat": lat,
+                  "lon": lon
                 }]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
                 [{
-                 name   : "MyLabel",    # A string: the label for the layer
-                 query  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
-                                        # Extra fields can be added for 'popup_url', 'popup_label' & either
-                                        # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
-                 active : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
-                 marker : None          # Optional: A per-Layer marker query or marker_id for the icon used to display the feature
-                 opacity : 1            # Optional
-                 cluster_distance       # Optional
-                 cluster_threshold      # Optional
+                  "name"   : T("MyLabel"), # A string: the label for the layer
+                  "query"  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
+                                           # Extra fields can be added for 'popup_url', 'popup_label' & either
+                                           # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
+                  "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  "marker" : None,         # Optional: A per-Layer marker query or marker_id for the icon used to display the feature
+                  "opacity" : 1,           # Optional
+                  "cluster_distance",      # Optional
+                  "cluster_threshold"      # Optional
+                }]
+            @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
+                [{
+                  "name"   : T("MyLabel"), # A string: the label for the layer
+                  "id"     : "search",     # A string: the id for the layer (for manipulation by JavaScript)
+                  "url"    : "/eden/module/resource.geojson?filter", # A URL to load the resource
+                  "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  "marker" : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
+                  "opacity" : 1,           # Optional
+                  "cluster_distance",      # Optional
+                  "cluster_threshold"      # Optional
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {
-                name: string,           # Name for the Folder in LayerTree
-                url: string             # URL of GetCapabilities
+                 "name": T("MyLabel"),     # Name for the Folder in LayerTree
+                 "url": string             # URL of GetCapabilities
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
@@ -3799,14 +3727,14 @@ class GIS(object):
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal' (default), 'mgrs' (MGRS), False (off)
             @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
                 {
-                url: string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
-                mapTitle: string        # Title for the Printed Map (optional)
-                subTitle: string        # subTitle for the Printed Map (optional)
+                 "url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
+                 "mapTitle": string,       # Title for the Printed Map (optional)
+                 "subTitle": string        # subTitle for the Printed Map (optional)
                 }
             @param mgrs: Use the MGRS Control to select PDFs
                 {
-                name: string,           # Name for the Control
-                url: string             # URL of PDF server
+                 "name": string,           # Name for the Control
+                 "url": string             # URL of PDF server
                 }
                 @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html
             @param window: Have viewport pop out of page into a resizable window
@@ -4379,7 +4307,7 @@ S3.gis.layers_feature_queries = new Array();"""
         for layer in feature_queries:
             counter = counter + 1
             name = str(layer["name"])
-            name_safe = re.sub("\W", "_", name) # ???
+            name_safe = re.sub("\W", "_", name)
 
             # Lat/Lon via Join or direct?
             try:
@@ -4458,32 +4386,21 @@ S3.gis.layers_feature_queries = new Array();"""
             if "marker" in layer:
                 # per-Layer Marker
                 marker = layer["marker"]
-                try:
-                    # row
-                    marker_url = URL(c="static", f="img",
-                                     args=["markers", marker.image])
-                    marker_height = marker.height
-                    marker_width = marker.width
-                except:
-                    # integer (marker_id)
+                if isinstance(marker, int):
+                    # integer (marker_id) not row
                     query = (mtable.id == marker)
                     marker = db(query).select(mtable.image,
                                               mtable.height,
                                               mtable.width,
                                               limitby=(0, 1),
                                               cache=cache).first()
-                    if marker:
-                        marker_url = URL(c="static", f="img",
-                                         args=["markers", marker.image])
-                        marker_height = marker.height
-                        marker_width = marker.width
-                    else:
-                        marker_url = ""
-                if marker_url:
+                if marker:
                     markerLayer = """,
     "marker_url": "%s",
     "marker_height": %i,
-    "marker_width": %i""" % (marker_url, marker_height, marker_width)
+    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+                else:
+                    markerLayer = ""
 
             if "opacity" in layer and layer["opacity"] != 1:
                 opacity = """,
@@ -4509,6 +4426,82 @@ S3.gis.layers_feature_queries[%i] = {
 }
 """ % (counter,
        name,
+       url,
+       visibility,
+       markerLayer,
+       opacity,
+       cluster_distance,
+       cluster_threshold)
+
+        # ---------------------------------------------------------------------
+        # Feature Resources
+        #
+        #   REST URLs to back-end resources
+        #
+        if feature_resources:
+            layers_feature_resources = """
+S3.gis.layers_feature_resources = new Array();"""
+            counter = -1
+        else:
+            layers_feature_resources = ""
+        for layer in feature_resources:
+            counter = counter + 1
+            name = str(layer["name"])
+            id = str(layer["id"])
+            id = re.sub("\W", "_", id)
+
+            # URL to retrieve the data
+            url = layer["url"]
+            # Optimise the query
+            if "?" in url:
+                url = "%s%s" % (url,
+                                #"layer=%i",
+                                "&components=None&maxdepth=0&references=location_id&fields=name")
+            else:
+                url = "%s%s" % (url,
+                                #"layer=%i",
+                                "?components=None&maxdepth=0&references=location_id&fields=name")
+
+            if "active" in layer and not layer["active"]:
+                visibility = """,
+    "visibility": false"""
+            else:
+                visibility = ""
+
+            if "opacity" in layer and layer["opacity"] != 1:
+                opacity = """,
+    "opacity": %.1f""" % layer["opacity"]
+            else:
+                opacity = ""
+            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
+                cluster_distance = """,
+    "cluster_distance": %i""" % layer["cluster_distance"]
+            else:
+                cluster_distance = ""
+            if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
+                cluster_threshold = """,
+    "cluster_threshold": %i""" % layer["cluster_threshold"]
+            else:
+                cluster_threshold = ""
+
+            if "marker" in layer:
+                marker = layer["marker"]
+                markerLayer = """,
+    "marker_image": "%s",
+    "marker_height": %i,
+    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+            else:
+                markerLayer = ""
+            # Generate JS snippet to pass to static
+            layers_feature_resources += """
+S3.gis.layers_feature_resources[%i] = {
+    "name": "%s",
+    "id": "%s",
+    "url": "%s"%s%s%s%s%s
+}
+""" % (counter,
+       name,
+       id,
        url,
        visibility,
        markerLayer,
@@ -4646,6 +4639,7 @@ S3.i18n.gis_feature_info = '%s';
             "S3.gis.marker_default_width = %i;\n" % marker_default.width,
             osm_auth,
             layers_feature_queries,
+            layers_feature_resources,
             _features,
             layers_config,
             # i18n Labels
@@ -5132,27 +5126,27 @@ class FeatureLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def __init__(self, record):
-            record_module = record.module
+            record_module = record.controller or record.module # Backwards-compatibility
             self.skip = False
             if record_module is not None:
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
                 if not current.auth.permission.has_permission("read",
-                                                              c=record.module,
-                                                              f=record.resource):
+                                                              c=record_module,
+                                                              f=record.function or record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
-                raise Exception("FeatureLayer Record '%s' has no module" % record.name)
+                raise Exception("FeatureLayer Record '%s' has no controller" % record.name)
             super(FeatureLayer.SubLayer, self).__init__(record)
 
         def as_dict(self):
             if self.skip:
                 # Skip layer
                 return
-            controller = self.controller or self.module
-            function = self.function or self.resource
+            controller = self.controller or self.module # Backwards-compatibility
+            function = self.function or self.resource   # Backwards-compatibility
             url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
                 (URL(controller, function), self.id)
             if self.filter:
@@ -5793,53 +5787,197 @@ class XYZLayer(Layer):
 
 
 # =============================================================================
-class S3MAP(S3Method):
+class S3Map(S3Search):
     """
-        Class to generate a Map
+        Class to generate a Map with a Search form above it
 
-        Currently unused
-
-        A typical implementation would be as follows:
-            exporter = s3base.S3MAP()
-            return exporter(xrequest, **attr)
-
-        This class supports a set of Features, typically called from the icon
-        shown in a search
-                For example inv/warehouse
-
-        For specialist calls a S3MAP() object will need to be created.
-        See the apply_method() for ideas on how to create a map,
-        but as a minimum the following structure is required:
-
-            _map = S3MAP()
-            #_map.newDocument(_map.defaultTitle(resource))
+        @ToDo: Allow .configure() to override normal search_method with one
+               for map (like report)
     """
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply CRUD methods
+            Entry point to apply search method to S3Requests
 
             @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
-                         The attributes that it knows about are:
-                         * componentname
-                         * formname
-                         * list_fields
-
-            @returns: output object to send to the view
+            @param attr: request attributes
         """
 
+        output = dict()
+
+        search = self.resource.search
+        if r.component and self != search:
+            output = search(r, **attr)
+
+        # Save search
+        elif "save" in r.vars :
+            r.interactive = False
+            output = self.save_search(r, **attr)
+
+        # Interactive or saved search
+        elif "load" in r.vars or r.interactive and \
+             search._S3Search__interactive:
+                # Put shortcuts where other methods expect them
+                self.advanced = search.advanced
+                self.simple = search.simple
+                output = self.search_interactive(r, **attr)
+
+        if not output:
+            # Not supported
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def search_interactive(self, r, **attr):
+        """
+            Interactive search
+
+            @param r: the S3Request instance
+            @param attr: request parameters
+
+            @ToDo: Reload Map Layer by AJAX rather than doing a full-page refresh
+            @ToDo: Static JS to resize page to bounds when layer is loaded
+            @ToDo: Refactor components common to parent class
+        """
+
+        T = current.T
+        session = current.session
+
+        table = self.table
+
+        if "location_id" in table or \
+           "site_id" in table:
+           # ok
+           pass
+        else:
+            session.error = T("This resource cannot be displayed on the map!")
+            redirect(r.url(method="search"))
+
+        # Get environment
+        request = self.request
+        response = current.response
+        s3 = response.s3
+        resource = self.resource
+        settings = current.deployment_settings
+        db = current.db
+        s3db = current.s3db
         gis = current.gis
+        manager = current.manager
+        tablename = self.tablename
 
-        # @ToDo: Deprecate gis controller's display_feature() & display_features()
-        # @ToDo: Build feature query
-        # @ToDo: Move to GeoJSON?
-        feature_queries = []
+        # Initialize the form
+        form = DIV(_class="search_form form-container")
 
-        # Can this also be an Ext popup for consistency?
-        #  request.vars to control map options
-        output = gis.show_map(feature_queries=feature_queries)
+        # Figure out which set of form values to use
+        # POST > GET > session > unfiltered
+        if r.http == "POST":
+            # POST
+            form_values = r.post_vars
+        else:
+            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            if url_options:
+                # GET
+                form_values = url_options
+            else:
+                session_options = session.s3.search_options
+                if session_options and tablename in session_options:
+                    # session
+                    session_options = session_options[tablename]
+                else:
+                    # unfiltered
+                    session_options = Storage()
+                form_values = session_options
 
+        # Build the search forms
+        simple_form, advanced_form = self.build_forms(r, form_values)
+
+        # Check for Load Search
+        if "load" in r.get_vars:
+            search_id = r.get_vars.get("load", None)
+            if not search_id:
+                r.error(400, manager.ERROR.BAD_RECORD)
+            r.post_vars = r.vars
+            search_table = s3db.pr_save_search
+            _query = (search_table.id == search_id)
+            record = db(_query).select(limitby=(0, 1)).first()
+            if not record:
+                r.error(400, manager.ERROR.BAD_RECORD)
+            s_vars = cPickle.loads(record.search_vars)
+            r.post_vars = Storage(s_vars["criteria"])
+            r.http = "POST"
+
+        # Process the search forms
+        query, errors = self.process_forms(r,
+                                           simple_form,
+                                           advanced_form,
+                                           form_values)
+        if not errors:
+            resource.add_filter(query)
+            search_vars = dict(simple=False,
+                               advanced=True,
+                               criteria=form_values)
+        else:
+            search_vars = dict()
+
+        if s3.simple_search:
+            form.append(DIV(_id="search-mode", _mode="simple"))
+        else:
+            form.append(DIV(_id="search-mode", _mode="advanced"))
+
+        # Save Search Widget
+        if session.auth and settings.get_save_search_widget():
+            save_search = self.save_search_widget(r, search_vars, **attr)
+        else:
+            save_search = DIV()
+
+        # Complete the output form
+        if simple_form is not None:
+            simple_form.append(save_search)
+            form.append(simple_form)
+        if advanced_form is not None:
+            advanced_form.append(save_search)
+            form.append(advanced_form)
+
+        # Add a map for search results
+        # (this same map is also used by the Map Search Widget, if-present)
+        # Build URL to load the features onto the map
+        if query:
+            vars = query.serialize_url(resource=resource)
+        else:
+            vars = None
+        url = URL(extension="geojson",
+                  args=None,
+                  vars=vars)
+        feature_resources = [{
+                "name"   : T("Search Results"),
+                "id"     : "search_results",
+                "url"    : url,
+                "active" : True,
+                "marker" : gis.get_marker(request.controller, request.function)
+            }]
+        map = gis.show_map(
+                            feature_resources=feature_resources,
+                            catalogue_layers=True,
+                            legend=True,
+                            toolbar=True,
+                            collapsed=True,
+                            search = True,
+                            )
+        # Title
+        title = self.crud_string(tablename, "title_map")
+
+        # View
+        response.view = self._view(r, "map.html")
+
+        # RHeader gets added later in S3Method()
+
+        output = dict(
+                    title = title,
+                    form = form,
+                    map = map,
+                )
         return output
 
 # =============================================================================
