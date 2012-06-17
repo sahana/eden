@@ -129,7 +129,7 @@ def get_debates(request):
     """
     Get all debates and serve them through JSON.
     """
-    data = [debate.title for debate in Debate.objects().order_by('title')]
+    data = [debate.title for debate in Debate.objects.order_by('title')]
     return render_to_response(json.dumps(data), content_type='application/json')
 
 
@@ -273,11 +273,11 @@ class ViewDebate(DetailView):
         """
         """
         context = super(ViewDebate, self).get_context_data(**kwargs)
-        columns = Column.objects().filter(debate=self.kwargs['debate_id'])
-        rows = Row.objects().filter(debate=self.kwargs['debate_id'])
+        columns = Column.objects.filter(debate=self.kwargs['debate_id'])
+        rows = Row.objects.filter(debate=self.kwargs['debate_id'])
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
-        notes = Note.objects().filter(debate=current_debate.pk)
+        notes = Note.objects.filter(debate=current_debate.pk)
         try:
             last_note = Note.objects.latest('id')
         except:
@@ -305,7 +305,7 @@ class ListDebates(ListView):
 
     def get_queryset(self):
         current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
-        debates = Debate.objects().filter(space=current_space)
+        debates = Debate.objects.filter(space=current_space)
 
         # Here must go a validation so a user registered to the space
         # can always see the debate list. While an anonymous or not
