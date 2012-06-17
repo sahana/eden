@@ -1319,7 +1319,6 @@ class S3OptionsMenu:
     def proc(self):
         """ PROC / Procurement """
 
-        # @todo: controller does not exist!
         return M(c="proc")(
                     M("Home", f="index"),
                     M("Procurement Plans", f="plan")(
@@ -1343,26 +1342,44 @@ class S3OptionsMenu:
         ADMIN = session.s3.system_roles.ADMIN
 
         settings = current.deployment_settings
+        #activities = settings.get_project_activities()
+        community = settings.get_project_community()
+        if community:
+            IMPORT = "Import Project Communities"
+        else:
+            IMPORT = "Import Project Locations"
 
         menu = M(c="project")
 
         if settings.get_project_mode_3w():
+            if community:
+                menu(
+                     M("Projects", f="project")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                     ),
+                     M("Communities", f="location")(
+                        M("List All"),
+                        M("Map", m="map"),
+                        M("Search", m="search"),
+                        M("List All Community Contacts", f="community_contact"),
+                        M("Search Community Contacts", f="community_contact",
+                          m="search"),
+                     )
+                    )
+            else:
+                menu(
+                     M("Projects", f="project")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", f="location", m="map"),
+                        M("Search", m="search"),
+                     )
+                    )
             menu(
-                 M("Projects", f="project")(
-                    M("New", m="create"),
-                    M("List All"),
-                    M("Map", f="community", m="map"),
-                    M("Search", m="search"),
-                 ),
-                 M("Communities", f="community")(
-                    M("List All"),
-                    M("Search", m="search"),
-                    M("List All Community Contacts", f="community_contact"),
-                    M("Search Community Contacts", f="community_contact",
-                      m="search"),
-                 ),
                  M("Reports", f="report")(
-                    M("Who is doing What Where", f="community", m="report"),
+                    M("Who is doing What Where", f="location", m="report"),
                     M("Beneficiaries", f="beneficiary", m="report"),
                     M("Funding", f="organisation", args="report"),
                  ),
@@ -1371,7 +1388,7 @@ class S3OptionsMenu:
                       m="import", p="create"),
                     M("Import Project Organizations", f="organisation",
                       m="import", p="create"),
-                    M("Import Project Communities", f="community",
+                    M(IMPORT, f="location",
                       m="import", p="create"),
                  ),
                  M("Themes", f="theme")(

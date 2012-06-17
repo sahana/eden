@@ -19,7 +19,7 @@ def download():
 
     # Load the Model
     tablename = request.args[0].split(".", 1)[0]
-    s3mgr.load(tablename)
+    table = s3db[tablename]
 
     return response.download(request, db)
 

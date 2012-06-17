@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Project Communities - CSV Import Stylesheet
+         Project Locations - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
@@ -50,7 +50,7 @@
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
 
-            <!-- Project Communities -->
+            <!-- Project Locations -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
     </xsl:template>
@@ -60,7 +60,7 @@
         <xsl:variable name="ProjectCode" select="col[@field='Project Code']/text()"/>
         <xsl:variable name="ProjectName" select="col[@field='Project Name']/text()"/>
 
-        <resource name="project_community">
+        <resource name="project_location">
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 
             <!-- Link to Project -->

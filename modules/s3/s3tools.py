@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Tools
+""" Tools
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 

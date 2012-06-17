@@ -27,13 +27,11 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
 """
 
 __all__ = ["URL2",
            "URL3",
            "Traceback",
-           "getBrowserName",
            "s3_debug",
            "s3_dev_toolbar",
            "s3_mark_required",
@@ -61,6 +59,10 @@ import hashlib
 import md5
 import re
 import uuid
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
 
 from gluon import *
 from gluon import current
@@ -201,22 +203,6 @@ class Traceback(object):
             i = i + 1
 
         return result
-
-# =============================================================================
-def getBrowserName(userAgent):
-    """
-        Determine which browser is being used.
-        - used by Selenium
-    """
-
-    if userAgent.find("MSIE") > -1:
-        return "IE"
-    elif userAgent.find("Firefox") > -1:
-        return "Firefox"
-    elif userAgent.find("Gecko") > -1:
-        return "Mozilla"
-    else:
-        return "Unknown"
 
 # =============================================================================
 def s3_debug(message, value=None):

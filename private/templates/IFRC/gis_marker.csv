@@ -8,7 +8,6 @@ school,33,44,gis_marker.image.Edu_Schools_S1.png
 food,40,40,gis_marker.image.Emergency_Food_Distribution_Centers_S1.png
 office,27,16,gis_marker.image.Office.png
 shelter,40,40,gis_marker.image.Emergency_Shelters_S1.png
-community,27,16,gis_marker.image.Project.png
 hospital,40,40,gis_marker.image.E_Med_Hospital_S1.png
 earthquake,50,50,gis_marker.image.Geo_Earth_Quake_Epicenter.png
 volcano,50,50,gis_marker.image.Geo_Volcanic_Threat.png

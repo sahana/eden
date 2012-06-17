@@ -90,6 +90,8 @@ settings.hrm.experience = "programme"
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to call project locations 'Communities'
+settings.project.community = True
 # Uncomment this to use multiple Budgets per project
 settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project

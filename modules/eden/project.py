@@ -62,11 +62,11 @@ class S3ProjectModel(S3Model):
     """
         Project Model
 
-        Note: This module can be extended by 3 different modes:
+        Note: This module can be extended by 2 different modes:
          - '3w':   "Who's doing What Where"
                     suitable for use by multinational organisations tracking
                     projects at a high level
-         - 'drr':   Disaster Risk Reduction extensions
+            - sub-mode 'drr':   Disaster Risk Reduction extensions
          - 'task':  Suitable for use by a smaller organsiation tracking tasks
                     within projects
 
@@ -496,8 +496,8 @@ class S3ProjectModel(S3Model):
                                 autocomplete="name",
                                 autodelete=False))
 
-        # Communities
-        add_component("project_community", project_project="project_id")
+        # project Locations
+        add_component("project_location", project_project="project_id")
 
         # Beneficiaries
         add_component("project_beneficiary", project_project="project_id")
@@ -866,7 +866,7 @@ class S3ProjectModel(S3Model):
             # @ToDo: Create a URL to the project_polygons custom method & use that
             # @ToDo: Pass through attributes that we don't need for the 1st level of mapping
             #        so that they can be used without a screen refresh
-            url = URL(f="community", extension="geojson")
+            url = URL(f="location", extension="geojson")
             layer = {
                     "name"   : T("Projects"),
                     "id"     : "projects",
@@ -1094,8 +1094,8 @@ class S3Project3WModel(S3Model):
 
     names = ["project_beneficiary_type",
              "project_beneficiary",
-             "project_community",
-             "project_community_contact",
+             "project_location",
+             "project_location_contact",
              "project_organisation",
              "project_organisation_roles",
              "project_organisation_lead_role",
@@ -1107,6 +1107,7 @@ class S3Project3WModel(S3Model):
         db = current.db
         s3 = current.response.s3
         settings = current.deployment_settings
+        community = settings.get_project_community()
         theme_percentages = settings.get_project_theme_percentages()
 
         person_id = self.pr_person_id
@@ -1132,12 +1133,9 @@ class S3Project3WModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Project Community
+        # Project Location ('Community')
         #
-        # @ToDo: Rename as project_location?
-        #      'project_community' is OK for L4, maybe L3, but not for L0/L1/L2
-        #
-        tablename = "project_community"
+        tablename = "project_location"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              project_id(),
@@ -1166,34 +1164,64 @@ class S3Project3WModel(S3Model):
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
                              *(s3.lx_fields() + meta_fields()))
 
-        table.virtualfields.append(S3ProjectCommunityVirtualFields())
+        table.virtualfields.append(S3ProjectLocationVirtualFields())
 
         # CRUD Strings
-        COMMUNITY = T("Community")
-        COMMUNITY_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
-        ADD_COMMUNITY = T("Add Community")
-        crud_strings[tablename] = Storage(
-                title_create = ADD_COMMUNITY,
-                title_display = T("Community Details"),
-                title_list = T("Communities"),
-                title_update = T("Edit Community Details"),
-                title_search = T("Search Community"),
-                title_upload = T("Import Community Data"),
-                title_report = T("Who is doing What Where"),
-                title_map = T("Map of Projects"),
-                subtitle_create = T("Add New Community"),
-                label_list_button = T("List Communities"),
-                label_create_button = ADD_COMMUNITY,
-                msg_record_created = T("Community Added"),
-                msg_record_modified = T("Community Updated"),
-                msg_record_deleted = T("Community Deleted"),
-                msg_list_empty = T("No Communities Found")
-        )
+        if community:
+            LOCATION = T("Community")
+            LOCATION_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Add Community'.")
+            ADD_LOCATION = T("Add Community")
+            crud_strings[tablename] = Storage(
+                    title_create = ADD_LOCATION,
+                    title_display = T("Community Details"),
+                    title_list = T("Communities"),
+                    title_update = T("Edit Community Details"),
+                    title_search = T("Search Community"),
+                    title_upload = T("Import Community Data"),
+                    title_report = T("Who is doing What Where"),
+                    title_map = T("Map of Communties"),
+                    subtitle_create = T("Add New Community"),
+                    label_list_button = T("List Communities"),
+                    label_create_button = ADD_LOCATION,
+                    msg_record_created = T("Community Added"),
+                    msg_record_modified = T("Community Updated"),
+                    msg_record_deleted = T("Community Deleted"),
+                    msg_list_empty = T("No Communities Found")
+            )
+        else:
+            LOCATION = T("Location")
+            LOCATION_TOOLTIP = T("If you don't see the location in the list, you can add a new one by clicking link 'Add Location'.")
+            ADD_LOCATION = T("Add Location")
+            crud_strings[tablename] = Storage(
+                    title_create = ADD_LOCATION,
+                    title_display = T("Location Details"),
+                    title_list = T("Locations"),
+                    title_update = T("Edit Location Details"),
+                    title_search = T("Search Location"),
+                    title_upload = T("Import Location Data"),
+                    title_report = T("Who is doing What Where"),
+                    title_map = T("Map of Projects"),
+                    subtitle_create = T("Add New Location"),
+                    label_list_button = T("List Locations"),
+                    label_create_button = ADD_LOCATION,
+                    msg_record_created = T("Location Added"),
+                    msg_record_modified = T("Location Updated"),
+                    msg_record_deleted = T("Location Deleted"),
+                    msg_list_empty = T("No Locations Found")
+            )
 
         # Search Method
-        simple = S3SearchSimpleWidget(
-                name = "project_community_search_text",
+        if community:
+            simple = S3SearchSimpleWidget(
+                name = "project_location_search_text",
                 label = T("Name"),
+                comment = T("Search for a Project Community by name."),
+                field = ["name"]
+            )
+        else:
+            simple = S3SearchSimpleWidget(
+                name = "project_location_search_text",
+                label = T("Text"),
                 comment = T("Search for a Project by name, code, location, or description."),
                 field = ["location_id$L0",
                          "location_id$L1",
@@ -1205,6 +1233,7 @@ class S3Project3WModel(S3Model):
                          "project_id$description",
                         ]
             )
+
         def project_theme_opts():
             """
                 Provide the options for the Theme search filter
@@ -1221,7 +1250,7 @@ class S3Project3WModel(S3Model):
 
         if theme_percentages:
             theme_search = S3SearchOptionsWidget(
-                    name = "project_community_search_theme",
+                    name = "project_location_search_theme",
                     label = T("Theme"),
                     #field = "multi_theme_percentage_id$theme_id",
                     field = "multi_theme_percentage_id",
@@ -1230,7 +1259,7 @@ class S3Project3WModel(S3Model):
                 )
         else:
             theme_search = S3SearchOptionsWidget(
-                    name = "project_community_search_theme",
+                    name = "project_location_search_theme",
                     label = T("Theme"),
                     field = "project_id$multi_theme_id",
                     cols = 1,
@@ -1240,35 +1269,35 @@ class S3Project3WModel(S3Model):
             simple,
             # This is only suitable for deployments with a few projects
             #S3SearchOptionsWidget(
-            #    name = "project_community_search_project",
+            #    name = "project_location_search_project",
             #    label = T("Project"),
             #    field = "project_id",
             #    cols = 3
             #),
             theme_search,
             S3SearchLocationHierarchyWidget(
-                name="project_community_search_L0",
+                name="project_location_search_L0",
                 field="L0",
                 cols = 3
             ),
             S3SearchLocationHierarchyWidget(
-                name="project_community_search_L1",
+                name="project_location_search_L1",
                 field="L1",
                 cols = 3
             ),
             S3SearchLocationHierarchyWidget(
-                name="project_community_search_L2",
+                name="project_location_search_L2",
                 field="L2",
                 cols = 3
             ),
             S3SearchLocationHierarchyWidget(
-                name="project_community_search_L3",
+                name="project_location_search_L3",
                 field="L3",
                 cols = 3
             )
         )
         
-        project_community_search = S3Search(
+        project_location_search = S3Search(
             simple = (simple),
             advanced = advanced_search,
         )
@@ -1290,11 +1319,11 @@ class S3Project3WModel(S3Model):
 
         configure(tablename,
                   super_entity="doc_entity",
-                  create_next=URL(c="project", f="community",
+                  create_next=URL(c="project", f="location",
                                   args=["[id]", "beneficiary"]),
-                  search_method=project_community_search,
-                  onaccept=self.project_community_onaccept,
-                  deduplicate=self.project_community_deduplicate,
+                  search_method=project_location_search,
+                  onaccept=self.project_location_onaccept,
+                  deduplicate=self.project_location_deduplicate,
                   report_options=Storage(
                                          search = advanced_search,
                                          rows=report_fields,
@@ -1312,27 +1341,27 @@ class S3Project3WModel(S3Model):
                   )
 
         # Reusable Field
-        community_id = S3ReusableField("community_id", db.project_community,
+        project_location_id = S3ReusableField("project_location_id", db.project_location,
                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "project_community.id",
-                                                                      self.project_community_represent,
+                                                                      "project_location.id",
+                                                                      self.project_location_represent,
                                                                       sort=True)),
-                                      represent = self.project_community_represent,
-                                      label = COMMUNITY,
-                                      comment = S3AddResourceLink(ADD_COMMUNITY,
-                                                                  c="project", f="community",
-                                                                  tooltip=COMMUNITY_TOOLTIP),
+                                      represent = self.project_location_represent,
+                                      label = LOCATION,
+                                      comment = S3AddResourceLink(ADD_LOCATION,
+                                                                  c="project", f="location",
+                                                                  tooltip=LOCATION_TOOLTIP),
                                       ondelete = "CASCADE")
 
         # Components
         add_component("project_beneficiary",
-                      project_community="community_id")
+                      project_location="project_location_id")
 
         add_component("pr_person",
-                      project_community=Storage(
+                      project_location=Storage(
                             name="contact",
                             link="project_community_contact",
-                            joinby="community_id",
+                            joinby="project_location_id",
                             key="person_id",
                             actuate="hide",
                             autodelete=False))
@@ -1342,7 +1371,7 @@ class S3Project3WModel(S3Model):
         #
         tablename = "project_community_contact"
         table = define_table(tablename,
-                             community_id(),
+                             project_location_id(),
                              person_id(widget=S3AddPersonWidget(controller="pr"),
                                        requires=IS_ADD_PERSON_WIDGET(),
                                        comment=None),
@@ -1400,8 +1429,8 @@ class S3Project3WModel(S3Model):
                                # (hierarchy["L3"], "person_id$L3"),
                                (T("Email"), "email"),
                                (T("Mobile Phone"), "sms"),
-                               "community_id",
-                               (T("Project"), "community_id$project_id"),
+                               "project_location_id",
+                               (T("Project"), "project_location_id$project_id"),
                                ])
 
         # ---------------------------------------------------------------------
@@ -1461,7 +1490,7 @@ class S3Project3WModel(S3Model):
                              project_id(readable=False,
                                         writable=False),
                              #activity_id(comment=None),
-                             community_id(comment=None),
+                             project_location_id(comment=None),
                              beneficiary_type_id(empty=False),
                              Field("number", "integer",
                                    label = T("Quantity"),
@@ -1507,7 +1536,7 @@ class S3Project3WModel(S3Model):
         # Resource Configuration
         report_fields=[
                       #"activity_id",
-                      "community_id",
+                      "project_location_id",
                       (T("Beneficiary Type"), "beneficiary_type_id"),
                       "project_id",
                       "project_id$multi_hazard_id",
@@ -1534,7 +1563,7 @@ class S3Project3WModel(S3Model):
                         ),
                         S3SearchLocationHierarchyWidget(
                             name="beneficiary_search_L1",
-                            field="community_id$L1",
+                            field="project_location_id$L1",
                             cols = 3,
                         ),
                     ],
@@ -1688,15 +1717,17 @@ class S3Project3WModel(S3Model):
         s3db = current.s3db
 
         btable = s3db.project_beneficiary
-        ctable = s3db.project_community
+        ctable = s3db.project_location
 
         record_id = form.vars.id
         query = (btable.id == record_id) & \
-                (ctable.id == btable.community_id)
-        community = db(query).select(ctable.project_id,
-                                    limitby=(0, 1)).first()
-        if community:
-            db(btable.id == record_id).update(project_id=community.project_id)
+                (ctable.id == btable.project_location_id)
+        project_location = db(query).select(ctable.project_id,
+                                            limitby=(0, 1)).first()
+        if project_location:
+            db(btable.id == record_id).update(
+                    project_id=project_location.project_id
+                )
         return
 
     # ---------------------------------------------------------------------
@@ -1709,13 +1740,13 @@ class S3Project3WModel(S3Model):
 
         data = item.data
         if "beneficiary_type_id" in data and \
-           "community_id" in data:
+           "project_location_id" in data:
             # Match beneficiary by type and activity_id
             table = item.table
             beneficiary_type_id = data.beneficiary_type_id
-            community_id = data.community_id
+            project_location_id = data.project_location_id
             query = (table.beneficiary_type_id == beneficiary_type_id) & \
-                    (table.community_id == community_id)
+                    (table.project_location_id == project_location_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -1725,19 +1756,19 @@ class S3Project3WModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_community_represent(id, row=None):
+    def project_location_represent(id, row=None):
         """
         """
 
         return current.s3db.gis_location_lx_represent( 
-                   s3_get_db_field_value(tablename = "project_community",
+                   s3_get_db_field_value(tablename = "project_location",
                                          fieldname = "location_id",
                                          look_up_value = id)
                     )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_community_onaccept(form):
+    def project_location_onaccept(form):
         """
         """
 
@@ -1745,23 +1776,23 @@ class S3Project3WModel(S3Model):
 
         if location_id:
             # Populate the Lx fields
-            ctable = current.s3db.project_community
+            ctable = current.s3db.project_location
             current.response.s3.lx_update(ctable, form.vars.id)
 
         return
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_community_deduplicate(item):
+    def project_location_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_community":
+        if item.tablename != "project_location":
             return
 
         data = item.data
         if "project_id" in data and \
            "location_id" in data:
-            # Match community by project_id and location_id
+            # Match location by project_id and location_id
             project_id = data.project_id
             location_id = data.location_id
             table = item.table
@@ -2071,7 +2102,7 @@ class S3ProjectThemeModel(S3Model):
         """
             Record creation post-processing
 
-            Update the percentages of all the Project's Communities.
+            Update the percentages of all the Project's Locations.
         """
 
         project_id = form.vars.project_id
@@ -2086,8 +2117,8 @@ class S3ProjectThemeModel(S3Model):
         rows = db(query).select(table.id)
         percentages = [row.id for row in rows]
 
-        # Update the Project's Communities
-        table = s3db.project_community
+        # Update the Project's Locations
+        table = s3db.project_location
         query = (table.project_id == project_id)
         db(query).update(multi_theme_percentage_id = percentages)
 
@@ -3463,8 +3494,8 @@ class S3ProjectActivityVirtualFields:
             return None
 
 # =============================================================================
-class S3ProjectCommunityVirtualFields:
-    """ Virtual fields for the project_community table """
+class S3ProjectLocationVirtualFields:
+    """ Virtual fields for the project_location table """
 
     extra_fields = ["project_id", "location_id"]
 
@@ -3478,7 +3509,7 @@ class S3ProjectCommunityVirtualFields:
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
         query = (ltable.deleted != True) & \
-                (ltable.project_id == self.project_community.project_id) & \
+                (ltable.project_id == self.project_location.project_id) & \
                 (ltable.role == LEAD_ROLE) & \
                 (ltable.organisation_id == otable.id)
         org = current.db(query).select(otable.name,
@@ -3496,14 +3527,14 @@ class S3ProjectCommunityVirtualFields:
         # themes = None
         # if current.deployment_settings.get_project_theme_percentages():
             # tptable = s3db.project_theme_percentage
-            # query = (tptable.project_id == self.project_community.project_id) & \
+            # query = (tptable.project_id == self.project_location.project_id) & \
                     # (ttable.id == tptable.theme_id)
             # themes = current.db(query).select(ttable.name)
         # else:
             # db = current.db
             # # 1st pull-back the themes
             # ptable = s3db.project_project
-            # query = (ptable.id == self.project_community.project_id)
+            # query = (ptable.id == self.project_location.project_id)
             # project = db(query).select(ptable.multi_theme_id,
                                        # limitby=(0, 1)).first()
             # if project and project.multi_theme_id:
@@ -3521,42 +3552,47 @@ class S3ProjectCommunityVirtualFields:
             Name for Map onHover popups
         """
 
-        record = self.project_community
-        location = current.s3db.gis_location_lx_represent(record.location_id)
-        project = project_project_represent(record.project_id, show_link=False)
-
-        return "%s (%s)" % (project, location)
+        record = self.project_location
+        if current.deployment_settings.get_project_community():
+            # Community is the primary resource
+            location = current.s3db.gis_location_lx_represent(record.location_id)
+            return location
+        else:
+            # Location is just a way to display Projects
+            location = current.s3db.gis_location_lx_represent(record.location_id)
+            project = project_project_represent(record.project_id, show_link=False)
+            return "%s (%s)" % (project, location)
 
 # =============================================================================
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["community_id"]
+    extra_fields = ["project_location_id"]
 
     @staticmethod
-    def _get_community_location(community_id):
+    def _get_project_location(project_location_id):
         """
-            Grab the first location from the database for this community and
+            Get the location from the database for this project_location and
             return the location tree
         """
 
-        ctable = current.s3db.project_community
-        query = (ctable.id == community_id)
+        ctable = current.s3db.project_location
+        query = (ctable.id == project_location_id)
 
-        community = current.db(query).select(ctable.location_id,
-                                             limitby=(0,1)).first()
+        project_location = current.db(query).select(ctable.location_id,
+                                                    limitby=(0,1)).first()
 
         parents = Storage()
-        if community:
+        if project_location:
             parents = current.gis.get_parent_per_level(parents,
-                                                       community.location_id,
+                                                       project_location.location_id,
                                                        ids=False,
                                                        names=True)
 
         return parents
 
     def L0(self):
-        parents = self._get_community_location(self.project_beneficiary.community_id)
+        parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
         if "L0" in parents:
             return parents["L0"]
@@ -3565,7 +3601,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
 
     def L1(self):
-        parents = self._get_community_location(self.project_beneficiary.community_id)
+        parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
         if "L1" in parents:
             return parents["L1"]
@@ -3573,7 +3609,7 @@ class S3ProjectBeneficiaryVirtualFields:
             return current.messages.NONE
 
     def L2(self):
-        parents = self._get_community_location(self.project_beneficiary.community_id)
+        parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
         if "L2" in parents:
             return parents["L2"]
@@ -3581,7 +3617,7 @@ class S3ProjectBeneficiaryVirtualFields:
             return current.messages.NONE
 
     def L3(self):
-        parents = self._get_community_location(self.project_beneficiary.community_id)
+        parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
         if "L3" in parents:
             return parents["L3"]
@@ -3590,7 +3626,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:
-    """ Virtual fields for the project_activity_contact table """
+    """ Virtual fields for the project_community_contact table """
 
     extra_fields = ["person_id"]
 
@@ -3808,7 +3844,6 @@ def project_rheader(r, tabs=[]):
     
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
-        mode_drr = settings.get_project_mode_drr()
         mode_task = settings.get_project_mode_task()
 
         # Tabs
@@ -3824,12 +3859,16 @@ def project_rheader(r, tabs=[]):
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme_percentage"))
         if mode_3w:
-            append((T("Communities"), "community"))
+            if settings.get_project_community():
+                append((T("Communities"), "location"))
+            else:
+                append((T("Locations"), "location"))
             append((T("Beneficiaries"), "beneficiary"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))
-        if mode_task:
+        if settings.get_project_activities():
             append((T("Activities"), "activity"))
+        if mode_task:
             append((T("Tasks"), "task"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
@@ -3869,7 +3908,7 @@ def project_rheader(r, tabs=[]):
         rheader_fields.append(["location_id"])
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-    elif resourcename == "community":
+    elif resourcename == "location":
         rheader_fields = []
         if record.project_id is not None:
             rheader_fields.append(["project_id"])

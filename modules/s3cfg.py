@@ -714,11 +714,23 @@ class S3Config(Storage):
         """
         return self.project.get("mode_drr", False)
 
+    def get_project_activities(self):
+        """
+            Use Activities in Projects
+        """
+        return self.project.get("activities", False)
+
     def get_project_codes(self):
         """
             Use Codes in Projects
         """
         return self.project.get("codes", False)
+
+    def get_project_community(self):
+        """
+            Label project_location as 'Community'
+        """
+        return self.project.get("community", False)
 
     def get_project_milestones(self):
         """

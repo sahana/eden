@@ -29,7 +29,7 @@
 
 __all__ = ["S3SupplierModel",
            "S3ProcurementModel",
-           "proc_plan_rheader"]
+           "proc_rheader"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -263,7 +263,6 @@ class S3ProcurementModel(S3Model):
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(
-                proc_plan_rheader = proc_plan_rheader,
             )
 
     # -------------------------------------------------------------------------
@@ -404,8 +403,8 @@ class S3SupplierModel(S3Model):
 
 
 # =============================================================================
-def proc_plan_rheader(r):
-    """ Resource Header for Planned Procurements """
+def proc_rheader(r):
+    """ Resource Header for Procurements """
 
     if r.representation == "html":
         plan = r.record
