@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import sys
 import xlwt
 import group_mod
 
@@ -27,9 +28,6 @@ def remove_duplicates(Strings):
 
 def create_spreadsheet(Strings):
 
-
-	Strings = remove_duplicates(Strings)
-
         wbk = xlwt.Workbook()
         sheet = wbk.add_sheet('Translate')
         style = xlwt.XFStyle()
@@ -56,9 +54,54 @@ def create_spreadsheet(Strings):
 
 
 
-def main():
+
+def convert_to_xls(modlist,filelist):
+
 	group_mod.init()
-	create_spreadsheet(group_mod.get_strings_by_module("inv"))
+
+	Strings = []
+
+	for mod in modlist:
+	     Strings += group_mod.get_strings_by_module(mod)
+
+	for f in filelist:
+	     Strings += group_mod.get_strings_by_file(f)
+       
+	Strings = remove_duplicates(Strings)
+
+	create_spreadsheet(Strings)
+
+ 
+
+def main():
+        
+	mflag = 0
+	fflag = 0
+	modlist = []
+	filelist = []
+
+	for i in range(1,len(sys.argv)):
+            
+		if sys.argv[i] == "-gsm":
+		    mflag = 1
+		    fflag = 0
+
+		elif sys.argv[i] == "-gsf":
+		    fflag = 1
+		    mflag = 0
+
+		elif mflag == 1:
+		    modlist.append(sys.argv[i])
+
+	        elif fflag == 1:
+		   filelist.append(sys.argv[i])
+	   
+        convert_to_xls(modlist,filelist)  
+
+	sys.exit(0)
+
+        
+
 
 if __name__=='__main__':
    main()
