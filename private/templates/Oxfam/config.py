@@ -17,6 +17,10 @@ T = current.T
 # Pre-Populate
 settings.base.prepopulate = ["Oxfam"]
 
+# L10n settings
+settings.L10n.languages = OrderedDict([
+    ("en-gb", "English"),
+])
 # Default Language
 settings.L10n.default_language = "en-gb"
 # Uncomment to Hide the language toolbar

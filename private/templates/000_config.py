@@ -172,6 +172,9 @@ if os.path.exists(path):
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs
 
+# After 1st_run, set this for Production to save 1x DAL hit/request
+#settings.base.prepopulate = 0
+
 # =============================================================================
 # A version number to tell update_check if there is a need to refresh the
 # running copy of this file

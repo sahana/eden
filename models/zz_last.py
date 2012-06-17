@@ -4,6 +4,9 @@
     Final actions before running controllers
 """
 
+# Pass Theme to Compiler
+s3.theme = settings.get_theme()
+
 if auth.permission.format in ("html"):
 
     # Compose the options menu
