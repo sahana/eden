@@ -1331,11 +1331,10 @@ class S3CRUD(S3Method):
     @staticmethod
     def crud_string(tablename, name):
         """
-        Get a CRUD info string for interactive pages
+            Get a CRUD info string for interactive pages
 
-        @param tablename: the table name
-        @param name: the name of the CRUD string
-
+            @param tablename: the table name
+            @param name: the name of the CRUD string
         """
 
         crud_strings = current.manager.s3.crud_strings

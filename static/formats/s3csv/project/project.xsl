@@ -88,8 +88,10 @@
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
-            <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Objectives']!=''">
+                <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
+            </xsl:if>
 
             <!-- HFAs -->
             <xsl:if test="$HFA!=''">

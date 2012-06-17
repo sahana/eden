@@ -607,8 +607,12 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
             # Execute, if callable
             if callable(represent):
-                opt_list = [(opt_key, represent(opt_key)) for opt_key
-                                                          in opt_keys]
+                if "show_link" in represent.func_code.co_varnames:
+                    opt_list = [(opt_key, represent(opt_key, show_link=False)) for opt_key
+                                                                               in opt_keys]
+                else:
+                    opt_list = [(opt_key, represent(opt_key)) for opt_key
+                                                              in opt_keys]
             # Otherwise, feed the format string
             elif isinstance(represent, str) and field_type[:9] == "reference":
                 # Use the represent string to reduce db calls
@@ -659,12 +663,14 @@ class S3SearchOptionsWidget(S3SearchWidget):
             letters = []
             letter_options = {}
             for key, label in opt_list:
-                letter = label[0].upper()
-                if letter not in letter_options:
-                    letters.append(letter)
-                    letter_options[letter] = [(key, label)]
-                else:
-                    letter_options[letter].append((key, label))
+                letter = label and label[0]
+                if letter:
+                    letter = letter.upper()
+                    if letter not in letter_options:
+                        letters.append(letter)
+                        letter_options[letter] = [(key, label)]
+                    else:
+                        letter_options[letter].append((key, label))
 
             # Ensure that letters contains A & Z
             # (For usability to ensure that the complete range is displayed)
@@ -1040,7 +1046,7 @@ class S3Search(S3CRUD):
         # Create a list of Simple search form widgets, by name,
         # and throw an error if a duplicate is found
         names = []
-        self.__simple = []
+        self.simple = []
         if not isinstance(simple, (list, tuple)):
             simple = [simple]
         for widget in simple:
@@ -1052,13 +1058,14 @@ class S3Search(S3CRUD):
                 # elif not name:
                 #     raise SyntaxError("Widget with no name")
                 else:
-                    self.__simple.append((name, widget))
+                    self.simple.append((name, widget))
                     names.append(name)
 
         # Create a list of Advanced search form widgets, by name,
         # and throw an error if a duplicate is found
         names = []
-        self.__advanced = []
+        self.advanced = []
+        append = self.advanced.append
         if not isinstance(advanced, (list, tuple)):
             advanced = [advanced]
         for widget in advanced:
@@ -1070,12 +1077,12 @@ class S3Search(S3CRUD):
                 # elif not name:
                 #    raise SyntaxError("Widget with no name")
                 else:
-                    self.__advanced.append((name, widget))
+                    append((name, widget))
                     names.append(name)
 
         self.__any = any
 
-        if self.__simple or self.__advanced:
+        if self.simple or self.advanced:
             self.__interactive = True
         else:
             self.__interactive = False
@@ -1296,40 +1303,37 @@ $('#%s').live('click', function() {
         representation = r.representation
 
         # Initialize output
-        feature_queries = []
-        bounds = None
         output = dict()
-        simple = False
 
         # Get table-specific parameters
-        sortby = self._config("sortby", [[1, "asc"]])
-        orderby = self._config("orderby", None)
-        list_fields = self._config("list_fields")
-        insertable = self._config("insertable", True)
+        config = self._config
+        sortby = config("sortby", [[1, "asc"]])
+        orderby = config("orderby", None)
+        list_fields = config("list_fields")
+        insertable = config("insertable", True)
 
         # Initialize the form
         form = DIV(_class="search_form form-container")
 
-        # Get the session options
-        session_options = session.s3.search_options
-        if session_options and self.tablename in session_options:
-            session_options = session_options[self.tablename]
-        else:
-            session_options = Storage()
-
-        # Get the URL options
-        url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
-
         # Figure out which set of form values to use
         # POST > GET > session > unfiltered
         if r.http == "POST":
+            # POST
             form_values = r.post_vars
-        elif url_options:
-            form_values = url_options
-        elif session_options:
-            form_values = session_options
         else:
-            form_values = Storage()
+            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            if url_options:
+                # GET
+                form_values = url_options
+            else:
+                session_options = session.s3.search_options
+                if session_options and tablename in session_options:
+                    # session
+                    session_options = session_options[tablename]
+                else:
+                    # unfiltered
+                    session_options = Storage()
+                form_values = session_options
 
         # Build the search forms
         simple_form, advanced_form = self.build_forms(r, form_values)
@@ -1356,8 +1360,8 @@ $('#%s').live('click', function() {
                                            form_values)
         if not errors:
             resource.add_filter(query)
-            search_vars = dict(simple=simple,
-                               advanced=not simple,
+            search_vars = dict(simple=False,
+                               advanced=True,
                                criteria=form_values)
         else:
             search_vars = dict()
@@ -1420,7 +1424,7 @@ $('#%s').live('click', function() {
             orderby = fields[0]
 
         # Truncate long texts
-        if r.interactive or r.representation == "aadata":
+        if r.interactive or representation == "aadata":
             for f in table:
                 if str(f.type) == "text" and not f.represent:
                     f.represent = self.truncate
@@ -1488,15 +1492,12 @@ $('#%s').live('click', function() {
             tabs = [(T("List"), None),
                     #(T("Export"), "export")
                     ]
-        else:
-            list_formats = ""
-            tabs = []
 
-        if "location_id" in table or \
-           "site_id" in table:
-            # Add a map for search results
-            # (this same map is also used by the Map Search Widget, if-present)
-            if list_formats:
+            if "location_id" in table or \
+               "site_id" in table:
+                # Add a map for search results
+                # (this same map is also used by the Map Search Widget, if-present)
+                tabs.append((T("Map"), "map"))
                 app = request.application
                 list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
                                       _title=T("Export in KML format"),
@@ -1504,42 +1505,45 @@ $('#%s').live('click', function() {
                                                   representation="kml",
                                                   vars=filter)),
                                     )
-            if tabs:
-                tabs.append((T("Map"), "map"))
-            # Build URL to load the features onto the map
-            if query:
-                vars = query.serialize_url(resource=resource)
-            else:
-                vars = None
-            url = URL(extension="geojson",
-                      args=None,
-                      vars=vars)
-            feature_resources = [{
-                    "name"   : T("Search Results"),
-                    "id"     : "search_results",
-                    "url"    : url,
-                    "active" : False, # Gets activated when the Map is opened up
-                    "marker" : gis.get_marker(request.controller, request.function)
-                }]
-            map_popup = gis.show_map(
-                                    feature_resources=feature_resources,
-                                    # Added by search widget onClick in s3.dataTables.js
-                                    #add_polygon = True,
-                                    #add_polygon_active = True,
-                                    catalogue_layers=True,
-                                    legend=True,
-                                    toolbar=True,
-                                    collapsed=True,
-                                    #search = True,
-                                    window=True,
-                                    window_hide=True
-                                    )
-            s3.dataTableMap = map_popup
+                # Build URL to load the features onto the map
+                if query:
+                    vars = query.serialize_url(resource=resource)
+                else:
+                    vars = None
+                url = URL(extension="geojson",
+                          args=None,
+                          vars=vars)
+                feature_resources = [{
+                        "name"   : T("Search Results"),
+                        "id"     : "search_results",
+                        "url"    : url,
+                        "active" : False, # Gets activated when the Map is opened up
+                        "marker" : gis.get_marker(request.controller, request.function)
+                    }]
+                map_popup = gis.show_map(
+                                        feature_resources=feature_resources,
+                                        # Added by search widget onClick in s3.dataTables.js
+                                        #add_polygon = True,
+                                        #add_polygon_active = True,
+                                        catalogue_layers=True,
+                                        legend=True,
+                                        toolbar=True,
+                                        collapsed=True,
+                                        #search = True,
+                                        window=True,
+                                        window_hide=True
+                                        )
+                s3.dataTableMap = map_popup
 
-        if "pe_id" in table or "person_id" in table:
-            # Provide the ability to Message person entities in search results
-            if tabs:
+            if settings.has_module("msg") and \
+               ("pe_id" in table or "person_id" in table):
+                # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
+
+        else:
+            list_formats = ""
+            tabs = []
+
 
         # Search Tabs
         search_tabs = s3_search_tabs(r, tabs)
@@ -1568,15 +1572,16 @@ $('#%s').live('click', function() {
 
             If valid, save the values into the users' session.
         """
-        session = current.session
+
+        s3 = current.session.s3
         response = current.response
 
         query = None
         errors = None
 
         # Create a container in the session to saves search options
-        if 'search_options' not in session.s3:
-            session.s3.search_options = Storage()
+        if "search_options" not in s3:
+            s3.search_options = Storage()
 
         # Process the simple search form:
         simple = simple_form is not None
@@ -1584,7 +1589,7 @@ $('#%s').live('click', function() {
             if simple_form.accepts(form_values,
                                    formname="search_simple",
                                    keepvalues=True):
-                for name, widget in self.__simple:
+                for name, widget in self.simple:
                     query, errors = self._build_widget_query(self.resource,
                                                              name,
                                                              widget,
@@ -1595,7 +1600,7 @@ $('#%s').live('click', function() {
                 errors = simple_form.errors
 
                 # Save the form values into the session
-                session.s3.search_options[self.tablename] = \
+                s3.search_options[self.tablename] = \
                     Storage([(k, v) for k, v in form_values.iteritems() if v])
             elif simple_form.errors:
                 errors = simple_form.errors
@@ -1607,7 +1612,7 @@ $('#%s').live('click', function() {
                                      formname="search_advanced",
                                      keepvalues=True):
                 simple = False
-                for name, widget in self.__advanced:
+                for name, widget in self.advanced:
                     query, errors = self._build_widget_query(self.resource,
                                                              name,
                                                              widget,
@@ -1619,7 +1624,7 @@ $('#%s').live('click', function() {
                 errors = advanced_form.errors
 
                 # Save the form values into the session
-                session.s3.search_options[self.tablename] = \
+                s3.search_options[self.tablename] = \
                     Storage([(k, v) for k, v in form_values.iteritems() if v])
             elif advanced_form.errors:
                 simple = False
@@ -1634,6 +1639,9 @@ $('#%s').live('click', function() {
             Builds a form customised to the module/resource. Includes a link
             to the create form for this resource.
         """
+
+        simple = self.simple
+        advanced = self.advanced
 
         T = current.T
         tablename = self.tablename
@@ -1654,29 +1662,29 @@ $('#%s').live('click', function() {
             add_link = ""
 
         # Simple search form
-        if self.__simple:
+        if simple:
             # Switch-link
-            if self.__advanced:
+            if advanced:
                 switch_link = A(T("Advanced Search"), _href="#",
                                 _class="action-lnk advanced-lnk")
             else:
                 switch_link = ""
-            simple_form = self._build_form(self.__simple,
+            simple_form = self._build_form(simple,
                                            form_values=form_values,
                                            add=add_link,
                                            switch=switch_link,
                                            _class="simple-form")
 
         # Advanced search form
-        if self.__advanced:
-            if self.__simple and not r.representation == "plain":
+        if advanced:
+            if simple and not r.representation == "plain":
                 switch_link = A(T("Simple Search"), _href="#",
                                 _class="action-lnk simple-lnk")
                 _class = "%s hide"
             else:
                 switch_link = ""
                 _class = "%s"
-            advanced_form = self._build_form(self.__advanced,
+            advanced_form = self._build_form(advanced,
                                              form_values=form_values,
                                              add=add_link,
                                              switch=switch_link,
@@ -1926,16 +1934,16 @@ $('#%s').live('click', function() {
         form = DIV(**form_attr)
 
         # Append the simple search form
-        if self.__simple:
+        if self.simple:
             simple = True
-            if self.__advanced:
+            if self.advanced:
                 switch_link = A(T("Advanced Search"), _href="#",
                                 _class="action-lnk advanced-lnk %s",
                                 _fieldname=fieldname)
             else:
                 switch_link = ""
             # Only display the S3SearchSimpleWidget (should be first)
-            name, widget = self.__simple[0]
+            name, widget = self.simple[0]
 
             self._check_search_autcomplete_search_simple_widget(widget)
             name = "%s_search_simple_simple" % fieldname
@@ -1953,10 +1961,10 @@ $('#%s').live('click', function() {
             form.append(simple_form)
 
         # Append the advanced search form
-        if self.__advanced:
+        if self.advanced:
             trows = []
             first_widget = True
-            for name, widget in self.__advanced:
+            for name, widget in self.advanced:
                 _widget = widget.widget(resource, vars)
                 if _widget is None:
                     # Skip this widget as we have nothing but the label
@@ -1979,7 +1987,7 @@ $('#%s').live('click', function() {
                     tr = TR(TD("%s: " % label, _class="w2p_fl"), _widget)
                     trows.append(tr)
 
-            if self.__simple:
+            if self.simple:
                 switch_link = A(T("Simple Search"), _href="#",
                                 _class="action-lnk simple-lnk",
                                 _fieldname=fieldname)
@@ -2017,8 +2025,8 @@ $('#%s').live('click', function() {
         response.headers["Content-Type"] = "application/json"
 
         # Process the simple search form:
-        if self.__simple and request.vars.simple_form:
-            for name, widget in self.__simple:
+        if self.simple and request.vars.simple_form:
+            for name, widget in self.simple:
                 # Pass request instead of form - it contains the vars
                 query, errors = self._build_widget_query(self.resource,
                                                          name,
@@ -2028,8 +2036,8 @@ $('#%s').live('click', function() {
                 if errors:
                     break
         # Process the advanced search form:
-        elif self.__advanced:
-            for name, widget in self.__advanced:
+        elif self.advanced:
+            for name, widget in self.advanced:
                 # Pass request instead of form - it contains the vars
                 query, errors = self._build_widget_query(self.resource,
                                                          name,

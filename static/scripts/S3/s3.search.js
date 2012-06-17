@@ -176,13 +176,13 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $('.search_select_letter_widget').each(function() {
-        widget = $(this)
+    $('.search_select_letter_label').each(function() {
+        widget = $(this).next();
         if ($(':checked', widget).length < 1) {
-            $(this).hide();
+            widget.hide();
         }
         else {
-            $(this).prev().toggleClass('expanded');
+            $(this).toggleClass('expanded');
         }
     })
 

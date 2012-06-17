@@ -3224,6 +3224,7 @@ class S3Permission(object):
         "create": CREATE,
         "import": CREATE,
         "read": READ,
+        "map": READ,
         "report": READ,
         "search": READ,
         "update": UPDATE,

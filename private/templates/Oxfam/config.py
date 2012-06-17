@@ -27,6 +27,18 @@ settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
 
+# Projects
+# Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
+settings.project.mode_3w = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
+# Uncomment this to use Theme Percentages for projects
+settings.project.theme_percentages = True
+# Uncomment this to use multiple Budgets per project
+settings.project.multiple_budgets = True
+
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

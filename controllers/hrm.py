@@ -3,6 +3,7 @@
 """
     Human Resource Management
 """
+
 module = request.controller
 resourcename = request.function
 
@@ -157,7 +158,7 @@ def staff():
     # Remove Type filter from the Search widget
     human_resource_search = s3mgr.model.get_config(tablename,
                                                    "search_method")
-    human_resource_search._S3Search__advanced.pop(1)
+    human_resource_search.advanced.pop(1)
     s3mgr.configure(tablename,
                     list_fields = list_fields,
                     search_method = human_resource_search)

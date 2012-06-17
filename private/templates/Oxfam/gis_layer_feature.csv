@@ -1,2 +1,2 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled","Polygons"
-"Aim1",,"project","project","US","activity",,"Activity","name/location_id",,,,,,"False",,"True"
+"Projects",,"project","community","US","activity",,"Project","name",,,,,,"False",

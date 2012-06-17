@@ -3,8 +3,6 @@
 """
     GIS Module
 
-    @version: 0.9.0
-
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
@@ -33,7 +31,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS", "GoogleGeocoder", "YahooGeocoder"]
+__all__ = ["GIS", "S3Map", "GoogleGeocoder", "YahooGeocoder"]
 
 import os
 import re
@@ -67,7 +65,7 @@ from gluon.tools import fetch
 import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3method import S3Method
+from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
@@ -2088,9 +2086,6 @@ class GIS(object):
                 query = (table.id.belongs(resource._ids)) & \
                         (table.site_id == stable.id) & \
                         (stable.location_id == gtable.id)
-            elif "countries_id" in table.fields:
-                query = (table.id.belongs(resource._ids)) & \
-                        (table.location_id.belongs(table.countries_id))
             else:
                 # Can't display this resource on the Map
                 return None
@@ -3696,7 +3691,7 @@ class GIS(object):
                 }]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
                 [{
-                  "name"   : "MyLabel",    # A string: the label for the layer
+                  "name"   : T("MyLabel"), # A string: the label for the layer
                   "query"  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
                                            # Extra fields can be added for 'popup_url', 'popup_label' & either
                                            # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
@@ -3708,7 +3703,7 @@ class GIS(object):
                 }]
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
                 [{
-                  "name"   : "MyLabel",    # A string: the label for the layer
+                  "name"   : T("MyLabel"), # A string: the label for the layer
                   "id"     : "search",     # A string: the id for the layer (for manipulation by JavaScript)
                   "url"    : "/eden/module/resource.geojson?filter", # A URL to load the resource
                   "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
@@ -3719,7 +3714,7 @@ class GIS(object):
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {
-                 "name": string,           # Name for the Folder in LayerTree
+                 "name": T("MyLabel"),     # Name for the Folder in LayerTree
                  "url": string             # URL of GetCapabilities
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
@@ -5792,53 +5787,197 @@ class XYZLayer(Layer):
 
 
 # =============================================================================
-class S3MAP(S3Method):
+class S3Map(S3Search):
     """
-        Class to generate a Map
+        Class to generate a Map with a Search form above it
 
-        Currently unused
-
-        A typical implementation would be as follows:
-            exporter = s3base.S3MAP()
-            return exporter(xrequest, **attr)
-
-        This class supports a set of Features, typically called from the icon
-        shown in a search
-                For example inv/warehouse
-
-        For specialist calls a S3MAP() object will need to be created.
-        See the apply_method() for ideas on how to create a map,
-        but as a minimum the following structure is required:
-
-            _map = S3MAP()
-            #_map.newDocument(_map.defaultTitle(resource))
+        @ToDo: Allow .configure() to override normal search_method with one
+               for map (like report)
     """
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply CRUD methods
+            Entry point to apply search method to S3Requests
 
             @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
-                         The attributes that it knows about are:
-                         * componentname
-                         * formname
-                         * list_fields
-
-            @returns: output object to send to the view
+            @param attr: request attributes
         """
 
+        output = dict()
+
+        search = self.resource.search
+        if r.component and self != search:
+            output = search(r, **attr)
+
+        # Save search
+        elif "save" in r.vars :
+            r.interactive = False
+            output = self.save_search(r, **attr)
+
+        # Interactive or saved search
+        elif "load" in r.vars or r.interactive and \
+             search._S3Search__interactive:
+                # Put shortcuts where other methods expect them
+                self.advanced = search.advanced
+                self.simple = search.simple
+                output = self.search_interactive(r, **attr)
+
+        if not output:
+            # Not supported
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def search_interactive(self, r, **attr):
+        """
+            Interactive search
+
+            @param r: the S3Request instance
+            @param attr: request parameters
+
+            @ToDo: Reload Map Layer by AJAX rather than doing a full-page refresh
+            @ToDo: Static JS to resize page to bounds when layer is loaded
+            @ToDo: Refactor components common to parent class
+        """
+
+        T = current.T
+        session = current.session
+
+        table = self.table
+
+        if "location_id" in table or \
+           "site_id" in table:
+           # ok
+           pass
+        else:
+            session.error = T("This resource cannot be displayed on the map!")
+            redirect(r.url(method="search"))
+
+        # Get environment
+        request = self.request
+        response = current.response
+        s3 = response.s3
+        resource = self.resource
+        settings = current.deployment_settings
+        db = current.db
+        s3db = current.s3db
         gis = current.gis
+        manager = current.manager
+        tablename = self.tablename
 
-        # @ToDo: Deprecate gis controller's display_feature() & display_features()
-        # @ToDo: Build feature query
-        # @ToDo: Move to GeoJSON?
-        feature_queries = []
+        # Initialize the form
+        form = DIV(_class="search_form form-container")
 
-        # Can this also be an Ext popup for consistency?
-        #  request.vars to control map options
-        output = gis.show_map(feature_queries=feature_queries)
+        # Figure out which set of form values to use
+        # POST > GET > session > unfiltered
+        if r.http == "POST":
+            # POST
+            form_values = r.post_vars
+        else:
+            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            if url_options:
+                # GET
+                form_values = url_options
+            else:
+                session_options = session.s3.search_options
+                if session_options and tablename in session_options:
+                    # session
+                    session_options = session_options[tablename]
+                else:
+                    # unfiltered
+                    session_options = Storage()
+                form_values = session_options
 
+        # Build the search forms
+        simple_form, advanced_form = self.build_forms(r, form_values)
+
+        # Check for Load Search
+        if "load" in r.get_vars:
+            search_id = r.get_vars.get("load", None)
+            if not search_id:
+                r.error(400, manager.ERROR.BAD_RECORD)
+            r.post_vars = r.vars
+            search_table = s3db.pr_save_search
+            _query = (search_table.id == search_id)
+            record = db(_query).select(limitby=(0, 1)).first()
+            if not record:
+                r.error(400, manager.ERROR.BAD_RECORD)
+            s_vars = cPickle.loads(record.search_vars)
+            r.post_vars = Storage(s_vars["criteria"])
+            r.http = "POST"
+
+        # Process the search forms
+        query, errors = self.process_forms(r,
+                                           simple_form,
+                                           advanced_form,
+                                           form_values)
+        if not errors:
+            resource.add_filter(query)
+            search_vars = dict(simple=False,
+                               advanced=True,
+                               criteria=form_values)
+        else:
+            search_vars = dict()
+
+        if s3.simple_search:
+            form.append(DIV(_id="search-mode", _mode="simple"))
+        else:
+            form.append(DIV(_id="search-mode", _mode="advanced"))
+
+        # Save Search Widget
+        if session.auth and settings.get_save_search_widget():
+            save_search = self.save_search_widget(r, search_vars, **attr)
+        else:
+            save_search = DIV()
+
+        # Complete the output form
+        if simple_form is not None:
+            simple_form.append(save_search)
+            form.append(simple_form)
+        if advanced_form is not None:
+            advanced_form.append(save_search)
+            form.append(advanced_form)
+
+        # Add a map for search results
+        # (this same map is also used by the Map Search Widget, if-present)
+        # Build URL to load the features onto the map
+        if query:
+            vars = query.serialize_url(resource=resource)
+        else:
+            vars = None
+        url = URL(extension="geojson",
+                  args=None,
+                  vars=vars)
+        feature_resources = [{
+                "name"   : T("Search Results"),
+                "id"     : "search_results",
+                "url"    : url,
+                "active" : True,
+                "marker" : gis.get_marker(request.controller, request.function)
+            }]
+        map = gis.show_map(
+                            feature_resources=feature_resources,
+                            catalogue_layers=True,
+                            legend=True,
+                            toolbar=True,
+                            collapsed=True,
+                            search = True,
+                            )
+        # Title
+        title = self.crud_string(tablename, "title_map")
+
+        # View
+        response.view = self._view(r, "map.html")
+
+        # RHeader gets added later in S3Method()
+
+        output = dict(
+                    title = title,
+                    form = form,
+                    map = map,
+                )
         return output
 
 # =============================================================================

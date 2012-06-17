@@ -66,7 +66,6 @@ class S3HRModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-        s3db = current.s3db
         settings = current.deployment_settings
         controller = current.request.controller
 
@@ -250,7 +249,7 @@ class S3HRModel(S3Model):
                 @ToDo: S3resource-based version to use accessible_realm-based
                        filtering rather than crude 'this user's org'
             """
-            ctable = s3db.hrm_course
+            ctable = current.s3db.hrm_course
             organisation_id = current.auth.user.organisation_id
             query = (ctable.deleted == False) & \
                     ((ctable.organisation_id == organisation_id) | \
@@ -284,7 +283,7 @@ class S3HRModel(S3Model):
                         name="human_resource_search_org",
                         label=T("Organization"),
                         field="organisation_id",
-                        represent = s3db.org_organisation_represent,
+                        represent = self.org_organisation_represent,
                         cols = 3,
                       ),
                       S3SearchLocationHierarchyWidget(
@@ -354,7 +353,7 @@ class S3HRModel(S3Model):
                                 name="human_resource_search_org",
                                 label=T("Organization"),
                                 field="organisation_id",
-                                represent = s3db.org_organisation_represent,
+                                represent = self.org_organisation_represent,
                                 cols = 3
                               ),
                             S3SearchLocationHierarchyWidget(
@@ -563,15 +562,8 @@ class S3HRModel(S3Model):
         """
 
         if item.tablename == "hrm_human_resource":
-
-            db = current.db
-            s3db = current.s3db
-
-            hrtable = s3db.hrm_human_resource
-
             data = item.data
-
-            person_id = data.person_id
+            person_id = "person_id" in data and data.person_id
             org = "organisation_id" in data and data.organisation_id
 
             # This allows only one HR record per person and organisation,
@@ -579,13 +571,14 @@ class S3HRModel(S3Model):
             # are desired, then this needs an additional criteria in the
             # query (e.g. job title, or type):
 
-            query = (hrtable.deleted != True) & \
-                    (hrtable.person_id == person_id)
+            table = item.table
+
+            query = (table.deleted != True) & \
+                    (table.person_id == person_id)
             if org:
-                query = query & \
-                    (hrtable.organisation_id == org)
-            row = db(query).select(hrtable.id,
-                                   limitby=(0, 1)).first()
+                query = query & (table.organisation_id == org)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE
@@ -846,13 +839,10 @@ class S3HRJobModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_job_role_duplicate(job):
+    def hrm_job_role_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
-
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
 
           If the record is a duplicate then it will set the job method to update
 
@@ -860,20 +850,20 @@ class S3HRJobModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "hrm_job_role":
-            table = job.table
-            name = "name" in job.data and job.data.name
-            org = "organisation_id" in job.data and job.data.organisation_id
+        if item.tablename == "hrm_job_role":
+            data = item.data
+            name = "name" in data and data.name
+            org = "organisation_id" in data and data.organisation_id
 
+            table = item.table
             query = (table.name.lower() == name.lower())
             if org:
                 query  = query & (table.organisation_id == org)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
@@ -1933,9 +1923,10 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_competency":
+            data = job.data
+            person = "person_id" in data and data.person_id
+            skill = "skill_id" in data and data.skill_id
             table = job.table
-            person = "person_id" in job.data and job.data.person_id
-            skill = "skill_id" in job.data and job.data.skill_id
             query = (table.person_id == person) & \
                     (table.skill_id == skill)
 
@@ -1963,9 +1954,10 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_certificate":
-            table = job.table
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
 
+            table = job.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -2061,8 +2053,6 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_competency_rating":
-            table = job.table
-            stable = current.s3db.hrm_skill_type
             name = "name" in job.data and job.data.name
             skill = False
             for cjob in job.components:
@@ -2072,6 +2062,8 @@ S3FilterFieldChange({
             if skill == False:
                 return
 
+            table = job.table
+            stable = current.s3db.hrm_skill_type
             query = (table.name.lower() == name.lower()) & \
                     (table.skill_type_id == stable.id) & \
                     (stable.value.lower() == skill.lower())
@@ -2099,9 +2091,9 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_course":
-            table = job.table
             name = "name" in job.data and job.data.name
 
+            table = job.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -2127,9 +2119,9 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_skill":
-            table = job.table
             name = "name" in job.data and job.data.name
 
+            table = job.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -2155,9 +2147,9 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_skill_type":
-            table = job.table
             name = "name" in job.data and job.data.name
 
+            table = job.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -2183,12 +2175,12 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_training_event":
-            table = job.table
-            start_date = "start_date" in job.data and job.data.start_date
+            data = job.data
+            start_date = "start_date" in data and data.start_date
             if not start_date:
                 return
-            course_id = "course_id" in job.data and job.data.course_id
-            site_id = "site_id" in job.data and job.data.site_id
+            course_id = "course_id" in data and data.course_id
+            site_id = "site_id" in data and data.site_id
             # Need to provide a range of dates as otherwise second differences prevent matches
             # - assume that if we have multiple training courses of the same
             #   type at the same site then they start at least a minute apart
@@ -2218,6 +2210,7 @@ S3FilterFieldChange({
                 minute = 0
             start_end_date = datetime.datetime(year, month, day, hour, minute)
 
+            table = job.table
             query = (table.course_id == course_id) & \
                     (table.start_date >= start_start_date) & \
                     (table.start_date < start_end_date)
@@ -2247,10 +2240,11 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_training":
-            table = job.table
-            training_event_id = "training_event_id" in job.data and job.data.training_event_id
-            person_id = "person_id" in job.data and job.data.person_id
+            data = job.data
+            training_event_id = "training_event_id" in data and data.training_event_id
+            person_id = "person_id" in data and data.person_id
 
+            table = job.table
             query = (table.person_id == person_id) & \
                     (table.training_event_id == training_event_id)
             _duplicate = current.db(query).select(table.id,

@@ -651,7 +651,7 @@ class S3Config(Storage):
         return self.inv.get("catalog_default", "Other Items")
 
     # -------------------------------------------------------------------------
-    # Organsiation
+    # Organisation
     def get_org_site_code_len(self):
         return self.org.get("site_code_len", 10)
 
@@ -710,7 +710,7 @@ class S3Config(Storage):
 
     def get_project_mode_drr(self):
         """
-            Enable DRR mode in the projects module
+            Enable DRR extensions in the projects module
         """
         return self.project.get("mode_drr", False)
 

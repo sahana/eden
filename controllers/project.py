@@ -24,9 +24,9 @@ def index():
     else:
         redirect(URL(f="project"))
 
-    module_name = deployment_settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    #module_name = deployment_settings.modules[module].name_nice
+    #response.title = module_name
+    #return dict(module_name=module_name)
 
 # =============================================================================
 def create():

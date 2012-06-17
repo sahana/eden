@@ -120,6 +120,7 @@ class S3FireStationModel(S3Model):
             title_update = T("Edit Station Details"),
             title_search = T("Search for Fire Station"),
             title_upload = T("Upload Fire Stations List"),
+            title_map = T("Map of Fire Stations"),
             subtitle_create = T("Add New Fire Station"),
             label_list_button = T("List Fire Stations"),
             label_create_button = ADD_FIRE_STATION,

@@ -90,6 +90,7 @@ def vehicle():
         title_list = T("Vehicles"),
         title_update = T("Edit Vehicle"),
         title_search = T("Search Vehicles"),
+        title_map = T("Map of Vehicles"),
         subtitle_create = T("Add New Vehicle"),
         label_list_button = T("List Vehicles"),
         label_create_button = ADD_VEHICLE,
