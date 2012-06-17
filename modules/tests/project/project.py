@@ -82,7 +82,7 @@ class project_create(SeleniumUnitTest):
         
         self.browser.find_element_by_id("rheader_tab_community").click()
         
-        self.create("project_community", 
+        self.create("project_location", 
                     [( "L0",
                        "Timor-Leste",
                        "gis_location" ),

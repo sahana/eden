@@ -310,6 +310,10 @@ settings.L10n.decimal_separator = "."
 #settings.project.mode_drr = True
 # Uncomment this to use settings suitable for detailed Task management
 #settings.project.mode_task = True
+# Uncomment this to call project locations 'Communities'
+#settings.project.community = True
+# Uncomment this to use Activities for projects
+#settings.project.activities = True
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
 # Uncomment this to use Milestones in project/task.

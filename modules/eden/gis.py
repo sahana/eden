@@ -977,10 +977,11 @@ class S3GISConfigModel(S3Model):
                                                                "static",
                                                                "img",
                                                                "markers"),
+                                   custom_retrieve = self.gis_marker_retrieve,
                                    represent = lambda filename: \
-                                      (filename and [DIV(IMG(_src=URL(c="default",
-                                                                      f="download",
-                                                                      args=filename),
+                                      (filename and [DIV(IMG(_src=URL(c="static",
+                                                                      f="img",
+                                                                      args=["markers", filename]),
                                                              _height=40))] or [""])[0]),
                              Field("height", "integer", writable=False), # In Pixels, for display purposes
                              Field("width", "integer", writable=False),  # We could get size client-side using Javascript's Image() class, although this is unreliable!
@@ -1663,14 +1664,16 @@ class S3GISConfigModel(S3Model):
         if not id:
             return current.messages.NONE
 
-        s3db = current.s3db
-        table = s3db.gis_marker
-        query = (table.id == id)
-        record = current.db(query).select(table.image,
-                                          limitby=(0, 1),
-                                          cache = s3db.cache).first()
-        if not record:
-            return current.messages.NONE
+        if isinstance(id, row):
+            record = id
+        else:
+            table = current.s3db.gis_marker
+            query = (table.id == id)
+            record = current.db(query).select(table.image,
+                                              limitby=(0, 1)).first()
+            if not record:
+                return current.messages.NONE
+
         represent = DIV(IMG(_src=URL(c="static", f="img",
                                      args=["markers", record.image]),
                             _height=40))
@@ -1678,16 +1681,25 @@ class S3GISConfigModel(S3Model):
         return represent
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def gis_marker_onvalidation(form):
         """
             Record the size of an Image upon Upload
             Don't wish to resize here as we'd like to use full resolution for printed output
         """
 
-        import Image
-
         vars = form.vars
-        im = Image.open(vars.image.file)
+        image = vars.image
+        if isinstance(image, str):
+            # This is an update not a create, so file not in form
+            return
+
+        try:
+            from PIL import Image
+        except ImportError:
+            import Image
+
+        im = Image.open(image.file)
         (width, height) = im.size
         vars.image.file.seek(0)
 
@@ -1722,6 +1734,21 @@ class S3GISConfigModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_marker_retrieve(filename, path=None):
+        """
+            custom_retrieve to override web2py DAL's standard retrieve,
+            as that checks filenames for uuids, so doesn't work with 
+            pre-populated files in static
+        """
+
+        if not path:
+            path = current.s3db.gis_marker.image.uploadfolder
+
+        image = open(os.path.join(path, filename), "rb")
+        return (filename, image)
 
     # -------------------------------------------------------------------------
     @staticmethod
