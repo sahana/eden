@@ -152,7 +152,11 @@ def get_strings_by_file(filename):
            return []
 
 	if filename.endswith(".py") == True:
-	         return getStrings.findstr(filename, "ALL", get_module_list())
+	         strings = []
+	         tmpstr = getStrings.findstr(filename, "ALL", get_module_list())
+		 for s in tmpstr:
+		    strings.append( (filename+":"+str(s[0]), s[1]) )
+		 return strings
 	else:
 	        print "Please enter a '.py' file path"
 		return []

@@ -3,6 +3,20 @@ import sys
 import xlwt
 import group_mod
 
+
+
+def remove_quotes(Strings):
+
+	l = []
+
+	for (loc,data) in Strings:
+            if data[0] == '"' and data[-1] == '"' or data[0] == "'" and data[-1] == "'":
+	            data = data[1:-1]
+            l.append( (loc,data) )
+
+        return l
+
+
 def remove_duplicates(Strings):
      
     uniq = {}
@@ -14,7 +28,7 @@ def remove_duplicates(Strings):
     for (loc,data) in Strings:
 
          if uniq[data] != '':
-            uniq[data] = uniq[data] + ',' + loc
+            uniq[data] = uniq[data] + ';' + loc
          else:
 	    uniq[data] = loc
     
@@ -22,6 +36,8 @@ def remove_duplicates(Strings):
 
     for data in uniq.keys():
         l.append( (uniq[data],data) )
+
+    l.sort( key=lambda tup: tup[1] )
     
     return l
      
@@ -63,13 +79,15 @@ def convert_to_xls(modlist,filelist):
 
 	for mod in modlist:
 	     Strings += group_mod.get_strings_by_module(mod)
-
+        
 	for f in filelist:
 	     Strings += group_mod.get_strings_by_file(f)
+        
+        Strings = remove_quotes(Strings)
        
-	Strings = remove_duplicates(Strings)
+        Strings = remove_duplicates(Strings)
 
-	create_spreadsheet(Strings)
+        create_spreadsheet(Strings)
 
  
 
