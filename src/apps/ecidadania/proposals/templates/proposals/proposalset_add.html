@@ -51,6 +51,21 @@
                         </span>
                     </div> 
                 </div>
+                <div class="clearfix {% if form.debate.errors %}error{% endif %}">
+                    <label for="prependedInput">{{ form.debate.label }}</label>
+                    <div class="input">
+                        {{ form.debate }}
+                        <span class="help-inline">
+                            {% if form.debate.errors %}
+                                {% for error in form.debate.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            {% else %}
+                                {{ form.debate.help_text }}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
                 <hr />
                 <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
                 <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Create' %}" />
