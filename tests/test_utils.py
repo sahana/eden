@@ -28,6 +28,14 @@ from django.test import TestCase
 
 from django.utils.encoding import smart_str
 
+from core.spaces.models import Space
+
+from apps.ecidadania.debate.models import Debate
+from apps.ecidadania.debate.models import Column
+from apps.ecidadania.debate.models import Row
+from apps.ecidadania.debate.models import Note
+
+
 from tests.data_seeder import seeder
 
 
@@ -39,9 +47,54 @@ class ECDTestCase(TestCase):
     def init(self):
         """Performs set up for the tests.
         """
-        
         self.client = Client(enforce_csrf_checks=False)
-    
+        self.username = 'dummy_username'
+        self.user_password = 'dummy_user_password'
+        self.admin_username = 'admin_username'
+        self.admin_password = 'admin_password'
+        self.user = self.create_user(self.username, self.user_password)
+        self.admin  = self.create_super_user(self.admin_username,
+                                             self.admin_password)
+        
+        space_properties = {'name': 'user_space', 'url': 'user_space_url',
+                            'author': self.user, 'public': True, 
+                            'mod_debate': True, 'mod_proposals': True,
+                            'mod_news': True, 'mod_cal': True, 'mod_docs': True
+                            }
+        self.user_space = self.seed(Space, properties=space_properties)
+        space_properties.update({'author': self.admin, 'name': 'admin_space',
+                                 'url': 'admin_space_url'})
+        self.admin_space = self.seed(Space, properties=space_properties)
+        
+        debate_properties = {'space': self.user_space, 'author': self.user}
+        self.user_debate = self.seed(Debate, properties=debate_properties)
+        
+        debate_properties.update({'space': self.admin_space, 
+                                 'author': self.admin})
+        self.admin_debate = self.seed(Debate, properties=debate_properties)
+        
+        column_properties = {'debate': self.user_debate, 'criteria': 'user'}
+        self.user_column = Column(**column_properties).save()
+        column_properties.update({'debate': self.admin_debate, 
+                                  'criteria': 'admin'})
+        self.admin_column = Column(**column_properties)
+        
+        row_properties = column_properties.copy()
+        self.admin_row = self.seed(Row, properties=row_properties)
+        
+        row_properties.update({'debate': self.user_debate})
+        self.user_row = self.seed(Row, properties=row_properties)
+        
+        note_properties = {'column': self.user_column, 'row': self.user_row,
+                           'debate': self.user_debate, 'author': self.user}
+        self.user_note = self.seed(Note, properties=note_properties)
+        
+        note_properties.update({'column': self.admin_column, 
+                                'row': self.admin_row,
+                                'debate': self.admin_debate,
+                                'author': self.admin})
+        self.admin_note = self.seed(Note, properties=note_properties)
+
     def seed(self, model, properties=None, constraints=None, follow_fk=None, 
              generate_fk=None, follow_m2m=None, factory=None, commit=True):
         """Generates and returns a new instance of the `model` with 
