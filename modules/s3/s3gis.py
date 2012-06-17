@@ -1939,6 +1939,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
+        request = current.request
         gis = current.gis
 
         format = current.auth.permission.format
@@ -1958,7 +1959,6 @@ class GIS(object):
 
         else:
             # e.g. Search results loaded as a Feature Resource layer
-            request = current.request
             query = (ftable.controller == request.controller) & \
                     (ftable.function == request.function)
 
@@ -1992,7 +1992,8 @@ class GIS(object):
         if format == "geojson":
             # Build the Popup Tooltips now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
-            if popup_label:
+            label_off = request.vars.get("label_off", None)
+            if popup_label and not label_off:
                 _tooltip = "(%s)" % current.T(popup_label)
             else:
                 _tooltip = ""
@@ -4452,15 +4453,12 @@ S3.gis.layers_feature_resources = new Array();"""
 
             # URL to retrieve the data
             url = layer["url"]
-            # Optimise the query
+            # Optimise the query & & tell back-end not to add the type to the tooltips
+            options = "components=None&maxdepth=0&references=location_id&fields=name&label_off=1"
             if "?" in url:
-                url = "%s%s" % (url,
-                                #"layer=%i",
-                                "&components=None&maxdepth=0&references=location_id&fields=name")
+                url = "%s&%s" % (url, options)
             else:
-                url = "%s%s" % (url,
-                                #"layer=%i",
-                                "?components=None&maxdepth=0&references=location_id&fields=name")
+                url = "%s?%s" % (url, options)
 
             if "active" in layer and not layer["active"]:
                 visibility = """,
@@ -5820,7 +5818,8 @@ class S3Map(S3Search):
              search._S3Search__interactive:
                 # Put shortcuts where other methods expect them
                 self.advanced = search.advanced
-                self.simple = search.simple
+                # We want advanced open by default
+                #self.simple = search.simple
                 output = self.search_interactive(r, **attr)
 
         if not output:

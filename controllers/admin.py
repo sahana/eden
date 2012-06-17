@@ -20,7 +20,7 @@ def index():
 
 # =============================================================================
 @auth.s3_requires_membership(1)
-def settings():
+def setting():
     """ Custom page to link to those Settings which can be edited through the web interface """
     return dict()
 

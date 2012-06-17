@@ -718,6 +718,7 @@ div.form-container form legend {
     font-weight: bold;
     color: #666;
 }
+/*
 div.form-container form fieldset div.brake {
     padding: 0.3em;
 }
@@ -752,6 +753,7 @@ div.form-container form fieldset textarea:focus {
     background-color: #ffffcc;
     border-color: #fc6;
 }
+*/
 div.form-container form input:focus,
 div.form-container form select:focus,
 div.form-container form input.errorfield:focus,

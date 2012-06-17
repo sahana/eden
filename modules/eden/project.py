@@ -1755,14 +1755,15 @@ class S3Project3WModel(S3Model):
     @staticmethod
     def project_location_onaccept(form):
         """
+            Populate the Lx fields from the location_id
         """
 
-        location_id = form.vars.location_id
-
+        vars = form.vars
+        location_id = vars.location_id
         if location_id:
             # Populate the Lx fields
             ctable = current.s3db.project_location
-            current.response.s3.lx_update(ctable, form.vars.id)
+            current.response.s3.lx_update(ctable, vars.id)
 
         return
 
@@ -2090,7 +2091,11 @@ class S3ProjectThemeModel(S3Model):
             Update the percentages of all the Project's Locations.
         """
 
-        project_id = form.vars.project_id
+        # Check for prepop
+        project_id = form.vars.get("project_id", None)
+        if not project_id and form.request_vars:
+            # Interactive form
+            project_id = form.request_vars.get("project_id", None)
         if not project_id:
             return
         db = current.db

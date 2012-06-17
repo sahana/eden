@@ -211,7 +211,7 @@ class S3MainMenu:
 
         menu_admin = MM(module.name_nice, c="admin",
                         restrict=[ADMIN], **attr)(
-                            MM("Settings", f="settings"),
+                            MM("Settings", f="setting"),
                             MM("Users", f="user"),
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),

@@ -89,7 +89,6 @@ def outbox():
 
 # =============================================================================
 def log():
-
     """
         RESTful CRUD controller for the Master Message Log
         - all Inbound & Outbound Messages go here
@@ -126,7 +125,6 @@ def log():
 
 # =============================================================================
 def tropo():
-
     """
         Receive a JSON POST from the Tropo WebAPI
 
@@ -210,7 +208,6 @@ def twitter_search_results():
 # =============================================================================
 @auth.s3_requires_membership(1)
 def setting():
-
     """ SMS settings for the messaging framework """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -258,11 +255,9 @@ def setting():
     #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
-
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def inbound_email_settings():
-
     """
         RESTful CRUD controller for email settings
             - appears in the administration menu
@@ -302,7 +297,6 @@ def inbound_email_settings():
 
 # -----------------------------------------------------------------------------
 def email_inbox():
-
     """
         RESTful CRUD controller for the Email Inbox
         - all Inbound Email Messages go here
@@ -322,7 +316,6 @@ def email_inbox():
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def modem_settings():
-
     """
         RESTful CRUD controller for modem settings
         - appears in the administration menu
@@ -379,7 +372,6 @@ def modem_settings():
 #------------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def smtp_to_sms_settings():
-
     """
         RESTful CRUD controller for SMTP to SMS settings
         - appears in the administration menu
@@ -419,7 +411,6 @@ def smtp_to_sms_settings():
 #------------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def api_settings():
-
     """
         RESTful CRUD controller for Web API settings
         - appears in the administration menu
@@ -466,7 +457,6 @@ def api_settings():
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def tropo_settings():
-
     """
         RESTful CRUD controller for Tropo settings
         - appears in the administration menu
@@ -499,7 +489,6 @@ def tropo_settings():
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def twitter_settings():
-
     """
         RESTful CRUD controller for Twitter settings
         - appears in the administration menu
@@ -566,7 +555,6 @@ def twitter_settings():
     s3mgr.configure(tablename, listadd=False, deletable=False)
     return s3_rest_controller()
 
-
 # =============================================================================
 # The following functions hook into the pr functions:
 #
@@ -595,7 +583,6 @@ def group():
 
 # -----------------------------------------------------------------------------
 def group_membership():
-
     """ RESTful CRUD controller """
 
     if auth.is_logged_in() or auth.basic():
@@ -664,7 +651,6 @@ def contact():
 
 # -----------------------------------------------------------------------------
 def search():
-
     """
         Do a search of groups which match a type
         - used for auto-completion
@@ -720,7 +706,6 @@ def recipient_represent(id, default_label=""):
 
 # -----------------------------------------------------------------------------
 def person_search(value, type=None):
-
     """ Search for People & Groups which match a search term """
 
     # Shortcuts
@@ -768,7 +753,6 @@ def person_search(value, type=None):
             items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label = "")})
 
     return items
-
 
 # -----------------------------------------------------------------------------
 def subscription():
@@ -826,7 +810,6 @@ def check_updates(user_id):
     else:
         return XML(message)
 
-
 # -----------------------------------------------------------------------------
 def subscription_messages():
 
@@ -855,7 +838,6 @@ def subscription_messages():
                                   fromaddress="sahana@sahana.com")
     return
 
-
 # =============================================================================
 # Enabled only for testing:
 #
@@ -873,6 +855,5 @@ def tag():
 
     s3mgr.configure(tablename, listadd=False)
     return s3_rest_controller()
-
 
 # END ================================================================================

@@ -875,7 +875,7 @@ def config():
                 layers = json.loads(request.post_vars.layers)
                 form = Storage()
                 for layer in layers:
-                    if "id" in layer:
+                    if "id" in layer and layer["id"] != "search_results":
                         layer_id = layer["id"]
                         vars = Storage(
                                 config_id = id,
