@@ -768,6 +768,10 @@ div.form-container form tr td,
 div.item-container form tr td {
     padding: 3px 0 0 3px;
 }
+
+div.form-container form input {
+	margin-right: 3px;
+}
 div.form-container div.controlset label,
 div.form-container div.controlset input {
     display: inline;
@@ -1284,7 +1288,8 @@ div#last_update {
 	float: left;
 }
 #list-add {
-    display: none
+    display: none;
+    margin-bottom: 10px;
 }
 
 /* Expand section button */

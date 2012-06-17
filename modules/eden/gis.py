@@ -3648,9 +3648,11 @@ def gis_location_lx_represent(record):
                                                ids=False,
                                                names=True)
 
-    location_list = [location.name,]
+    location_list = []
+    if location.name:
+        location_list.append(location.name)
     if parents:
-        fields = ["L%s" % (i) for i in xrange(0, 4)]
+        fields = ["L%s" % (i) for i in xrange(0, 5)]
         for field in reversed(fields):
             if field in parents and parents[field]:
                 location_list.append(parents[field])

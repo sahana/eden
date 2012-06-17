@@ -113,6 +113,15 @@ def project():
                         statuses = response.s3.project_task_active_statuses
                         filter = (r.component.table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
+                elif r.component_name == "beneficiary":
+                    db.project_beneficiary.project_location_id.requires = IS_NULL_OR(
+                        IS_ONE_OF(db,
+                                  "project_location.id",
+                                  s3db.project_location_represent,
+                                  sort=True,
+                                  filterby="project_id",
+                                  filter_opts=[r.id])
+                    )
                 elif r.component_name == "human_resource":
                     from eden.hrm import hrm_human_resource_represent
 
