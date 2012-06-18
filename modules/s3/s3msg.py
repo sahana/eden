@@ -219,7 +219,23 @@ class S3Msg(object):
                 db.commit()
                 
         return        
+    # -----------------------------------------------------------------------------
+    # Enabled Parsing Workflows
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def add_parsing_workflows():
+        """
+           Returns the list of the enabled Parsign Workflows.
+        """
+            
+        settings = current.deployment_settings
+        workflows = []
+        for workflow in settings.get_parser_enabled():
+            workflow = int(workflow.split("_")[1])
+            workflows += [workflow]
                 
+        return workflows
+    
             
     # =========================================================================
     # Outbound Messages
