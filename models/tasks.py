@@ -70,7 +70,16 @@ if deployment_settings.has_module("msg"):
         return result
         
     tasks["parse_workflow"] = parse_workflow
+    # -----------------------------------------------------------------------------
+    def schedule_parser():
+        """
+        Schedules the parsing workflows.
+        """
+        #Run the task
+        result = msg.schedule_parser()
+        return result
     
+    tasks["schedule_parser"] = schedule_parser    
 # -----------------------------------------------------------------------------
 def sync_synchronize(repository_id, user_id=None, manual=False):
     """

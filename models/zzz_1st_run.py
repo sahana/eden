@@ -24,13 +24,11 @@ if len(pop_list) > 0:
     if deployment_settings.has_module("msg"):
         
         #Message Parsing Tasks for each enabled workflows 
-        #for workflow in msg.add_parsing_workflows():
-        #    s3task.schedule_task("parse_workflow",
-                                 #vars={"workflow": workflow},
-                                 #period=300,  # seconds
-                                 #timeout=300, # seconds
-                                 #repeats=0    # unlimited
-                                 #)
+        #s3task.schedule_task("schedule_parser",
+                             #period=900,  # seconds
+                             #timeout=300, # seconds
+                             #repeats=0    # unlimited
+                             #)
                         
                         
                 

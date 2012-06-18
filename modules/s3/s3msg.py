@@ -223,7 +223,7 @@ class S3Msg(object):
     # Enabled Parsing Workflows
     # -----------------------------------------------------------------------------
     @staticmethod
-    def add_parsing_workflows():
+    def get_msg_parsers():
         """
            Returns the list of the enabled Parsign Workflows.
         """
@@ -236,7 +236,30 @@ class S3Msg(object):
                 
         return workflows
     
+    # -----------------------------------------------------------------------------
+    # Scheduling of Parsing Workflows
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def schedule_parser():
+        """
+           Schedules different parsing workflows.
+        """
+        
+        s3task = current.s3task
+        db = current.db
+        #Message Parsing Tasks for each enabled workflows 
+        for workflow in S3Msg.get_msg_parsers():
+            s3task.schedule_task("parse_workflow",
+                                 vars={"workflow": workflow},
+                                 period=300,  # seconds
+                                 timeout=300, # seconds
+                                 repeats=0    # unlimited
+                                 )
+            db.commit()
+                
+        return
             
+     
     # =========================================================================
     # Outbound Messages
     # =========================================================================
