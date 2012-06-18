@@ -47,7 +47,7 @@ class AddProposal(FormView):
     """
     Create a new proposal.
     
-    :parameters: space_name
+    :parameters: space_url
     :rtype: HTML Form
     :context: form, get_place
     """
@@ -55,10 +55,10 @@ class AddProposal(FormView):
     template_name = 'proposals/proposal_add.html'
     
     def get_success_url(self):
-        return '/spaces/' + self.kwargs['space_name']
+        return '/spaces/' + self.kwargs['space_url']
     
     def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)
         form_uncommited.space = self.space
         form_uncommited.author = self.request.user
@@ -67,7 +67,7 @@ class AddProposal(FormView):
     
     def get_context_data(self, **kwargs):
         context = super(AddProposal, self).get_context_data(**kwargs)
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = self.space
         return context
         
@@ -94,7 +94,7 @@ class ViewProposal(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ViewProposal, self).get_context_data(**kwargs)
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
         support_votes_count = Proposal.objects.filter(space=current_space)\
                              .annotate(Count('support_votes'))
         # We are going to get the proposal position in the list
@@ -115,13 +115,13 @@ class EditProposal(UpdateView):
 
     :rtype: HTML Form
     :context: get_place
-    :parameters: space_name, prop_id
+    :parameters: space_url, prop_id
     """
     model = Proposal
     template_name = 'proposals/proposal_edit.html'
     
     def get_success_url(self):
-        return '/spaces/{0}/proposal/{1}/'.format(self.kwargs['space_name'], self.kwargs['prop_id'])
+        return '/spaces/{0}/proposal/{1}/'.format(self.kwargs['space_url'], self.kwargs['prop_id'])
         
     def get_object(self):
         prop_id = self.kwargs['prop_id']
@@ -129,7 +129,7 @@ class EditProposal(UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(EditProposal, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
     @method_decorator(permission_required('proposals.edit_proposal'))
@@ -149,17 +149,17 @@ class DeleteProposal(DeleteView):
         return get_object_or_404(Proposal, pk = self.kwargs['prop_id'])
 
     def get_success_url(self):
-        current_space = self.kwargs['space_name']
+        current_space = self.kwargs['space_url']
         return '/spaces/{0}'.format(current_space)
 
     def get_context_data(self, **kwargs):
         context = super(DeleteProposal, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context                 
                   
            
 @require_POST
-def vote_proposal(request, space_name):
+def vote_proposal(request, space_url):
 
     """
     Increment support votes for the proposal in 1.
@@ -185,13 +185,13 @@ class ListProposals(ListView):
     context_object_name = 'proposal'
 
     def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        place = get_object_or_404(Space, url=self.kwargs['space_url'])
         objects = Proposal.objects.annotate(Count('support_votes')).filter(space=place.id).order_by('pub_date')
         return objects
 
     def get_context_data(self, **kwargs):
         context = super(ListProposals, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
 #
@@ -212,13 +212,13 @@ class ListProposalSet(ListView):
     context_object_name = 'setlist'
     
     def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        place = get_object_or_404(Space, url=self.kwargs['space_url'])
         objects = ProposalSet.objects.all()
         return objects
     
     def get_context_data(self, **kwargs):
         context = super(ListProposalSet, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
     
 class ViewProposalSet(ListView):
@@ -236,13 +236,13 @@ class ViewProposalSet(ListView):
     template_name = 'proposals/proposalset_detail.html'
     
     def get_queryset(self):
-        place = get_object_or_404(Space, url=self.kwargs['space_name'])
+        place = get_object_or_404(Space, url=self.kwargs['space_url'])
         objects = Proposal.objects.all().filter(proposalset=self.kwargs['set_id']).order_by('pub_date')
         return objects
     
     def get_context_data(self, **kwargs):
         context = super(ViewProposalSet, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
 class AddProposalSet(FormView):
@@ -261,10 +261,10 @@ class AddProposalSet(FormView):
     template_name = 'proposals/proposalset_add.html'
     
     def get_success_url(self):
-        return '/spaces/' + self.kwargs['space_name']
+        return '/spaces/' + self.kwargs['space_url']
     
     def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)
         form_uncommited.space = self.space
         form_uncommited.author = self.request.user
@@ -273,7 +273,7 @@ class AddProposalSet(FormView):
     
     def get_context_data(self, **kwargs):
         context = super(AddProposalSet, self).get_context_data(**kwargs)
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = self.space
         return context
         
@@ -295,7 +295,7 @@ class EditProposalSet(UpdateView):
     template_name = 'proposals/proposalset_edit.html'
     
     def get_success_url(self):
-        return '/spaces/{0}/proposal/psets/{1}/'.format(self.kwargs['space_name'], self.kwargs['set_id'])
+        return '/spaces/{0}/proposal/psets/{1}/'.format(self.kwargs['space_url'], self.kwargs['set_id'])
         
     def get_object(self):
         propset_id = self.kwargs['set_id']
@@ -303,7 +303,7 @@ class EditProposalSet(UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(EditProposalSet, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
     @method_decorator(permission_required('proposals.edit_proposalset'))
@@ -324,10 +324,10 @@ class DeleteProposalSet(DeleteView):
         return get_object_or_404(ProposalSet, pk = self.kwargs['set_id'])
 
     def get_success_url(self):
-        current_space = self.kwargs['space_name']
+        current_space = self.kwargs['space_url']
         return '/spaces/{0}'.format(current_space)
 
     def get_context_data(self, **kwargs):
         context = super(DeleteProposalSet, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context                 

@@ -36,66 +36,66 @@ from core.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
 urlpatterns = patterns('core.spaces.views',
 
     # RSS Feed
-    url(_(r'^(?P<space_name>\w+)/rss/$'), SpaceFeed(), name='space-feed'),
+    url(_(r'^(?P<space_url>\w+)/rss/$'), SpaceFeed(), name='space-feed'),
     
     # News
-    url(_(r'^(?P<space_name>\w+)/news/'), include('apps.ecidadania.news.urls')),
+    url(_(r'^(?P<space_url>\w+)/news/'), include('apps.ecidadania.news.urls')),
 
     # Proposals
-    url(_(r'^(?P<space_name>\w+)/proposal/'), include('apps.ecidadania.proposals.urls')),
+    url(_(r'^(?P<space_url>\w+)/proposal/'), include('apps.ecidadania.proposals.urls')),
     
     # Calendar
-    url(_(r'^(?P<space_name>\w+)/calendar/'), include('apps.ecidadania.cal.urls')),
+    url(_(r'^(?P<space_url>\w+)/calendar/'), include('apps.ecidadania.cal.urls')),
 
     # Debates
-    url(_(r'^(?P<space_name>\w+)/debate/'), include('apps.ecidadania.debate.urls')),
+    url(_(r'^(?P<space_url>\w+)/debate/'), include('apps.ecidadania.debate.urls')),
 
 )
 
 # Document URLs
 urlpatterns += patterns('core.spaces.views',
 
-    url(_(r'^(?P<space_name>\w+)/docs/add/$'), AddDocument.as_view(), name='add-document'),
+    url(_(r'^(?P<space_url>\w+)/docs/add/$'), AddDocument.as_view(), name='add-document'),
 
-    url(_(r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/edit/$'), EditDocument.as_view(), name='edit-document'),
+    url(_(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/edit/$'), EditDocument.as_view(), name='edit-document'),
 
-    url(_(r'^(?P<space_name>\w+)/docs/(?P<doc_id>\d+)/delete/$'), DeleteDocument.as_view(), name='delete-document'),
+    url(_(r'^(?P<space_url>\w+)/docs/(?P<doc_id>\d+)/delete/$'), DeleteDocument.as_view(), name='delete-document'),
 
-    url(_(r'^(?P<space_name>\w+)/docs/$'), ListDocs.as_view(), name='list-documents'),
+    url(_(r'^(?P<space_url>\w+)/docs/$'), ListDocs.as_view(), name='list-documents'),
 
 )
 
 # Event URLs
 urlpatterns += patterns('core.spaces.views',
 
-    url(_(r'^(?P<space_name>\w+)/event/add/$'), AddEvent.as_view(), name='add-event'),
+    url(_(r'^(?P<space_url>\w+)/event/add/$'), AddEvent.as_view(), name='add-event'),
 
-    url(_(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/edit/$'), EditEvent.as_view(), name='edit-event'),
+    url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/edit/$'), EditEvent.as_view(), name='edit-event'),
 
-    url(_(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/delete/$'), DeleteEvent.as_view(), name='delete-event'),
+    url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/delete/$'), DeleteEvent.as_view(), name='delete-event'),
 
-    url(_(r'^(?P<space_name>\w+)/event/(?P<event_id>\d+)/$'), ViewEvent.as_view(), name='view-event'),
+    url(_(r'^(?P<space_url>\w+)/event/(?P<event_id>\d+)/$'), ViewEvent.as_view(), name='view-event'),
 
-    url(_(r'^(?P<space_name>\w+)/event/$'), ListEvents.as_view(), name='list-events'),
+    url(_(r'^(?P<space_url>\w+)/event/$'), ListEvents.as_view(), name='list-events'),
 
 )
 
 # Intent URLs
 urlpatterns += patterns('core.spaces.views',
 
-    url(_(r'^(?P<space_name>\w+)/intent/$'), 'add_intent', name='add-intent'),
-    url(_(r'^(?P<space_name>\w+)/intent/approve/(?P<token>\w+)/$'), ValidateIntent.as_view(), name='validate-intent'),
+    url(_(r'^(?P<space_url>\w+)/intent/$'), 'add_intent', name='add-intent'),
+    url(_(r'^(?P<space_url>\w+)/intent/approve/(?P<token>\w+)/$'), ValidateIntent.as_view(), name='validate-intent'),
 
 )
 
 # Spaces URLs
 urlpatterns += patterns('core.spaces.views',
 
-    url(_(r'^(?P<space_name>\w+)/edit/$'), 'edit_space', name='edit-space'),
+    url(_(r'^(?P<space_url>\w+)/edit/$'), 'edit_space', name='edit-space'),
 
-    url(_(r'^(?P<space_name>\w+)/delete/$'), DeleteSpace.as_view(), name='delete-space'),
+    url(_(r'^(?P<space_url>\w+)/delete/$'), DeleteSpace.as_view(), name='delete-space'),
     
-    url(_(r'^(?P<space_name>\w+)/news/'), ListPosts.as_view(), name='list-space-news'),
+    url(_(r'^(?P<space_url>\w+)/news/'), ListPosts.as_view(), name='list-space-news'),
         
     url(_(r'^add/$'), 'create_space', name='create-space'),
 
@@ -103,7 +103,7 @@ urlpatterns += patterns('core.spaces.views',
 
     url(_(r'^go/'), GoToSpace.as_view(), name='goto-space'),
 
-    url(r'^(?P<space_name>\w+)/$', ViewSpaceIndex.as_view(), name='space-index'),
+    url(r'^(?P<space_url>\w+)/$', ViewSpaceIndex.as_view(), name='space-index'),
 
 )
 

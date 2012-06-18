@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-14 12:52+0200\n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -160,7 +160,7 @@ msgstr ""
 #: templates/proposals/proposal_confirm_delete.html:26
 #: templates/proposals/proposal_edit.html:139
 #: templates/proposals/proposal_list.html:50
-#: templates/proposals/proposalset_add.html:55
+#: templates/proposals/proposalset_add.html:70
 #: templates/proposals/proposalset_confirm_delete.html:26
 #: templates/proposals/proposalset_detail.html:50
 #: templates/proposals/proposalset_edit.html:74
@@ -218,7 +218,6 @@ msgstr ""
 
 #: templates/proposals/proposal_confirm_delete.html:4
 #: templates/proposals/proposal_confirm_delete.html:21
-#: templates/proposals/proposalset_confirm_delete.html:4
 msgid "Delete proposal"
 msgstr ""
 
@@ -307,10 +306,11 @@ msgstr ""
 msgid "Add new proposal set"
 msgstr ""
 
-#: templates/proposals/proposalset_add.html:56
+#: templates/proposals/proposalset_add.html:71
 msgid "Create"
 msgstr ""
 
+#: templates/proposals/proposalset_confirm_delete.html:4
 #: templates/proposals/proposalset_confirm_delete.html:21
 msgid "Delete Proposal Set"
 msgstr ""

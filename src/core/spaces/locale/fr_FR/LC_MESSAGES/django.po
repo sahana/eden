@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 #   <hugo.deslongchamps@googlemail.com>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
-"Report-Msgid-Bugs-To: http://code.ecidadania.org/\n"
-"POT-Creation-Date: 2012-06-14 11:43+0200\n"
-"PO-Revision-Date: 2012-06-14 11:21+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
+"PO-Revision-Date: 2012-06-14 11:35+0000\n"
 "Last-Translator: hugodeslongchamps <hugo.deslongchamps@googlemail.com>\n"
-"Language-Team: French (http://www.transifex.net/projects/p/ecidadania/language/fr/)\n"
+"Language-Team: French (http://www.transifex.net/projects/p/ecidadania/"
+"language/fr/)\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 
 #: admin.py:66
@@ -50,10 +51,13 @@ msgstr "URL"
 
 #: models.py:57
 msgid ""
-"Valid characters are lowercase, digits and"
-"                                          underscore. This will be the "
+"Valid characters are lowercase, digits "
+"and                                          underscore. This will be the "
 "accesible URL"
-msgstr "Les caractères valides sont les minuscules, le chiffres et                                          les \"_\". Ceci sera l'URL accessible"
+msgstr ""
+"Les caractères valides sont les minuscules, le chiffres "
+"et                                          les \"_\". Ceci sera l'URL "
+"accessible"
 
 #: models.py:59 models.py:172 templates/spaces/event_add.html:138
 #: templates/spaces/space_add.html:224
@@ -172,75 +176,93 @@ msgid "Events"
 msgstr "Évènements"
 
 #: urls.py:39
-msgid "^(?P<space_name>\\w+)/rss/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/rss/$"
 msgstr "^(?P<space_name>\\w+)/rss/$"
 
 #: urls.py:42 urls.py:98
-msgid "^(?P<space_name>\\w+)/news/"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/news/"
 msgstr "^(?P<space_name>\\w+)/informations/"
 
 #: urls.py:45
-msgid "^(?P<space_name>\\w+)/proposal/"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/proposal/"
 msgstr "^(?P<space_name>\\w+)/proposition/"
 
 #: urls.py:48
-msgid "^(?P<space_name>\\w+)/calendar/"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/calendar/"
 msgstr "^(?P<space_name>\\w+)/calendrier/"
 
 #: urls.py:51
-msgid "^(?P<space_name>\\w+)/debate/"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/debate/"
 msgstr "^(?P<space_name>\\w+)/debat/"
 
 #: urls.py:58
-msgid "^(?P<space_name>\\w+)/docs/add/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/docs/add/$"
 msgstr "^(?P<space_name>\\w+)/docu/ajouter/$"
 
 #: urls.py:60
-msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
 msgstr "^(?P<space_name>\\w+)/docu/(?P<doc_id>\\d+)/editer/$"
 
 #: urls.py:62
-msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
 msgstr "^(?P<space_name>\\w+)/docu/(?P<doc_id>\\d+)/supprimer/$"
 
 #: urls.py:64
-msgid "^(?P<space_name>\\w+)/docs/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/docs/$"
 msgstr "^(?P<space_name>\\w+)/docu/$"
 
 #: urls.py:71
-msgid "^(?P<space_name>\\w+)/event/add/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/event/add/$"
 msgstr "^(?P<space_name>\\w+)/evenement/ajouter/$"
 
 #: urls.py:73
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/edit/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/edit/$"
 msgstr "^(?P<space_name>\\w+)/evenement/(?P<event_id>\\d+)/editer/$"
 
 #: urls.py:75
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/delete/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/delete/$"
 msgstr "^(?P<space_name>\\w+)/evenement/(?P<event_id>\\d+)/supprimer/$"
 
 #: urls.py:77
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/$"
 msgstr "^(?P<space_name>\\w+)/evenement/(?P<event_id>\\d+)/$"
 
 #: urls.py:79
-msgid "^(?P<space_name>\\w+)/event/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/event/$"
 msgstr "^(?P<space_name>\\w+)/evenement/$"
 
 #: urls.py:86
-msgid "^(?P<space_name>\\w+)/intent/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/intent/$"
 msgstr "^(?P<space_name>\\w+)/intention/$"
 
 #: urls.py:87
-msgid "^(?P<space_name>\\w+)/intent/approve/(?P<token>\\w+)/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/intent/approve/(?P<token>\\w+)/$"
 msgstr "^(?P<space_name>\\w+)/intention/accepter/(?P<token>\\w+)/$"
 
 #: urls.py:94
-msgid "^(?P<space_name>\\w+)/edit/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/edit/$"
 msgstr "^(?P<space_name>\\w+)/editer/$"
 
 #: urls.py:96
-msgid "^(?P<space_name>\\w+)/delete/$"
+#, fuzzy
+msgid "^(?P<space_url>\\w+)/delete/$"
 msgstr "^(?P<space_name>\\w+)/supprimer/$"
 
 #: urls.py:100
@@ -274,7 +296,10 @@ msgid ""
 "User {0} wants to participate in space {1}.\n"
 "                   Plese click on the link below to approve.\n"
 " {2}"
-msgstr "L'utilisateur {0} veut participer dans l'espace {1}.\n                   Pour accepter, cliquez sur le lien ici-bas.\n {2}"
+msgstr ""
+"L'utilisateur {0} veut participer dans l'espace {1}.\n"
+"                   Pour accepter, cliquez sur le lien ici-bas.\n"
+" {2}"
 
 #: views.py:130
 msgid "Your request is being processed."
@@ -284,37 +309,46 @@ msgstr "Votre demande est en cours de traitement."
 msgid "The requested intent does not exist!"
 msgstr "L'intention demandé n'existe pas!"
 
-#: views.py:153
+#: views.py:152
 #, python-format
 msgid "The user has been authorized to participate in space \"%s\"."
 msgstr "L'utilisateur a été autorisé pour participer à l'espace \"%s\"."
 
-#: views.py:154
+#: views.py:153
 msgid "Autorization succesful"
 msgstr "L'autorisation est un succès"
 
-#: views.py:237
+#: views.py:236
 msgid ""
-"Hello anonymous user. Remember"
-"                                               that this space is public to "
-"view, but                                               you must <a "
-"href=\"/accounts/register\">register</a>"
-"                                               or <a "
-"href=\"/accounts/login\">login</a> to participate."
-msgstr "Bonjour utilisateur anonyme Rappelez vous                                              que cet espace est public, mais                                               vous devez vous <a href=\"/accounts/register\">enregistrer</a>                                               ou vous <a href=\"/accounts/login\">indentifier</a> pour participer."
+"Hello anonymous user. Remember                                               "
+"that this space is public to view, "
+"but                                               you must <a href=\"/"
+"accounts/register\">register</"
+"a>                                               or <a href=\"/accounts/login"
+"\">login</a> to participate."
+msgstr ""
+"Bonjour utilisateur anonyme Rappelez "
+"vous                                              que cet espace est public, "
+"mais                                               vous devez vous <a href="
+"\"/accounts/register\">enregistrer</"
+"a>                                               ou vous <a href=\"/accounts/"
+"login\">indentifier</a> pour participer."
 
-#: views.py:244
+#: views.py:243
 msgid ""
-"You're an anonymous user.                           You must <a "
-"href=\"/accounts/register\">register</a>                           or <a "
-"href=\"/accounts/login\">login</a> to access here."
-msgstr "Vous êtes un utilisateur anonyme.                           Vous devez vous <a href=\"/accounts/register\">enregistrer</a>                           ou vous <a href=\"/accounts/login\">identifier</a> pour acceder à cette page."
+"You're an anonymous user.                           You must <a href=\"/"
+"accounts/register\">register</a>                           or <a href=\"/"
+"accounts/login\">login</a> to access here."
+msgstr ""
+"Vous êtes un utilisateur anonyme.                           Vous devez vous "
+"<a href=\"/accounts/register\">enregistrer</a>                           ou "
+"vous <a href=\"/accounts/login\">identifier</a> pour acceder à cette page."
 
-#: views.py:254
+#: views.py:253
 msgid "You're not registered to this space."
 msgstr "Vous n'êtes pas enregistré dans cet espace"
 
-#: views.py:314
+#: views.py:313
 msgid "Space edited successfully"
 msgstr "Espace mis à jour avec succès"
 
@@ -347,7 +381,8 @@ msgstr "Formats autorisés"
 
 #: templates/spaces/document_add.html:70
 msgid "PDF, ODT, DOC, TXT, RTF, etc. Audio and video are not allowed."
-msgstr "PDF, ODT, DOC, TXT, RTF, etc. L'audio et la vidéo ne sont pas autorisés."
+msgstr ""
+"PDF, ODT, DOC, TXT, RTF, etc. L'audio et la vidéo ne sont pas autorisés."
 
 #: templates/spaces/document_add.html:71
 msgid "Maximum size"
@@ -365,7 +400,9 @@ msgstr "Suprimer document"
 #: templates/spaces/document_confirm_delete.html:19
 msgid ""
 "Are you sure you want to delete this document? This action cannot be undone"
-msgstr "Vous êtes sûr de vouloir supprimer ce document? Cette action ne peut être défaite."
+msgstr ""
+"Vous êtes sûr de vouloir supprimer ce document? Cette action ne peut être "
+"défaite."
 
 #: templates/spaces/document_confirm_delete.html:23
 #: templates/spaces/event_confirm_delete.html:23
@@ -469,7 +506,9 @@ msgstr "Supprimer l'évènement"
 #: templates/spaces/event_confirm_delete.html:19
 msgid ""
 "Are you sure you want to delete this event? This action cannot be undone"
-msgstr "Vous êtes sur de vouloir supprimer cet évènement? Cette action ne peut être défaite."
+msgstr ""
+"Vous êtes sur de vouloir supprimer cet évènement? Cette action ne peut être "
+"défaite."
 
 #: templates/spaces/event_detail.html:4 templates/spaces/event_detail.html:16
 msgid "View event"
@@ -519,13 +558,16 @@ msgstr "Nom de l'epace"
 msgid ""
 "The name of the space. Have in mind that this name will be used as the URL "
 "of your space. We recommend to use all lowercase. (100 chars)"
-msgstr "Le nom de l'espace. Gardez en tête que ce nom sera utilisé comme l'URL de votre espace. On vous recommande de n'utiliser que des minuscules. (100 caractères)"
+msgstr ""
+"Le nom de l'espace. Gardez en tête que ce nom sera utilisé comme l'URL de "
+"votre espace. On vous recommande de n'utiliser que des minuscules. (100 "
+"caractères)"
 
 #: templates/spaces/space_add.html:224
 msgid ""
-"An optional description for your space. This is publicly visible to "
-"everyone."
-msgstr "Une description optionnelle pour votre espace. Ceci est publiquement visible."
+"An optional description for your space. This is publicly visible to everyone."
+msgstr ""
+"Une description optionnelle pour votre espace. Ceci est publiquement visible."
 
 #: templates/spaces/space_add.html:225
 msgid "Logotype"
@@ -553,9 +595,10 @@ msgstr "Ceci défini quels utilisateurs peuvent accéder à votre espace."
 
 #: templates/spaces/space_add.html:228
 msgid ""
-"Select the modules you will use in your space. This can be edited "
-"afterwards."
-msgstr "Sélectionnez quels modules vous aller utiliser pour votre espace. Vous pourrez changez d'avis plus tard."
+"Select the modules you will use in your space. This can be edited afterwards."
+msgstr ""
+"Sélectionnez quels modules vous aller utiliser pour votre espace. Vous "
+"pourrez changez d'avis plus tard."
 
 #: templates/spaces/space_confirm_delete.html:4
 #: templates/spaces/space_confirm_delete.html:17
@@ -566,7 +609,9 @@ msgstr "Suprimer cet espace."
 #: templates/spaces/space_confirm_delete.html:18
 msgid ""
 "Are you sure you want to delete this space? This action cannot be undone"
-msgstr "Êtes vous sûr de vouloir supprimer cet espace? Cette action ne peut être défaite."
+msgstr ""
+"Êtes vous sûr de vouloir supprimer cet espace? Cette action ne peut être "
+"défaite."
 
 #: templates/spaces/space_edit.html:5 templates/spaces/space_edit.html:13
 #: templates/spaces/space_index.html:44
@@ -725,15 +770,15 @@ msgstr "à"
 
 #: templates/spaces/space_index.html:241
 msgid "New proposal sets"
-msgstr ""
+msgstr "Nouvel ensemble de propsitions"
 
 #: templates/spaces/space_index.html:246
 msgid "No proposal sets available."
-msgstr ""
+msgstr "Aucun ensemble de propositions disponible."
 
 #: templates/spaces/space_index.html:249
 msgid "Merged proposals"
-msgstr ""
+msgstr " Propositions fusionées"
 
 #: templates/spaces/space_index.html:251
 msgid "Highlighted proposals"
@@ -745,7 +790,7 @@ msgstr "Ajouter une nouvelle proposition"
 
 #: templates/spaces/space_index.html:259
 msgid "Add proposal set"
-msgstr ""
+msgstr "Ajouter un ensemble de propositions"
 
 #: templates/spaces/space_index.html:267
 msgid "Add proposal"
@@ -753,7 +798,7 @@ msgstr "Ajouter une proposition"
 
 #: templates/spaces/space_index.html:272
 msgid "Other options"
-msgstr ""
+msgstr "Autres options"
 
 #: templates/spaces/space_index.html:274
 msgid "View all proposals"
@@ -761,7 +806,7 @@ msgstr "Voir toutes les propositions"
 
 #: templates/spaces/space_index.html:275
 msgid "View all proposal sets"
-msgstr ""
+msgstr "Visionner"
 
 #: templates/spaces/space_index.html:290
 msgid "No documents available."

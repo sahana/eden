@@ -63,7 +63,7 @@ class Debate(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('view-debate', (), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'debate_id': str(self.id)})
 
 class Column(models.Model):

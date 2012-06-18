@@ -55,7 +55,7 @@ class Post(models.Model):
     def get_absolute_url(self):
         if self.space is not None:
             return ('view-post', (), {
-                'space_name': self.space.url,
+                'space_url': self.space.url,
                 'post_id': str(self.id)})
         else:
             return ('view-site-post', (), {

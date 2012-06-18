@@ -98,7 +98,7 @@ class ProposalSet(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('view-proposalset',(), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'set_id': self.id
         })
 
@@ -169,5 +169,5 @@ class Proposal(BaseProposalAbstractModel):
     @models.permalink
     def get_absolute_url(self):
         return ('view-proposal', (), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'prop_id': str(self.id)})

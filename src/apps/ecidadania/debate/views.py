@@ -53,7 +53,7 @@ from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
 from core.spaces.models import Space
 
 
-def add_new_debate(request, space_name):
+def add_new_debate(request, space_url):
 
     """
     Create a new debate. This function returns two forms to create
@@ -64,7 +64,7 @@ def add_new_debate(request, space_name):
     :attributes: debate_form, row_formset, column_formset
     :context: form, rowform, colform, get_place, debateid
     """
-    place = get_object_or_404(Space, url=space_name)
+    place = get_object_or_404(Space, url=space_url)
     
     # Define FormSets
     
@@ -112,7 +112,7 @@ def add_new_debate(request, space_name):
                     column.debate = debate_instance
                     column.save()
 
-                return redirect('/spaces/' + space_name + '/debate/' + str(debate_form_uncommited.id))
+                return redirect('/spaces/' + space_url + '/debate/' + str(debate_form_uncommited.id))
         return render_to_response('debate/debate_add.html',
                                   {'form': debate_form,
                                    'rowform': row_formset,
@@ -133,7 +133,7 @@ def get_debates(request):
     return render_to_response(json.dumps(data), content_type='application/json')
 
 
-def create_note(request, space_name):
+def create_note(request, space_url):
 
     """
     This function creates a new note inside the debate board. It receives the order
@@ -174,7 +174,7 @@ def create_note(request, space_name):
     return HttpResponse(json.dumps(msg), mimetype="application/json")
 
 
-def update_note(request, space_name):
+def update_note(request, space_url):
 
     """
     Updated the current note with the POST data. UpdateNoteForm is an incomplete
@@ -209,7 +209,7 @@ def update_note(request, space_name):
     return HttpResponse(msg)
 
 
-def update_position(request, space_name):
+def update_position(request, space_url):
 
     """
     This view saves the new note position in the debate board. Instead of reloading
@@ -235,7 +235,7 @@ def update_position(request, space_name):
     return HttpResponse(msg)
 
 
-def delete_note(request, space_name):
+def delete_note(request, space_url):
 
     """
     Deletes a note object.
@@ -275,7 +275,7 @@ class ViewDebate(DetailView):
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.filter(debate=self.kwargs['debate_id'])
         rows = Row.objects.filter(debate=self.kwargs['debate_id'])
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
         current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
         notes = Note.objects.filter(debate=current_debate.pk)
         try:
@@ -304,7 +304,7 @@ class ListDebates(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        current_space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
         debates = Debate.objects.filter(space=current_space)
 
         # Here must go a validation so a user registered to the space
@@ -315,5 +315,5 @@ class ListDebates(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListDebates, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context

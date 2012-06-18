@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-14 12:52+0200\n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -172,75 +172,75 @@ msgid "Events"
 msgstr ""
 
 #: urls.py:39
-msgid "^(?P<space_name>\\w+)/rss/$"
+msgid "^(?P<space_url>\\w+)/rss/$"
 msgstr ""
 
 #: urls.py:42 urls.py:98
-msgid "^(?P<space_name>\\w+)/news/"
+msgid "^(?P<space_url>\\w+)/news/"
 msgstr ""
 
 #: urls.py:45
-msgid "^(?P<space_name>\\w+)/proposal/"
+msgid "^(?P<space_url>\\w+)/proposal/"
 msgstr ""
 
 #: urls.py:48
-msgid "^(?P<space_name>\\w+)/calendar/"
+msgid "^(?P<space_url>\\w+)/calendar/"
 msgstr ""
 
 #: urls.py:51
-msgid "^(?P<space_name>\\w+)/debate/"
+msgid "^(?P<space_url>\\w+)/debate/"
 msgstr ""
 
 #: urls.py:58
-msgid "^(?P<space_name>\\w+)/docs/add/$"
+msgid "^(?P<space_url>\\w+)/docs/add/$"
 msgstr ""
 
 #: urls.py:60
-msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
+msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/edit/$"
 msgstr ""
 
 #: urls.py:62
-msgid "^(?P<space_name>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
+msgid "^(?P<space_url>\\w+)/docs/(?P<doc_id>\\d+)/delete/$"
 msgstr ""
 
 #: urls.py:64
-msgid "^(?P<space_name>\\w+)/docs/$"
+msgid "^(?P<space_url>\\w+)/docs/$"
 msgstr ""
 
 #: urls.py:71
-msgid "^(?P<space_name>\\w+)/event/add/$"
+msgid "^(?P<space_url>\\w+)/event/add/$"
 msgstr ""
 
 #: urls.py:73
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/edit/$"
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/edit/$"
 msgstr ""
 
 #: urls.py:75
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/delete/$"
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/delete/$"
 msgstr ""
 
 #: urls.py:77
-msgid "^(?P<space_name>\\w+)/event/(?P<event_id>\\d+)/$"
+msgid "^(?P<space_url>\\w+)/event/(?P<event_id>\\d+)/$"
 msgstr ""
 
 #: urls.py:79
-msgid "^(?P<space_name>\\w+)/event/$"
+msgid "^(?P<space_url>\\w+)/event/$"
 msgstr ""
 
 #: urls.py:86
-msgid "^(?P<space_name>\\w+)/intent/$"
+msgid "^(?P<space_url>\\w+)/intent/$"
 msgstr ""
 
 #: urls.py:87
-msgid "^(?P<space_name>\\w+)/intent/approve/(?P<token>\\w+)/$"
+msgid "^(?P<space_url>\\w+)/intent/approve/(?P<token>\\w+)/$"
 msgstr ""
 
 #: urls.py:94
-msgid "^(?P<space_name>\\w+)/edit/$"
+msgid "^(?P<space_url>\\w+)/edit/$"
 msgstr ""
 
 #: urls.py:96
-msgid "^(?P<space_name>\\w+)/delete/$"
+msgid "^(?P<space_url>\\w+)/delete/$"
 msgstr ""
 
 #: urls.py:100
@@ -284,16 +284,16 @@ msgstr ""
 msgid "The requested intent does not exist!"
 msgstr ""
 
-#: views.py:153
+#: views.py:152
 #, python-format
 msgid "The user has been authorized to participate in space \"%s\"."
 msgstr ""
 
-#: views.py:154
+#: views.py:153
 msgid "Autorization succesful"
 msgstr ""
 
-#: views.py:237
+#: views.py:236
 msgid ""
 "Hello anonymous user. Remember                                               "
 "that this space is public to view, "
@@ -303,18 +303,18 @@ msgid ""
 "\">login</a> to participate."
 msgstr ""
 
-#: views.py:244
+#: views.py:243
 msgid ""
 "You're an anonymous user.                           You must <a href=\"/"
 "accounts/register\">register</a>                           or <a href=\"/"
 "accounts/login\">login</a> to access here."
 msgstr ""
 
-#: views.py:254
+#: views.py:253
 msgid "You're not registered to this space."
 msgstr ""
 
-#: views.py:314
+#: views.py:313
 msgid "Space edited successfully"
 msgstr ""
 

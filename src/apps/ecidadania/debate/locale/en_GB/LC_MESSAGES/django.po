@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-14 12:52+0200\n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: models.py:43 templates/debate/debate_view.html:104
+#: models.py:43 templates/debate/debate_view.html:117
 msgid "Description"
 msgstr ""
 
@@ -103,7 +103,7 @@ msgstr ""
 msgid "Add row"
 msgstr ""
 
-#: templates/debate/debate_add.html:60 templates/debate/debate_view.html:132
+#: templates/debate/debate_add.html:60 templates/debate/debate_view.html:145
 msgid "Add new note"
 msgstr ""
 
@@ -118,7 +118,7 @@ msgstr ""
 
 #: templates/debate/debate_add.html:147
 #: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:115
+#: templates/debate/debate_view.html:128
 msgid "Save"
 msgstr ""
 
@@ -127,31 +127,31 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: templates/debate/debate_list.html:4
+#: templates/debate/debate_list.html:7
 msgid "Debates in "
 msgstr ""
 
-#: templates/debate/debate_list.html:10
+#: templates/debate/debate_list.html:13
 msgid "Debates in"
 msgstr ""
 
-#: templates/debate/debate_list.html:18
+#: templates/debate/debate_list.html:21
 msgid "There are no debates."
 msgstr ""
 
-#: templates/debate/debate_list.html:22
+#: templates/debate/debate_list.html:25
 msgid "Go back"
 msgstr ""
 
-#: templates/debate/debate_list.html:28
+#: templates/debate/debate_list.html:31
 msgid "previous"
 msgstr ""
 
-#: templates/debate/debate_list.html:31
+#: templates/debate/debate_list.html:34
 msgid "of"
 msgstr ""
 
-#: templates/debate/debate_list.html:34
+#: templates/debate/debate_list.html:37
 msgid "next"
 msgstr ""
 
@@ -174,54 +174,54 @@ msgstr ""
 msgid "Finished on:"
 msgstr ""
 
-#: templates/debate/debate_view.html:5
+#: templates/debate/debate_view.html:7
 msgid "View debate"
 msgstr ""
 
-#: templates/debate/debate_view.html:23
+#: templates/debate/debate_view.html:26
 msgid "Description:"
 msgstr ""
 
-#: templates/debate/debate_view.html:24
+#: templates/debate/debate_view.html:27
 msgid "Theme:"
 msgstr ""
 
-#: templates/debate/debate_view.html:27
+#: templates/debate/debate_view.html:32
 msgid "Start date:"
 msgstr ""
 
-#: templates/debate/debate_view.html:27 templates/debate/debate_view.html:28
+#: templates/debate/debate_view.html:32 templates/debate/debate_view.html:33
 msgid "No date"
 msgstr ""
 
-#: templates/debate/debate_view.html:28
+#: templates/debate/debate_view.html:33
 msgid "End date:"
 msgstr ""
 
-#: templates/debate/debate_view.html:68
+#: templates/debate/debate_view.html:79
 msgid "Delete note"
 msgstr ""
 
-#: templates/debate/debate_view.html:72
+#: templates/debate/debate_view.html:83
 msgid "View"
 msgstr ""
 
-#: templates/debate/debate_view.html:74
+#: templates/debate/debate_view.html:85
 msgid "Edit"
 msgstr ""
 
-#: templates/debate/debate_view.html:91
+#: templates/debate/debate_view.html:104
 msgid "Edit note"
 msgstr ""
 
-#: templates/debate/debate_view.html:97
+#: templates/debate/debate_view.html:110
 msgid "Note title"
 msgstr ""
 
-#: templates/debate/debate_view.html:100
+#: templates/debate/debate_view.html:113
 msgid "100 characters"
 msgstr ""
 
-#: templates/debate/debate_view.html:122
+#: templates/debate/debate_view.html:135
 msgid "View note"
 msgstr ""

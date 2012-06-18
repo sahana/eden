@@ -88,7 +88,7 @@ class Space(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('space-index', (), {
-           'space_name': self.url})
+           'space_url': self.url})
 
 
 class Entity(models.Model):
@@ -184,7 +184,7 @@ class Event(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('view-event', (), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'event_id': str(self.id)})
 
 class Intent(models.Model):
