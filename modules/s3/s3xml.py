@@ -800,7 +800,7 @@ class S3XML(S3Codec):
                     # Assume being used outside the Sahana Mapping client so use public URLs
                     url = "%s%s/%i" % (settings.get_base_public_url(), url, record.id)
                 attr[ATTRIBUTE.url] = url
-                
+
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip
