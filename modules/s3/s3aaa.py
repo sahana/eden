@@ -6341,7 +6341,7 @@ class S3EntityRoleManager(S3Method):
                     ...
                 },
 
-                "paginated_list": [
+                "pagination_list": [
                     (
                         "User One",
                         "1"
@@ -6411,7 +6411,7 @@ class S3EntityRoleManager(S3Method):
             pagination_offset = int(r.get_vars.get("page_offset", 0))
             # the number of pages of assigned roles
             pagination_pages = int(math.ceil(len(self.assigned_roles) / float(pagination_size)))
-            # the list of objects to show on this page
+            # the list of objects to show on this page sorted by name
             pagination_list = [(self.objects[id], id) for id in self.assigned_roles]
             pagination_list = sorted(pagination_list)[pagination_offset * pagination_size:pagination_offset * pagination_size + pagination_size]
 

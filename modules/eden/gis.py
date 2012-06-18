@@ -671,7 +671,7 @@ class S3LocationModel(S3Model):
            - Else, Look for a record with the same name, ignoring case
                 and, if level exists in the import, the same level
                 and, if parent exists in the import, the same parent
-                
+
             @ToDo: Check soundex? (only good in English)
                    http://eden.sahanafoundation.org/ticket/481
         """
@@ -1740,7 +1740,7 @@ class S3GISConfigModel(S3Model):
     def gis_marker_retrieve(filename, path=None):
         """
             custom_retrieve to override web2py DAL's standard retrieve,
-            as that checks filenames for uuids, so doesn't work with 
+            as that checks filenames for uuids, so doesn't work with
             pre-populated files in static
         """
 
@@ -1927,7 +1927,7 @@ class S3LayerEntityModel(S3Model):
 
         # =====================================================================
         #  Layer Config link table
-        
+
         # Style is a JSON object with the following structure (only the 3 starred elements are currently parsed):
         #Style = [{
         #   low: float,   //*
