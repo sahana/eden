@@ -35,6 +35,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectThemeModel",
            "project_project_represent",
+           "project_location_represent",
            "project_rheader",
            "project_task_controller",
            ]
@@ -1341,9 +1342,9 @@ class S3Project3WModel(S3Model):
         project_location_id = S3ReusableField("project_location_id", db.project_location,
                                       requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                       "project_location.id",
-                                                                      self.project_location_represent,
+                                                                      project_location_represent,
                                                                       sort=True)),
-                                      represent = self.project_location_represent,
+                                      represent = project_location_represent,
                                       label = LOCATION,
                                       comment = S3AddResourceLink(ADD_LOCATION,
                                                                   c="project", f="location",
@@ -1738,18 +1739,6 @@ class S3Project3WModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_location_represent(id, row=None):
-        """
-        """
-
-        return current.s3db.gis_location_lx_represent( 
-                   s3_get_db_field_value(tablename = "project_location",
-                                         fieldname = "location_id",
-                                         look_up_value = id)
-                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3160,6 +3149,17 @@ def project_project_represent(id, row=None, show_link=True):
                                    args=[id]))
     else:
         return current.messages.NONE
+
+# =============================================================================
+def project_location_represent(id, row=None):
+    """
+    """
+
+    return current.s3db.gis_location_lx_represent( 
+               s3_get_db_field_value(tablename = "project_location",
+                                     fieldname = "location_id",
+                                     look_up_value = id)
+                )
 
 # =============================================================================
 def project_assignee_represent(id):

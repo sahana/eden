@@ -20,7 +20,7 @@ if len(pop_list) > 0:
     # Create the bulk Importer object
     bi = s3base.S3BulkImporter()
 
-    response.s3.import_role = bi.import_role
+    s3.import_role = bi.import_role
 
     # Shortcuts
     acl = auth.permission

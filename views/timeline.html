@@ -1,8 +1,6 @@
 {{extend "layout.html"}}
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}
+{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}
  {{=rheader}}
@@ -11,31 +9,21 @@
 {{except:}}
   <div>
  {{pass}}
-	{{try:}}
-	 {{=H3(subtitle)}}
-	{{except:}}
-	{{pass}}
-	<div id='map'></div>
-	<div class='item-container'>
-	{{try:}}
-	 {{=item}}
-	{{except:}}
-	{{pass}}
-    <p>{{=T("To move the Timeline: use the mouse scroll wheel, the arrow keys or grab and drag the Timeline.")}}</p>
-	</div>
-	{{try:}}
-	 {{=list_btn}}
-	{{except:}}
-	{{pass}}
-	{{if response.s3.rfooter:}}
-	<div id='rfooter'>
-	 {{=XML(response.s3.rfooter)}}
-	</div>
-	{{pass}}
+ {{try:}}{{=H3(subtitle)}}
+ {{except:}}{{pass}}
+ <div id='map'></div>
+ <div class='item-container'>
+  {{try:}}{{=item}}
+  {{except:}}{{pass}}
+  <p>{{=T("To move the Timeline: use the mouse scroll wheel, the arrow keys or grab and drag the Timeline.")}}</p>
+ </div>
+ {{try:}}{{=list_btn}}
+ {{except:}}{{pass}}
+ {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 </div>
+{{# Need to be available before response.s3.scripts}}
 <script>
- // Need to be available before response.s3.scripts
- var Timeline_ajax_url = '/{{=request.application}}/static/scripts/simile/ajax/simile-ajax-api.js';
- var Timeline_urlPrefix = '/{{=request.application}}/static/scripts/simile/timeline/';
+ var Timeline_ajax_url = '/{{=appname}}/static/scripts/simile/ajax/simile-ajax-api.js';
+ var Timeline_urlPrefix = '/{{=appname}}/static/scripts/simile/timeline/';
  var Timeline_parameters = 'bundle=true';
 </script>

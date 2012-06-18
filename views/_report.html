@@ -1,7 +1,7 @@
 {{if session.s3.debug:}}
-<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
-<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{try:}}{{=H2(title)}}
 {{except:}}{{pass}}
@@ -21,17 +21,17 @@
   {{try:}}{{items = items}}
     {{try:}}
         {{if report_data is not None:}}
-        {{response.s3.actions=None}}
+        {{s3.actions=None}}
         <div id='chart-opts' style='padding-bottom:10px;'>
             {{=report_data.layer_label}}
             {{if report_data.row_label:}}
-                <a href="#" id="pie_chart_rows"><img src="/{{=request.application}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-                <a href="#" id="vbar_chart_rows"><img src="/{{=request.application}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+                <a href="#" id="pie_chart_rows"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
+                <a href="#" id="vbar_chart_rows"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
                 {{=report_data.row_label}}
             {{pass}}
             {{if report_data.col_label:}}
-                <a href="#" id="pie_chart_cols"><img src="/{{=request.application}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
-                <a href="#" id="vbar_chart_cols"><img src="/{{=request.application}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
+                <a href="#" id="pie_chart_cols"><img src="/{{=appname}}/static/img/report/pchart.png" style="vertical-align:middle;"/></a>
+                <a href="#" id="vbar_chart_cols"><img src="/{{=appname}}/static/img/report/vchart.png" style="vertical-align:middle;"/></a>
                 {{=report_data.col_label}}
             {{pass}}
         </div>
@@ -47,43 +47,39 @@
   </div>
 {{except:}}{{pass}}
 </div>
-{{if response.s3.rfooter:}}
-  <div id='rfooter'>
-    {{=XML(response.s3.rfooter)}}
-  </div>
-{{pass}}
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 {{try:}}
 {{if report_data:}}
-    var json_data = {{=XML(report_data.json_data)}};
+  var json_data = {{=XML(report_data.json_data)}};
 {{else:}}
-    var json_data = {cols:null, rows:null};
+  var json_data = {cols:null, rows:null};
 {{pass}}
 {{except:}}
 var json_data = {cols:null, rows:null};
 {{pass}}
 //]]></script>
 {{if session.s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.search.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.js"></script>
 {{else:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.search.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/s3.report.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.search.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.min.js"></script>
 {{pass}}

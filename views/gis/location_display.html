@@ -1,12 +1,10 @@
 {{extend "layout.html"}}
 <div id="list_formats">
-    <a href="{{=URL(args=r.id)}}.gpx" title="{{=T("Export in GPX format")}}"><img src="/{{=request.application}}/static/img/gpx_icon.png"/></a>
-    <a href="{{=URL(args=r.id)}}.kml" title="{{=T("Export in KML format")}}"><img src="/{{=request.application}}/static/img/kml_icon.png"/></a>
-    <a href="{{=URL(args=r.id)}}.osm" title="{{=T("Export in OSM format")}}"><img src="/{{=request.application}}/static/img/osm_icon.png"/></a>
+ <a href="{{=URL(args=r.id)}}.gpx" title="{{=T("Export in GPX format")}}"><img src="/{{=appname}}/static/img/gpx_icon.png"/></a>
+ <a href="{{=URL(args=r.id)}}.kml" title="{{=T("Export in KML format")}}"><img src="/{{=appname}}/static/img/kml_icon.png"/></a>
+ <a href="{{=URL(args=r.id)}}.osm" title="{{=T("Export in OSM format")}}"><img src="/{{=appname}}/static/img/osm_icon.png"/></a>
 </div>
 {{include "_display.html"}}
 <p>&nbsp;</p>
-{{try:}}
-{{=XML(_map)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=XML(_map)}}
+{{except:}}{{pass}}

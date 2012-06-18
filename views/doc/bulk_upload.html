@@ -3,22 +3,20 @@
 <p>
 {{=T("This screen allows you to upload a collection of photos to the server.")}}
 </p>
-
 <div id='file-uploader'>
 </div>
-
-<script type="text/javascript" src="/{{=request.application}}/static/scripts/S3/fileuploader.js"></script>
+<script type="text/javascript" src="/{{=appname}}/static/scripts/S3/fileuploader.js"></script>
 <script type="text/javascript">//<![CDATA[
 var uploader = new qq.FileUploader({
-    // pass the dom node (ex. $(selector)[0] for jQuery users)
-    element: document.getElementById('file-uploader'),
-    // path to server-side upload POST handler
-    action: '{{=URL(f='upload_bulk')}}',
-    onSubmit: function (id, fileName) {
-        uploader.setParams({
-            name: fileName 
-        });
-    }
+  // pass the dom node (ex. $(selector)[0] for jQuery users)
+  element: document.getElementById('file-uploader'),
+  // path to server-side upload POST handler
+  action: '{{=URL(f='upload_bulk')}}',
+  onSubmit: function (id, fileName) {
+    uploader.setParams({
+      name: fileName 
+    });
+  }
 });
 //]]></script>
 

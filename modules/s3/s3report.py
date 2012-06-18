@@ -98,17 +98,18 @@ class S3Cube(S3CRUD):
 
         T = current.T
         manager = current.manager
-        session = current.session
         response = current.response
-        table = self.table
+        session = current.session
+        s3 = session.s3
 
+        table = self.table
         tablename = self.tablename
 
         # Report options  -----------------------------------------------------
         #
 
         # Get the session options
-        session_options = session.s3.report_options
+        session_options = s3.report_options
         if session_options and tablename in session_options:
             session_options = session_options[tablename]
         else:
@@ -173,13 +174,13 @@ class S3Cube(S3CRUD):
                              onvalidation=self._process_report_options):
 
                 # The form is valid so save the form values into the session
-                if 'report_options' not in session.s3:
-                    session.s3.report_options = Storage()
+                if "report_options" not in s3:
+                    s3.report_options = Storage()
 
-                session.s3.report_options[tablename] = Storage([(k, v) for k, v in
+                s3.report_options[tablename] = Storage([(k, v) for k, v in
                                                         form_values.iteritems() if v])
 
-            #Use the values to generate the query filter
+            # Use the values to generate the query filter
             query, errors = self._process_filter_options(form)
 
             if not errors:

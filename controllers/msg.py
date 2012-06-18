@@ -131,9 +131,9 @@ def tropo():
         @see: https://www.tropo.com/docs/webapi/newhowitworks.htm
     """
 
-    exec("from applications.%s.modules.tropo import Tropo, Session" % request.application)
-    # Faster for Production (where app-name won't change):
-    #from applications.eden.modules.tropo import Tropo, Session
+    # Stored in modules/tropo.py
+    from tropo import Tropo, Session
+
     try:
         s = Session(request.body.read())
         t = Tropo()

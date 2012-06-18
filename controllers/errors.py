@@ -79,7 +79,6 @@ def index():
                        **headers)
 
     details = " %s, %s " % (code, description)
-    app = request.application
     try:
         message, suggestions = error_messages[code]
     except KeyError:
@@ -87,5 +86,5 @@ def index():
 
     # Retain the HTTP status code on error pages
     response.status = int(code)
-    return dict(res=request.vars, message=message, details=details, suggestions=suggestions, app=app)
+    return dict(res=request.vars, message=message, details=details, suggestions=suggestions, app=appname)
 

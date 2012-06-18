@@ -572,7 +572,7 @@ settings.modules = OrderedDict([
     #       module_type = 10,
     #   )),
     # These are specialist modules
-    # Requires RPy2
+    # Requires RPy2 & PostgreSQL
     #("climate", Storage(
     #        name_nice = T("Climate"),
     #        #description = "Climate data portal",

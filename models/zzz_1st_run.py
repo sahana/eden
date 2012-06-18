@@ -15,16 +15,16 @@ if len(pop_list) > 0:
 
     # Add core data as long as at least one populate setting is on
 
-    if deployment_settings.get_auth_opt_in_to_email():
+    if settings.get_auth_opt_in_to_email():
         table = db.pr_group
-        for team in deployment_settings.get_auth_opt_in_team_list():
+        for team in settings.get_auth_opt_in_team_list():
             table.insert(name = team, group_type = 5)
 
     # Scheduled Tasks
-    if deployment_settings.has_module("msg"):
+    if settings.has_module("msg"):
         
         #Message Parsing Tasks for each enabled workflows 
-        #for workflow in deployment_settings.get_parser_enabled():
+        #for workflow in settings.get_parser_enabled():
             #workflow = int(workflow.split("_")[1])
             #s3task.schedule_task("parse_workflow",
                                  #vars={"workflow": workflow},
@@ -81,7 +81,7 @@ if len(pop_list) > 0:
        table.insert()
 
     # Incident Reporting System
-    if deployment_settings.has_module("irs"):
+    if settings.has_module("irs"):
         # Categories visible to ends-users by default
         table = db.irs_icategory
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
@@ -94,7 +94,7 @@ if len(pop_list) > 0:
             table.insert(code = "other.powerFailure")
 
     # Messaging Module
-    if deployment_settings.has_module("msg"):
+    if settings.has_module("msg"):
         # To read inbound email, set username (email address), password, etc.
         # here. Insert multiple records for multiple email sources.
         table = db.msg_inbound_email_settings
@@ -128,7 +128,7 @@ if len(pop_list) > 0:
             table.insert( pin = "" )
 
     # Budget Module
-    if deployment_settings.has_module("budget"):
+    if settings.has_module("budget"):
         table = db.budget_parameter
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
             table.insert() # Only defaults are fine
@@ -154,15 +154,15 @@ if len(pop_list) > 0:
         (field, tablename, field))
 
     # Supply Module
-    if deployment_settings.has_module("supply"):
+    if settings.has_module("supply"):
         tablename = "supply_catalog"
         table = db[tablename]
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(name = deployment_settings.get_supply_catalog_default() )
+            table.insert(name = settings.get_supply_catalog_default() )
 
     # Climate module
-    if deployment_settings.has_module("climate"):
-        climate_first_run()
+    if settings.has_module("climate"):
+        s3db.climate_first_run()
 
     # Ensure DB population committed when running through shell
     db.commit()
@@ -187,7 +187,7 @@ if len(pop_list) > 0:
     if not request.env.request_method:
         request.env.request_method = "GET"
 
-    _debug = deployment_settings.get_base_debug()
+    _debug = settings.get_base_debug()
 
     grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:

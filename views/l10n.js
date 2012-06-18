@@ -1,6 +1,6 @@
-// These are messages which are translatable & can then be available to Static JavaScript
+{{# These are messages which are translatable & can then be available to Static JavaScript}}
 S3.i18n = Object();
-S3.i18n.language = '{{=response.s3.language}}';
+S3.i18n.language = '{{=s3.language}}';
 S3.i18n.ajax_wht = '{{=T("We have tried")}}';
 S3.i18n.ajax_gvn = '{{=T("times and it is still not working. We give in. Sorry.")}}';
 S3.i18n.ajax_500 = '{{=T("Sorry - the server has a problem, please try again later.")}}';

@@ -105,7 +105,7 @@ def item():
                     orderby=s3db.supply_item.name)
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return supply_item_controller()
+    return s3db.supply_item_controller()
 # -----------------------------------------------------------------------------
 def kit_item():
     """ RESTful CRUD controller """
@@ -122,6 +122,6 @@ def item_entity():
     """ RESTful CRUD controller """
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return item_entity_controller()
+    return s3db.supply_item_entity_controller()
 
 # END =========================================================================

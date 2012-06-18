@@ -9,14 +9,14 @@ function s3_debug() {
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
   <script src="http://extjs.cachefly.net/ext-3.4.0/adapter/jquery/ext-jquery-adapter.js" type="text/javascript"></script>
   <script src="http://extjs.cachefly.net/ext-3.4.0/ext-all.js" type="text/javascript"></script>
-  <script src="http://extjs.cachefly.net/ext-3.4.0/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>  
+  <script src="http://extjs.cachefly.net/ext-3.4.0/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>  
 {{else:}}
-  <script src="/{{=request.application}}/static/scripts/web2py/jquery-1.7.1.min.js" type="text/javascript"></script>
-  <script src="/{{=request.application}}/static/scripts/ext/adapter/jquery/ext-jquery-adapter.js" type="text/javascript"></script>
-  <script src="/{{=request.application}}/static/scripts/ext/ext-all.js" type="text/javascript"></script>  
-  <script src="/{{=request.application}}/static/scripts/ext/src/locale/ext-lang-{{=response.s3.language}}.js" type="text/javascript"></script>  
+  <script src="/{{=appname}}/static/scripts/web2py/jquery-1.7.1.min.js" type="text/javascript"></script>
+  <script src="/{{=appname}}/static/scripts/ext/adapter/jquery/ext-jquery-adapter.js" type="text/javascript"></script>
+  <script src="/{{=appname}}/static/scripts/ext/ext-all.js" type="text/javascript"></script>  
+  <script src="/{{=appname}}/static/scripts/ext/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>  
 {{pass}}
-<link href="/{{=request.application}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
+<link href="/{{=appname}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
 {{# These are built by /static/scripts/tools/build.sahana.py }}
-<link href="/{{=request.application}}/static/styles/S3/sahana.min.css" rel="stylesheet" type="text/css" />
-<script src="/{{=request.application}}/static/scripts/S3/S3.min.js" type="text/javascript"></script>
+<link href="/{{=appname}}/static/styles/S3/sahana.min.css" rel="stylesheet" type="text/css" />
+<script src="/{{=appname}}/static/scripts/S3/S3.min.js" type="text/javascript"></script>

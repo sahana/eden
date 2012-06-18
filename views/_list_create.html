@@ -1,7 +1,5 @@
-{{try:}} {{=H2(title)}}
-{{except:}}{{pass}}
-{{try:}}{{=s3db.ocr_buttons(r)}}
-{{except:}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
@@ -12,19 +10,15 @@
 {{pass}}
 <div id='map'></div>
 <div id='list-btn-add'>
-{{try:}}{{=showadd_btn}}
-{{hide_listadd=True}}{{except:}}
-{{hide_listadd=False}}{{pass}}
+{{try:}}{{=showadd_btn}}{{hide_listadd=True}}
+{{except:}}{{hide_listadd=False}}{{pass}}
+</div>
 <div id='list-add'>
-{{try:}}{{=H3(addtitle)}}
-{{except:}}{{pass}}
-{{try:}}{{=addheader}}
-{{except:}}{{pass}}
+{{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+{{try:}}{{=addheader}}{{except:}}{{pass}}
 {{include "key.html"}}
 <div class='form-container'>
-{{try:}}{{=form}}
-{{except:}}{{pass}}
-</div>
+{{try:}}{{=form}}{{except:}}{{pass}}
 </div>
 </div>
 {{try:}}{{items = items}}
@@ -34,22 +28,18 @@
 </div>
 {{except:}}{{pass}}
 </div>
-{{if response.s3.rfooter:}}
-  <div id='rfooter'>
-    {{=XML(response.s3.rfooter)}}
-  </div>
-{{pass}}
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
 {{if r.http == "POST" or not hide_listadd:}}
-    $('#list-add').show()
-    $('#show-add-btn').hide()
+ $('#list-add').show()
+ $('#show-add-btn').hide()
 {{else:}}
-    $('#show-add-btn').click(function() {
-        $('#list-add').show()
-        $('#show-add-btn').hide()
-    });
+ $('#show-add-btn').click(function(){
+  $('#list-add').show()
+  $('#show-add-btn').hide()
+ });
 {{pass}}
 });
 //]]></script>

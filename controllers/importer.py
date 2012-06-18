@@ -178,7 +178,6 @@ def spreadsheetview():
     str = pathfind(k)
     str = request.folder + str
     temp = removerowcol(str)
-    #appname = request.application
     v = json(str, request.folder)
     return dict(ss=v)
 

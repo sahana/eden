@@ -230,7 +230,7 @@ table td input[type="text"],table td select{background:#fff;font-size:0.9em;bord
 #footer .footer-nav li:first-child{border-left:0px #000 solid;}
 
 /*** Form Elements ***/
-label {font-weight:normal;}
+/*label {font-weight:normal;}*/
 fieldset {padding:0 1.4em 1.4em 1.4em;margin:0 0 1.5em 0;border:1px solid #ccc;}
 legend {font-weight:bold;font-size:1.2em;margin-top:-0.2em;margin-bottom:1em;}
 fieldset, #IE8#HACK {padding-top:1.4em;}

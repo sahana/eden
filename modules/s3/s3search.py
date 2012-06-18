@@ -1476,7 +1476,8 @@ $('#%s').live('click', function() {
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
-            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
+            list_formats = DIV(T("Export to:"),
+                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
                                  _href=r.url(method="", representation="pdf",
                                              vars=filter)),

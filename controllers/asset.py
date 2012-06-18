@@ -32,7 +32,7 @@ def asset():
     """ RESTful CRUD controller """
 
     # Defined in Model for use from Multiple Controllers for unified menus
-    return asset_controller()
+    return s3db.asset_controller()
 
 # =============================================================================
 def item():

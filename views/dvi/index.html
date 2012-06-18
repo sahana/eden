@@ -1,8 +1,8 @@
 {{extend "layout.html"}}
 {{if session.s3.debug:}}
-<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
-<link href="/{{=request.application}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 <div id='home'>
 {{=H2(module_name)}}
@@ -34,14 +34,14 @@
 </div>
 </div><!-- home -->
 {{if session.s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
 <!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.js"></script><![endif]-->
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.js"></script><![endif]-->
 {{else:}}
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=request.application}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
 {{pass}}
 <script type="text/javascript" language="javascript">//<![CDATA[
 $(document).ready(function(){

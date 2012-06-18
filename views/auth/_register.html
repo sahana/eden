@@ -1,5 +1,5 @@
 {{register_form.attributes["_id"] = "regform"}}
-{{if deployment_settings.get_terms_of_service():}}
+{{if settings.get_terms_of_service():}}
   {{register_form[0][-2].append(TR(TD(LABEL(T("Terms of Service:"), _id="terms_of_service__label"), _class="w2p_fl"), TD(LABEL(TEXTAREA(deployment_settings.get_terms_of_service(), _onfocus="this.rows=10", _readonly="readonly", _style="width:100%;text-align:", _cols="80", _rows="10"), _id="terms_of_service"), _class="w2p_fw", _colspan="2"), _id="terms_of_service__row"))}}
 {{pass}}
 {{register_form[0][-1][1].append(A(T("Login"), _href=URL(f="user", args="login"), _id="login-btn", _class="action-lnk"))}}
@@ -16,12 +16,12 @@
 </a>{{pass}}
 </div>
 {{if session.s3.debug:}}
-    {{response.s3.scripts.append( "%s/jquery.pstrength.1.3.js" % s3_script_dir )}}
+ {{s3.scripts.append( "%s/jquery.pstrength.1.3.js" % s3_script_dir )}}
 {{else:}}
-    {{response.s3.scripts.append( "%s/jquery.pstrength.1.3.min.js" % s3_script_dir )}}
+ {{s3.scripts.append( "%s/jquery.pstrength.1.3.min.js" % s3_script_dir )}}
 {{pass}}
 {{if request.cookies.has_key("registered"):}}
-    {{response.s3.jquery_ready.append("$('.password:last').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
+ {{s3.jquery_ready.append("$('.password:last').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
 {{else:}}
-    {{response.s3.jquery_ready.append("$('.password:first').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
+ {{s3.jquery_ready.append("$('.password:first').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
 {{pass}}

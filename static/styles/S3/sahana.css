@@ -275,7 +275,7 @@ table {
     height: 255px;
     display: block;
     position: absolute;
-    top: 0px;
+    top: 0;
 }
 */
 /* response.menu_modules */
@@ -301,7 +301,7 @@ table {
         rgb(88,96,108) 99%
     );
     */
-    padding-top: 0px;
+    padding-top: 0;
     z-index: 25;
     min-width: 800px;
     width: 100%;
@@ -309,7 +309,7 @@ table {
 }
 #modulenav {
     position: relative;
-    margin: 0px;
+    margin: 0;
     padding-right: 0.7%;
 }
 #modulenav,
@@ -362,7 +362,7 @@ table {
 #modulenav li div {
     text-align: center;
     background: url(../../img/BFTBmenu_side.png) right 10px no-repeat;
-    text-shadow: 0px 1px 1px #58606c;
+    text-shadow: 0 1px 1px #58606c;
 }
 #modulenav li div a{
     display:inline-block;
@@ -440,11 +440,11 @@ table {
 
 /* Sidebar / response.menu_options */
 #menu_options {
-    margin: 6px 0px 0px 0px;
+    margin: 6px 0 0 0;
     /*padding:5px;*/
     background: #e7ebed;
     /*border: 1px solid #bbb;*/
-    border-radius: 0px 5px 5px 0px;
+    border-radius: 0 5px 5px 0;
     overflow: auto;
 }
 
@@ -552,7 +552,7 @@ table {
     background: #f0f3f4;
     border: 1px solid #bbb;
     margin: 6px 5px;
-    padding: 0px;
+    padding: 0;
     margin-bottom: 2px;
     padding: 6px 10px 6px 10px;
    -moz-border-radius: 10px 10px 10px 10px;
@@ -583,13 +583,13 @@ table {
     );
     margin: -6px -10px 6px -10px;
     background-color: #cfdde7;
-    text-shadow: 0px 1px 1px #e3edf4;
+    text-shadow: 0 1px 1px #e3edf4;
     border: 1px solid #aecbe0;
     border-top: 1px solid #e1eaf1;
     border-bottom: 1px solid #9cb2c1;
     padding-left: 10px;
-    -moz-border-radius: 10px 10px 0px 0px;
-    -webkit-border-radius: 10px 10px 0px 0px;
+    -moz-border-radius: 10px 10px 0 0;
+    -webkit-border-radius: 10px 10px 0 0;
 }
 #content h3 {
     color: #2a485d;
@@ -869,7 +869,7 @@ div#table-container td.totals_header {
 }
 
 #list_formats {
-    float: left;
+    float: right;
     margin-bottom: 10px;
     margin-right: 10px;
 }
@@ -913,6 +913,7 @@ div.dataTables_processing {
 div.dataTables_info  {
 	width: auto;
     float: right;
+    clear: none;
     margin: 2px 0 4px 10px;
 }
 div.dataTables_length {
@@ -1283,10 +1284,11 @@ div#last_update {
 
 /* Used to diplay the list-add with the list-add-btn */
 #list-btn-add {
-	margin-bottom: 10px
+	margin-bottom: 10px;
+    float: left;
 }
 #list-add {
-    display: none
+    display: none;
 }
 
 /* Expand section button */
@@ -1440,7 +1442,7 @@ li input + a {
 }
 
 #home #login_box div {
-	padding: 0px
+	padding: 0;
 }
 
 #home #login_box input[size="62"] {
@@ -1490,7 +1492,7 @@ li input + a {
 }
 
 #org_box #list_filter {
-    margin: 0px;
+    margin: 0;
 }
 #org_box #list_processing {
     margin-top: 5px;
@@ -1502,12 +1504,12 @@ li input + a {
     margin-top: 100px;
 }
 #content .menu_box h3  {
-    border-bottom: 0px;
+    border-bottom: 0;
     font-size: 1.6em;
     text-align: center;
 }
 .menu-btn-r {
-    margin: 0px;
+    margin: 0;
     padding: 15px 15px 15px 15px;
     overflow: hidden;
     background: url(../../img/menu_box-r.png) no-repeat scroll top right;
@@ -1744,7 +1746,7 @@ a:visited:after {
 
 /* Search Form */
 .search_select_letter_label {
-    margin: 10px 0px 0px 7px;
+    margin: 10px 0 0 7px;
     padding-left: 20px;
     background: url( ../../img/icon_blue_plus15px.png ) no-repeat;
     cursor: pointer;

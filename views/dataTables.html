@@ -1,148 +1,118 @@
 {{if session.s3.debug:}}
-    {{response.s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.js" % request.application)}}
-    {{response.s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.fnSetFilteringDelay.js" % request.application)}}
-    {{response.s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.sortFunctions.js" % request.application)}}
-    {{response.s3.scripts.append( "%s/s3.dataTables.js" % s3_script_dir )}}
-{{else:}}
-    {{response.s3.scripts.append( "%s/s3.dataTables.min.js" % s3_script_dir )}}
-{{pass}}
-
+ {{s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.js" % appname)}}
+ {{s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.fnSetFilteringDelay.js" % appname)}}
+ {{s3.scripts.append( "/%s/static/scripts/S3/jquery.dataTables.sortFunctions.js" % appname)}}
+ {{s3.scripts.append( "%s/s3.dataTables.js" % s3_script_dir )}}
+{{else:}}{{s3.scripts.append( "%s/s3.dataTables.min.js" % s3_script_dir )}}{{pass}}
 <script type="text/javascript">
-    S3.i18n.all = '{{=T("All")}}';
-    S3.dataTables = new Array();
-
-    {{if response.s3.dataTableSelectable:}}
-        S3.dataTables.Selectable = true;
-    {{pass}}
-
-    {{if response.s3.dataTableSelectAll:}}
-        S3.dataTables.SelectAll = true;
-    {{pass}}
-
-    {{if response.s3.dataTableSelectAllValid:}}
-        S3.dataTables.ShowAllValidButton = true;
-    {{pass}}
-
-    {{if response.s3.dataTablePostMethod:}}
-        S3.dataTables.UsePostMethod = true;
-    {{else:}}
-        S3.dataTables.UsePostMethod = false;
-    {{pass}}
-
-    {{if response.s3.dataTableSubmitLabel:}}
-        S3.dataTables.PostSubmitLabel = '{{=response.s3.dataTableSubmitLabel}}';
-        {{if response.s3.dataTableSubmitLabelPosn:}}
-            S3.dataTables.PostSubmitPosn = '{{=response.s3.dataTableSubmitLabelPosn}}';
-        {{else:}}
-            S3.dataTables.PostSubmitPosn = 'bottom';
-        {{pass}}
-    {{else:}}
-        S3.dataTables.PostSubmitLabel = '{{=T("Submit")}}';
-    {{pass}}
-
-    {{if response.s3.dataTableSelectSubmitURL:}}
-        S3.dataTables.SelectURL = '{{=XML(response.s3.dataTableSelectSubmitURL)}}';
-    {{else:}}
-        S3.dataTables.SelectURL = "?";
-    {{pass}}
-
-    {{if response.s3.actions:}}
-        S3.dataTables.Actions = {{=XML(response.s3.actions)}};
-        {{if "_jqclick" in response.s3.actions[-1]:}}
-            function S3ActionCallBack(event){
-                id = this.id;
-                {{=XML(response.s3.actions[-1]["_jqclick"])}} ;
-                event.stopPropagation();
-                return false;
-            }
-        {{pass}}
-    {{pass}}
-
-    {{if response.s3.dataTableID:}}
-        S3.dataTables.id = '{{=response.s3.dataTableID}}';
-    {{pass}}
-
-    {{if response.s3.dataTable_iDisplayLength:}}
-        S3.dataTables.iDisplayLength = {{=response.s3.dataTable_iDisplayLength}};
-    {{pass}}
-
-    {{if response.s3.no_sspag:}}
-        S3.dataTables.no_pagination = true;
-    {{else:}}
-        {{if r:}}
-            {{if response.s3.dataTable_Method and response.s3.dataTable_vars:}}
-                S3.dataTables.sAjaxSource = '{{=r.url(method=response.s3.dataTable_Method, vars=response.s3.dataTable_vars, representation="aaData")}}';
-        {{elif response.s3.dataTable_Method:}}
-            S3.dataTables.sAjaxSource = '{{=r.url(method=response.s3.dataTable_Method, representation="aaData")}}';
-        {{elif response.s3.dataTable_vars:}}
-            S3.dataTables.sAjaxSource = '{{=r.url(method="", vars=response.s3.dataTable_vars, representation="aaData")}}';
-        {{else:}}
-            S3.dataTables.sAjaxSource = '{{=r.url(method="", representation="aaData")}}';
-        {{pass}}
-    {{else:}}
-        {{try:}}
-            S3.dataTables.sAjaxSource = '{{=datatable_ajax_source}}';
-            {{except:}}
-            {{pass}}
-        {{pass}}
-    {{pass}}
-
-    {{if response.aadata is not None:}}
-        S3.dataTables.oCache = {
-            iCacheLower: {{=response.s3.start}},
-            iCacheUpper: {{=response.s3.limit}},
-            lastJson: {{=XML(response.aadata)}}
-        };
-    {{pass}}
-
-    {{try:}}
-        {{if sortby:}}
-            S3.dataTables.aaSorting = {{=XML(sortby)}};
-        {{pass}}
-    {{except:}}
-    {{pass}}
-
-    {{if response.s3.dataTable_group:}}
-        S3.dataTables.group = {{=XML(response.s3.dataTable_group)}}
-    {{pass}}
-
-    {{if response.s3.hideCol is not None:}}
-        S3.dataTables.hideList = {{=XML(response.s3.hideCol)}};
-    {{pass}}
-
-    {{if response.s3.dataTable_NobFilter:}}
-        S3.dataTables.bFilter = false;
-    {{pass}}
-
-    {{if response.s3.dataTable_sDom:}}
-        S3.dataTables.sDom = '{{=response.s3.dataTable_sDom}}';
-    {{pass}}
-
-    {{if response.s3.dataTable_sPaginationType:}}
-        S3.dataTables.sPaginationType = '{{=response.s3.dataTable_sPaginationType}}';
-    {{pass}}
-
-    {{if response.s3.dataTableDisplay:}}
-        S3.dataTables.Display = {{=XML(response.s3.dataTableDisplay)}};
-    {{pass}}
-
-    {{if response.s3.dataTableStyleDisabled:}}
-        S3.dataTables.Disabled = {{=XML(response.s3.dataTableStyleDisabled)}};
-    {{pass}}
-
-    {{if response.s3.dataTableStyleWarning:}}
-        S3.dataTables.Warning = {{=XML(response.s3.dataTableStyleWarning)}};
-    {{pass}}
-
-    {{if response.s3.dataTableStyleAlert:}}
-        S3.dataTables.Alert = {{=XML(response.s3.dataTableStyleAlert)}};
-    {{pass}}
-
-    {{if response.s3.dataTableResize:}}
-        S3.dataTables.Resize = true;
-    {{pass}}
-</script>
-
-{{if response.s3.dataTableMap:}}
-    {{=XML(response.s3.dataTableMap)}}
+S3.i18n.all='{{=T("All")}}';
+S3.dataTables=new Array();
+{{if s3.dataTableSelectable:}}
+ S3.dataTables.Selectable=true;
 {{pass}}
+{{if s3.dataTableSelectAll:}}
+ S3.dataTables.SelectAll=true;
+{{pass}}
+{{if s3.dataTableSelectAllValid:}}
+ S3.dataTables.ShowAllValidButton=true;
+{{pass}}
+{{if s3.dataTablePostMethod:}}
+ S3.dataTables.UsePostMethod=true;
+{{else:}}
+ S3.dataTables.UsePostMethod=false;
+{{pass}}
+{{if s3.dataTableSubmitLabel:}}
+ S3.dataTables.PostSubmitLabel='{{=s3.dataTableSubmitLabel}}';
+  {{if s3.dataTableSubmitLabelPosn:}}
+    S3.dataTables.PostSubmitPosn='{{=s3.dataTableSubmitLabelPosn}}';
+  {{else:}}
+    S3.dataTables.PostSubmitPosn='bottom';
+  {{pass}}
+{{else:}}
+ S3.dataTables.PostSubmitLabel='{{=T("Submit")}}';
+{{pass}}
+{{if s3.dataTableSelectSubmitURL:}}
+ S3.dataTables.SelectURL='{{=XML(s3.dataTableSelectSubmitURL)}}';
+{{else:}}
+ S3.dataTables.SelectURL="?";
+{{pass}}
+{{if s3.actions:}}
+ S3.dataTables.Actions={{=XML(s3.actions)}};
+ {{if "_jqclick" in s3.actions[-1]:}}
+  function S3ActionCallBack(event){
+    id=this.id;
+    {{=XML(s3.actions[-1]["_jqclick"])}};
+    event.stopPropagation();
+        return false;
+    }
+ {{pass}}
+{{pass}}
+{{if s3.dataTableID:}}
+ S3.dataTables.id='{{=s3.dataTableID}}';
+{{pass}}
+{{if s3.dataTable_iDisplayLength:}}
+ S3.dataTables.iDisplayLength={{=s3.dataTable_iDisplayLength}};
+{{pass}}
+{{if s3.no_sspag:}}
+ S3.dataTables.no_pagination=true;
+{{else:}}
+ {{if r:}}
+  {{if s3.dataTable_Method and s3.dataTable_vars:}}
+   S3.dataTables.sAjaxSource='{{=r.url(method=s3.dataTable_Method, vars=s3.dataTable_vars, representation="aaData")}}';
+  {{elif s3.dataTable_Method:}}
+   S3.dataTables.sAjaxSource='{{=r.url(method=s3.dataTable_Method, representation="aaData")}}';
+  {{elif s3.dataTable_vars:}}
+   S3.dataTables.sAjaxSource='{{=r.url(method="", vars=s3.dataTable_vars, representation="aaData")}}';
+  {{else:}}
+   S3.dataTables.sAjaxSource='{{=r.url(method="", representation="aaData")}}';
+  {{pass}}
+ {{else:}}
+  {{try:}}
+   S3.dataTables.sAjaxSource='{{=datatable_ajax_source}}';
+  {{except:}}{{pass}}
+ {{pass}}
+{{pass}}
+{{if response.aadata is not None:}}
+ S3.dataTables.oCache={
+    iCacheLower: {{=s3.start}},
+    iCacheUpper: {{=s3.limit}},
+    lastJson: {{=XML(response.aadata)}}
+ };
+{{pass}}
+{{try:}}
+ {{if sortby:}}
+  S3.dataTables.aaSorting={{=XML(sortby)}};
+ {{pass}}
+{{except:}}{{pass}}
+{{if s3.dataTable_group:}}
+ S3.dataTables.group={{=XML(s3.dataTable_group)}}
+{{pass}}
+{{if s3.hideCol is not None:}}
+ S3.dataTables.hideList={{=XML(s3.hideCol)}};
+{{pass}}
+{{if s3.dataTable_NobFilter:}}
+ S3.dataTables.bFilter=false;
+{{pass}}
+{{if s3.dataTable_sDom:}}
+ S3.dataTables.sDom='{{=s3.dataTable_sDom}}';
+{{pass}}
+{{if s3.dataTable_sPaginationType:}}
+ S3.dataTables.sPaginationType='{{=s3.dataTable_sPaginationType}}';
+{{pass}}
+{{if s3.dataTableDisplay:}}
+ S3.dataTables.Display={{=XML(s3.dataTableDisplay)}};
+{{pass}}
+{{if s3.dataTableStyleDisabled:}}
+ S3.dataTables.Disabled={{=XML(s3.dataTableStyleDisabled)}};
+{{pass}}
+{{if s3.dataTableStyleWarning:}}
+ S3.dataTables.Warning={{=XML(s3.dataTableStyleWarning)}};
+{{pass}}
+{{if s3.dataTableStyleAlert:}}
+ S3.dataTables.Alert={{=XML(s3.dataTableStyleAlert)}};
+{{pass}}
+{{if s3.dataTableResize:}}
+ S3.dataTables.Resize=true;
+{{pass}}
+</script>
+{{if s3.dataTableMap:}}{{=XML(s3.dataTableMap)}}{{pass}}

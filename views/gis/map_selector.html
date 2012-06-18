@@ -3,19 +3,18 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <style type="text/css">
-{{if response.s3.rtl:}}
-    body { direction: rtl; }
+{{if s3.rtl:}}
+ body{direction:rtl;}
 {{else:}}
-    body { direction: ltr; }
+ body{direction:ltr;}
 {{pass}}
 </style>
 {{if session.s3.debug:}}
-  {{include "s3_include_debug.html"}}
+ {{include "s3_include_debug.html"}}
 {{else:}}
-  {{include "s3_include_min.html"}}
+ {{include "s3_include_min.html"}}
 {{pass}}
 </head>
-
 <body>
 {{=XML(map)}}
 </body>

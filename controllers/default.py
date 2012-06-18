@@ -204,7 +204,7 @@ def index():
                                  )
 
     div_arrow = DIV(IMG(_src = "/%s/static/img/arrow_blue_right.png" % \
-                                request.application),
+                                appname),
                     _class = "div_arrow")
     sit_dec_res_box = DIV(menu_divs["sit"],
                           div_arrow,
@@ -217,7 +217,7 @@ def index():
                     )
     facility_box  = menu_divs["facility"]
     facility_box.append(A(IMG(_src = "/%s/static/img/map_icon_128.png" % \
-                                    request.application),
+                                    appname),
                           _href = URL(c="gis", f="index"),
                           _title = T("Map")
                           )
@@ -229,7 +229,7 @@ def index():
        auth.s3_has_permission("read", db.org_organisation):
         org_items = organisation()
         datatable_ajax_source = "/%s/default/organisation.aaData" % \
-                                request.application
+                                appname
         response.s3.actions = None
         response.view = "default/index.html"
         auth.permission.controller = "org"
@@ -432,7 +432,7 @@ def organisation():
                     listadd = False,
                     addbtn = True,
                     super_entity = db.pr_pentity,
-                    linkto = "/%s/org/organisation/%s" % (request.application,
+                    linkto = "/%s/org/organisation/%s" % (appname,
                                                           "%s"),
                     list_fields = ["id",])
 
@@ -468,7 +468,7 @@ def message():
     image = "email_icon.png"
     return dict(title = title,
                 message = message,
-                image_src = "/%s/static/img/%s" % (request.application, image)
+                image_src = "/%s/static/img/%s" % (appname, image)
                 )
 
 # -----------------------------------------------------------------------------

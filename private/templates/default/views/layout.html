@@ -7,7 +7,7 @@
 <title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <!-- http://dev.w3.org/html5/markup/meta.name.html -->
-<meta name="application-name" content="{{=request.application}}" />
+<meta name="application-name" content="{{=appname}}" />
 <!-- Set your site up with Google: http://google.com/webmasters -->
 <meta name="google-site-verification" content="" />
 <!--  Mobile Viewport Fix
@@ -18,11 +18,11 @@
   -->
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
 <!-- Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references -->
-<link rel="shortcut icon" href="/{{=request.application}}/static/favicon.ico" type="image/x-icon">
-<link rel="apple-touch-icon" href="/{{=request.application}}/static/favicon.png">
+<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/{{=appname}}/static/favicon.png">
 <!-- All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects -->
 <!-- This kills the map in IE8: VML.js -->
-<!--<script src="/{{=request.application}}/static/scripts/web2py/modernizr-1.7.min.js"></script>-->
+<!--<script src="/{{=appname}}/static/scripts/web2py/modernizr-1.7.min.js"></script>-->
 <style type="text/css">
 {{if s3.rtl:}}
   div { direction: rtl; }
@@ -34,21 +34,22 @@
   {{include "s3_include_debug.html"}}
 {{else:}}
   {{include "s3_include_min.html"}}
-  {{include "style.html"}}
+  {{# Built by /static/scripts/tools/build.sahana.py }}
+  <link href="/{{=appname}}/static/styles/S3/sahana.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{for sheet in s3.external_stylesheets:}}
   <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{for sheet in s3.stylesheets:}}
-  <link href="/{{=request.application}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-<script src="/{{=request.application}}/static/scripts/ext/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
+<script src="/{{=appname}}/static/scripts/ext/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
 <!--Scripts which need pre-processing by server must be called in-line-->
 <script type="text/javascript">//<![CDATA[
   // Translation Strings
   {{include "l10n.js"}}
   // Global variables
-  S3.Ap = '/{{=request.application}}';
+  S3.Ap = '/{{=appname}}';
 {{if s3.rtl:}}
   S3.rtl = true;
 {{else:}}

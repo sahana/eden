@@ -26,7 +26,7 @@ def download_kml(record_id, filename, user_id=None):
 tasks["download_kml"] = download_kml
 
 # -----------------------------------------------------------------------------
-if deployment_settings.has_module("msg"):
+if settings.has_module("msg"):
 
     # -------------------------------------------------------------------------
     def process_outbox(contact_method, user_id=None):
@@ -110,7 +110,7 @@ tasks["sync_synchronize"] = sync_synchronize
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks
-response.s3.tasks = tasks
+s3.tasks = tasks
 s3task = s3base.S3Task()
 current.s3task = s3task
 

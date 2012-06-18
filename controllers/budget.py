@@ -15,8 +15,8 @@
 module = request.controller
 resourcename = request.function
 
-# Requires 'project' module too
-if not deployment_settings.has_module(module):
+# NB Requires 'project' module too
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------

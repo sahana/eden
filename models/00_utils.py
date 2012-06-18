@@ -126,7 +126,7 @@ $('#regform').validate({
         form.submit();
     }
 });""" ))
-    response.s3.jquery_ready.append( script )
+    s3.jquery_ready.append( script )
 
 # -----------------------------------------------------------------------------
 def s3_get_utc_offset():
@@ -465,7 +465,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     output = r(**attr)
 
     if isinstance(output, dict) and (not r.method or r.method in ("report", "search")):
-        if response.s3.actions is None:
+        if s3.actions is None:
 
             # Add default action buttons
             prefix, name, table, tablename = r.target()
@@ -516,7 +516,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 output.update(add_btn=add_btn)
 
     elif r.method != "import":
-        response.s3.actions = None
+        s3.actions = None
 
     return output
 

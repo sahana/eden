@@ -1,8 +1,5 @@
-{{try:}}{{=H2(title)}}
-{{except:}}{{pass}}
-{{try:}}
-{{=s3db.ocr_buttons(r)}}
-{{except:}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
  </div>
@@ -12,10 +9,7 @@
 <div>
  {{pass}}
 	{{include "key.html"}}
-	{{try:}}{{=H3(subtitle)}}
-	{{except:}}{{pass}}
 	<div class='form-container'>
-	{{try:}}{{=form}}
-	{{except:}}{{pass}}
+	{{try:}}{{=form}}{{except:}}{{pass}}
 	</div>
 </div>

@@ -1,7 +1,7 @@
 {{if session.s3.debug:}}
-    <script src="/{{=request.application}}/static/scripts/S3/jquery.dataTables.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/{{=appname}}/static/scripts/S3/jquery.dataTables.js" type="text/javascript" charset="utf-8"></script>
 {{else:}}
-    <script src="/{{=request.application}}/static/scripts/S3/jquery.dataTables.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/{{=appname}}/static/scripts/S3/jquery.dataTables.min.js" type="text/javascript" charset="utf-8"></script>
 {{pass}}
 <script type="text/javascript">//<![CDATA[
 var sSource = window.location.href;

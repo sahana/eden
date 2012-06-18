@@ -596,7 +596,7 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
     """
         Renders an organisation_id SELECT as a menu.
     """
-    _class="widget-org-hierarchy"
+    _class = "widget-org-hierarchy"
 
     def __init__(self, primary_options=None):
         """
@@ -605,7 +605,8 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
         self.primary_options = primary_options
 
     def __call__(self, field, value, **attributes):
-        db = current.db
+
+        s3 = current.response.s3
         table = current.s3db.org_organisation
         options = self.primary_options
 
@@ -614,19 +615,22 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
             if not isinstance(requires, (list, tuple)):
                 requires = [requires]
             if requires:
-                if hasattr(requires[0], 'options'):
+                if hasattr(requires[0], "options"):
                     options = requires[0].options()
                     ids = [option[0] for option in options if option[0]]
                     options = []
-                    for row in db(table.id.belongs(ids)).select(table.id, table.pe_id, table.name):
+                    rows = current.db(table.id.belongs(ids)).select(table.id,
+                                                                    table.pe_id,
+                                                                    table.name)
+                    for row in rows:
                         options.append(row.as_dict())
                 else:
-                    raise SyntaxError, 'widget cannot determine options of %s' % field
+                    raise SyntaxError, "widget cannot determine options of %s" % field
 
         javascript_array = "%s_options = %s;" % (field.name, json.dumps(options))
-        current.response.s3.js_global.append(javascript_array)
-        current.response.s3.scripts.append("%s/%s" % (current.response.s3.script_dir, "s3.orghierarchy.js"))
-        current.response.s3.stylesheets.append("S3/jquery.ui.menu.css")
+        s3.js_global.append(javascript_array)
+        s3.scripts.append("%s/%s" % (s3.script_dir, "s3.orghierarchy.js"))
+        s3.stylesheets.append("S3/jquery.ui.menu.css")
 
         return self.widget(field, value, **attributes)
 

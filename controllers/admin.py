@@ -479,18 +479,16 @@ def errors():
     from gluon.admin import apath
     from gluon.fileutils import listdir
 
-    app = request.application
-
     for item in request.vars:
         if item[:7] == "delete_":
-            os.unlink(apath("%s/errors/%s" % (app, item[7:]), r=request))
+            os.unlink(apath("%s/errors/%s" % (appname, item[7:]), r=request))
 
-    func = lambda p: os.stat(apath("%s/errors/%s" % (app, p), r=request)).st_mtime
-    tickets = sorted(listdir(apath("%s/errors/" % app, r=request), "^\w.*"),
+    func = lambda p: os.stat(apath("%s/errors/%s" % (appname, p), r=request)).st_mtime
+    tickets = sorted(listdir(apath("%s/errors/" % appname, r=request), "^\w.*"),
                      key=func,
                      reverse=True)
 
-    return dict(app=app, tickets=tickets)
+    return dict(app=appname, tickets=tickets)
 
 # =============================================================================
 # Create portable app
@@ -503,8 +501,7 @@ def portable():
     import os
     from operator import itemgetter, attrgetter
 
-    app = request.application
-    uploadfolder=os.path.join(apath("%s" % app, r=request), "cache")
+    uploadfolder=os.path.join(apath("%s" % appname, r=request), "cache")
     web2py_source = None
     web2py_source_exists = False
     last_build_exists = False
@@ -574,8 +571,13 @@ def portable():
 
     else:
         download_last_form = None
-    return dict(web2py_form=web2py_form, generator_form=generator_form, download_last_form=download_last_form)
+    return dict(
+            web2py_form=web2py_form,
+            generator_form=generator_form,
+            download_last_form=download_last_form
+        )
 
+# -----------------------------------------------------------------------------
 def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     """Function to create the portable app based on the parameters"""
 
@@ -584,8 +586,7 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     import zipfile
     import contenttype
 
-    app = request.application
-    cachedir = os.path.join(apath("%s" % app, r=request), "cache")
+    cachedir = os.path.join(apath("%s" % appname, r=request), "cache")
     tempdir = tempfile.mkdtemp("", "eden-", cachedir)
     workdir = os.path.join(tempdir, "web2py")
     if copy_uploads:
@@ -593,8 +594,8 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     else:
         ignore = shutil.ignore_patterns("*.db", "*.log", "*.table", "errors", "sessions", "compiled" , "uploads", "cache", ".bzr", "*.pyc")
 
-    appdir = os.path.join(workdir, "applications", app)
-    shutil.copytree(apath("%s" % app, r=request),\
+    appdir = os.path.join(workdir, "applications", appname)
+    shutil.copytree(apath("%s" % appname, r=request),\
                     appdir, \
                     ignore = ignore)
     os.mkdir(os.path.join(appdir, "errors"))
@@ -649,7 +650,6 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     response.headers["Content-Type"] = contenttype.contenttype(portable_app)
     response.headers["Content-Disposition"] = \
                             "attachment; filename=portable-sahana.zip"
-
 
     return response.stream(portable_app)
 

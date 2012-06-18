@@ -15,6 +15,7 @@ current.s3db = s3db = S3Model()
 # Explicit import statements to have them reload automatically in debug mode
 import eden.asset
 import eden.auth
+import eden.climate
 import eden.cms
 import eden.cr
 import eden.delphi
@@ -171,7 +172,7 @@ def s3_meta_fields():
 s3.meta_fields = s3_meta_fields
 
 # =============================================================================
-response.s3.all_meta_field_names = [field.name for field in
+s3.all_meta_field_names = [field.name for field in
     [s3_meta_uuid(),
      s3_meta_mci(),
      s3_meta_deletion_status(),
@@ -267,7 +268,7 @@ currency_type = S3ReusableField("currency_type",
                                 #    currency_type_opts.get(opt, UNKNOWN_OPT),
                                 writable = deployment_settings.get_fin_currency_writable())
 
-response.s3.currency_type = currency_type
+s3.currency_type = currency_type
 
 # =============================================================================
 # Lx

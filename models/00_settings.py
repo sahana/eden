@@ -15,14 +15,14 @@ s3.formats = Storage()
 
 # Workaround for this Bug in Selenium with FF4:
 #    http://code.google.com/p/selenium/issues/detail?id=1604
-s3.interactive = deployment_settings.get_ui_confirm()
+s3.interactive = settings.get_ui_confirm()
 
 # Use session for persistent per-user variables (beware of a user having multiple tabs open!)
 if not session.s3:
     session.s3 = Storage()
 
-s3.base_url = "%s/%s" % (deployment_settings.get_base_public_url(),
-                         request.application)
+s3.base_url = "%s/%s" % (settings.get_base_public_url(),
+                         appname)
 s3.download_url = "%s/default/download" % s3.base_url
 
 ###############
@@ -186,10 +186,10 @@ ROWSPERPAGE = 20
 PRETTY_PRINT = False
 
 # To get included in <HEAD>
-response.s3.stylesheets = []
-response.s3.external_stylesheets = []
-s3_script_dir = "/%s/static/scripts/S3" % request.application
-response.s3.script_dir = s3_script_dir
+s3.stylesheets = []
+s3.external_stylesheets = []
+s3_script_dir = "/%s/static/scripts/S3" % appname
+s3.script_dir = s3_script_dir
 # To get included at the end of <BODY>
 s3.scripts = []
 s3.js_global = []
@@ -199,7 +199,7 @@ s3.jquery_ready = []
 # Languages
 ###########
 
-s3.l10n_languages = deployment_settings.get_L10n_languages()
+s3.l10n_languages = settings.get_L10n_languages()
 
 # Default strings are in US English
 T.current_languages = ["en", "en-us"]
@@ -215,7 +215,7 @@ elif auth.is_logged_in():
     language = auth.user.language
 else:
     # Use system default
-    language = deployment_settings.get_L10n_default_language()
+    language = settings.get_L10n_default_language()
 #else:
 #    # Use what browser requests (default web2py behaviour)
 #    T.force(T.http_accept_language)
@@ -446,7 +446,7 @@ ORG_ADMIN = system_roles.ORG_ADMIN
 
 if session.s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py
-    response.s3.toolbar = s3_dev_toolbar
+    s3.toolbar = s3_dev_toolbar
 
 ######
 # CRUD
@@ -485,7 +485,7 @@ s3.crud.confirm_delete = T("Do you really want to delete these records?")
 
 s3.crud.archive_not_delete = deployment_settings.get_security_archive_not_delete()
 s3.crud.navigate_away_confirm = deployment_settings.get_ui_navigate_away_confirm()
-#response.s3.navigate_away_confirm = s3.crud.navigate_away_confirm
+#s3.navigate_away_confirm = s3.crud.navigate_away_confirm
 
 # Web2py Crud
 
