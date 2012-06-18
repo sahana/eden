@@ -720,12 +720,6 @@ class S3Config(Storage):
         """
         return self.project.get("activities", False)
 
-    def get_project_aims(self):
-        """
-            Use Aims in Projects
-        """
-        return self.project.get("aims", False)
-
     def get_project_codes(self):
         """
             Use Codes in Projects

@@ -7,8 +7,6 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -40,7 +38,6 @@ import os
 from gluon import current
 
 # =============================================================================
-
 class S3Method(object):
     """
         REST Method Handler Base Class
@@ -173,37 +170,39 @@ class S3Method(object):
                            requested method
         """
 
-        has_permission = current.auth.s3_has_permission
-        is_owner = current.auth.permission.is_owner
+        auth = current.auth
+        has_permission = auth.s3_has_permission
 
         r = self.request
 
-        table = r.table
+        table = mtable = r.table
         record_id = r.id
 
         if not method:
             method = self.method
-        if method in ("list", "search"):
+        if method == "list":
+            # Rest handled in S3Permission.METHODS
             method = "read"
 
         if r.component is not None:
-            table = r.component.table
+            table = ctable = r.component.table
             record_id = r.component_id
             master_access = True
             if method in ("create", "update", "delete"):
-                if is_owner(table, record=record_id):
+                is_owner = auth.permission.is_owner
+                if is_owner(ctable, record=record_id):
                     master_access = True
                 else:
                     # User must have update permission on the master record
                     master_access = has_permission("update",
-                                                   r.table, record_id=r.id)
+                                                   mtable, record_id=r.id)
                     if not master_access:
                         # ... or own the master record
-                        master_access = is_owner(r.table, r.id)
+                        master_access = is_owner(mtable, r.id)
             if not master_access:
                 return False
 
-        return has_permission(method, table, record_id = record_id)
+        return has_permission(method, table, record_id=record_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -325,5 +324,4 @@ class S3Method(object):
                 elif key in output and callable(handler):
                     del output[key]
 
-# =============================================================================
-
+# END =========================================================================

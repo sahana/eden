@@ -3130,8 +3130,10 @@ def pr_contacts(r, **attr):
         r.error(405, current.manager.ERROR.BAD_METHOD)
 
     T = current.T
+    #auth = current.auth
     db = current.db
     s3db = current.s3db
+    crud = r.resource.crud
 
     person = r.record
 
@@ -3194,13 +3196,19 @@ def pr_contacts(r, **attr):
     for key, group in groupby(contacts, lambda c: c.contact_method):
         contact_groups[key] = list(group)
 
-    contacts_wrapper = DIV(H2(T("Contacts")),
-                           DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
-                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                                  _height=32, _width=32,
-                                  _id="contact-add_throbber",
-                                  _class="throbber hidden"),
-                               _class="margin"))
+    contacts_wrapper = DIV(H2(T("Contacts")))
+
+    r.component = Storage()
+    r.component.table = ctable
+    r.component_id = None
+    if crud._permitted(method="create"):
+        add_btn = DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
+                      IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                          _height=32, _width=32,
+                          _id="contact-add_throbber",
+                          _class="throbber hidden"),
+                      _class="margin")
+        contacts_wrapper.append(add_btn)
 
     items = contact_groups.items()
     def mysort(key):
@@ -3220,15 +3228,31 @@ def pr_contacts(r, **attr):
         return keys[key[0]]
     items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
+
+    def action_buttons(id):
+        r.component_id = id
+        if crud._permitted(method="update"):
+            edit_btn = A(T("Edit"), _class="editBtn action-btn fright")
+        else:
+            edit_btn = DIV()
+        if crud._permitted(method="delete"):
+            delete_btn = A(T("Delete"), _class="deleteBtn delete-btn fright")
+        else:
+            delete_btn = DIV()
+        return (edit_btn, delete_btn)
+
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
-            contacts_wrapper.append(P(
-                SPAN(detail.value),
-                A(T("Edit"), _class="editBtn action-btn fright"),
-                A(T("Delete"), _class="deleteBtn delete-btn fright"),
-                _id="contact-%s" % detail.id,
-                _class="contact",
+            id = detail.id
+            (edit_btn, delete_btn) = action_buttons(id)
+            contacts_wrapper.append(
+                P(
+                  SPAN(detail.value),
+                  edit_btn,
+                  delete_btn,
+                  _id="contact-%s" % id,
+                  _class="contact",
                 ))
 
     # Emergency Contacts
@@ -3240,13 +3264,18 @@ def pr_contacts(r, **attr):
                                  etable.relationship,
                                  etable.phone)
 
-    emergency_wrapper = DIV(H2(T("Emergency Contacts")),
-                            DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
-                              IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                                  _height=32, _width=32,
-                                  _id="emergency-add_throbber",
-                                  _class="throbber hidden"),
-                                _class="margin"))
+    emergency_wrapper = DIV(H2(T("Emergency Contacts")))
+
+    r.component.table = etable
+    r.component_id = None
+    if crud._permitted(method="create"):
+        add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
+                      IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
+                          _height=32, _width=32,
+                          _id="emergency-add_throbber",
+                          _class="throbber hidden"),
+                      _class="margin")
+        emergency_wrapper.append(add_btn)
 
     for contact in emergency:
         name = contact.name or ""
@@ -3255,12 +3284,15 @@ def pr_contacts(r, **attr):
         relationship = contact.relationship or ""
         if relationship:
             relationship = "%s, "% relationship
-        emergency_wrapper.append(P(
-            SPAN("%s%s%s" % (name, relationship, contact.phone)),
-            A(T("Edit"), _class="editBtn action-btn fright"),
-            A(T("Delete"), _class="deleteBtn delete-btn fright"),
-            _id="emergency-%s" % contact.id,
-            _class="emergency",
+        id = contact.id
+        (edit_btn, delete_btn) = action_buttons(id)
+        emergency_wrapper.append(
+            P(
+              SPAN("%s%s%s" % (name, relationship, contact.phone)),
+              edit_btn,
+              delete_btn,
+              _id="emergency-%s" % id,
+              _class="emergency",
             ))
 
     # Overall content

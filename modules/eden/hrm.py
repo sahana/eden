@@ -3750,7 +3750,7 @@ def hrm_rheader(r, tabs=[]):
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
                     #(T("Credentials"), "credential"),
-                    experience_tab,
+                    #experience_tab,
                     (T("Positions"), "human_resource"),
                     (T("Teams"), "group_membership"),
                     (T("Assets"), "asset"),
@@ -3851,8 +3851,6 @@ def hrm_training_event_controller():
         multiple controllers for unified menus
     """
 
-    s3_rest_controller = current.rest_controller
-
     T = current.T
     session = current.session
     s3 = current.response.s3
@@ -3885,8 +3883,8 @@ def hrm_training_event_controller():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("hrm", "training_event",
-                                rheader=hrm_rheader)
+    output = current.rest_controller("hrm", "training_event",
+                                     rheader=hrm_rheader)
     return output
 
 # =============================================================================
@@ -3895,8 +3893,6 @@ def hrm_training_controller():
         Training Controller, defined in the model for use from
         multiple controllers for unified menus
     """
-
-    s3_rest_controller = current.rest_controller
 
     T = current.T
     session = current.session
@@ -3908,6 +3904,9 @@ def hrm_training_controller():
         redirect(URL(f="index"))
 
     roles = s3.roles or []
+    system_roles = current.auth.get_system_roles()
+    ADMIN = system_roles.ADMIN
+    EDITOR = system_roles.EDITOR
     if ADMIN not in roles and \
        EDITOR not in roles:
         s3db = current.s3db
@@ -3920,7 +3919,7 @@ def hrm_training_controller():
                 (orgtable.pe_id.belongs(orgs))
         current.response.s3.filter = query
 
-    output = s3_rest_controller("hrm", "training")
+    output = current.rest_controller("hrm", "training")
     return output
 
 # END =========================================================================

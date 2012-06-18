@@ -1664,7 +1664,7 @@ class S3GISConfigModel(S3Model):
         if not id:
             return current.messages.NONE
 
-        if isinstance(id, row):
+        if isinstance(id, Row):
             record = id
         else:
             table = current.s3db.gis_marker

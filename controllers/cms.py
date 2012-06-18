@@ -118,6 +118,8 @@ def post():
         table.module.readable = table.module.writable = False
         table.name.default = "%s Home Page" % _module
         table.name.readable = table.name.writable = False
+        s3.crud_strings[tablename].title_create = T("New Page")
+        s3.crud_strings[tablename].title_update = T("Edit Page")
         url = URL(c=_module, f="index")
         s3mgr.configure(tablename,
                         create_next = url,

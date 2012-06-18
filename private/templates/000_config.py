@@ -171,6 +171,12 @@ if os.path.exists(path):
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs
+# Enable Additional Module(s)
+#settings.modules["delphi"] = Storage(
+#        name_nice = T("Delphi Decision Maker"),
+#        restricted = False,
+#        module_type = 10,
+#    )
 
 # After 1st_run, set this for Production to save 1x DAL hit/request
 #settings.base.prepopulate = 0
