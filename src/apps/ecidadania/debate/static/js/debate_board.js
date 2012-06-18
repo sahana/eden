@@ -100,7 +100,7 @@ function viewNote(obj) {
 
     request.done(function(note) {
         $('h3#view-note-title').text(note.title);
-        $('p#view-note-desc').text(note.message);
+        $('p#view-note-desc').html(note.message);
     });
 
     request.fail(function (jqXHR, textStatus) {
