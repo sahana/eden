@@ -440,6 +440,11 @@ $(document).ready(function() {
 	                }
 	            }
             }
+            if (Math.ceil((this.fnSettings().fnRecordsDisplay()) / this.fnSettings()._iDisplayLength) > 1)  {
+                $('.dataTables_paginate').css("display", "block");
+            } else {
+                $('.dataTables_paginate').css("display", "none");
+            }
         },
         "aaSortingFixed": sortFixed,
         "aoColumnDefs": [
