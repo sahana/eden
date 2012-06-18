@@ -793,7 +793,9 @@ class S3TrackingModel(S3Model):
                                 ],                                      
                   onaccept = self.inv_send_onaccept,
                   create_next = send_item_url,
-                  update_next = send_item_url)
+                  update_next = send_item_url,
+                  orderby=~table.date,
+                  sortby=[[5, "desc"], [1, "asc"]])
 
         # ---------------------------------------------------------------------
         # Received (In/Receive / Donation / etc)
@@ -1018,7 +1020,9 @@ class S3TrackingModel(S3Model):
                   onaccept = self.inv_recv_onaccept,
                   search_method = recv_search,
                   create_next = recv_item_url,
-                  update_next = recv_item_url)
+                  update_next = recv_item_url,
+                  orderby=~table.date,
+                  sortby=[[6, "desc"], [1, "asc"]])
 
         # Components
         add_component("inv_track_item",
