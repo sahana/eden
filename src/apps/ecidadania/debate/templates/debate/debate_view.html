@@ -3,13 +3,12 @@
 {% load wysiwyg %}
 
 {% with debate.title as debate_title %}
-{% with get_place.get_absolute_url as place_url %}
 {% block title %}{% trans "View debate" %} {{ debate_title }}{% endblock %}
-{% block logo %}<a href="{{ place_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
+{% block logo %}<a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>{% endblock %}
 {% block banner %}<img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />{% endblock %}
 
 {% block space %}
-    <a class="brand" href="{{ place_url }}">{{ get_place.name }}</a>
+    <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
 {% endblock %}
 {% endwith %}
 
@@ -27,12 +26,12 @@
             <p><strong>{% trans "Theme:" %}</strong> {{ debate.theme}}</p>
         </div>
         <div class="span6">
-						{% with debate.start_date as start_date %}
-						{% with debate.end_date as end_date %}
-            <p><strong>{% trans "Start date:" %}</strong> {% if start_date %}{{ start_date }}{% else %}{% trans "No date"%}{% endif %}</p>
-            <p><strong>{% trans "End date:" %}</strong> {% if end_date %}{{ end_date }}{% else %}{% trans "No date"%}{% endif %}</p>
-						{% endwith %}
-						{% endwith %}
+			{% with debate.start_date as start_date %}
+			{% with debate.end_date as end_date %}
+                <p><strong>{% trans "Start date:" %}</strong> {% if start_date %}{{ start_date }}{% else %}{% trans "No date" %}{% endif %}</p>
+                <p><strong>{% trans "End date:" %}</strong> {% if end_date %}{{ end_date }}{% else %}{% trans "No date" %}{% endif %}</p>
+			{% endwith %}
+			{% endwith %}
         </div>
     </div>
 
