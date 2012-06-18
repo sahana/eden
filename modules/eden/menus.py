@@ -37,11 +37,29 @@ from ..s3 import *
 from layouts import *
 
 # =============================================================================
-class S3MainMenu:
+class S3MainMenu(object):
     """ The default configurations for the main application menu """
 
-    @staticmethod
-    def menu_modules():
+    @classmethod
+    def menu(cls):
+
+        main_menu = MM()(
+
+            # Standard modules-menu, left
+            cls.menu_modules(),
+
+            # Standard service menus, right
+            cls.menu_help(right=True),
+            cls.menu_auth(right=True),
+            cls.menu_lang(right=True),
+            cls.menu_admin(right=True),
+            cls.menu_gis(right=True)
+        )
+        return main_menu
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_modules(cls):
 
         request = current.request
         response = current.response
@@ -112,8 +130,8 @@ class S3MainMenu:
         return menu_modules
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def menu_lang(**attr):
+    @classmethod
+    def menu_lang(cls, **attr):
         """ Language menu """
 
         s3 = current.response.s3
@@ -131,8 +149,8 @@ class S3MainMenu:
         return menu_lang
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def menu_help(**attr):
+    @classmethod
+    def menu_help(cls, **attr):
         """ Help Menu """
 
         menu_help = MM("Help", **attr)(
@@ -142,8 +160,8 @@ class S3MainMenu:
         return menu_help
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def menu_auth(**attr):
+    @classmethod
+    def menu_auth(cls, **attr):
         """ Auth Menu """
 
         T = current.T
@@ -199,8 +217,8 @@ class S3MainMenu:
         return menu_auth
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def menu_admin(**attr):
+    @classmethod
+    def menu_admin(cls, **attr):
         """ Administrator Menu """
 
         session = current.session
@@ -222,8 +240,8 @@ class S3MainMenu:
         return menu_admin
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def menu_gis(**attr):
+    @classmethod
+    def menu_gis(cls, **attr):
         """ GIS Config Menu """
 
         settings = current.deployment_settings
@@ -303,8 +321,8 @@ class S3MainMenu:
                 )
         return gis_menu
 
-    @staticmethod
-    def menu_climate(**attr):
+    @classmethod
+    def menu_climate(cls, **attr):
         settings = current.deployment_settings
         module = settings.modules["climate"]
         session = current.session
@@ -322,7 +340,7 @@ class S3MainMenu:
         return menu_climate
 
 # =============================================================================
-class S3OptionsMenu:
+class S3OptionsMenu(object):
     """
         The default configurations for options menus
 
@@ -1526,8 +1544,8 @@ class S3OptionsMenu:
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def settings_messaging():
+    @classmethod
+    def settings_messaging(cls):
         """ Messaging settings menu items:
 
             These items are used in multiple menus, but each item instance can
@@ -1546,8 +1564,8 @@ class S3OptionsMenu:
         ]
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def breadcrumbs():
+    @classmethod
+    def breadcrumbs(cls):
         """ Breadcrumbs from the current options menu """
 
         # Configure the layout:

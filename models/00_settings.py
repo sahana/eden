@@ -524,11 +524,37 @@ s3mgr.ROWSPERPAGE = 20
 #######
 
 # Import menus and layouts
-from eden.menus import *
 from eden.layouts import *
+import eden.menus as default_menus
 
-# Create a Storage for menus
-menu = current.menu = Storage(main=MM(), options=None)
+S3MainMenu = default_menus.S3MainMenu
+S3OptionsMenu = default_menus.S3OptionsMenu
+
+if auth.permission.format in ("html"):
+    menus = "applications.%s.private.templates.%s.menus" % \
+            (request.application, deployment_settings.get_template())
+    try:
+        exec("import %s as deployment_menus" % menus)
+    except ImportError:
+        pass
+    else:
+        if "S3MainMenu" in deployment_menus.__dict__:
+            S3MainMenu = deployment_menus.S3MainMenu
+
+        if "S3OptionsMenu" in deployment_menus.__dict__:
+            S3OptionsMenu = deployment_menus.S3OptionsMenu
+
+    # Create a Storage for menus
+    menu = current.menu = Storage(main=S3MainMenu.menu(),
+                                  options=None,
+                                  override={})
+else:
+    menu = current.menu = Storage(main=None,
+                                  options=None,
+                                  override={})
+
+# Override controller menus, @todo: replace by current.menu.override
+s3_menu_dict = {}
 
 ##########
 # Messages
