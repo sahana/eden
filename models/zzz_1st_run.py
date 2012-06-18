@@ -1,41 +1,151 @@
 # -*- coding: utf-8 -*-
 
 # 1st-run initialisation
-# designed to be called from Crontab's @reboot
-# however this isn't reliable (doesn't work on Win32 Service) so still in models for now...
 
-# Deployments can change settings live via appadmin
+# Set settings.base.prepopulate to 0 in Production
+# (to save 1x DAL hit every page).
+pop_list = settings.get_base_prepopulate()
+if pop_list == 0:
+    pop_list = []
+else:
+    table = db[auth.settings.table_group_name]
+    # The query used here takes 2/3 the time of .count().
+    if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+        pop_list = []
+    if not isinstance(pop_list, (list, tuple)):
+        pop_list = [pop_list]
+
 if len(pop_list) > 0:
+
+    # =========================================================================
+    # Populate default roles and permissions
+    #
 
     # Allow debug
     import sys
 
-    # Load all Models to ensure all DB tables present
-    s3db.load_all_models()
+    # Shortcuts
+    acl = auth.permission
+    sysroles = auth.S3_SYSTEM_ROLES
+    create_role = auth.s3_create_role
+    update_acls = auth.s3_update_acls
 
-    # Add core data as long as at least one populate setting is on
+    default_oacl = acl.READ|acl.UPDATE
 
-    if settings.get_auth_opt_in_to_email():
-        table = db.pr_group
-        for team in settings.get_auth_opt_in_team_list():
-            table.insert(name = team, group_type = 5)
+    # Do not remove or change order of these 5 definitions (System Roles):
+    create_role("Administrator",
+                "System Administrator - can access & make changes to any data",
+                uid=sysroles.ADMIN,
+                system=True, protected=True)
+    authenticated = create_role("Authenticated",
+                                "Authenticated - all logged-in users",
+                                # Authenticated users can see the Map
+                                dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
+                                # Note the owning role for locations is set to Authenticated
+                                # by default, so this controls the access that logged in
+                                # users have. (In general, tables do not have a default
+                                # owning role.)
+                                dict(c="gis", f="location", uacl=acl.READ|acl.CREATE, oacl=acl.ALL),
+                                # Authenticated users can only see/edit their own PR records
+                                dict(c="pr", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                dict(t="pr_person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                # But need to be able to add/edit addresses
+                                dict(c="pr", f="person", uacl=acl.CREATE, oacl=acl.READ|acl.UPDATE),
+                                # And access the Autocompletes
+                                dict(c="pr", f="person_search", uacl=acl.READ),
+                                dict(c="pr", f="pentity", uacl=acl.READ),
+                                dict(c="msg", f="search", uacl=acl.READ),
+                                # Authenticated  users can see the Supply Catalogue
+                                dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                                uid=sysroles.AUTHENTICATED,
+                                protected=True)
+    # Authenticated users:
+    # Have access to all Orgs, Hospitals, Shelters
+    update_acls(authenticated,
+                dict(c="org", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                # Since we specify a Table ACL for Anonymous, we also need 1 for Authenticated
+                dict(t="org_organisation", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                dict(c="hms", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl)
+                )
 
-    # Scheduled Tasks
+    # If we don't have OrgAuth active, then Authenticated users:
+    # Have access to all Orgs, Sites & the Inventory & Requests thereof
+    update_acls(authenticated,
+                dict(c="asset", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                dict(c="inv", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                dict(c="req", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=default_oacl),
+                # Allow authenticated users to view the Certificate Catalog
+                dict(t="hrm_certificate", uacl=acl.READ),
+                # HRM access is controlled to just HR Staff, except for:
+                # Access to your own record & to be able to search for Skills
+                # requires security policy 4+
+                dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
+                dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
+                dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ)
+                )
+
+    create_role("Anonymous",
+                "Unauthenticated users",
+
+                # Defaults for Trunk
+                dict(c="org", uacl=acl.READ, oacl=default_oacl),
+                dict(c="project", uacl=acl.READ, oacl=default_oacl),
+                dict(c="cr", uacl=acl.READ, oacl=default_oacl),
+                dict(c="hms", uacl=acl.READ, oacl=default_oacl),
+                #dict(c="inv", uacl=acl.READ, oacl=default_oacl),
+                dict(c="supply", uacl=acl.READ, oacl=default_oacl),
+                dict(c="delphi", uacl=acl.READ, oacl=default_oacl),
+
+                # Allow unauthenticated users to view the list of organisations
+                # so they can select an organisation when registering
+                dict(t="org_organisation", uacl=acl.READ, entity="any"),
+                # Allow unauthenticated users to view the Map
+                dict(c="gis", uacl=acl.READ, oacl=default_oacl),
+                # Allow unauthenticated users to cache Map feeds
+                dict(c="gis", f="cache_feed", uacl=acl.ALL, oacl=default_oacl),
+                # Allow unauthenticated users to view feature queries
+                dict(c="gis", f="feature_query", uacl=acl.NONE, oacl=default_oacl),
+                uid=sysroles.ANONYMOUS,
+                protected=True)
+
+    # Primarily for Security Policy 2
+    create_role("Editor",
+                "Editor - can access & make changes to any unprotected data",
+                uid=sysroles.EDITOR,
+                system=True, protected=True)
+
+    # MapAdmin
+    create_role("MapAdmin",
+                "MapAdmin - allowed access to edit the MapService Catalogue",
+                dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
+                dict(c="gis", f="location", uacl=acl.ALL, oacl=acl.ALL),
+                uid=sysroles.MAP_ADMIN,
+                system=True, protected=True)
+
+    # OrgAdmin (policies 6, 7 and 8)
+    create_role("OrgAdmin",
+                "OrgAdmin - allowed to manage user roles for entity realms",
+                uid=sysroles.ORG_ADMIN,
+                system=True, protected=True)
+
+    # Enable shortcuts (needed by default.py)
+    system_roles = auth.get_system_roles()
+    ADMIN = system_roles.ADMIN
+    AUTHENTICATED = system_roles.AUTHENTICATED
+    ANONYMOUS = system_roles.ANONYMOUS
+    EDITOR = system_roles.EDITOR
+    MAP_ADMIN = system_roles.MAP_ADMIN
+    ORG_ADMIN = system_roles.ORG_ADMIN
+
+    # =========================================================================
+    # Configure Scheduled Tasks
+    #
+
     if settings.has_module("msg"):
-        
-        #Message Parsing Tasks for each enabled workflows 
-        #for workflow in settings.get_parser_enabled():
-            #workflow = int(workflow.split("_")[1])
-            #s3task.schedule_task("parse_workflow",
-                                 #vars={"workflow": workflow},
-                                 #period=300,  # seconds
-                                 #timeout=300, # seconds
-                                 #repeats=0    # unlimited
-                                 #)
-                        
-                        
-                
-                
+
         # Send Messages from Outbox
         # SMS every minute
         s3task.schedule_task("process_outbox",
@@ -51,22 +161,28 @@ if len(pop_list) > 0:
                              timeout=300, # seconds
                              repeats=0    # unlimited
                             )
-        # Inbound email
-        # To schedule reading inbound email, uncomment and substitute the
-        # username from the task definition for example-username. This example
-        # shows reading email every 15 minutes. Add one task for each email
-        # source.
-        #s3task.schedule_task("process_inbound_email",
-        #                     vars={"username":"example-username"},
-        #                     period=900,  # seconds
-        #                     timeout=300, # seconds
-        #                     repeats=0    # unlimited
-        #                    )
 
-        
+    # =========================================================================
+    # Import PrePopulate data
+    #
+
+    # Load all Models to ensure all DB tables present
+    s3db.load_all_models()
+
+    if settings.get_auth_opt_in_to_email():
+        table = db.pr_group
+        for team in settings.get_auth_opt_in_team_list():
+            table.insert(name = team, group_type = 5)
+
+    # Synchronisation
+    table = db.sync_config
+    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+       table.insert()
+
     # Person Registry
     tablename = "pr_person"
     table = db[tablename]
+    # Add extra indexes on search fields
     # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
     field = "first_name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
@@ -75,23 +191,25 @@ if len(pop_list) > 0:
     field = "last_name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
-    # Synchronisation
-    table = db.sync_config
+    # GIS Locations
+    tablename = "gis_location"
+    table = db[tablename]
     if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-       table.insert()
-
-    # Incident Reporting System
-    if settings.has_module("irs"):
-        # Categories visible to ends-users by default
-        table = db.irs_icategory
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(code = "flood")
-            table.insert(code = "geophysical.landslide")
-            table.insert(code = "roadway.bridgeClosure")
-            table.insert(code = "roadway.roadwayClosure")
-            table.insert(code = "other.buildingCollapsed")
-            table.insert(code = "other.peopleTrapped")
-            table.insert(code = "other.powerFailure")
+        # L0 Countries
+        import_file = os.path.join(request.folder,
+                                   "private",
+                                   "templates",
+                                   "default",
+                                   "countries.csv")
+        table.import_from_csv_file(open(import_file, "r")) #, id_map=True)
+        query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
+        map_admin = db(query).select(db.auth_group.id,
+                                     limitby=(0, 1)).first().id
+        db(table.level == "L0").update(owned_by_group=map_admin)
+    # Add extra index on search field
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    field = "name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
     # Messaging Module
     if settings.has_module("msg"):
@@ -131,27 +249,24 @@ if len(pop_list) > 0:
     if settings.has_module("budget"):
         table = db.budget_parameter
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert() # Only defaults are fine
+            table.insert() # Defaults are fine
 
-    # GIS Locations
-    tablename = "gis_location"
-    table = db[tablename]
-    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-        # L0 Countries
-        import_file = os.path.join(request.folder,
-                                   "private",
-                                   "templates",
-                                   "default",
-                                   "countries.csv")
-        table.import_from_csv_file(open(import_file, "r")) #, id_map=True)
-        query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
-        map_admin = db(query).select(db.auth_group.id,
-                                     limitby=(0, 1)).first().id
-        db(table.level == "L0").update(owned_by_group=map_admin)
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    field = "name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % \
-        (field, tablename, field))
+    # Climate Module
+    if settings.has_module("climate"):
+        s3db.climate_first_run()
+
+    # Incident Reporting System
+    if settings.has_module("irs"):
+        # Categories visible to ends-users by default
+        table = db.irs_icategory
+        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+            table.insert(code = "flood")
+            table.insert(code = "geophysical.landslide")
+            table.insert(code = "roadway.bridgeClosure")
+            table.insert(code = "roadway.roadwayClosure")
+            table.insert(code = "other.buildingCollapsed")
+            table.insert(code = "other.peopleTrapped")
+            table.insert(code = "other.powerFailure")
 
     # Supply Module
     if settings.has_module("supply"):
@@ -160,16 +275,18 @@ if len(pop_list) > 0:
         if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
             table.insert(name = settings.get_supply_catalog_default() )
 
-    # Climate module
-    if settings.has_module("climate"):
-        s3db.climate_first_run()
-
     # Ensure DB population committed when running through shell
     db.commit()
 
-    # -------------------------------------------------------------------------
-    # Prepopulate import (from CSV)
+    # =========================================================================
+    # PrePopulate import (from CSV)
+    #
 
+    # Create the bulk Importer object
+    bi = s3base.S3BulkImporter()
+
+    s3.import_role = bi.import_role
+    
     # Override authorization
     auth.override = True
 
@@ -331,3 +448,5 @@ if len(pop_list) > 0:
 
     # Restore view
     response.view = "default/index.html"
+
+# END =========================================================================
