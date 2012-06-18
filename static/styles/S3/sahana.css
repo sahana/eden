@@ -728,9 +728,7 @@ div.form-container form fieldset label {
     width: 15em;
     display: block;
     float: left;
-    text-align: right;
     min-height: 1em;
-    top: 0.25em;
 }
 
 div.form-container form fieldset label.errorfield,
@@ -763,6 +761,10 @@ div.form-container form td.w2p_fl,
 div.item-container form td.w2p_fl {
     font-weight: bold;
     /* background-color: #ffc; */
+}
+div.form-container form td.w2p_fl label,
+div.item-container form td.w2p_fl label {
+    width: auto;
 }
 div.form-container form tr td,
 div.item-container form tr td {
