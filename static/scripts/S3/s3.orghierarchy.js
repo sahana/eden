@@ -47,7 +47,7 @@ function parseOrganisations(json) {
 }
 
 function getOrganisations(callback) {
-	var url = "/eden/org/organisation.s3json?components=role&show_ids=true";
+	var url = S3.Ap.concat('/org/organisation.s3json?components=role&show_ids=true');
 	$.getJSON(url, callback);
 }
 
@@ -81,7 +81,7 @@ function parseAffiliates(json) {
 }
 // Get the list of aff
 function getAffiliates(role_id, callback) {
-	var url = "/eden/pr/role/#.s3json?show_ids=true".replace("#", role_id);
+	var url = S3.Ap.concat('/pr/role' + role_id + '.s3json?show_ids=true');
 	$.getJSON(url, callback);
 }
 
@@ -109,7 +109,7 @@ function parseRoles(json) {
 }
 // Get the list of roles for an entity
 function getRoles(entity_pe_id, callback) {
-	var url = "/eden/pr/pentity/#.s3json?show_ids=true".replace("#", entity_pe_id);
+        var url = S3.Ap.concat('/pr/pentity/' + entity_pe_id + '.s3json?show_ids=true');
 	$.getJSON(url, callback);
 }
 
@@ -270,7 +270,8 @@ function updateDomHierarchy(parent, items) {
 }
 
 jQuery(function($) {
-	$.getJSON("/eden/org/organisation.json?show_ids=true", function(data) {
+        url = S3.Ap.concat('/org/organisation.json?show_ids=true');
+        $.getJSON(url, function(data) {
 		for (var i=0; i<data.length; i++) {
 			var id = data[i].id;
 			var pe_id = data[i].pe_id;

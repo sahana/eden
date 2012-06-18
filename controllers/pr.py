@@ -425,7 +425,7 @@ def pentity():
         - limited to just search.json for use in Autocompletes
     """
 
-    response.s3.prep = lambda r: r.representation == "json"
+    response.s3.prep = lambda r: r.representation in ("s3json", "json", "xml")
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

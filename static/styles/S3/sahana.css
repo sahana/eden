@@ -1765,3 +1765,35 @@ a:visited:after {
 .checkboxes-widget-s3 input {
     float: left;
 }
+
+.widget-org-hierarchy-menu {
+    overflow:auto;
+    height:10em;
+    width:36em;
+    position:relative;
+}
+.widget-org-hierarchy-menu .ui-menu {
+    position:absolute;
+    top:0;
+    bottom:0;
+    overflow:auto;
+    width:32em;
+}
+.widget-org-hierarchy-menu .ui-menu a {
+    cursor: pointer;
+}
+
+.widget-org-hierarchy-crumbs {
+    list-style: none;
+}
+.widget-org-hierarchy-crumbs li {
+    display: inline;
+    cursor: pointer;
+}
+.widget-org-hierarchy-crumbs li:after {
+    content: " > ";
+}
+.widget-org-hierarchy-crumbs li.selected a {
+    text-decoration: none;
+    border-bottom: 1px dashed black;
+}
