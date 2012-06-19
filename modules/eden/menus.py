@@ -95,14 +95,11 @@ class S3MainMenu(object):
                     if not _module.access:
                         menu_modules.append(MM(_module.name_nice, c=module, f="index"))
                     else:
-                        authorised = False
                         groups = re.split("\|", _module.access)[1:-1]
-                        for group in groups:
-                            if has_role(group):
-                                authorised = True
-                                break
-                        if authorised == True:
-                            menu_modules.append(MM(_module.name_nice, c=module, f="index"))
+                        menu_modules.append(MM(_module.name_nice,
+                                               c=module,
+                                               f="index",
+                                               restrict=groups))
 
         # Modules to display off the 'more' menu
         modules_submenu = []
@@ -114,13 +111,11 @@ class S3MainMenu(object):
                 if not _module.access:
                     modules_submenu.append(MM(_module.name_nice, c=module, f="index"))
                 else:
-                    authorised = False
                     groups = re.split("\|", _module.access)[1:-1]
-                    for group in groups:
-                        if has_role(group):
-                            authorised = True
-                    if authorised == True:
-                        modules_submenu.append(MM(_module.name_nice, c=module, f="index"))
+                    modules_submenu.append(MM(_module.name_nice,
+                                              c=module,
+                                              f="index",
+                                              restrict=groups))
 
         if modules_submenu:
             # Only show the 'more' menu if there are entries in the list
