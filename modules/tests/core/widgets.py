@@ -13,8 +13,6 @@ from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
-from s3 import s3_debug
-
 import time
 
 def _autocomple_finish(el_id, browser):
