@@ -120,17 +120,22 @@ class Document(models.Model):
     This models stores documents for the space, like a document repository,
     There is no restriction in what a user can upload to the space
     """
-    title = models.CharField(_('Document title'), max_length=100)
-    space = models.ForeignKey(Space, blank=True, null=True)
+    title = models.CharField(_('Document title'), max_length=100,
+                            help_text=_('Max: 100 characters'))
+    space = models.ForeignKey(Space, blank=True, null=True,
+    help_text=_('Change the space to whom belongs this document'))
     docfile = ContentTypeRestrictedFileField(_('File'),
         upload_to='spaces/documents/%Y/%m/%d',
         content_types=ALLOWED_CONTENT_TYPES,
-        max_upload_size=26214400
+        max_upload_size=26214400,
+        help_text=_('Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP, PDF, \
+                    RST, TXT.')
     )
     #docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-                               null=True)
+                               null=True, help_text=_('Change the user that \
+                                will figure as the author'))
     
     def get_file_ext(self):
         filename = self.docfile.name

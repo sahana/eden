@@ -284,7 +284,18 @@
                         <div class="span8">
                             <ul class="unstyled">
                                 {% for doc in documents %}
-                                    <li><a href="{{ doc.docfile.url }}">{{ doc.title }} ({{ doc.get_file_ext }}, {{ doc.get_file_size }})</a></li>
+                                    <li><a href="{{ doc.docfile.url }}">{{ doc.title }} ({{ doc.get_file_ext }}, {{ doc.get_file_size }})</a>
+                                    {% if perms.spaces.edit_document %}
+                                        <a href="{% url 'edit-document' get_place.url doc.id %}">
+                                            <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                        </a>
+                                    {% endif %}
+                                    {% if perms.spaces.delete_document %}
+                                        <a href="{% url 'delete-document' get_place.url doc.id %}">
+                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                        </a>
+                                    {% endif %}
+                                    </li>
                                 {% empty %}
                                     <li>{% trans "No documents available." %}</li>
                                 {% endfor %}
@@ -306,18 +317,6 @@
                             </ul>
                         </div>
                     </div>
-                    {% comment %}
-                        {% if perms.spaces.edit_document %}
-                            <a href="{% url 'edit-document' get_place.url doc.id %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
-                            </a>
-                        {% endif %}
-                        {% if perms.spaces.delete_document %}
-                            <a href="{% url 'delete-document' get_place.url doc.id %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
-                            </a>
-                        {% endif %}
-                    {% endcomment %}
                 </div>
                 {% endif %}
                 

@@ -392,7 +392,7 @@ class AddDocument(FormView):
     :context: form, get_place
     """
     form_class = DocForm
-    template_name = 'spaces/document_add.html'
+    template_name = 'spaces/document_form.html'
     
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -427,7 +427,7 @@ class EditDocument(UpdateView):
     :context: doc, get_place
     """
     model = Document
-    template_name = 'spaces/document_edit.html'
+    template_name = 'spaces/document_form.html'
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
