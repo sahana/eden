@@ -1797,6 +1797,9 @@ a:visited:after {
 .widget-org-hierarchy-crumbs li:after {
     content: " > ";
 }
+.widget-org-hierarchy-crumbs li a {
+    text-decoration: none;
+}
 .widget-org-hierarchy-crumbs li.selected a {
     text-decoration: none;
     border-bottom: 1px dashed black;
