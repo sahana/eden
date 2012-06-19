@@ -204,10 +204,19 @@ def s3_uuid():
 
 s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
-                       encoder = (lambda x: "'%s'" % (s3_uuid().urn
+                       encoder = lambda x: "%s" % (s3_uuid().urn
                                     if x == ""
-                                    else str(x.encode("utf-8")).replace("'", "''"))),
-                       decoder = (lambda x: x))
+                                    else unicode(x.encode("utf-8"))),
+                       decoder = lambda x: x)
+
+if current.db._adapter.represent("X", s3uuid) != "'X'":
+    # Old web2py DAL, must add quotes in encoder
+    s3uuid = SQLCustomType(type = "string",
+                           native = "VARCHAR(128)",
+                           encoder = (lambda x: "'%s'" % (s3_uuid().urn
+                                        if x == ""
+                                        else str(x.encode("utf-8")).replace("'", "''"))),
+                           decoder = (lambda x: x))
 
 # =============================================================================
 # Record identity meta-fields
