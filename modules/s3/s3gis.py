@@ -1397,10 +1397,10 @@ class GIS(object):
             _countries = settings.get_gis_countries()
             if _countries:
                 query = query & (ttable.value.belongs(_countries))
-            countries = db(query).select(table.id,
-                                         ttable.value,
-                                         table.name,
-                                         orderby=table.name)
+            countries = current.db(query).select(table.id,
+                                                 table.name,
+                                                 ttable.value,
+                                                 orderby=table.name)
             if not countries:
                 return []
 
@@ -1486,10 +1486,14 @@ class GIS(object):
                         if key_type == "id":
                             return row.id
                         elif key_type == "code":
-                            return row.code
-
+                            ttable = s3db.gis_location_tag
+                            query = (ttable.tag == "ISO2") & \
+                                    (ttable.location_id == row.id)
+                            tag = db(query).select(ttable.value,
+                                                   limitby=(0, 1)).first()
+                            if tag:
+                                return tag.value
         return None
-
 
     # -------------------------------------------------------------------------
     def get_default_country(self, key_type="id"):

@@ -164,6 +164,22 @@ def location():
         )
     )
 
+    class S3LocationVirtualFields:
+        def population(self):
+            """
+                Used by the Report
+            """
+            table = current.s3db.gis_location_tag
+            query = (table.location_id == self.gis_location.id) & \
+                    (table.tag == "population")
+            location = current.db(query).select(table.value,
+                                                limitby=(0, 1)).first()
+            if location:
+                return location.value
+            else:
+                return None
+
+    table.virtualfields.append(S3LocationVirtualFields())
     s3mgr.configure(tablename,
                     # Don't include Bulky Location Selector in List Views
                     listadd=False,
@@ -172,7 +188,8 @@ def location():
                     report_filter=gis_location_adv_search,
                     report_rows = ["name"],
                     report_cols = [],
-                    report_fact = ["population"],
+                    report_fact = [(T("Population"), "population")],
+                    #report_fact = [(T("Population"), "tag.value")],
                     report_method=["sum"],
                     )
 
@@ -340,16 +357,11 @@ def location():
 
             # Hide unnecessary rows
             table.level.readable = table.level.writable = False
-            table.geonames_id.readable = table.geonames_id.writable = False
-            table.osm_id.readable = table.osm_id.writable = False
-            table.source.readable = table.source.writable = False
-            table.url.readable = table.url.writable = False
 
     level = _vars.get("level", None)
     if level:
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
-
 
     country = S3ReusableField("country", "string", length=2,
                               label = T("Country"),
@@ -359,7 +371,8 @@ def location():
                               represent = lambda code: \
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
-    output = s3_rest_controller(csv_extra_fields = [
+    output = s3_rest_controller(rheader=s3db.gis_rheader,
+                                csv_extra_fields = [
                                     dict(label="Country",
                                          field=country())
                                 ])

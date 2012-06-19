@@ -268,10 +268,14 @@ class S3LocationModel(S3Model):
                         )
 
         # Tags as component of Locations
-        add_component("gis_location_tag", gis_location="location_id")
+        add_component("gis_location_tag",
+                      gis_location=dict(joinby="location_id",
+                                        name="tag"))
 
         # Names as component of Locations
-        add_component("gis_location_name", gis_location="location_id")
+        add_component("gis_location_name",
+                      gis_location=dict(joinby="location_id",
+                                        name="name"))
 
         # Locations as component of Locations ('Parent')
         #add_component(table, joinby=dict(gis_location="parent"),
@@ -3599,7 +3603,6 @@ def gis_location_represent(record, showlink=True, simpletext=False):
                                                  table.addr_street,
                                                  table.lat,
                                                  table.lon,
-                                                 table.osm_id,
                                                  cache=cache,
                                                  limitby=(0, 1)).first()
 
@@ -3714,7 +3717,25 @@ def gis_rheader(r, tabs=[]):
     resourcename = r.name
     T = current.T
 
-    if resourcename == "config":
+    if resourcename == "location":
+        tabs = [(T("Location Details"), None),
+                (T("Local Names"), "name"),
+                (T("Key Value pairs"), "tag"),
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(
+                            TR(
+                                TH("%s: " % table.name.label),
+                                record.name,
+                                ),
+                            TR(
+                                TH("%s: " % T("Level")),
+                                record.level,
+                                ),
+                        ), rheader_tabs)
+        
+    elif resourcename == "config":
         # Tabs
         if not tabs:
             tabs = [(T("Profile Details"), None),

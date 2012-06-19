@@ -1317,8 +1317,8 @@ class S3OfficeModel(S3Model):
                                         #notnull=True,
                                         #unique=True,
                                         label=T("Code")),
-                                  #organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  organisation_id(widget = S3OrganisationHierarchyWidget()),
+                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                                  #organisation_id(widget = S3OrganisationHierarchyWidget()),
                                   Field("type", "integer", label = T("Type"),
                                         requires = IS_NULL_OR(IS_IN_SET(org_office_type_opts)),
                                         represent = lambda opt: \
