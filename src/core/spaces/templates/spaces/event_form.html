@@ -5,7 +5,8 @@
 {% comment %}
 The way to validate in this form if it is an edit or an add request is to
 validate the title field. If it's True, it means that it's populated, therefore
-we're editing the form.
+we're editing the form. Remember that this tempalte shows the help_text
+automatically if found in the data models.
 {% endcomment %}
 
 {% block title %}
@@ -46,7 +47,9 @@ we're editing the form.
                 <div class="controls">
                     <div class="input-append">
                         {{ form.title }}
-                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.title.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% if form.title.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.title.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
                     </div>
                     {% if form.title.errors %}
                         <p class="help-block">
@@ -63,7 +66,9 @@ we're editing the form.
                 <div class="controls">
                     <div class="input-append">
                         <input type="text" name="event_date" id="datepicker" class="hasDatePicker">
-                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.event_date.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% if form.event_date.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.event_date.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
                     </div>
                     {% if form.event_date.errors %}
                     <p class="help-block">
@@ -78,8 +83,13 @@ we're editing the form.
             <div class="control-group {% if form.description.errors %}error{% endif%}">
                 <label>{{ form.description.label }}</label>
                 <div class="controls">
-                    {{ form.description }}
-                    {% wysiwyg_editor "id_description" %}
+                    <div class="input-prepend">
+                        {{ form.description }}
+                        {% wysiwyg_editor "id_description" %}
+                        {% if form.description.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.description.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
                     {% if form.description.errors %}
                         <p class="help-block">
                             {% for error in form.description.errors %}
@@ -93,7 +103,12 @@ we're editing the form.
             <div class="control-group {% if form.location.errors %}error{% endif%}">
                 <label>{{ form.location.label }}</label>
                 <div class="controls">
-                    {{ form.location }}
+                    <div class="input-prepend">
+                        {{ form.location }}
+                        {% if form.location.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.location.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
                     {% if form.location.errors %}
                     <p class="help-block">
                         {% for error in form.location.errors %}
@@ -109,7 +124,9 @@ we're editing the form.
                 <div class="controls">
                     <div class="input-prepend">
                         {{ form.user }}
-                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% if form.user.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
                     </div>
                     {% if form.user.errors %}
                     <p class="help-block">
@@ -120,9 +137,6 @@ we're editing the form.
                     {% endif %}
                 </div>
             </div>
-
-            {{ form.space.as_hidden }}
-            {{ form.event_author.as_hidden }}
 
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Cancel" %}</a>

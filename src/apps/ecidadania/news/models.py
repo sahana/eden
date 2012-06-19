@@ -30,17 +30,21 @@ class Post(models.Model):
     """
     Model of a news post.
     """
-    post_title = models.CharField(_('Title'), max_length=100)
+    post_title = models.CharField(_('Title'), max_length=200,
+    help_text=_('Max: 200 characters'))
     post_message = models.TextField(_('Text'))
     pub_date = models.DateTimeField(_('Date'), auto_now_add=True)
     post_lastup = models.DateTimeField(_('Last update'), auto_now=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-                                    null=True)
-    pub_index = models.BooleanField(_('Publish in index page'))
+            null=True,help_text=_('Change the user that will figure as the \
+                                  author'))
+    pub_index = models.BooleanField(_('Publish in index'),
+    help_text=_('This will publish the post in the main site page'))
     space = models.ForeignKey(Space, verbose_name=_('Publish in'),
                                    blank=True, null=True,
             help_text=_('If you want to post to the index leave this blank'))
-    post_tags = TagField()
+    post_tags = TagField(help_text=_('Insert here relevant words related with \
+                                     the post'))
 
     def __unicode__(self):
         return self.post_title

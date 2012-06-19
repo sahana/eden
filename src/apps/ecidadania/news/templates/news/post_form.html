@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load wysiwyg %}
+
+{% comment %}
+The way to validate in this form if it is an edit or an add request is to
+validate the title field. If it's True, it means that it's populated, therefore
+we're editing the form. Remember that this tempalte shows the help_text
+automatically if found in the data models.
+{% endcomment %}
+
+{% block title %}
+    {% if form.title.value %}
+        {% trans "Edit post" %} {{ form.title.value }}
+    {% else %}
+        {% trans "Create new post" %}
+    {% endif %}
+{% endblock %}
+
+
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% endif %}
+{% endblock %}
+
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% endif %}
+{% endblock %}
+
+{% if get_place %}
+    {% block space %}
+        <a class="brand" href="{{ get_place.get_absolute_url }}">{{ get_place.name }}</a>
+    {% endblock %}
+{% endif %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span12">
+        {% if form.title.value %}
+            <h3>{% trans "Edit post" %} {{ form.title.value }}</h3>
+        {% else %}
+            <h3>{% trans "Create new post" %}</h3>
+        {% endif %}
+
+        <form class="form-horizontal" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <span class="help-inline">{{ error|escape }}</span>
+                {% endfor %}
+            {% endif %}
+
+            <div class="control-group {% if form.post_title.errors %}error{% endif%}">
+                <label>{{ form.post_title.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.post_title }}
+                        {% if form.post_title.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.post_title.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.post_title.errors %}
+                    <p class="help-block">
+                        {% for error in form.post_title.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="control-group {% if form.post_message.errors %}error{% endif%}">
+                <label>{{ form.post_message.label }}</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        {{ form.post_message }}
+                        {% wysiwyg_editor "id_post_message" %}
+                        {% if form.post_message.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.post_message.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.post_message.errors %}
+                    <p class="help-block">
+                        {% for error in form.post_message.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="control-group {% if form.post_tags.errors %}error{% endif%}">
+                <label>{{ form.post_tags.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.post_tags }}
+                        {% if form.post_tags.help_text %}
+                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.post_tags.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.post_tags.errors %}
+                    <p class="help-block">
+                        {% for error in form.post_tags.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {% if request.user.is_staff %}
+            <hr>
+            <h3>{% trans "Staff members options" %}</h3>
+
+            <div class="control-group {% if form.pub_index.errors %}error{% endif%}">
+                <label class="control-label">{{ form.pub_index.label }}
+                    {% if form.pub_index.help_text %}
+                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.pub_index.help_text }}"><i class="icon-question-sign"></i></a></span>
+                    {% endif %}
+                </label>
+                <div class="controls">
+                    <label class="checkbox">
+                        {{ form.pub_index }}
+                    </label>
+                    {% if form.pub_index.errors %}
+                        <p class="help-block">
+                            {% for error in form.pub_index.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="control-group {% if form.author.errors %}error{% endif%}">
+                <label>{{ form.author.label }}</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        {{ form.author }}
+                        {% if form.author.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.author.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.author.errors %}
+                        <p class="help-block">
+                            {% for error in form.author.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="control-group {% if form.space.errors %}error{% endif%}">
+                <label>{{ form.space.label }}</label>
+                <div class="controls">
+                    <div class="input-prepend">
+                        {{ form.space }}
+                        {% if form.space.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.space.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.space.errors %}
+                        <p class="help-block">
+                            {% for error in form.space.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <hr />
+            <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
+            <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Publish' %}" />
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+

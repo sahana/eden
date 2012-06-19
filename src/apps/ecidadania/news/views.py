@@ -49,7 +49,7 @@ class AddPost(FormView):
     :context: get_place
     """
     form_class = NewsForm
-    template_name = 'news/post_add.html'
+    template_name = 'news/post_form.html'
     
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -104,7 +104,7 @@ class EditPost(UpdateView):
     :context: get_place
     """
     model = Post
-    template_name = 'news/post_edit.html'
+    template_name = 'news/post_form.html'
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])

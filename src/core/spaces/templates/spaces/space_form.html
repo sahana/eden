@@ -5,7 +5,8 @@
 {% comment %}
 The way to validate in this form if it is an edit or an add request is to
 validate the get_request context variable. If it's True, it means that it's an
-already created space, therefore we're editing the form.
+already created space, therefore we're editing the form. Remember that this
+tempalte shows the help_text automatically if found in the data models.
 {% endcomment %}
 
 {% block title %}
@@ -59,7 +60,9 @@ already created space, therefore we're editing the form.
                     <div class="controls">
                         <div class="input-append">
                             {{ form.name }}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% if form.name.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
                         </div>
                         {% if form.name.errors %}
                             <p class="help-block">
@@ -76,7 +79,9 @@ already created space, therefore we're editing the form.
                     <div class="controls">
                         <div class="input-append">
                             {{ form.url }}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.url.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% if form.url.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.url.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
                         </div>
                         {% if form.url.errors %}
                             <p class="help-block">
@@ -91,8 +96,13 @@ already created space, therefore we're editing the form.
                 <div class="control-group {% if form.description.errors %}error{% endif%}">
                     <label>{{ form.description.label }}</label>
                     <div class="controls">
-                        {{ form.description }}
-                        {% wysiwyg_editor "id_description" %}
+                        <div class="input-prepend">
+                            {{ form.description }}
+                            {% wysiwyg_editor "id_description" %}
+                            {% if form.description.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.description.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
                         {% if form.name.errors %}
                             <p class="help-block">
                                 {% for error in form.description.errors %}
@@ -104,7 +114,11 @@ already created space, therefore we're editing the form.
                 </div>
 
                 <div class="control-group {% if form.logo.errors %}error{% endif%}">
-                    <label>{{ form.logo.label }} <a href="#" rel="tooltip" title="{{ form.logo.help_text }}"><i class="icon-question-sign"></i></a></label>
+                    <label>{{ form.logo.label }}
+                        {% if form.logo.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.logo.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
                     <div class="controls">
                         <div class="row">
                             <div class="span2">
@@ -127,7 +141,11 @@ already created space, therefore we're editing the form.
                 </div>
 
                 <div class="control-group {% if form.banner.errors %}error{% endif%}">
-                    <label>{{ form.banner.label }} <a href="#" rel="tooltip" title="{{ form.banner.help_text }}"><i class="icon-question-sign"></i></a></label>
+                    <label>{{ form.banner.label }}
+                        {% if form.banner.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.banner.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
                     <div class="controls">
                         <div class="row">
                             <div class="span4">
@@ -155,12 +173,14 @@ already created space, therefore we're editing the form.
                     <div class="controls">
                         <div class="input-prepend">
                             {{ form.author }}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.author.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% if form.author.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.author.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
                         </div>
                         {% if form.author.errors %}
                         <p class="help-block">
                             {% for error in form.author.errors %}
-                            {{ error|escape }}
+                                {{ error|escape }}
                             {% endfor %}
                         </p>
                         {% endif %}
@@ -169,7 +189,11 @@ already created space, therefore we're editing the form.
                 {% endif %}
 
                 <div class="control-group {% if form.public.errors %}error{% endif%}">
-                    <label class="control-label">{{ form.public.label }} <a href="#" rel="tooltip" title="{{ form.public.help_text }}"><i class="icon-question-sign"></i></a></label>
+                    <label class="control-label">{{ form.public.label }}
+                        {% if form.public.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.public.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
                     <div class="controls">
                         <label class="checkbox">
                             {{ form.public }}
