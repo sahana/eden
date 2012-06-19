@@ -359,9 +359,9 @@ class S3OptionsMenu(object):
     def __init__(self, name):
         """ Constructor """
 
-        if name in self.__class__.__dict__:
+        try:
             self.menu = getattr(self, name)()
-        else:
+        except:
             self.menu = None
 
     # -------------------------------------------------------------------------
