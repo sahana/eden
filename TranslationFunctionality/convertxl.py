@@ -65,7 +65,7 @@ def parseList(entry,tmpstr):
 
 def read_w2pfile(fileName):
 
-	try:
+      try:
           file = open(fileName)
           fileContent = file.read()
           fileContent = fileContent.replace("\r",'') + '\n'
@@ -80,14 +80,14 @@ def read_w2pfile(fileName):
 	    if i%2 == 0:
                strings.append( (tmpstr[i],tmpstr[i+1]) )
           return strings 
-	except:
+      except:
 	   return []
 
        
 
 def create_spreadsheet(Strings):
 
-        wbk = xlwt.Workbook()
+        wbk = xlwt.Workbook("utf-8")
         sheet = wbk.add_sheet('Translate')
         style = xlwt.XFStyle()
         font = xlwt.Font()
@@ -101,9 +101,10 @@ def create_spreadsheet(Strings):
 	row_num = 1
 
 	for (loc,d1,d2) in Strings:
+	    d2 = d2.decode('string-escape').decode("utf-8")
 	    sheet.write(row_num,0,loc,style)
-            sheet.write(row_num,1,unicode(d1, encoding = "utf-8"),style)
-	    sheet.write(row_num,2,unicode(d2, encoding = "utf-8"),style)
+            sheet.write(row_num,1,d1,style)
+            sheet.write(row_num,2,d2,style)
 	    row_num+=1
 
 	for colx in range(0,3):
@@ -144,7 +145,7 @@ def convert_to_xls(langfile,modlist,filelist):
 	      while i<lim and OldStrings[i][0] < s:
 	          i+=1
 
-	      if i!=lim and OldStrings[i][0] == s:
+	      if i!=lim and OldStrings[i][0] == s and OldStrings[i][1].startswith("*** ") == False:
 	          Strings.append( (l,s,OldStrings[i][1]) )
 	      else:
 	          Strings.append( (l,s,'') )
