@@ -204,7 +204,7 @@ def create_space(request):
                 #messages.success(request, _('Space %s created successfully.') % space.name)
                 return redirect('/spaces/' + space.url)
     
-        return render_to_response('spaces/space_add.html',
+        return render_to_response('spaces/space_form.html',
                               {'form': space_form,
                                'entityformset': entity_forms},
                               context_instance=RequestContext(request))
@@ -315,7 +315,7 @@ def edit_space(request, space_url):
 
     for i in request.user.profile.spaces.all():
         if i.url == space_url or request.user.is_staff:
-            return render_to_response('spaces/space_edit.html',
+            return render_to_response('spaces/space_form.html',
                               {'form': form, 'get_place': place,
                               'entityformset': entity_forms},
                               context_instance=RequestContext(request))

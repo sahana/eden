@@ -60,13 +60,15 @@ class Space(models.Model):
                                     default=_('Write here your description.'))
     date = models.DateTimeField(_('Date of creation'), auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True,
-                                verbose_name=_('Space creator'))
+                                verbose_name=_('Space creator'),
+    help_text=_('Select a user that will be marked as creator of the space'))
 
     logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False), 
                          help_text = _('Valid extensions are jpg, jpeg, png and gif'))
     banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
                            help_text = _('Valid extensions are jpg, jpeg, png and gif'))
-    public = models.BooleanField(_('Public space'))
+    public = models.BooleanField(_('Public space'), help_text="This will make \
+    the space visible to everyone, but registration will be necessary to participate.")
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
