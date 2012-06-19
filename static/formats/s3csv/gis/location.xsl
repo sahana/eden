@@ -139,7 +139,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="L0">
-        <xsl:if test="col[@field='L0']!=''">
+        <xsl:if test="col[@field='L0']!='' and col[@field='ISO2']!=''">
 
             <!-- Create the gis location -->
             <resource name="gis_location">

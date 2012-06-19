@@ -175,7 +175,7 @@ def location():
             location = current.db(query).select(table.value,
                                                 limitby=(0, 1)).first()
             if location:
-                return location.value
+                return int(location.value)
             else:
                 return None
 
@@ -185,12 +185,19 @@ def location():
                     listadd=False,
                     # Custom Search Method
                     search_method=gis_location_search,
-                    report_filter=gis_location_adv_search,
-                    report_rows = ["name"],
-                    report_cols = [],
-                    report_fact = [(T("Population"), "population")],
-                    #report_fact = [(T("Population"), "tag.value")],
-                    report_method=["sum"],
+                    report_options=Storage(
+                            search=gis_location_adv_search,
+                            rows=["name"],
+                            cols=[],
+                            facts=[(T("Population"), "population")],
+                            defaults=Storage(
+                                            rows="name",
+                                            cols=None,
+                                            fact=(T("Population"), "population"),
+                                            aggregate="sum",
+                                            totals=True
+                                            )
+                            ),
                     )
 
     # Custom Method
