@@ -2160,19 +2160,19 @@ class AuthS3(Auth):
             return True
 
         db = current.db
-        session = current.session
+        s3 = current.session.s3
 
         # Trigger HTTP basic auth
         self.s3_logged_in()
 
         # Get the realms
-        if not session.s3:
+        if not s3:
             return False
         realms = None
         if self.user:
             realms = self.user.realms
-        elif session.s3.roles:
-            realms = Storage([(r, None) for r in session.s3.roles])
+        elif s3.roles:
+            realms = Storage([(r, None) for r in s3.roles])
         if not realms:
             return False
 
