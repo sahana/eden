@@ -528,7 +528,7 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
     menus = "applications.%s.private.templates.%s.menus" % \
-            (appname, settings.get_template())
+            (appname, settings.get_theme())
     try:
         exec("import %s as deployment_menus" % menus)
     except ImportError:

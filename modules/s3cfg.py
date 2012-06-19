@@ -786,8 +786,8 @@ class S3Config(Storage):
     # Message Parser Settings
     def get_parser_enabled(self):
             return self.parser.get("parser_enabled")
-    
-    
+
+
     # -------------------------------------------------------------------------
     # Active modules list
     def has_module(self, module_name):

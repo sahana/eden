@@ -223,9 +223,9 @@ S3OptionsMenuLayout = S3OptionsMenuDefaultLayout
 S3MenuSeparatorLayout = S3MenuSeparatorDefaultLayout
 
 application = current.request.application
-template = current.deployment_settings.get_template()
+theme = current.deployment_settings.get_theme()
 
-layouts = "applications.%s.private.templates.%s.layouts" % (application, template)
+layouts = "applications.%s.private.templates.%s.layouts" % (application, theme)
 try:
     exec("import %s as deployment_layouts" % layouts)
 except:
