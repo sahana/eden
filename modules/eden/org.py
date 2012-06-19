@@ -1317,8 +1317,8 @@ class S3OfficeModel(S3Model):
                                         #notnull=True,
                                         #unique=True,
                                         label=T("Code")),
-                                  organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
-                                  #organisation_id(widget = S3OrganisationHierarchyWidget()),
+                                  #organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                                  organisation_id(widget = S3OrganisationHierarchyWidget()),
                                   Field("type", "integer", label = T("Type"),
                                         requires = IS_NULL_OR(IS_IN_SET(org_office_type_opts)),
                                         represent = lambda opt: \
@@ -1964,13 +1964,20 @@ def org_office_controller():
                     comment=T("Search for office by text."),
                     field=["name", "comments", "email"]
                   ),
-                  S3SearchOptionsWidget(
+                  #~ S3SearchOptionsWidget(
+                    #~ name="office_search_org",
+                    #~ label=T("Organization"),
+                    #~ comment=T("Search for office by organization."),
+                    #~ field="organisation_id",
+                    #~ represent ="%(name)s",
+                    #~ cols = 3
+                  #~ ),
+                  S3SearchOrgHierarchyWidget(
                     name="office_search_org",
                     label=T("Organization"),
                     comment=T("Search for office by organization."),
                     field="organisation_id",
                     represent ="%(name)s",
-                    cols = 3
                   ),
                   S3SearchLocationHierarchyWidget(
                     name="office_search_location",

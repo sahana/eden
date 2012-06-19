@@ -43,7 +43,7 @@ from s3navigation import s3_search_tabs
 from s3utils import s3_debug
 from s3tools import S3DateTime
 from s3validators import *
-from s3widgets import CheckboxesWidgetS3
+from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
 from s3rest import S3FieldSelector
 
@@ -54,6 +54,7 @@ __all__ = ["S3SearchWidget",
            "S3SearchLocationHierarchyWidget",
            "S3SearchLocationWidget",
            "S3SearchSkillsWidget",
+           "S3SearchOrgHierarchyWidget",
            "S3Search",
            "S3LocationSearch",
            "S3OrganisationSearch",
@@ -1719,8 +1720,8 @@ $('#%s').live('click', function() {
             if hasattr(widget, "attr"):
                 label = widget.attr.get("label", label)
                 comment = widget.attr.get("comment", comment)
-            tr = TR(TD("%s: " % label, _class="w2p_fl"),
-                    widget.widget(resource, form_values))
+
+            tr = TR(TD("%s: " % label, _class="w2p_fl"), _widget)
 
             if comment:
                 tr.append(DIV(DIV(_class="tooltip",
@@ -2837,5 +2838,21 @@ class S3TrainingSearch(S3Search):
 
         response.headers["Content-Type"] = "application/json"
         return output
+
+
+# =============================================================================
+class S3SearchOrgHierarchyWidget(S3SearchOptionsWidget):
+    def widget(self, resource, vars):
+        field_name = self.field
+
+        # check the field type
+        try:
+            field = resource.table[field_name]
+        except:
+            field_type = "virtual"
+        else:
+            field_type = str(field.type)
+
+        return S3OrganisationHierarchyWidget()(field, {}, **self.attr)
 
 # END =========================================================================

@@ -81,7 +81,7 @@ function parseAffiliates(json) {
 }
 // Get the list of aff
 function getAffiliates(role_id, callback) {
-	var url = S3.Ap.concat('/pr/role' + role_id + '.s3json?show_ids=true');
+	var url = S3.Ap.concat('/pr/role/' + role_id + '.s3json?show_ids=true');
 	$.getJSON(url, callback);
 }
 
@@ -187,10 +187,6 @@ function loadNode(event) {
 	});
 }
 
-function back(event) {
-
-}
-
 function Menu(field_name) {
 	return $("<ul/>")
 		.addClass(" ui-menu ui-widget ui-widget-content ui-corner-all")
@@ -270,25 +266,28 @@ function updateDomHierarchy(parent, items) {
 }
 
 jQuery(function($) {
-        url = S3.Ap.concat('/org/organisation.json?show_ids=true');
-        $.getJSON(url, function(data) {
-		for (var i=0; i<data.length; i++) {
-			var id = data[i].id;
-			var pe_id = data[i].pe_id;
-			var name = data[i].name;
+    url = S3.Ap.concat('/org/organisation.json?show_ids=true');
+    $.getJSON(url, function(data) {
+        for (var i=0; i<data.length; i++) {
+            var id = data[i].id;
+            var pe_id = data[i].pe_id;
+            var name = data[i].name;
 
-			organisations[pe_id] = {
-				"id": id,
-				"pe_id": pe_id,
-				"name": name
-			};
-		}
-	});
+            organisations[pe_id] = {
+                "id": id,
+                "pe_id": pe_id,
+                "name": name
+            };
+        }
+    });
 
 	$(".widget-org-hierarchy").each(function(index) {
 		var field = $(this);
 		var field_name = field.attr("name");
+        var field_value = field.val();
 		var options = window[field_name + "_options"];
+
+        var selected_index = null;
 
 		var entity_list = [];
 		if (options != undefined) {
@@ -308,6 +307,9 @@ jQuery(function($) {
 				};
 				org_hierarchy[pe_id] = entity;
 				entity_list.push(entity);
+                if (field_value == id) {
+					selected_index = i;
+				}
 			}
 		}
 
@@ -348,8 +350,15 @@ jQuery(function($) {
 				field.change();
 				crumb.addClass("selected");
 			}
+			else if (entity == undefined) {
+				field.val("");
+				field.change();
+			}
 		});
 
 		field.hide();
+		if (selected_index != undefined) {
+			loadNode({currentTarget:menu[0].childNodes[selected_index].childNodes[0],delegateTarget:menu[0]});
+		}
 	});
 });

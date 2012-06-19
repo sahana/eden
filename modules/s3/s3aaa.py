@@ -2168,9 +2168,10 @@ class AuthS3(Auth):
         # Get the realms
         if not session.s3:
             return False
+        realms = None
         if self.user:
             realms = self.user.realms
-        else:
+        elif session.s3.roles:
             realms = Storage([(r, None) for r in session.s3.roles])
         if not realms:
             return False
