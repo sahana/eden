@@ -280,12 +280,9 @@ class S3Model(object):
             module = models.__dict__[name]
             for n in module.__all__:
                 model = module.__dict__[n]
-                if type(model).__name__ == "type":
-                    try:
-                        model(name)
-                    except:
-                        # new 'menus' fails here
-                        pass
+                if type(model).__name__ == "type" and \
+                   issubclass(model, S3Model):
+                    model(name)
                 elif n.startswith("%s_" % name):
                     s3[n] = model
         return
