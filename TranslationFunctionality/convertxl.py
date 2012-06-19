@@ -2,10 +2,7 @@
 import sys
 import xlwt
 import group_mod
-import parser
-import symbol
-import token
-import codecs
+import parsew2p
 
 
 
@@ -48,43 +45,6 @@ def remove_duplicates(Strings):
 
 
 
-def parseList(entry,tmpstr):
-
-        if isinstance(entry,list):
-             id = entry[0]
-             value = entry[1]
-             if isinstance(value,list):
-                  for element in entry:
-                       parseList(element,tmpstr)
-             else:
-		     if token.tok_name[id] == "STRING":
-		           tmpstr.append(value)
-		            
-
-
-
-def read_w2pfile(fileName):
-
-      try:
-          file = open(fileName)
-          fileContent = file.read()
-          fileContent = fileContent.replace("\r",'') + '\n'
-          tmpstr=[]
-          st = parser.suite(fileContent)
-          stList = parser.st2list(st,line_info=1)
-          for element in stList:
-             parseList(element,tmpstr)
-
-          strings = []
-          for i in range(0,len(tmpstr)):
-	    if i%2 == 0:
-               strings.append( (tmpstr[i],tmpstr[i+1]) )
-          return strings 
-      except:
-	   return []
-
-       
-
 def create_spreadsheet(Strings):
 
         wbk = xlwt.Workbook("utf-8")
@@ -101,7 +61,7 @@ def create_spreadsheet(Strings):
 	row_num = 1
 
 	for (loc,d1,d2) in Strings:
-	    d2 = d2.decode('string-escape').decode("utf-8")
+            d2 = d2.decode('string-escape').decode("utf-8")
 	    sheet.write(row_num,0,loc,style)
             sheet.write(row_num,1,d1,style)
             sheet.write(row_num,2,d2,style)
@@ -131,7 +91,7 @@ def convert_to_xls(langfile,modlist,filelist):
         NewStrings = remove_duplicates(NewStrings)
         NewStrings.sort( key=lambda tup: tup[1] )
 
-	OldStrings = read_w2pfile(langfile)
+	OldStrings = parsew2p.read_w2pfile(langfile)
         OldStrings = remove_quotes(OldStrings)
 	OldStrings.sort( key=lambda tup: tup[0] )
 
