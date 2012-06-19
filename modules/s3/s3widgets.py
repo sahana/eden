@@ -608,6 +608,7 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
         s3 = current.response.s3
         table = current.s3db.org_organisation
         options = self.primary_options
+        name = attributes.get("_name", field.name)
 
         if options is None:
             requires = field.requires
@@ -630,7 +631,7 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
                 else:
                     raise SyntaxError, "widget cannot determine options of %s" % field
 
-        javascript_array = "%s_options = %s;" % (attributes.get("_name"),
+        javascript_array = "%s_options = %s;" % (name,
                                                  json.dumps(options))
         s3.js_global.append(javascript_array)
         s3.scripts.append("%s/%s" % (s3.script_dir, "s3.orghierarchy.js"))
