@@ -2,7 +2,14 @@
 {% load i18n %}
 {% load wysiwyg %}
 
-{% block title %}{% trans "Create new space" %}{% endblock %}
+{% block title %}
+    {% if get_place %}
+        {% trans "Edit space" %} {{ get_place.name }}
+    {% else %}
+        {% trans "Create a new space" %}
+    {% endif %}
+{% endblock %}
+
 {% block logo %}
     {% if get_place %}
         <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
@@ -23,7 +30,11 @@
 
     <div class="row">
         <div class="span12">
-            <h3>{% trans "Create a new space" %}</h3>
+            {% if get_place %}
+                <h3>{% trans "Edit space" %} {{ get_place.name }}</h3>
+            {% else %}
+                <h3>{% trans "Create a new space" %}</h3>
+            {% endif %}
         </div>
     </div>
     
