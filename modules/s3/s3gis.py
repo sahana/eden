@@ -676,11 +676,6 @@ class GIS(object):
             update_location_tree to get the path.
         """
 
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
-
         if not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
 
@@ -704,9 +699,12 @@ class GIS(object):
                 return reverse_path
 
             # Retrieve parents - order in which they're returned is arbitrary.
+            s3db = current.s3db
+            cache = s3db.cache
+            table = s3db.gis_location
             query = (table.id.belongs(reverse_path))
-            fields = [table.id, table.name, table.code, table.level, table.lat, table.lon]
-            unordered_parents = db(query).select(cache=cache, *fields)
+            fields = [table.id, table.name, table.level, table.lat, table.lon]
+            unordered_parents = current.db(query).select(cache=cache, *fields)
 
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
@@ -1390,28 +1388,28 @@ class GIS(object):
             cached = True
 
         if not cached:
-            db = current.db
-            _location = "gis_location" in db and db.gis_location
-            if not _location:
-                # Called before gis_location is in db
-                return None
-
-            query = (_location.level == "L0")
+            s3db = current.s3db
+            table = s3db.gis_location
+            ttable = s3db.gis_location_tag
+            query = (table.level == "L0") & \
+                    (ttable.tag == "ISO2") & \
+                    (ttable.location_id == table.id)
             _countries = settings.get_gis_countries()
             if _countries:
-                query = query & (_location.code.belongs(_countries))
-            countries = db(query).select(_location.id,
-                                         _location.code,
-                                         _location.name,
-                                         orderby=_location.name)
+                query = query & (ttable.value.belongs(_countries))
+            countries = db(query).select(table.id,
+                                         ttable.value,
+                                         table.name,
+                                         orderby=table.name)
             if not countries:
                 return []
 
             countries_by_id = OrderedDict()
             countries_by_code = OrderedDict()
             for row in countries:
-                countries_by_id[row.id] = row.name
-                countries_by_code[row.code] = row.name
+                _location = row["gis_location"]
+                countries_by_id[_location.id] = _location.name
+                countries_by_code[row["gis_location_tag"].value] = _location.name
 
             # Don't expose these while they're being built. Set countries last
             # so it can be used to tell when all exist.
@@ -1461,7 +1459,6 @@ class GIS(object):
             query = (table.id == location)
             location = db(query).select(table.id,
                                         table.path,
-                                        table.code,
                                         table.level,
                                         limitby=(0, 1),
                                         cache=cache).first()
@@ -1473,9 +1470,16 @@ class GIS(object):
             if key_type == "id":
                 return location.id
             elif key_type == "code":
-                return location.code
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.location_id == location.id)
+                tag = db(query).select(ttable.value,
+                                       limitby=(0, 1)).first()
+                if tag:
+                    return tag.value
         else:
-            parents = self.get_parents(location.id, feature=location)
+            parents = self.get_parents(location.id,
+                                       feature=location)
             if parents:
                 for row in parents:
                     if row.level == "L0":
@@ -2810,7 +2814,7 @@ class GIS(object):
                     parentCodeQuery & \
                     (ttable.value == parentCode)
             parent = db(query).select(table.id,
-                                      table.code,
+                                      ttable.value,
                                       limitby=(0, 1),
                                       cache=cache).first()
             if not parent:
@@ -2822,8 +2826,8 @@ class GIS(object):
             if countries:
                 # Skip the countries which we're not interested in
                 if level == "L1":
-                    if parent.code not in countries:
-                        #s3_debug("Skipping %s as not in countries list" % parent.code)
+                    if parent["gis_location_tag"].value not in countries:
+                        #s3_debug("Skipping %s as not in countries list" % parent["gis_location_tag"].value)
                         count += 1
                         continue
                 else:
@@ -2923,6 +2927,7 @@ class GIS(object):
             @ToDo: Complete this
                 - not currently possible to get all data from the 1 file easily
                 - no ISO2
+                - needs updating for gis_location_tag model
                 - only the lowest available levels accessible
                 - use GADMv1 for L0, L1, L2 & GADMv2 for specific lower?
         """
@@ -3026,7 +3031,8 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     pass
                 else:
-                    query = (table.code == code)
+                    ## FIXME
+                    ##query = (table.code == code)
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
                         gis_feature_type = 2

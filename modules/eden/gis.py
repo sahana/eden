@@ -3280,6 +3280,9 @@ class S3GISThemeModel(S3Model):
         # =====================================================================
         # GIS Theme Data
         #
+        # @ToDo: Replace this with gis_location_tag?
+        #        - layer just selects a tag to filter on?
+        #
 
         tablename = "gis_theme_data"
         table = define_table(tablename,
