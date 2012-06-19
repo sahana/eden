@@ -31,10 +31,10 @@ def register_validation(form):
         regex = re.compile(single_phone_number_pattern)
         if not regex.match(form.vars.mobile):
             form.errors.mobile = T("Invalid phone number")
-    elif deployment_settings.get_auth_registration_mobile_phone_mandatory():
+    elif settings.get_auth_registration_mobile_phone_mandatory():
         form.errors.mobile = T("Phone number is required")
 
-    org = deployment_settings.get_auth_registration_organisation_id_default()
+    org = settings.get_auth_registration_organisation_id_default()
     if org:
         # Add to default organisation
         form.vars.organisation_id = org
@@ -49,15 +49,15 @@ def register_onaccept(form):
     # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
     person_id = auth.s3_register(form)
 
-    if form.vars.organisation_id and not deployment_settings.get_hrm_show_staff():
+    if form.vars.organisation_id and not settings.get_hrm_show_staff():
         # Convert HRM record to a volunteer
         htable = s3db.hrm_human_resource
         query = (htable.person_id == person_id)
         db(query).update(type=2)
 
     # Add to required roles:
-    roles = deployment_settings.get_auth_registration_roles()
-    if roles or deployment_settings.has_module("delphi"):
+    roles = settings.get_auth_registration_roles()
+    if roles or settings.has_module("delphi"):
         utable = auth.settings.table_user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
@@ -77,7 +77,7 @@ def register_onaccept(form):
             mtable.insert(user_id=user[ltable._tablename].user_id,
                           group_id=role.id)
 
-    if deployment_settings.has_module("delphi"):
+    if settings.has_module("delphi"):
         # Add user as a participant of the default problem group
         table = s3db.delphi_group
         query = (table.uuid == "DEFAULT")
@@ -97,7 +97,7 @@ _table_user = auth.settings.table_user
 _table_user.first_name.label = T("First Name")
 _table_user.first_name.comment = SPAN("*", _class="req")
 _table_user.last_name.label = T("Last Name")
-if deployment_settings.get_L10n_mandatory_lastname():
+if settings.get_L10n_mandatory_lastname():
     _table_user.last_name.comment = SPAN("*", _class="req")
 _table_user.email.label = T("E-mail")
 _table_user.email.comment = SPAN("*", _class="req")
@@ -115,7 +115,7 @@ org_widget = IS_ONE_OF(db, "org_organisation.id",
                        organisation_represent,
                        orderby="org_organisation.name",
                        sort=True)
-if deployment_settings.get_auth_registration_organisation_mandatory():
+if settings.get_auth_registration_organisation_mandatory():
     _table_user.organisation_id.requires = org_widget
 else:
     _table_user.organisation_id.requires = IS_NULL_OR(org_widget)
@@ -141,11 +141,11 @@ _table_user.site_id.comment = DIV(_class="tooltip",
 def index():
     """ Main Home Page """
 
-    title = deployment_settings.get_system_name()
+    title = settings.get_system_name()
     response.title = title
 
     item = ""
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         item = db(table.module == module).select(table.body,
                                                  limitby=(0, 1)).first()
@@ -154,8 +154,8 @@ def index():
         else:
             item = ""
 
-    if deployment_settings.has_module("cr"):
-        s3mgr.load("cr_shelter")
+    if settings.has_module("cr"):
+        table = s3db.cr_shelter
         SHELTERS = s3.crud_strings["cr_shelter"].title_list
     else:
         SHELTERS = ""
@@ -194,7 +194,7 @@ def index():
                 }
 
     for div, label, app, function in menu_btns:
-        if deployment_settings.has_module(app):
+        if settings.has_module(app):
             # @ToDo: Also check permissions (e.g. for anonymous users)
             menu_divs[div].append(A(DIV(label,
                                         _class = "menu-btn-r"),
@@ -230,7 +230,7 @@ def index():
         org_items = organisation()
         datatable_ajax_source = "/%s/default/organisation.aaData" % \
                                 appname
-        response.s3.actions = None
+        s3.actions = None
         response.view = "default/index.html"
         auth.permission.controller = "org"
         auth.permission.function = "site"
@@ -256,7 +256,7 @@ def index():
                                         ),
                                     _id = "manage_facility_box",
                                     _class = "menu_box fleft")
-                response.s3.jquery_ready.append( """
+                s3.jquery_ready.append( """
 $('#manage_facility_select').change(function() {
     $('#manage_facility_btn').attr('href', S3.Ap.concat('/default/site/',  $('#manage_facility_select').val()));
 })""" )
@@ -291,7 +291,7 @@ $('#manage_facility_select').change(function() {
     #    admin_tel = T("Not Set").xml(),
 
     # Login/Registration forms
-    self_registration = deployment_settings.get_security_self_registration()
+    self_registration = settings.get_security_self_registration()
     registered = False
     login_form = None
     login_div = None
@@ -306,7 +306,7 @@ $('#manage_facility_select').change(function() {
         if self_registration:
             # Provide a Registration box on front page
             request.args = ["register"]
-            if deployment_settings.get_terms_of_service():
+            if settings.get_terms_of_service():
                 auth.messages.submit_button = T("I accept. Create my account.")
             else:
                 auth.messages.submit_button = T("Register")
@@ -319,9 +319,9 @@ $('#manage_facility_select').change(function() {
             s3_register_validation()
 
             if session.s3.debug:
-                response.s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )
+                s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )
             else:
-                response.s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )
+                s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )
             if request.env.request_method == "POST":
                 post_script = """// Unhide register form
     $('#register_form').removeClass('hide');
@@ -349,7 +349,7 @@ $('#manage_facility_select').change(function() {
         // Unhide login form
         $('#login_form').removeClass('hide');
     });""" % post_script
-            response.s3.jquery_ready.append(register_script)
+            s3.jquery_ready.append(register_script)
 
         # Provide a login box on front page
         request.args = ["login"]
@@ -359,19 +359,19 @@ $('#manage_facility_select').change(function() {
                         P(XML(T("Registered users can %(login)s to access the system" % \
                                 dict(login=B(T("login")))))))
 
-    if deployment_settings.frontpage.rss:
-        response.s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
-        response.s3.scripts.append( "http://www.google.com/jsapi?key=notsupplied-wizard" )
-        response.s3.scripts.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js" )
+    if settings.frontpage.rss:
+        s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
+        s3.scripts.append( "http://www.google.com/jsapi?key=notsupplied-wizard" )
+        s3.scripts.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js" )
         counter = 0
         feeds = ""
-        for feed in deployment_settings.frontpage.rss:
+        for feed in settings.frontpage.rss:
             counter += 1
             feeds = "".join((feeds,
                              "{title: '%s',\n" % feed["title"],
                              "url: '%s'}" % feed["url"]))
             # Don't add a trailing comma for old IEs
-            if counter != len(deployment_settings.frontpage.rss):
+            if counter != len(settings.frontpage.rss):
                 feeds += ",\n"
         feed_control = "".join(("""
 function LoadDynamicFeedControl() {
@@ -391,7 +391,7 @@ function LoadDynamicFeedControl() {
 // Load the feeds API and set the onload callback.
 google.load('feeds', '1');
 google.setOnLoadCallback(LoadDynamicFeedControl);"""))
-        response.s3.js_global.append( feed_control )
+        s3.js_global.append( feed_control )
 
     return dict(title = title,
                 item = item,
@@ -424,9 +424,9 @@ def organisation():
     table.id.label = T("Organization")
     table.id.represent = organisation_represent
 
-    response.s3.dataTable_sPaginationType = "two_button"
-    response.s3.dataTable_sDom = "rtip" #"frtip" - filter broken
-    response.s3.dataTable_iDisplayLength = 25
+    s3.dataTable_sPaginationType = "two_button"
+    s3.dataTable_sDom = "rtip" #"frtip" - filter broken
+    s3.dataTable_iDisplayLength = 25
 
     s3mgr.configure("org_organisation",
                     listadd = False,
@@ -463,7 +463,7 @@ def message():
     #if "verify_email_sent" in request.args:
     title = T("Account Registered - Please Check Your Email")
     message = T( "%(system_name)s has sent an email to %(email)s to verify your email address.\nPlease check your email to verify this address. If you do not receive this email please check you junk email or spam filters." )\
-                 % {"system_name": deployment_settings.get_system_name(),
+                 % {"system_name": settings.get_system_name(),
                     "email": request.vars.email}
     image = "email_icon.png"
     return dict(title = title,
@@ -506,8 +506,8 @@ def user():
         _table_user.utc_offset.writable = True
 
         # If we have an opt_in and some post_vars then update the opt_in value
-        if deployment_settings.get_auth_opt_in_to_email() and request.post_vars:
-            opt_list = deployment_settings.get_auth_opt_in_team_list()
+        if settings.get_auth_opt_in_to_email() and request.post_vars:
+            opt_list = settings.get_auth_opt_in_team_list()
             removed = []
             selected = []
             for opt_in in opt_list:
@@ -551,7 +551,7 @@ def user():
 
     auth.settings.profile_onaccept = user_profile_onaccept
 
-    self_registration = deployment_settings.get_security_self_registration()
+    self_registration = settings.get_security_self_registration()
 
     login_form = register_form = None
     if request.args and request.args(0) == "login":
@@ -564,7 +564,7 @@ def user():
         if not self_registration:
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
-        if deployment_settings.get_terms_of_service():
+        if settings.get_terms_of_service():
             auth.messages.submit_button = T("I accept. Create my account.")
         else:
             auth.messages.submit_button = T("Register")
@@ -577,15 +577,15 @@ def user():
     elif request.args and request.args(0) == "change_password":
         form = auth()
     elif request.args and request.args(0) == "profile":
-        if deployment_settings.get_auth_openid():
+        if settings.get_auth_openid():
             form = DIV(form, openid_login_form.list_user_openids())
         else:
             form = auth()
         # add an opt in clause to receive emails depending on the deployment settings
-        if deployment_settings.get_auth_opt_in_to_email():
+        if settings.get_auth_opt_in_to_email():
             ptable = s3db.pr_person
             ltable = s3db.pr_person_user
-            opt_list = deployment_settings.get_auth_opt_in_team_list()
+            opt_list = settings.get_auth_opt_in_team_list()
             query = (ltable.user_id == form.record.id) & \
                     (ltable.pe_id == ptable.pe_id)
             db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
@@ -650,7 +650,7 @@ def source():
 # About Sahana
 def apath(path=""):
     """ Application path """
-    import os
+
     from gluon.fileutils import up
     opath = up(request.folder)
     #TODO: This path manipulation is very OS specific.
@@ -665,9 +665,11 @@ def about():
         @ToDo: Avoid relying on Command Line tools which may not be in path
                - pull back info from Python modules instead?
     """
+
     import sys
     import subprocess
     import string
+
     python_version = sys.version
     web2py_version = open(apath("../VERSION"), "r").read()[8:]
     sahana_version = open(os.path.join(request.folder, "VERSION"), "r").read()
@@ -746,7 +748,7 @@ def contact():
             Custom View
     """
 
-    if auth.is_logged_in() and deployment_settings.has_module("support"):
+    if auth.is_logged_in() and settings.has_module("support"):
         # Provide an internal Support Requests ticketing system.
         prefix = "support"
         resourcename = "req"
@@ -768,7 +770,7 @@ def contact():
                     actions.readable = False
                     actions.writable = False
             return True
-        response.s3.prep = prep
+        s3.prep = prep
 
         output = s3_rest_controller(prefix, resourcename)
         return output

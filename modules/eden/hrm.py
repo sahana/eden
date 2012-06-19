@@ -3566,6 +3566,14 @@ class HRMProgrammePersonVirtualFields:
         if person_id:
             active = hrm_active(person_id)
             return active
+            # If we do this then it can't be used in reports
+            #T = current.T
+            #if active:
+            #    _active = DIV(T("Yes"),
+            #                  _style="color:green;")
+            #else:
+            #    _active = DIV(T("No"),
+            #                  _style="color:red;")
 
         return current.messages.NONE
 

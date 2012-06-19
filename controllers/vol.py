@@ -59,20 +59,22 @@ def human_resource():
                    "person_id",
                    "job_role_id",
                    "organisation_id",
-                   "location_id",
-                   (T("Email"), "email"),
-                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
-                   (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate")
                   ]
-    if deployment_settings.get_hrm_experience() == "programme":
+    append = list_fields.append
+    if settings.get_hrm_experience() == "programme":
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
-        list_fields.append((T("Programme"), "programme"))
-        list_fields.append((T("Active?"), "active"))
+        append((T("Status"), "active"))
+    append("location_id")
+    append((T("Email"), "email"))
+    append((deployment_settings.get_ui_label_mobile_phone(), "phone"))
+    append((T("Trainings"), "course"))
+    append((T("Certificates"), "certificate"))
+    if settings.get_hrm_experience() == "programme":
+        append((T("Programme"), "programme"))
     else:
-        list_fields.append("status")
+        append("status")
     s3mgr.configure(tablename,
                     list_fields = list_fields)
     table.job_role_id.label = T("Volunteer Role")
@@ -165,11 +167,11 @@ def volunteer():
                    "person_id",
                    "job_role_id",
                    "organisation_id",
+                   (settings.get_ui_label_mobile_phone(), "phone"),
                    "location_id",
-                   (T("Email"), "email"),
-                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate")
+                   (T("Certificates"), "certificate"),
+                   (T("Email"), "email"),
                   ]
     report_options = s3mgr.model.get_config(tablename,
                                             "report_options")
@@ -178,12 +180,12 @@ def volunteer():
                                                    "search_method")
     # Remove Facility
     human_resource_search.advanced.pop(5)
-    if deployment_settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_experience() == "programme":
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
-        list_fields.append((T("Programme"), "programme"))
-        list_fields.append((T("Active?"), "active"))
+        list_fields.insert(4, (T("Active?"), "active"))
+        list_fields.insert(6, (T("Programme"), "programme"))
         # Add VF to Report Options
         report_fields = report_options.rows
         report_fields.append((T("Programme"), "programme"))

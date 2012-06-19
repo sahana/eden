@@ -138,17 +138,17 @@ class S3Model(object):
     def __getitem__(self, key):
         """ Model auto-loader """
 
-        s3 = current.response.s3
-        db = current.db
         if str(key) in self.__dict__:
             return dict.__getitem__(self, str(key))
-        elif key in db:
-            return db[key]
-        elif key in s3:
-            return s3[key]
         else:
-            return self.table(key,
-                              AttributeError("undefined table: %s" % key))
+            db = current.db
+            if key in db:
+                return db[key]
+            elif key in current.response.s3:
+                return current.response.s3[key]
+            else:
+                return self.table(key,
+                                  AttributeError("undefined table: %s" % key))
 
     # -------------------------------------------------------------------------
     def model(self):

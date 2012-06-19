@@ -5,9 +5,7 @@
     <!-- **********************************************************************
          S3CSV Common Templates
 
-         2011-11-07 / Dominic König <dominic[at]aidiq[dot]com>
-
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-12 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation

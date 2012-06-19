@@ -2416,6 +2416,7 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         layer = {
             "url" : "http://gadm.org/data/gadm_v1_lev0_shp.zip",
@@ -2500,7 +2501,9 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     pass
                 else:
-                    query = (table.code == code)
+                    query = (table.id == ttable.location_id) & \
+                            (ttable.tag == "ISO2") & \
+                            (ttable.value == code)
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
                         gis_feature_type = 2
@@ -2515,12 +2518,18 @@ class GIS(object):
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
                     code2 = feat.GetField(code2Field)
-                    area = feat.GetField("Shape_Area")
+                    #area = feat.GetField("Shape_Area")
                     try:
                         db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt,
-                                         code2=code2,
-                                         area=area)
+                                         wkt=wkt)
+                        id = db(query).select(table.id,
+                                              limitby=(0, 1)).first().id
+                        ttable.insert(location_id = id,
+                                      tag = "ISO3",
+                                      value = code2)
+                        #ttable.insert(location_id = location_id,
+                        #              tag = "area",
+                        #              value = area)
                     except db._adapter.driver.OperationalError, exception:
                         s3_debug(exception)
 
@@ -2561,10 +2570,13 @@ class GIS(object):
                 "zipfile" : "gadm_v1_lev1_shp.zip",
                 "shapefile" : "gadm1_lev1",
                 "namefield" : "NAME_1",
-                "codefield" : "ID_1",   # This field is used to uniquely identify the L1 for updates
-                "code2field" : "ISO",   # This field is used to uniquely identify the L0 for parenting the L1s
+                # Uniquely identify the L1 for updates
+                "sourceCodeField" : "ID_1",
+                "edenCodeField" : "GADM1",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L0",
-                "parentCode" : "code2"
+                "parentSourceCodeField" : "ISO",
+                "parentEdenCodeField" : "ISO3",
             }
         elif level == "L2":
             layer = {
@@ -2572,10 +2584,13 @@ class GIS(object):
                 "zipfile" : "gadm_v1_lev2_shp.zip",
                 "shapefile" : "gadm_v1_lev2",
                 "namefield" : "NAME_2",
-                "codefield" : "ID_2",    # This field is used to uniquely identify the L2 for updates
-                "code2field" : "ID_1",   # This field is used to uniquely identify the L1 for parenting the L2s
+                # Uniquely identify the L2 for updates
+                "sourceCodeField" : "ID_2",
+                "edenCodeField" : "GADM2",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L1",
-                "parentCode" : "code"
+                "parentSourceCodeField" : "ID_1",
+                "parentEdenCodeField" : "GADM1",
             }
         else:
             s3_debug("Level %s not supported!" % level)
@@ -2668,30 +2683,29 @@ class GIS(object):
         nGroupTransactions = 200
         nFIDToFetch = ogr.NullFID
         inputFileName = "%s.shp" % layerName
-        inputDS = ogr.Open( inputFileName, False )
+        inputDS = ogr.Open(inputFileName, False)
         outputFileName = "CSV"
         outputDriver = ogr.GetDriverByName("CSV")
-        outputDS = outputDriver.CreateDataSource( outputFileName, options = [] )
+        outputDS = outputDriver.CreateDataSource(outputFileName, options=[])
         # GADM only has 1 layer/source
         inputLayer = inputDS.GetLayer(0)
         inputFDefn = inputLayer.GetLayerDefn()
         # Create the output Layer
-        outputLayer = outputDS.CreateLayer( layerName )
+        outputLayer = outputDS.CreateLayer(layerName)
         # Copy all Fields
         papszFieldTypesToString = []
         inputFieldCount = inputFDefn.GetFieldCount()
-        panMap = [ -1 for i in range(inputFieldCount) ]
+        panMap = [-1 for i in range(inputFieldCount)]
         outputFDefn = outputLayer.GetLayerDefn()
         nDstFieldCount = 0
         if outputFDefn is not None:
             nDstFieldCount = outputFDefn.GetFieldCount()
         for iField in range(inputFieldCount):
             inputFieldDefn = inputFDefn.GetFieldDefn(iField)
-            oFieldDefn = ogr.FieldDefn( inputFieldDefn.GetNameRef(),
-                                        inputFieldDefn.GetType() )
-            oFieldDefn.SetWidth( inputFieldDefn.GetWidth() )
-            oFieldDefn.SetPrecision( inputFieldDefn.GetPrecision() )
-
+            oFieldDefn = ogr.FieldDefn(inputFieldDefn.GetNameRef(),
+                                       inputFieldDefn.GetType())
+            oFieldDefn.SetWidth(inputFieldDefn.GetWidth())
+            oFieldDefn.SetPrecision(inputFieldDefn.GetPrecision())
             # The field may have been already created at layer creation
             iDstField = -1;
             if outputFDefn is not None:
@@ -2702,77 +2716,57 @@ class GIS(object):
                 # now that we've created a field, GetLayerDefn() won't return NULL
                 if outputFDefn is None:
                     outputFDefn = outputLayer.GetLayerDefn()
-
                 panMap[iField] = nDstFieldCount
                 nDstFieldCount = nDstFieldCount + 1
-
         # Transfer features
         nFeaturesInTransaction = 0
         iSrcZField = -1
-
         inputLayer.ResetReading()
-
         if nGroupTransactions > 0:
             outputLayer.StartTransaction()
-
         while True:
             poDstFeature = None
-
             if nFIDToFetch != ogr.NullFID:
-
                 # Only fetch feature on first pass.
                 if nFeaturesInTransaction == 0:
                     poFeature = inputLayer.GetFeature(nFIDToFetch)
                 else:
                     poFeature = None
-
             else:
                 poFeature = inputLayer.GetNextFeature()
-
             if poFeature is None:
                 break
-
             nParts = 0
             nIters = 1
-
             for iPart in range(nIters):
                 nFeaturesInTransaction = nFeaturesInTransaction + 1
                 if nFeaturesInTransaction == nGroupTransactions:
                     outputLayer.CommitTransaction()
                     outputLayer.StartTransaction()
                     nFeaturesInTransaction = 0
-
-                poDstFeature = ogr.Feature( outputLayer.GetLayerDefn() )
-
-                if poDstFeature.SetFromWithMap( poFeature, 1, panMap ) != 0:
-
+                poDstFeature = ogr.Feature(outputLayer.GetLayerDefn())
+                if poDstFeature.SetFromWithMap(poFeature, 1, panMap) != 0:
                     if nGroupTransactions > 0:
                         outputLayer.CommitTransaction()
-
                     s3_debug("Unable to translate feature %d from layer %s" % (poFeature.GetFID() , inputFDefn.GetName() ))
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
                 poDstGeometry = poDstFeature.GetGeometryRef()
                 if poDstGeometry is not None:
-
                     if nParts > 0:
                         # For -explodecollections, extract the iPart(th) of the geometry
                         poPart = poDstGeometry.GetGeometryRef(iPart).Clone()
                         poDstFeature.SetGeometryDirectly(poPart)
                         poDstGeometry = poPart
-
                 if outputLayer.CreateFeature( poDstFeature ) != 0 and not bSkipFailures:
                     if nGroupTransactions > 0:
                         outputLayer.RollbackTransaction()
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
         if nGroupTransactions > 0:
             outputLayer.CommitTransaction()
-
         # Cleanup
         outputDS.Destroy()
         inputDS.Destroy()
@@ -2791,7 +2785,7 @@ class GIS(object):
             os.chdir(old_working_directory)
             return
 
-        lyr = ds.GetLayerByName( layerName )
+        lyr = ds.GetLayerByName(layerName)
 
         lyr.ResetReading()
 
@@ -2800,25 +2794,28 @@ class GIS(object):
         rows = latin_dict_reader(open("%s.csv" % layerName))
 
         nameField = layer["namefield"]
-        codeField = layer["codefield"]
-        code2Field = layer["code2field"]
+        sourceCodeField = layer["sourceCodeField"]
+        edenCodeField = layer["edenCodeField"]
+        parentSourceCodeField = layer["parentSourceCodeField"]
         parentLevel = layer["parent"]
-        parentCodeField = table[layer["parentCode"]]
+        parentEdenCodeField = layer["parentEdenCodeField"]
+        parentCodeQuery = (ttable.tag == parentEdenCodeField)
         count = 0
         for row in rows:
             # Read Attributes
             feat = lyr[count]
 
-            code2 = feat.GetField(code2Field)
+            parentCode = feat.GetField(parentSourceCodeField)
             query = (table.level == parentLevel) & \
-                    (parentCodeField == code2)
+                    parentCodeQuery & \
+                    (ttable.value == parentCode)
             parent = db(query).select(table.id,
                                       table.code,
                                       limitby=(0, 1),
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
-                #s3_debug("Skipping - cannot find parent with code2: %s" % code2)
+                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % (parentEdenCodeField, parentCode))
                 count += 1
                 continue
 
@@ -2840,7 +2837,7 @@ class GIS(object):
             name = row.pop(nameField)
             name.encode("utf8")
 
-            code = feat.GetField(codeField)
+            code = feat.GetField(sourceCodeField)
             area = feat.GetField("Shape_Area")
 
             geom = feat.GetGeometryRef()
@@ -2848,14 +2845,18 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     lat = geom.GetX()
                     lon = geom.GetY()
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=1,
-                                 lat=lat,
-                                 lon=lon,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=1,
+                                      lat=lat,
+                                      lon=lon,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
                 else:
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
@@ -2870,13 +2871,17 @@ class GIS(object):
                         gis_feature_type = 6
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=gis_feature_type,
-                                 wkt=wkt,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=gis_feature_type,
+                                      wkt=wkt,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
             else:
                 s3_debug("No geometry\n")
 
@@ -2891,7 +2896,8 @@ class GIS(object):
         try:
             self.update_location_tree()
         except MemoryError:
-            # If doing all L2s, it can break memory limits - how can we avoid this?
+            # If doing all L2s, it can break memory limits
+            # @ToDo: Amend function to do in chunks
             s3_debug("Memory error when trying to update_location_tree()!")
 
         db.commit()
@@ -3080,6 +3086,7 @@ class GIS(object):
         request = current.request
         settings = current.deployment_settings
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         url = "http://download.geonames.org/export/dump/" + country + ".zip"
 
@@ -3200,11 +3207,6 @@ class GIS(object):
             modification_date = line.split("\t")
 
             if feature_code == fc:
-                # @ToDo: Agree on a global repository for UUIDs:
-                # http://eden.sahanafoundation.org/wiki/UserGuidelinesGISData#UUIDs
-                import uuid
-                uuid = "geo.sahanafoundation.org/" + uuid.uuid4()
-
                 # Add WKT
                 lat = float(lat)
                 lon = float(lon)
@@ -3238,20 +3240,19 @@ class GIS(object):
                         s3_debug("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
-                table.insert(uuid=uuid,
-                             geonames_id=geonames_id,
-                             source="geonames",
-                             name=name,
-                             level=level,
-                             parent=parent,
-                             lat=lat,
-                             lon=lon,
-                             wkt=wkt,
-                             lon_min=lon_min,
-                             lon_max=lon_max,
-                             lat_min=lat_min,
-                             lat_max=lat_max)
-
+                new_id = table.insert(name=name,
+                                      level=level,
+                                      parent=parent,
+                                      lat=lat,
+                                      lon=lon,
+                                      wkt=wkt,
+                                      lon_min=lon_min,
+                                      lon_max=lon_max,
+                                      lat_min=lat_min,
+                                      lat_max=lat_max)
+                ttable.insert(location_id=new_id,
+                              tag="geonames",
+                              value=geonames_id)
             else:
                 continue
 
