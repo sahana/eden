@@ -67,8 +67,8 @@ class Space(models.Model):
                          help_text = _('Valid extensions are jpg, jpeg, png and gif'))
     banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
                            help_text = _('Valid extensions are jpg, jpeg, png and gif'))
-    public = models.BooleanField(_('Public space'), help_text="This will make \
-    the space visible to everyone, but registration will be necessary to participate.")
+    public = models.BooleanField(_('Public space'), help_text=_("This will make \
+    the space visible to everyone, but registration will be necessary to participate."))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
@@ -163,14 +163,18 @@ class Event(models.Model):
     Meeting data model. Every space (process) has N meetings. This will
     keep record of the assistants, meeting name, etc.
     """
-    title = models.CharField(_('Event name'), max_length=100)
+    title = models.CharField(_('Event name'), max_length=250,
+                             help_text="Max: 250 characters")
     space = models.ForeignKey(Space, blank=True, null=True)
-    user = models.ManyToManyField(User, verbose_name=_('Users'))
+    user = models.ManyToManyField(User, verbose_name=_('Users'),
+    help_text=_('List of the users that will assist or assisted to the event.'))
     pub_date = models.DateTimeField(auto_now_add=True)
     event_author = models.ForeignKey(User, verbose_name=_('Created by'),
                                      blank=True, null=True,
-                                     related_name='meeting_author')
-    event_date = models.DateField(verbose_name=_('Event date'))
+                                     related_name='meeting_author',
+    help_text=_('Select the user that will be designated as author.'))
+    event_date = models.DateField(verbose_name=_('Event date'),
+        help_text=_('Select the date where the event is celebrated.'))
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
     

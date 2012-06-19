@@ -518,7 +518,7 @@ class AddEvent(FormView):
     :context: form, get_place
     """
     form_class = EventForm
-    template_name = 'spaces/event_add.html'
+    template_name = 'spaces/event_form.html'
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -573,7 +573,7 @@ class EditEvent(UpdateView):
     :context: event, get_place
     """
     model = Event
-    template_name = 'spaces/event_edit.html'
+    template_name = 'spaces/event_form.html'
 
     def get_object(self):
         cur_event = get_object_or_404(Event, pk=self.kwargs['event_id'])

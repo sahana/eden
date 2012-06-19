@@ -2,6 +2,12 @@
 {% load i18n %}
 {% load wysiwyg %}
 
+{% comment %}
+The way to validate in this form if it is an edit or an add request is to
+validate the get_request context variable. If it's True, it means that it's an
+already created space, therefore we're editing the form.
+{% endcomment %}
+
 {% block title %}
     {% if get_place %}
         {% trans "Edit space" %} {{ get_place.name }}
