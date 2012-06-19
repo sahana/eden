@@ -622,14 +622,15 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
                     ids = [option[0] for option in options if option[0]]
                     rows = current.db(table.id.belongs(ids)).select(table.id,
                                                                     table.pe_id,
-                                                                    table.name)
+                                                                    table.name,
+                                                                    orderby=table.name)
                     options = []
                     for row in rows:
                         options.append(row.as_dict())
                 else:
                     raise SyntaxError, "widget cannot determine options of %s" % field
 
-        javascript_array = "%s_options = %s;" % (field.name,
+        javascript_array = "%s_options = %s;" % (attributes.get("_name"),
                                                  json.dumps(options))
         s3.js_global.append(javascript_array)
         s3.scripts.append("%s/%s" % (s3.script_dir, "s3.orghierarchy.js"))
