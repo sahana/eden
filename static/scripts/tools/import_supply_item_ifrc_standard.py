@@ -26,7 +26,7 @@ session.s3.roles.append(ADMIN)
 s3mgr.load("supply_item")
 
 stylesheet_dir = os.path.join(request.folder, "static", "formats", "s3csv", "supply")
-import_dir = os.path.join(request.folder, "private", "templates", "demo", "Standard")
+import_dir = os.path.join(request.folder, "private", "templates", "Standard")
 
 import_file = os.path.join(import_dir, "supply_item_category_ifrc_standard.csv")
 stylesheet = os.path.join(stylesheet_dir, "item_category_ifrc_standard.xsl")
