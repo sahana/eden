@@ -24,6 +24,7 @@ class S3MainMenu(default.S3MainMenu):
 
         # Have an additional separate personal menu
         current.menu.personal = cls.menu_personal()
+        current.menu.dashboard = cls.menu_dashboard()
 
         return main_menu
 
@@ -89,6 +90,96 @@ class S3MainMenu(default.S3MainMenu):
             #    MM("Incident Reports", c="irs", f="ireport"),
             #)
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_dashboard(cls):
+        """ Dashboard Menu (at bottom of page) """
+
+        DB = S3DashBoardMenuLayout
+        request = current.request
+
+        if request.controller == "vol":
+            dashboard = DB()(
+                DB("VOLUNTEERS",
+                    c="vol",
+                    image = "graphic_staff_wide.png",
+                    title = "Volunteers")(
+                    DB("Manage Volunteer Data", f="volunteer"),
+                    DB("Manage Teams Data", f="group"),
+                ),
+                DB("CATALOGUES",
+                    c="hrm",
+                    image="graphic_catalogue.png",
+                    title="Catalogues")(
+                    DB("Certificates", f="certificate"),
+                    DB("Training Courses", f="course"),
+                    #DB("Skills", f="skill"),
+                    DB("Job Roles", f="job_role")
+                ))
+        elif request.controller in ("hrm", "org"):
+            dashboard = DB()(
+                DB("STAFF",
+                    c="hrm",
+                    image = "graphic_staff_wide.png",
+                    title = "Staff")(
+                    DB("Manage Staff Data", f="staff"),
+                    #DB("Manage Teams Data", f="group"),
+                ),
+                DB("OFFICES",
+                    c="org",
+                    image = "graphic_office.png",
+                    title = "Offices")(
+                    DB("Manage Offices Data", f="office"),
+                    DB("Manage Organisations Data", f="organisation"),
+                ),
+                DB("CATALOGUES",
+                    c="hrm",
+                    image="graphic_catalogue.png",
+                    title="Catalogues")(
+                    DB("Certificates", f="certificate"),
+                    DB("Training Courses", f="course"),
+                    #DB("Skills", f="skill"),
+                    DB("Job Roles", f="job_role")
+                ))
+
+        elif request.controller == "default" and request.function == "index":
+
+            dashboard = DB(_id="dashboard")(
+                DB("Staff", c="hrm", f="staff", m="search",
+                   image = "graphic_staff.png",
+                   title = "Staff",
+                   text = "Add new and manage existing staff."),
+                DB("Volunteers", c="vol", f="volunteer", m="search",
+                   image = "graphic_volunteers.png",
+                   title = "Volunteers",
+                   text = "Add new and manage existing volunteers."),
+                DB("Members", c="member", f="index",
+                   image = "graphic_members.png",
+                   title = "Members",
+                   text = "Add new and manage existing members."),
+                DB("Warehouses", c="inv", f="index",
+                   image = "graphic_warehouse.png",
+                   title = "Warehouses",
+                   text = "Stocks and relief items."),
+                DB("Assets", c="asset", f="index",
+                   image = "graphic_assets.png",
+                   title = "Assests",
+                   text = "Manage office inventories and assets."),
+                DB("Assessments", c="survey", f="index",
+                   image = "graphic_assessments.png",
+                   title = "Assessments",
+                   text = "Design, deploy & analyze surveys."),
+                DB("Projects", c="project", f="index",
+                   image = "graphic_tools.png",
+                   title = "Projects",
+                   text = "Tracking and analysis of Projects and Activities.")
+            )
+
+        else:
+            dashboard = None
+
+        return dashboard
 
     # -------------------------------------------------------------------------
     @classmethod
