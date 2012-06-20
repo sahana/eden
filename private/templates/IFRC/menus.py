@@ -81,7 +81,7 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("project")(
                 MM("Projects", c="project", f="project"),
-                MM("Communities", c="project", f="activity"),
+                MM("Communities", c="project", f="location"),
                 MM("Reports", c="project", f="report"),
             ),
             #homepage("event", "irs")(

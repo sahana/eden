@@ -878,7 +878,7 @@ div#table-container td.totals_header {
 }
 
 /* dataTables Styling */
-.dataTable {
+table.dataTable {
     /* min-width: 700px; */
     width: 100%;
 }
@@ -1011,6 +1011,8 @@ div#map {
 .stickytip:hover,
 .ajaxtip:hover {
     background-color: transparent;
+    height: 20px;
+    width: 50px;
     background-image: url(../../img/help_on.gif);
 }
 
@@ -1033,6 +1035,7 @@ div.confirmation {
     padding-top: 1.0em;
     padding-bottom: 1.0em;
     cursor: pointer;
+    clear: left; /* Added to avoid merging with breadcrumbs */
 }
 .confirmation p em {
     color: #070;
@@ -1050,6 +1053,7 @@ div.confirmation {
     padding-top: 1.0em;
     padding-bottom: 1.0em;
     cursor: pointer;
+    clear: left; /* Added to avoid merging with breadcrumbs */
 }
 .error p em {
     color: #c00;
@@ -1067,6 +1071,7 @@ div.confirmation {
     padding-top: 1.0em;
     padding-bottom: 1.0em;
     cursor: pointer;
+    clear: left; /* Added to avoid merging with breadcrumbs */
 }
 .information p em {
     color: #748d8e;
@@ -1084,6 +1089,7 @@ div.confirmation {
     padding-top: 1.0em;
     padding-bottom: 1.0em;
     cursor: pointer;
+    clear: left; /* Added to avoid merging with breadcrumbs */
 }
 .warning p em {
     color: #c00;
@@ -1174,7 +1180,7 @@ div.tabs span.tab_here {
     margin-bottom: -1px;
 }
 form div.tabs span.tab_here{
-    background:#ffffff;
+    background: #ffffff;
 }
 
 div.tabs span.tab_here a {
@@ -1187,8 +1193,8 @@ span.tab_other a:hover, span.tab_last a:hover {
     background:transparent;
 }
 span.tab_other:hover, span.tab_last:hover {
-    background:#164b8b;
-    border-color:#164b8b;
+    background: #164b8b;
+    border-color: #164b8b;
 }
 span.tab_prev_active {
     border: 1px solid #6699cc;
@@ -1254,7 +1260,7 @@ div#last_update {
     /* font-weight:bold; */
     color: #ffffff;
     background-color: #3286e2;
-    border:1px solid #4c95e6;
+    border: 1px solid #4c95e6;
     border-bottom: 2px solid #164b8b;
     border-top: 1px solid #5f9eeb;
     padding: 2px 4px 2px 4px;

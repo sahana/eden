@@ -8,7 +8,7 @@
 
 # Are we running in debug mode?
 s3.debug = request.vars.get("debug", None) or \
-                    deployment_settings.get_base_debug()
+                    settings.get_base_debug()
 
 if s3.debug:
     # Needed for s3_include_debug
@@ -34,15 +34,15 @@ request.utcnow = datetime.datetime.utcnow()
 # Database Configuration
 ########################
 
-migrate = deployment_settings.get_base_migrate()
-fake_migrate = deployment_settings.get_base_fake_migrate()
+migrate = settings.get_base_migrate()
+fake_migrate = settings.get_base_fake_migrate()
 
 if migrate:
     check_reserved = ["mysql", "postgres"]
 else:
     check_reserved = None
 
-(db_string, pool_size) = deployment_settings.get_database_string()
+(db_string, pool_size) = settings.get_database_string()
 if db_string.find("sqlite") != -1:
     db = DAL(db_string,
              check_reserved=check_reserved,
@@ -80,11 +80,11 @@ current.db = db
 db.set_folder("upload")
 
 # Sessions Storage
-if deployment_settings.get_base_session_memcache():
+if settings.get_base_session_memcache():
     # Store sessions in Memcache
     from gluon.contrib.memcache import MemcacheClient
     cache.memcache = MemcacheClient(request,
-                                    [deployment_settings.get_base_session_memcache()])
+                                    [settings.get_base_session_memcache()])
     from gluon.contrib.memdb import MEMDB
     session.connect(request, response, db=MEMDB(cache.memcache))
 
