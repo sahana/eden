@@ -11,11 +11,11 @@
 <!-- Set your site up with Google: http://google.com/webmasters -->
 <meta name="google-site-verification" content="" />
 <!--  Mobile Viewport Fix
-  j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
-  device-width: Occupy full width of the screen in its current orientation
-  initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
-  maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
-  -->
+ j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
+ device-width: Occupy full width of the screen in its current orientation
+ initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
+ maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
+-->
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
 <!-- Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references -->
 <link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon">
@@ -25,117 +25,119 @@
 <!--<script src="/{{=appname}}/static/scripts/web2py/modernizr-1.7.min.js"></script>-->
 <style type="text/css">
 {{if s3.rtl:}}
-  div { direction: rtl; }
+ div{direction:rtl;}
 {{else:}}
-  body { direction: ltr; }
+ body{direction:ltr;}
 {{pass}}
 </style>
 {{if session.s3.debug:}}
-  {{include "s3_include_debug.html"}}
+ {{include "s3_include_debug.html"}}
+ <link href="/{{=appname}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />	
+ {{=s3_include_debug()}}
 {{else:}}
-  {{include "s3_include_min.html"}}
-  {{# Built by /static/scripts/tools/build.sahana.py }}
-  <link href="/{{=appname}}/static/styles/S3/sahana.min.css" rel="stylesheet" type="text/css" />
+ {{include "s3_include_min.html"}}
+ <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
+ {{# Built by /static/scripts/tools/build.sahana.py }}
+ <link href="/{{=appname}}/static/styles/S3/sahana.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{for sheet in s3.external_stylesheets:}}
-  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{for sheet in s3.stylesheets:}}
-  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 <script src="/{{=appname}}/static/scripts/ext/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
 <!--Scripts which need pre-processing by server must be called in-line-->
 <script type="text/javascript">//<![CDATA[
-  // Translation Strings
-  {{include "l10n.js"}}
-  // Global variables
-  S3.Ap = '/{{=appname}}';
+ // Translation Strings
+ {{include "l10n.js"}}
+ // Global variables
+ S3.Ap = '/{{=appname}}';
 {{if s3.rtl:}}
-  S3.rtl = true;
+ S3.rtl = true;
 {{else:}}
-  S3.rtl = false;
+ S3.rtl = false;
 {{pass}}
 {{if s3.interactive:}}
-  S3.interactive = true;
+ S3.interactive = true;
 {{else:}}
-  S3.interactive = false;
+ S3.interactive = false;
 {{pass}}
 //]]></script>
 {{try:}}
-  {{if r.representation == "popup":}}
-    {{representation = "popup"}}
-  {{elif r.representation == "iframe":}}
-    {{representation = "iframe"}}
-  {{else:}}
-    {{representation = ""}}
-  {{pass}}
-{{except:}}
+ {{if r.representation == "popup":}}
+  {{representation = "popup"}}
+ {{elif r.representation == "iframe":}}
+  {{representation = "iframe"}}
+ {{else:}}
   {{representation = ""}}
+ {{pass}}
+{{except:}}
+ {{representation = ""}}
 {{pass}}
 {{if representation == "popup":}}
-  {{include "layout_popup.html"}}
-  {{if response.flash or response.confirmation:}}
-    <div id='popup' class='clearfix'><center>
-    <p style='padding:20px 20px;'><h2>
-      {{=T("Submission successful - please wait")}}...
-    </h2><p></center></div>
-  {{else:}}
-    {{include}}
-  {{pass}}
-{{elif representation == "iframe":}}
-  {{include "layout_iframe.html"}}
+ {{include "layout_popup.html"}}
+ {{if response.flash or response.confirmation:}}
+  <div id='popup' class='clearfix'><center>
+   <p style='padding:20px 20px;'>
+    <h2>{{=T("Submission successful - please wait")}}...</h2>
+   <p>
+  </center></div>
+ {{else:}}
   {{include}}
+ {{pass}}
+{{elif representation == "iframe":}}
+ {{include "layout_iframe.html"}}
+ {{include}}
 {{else:}}
 </head>
 <body>
-    <div id='menu_modules'>
-        {{=current.menu.main}}
+ <div id='menu_modules'>
+  {{=current.menu.main}}
+ </div>
+ <div class='colmask fullpage'>
+  {{if current.menu.options is not None:}}
+   <div class='aside'>
+    <div id='menu_options'>
+     {{=current.menu.options}}
     </div>
-    <div class='colmask fullpage'>
-        {{if current.menu.options is not None:}}
-        <div class='aside'>
-            <div id='menu_options'>
-                {{=current.menu.options}}
-            </div>
-        </div>
-        {{pass}}
-        <div {{if current.menu.options is not None:}}class='rightside'{{pass}}>
-            <div class='col1'>
-                {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
-                {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
-                {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
-                {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
-                {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
-                <div id='content' class='clearfix'>
-                  {{#include "breadcrumbs.html"}} 
-                  {{include}}
-                </div>
-            </div>
-        </div>
+   </div>
+  {{pass}}
+  <div {{if current.menu.options is not None:}}class='rightside'{{pass}}>
+   <div class='col1'>
+    {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
+    {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
+    {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
+    {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
+    {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
+    <div id='content' class='clearfix'>
+     {{#include "breadcrumbs.html"}} 
+     {{include}}
     </div>
-    <div id='footer'>
-        {{include "footer.html"}}
-      {{if session.s3.debug:}}
-        {{=s3.toolbar()}}
-      {{pass}}
-    </div>
+   </div>
+  </div>
+ </div>
+ <div id='footer'>
+  {{include "../private/templates/%s/views/footer.html" % s3.theme}}
+  {{if session.s3.debug:}}{{=s3.toolbar()}}{{pass}}
+ </div>
 {{pass}}
-{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script')) </script>{{pass}}
+{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script'))</script>{{pass}}
 <!-- Include dynamically added Scripts -->
 {{for script in s3.scripts:}}
-    {{=SCRIPT(_src = script)}}
+ {{=SCRIPT(_src = script)}}
 {{pass}}
-    <script type="text/javascript">//<![CDATA[
-  {{for script in s3.js_global:}}
-    {{=XML(script)}}
-  {{pass}}
-  {{if s3.jquery_ready:}}
-    $(document).ready(function() {
-      {{for script in s3.jquery_ready:}}
-        {{=XML(script)}}
-      {{pass}}
-    });
-    {{pass}}
-    //]]></script>
+<script type="text/javascript">//<![CDATA[
+{{for script in s3.js_global:}}
+ {{=XML(script)}}
+{{pass}}
+{{if s3.jquery_ready:}}
+$(document).ready(function() {
+ {{for script in s3.jquery_ready:}}
+  {{=XML(script)}}
+ {{pass}}
+});
+{{pass}}
+//]]></script>
 </body>
 </html>
