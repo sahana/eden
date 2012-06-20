@@ -28,6 +28,8 @@
 """
 
 __all__ = ["S3LocationModel",
+           "S3LocationNameModel",
+           "S3LocationTagModel",
            "S3LocationGroupModel",
            "S3LocationHierarchyModel",
            "S3GISConfigModel",
@@ -56,8 +58,6 @@ class S3LocationModel(S3Model):
     """
 
     names = ["gis_location",
-             "gis_location_tag",
-             "gis_location_name",
              #"gis_location_error",
              "gis_location_id",
              "gis_country_id",
@@ -280,72 +280,6 @@ class S3LocationModel(S3Model):
         # Locations as component of Locations ('Parent')
         #add_component(table, joinby=dict(gis_location="parent"),
         #              multiple=False)
-
-        # ---------------------------------------------------------------------
-        # Location Tags
-        # - Key-Value extensions
-        # - can be used to identify a Source (GPS, Imagery, Wikipedia, etc)
-        # - can be used to add extra attributes (e.g. Area, Population)
-        # - can link Locations to other Systems, such as:
-        #   * ISO2
-        #   * ISO3
-        #   * OpenStreetMap (although their IDs can change over time)
-        #   * UN P-Codes
-        #   * GeoNames
-        #   * Wikipedia URL
-        #   * Christchurch 'prupi'(Property reference in the council system) & 
-        #                  'gisratingid' (Polygon reference of the rating unit)
-        # - can be a Triple Store for Semantic Web support
-        #
-        tablename = "gis_location_tag"
-        table = define_table(tablename,
-                             location_id(),
-                             # key is a reserved word in MySQL
-                             Field("tag", label=T("Key")),
-                             Field("value", label=("Value")),
-                             comments(),
-                             *meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Local Names
-        #
-        tablename = "gis_location_name"
-        table = define_table(tablename,
-                             location_id(),
-                             Field("language",
-                                   label = T("Language"),
-                                   requires = IS_IN_SET(s3.l10n_languages),
-                                   represent = lambda opt: \
-                                     s3.l10n_languages.get(opt,
-                                                           UNKNOWN_OPT)),
-                             Field("name_l10n",
-                                   label = T("Name")),
-                             comments(),
-                             *meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Groups
-        #
-        tablename = "gis_location_group"
-        table = define_table(tablename,
-                             Field("name",
-                                   label = T("Name")),
-                             # Optional Polygon for the overall Group
-                             location_id(),
-                             comments(),
-                             *meta_fields())
-
-        add_component("gis_location_group_member", gis_group="location_group_id")
-
-        tablename = "gis_location_group_member"
-        table = define_table(tablename,
-                             Field("location_group_id",
-                                   db.gis_location_group,
-                                   label = T("Location Group"),
-                                   represent = gis_location_represent,
-                                   ondelete = "RESTRICT"),
-                             location_id(),
-                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Error
@@ -682,6 +616,93 @@ class S3LocationModel(S3Model):
                 return level
 
 # =============================================================================
+class S3LocationNameModel(S3Model):
+    """
+        Location Names model
+        - local/alternate names for Locations
+
+        @ToDo: Change lookup to be a full set of languages,
+               not just those we are using in the interface
+    """
+
+    names = ["gis_location_name"]
+
+    def model(self):
+
+        T = current.T
+        s3 = current.response.s3
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        # ---------------------------------------------------------------------
+        # Local Names
+        #
+        tablename = "gis_location_name"
+        table = self.define_table(tablename,
+                                  self.gis_location_id(),
+                                  Field("language",
+                                        label = T("Language"),
+                                        requires = IS_IN_SET(s3.l10n_languages),
+                                        represent = lambda opt: \
+                                            s3.l10n_languages.get(opt,
+                                                                  UNKNOWN_OPT)),
+                                  Field("name_l10n",
+                                        label = T("Name")),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
+        return Storage(
+                )
+
+# =============================================================================
+class S3LocationTagModel(S3Model):
+    """
+        Location Tags model
+        - flexible Key-Value component attributes to Locations
+    """
+
+    names = ["gis_location_tag"]
+
+    def model(self):
+
+        T = current.T
+        s3 = current.response.s3
+
+        # ---------------------------------------------------------------------
+        # Location Tags
+        # - Key-Value extensions
+        # - can be used to identify a Source (GPS, Imagery, Wikipedia, etc)
+        # - can be used to add extra attributes (e.g. Area, Population)
+        # - can link Locations to other Systems, such as:
+        #   * ISO2
+        #   * ISO3
+        #   * OpenStreetMap (although their IDs can change over time)
+        #   * UN P-Codes
+        #   * GeoNames
+        #   * Wikipedia URL
+        #   * Christchurch 'prupi'(Property reference in the council system) & 
+        #                  'gisratingid' (Polygon reference of the rating unit)
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "gis_location_tag"
+        table = self.define_table(tablename,
+                                  self.gis_location_id(),
+                                  # key is a reserved word in MySQL
+                                  Field("tag", label=T("Key")),
+                                  Field("value", label=T("Value")),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
+        return Storage(
+                )
+
+# =============================================================================
 class S3LocationGroupModel(S3Model):
     """
         Location Groups model
@@ -696,7 +717,6 @@ class S3LocationGroupModel(S3Model):
 
         T = current.T
         db = current.db
-        gis = current.gis
         s3 = current.response.s3
 
         location_id = self.gis_location_id

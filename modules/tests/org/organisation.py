@@ -7,7 +7,7 @@ current.data["organisation"] = [
         # & for organisation_id lookups
         ("name", "Romanian Food Assistance Association (Test)"),
         ("acronym", "RFAAT"),
-        ("type", "Institution", "option"),
+        ("organisation_type_id", "Institution", "option"),
         ("region", "Europe"),
         # Whilst the short  form is accepted by the DB, our validation routine needs the full form
         ("website", "http://www.rfaat.com"),

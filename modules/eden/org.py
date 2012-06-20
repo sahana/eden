@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3OrganisationModel",
+           "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3FacilityModel",
            "S3RoomModel",
@@ -57,7 +58,7 @@ class S3OrganisationModel(S3Model):
              "org_sector_id",
              #"org_subsector",
              "org_organisation_type",
-             "org_organisation_type_tag",
+             "org_organisation_type_id",
              "org_organisation",
              "org_organisation_id",
             ]
@@ -261,22 +262,6 @@ class S3OrganisationModel(S3Model):
         add_component("gis_location_tag",
                       gis_location=dict(joinby="location_id",
                                         name="tag"))
-
-        # ---------------------------------------------------------------------
-        # Organisation Type Tags
-        # - Key-Value extensions
-        # - can be used to provide conversions to external systems, such as:
-        #   * HXL
-        # - can be a Triple Store for Semantic Web support
-        #
-        tablename = "org_organisation_type_tag"
-        table = define_table(tablename,
-                             organisation_type_id(),
-                             # key is a reserved word in MySQL
-                             Field("tag", label=T("Key")),
-                             Field("value", label=("Value")),
-                             comments(),
-                             *meta_fields())
 
         # ---------------------------------------------------------------------
         # Organisations
@@ -621,6 +606,7 @@ class S3OrganisationModel(S3Model):
         #
         return Storage(
                     org_sector_id = sector_id,
+                    org_organisation_type_id = organisation_type_id,
                     org_organisation_id = organisation_id,
                 )
 
@@ -899,6 +885,44 @@ class S3OrganisationModel(S3Model):
                                  deleted_fk = json.dumps(deleted_fk))
             s3db.pr_update_affiliations(ltable, record)
         return
+
+# =============================================================================
+class S3OrganisationTypeTagModel(S3Model):
+    """
+        Organisation Type Tags
+    """
+
+    names = ["org_organisation_type_tag"]
+
+    def model(self):
+
+        T = current.T
+        s3 = current.response.s3
+
+        # ---------------------------------------------------------------------
+        # Local Names
+        #
+        # ---------------------------------------------------------------------
+        # Organisation Type Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "org_organisation_type_tag"
+        table = self.define_table(tablename,
+                                  self.org_organisation_type_id(),
+                                  # key is a reserved word in MySQL
+                                  Field("tag", label=T("Key")),
+                                  Field("value", label=("Value")),
+                                  s3.comments(),
+                                  *s3.meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (response.s3.*)
+        #
+        return Storage(
+                )
 
 # =============================================================================
 class S3SiteModel(S3Model):
