@@ -81,11 +81,13 @@ class ProposalSet(models.Model):
 
     """
 
-    name = models.CharField(_('Name'), max_length=100, unique=True)
+    name = models.CharField(_('Name'), max_length=100, unique=True,
+            help_text = _('Max: 200 character'))
     space = models.ForeignKey(Space, blank=True, null=True)
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True)
-    debate = models.ForeignKey(Debate, blank=True, null=True)
+    debate = models.ForeignKey(Debate, blank=True, null=True,
+            help_text = _('Select the debate associated with this proposalset'))
 
     def __unicode__(self):
         return self.name
