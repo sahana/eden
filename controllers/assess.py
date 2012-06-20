@@ -409,7 +409,7 @@ def rat_tables():
     table = db.define_table(
         tablename,
         Field("date", "date",
-              requires = [IS_DATE(format = s3_date_format),
+              requires = [IS_DATE(format = settings.get_L10n_date_format()),
                           IS_NOT_EMPTY()],
               default = datetime.datetime.today()),
         location_id(widget = S3LocationAutocompleteWidget(),

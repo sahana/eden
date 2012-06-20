@@ -96,8 +96,9 @@ def s3_is_mobile_client(request):
     return False
 
 # Store in session
-if session.s3.mobile is None:
-    session.s3.mobile = s3_is_mobile_client(request)
+# - commented-out until we make use of it
+#if session.s3.mobile is None:
+#    session.s3.mobile = s3_is_mobile_client(request)
 
 def s3_populate_browser_compatibility(request):
     """
@@ -145,7 +146,7 @@ def s3_populate_browser_compatibility(request):
 # Interactive view formats
 s3.interactive_view_formats = ("html", "popup", "iframe")
 
-# Strings
+# Strings to i18n
 messages["UNAUTHORISED"] = "Not authorised!"
 messages["BADFORMAT"] = "Unsupported data format!"
 messages["BADMETHOD"] = "Unsupported method!"
@@ -183,9 +184,9 @@ PRETTY_PRINT = False
 # To get included in <HEAD>
 s3.stylesheets = []
 s3.external_stylesheets = []
+# To get included at the end of <BODY>
 s3_script_dir = "/%s/static/scripts/S3" % appname
 s3.script_dir = s3_script_dir
-# To get included at the end of <BODY>
 s3.scripts = []
 s3.js_global = []
 s3.jquery_ready = []
@@ -239,9 +240,6 @@ if T.accepted_language in s3_rtl_languages:
     s3.rtl = True
 else:
     s3.rtl = False
-
-s3_date_format = settings.get_L10n_date_format()
-s3_datetime_format = settings.get_L10n_datetime_format()
 
 ######
 # Mail
@@ -387,12 +385,7 @@ _settings.lock_keys = True
 #########
 def s3_sessions():
     """
-        Extend session to support:
-            Multiple flash classes
-            Settings
-                Debug mode
-                Security mode
-                Audit modes
+        Extend session to support multiple flash classes
     """
 
     response.error = session.error
@@ -403,27 +396,6 @@ def s3_sessions():
     session.confirmation = []
     session.information = []
     session.warning = []
-
-    # Are we running in debug mode?
-    session.s3.debug = s3.debug
-
-    # Should we use Content-Delivery Networks?
-    session.s3.cdn = settings.get_base_cdn()
-
-    # Security Policy
-    session.s3.security_policy = settings.get_security_policy()
-
-    # We Audit if either the Global or Module asks us to
-    # (ignore gracefully if module author hasn't implemented this)
-    try:
-        session.s3.audit_read = settings.get_security_audit_read() \
-            or settings.modules[request.controller].get("audit_read", False)
-        session.s3.audit_write = settings.get_security_audit_write() \
-            or settings.modules[request.controller].get("audit_write", False)
-    except:
-        # Controller doesn't link to a 'module' (e.g. appadmin)
-        session.s3.audit_read = False
-        session.s3.audit_write = False
 
     return
 
@@ -439,7 +411,7 @@ EDITOR = system_roles.EDITOR
 MAP_ADMIN = system_roles.MAP_ADMIN
 ORG_ADMIN = system_roles.ORG_ADMIN
 
-if session.s3.debug:
+if s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py
     s3.toolbar = s3_dev_toolbar
 
@@ -547,7 +519,8 @@ else:
 menu = current.menu
 menu["main"] = main
 
-# Override controller menus, @todo: replace by current.menu.override
+# Override controller menus
+# @todo: replace by current.menu.override
 s3_menu_dict = {}
 
 ##########
@@ -781,6 +754,7 @@ s3_list_of_nations = {
     "SO": "Somalia",
     "ZA": "South Africa",
     "GS": "South Georgia and the South Sandwich Islands",
+    "SS": "South Sudan",
     "ES": "Spain",
     "LK": "Sri Lanka",
     "SD": "Sudan",

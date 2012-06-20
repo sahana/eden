@@ -4573,7 +4573,7 @@ class S3Audit(object):
             @param representation: the representation format
         """
 
-        settings = current.session.s3
+        settings = current.deployment_settings
 
         #print >>sys.stderr, "Audit %s: %s_%s record=%s representation=%s" % \
                             #(operation, prefix, name, record, representation)
@@ -4609,7 +4609,7 @@ class S3Audit(object):
             record = None
 
         if operation in ("list", "read"):
-            if settings.audit_read:
+            if settings.get_security_audit_read():
                 table.insert(timestmp = now,
                              person = self.user,
                              operation = operation,
@@ -4618,7 +4618,7 @@ class S3Audit(object):
                              representation = representation)
 
         elif operation in ("create", "update"):
-            if settings.audit_write:
+            if settings.get_security_audit_write():
                 if form:
                     record = form.vars.id
                     new_value = ["%s:%s" % (var, str(form.vars[var]))
@@ -4635,7 +4635,7 @@ class S3Audit(object):
                 self.diff = None
 
         elif operation == "delete":
-            if settings.audit_write:
+            if settings.get_security_audit_write():
                 query = db[tablename].id == record
                 row = db(query).select(limitby=(0, 1)).first()
                 old_value = []

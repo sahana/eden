@@ -6,14 +6,14 @@
 {{elif request.args(0) == "register":}}
  {{=H2(T("Register"))}}
  {{include "auth/_register.html"}}
-{{if session.s3.debug:}}
-  {{if session.s3.cdn:}}
+{{if s3.debug:}}
+  {{if s3.cdn:}}
 {{s3.scripts.append( "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.js" )}}
   {{else:}}
 {{s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )}}
   {{pass}}
  {{else:}}
-  {{if session.s3.cdn:}}
+  {{if s3.cdn:}}
 {{s3.scripts.append( "http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.min.js" )}}
   {{else:}}
 {{s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )}}
@@ -27,7 +27,7 @@
 {{elif request.args(0) == "change_password":}}
  {{=H2(T("Change Password"))}}
  {{=form}}
-{{if session.s3.debug:}}
+{{if s3.debug:}}
   {{s3.scripts.append( "%s/jquery.pstrength.1.3.js" % s3_script_dir )}}
 {{else:}}
   {{s3.scripts.append( "%s/jquery.pstrength.1.3.min.js" % s3_script_dir )}}

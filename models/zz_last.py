@@ -9,6 +9,9 @@ s3.theme = settings.get_theme()
 
 if auth.permission.format in ("html"):
 
+    # Should we use Content-Delivery Networks?
+    s3.cdn = settings.get_base_cdn()
+
     # Compose the options menu
     controller = request.controller
     if controller not in s3_menu_dict:

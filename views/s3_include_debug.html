@@ -9,7 +9,7 @@ function s3_debug(message, value) {
     }
 }
 //]]></script>
-{{if session.s3.cdn:}}
+{{if s3.cdn:}}
   <!-- For Sites Hosted on the Public Internet, using Google's version of jQuery should provide better performance -->
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js" type="text/javascript"></script>
   <!--<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.js" type="text/javascript"></script>-->

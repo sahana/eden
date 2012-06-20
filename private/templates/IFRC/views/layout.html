@@ -14,7 +14,7 @@
  body{direction:ltr;}
 {{pass}}
 </style>
-{{if session.s3.debug:}}
+{{if s3.debug:}}
  {{include "s3_include_debug.html"}}
  <link href="/{{=appname}}/static/styles/IFRC/xtheme-ifrc.css" rel="stylesheet" type="text/css" />
  {{=s3_include_debug()}}
@@ -114,7 +114,7 @@
   </div>
   <div id='footer'>
    {{include "../private/templates/IFRC/views/footer.html"}}
-   {{if session.s3.debug:}}{{=s3.toolbar()}}{{pass}}
+   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
   </div>
  </div>
 {{pass}}

@@ -141,6 +141,28 @@ _table_user.site_id.comment = DIV(_class="tooltip",
 def index():
     """ Main Home Page """
 
+    page = request.args(0)
+    if page:
+        # Go to a custom page
+        # Arg 1 = function in /private/templates/<template>/controllers.py
+        # other Args & Vars passed through
+        custom_page = "applications.%s.private.templates.%s.controllers" % \
+                            (appname, settings.get_template())
+        try:
+            exec("import %s as custom_page" % custom_page)
+        except ImportError:
+            # No Custom Page available, continue with the default
+            page = "private/templates/%s/controllers.py" % \
+                            (appname, settings.get_template())
+            s3_debug("File not loadable: %s" % page)
+        else:
+            if page in custom_page.__dict__:
+                exec("output = custom_page.%s()()" % page)
+                return output
+            else:
+                raise(HTTP(404, "Function not found: %s()" % page))
+
+    # Default Homepage
     title = settings.get_system_name()
     response.title = title
 
@@ -318,7 +340,7 @@ $('#manage_facility_select').change(function() {
              # Add client-side validation
             s3_register_validation()
 
-            if session.s3.debug:
+            if s3.debug:
                 s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )
             else:
                 s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )
@@ -736,6 +758,12 @@ def about():
 def help():
     """ Custom View """
     response.title = T("Help")
+    return dict()
+
+# -----------------------------------------------------------------------------
+def privacy():
+    """ Custom View """
+    response.title = T("Privacy")
     return dict()
 
 # -----------------------------------------------------------------------------

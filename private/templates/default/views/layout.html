@@ -30,7 +30,7 @@
  body{direction:ltr;}
 {{pass}}
 </style>
-{{if session.s3.debug:}}
+{{if s3.debug:}}
  {{include "s3_include_debug.html"}}
  <link href="/{{=appname}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />	
  {{=s3_include_debug()}}
@@ -119,7 +119,7 @@
  </div>
  <div id='footer'>
   {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
-  {{if session.s3.debug:}}{{=s3.toolbar()}}{{pass}}
+  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
 {{pass}}
 {{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script'))</script>{{pass}}

@@ -192,8 +192,8 @@ class S3DateTimeWidget(FormWidget):
 
         format = str(self.format)
         request = current.request
-        response = current.response
         session = current.session
+        s3 = current.response.s3
 
         if isinstance(value, datetime.datetime):
             value = value.strftime(format)
@@ -222,15 +222,15 @@ class S3DateTimeWidget(FormWidget):
         latest = latest.strftime(format)
 
         s3_script_dir = "/%s/static/scripts/S3" % request.application
-        if session.s3.debug and \
-           "%s/anytime.js" % s3_script_dir not in response.s3.scripts:
-            response.s3.scripts.append( "%s/anytime.js" % s3_script_dir )
-            response.s3.stylesheets.append( "S3/anytime.css" )
-        elif "%s/anytimec.js" % s3_script_dir not in response.s3.scripts:
-            response.s3.scripts.append( "%s/anytimec.js" % s3_script_dir )
-            response.s3.stylesheets.append( "S3/anytimec.css" )
+        if s3.debug and \
+           "%s/anytime.js" % s3_script_dir not in s3.scripts:
+            s3.scripts.append( "%s/anytime.js" % s3_script_dir )
+            s3.stylesheets.append( "S3/anytime.css" )
+        elif "%s/anytimec.js" % s3_script_dir not in s3.scripts:
+            s3.scripts.append( "%s/anytimec.js" % s3_script_dir )
+            s3.stylesheets.append( "S3/anytimec.css" )
 
-        response.s3.jquery_ready.append('''
+        s3.jquery_ready.append('''
 $('#{0}').AnyTime_picker({{
     askSecond: false,
     firstDOW: 1,
@@ -2369,10 +2369,10 @@ class S3AddPersonWidget(FormWidget):
         s3db = current.s3db
 
         request = current.request
-        response = current.response
         session = current.session
+        s3 = current.response.s3
 
-        formstyle = response.s3.crud.formstyle
+        formstyle = s3.crud.formstyle
 
         # Main Input
         real_input = str(field).replace(".", "_")
@@ -2464,7 +2464,7 @@ class S3AddPersonWidget(FormWidget):
 
         labels, required = s3_mark_required(fields)
         if required:
-            response.s3.has_required = True
+            s3.has_required = True
 
         form = SQLFORM.factory(table_name="pr_person",
                                labels=labels,
@@ -2489,12 +2489,12 @@ class S3AddPersonWidget(FormWidget):
                     _class="box_bottom")
 
         # JavaScript
-        if session.s3.debug:
+        if s3.debug:
             script = "s3.select_person.js"
         else:
             script = "s3.select_person.min.js"
 
-        response.s3.scripts.append( "%s/%s" % (response.s3.script_dir, script))
+        s3.scripts.append( "%s/%s" % (s3.script_dir, script))
 
         # Overall layout of components
         return TAG[""](select_row,
@@ -2945,10 +2945,9 @@ class S3EmbedComponentWidget(FormWidget):
         s3db = current.s3db
 
         request = current.request
-        response = current.response
-        session = current.session
+        s3 = current.response.s3
 
-        formstyle = response.s3.crud.formstyle
+        formstyle = s3.crud.formstyle
 
         ltable = s3db[self.link]
         ctable = s3db[self.component]
@@ -3069,7 +3068,7 @@ class S3EmbedComponentWidget(FormWidget):
                                          if hasattr(r, 'set_self_id')]
         labels, required = s3_mark_required(fields)
         if required:
-            response.s3.has_required = True
+            s3.has_required = True
         form = SQLFORM.factory(table_name=self.component,
                                labels=labels,
                                formstyle=formstyle,
@@ -3091,12 +3090,12 @@ class S3EmbedComponentWidget(FormWidget):
         divider = TR(TD(_class="subheading"), TD(), _class="box_bottom embedded")
 
         # JavaScript
-        if session.s3.debug:
+        if s3.debug:
             script = "s3.embed_component.js"
         else:
             script = "s3.embed_component.min.js"
 
-        response.s3.scripts.append( "%s/%s" % (response.s3.script_dir, script))
+        s3.scripts.append( "%s/%s" % (s3.script_dir, script))
 
         # Overall layout of components
         return TAG[""](select_row,

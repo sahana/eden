@@ -1,5 +1,5 @@
 {{extend "layout.html"}}
-{{if session.s3.debug:}}
+{{if s3.debug:}}
 <link href="/{{=appname}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
 <link href="/{{=appname}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
@@ -56,7 +56,7 @@ $(document).ready(function(){
     </div>
 </div>
 </div><!-- home -->
-{{if session.s3.debug:}}
+{{if s3.debug:}}
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
 <!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->

@@ -3911,7 +3911,7 @@ class GIS(object):
                 script = URL(c="static", f=script)
                 scripts_append(script)
 
-        debug = session.s3.debug
+        debug = response.s3.debug
         if debug:
             if projection not in (900913, 4326):
                 add_javascript("scripts/gis/proj4js/lib/proj4js-combined.js")
@@ -5323,7 +5323,7 @@ class GoogleLayer(Layer):
             T = current.T
             epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
-            debug = current.session.s3.debug
+            debug = current.response.s3.debug
             add_script = self.scripts.append
 
             output = {}
@@ -5724,7 +5724,7 @@ class WMSLayer(Layer):
     def __init__(self):
         super(WMSLayer, self).__init__()
         if self.sublayers:
-            debug = current.session.s3.debug
+            debug = current.response.s3.debug
             add_script = self.scripts.append
             if debug:
                 # Non-debug has this included within GeoExt.js

@@ -1,6 +1,6 @@
 {{extend "layout.html"}}
 <h1>This is the importer/spreadsheet.html template</h1>
-{{if session.s3.security_policy==1:}}
+{{if settings.get_security_policy() == 1:}}
     <script type="text/javascript">//<![CDATA[
     $(function() {
             // Hide the Admin row for simple security_policy

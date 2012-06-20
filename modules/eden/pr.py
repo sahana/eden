@@ -3304,7 +3304,7 @@ def pr_contacts(r, **attr):
     # Add the javascript
     response = current.response
     s3 = response.s3
-    if current.session.s3.debug:
+    if s3.debug:
         s3.scripts.append(URL(c="static", f="scripts",
                               args=["S3", "s3.contacts.js"]))
     else:

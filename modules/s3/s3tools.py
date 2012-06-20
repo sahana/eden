@@ -515,25 +515,29 @@ class S3BulkImporter(object):
                 # older Python
                 msg = "%s import job completed in %s" % (csvName, duration)
             self.resultList.append(msg)
-            if current.session.s3.debug:
+            if response.s3.debug:
                 s3_debug(msg)
 
     # -------------------------------------------------------------------------
     def execute_special_task(self, task):
+        """
+        """
+        
         start = datetime.datetime.now()
+        s3 = current.response.s3
         if task[0] == 2:
             fun = task[1]
             csv = task[2]
             extraArgs = task[3]
             if csv is None:
                 if extraArgs is None:
-                    error = current.response.s3[fun]()
+                    error = s3[fun]()
                 else:
-                    error = current.response.s3[fun](extraArgs)
+                    error = s3[fun](extraArgs)
             elif extraArgs is None:
-                error = current.response.s3[fun](csv)
+                error = s3[fun](csv)
             else:
-                error = current.response.s3[fun](csv, extraArgs)
+                error = s3[fun](csv, extraArgs)
             if error:
                 self.errorList.append(error)
             end = datetime.datetime.now()
@@ -546,7 +550,7 @@ class S3BulkImporter(object):
                 # older Python
                 msg = "%s import job completed in %s" % (fun, duration)
             self.resultList.append(msg)
-            if current.session.s3.debug:
+            if s3.debug:
                 s3_debug(msg)
 
     # -------------------------------------------------------------------------

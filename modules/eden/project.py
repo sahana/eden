@@ -980,7 +980,6 @@ class S3ProjectModel(S3Model):
             T = current.T
             request = current.request
             response = current.response
-            session = current.session
             s3 = response.s3
 
             calendar = r.record.calendar
@@ -992,7 +991,7 @@ class S3ProjectModel(S3Model):
             s3.js_global.append("S3.timeline.calendar = '%s';" % calendar)
 
             # Add our control script
-            if session.s3.debug:
+            if s3.debug:
                 s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
             else:
                 s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)

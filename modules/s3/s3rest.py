@@ -5912,7 +5912,7 @@ class S3ResourceQuery:
             l = extract(lfield)
             r = extract(rfield)
         except KeyError, SyntaxError:
-            if current.session.s3.debug:
+            if current.response.s3.debug:
                 from s3utils import s3_debug
                 s3_debug(sys.exc_info()[1])
             return None
