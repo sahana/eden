@@ -45,18 +45,18 @@ class AddPost(FormView):
     
     .. versionadded: 0.1
     
-    :parameters: space_name
+    :parameters: space_url
     :context: get_place
     """
     form_class = NewsForm
-    template_name = 'news/post_add.html'
+    template_name = 'news/post_form.html'
     
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         return '/spaces/' + self.space.url + '/'
         
     def form_valid(self, form):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)
         form_uncommited.author = self.request.user
         form_uncommited.space = self.space
@@ -65,7 +65,7 @@ class AddPost(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(AddPost, self).get_context_data(**kwargs)
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         context['get_place'] = self.space
         return context
         
@@ -91,7 +91,7 @@ class ViewPost(DetailView):
         Get extra context data for the ViewPost view.
         """
         context = super(ViewPost, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
 
@@ -100,14 +100,14 @@ class EditPost(UpdateView):
     """
     Edit an existent post.
     
-    :parameters: space_name, post_id
+    :parameters: space_url, post_id
     :context: get_place
     """
     model = Post
-    template_name = 'news/post_edit.html'
+    template_name = 'news/post_form.html'
 
     def get_success_url(self):
-        self.space = get_object_or_404(Space, url=self.kwargs['space_name'])
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         return '/spaces/' + self.space.url
 
     def get_object(self):
@@ -116,7 +116,7 @@ class EditPost(UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(EditPost, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
     @method_decorator(permission_required('news.edit_post'))
@@ -133,7 +133,7 @@ class DeletePost(DeleteView):
     context_object_name = "get_place"
 
     def get_success_url(self):
-        space = self.kwargs['space_name']
+        space = self.kwargs['space_url']
         return '/spaces/%s' % (space)
 
     def get_object(self):
@@ -145,6 +145,6 @@ class DeletePost(DeleteView):
         Get extra context data for the ViewPost view.
         """
         context = super(DeletePost, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_name'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 

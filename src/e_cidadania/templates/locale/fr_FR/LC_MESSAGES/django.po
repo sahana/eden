@@ -1,0 +1,463 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: dashboard.py:68
+msgid "Users"
+msgstr ""
+
+#: dashboard.py:78
+msgid "Applications"
+msgstr ""
+
+#: dashboard.py:87
+msgid "Latest News"
+msgstr ""
+
+#: dashboard.py:95
+msgid "Media Management"
+msgstr ""
+
+#: dashboard.py:99
+msgid "FileBrowser"
+msgstr ""
+
+#: dashboard.py:108
+msgid "e-cidadania Support"
+msgstr ""
+
+#: dashboard.py:112
+msgid "Documentation"
+msgstr ""
+
+#: dashboard.py:117
+msgid "Wiki"
+msgstr ""
+
+#: dashboard.py:122
+msgid "Translations"
+msgstr ""
+
+#: dashboard.py:130
+msgid "Thirdparty Support"
+msgstr ""
+
+#: dashboard.py:134
+msgid "Django Documentation"
+msgstr ""
+
+#: dashboard.py:139
+msgid "Grappelli Documentation"
+msgstr ""
+
+#: dashboard.py:144
+msgid "python-dateutil Documentation"
+msgstr ""
+
+#: dashboard.py:153
+msgid "e-cidadania source code"
+msgstr ""
+
+#: dashboard.py:157
+msgid "GitHub"
+msgstr ""
+
+#: dashboard.py:162
+msgid "Gitorious"
+msgstr ""
+
+#: dashboard.py:167
+msgid "Repo.or.vz (Mirror)"
+msgstr ""
+
+#: dashboard.py:176
+msgid "Recent Actions"
+msgstr ""
+
+#: urls.py:62
+msgid "^accounts/"
+msgstr ""
+
+#: urls.py:65
+msgid "^spaces/"
+msgstr ""
+
+#: urls.py:68
+msgid "^invite/"
+msgstr ""
+
+#: urls.py:71
+msgid "^news/$"
+msgstr ""
+
+#: urls.py:73
+msgid "^news/add/$"
+msgstr ""
+
+#: urls.py:75
+msgid "^news/(?P<post_id>\\w+)/delete/$"
+msgstr ""
+
+#: urls.py:78
+msgid "^news/(?P<post_id>\\w+)/edit/$"
+msgstr ""
+
+#: urls.py:81
+msgid "^news/(?P<post_id>\\w+)/$"
+msgstr ""
+
+#: urls.py:90
+msgid "^comments/"
+msgstr ""
+
+#: templates/404.html:9
+msgid "Nooo...!"
+msgstr ""
+
+#: templates/404.html:11
+msgid "The page you're looking for does not exist."
+msgstr ""
+
+#: templates/404.html:12
+msgid "May it be abstract?"
+msgstr ""
+
+#: templates/500.html:10
+msgid "This wasn't supposed to happen! What did you do!?"
+msgstr ""
+
+#: templates/500.html:11
+msgid ""
+"We will send the spaguetti squad to repair this. Meanwhile you can go back "
+"to the index."
+msgstr ""
+
+#: templates/base.html:105
+msgid "Pages"
+msgstr ""
+
+#: templates/base.html:115
+msgid "Help"
+msgstr ""
+
+#: templates/base.html:116
+msgid "Mailing lists"
+msgstr ""
+
+#: templates/base.html:117
+msgid "Issues"
+msgstr ""
+
+#: templates/base.html:118
+msgid "E-mail"
+msgstr ""
+
+#: templates/base.html:119 templates/invite.html:15
+#: templates/invite_done.html:10
+msgid "Invite your friends"
+msgstr ""
+
+#: templates/base.html:131
+msgid "created by"
+msgstr ""
+
+#: templates/invite.html:9 templates/invite_done.html:4
+msgid "Invite your friends to e-cidadania"
+msgstr ""
+
+#: templates/invite.html:21
+msgid "Invite via E-mail"
+msgstr ""
+
+#: templates/invite.html:22
+msgid "Write the e-mail adresses here"
+msgstr ""
+
+#: templates/invite.html:23
+msgid ""
+"If you want to invite more than one person, you will have to write their "
+"adresses separated by commas. Example: this@that.com, foo@bar.net, "
+"black@white.org"
+msgstr ""
+
+#: templates/invite.html:24
+msgid ""
+"Hi!, I would like you to join e-cidadania, the participative democracy "
+"platform for citizens."
+msgstr ""
+
+#: templates/invite.html:25
+msgid ""
+"You can write here whatever text you want for your invitation, or leave it "
+"by default."
+msgstr ""
+
+#: templates/invite.html:26
+msgid "Submit"
+msgstr ""
+
+#: templates/invite.html:31
+msgid ""
+"To send invitations via e-mail you have to be <a href='/accounts/"
+"login/'>logged in</a>."
+msgstr ""
+
+#: templates/invite_done.html:11
+msgid "The email(s) have been sent"
+msgstr ""
+
+#: templates/invite_done.html:12
+msgid "Go to index"
+msgstr ""
+
+#: templates/menu.html:3
+msgid "Home"
+msgstr ""
+
+#: templates/menu.html:5 templates/site_index.html:54
+msgid "Login"
+msgstr ""
+
+#: templates/menu.html:6
+msgid "Sign up"
+msgstr ""
+
+#: templates/menu.html:13
+msgid "Language"
+msgstr ""
+
+#: templates/menu.html:33
+msgid "Profile"
+msgstr ""
+
+#: templates/menu.html:45
+msgid "Administration"
+msgstr ""
+
+#: templates/menu.html:46
+msgid "Create new space"
+msgstr ""
+
+#: templates/menu.html:47
+msgid "Add news"
+msgstr ""
+
+#: templates/menu.html:50
+msgid "Edit profile"
+msgstr ""
+
+#: templates/menu.html:52
+msgid "Logout"
+msgstr ""
+
+#: templates/not_allowed.html:4
+msgid "Not allowed"
+msgstr ""
+
+#: templates/not_allowed.html:10
+msgid "You are not allowed to access here."
+msgstr ""
+
+#: templates/not_allowed.html:13
+msgid "I want to participate"
+msgstr ""
+
+#: templates/not_allowed.html:15 templates/space_intent.html:12
+msgid ""
+"You can go <a href='/'>back to home</a> or <a href='/accounts/'>back to your "
+"profile</a>"
+msgstr ""
+
+#: templates/site_index.html:4
+msgid "e-cidadania"
+msgstr ""
+
+#: templates/site_index.html:14
+msgid "Recent processes"
+msgstr ""
+
+#: templates/site_index.html:21
+msgid "Public"
+msgstr ""
+
+#: templates/site_index.html:23
+msgid "Private"
+msgstr ""
+
+#: templates/site_index.html:27
+msgid "There are no spaces."
+msgstr ""
+
+#: templates/site_index.html:38
+msgid "View all the spaces"
+msgstr ""
+
+#: templates/site_index.html:54
+msgid "Register"
+msgstr ""
+
+#: templates/site_index.html:54
+msgid "or"
+msgstr ""
+
+#: templates/site_index.html:63
+msgid "Recent news"
+msgstr ""
+
+#: templates/site_index.html:68
+msgid "No public news."
+msgstr ""
+
+#: templates/site_index.html:73
+msgid "True democracy"
+msgstr ""
+
+#: templates/site_index.html:77
+msgid "The most complete tool ever"
+msgstr ""
+
+#: templates/site_index.html:94
+msgid "Share"
+msgstr ""
+
+#: templates/site_index.html:131
+msgid "Tweet"
+msgstr ""
+
+#: templates/space_intent.html:4
+msgid "Participate"
+msgstr ""
+
+#: templates/space_intent.html:11
+msgid ""
+"If the administrator approves your request, you will be notified by email"
+msgstr ""
+
+#: templates/validate_intent.html:4
+msgid "Validate participation"
+msgstr ""
+
+#: templates/comments/approve.html:4
+msgid "Approve a comment"
+msgstr ""
+
+#: templates/comments/approve.html:7
+msgid "Really make this comment public?"
+msgstr ""
+
+#: templates/comments/approve.html:12
+msgid "Approve"
+msgstr ""
+
+#: templates/comments/approved.html:4
+msgid "Thanks for approving"
+msgstr ""
+
+#: templates/comments/approved.html:7 templates/comments/deleted.html:7
+#: templates/comments/flagged.html:7
+msgid ""
+"Thanks for taking the time to improve the quality of discussion on our site"
+msgstr ""
+
+#: templates/comments/delete.html:4
+msgid "Remove a comment"
+msgstr ""
+
+#: templates/comments/delete.html:7
+msgid "Really remove this comment?"
+msgstr ""
+
+#: templates/comments/delete.html:12
+msgid "Remove"
+msgstr ""
+
+#: templates/comments/deleted.html:4
+msgid "Thanks for removing"
+msgstr ""
+
+#: templates/comments/flag.html:4
+msgid "Flag this comment"
+msgstr ""
+
+#: templates/comments/flag.html:7
+msgid "Really flag this comment?"
+msgstr ""
+
+#: templates/comments/flag.html:12
+msgid "Flag"
+msgstr ""
+
+#: templates/comments/flagged.html:4
+msgid "Thanks for flagging"
+msgstr ""
+
+#: templates/comments/form.html:2
+msgid "Leave a comment"
+msgstr ""
+
+#: templates/comments/form.html:19 templates/comments/form.html.py:49
+#: templates/comments/preview.html:34
+msgid "Post"
+msgstr ""
+
+#: templates/comments/form.html:20 templates/comments/form.html.py:50
+#: templates/comments/preview.html:35
+msgid "Preview"
+msgstr ""
+
+#: templates/comments/list.html:3
+msgid "Comments"
+msgstr ""
+
+#: templates/comments/list.html:7
+msgid "said"
+msgstr ""
+
+#: templates/comments/posted.html:4
+msgid "Thanks for commenting"
+msgstr ""
+
+#: templates/comments/posted.html:7
+msgid "Thank you for your comment"
+msgstr ""
+
+#: templates/comments/posted.html:10 templates/comments/posted.html.py:12
+msgid "Go back"
+msgstr ""
+
+#: templates/comments/preview.html:4 templates/comments/preview.html.py:17
+msgid "Preview your comment"
+msgstr ""
+
+#: templates/comments/preview.html:15
+msgid "Please correct the error below"
+msgid_plural "Please correct the errors below"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/comments/preview.html:20
+msgid "and"
+msgstr ""
+
+#: templates/comments/preview.html:20
+msgid "Post your comment"
+msgstr ""
+
+#: templates/comments/preview.html:20
+msgid "or make changes"
+msgstr ""

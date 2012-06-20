@@ -60,25 +60,20 @@ class Space(models.Model):
                                     default=_('Write here your description.'))
     date = models.DateTimeField(_('Date of creation'), auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True,
-                                verbose_name=_('Space creator'))
+                                verbose_name=_('Space creator'),
+    help_text=_('Select a user that will be marked as creator of the space'))
 
     logo = StdImageField(upload_to='spaces/logos', size=(100, 75, False), 
                          help_text = _('Valid extensions are jpg, jpeg, png and gif'))
     banner = StdImageField(upload_to='spaces/banners', size=(500, 75, False),
                            help_text = _('Valid extensions are jpg, jpeg, png and gif'))
-#    logo = models.ImageField(upload_to='spaces/logos',
-#                             verbose_name=_('Logotype'),
-#                             help_text=_('100x75 pixels'))
-#    banner = models.ImageField(upload_to='spaces/banners',
-#                               verbose_name=_('Banner'),
-#                               help_text=_('75px height'))
-    public = models.BooleanField(_('Public space'))
+    public = models.BooleanField(_('Public space'), help_text=_("This will make \
+    the space visible to everyone, but registration will be necessary to participate."))
     #theme = models.CharField(_('Theme'), m)
     
     # Modules
     mod_debate = models.BooleanField(_('Debate'))
     mod_proposals = models.BooleanField(_('Proposals'))
-    mod_proposalsets = models.BooleanField(_('ProposalSets'))
     mod_news = models.BooleanField(_('News'))
     mod_cal = models.BooleanField(_('Calendar'))
     mod_docs = models.BooleanField(_('Documents'))
@@ -95,7 +90,7 @@ class Space(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('space-index', (), {
-           'space_name': self.url})
+           'space_url': self.url})
 
 
 class Entity(models.Model):
@@ -125,17 +120,22 @@ class Document(models.Model):
     This models stores documents for the space, like a document repository,
     There is no restriction in what a user can upload to the space
     """
-    title = models.CharField(_('Document title'), max_length=100)
-    space = models.ForeignKey(Space, blank=True, null=True)
+    title = models.CharField(_('Document title'), max_length=100,
+                            help_text=_('Max: 100 characters'))
+    space = models.ForeignKey(Space, blank=True, null=True,
+    help_text=_('Change the space to whom belongs this document'))
     docfile = ContentTypeRestrictedFileField(_('File'),
         upload_to='spaces/documents/%Y/%m/%d',
         content_types=ALLOWED_CONTENT_TYPES,
-        max_upload_size=26214400
+        max_upload_size=26214400,
+        help_text=_('Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP, PDF, \
+                    RST, TXT.')
     )
     #docfile = models.FileField(upload_to='spaces/documents/%Y/%m/%d')
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, verbose_name=_('Author'), blank=True,
-                               null=True)
+                               null=True, help_text=_('Change the user that \
+                                will figure as the author'))
     
     def get_file_ext(self):
         filename = self.docfile.name
@@ -168,14 +168,18 @@ class Event(models.Model):
     Meeting data model. Every space (process) has N meetings. This will
     keep record of the assistants, meeting name, etc.
     """
-    title = models.CharField(_('Event name'), max_length=100)
+    title = models.CharField(_('Event name'), max_length=250,
+                             help_text="Max: 250 characters")
     space = models.ForeignKey(Space, blank=True, null=True)
-    user = models.ManyToManyField(User, verbose_name=_('Users'))
+    user = models.ManyToManyField(User, verbose_name=_('Users'),
+    help_text=_('List of the users that will assist or assisted to the event.'))
     pub_date = models.DateTimeField(auto_now_add=True)
     event_author = models.ForeignKey(User, verbose_name=_('Created by'),
                                      blank=True, null=True,
-                                     related_name='meeting_author')
-    event_date = models.DateField(verbose_name=_('Event date'))
+                                     related_name='meeting_author',
+    help_text=_('Select the user that will be designated as author.'))
+    event_date = models.DateField(verbose_name=_('Event date'),
+        help_text=_('Select the date where the event is celebrated.'))
     description = models.TextField(_('Description'), blank=True, null=True)
     location = models.TextField(_('Location'), blank=True, null=True)
     
@@ -191,7 +195,7 @@ class Event(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return ('view-event', (), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'event_id': str(self.id)})
 
 class Intent(models.Model):

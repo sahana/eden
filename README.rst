@@ -10,10 +10,12 @@ The e-cidadania objective is to maintain the platform as easy as possible while 
 Installation
 ------------
 
-To install e-cidadania follow these steps:
+Since e-cidadania 0.1.5 RC1 e-cidadania includes an automated buildout system.
+If you want to install it to do testing or development you should see
+`these instructions <https://github.com/cidadania/e-cidadania/blob/gsoc2012/docs/en/dev/environment.rst>`_
 
+If you don't want to create an isolated development environment,
 * Download the source code from git, or from the official webpage.
-* Copy the directory **src/** into your web root.
 * You need to install the python packages specified in requirements.txt for e-cidadania, you can do it with pip::
 
     sudo pip install -r requirements.txt

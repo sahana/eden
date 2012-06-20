@@ -52,10 +52,11 @@ class BaseProposalAbstractModel(models.Model):
     """
     content_type = models.ForeignKey(ContentType,
             verbose_name=_('content_type'),
-            related_name="content_type_set_for_%(class)s", null=True)
+            related_name="content_type_set_for_%(class)s", null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_pk = models.TextField(_('object ID'), null=True)
     content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
-
+    
     class Meta:
         abstract = True
 
@@ -80,24 +81,27 @@ class ProposalSet(models.Model):
 
     """
 
-    name = models.CharField(_('Name'), max_length=100, unique=True)
+    name = models.CharField(_('Name'), max_length=200, unique=True,
+                            help_text = _('Max: 200 characters'))
     space = models.ForeignKey(Space, blank=True, null=True)
     pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, blank=True, null=True)
-    debate = models.ForeignKey(Debate, blank=True, null=True)
+    debate = models.ForeignKey(Debate, blank=True, null=True,
+                               help_text = _('Select the debate associated \
+                               with this proposal set'))
 
     def __unicode__(self):
         return self.name
 
     class Meta:
-        verbose_name = _('ProposalSet')
-        verbose_name_plural = _('ProposalSets')
+        verbose_name = _('Proposal set')
+        verbose_name_plural = _('Proposal sets')
         get_latest_by = 'pub_date'
 
     @models.permalink
     def get_absolute_url(self):
         return ('view-proposalset',(), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'set_id': self.id
         })
 
@@ -121,19 +125,27 @@ class Proposal(BaseProposalAbstractModel):
     """
     code = models.CharField(_('Code'), max_length=50, blank=True,
                             null=True)
-    title = models.CharField(_('Title'), max_length=100, unique=True)
+    title = models.CharField(_('Title'), max_length=100, unique=True,
+                             help_text = _('Max: 200 characters'))
     proposalset = models.ForeignKey(ProposalSet, related_name='proposal_in',
-                                    blank=True, null=True)
+                                    blank=True, null=True,
+                                    help_text=_('Proposal set in which the \
+                                    proposal resides'))
     description = models.TextField(_('Description'), max_length=300)
     space = models.ForeignKey(Space, blank=True, null=True)
     author = models.ForeignKey(User, related_name='proposal_authors',
-                               blank=True, null=True)
+                               blank=True, null=True, 
+                               help_text = _('Change the user that will figure \
+                               as the author'))
     #debatelink = models.ForeignKey()
-    tags = TagField()
+    tags = TagField(help_text = _('Insert here relevant words related with the \
+                                proposal'))
     latitude = models.DecimalField(_('Latitude'), blank=True, null=True,
-                                   max_digits=8, decimal_places=6)
+                                   max_digits=8, decimal_places=6, 
+                                   help_text =_('Specify it in decimal'))
     longitude = models.DecimalField(_('Longitude'), blank=True, null=True,
-                                    max_digits=8, decimal_places=6)
+                                    max_digits=8, decimal_places=6, 
+                                    help_text =_('Specify it in decimal'))
     closed = models.NullBooleanField(default=False, blank=True)
     closed_by = models.ForeignKey(User, blank=True, null=True,
                                   related_name='proposal_closed_by')
@@ -168,5 +180,5 @@ class Proposal(BaseProposalAbstractModel):
     @models.permalink
     def get_absolute_url(self):
         return ('view-proposal', (), {
-            'space_name': self.space.url,
+            'space_url': self.space.url,
             'prop_id': str(self.id)})

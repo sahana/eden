@@ -313,7 +313,7 @@ def email_validation_process(request, key):
     return render_to_response(template, data, context_instance=RequestContext(request))
 
 
-def email_validation(request, space_name):
+def email_validation(request, space_url):
     """
     E-mail Change form
     """

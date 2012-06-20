@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-05-21 17:49+0200\n"
+"POT-Creation-Date: 2012-06-18 09:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -103,7 +103,7 @@ msgid ""
 "button."
 msgstr ""
 
-#: static/admin/js/calendar.js:26 static/admin/js/dateparse.js:32
+#: static/admin/js/calendar.js:26
 msgid ""
 "January February March April May June July August September October November "
 "December"
@@ -120,10 +120,6 @@ msgstr ""
 
 #: static/admin/js/collapse.js:15 static/admin/js/collapse.min.js:1
 msgid "Hide"
-msgstr ""
-
-#: static/admin/js/dateparse.js:33
-msgid "Sunday Monday Tuesday Wednesday Thursday Friday Saturday"
 msgstr ""
 
 #: static/admin/js/admin/DateTimeShortcuts.js:49

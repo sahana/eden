@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load wysiwyg %}
+
+{% comment %}
+The way to validate in this form if it is an edit or an add request is to
+validate the get_request context variable. If it's True, it means that it's an
+already created space, therefore we're editing the form. Remember that this
+tempalte shows the help_text automatically if found in the data models.
+{% endcomment %}
+
+{% block title %}
+    {% if get_place %}
+        {% trans "Edit space" %} {{ get_place.name }}
+    {% else %}
+        {% trans "Create a new space" %}
+    {% endif %}
+{% endblock %}
+
+{% block logo %}
+    {% if get_place %}
+        <a href="{{ get_place.get_absolute_url }}"><img src="{{ MEDIA_URL }}/{{ get_place.logo }}" /></a>
+    {% else %}
+        <a href="/"><img src="{{ STATIC_URL }}/assets/logos/index.png" /></a>
+    {% endif %}
+{% endblock %}
+
+{% block banner %}
+    {% if get_place %}
+        <img src="{{ MEDIA_URL }}/{{ get_place.banner }}" />
+    {% else %}
+        <img src="{{ STATIC_URL }}/assets/banners/index.png" />
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="span12">
+            {% if get_place %}
+                <h3>{% trans "Edit space" %} {{ get_place.name }}</h3>
+            {% else %}
+                <h3>{% trans "Create a new space" %}</h3>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="span12">
+            <form class="form-horizontal" enctype="multipart/form-data" action="" method="post">{% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <span class="help-inline">{{ error|escape }}</span>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="control-group {% if form.name.errors %}error{% endif%}">
+                    <label>{{ form.name.label }}</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            {{ form.name }}
+                            {% if form.name.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.name.errors %}
+                            <p class="help-block">
+                                {% for error in form.name.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="control-group {% if form.url.errors %}error{% endif%}">
+                    <label>{{ form.url.label }}</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            {{ form.url }}
+                            {% if form.url.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.url.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.url.errors %}
+                            <p class="help-block">
+                                {% for error in form.url.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="control-group {% if form.description.errors %}error{% endif%}">
+                    <label>{{ form.description.label }}</label>
+                    <div class="controls">
+                        <div class="input-prepend">
+                            {{ form.description }}
+                            {% wysiwyg_editor "id_description" %}
+                            {% if form.description.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.description.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.name.errors %}
+                            <p class="help-block">
+                                {% for error in form.description.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="control-group {% if form.logo.errors %}error{% endif%}">
+                    <label>{{ form.logo.label }}
+                        {% if form.logo.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.logo.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
+                    <div class="controls">
+                        <div class="row">
+                            <div class="span2">
+                                {% if get_place %}
+                                    <img src="{{ MEDIA_URL }}{{ get_place.logo }}" />
+                                {% endif %}
+                            </div>
+                            <div class="span4">
+                                {{ form.logo }}
+                            </div>
+                        </div>
+                        {% if form.logo.errors %}
+                            <p class="help-block">
+                                {% for error in form.logo.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="control-group {% if form.banner.errors %}error{% endif%}">
+                    <label>{{ form.banner.label }}
+                        {% if form.banner.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.banner.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
+                    <div class="controls">
+                        <div class="row">
+                            <div class="span4">
+                                {% if get_place %}
+                                <img src="{{ MEDIA_URL }}{{ get_place.banner }}" />
+                                {% endif %}
+                            </div>
+                            <div class="span4">
+                                {{ form.banner }}
+                            </div>
+                        </div>
+                        {% if form.banner.errors %}
+                            <p class="help-block">
+                                {% for error in form.banner.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if request.user.is_staff %}
+                <div class="control-group {% if form.author.errors %}error{% endif%}">
+                    <label>{{ form.author.label }}</label>
+                    <div class="controls">
+                        <div class="input-prepend">
+                            {{ form.author }}
+                            {% if form.author.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.author.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.author.errors %}
+                        <p class="help-block">
+                            {% for error in form.author.errors %}
+                                {{ error|escape }}
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="control-group {% if form.public.errors %}error{% endif%}">
+                    <label class="control-label">{{ form.public.label }}
+                        {% if form.public.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.public.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            {{ form.public }}
+                        </label>
+                        {% if form.public.errors %}
+                            <p class="help-block">
+                                {% for error in form.public.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr />
+    
+                <div class="control-group">
+                    <h3>{% trans "Modules" %}</h3>
+                    <div class="controls">
+                        <label class="checkbox inline">{{ form.mod_debate }}{{ form.mod_debate.label }}</label>
+                        <label class="checkbox inline">{{ form.mod_proposals }}{{ form.mod_proposals.label }}</label>
+                        <label class="checkbox inline">{{ form.mod_news }}{{ form.mod_news.label }}</label>
+                        <label class="checkbox inline">{{ form.mod_cal }}{{ form.mod_cal.label }}</label>
+                        <label class="checkbox inline">{{ form.mod_docs }}{{ form.mod_docs.label }}</label>
+                    </div>
+                </div>
+        
+                <hr />
+    
+                <h3>{% trans "Entities participating" %}</h3><br /><br />
+    
+                {% comment %}
+                    Entity forms
+                {% endcomment %}
+    
+                {{ entityformset.management_form }}
+    
+                {% for entity in entityformset %}
+                    {{ entity.id }}
+                    <div class="control-group {% if entity.name.errors %}error{% endif%}">
+                        <label>{{ entity.name.label }}</label>
+                        <div class="controls">
+                            {{ entity.name }}
+                            {% if entity.name.errors %}
+                                <p class="help-block">
+                                    {% for error in entity.name.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="control-group {% if entity.website.errors %}error{% endif%}">
+                        <label>{{ entity.website.label }}</label>
+                        <div class="controls">
+                            {{ entity.website }}
+                            {% if entity.website.errors %}
+                                <p class="help-block">
+                                    {% for error in entity.website.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="control-group {% if entity.logo.errors %}error{% endif%}">
+                        <label>{{ entity.logo.label }}</label>
+                        <div class="controls">
+                            {{ entity.logo }}
+                            {% if entity.logo.errors %}
+                                <p class="help-block">
+                                    {% for error in entity.logo.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+           
+                <hr />
+                <a href="{{ get_place.get_absolute_url }}" class="btn btn-small btn-danger">&laquo; {% trans "Cancel" %}</a>
+                <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Create' %}" />
+    
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+

@@ -23,13 +23,17 @@ Main URLs for the e-cidadania platform.
 
 from django.conf.urls import *
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
 
-from core.views import IndexEntriesFeed, ListNews, AddPost, EditPost, \
-                              DeletePost, ViewPost
+from core.views.index import IndexEntriesFeed
+from core.views.news import ListNews
+from core.views.news import AddPost
+from core.views.news import EditPost
+from core.views.news import DeletePost
+from core.views.news import ViewPost
 
 admin.autodiscover()
 
@@ -52,7 +56,7 @@ urlpatterns += i18n_patterns('',
     (r'^admin/', include(admin.site.urls)),
 
     # Index
-    url(r'^$', 'core.views.index_view', name='site-index'),
+    url(r'^$', 'core.views.index.index_view', name='site-index'),
 
     # User accounts
     url(_(r'^accounts/'), include('apps.thirdparty.userprofile.urls')),
@@ -61,7 +65,7 @@ urlpatterns += i18n_patterns('',
     url(_(r'^spaces/'), include('core.spaces.urls')),
     
     # Invitations
-    url(_(r'^invite/'), 'core.views.invite', name='invite'),
+    url(_(r'^invite/'), 'core.views.invite.invite', name='invite'),
     
     # News (this view of news is only for the index)
     url(_(r'^news/$'), ListNews.as_view(), name='list-site-news'),

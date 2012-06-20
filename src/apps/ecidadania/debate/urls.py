@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-"""  
+"""
 This file contains all the URLs that e_cidadania will inherit when the user
 access to '/spaces/'.
 """
@@ -31,20 +31,20 @@ urlpatterns = patterns('apps.ecidadania.debate.views',
     url(r'^$', ListDebates.as_view(), name='list-debates'),
 
     url(r'^(?P<debate_id>\d+)/', ViewDebate.as_view(), name='view-debate'),
-    
+
     url(_(r'^add/'), 'add_new_debate', name='add-debate'),
 
     url(_(r'^update_position/'), 'update_position', name='update-note-position'),
-    
+
     url(_(r'^update_note/'), 'update_note', name='update-note'),
-    
+
     url(_(r'^create_note/'), 'create_note', name='create-note'),
-    
+
     url(_(r'^delete_note/'), 'delete_note', name='delete-note'),
-    
+
     # Editing debates is not allowed at this time
     #(r'^(?P<debate_id>\d+)', 'edit_debate'),
-    
+
     #(r'^(?P<debate_id>\d+)', 'delete_debate'),
 
 )

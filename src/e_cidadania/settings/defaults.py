@@ -41,9 +41,10 @@ LOGIN_REDIRECT_URL = '/accounts/'
 
 # Languages for the platform.
 LANGUAGES = (
-    ('es_ES', 'Espanol'),
+    ('es_ES', 'Español'),
     ('en_GB', 'English'),
     ('gl_ES', 'Galego'),
+    ('fr_FR', 'Français')
 )
 
 SITE_ID = 1
@@ -93,6 +94,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    #GZipMiddleware compresses content for modern browsers
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -146,7 +149,7 @@ THIRDPARTY_APPS = (
     'apps.thirdparty.smart_selects',
     'apps.thirdparty.userprofile',
     'apps.thirdparty.tagging',
-    #'django_extensions',
+    'django_extensions',
 )
 
 ECIDADANIA_MODULES = (

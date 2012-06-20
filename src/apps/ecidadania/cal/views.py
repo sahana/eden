@@ -26,7 +26,7 @@ from core.spaces.models import Event, Space
 from apps.ecidadania.cal.models import EventCalendar
 from e_cidadania import settings
 
-def calendar(request, space_name, year, month):
+def calendar(request, space_url, year, month):
     
     """
     Returns an localized event calendar with all the Meeting objects.
@@ -39,7 +39,7 @@ def calendar(request, space_name, year, month):
         return render_to_response('cal/error.html',
                                   context_instance=RequestContext(request))
 
-    place = get_object_or_404(Space, url=space_name)
+    place = get_object_or_404(Space, url=space_url)
     events = Event.objects.order_by('event_date') \
                               .filter(space = place,
                                       event_date__year = year,

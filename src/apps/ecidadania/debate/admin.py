@@ -29,7 +29,7 @@ class ColumnInline(admin.TabularInline):
     """
     model = Column
     extra = 2
-    
+
 class RowInline(admin.TabularInline):
 
     """
@@ -40,16 +40,16 @@ class RowInline(admin.TabularInline):
     extra = 2
 
 class DebateAdmin(admin.ModelAdmin):
-    
+
     """
     Administration for all the debates.
     """
     list_display = ('title', 'date')
     inlines = [ColumnInline, RowInline]
-    
-    
+
+
 class NoteAdmin(admin.ModelAdmin):
-    
+
     """
     Administration for all the notes in every debate.
     """

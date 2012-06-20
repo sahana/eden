@@ -30,6 +30,12 @@ from apps.ecidadania.proposals.views import ListProposalSet, AddProposalSet, \
 urlpatterns = patterns('apps.ecidadania.proposals.views',
 
     url(_(r'^$'), ListProposals.as_view(), name='list-proposals'),
+    
+    url(_(r'^psets/(?P<set_id>\w+)/edit/'), EditProposalSet.as_view(), name='edit-proposalset'),
+       
+    url(_(r'^psets/(?P<set_id>\w+)/delete/'), DeleteProposalSet.as_view(), name='delete-proposalset'),
+    
+    url(_(r'^psets/(?P<set_id>\w+)/'), ViewProposalSet.as_view(), name='view-proposalset'),
 
     url(_(r'^psets/'), ListProposalSet.as_view(), name='list-proposalset'),
 
@@ -45,11 +51,5 @@ urlpatterns = patterns('apps.ecidadania.proposals.views',
     
     url(_(r'^(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(), name='delete-proposal'),
 
-    url(_(r'^psets/(?P<set_id>\w+)/$'), ViewProposalSet.as_view(), name='view-proposalset'),
-   
-    url(_(r'^psets/(?P<set_id>\w+/edit/$)'), EditProposalSet.as_view(), name='edit-proposalset'),
-
-    url(_(r'^psets/(?P<set_id>\w+/delete/$)'), DeleteProposalSet.as_view(), name='delete-proposalset'),
-    
 )
 
