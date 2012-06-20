@@ -14,7 +14,7 @@
  body{direction:ltr;}
 {{pass}}
 </style>
-{{if s3.debug:}}
+{{if session.s3.debug:}}
  {{include "s3_include_debug.html"}}
  <link href="/{{=appname}}/static/styles/IFRC/xtheme-ifrc.css" rel="stylesheet" type="text/css" />
  {{=s3_include_debug()}}
@@ -109,12 +109,12 @@
      {{include "breadcrumbs.html"}}
      <a id='main-content'></a>
      {{include}}
-     {{try:}}{{=dashboard}}{{except:}}{{pass}}
+     {{try:}}{{if current.menu.dashboard is not None:}}{{=current.menu.dashboard}}{{pass}}{{except:}}{{pass}}
     </div>
   </div>
   <div id='footer'>
    {{include "../private/templates/IFRC/views/footer.html"}}
-   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
+   {{if session.s3.debug:}}{{=s3.toolbar()}}{{pass}}
   </div>
  </div>
 {{pass}}

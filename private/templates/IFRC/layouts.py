@@ -183,7 +183,11 @@ class S3DashBoardMenuLayout(S3NavigationItem):
             #return items
         #elif item.parent.parent is None:
             if items:
-                return UL(items, _id="sub-dashboard")
+                if item.attr._id is not None:
+                    _id = item.attr._id
+                else:
+                    _id = "sub-dashboard"
+                return UL(items, _id=_id)
             else:
                 return ""
         else:
@@ -193,6 +197,13 @@ class S3DashBoardMenuLayout(S3NavigationItem):
                           IMG(_src=URL(c="static", f="img",
                                        args=["ifrc", item.opts.image]),
                               _alt=T(item.opts.title)),
+                          _href=item.url()))
+            elif item.opts.text:
+                return LI(A(H2(item.label),
+                          P(item.opts.text),
+                          IMG(_src=URL(c="static", f="img",
+                                       args=["ifrc", item.opts.image]),
+                              _alt=item.opts.image),
                           _href=item.url()))
             else:
                 return LI(A(item.label, _href=item.url()))
