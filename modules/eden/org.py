@@ -47,27 +47,6 @@ from gluon.storage import Storage
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
 
-T = current.T
-organisation_type_opts = {
-    # http://hxl.humanitarianresponse.info/index.html#Organisation
-    1:T("Government"),          # HXL: Government organisation
-    2:T("Embassy"),             # Add to HXL?
-    3:T("International NGO"),   # HXL: NGO - split?
-    4:T("Donor"),               # HXL: Bilateral organisation. Don't change this number without changing organisation_popup.html
-    6:T("National NGO"),        # HXL: NGO - split?
-    7:T("UN"),                  # HXL: UN agency
-    8:T("International Organization"), # remove?
-    9:T("Military"),            # Add to HXL?
-    10:T("Private"),            # HXL: Private organisation / foundation
-    11:T("Intergovernmental Organization"), # HXL: Inter-governmental organisation
-    12:T("Institution"),        # remove?
-    13:T("Red Cross / Red Crescent") # HXL: Red cross / red crescent
-    # These are affiliation roles:
-    # http://eden.sahanafoundation.org/wiki/BluePrintPersonEntityModel#Roles
-    # HXL: Distributing partner
-    # HXL: Supplying agency
-}
-
 # =============================================================================
 class S3OrganisationModel(S3Model):
     """
@@ -77,6 +56,8 @@ class S3OrganisationModel(S3Model):
     names = ["org_sector",
              "org_sector_id",
              #"org_subsector",
+             "org_organisation_type",
+             "org_organisation_type_tag",
              "org_organisation",
              "org_organisation_id",
             ]
@@ -96,6 +77,7 @@ class S3OrganisationModel(S3Model):
         SELECT_LOCATION = messages.SELECT_LOCATION
 
         add_component = self.add_component
+        comments = s3.comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -113,13 +95,16 @@ class S3OrganisationModel(S3Model):
                              Field("name", length=128,
                                    notnull=True, unique=True,
                                    label=T("Name")),
+                             comments(),
                              *meta_fields())
 
         # CRUD strings
         if settings.get_ui_cluster():
             SECTOR = T("Cluster")
+            ADD_SECTOR = T("Add Cluster")
+            help = T("If you don't see the Cluster in the list, you can add a new one by clicking link 'Add Cluster'.")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Cluster"),
+                title_create = ADD_SECTOR,
                 title_display = T("Cluster Details"),
                 title_list = T("Clusters"),
                 title_update = T("Edit Cluster"),
@@ -134,8 +119,10 @@ class S3OrganisationModel(S3Model):
                 msg_list_empty = T("No Clusters currently registered"))
         else:
             SECTOR = T("Sector")
+            ADD_SECTOR = T("Add Sector")
+            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Add Sector'.")
             crud_strings[tablename] = Storage(
-                title_create = T("Add Sector"),
+                title_create = ADD_SECTOR,
                 title_display = T("Sector Details"),
                 title_list = T("Sectors"),
                 title_update = T("Edit Sector"),
@@ -159,6 +146,11 @@ class S3OrganisationModel(S3Model):
                                                                     sort=True,
                                                                     multiple=True)),
                                     represent = self.org_sector_represent,
+                                    comment = S3AddResourceLink(c="org",
+                                                f="sector",
+                                                label=ADD_SECTOR,
+                                                title=T("Sector"),
+                                                tooltip=help),
                                     label = SECTOR,
                                     ondelete = "SET NULL")
 
@@ -222,8 +214,73 @@ class S3OrganisationModel(S3Model):
         # configure("org_subsector", deduplicate=self.org_sector_deduplicate)
         # add_component("org_subsector", org_sector="sector_id")
 
-        # =============================================================================
+        # ---------------------------------------------------------------------
+        # Organisation Types
+        #
+        tablename = "org_organisation_type"
+        table = define_table(tablename,
+                             Field("name", length=128,
+                                   notnull=True, unique=True,
+                                   label=T("Name")),
+                             comments(),
+                             *meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Organization Type"),
+            title_display = T("Organization Type Details"),
+            title_list = T("Organization Types"),
+            title_update = T("Edit Organization Type"),
+            title_search = T("Search Organization Types"),
+            subtitle_create = T("Add New Organization Type"),
+            label_list_button = T("List Organization Types"),
+            label_create_button = T("Add New Organization Type"),
+            label_delete_button = T("Delete Organization Type"),
+            msg_record_created = T("Organization Type added"),
+            msg_record_modified = T("Organization Type updated"),
+            msg_record_deleted = T("Organization Type deleted"),
+            msg_list_empty = T("No Organization Types currently registered"))
+
+        organisation_type_id = S3ReusableField("organisation_type_id",
+                                db.org_organisation_type,
+                                sortby="name",
+                                requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                "org_organisation_type.id",
+                                                                 "%(name)s",
+                                                                 sort=True)),
+                                represent = self.org_organisation_type_represent,
+                                label = T("Organization Type"),
+                                comment = S3AddResourceLink(c="org",
+                                            f="organisation_type",
+                                            label=T("Add Organization Type"),
+                                            title=T("Organization Type"),
+                                            tooltip=help),
+                                ondelete = "SET NULL")
+
+        # Tags as component of Locations
+        add_component("gis_location_tag",
+                      gis_location=dict(joinby="location_id",
+                                        name="tag"))
+
+        # ---------------------------------------------------------------------
+        # Organisation Type Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "org_organisation_type_tag"
+        table = define_table(tablename,
+                             organisation_type_id(),
+                             # key is a reserved word in MySQL
+                             Field("tag", label=T("Key")),
+                             Field("value", label=("Value")),
+                             comments(),
+                             *meta_fields())
+
+        # ---------------------------------------------------------------------
         # Organisations
+        # http://xmlns.com/foaf/0.1/Organisation
         #
         tablename = "org_organisation"
         table = define_table(tablename,
@@ -233,37 +290,37 @@ class S3OrganisationModel(S3Model):
                              Field("name", notnull=True, unique=True,
                                    length=128,           # Mayon Compatibility
                                    label = T("Name")),
-                             Field("acronym", length=8, label = T("Acronym"),
+                             # http://hxl.humanitarianresponse.info/#abbreviation
+                             Field("acronym", length=8,
+                                   label = T("Acronym"),
                                    represent = lambda val: val or "",
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Acronym"),
                                                                    T("Acronym of the organization's name, eg. IFRC.")))),
-                             Field("type", "integer", label = T("Type"),
-                                   #readable = False,
-                                   #writable = False,
-                                   requires = IS_NULL_OR(IS_IN_SET(organisation_type_opts)),
-                                   represent = lambda opt: \
-                                       organisation_type_opts.get(opt, UNKNOWN_OPT)),
+                             organisation_type_id(
+                                                  #readable = False,
+                                                  #writable = False,
+                                                ),
                              sector_id(
                                        #readable = False,
                                        #writable = False,
                                       ),
                              #Field("registration", label=T("Registration")),    # Registration Number
                              Field("region",
+                                   label=T("Region"),
                                    #readable = False,
                                    #writable = False,
-                                   label=T("Region")),
+                                   ),
                              Field("country", "string", length=2,
+                                   label = T("Home Country"),
                                    #readable = False,
                                    #writable = False,
-                                   label = T("Home Country"),
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                         lambda: gis.get_countries(key_type="code"),
                                                                   zero = SELECT_LOCATION)),
                                    represent = lambda code: \
                                         gis.get_country(code, key_type="code") or UNKNOWN_OPT),
-                             Field("logo",
-                                   "upload",
+                             Field("logo", "upload",
                                    label = T("Logo"),
                                    requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
                                                                     error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
@@ -272,21 +329,36 @@ class S3OrganisationModel(S3Model):
                                                  _title="%s|%s" % (T("Logo"),
                                                                    T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400")))
                                   ),
-                             Field("website", label = T("Website"),
+                             # http://hxl.humanitarianresponse.info/#organisationHomepage
+                             Field("website",
+                                   label = T("Website"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = s3_url_represent),
-                             Field("twitter",                        # deprecated by contact component
+                             Field("year", "integer",
+                                   label = T("Year"),
+                                   #readable = False,
+                                   #writable = False,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(1850, 2100)),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Year"),
+                                                                   T("Year that the organization was founded"))),
+                                   ),
+                             # @ToDo: Deprecate with Contact component
+                             Field("twitter",
+                                   #readable = False,
+                                   #writable = False,
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Twitter"),
                                                                    T("Twitter ID or #hashtag")))),
-                             Field("donation_phone", label = T("Donation Phone #"),
+                             Field("donation_phone",
+                                   label = T("Donation Phone #"),
                                    #readable = False,
                                    #writable = False,
                                    requires = IS_NULL_OR(s3_phone_requires),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Donation Phone #"),
                                                                    T("Phone number to donate to this organization's relief efforts.")))),
-                             s3.comments(),
+                             comments(),
                              #document_id(), # Better to have multiple Documents on a Tab
                              *meta_fields())
 
@@ -381,7 +453,7 @@ class S3OrganisationModel(S3Model):
                     S3SearchOptionsWidget(
                         name = "org_search_type",
                         label = T("Type"),
-                        field = "type",
+                        field = "organisation_type_id",
                         cols = 2
                     ),
                     S3SearchOptionsWidget(
@@ -683,6 +755,26 @@ class S3OrganisationModel(S3Model):
             return "%s:%s" % (sector, record.abrv)
         else:
             return NONE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_type_represent(id):
+        """ Organisation Type representation """
+
+        if not id:
+            return current.messages.NONE
+
+        if isinstance(id, Row):
+            record = id
+        else:
+            db = current.db
+            table = db.org_organisation_type
+            query = (table.id == id)
+            record = db(query).select(table.name,
+                                      limitby=(0, 1)).first()
+        if record:
+            return record.name
+        return current.messages.NONE
 
     # -----------------------------------------------------------------------------
     @staticmethod

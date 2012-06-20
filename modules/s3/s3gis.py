@@ -2528,10 +2528,11 @@ class GIS(object):
                     code2 = feat.GetField(code2Field)
                     #area = feat.GetField("Shape_Area")
                     try:
-                        db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt)
                         id = db(query).select(table.id,
                                               limitby=(0, 1)).first().id
+                        query = (table.id == id)
+                        db(query).update(gis_feature_type=gis_feature_type,
+                                         wkt=wkt)
                         ttable.insert(location_id = id,
                                       tag = "ISO3",
                                       value = code2)
@@ -3053,10 +3054,11 @@ class GIS(object):
                     code2 = feat.GetField(code2Field)
                     area = feat.GetField("Shape_Area")
                     try:
+                        ## FIXME
                         db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt,
-                                         code2=code2,
-                                         area=area)
+                                         wkt=wkt)
+                                         #code2=code2,
+                                         #area=area
                     except db._adapter.driver.OperationalError, exception:
                         s3_debug(exception)
 

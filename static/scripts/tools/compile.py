@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Needs to be run in the web2py environment
-# python web2py.py -S eden -R applications/eden/static/scripts/tools/compile.py
+# python web2py.py -S eden -M -R applications/eden/static/scripts/tools/compile.py
 
 import os
 
