@@ -261,7 +261,6 @@ def inbound_email_settings():
     """
         RESTful CRUD controller for email settings
             - appears in the administration menu
-        Only 1 of these ever in existence
     """
 
     tablename = "msg_inbound_email_settings"
@@ -280,6 +279,10 @@ def inbound_email_settings():
     table.delete_from_server.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Delete"),
                               T("If this is set to True then mails will be deleted from the server after downloading."))))
+    table.enable_schedule.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Enable"),
+                                  T("If this is set to True then the mail receiving task will be scheduled"))))
+
 
     if not auth.has_membership(auth.id_group("Administrator")):
         session.error = UNAUTHORISED
@@ -287,13 +290,49 @@ def inbound_email_settings():
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
         title_update = T("Edit Email Settings"),
+        label_create_button = T("Add Email Settings"),
         msg_record_modified = T("Email settings updated"),
     )
 
     #response.menu_options = admin_menu_options
-    s3mgr.configure(tablename, listadd=False, deletable=False)
+    s3mgr.configure(tablename, listadd=True, deletable=False)
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def workflow():
+    """
+        RESTful CRUD controller for parser settings
+            - appears in the administration menu
+    """
+    
+    s3db = current.s3db
+    table = s3db.msg_workflow
+    
+    table.source_task_id.label = T("Source Task ID")
+    table.source_task_id.comment = DIV(DIV(_class="tooltip",
+            _title="%s|%s" % (T("Source Task ID"),
+                              T("This is the scheduler_task.id for the Inbound Message Source."))))
+    
+    table.workflow_task_id.label = T("Workflow Task ID")
+    table.workflow_task_id.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Workflow Task ID"),
+                                  T("This is the scheduler_task.id for the Message Parsing Workflow."))))
+    
+    if not auth.has_membership(auth.id_group("Administrator")):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+ 
+    # CRUD Strings
+    s3.crud_strings["msg_workflow"] = Storage(
+        title_update = T("Edit Message Parser Settings"),
+        label_create_button = T("Add Parser Settings"),
+        msg_record_modified = T("Message Parser settings updated"),
+    )
+ 
+    s3mgr.configure("msg_workflow", listadd=True, deletable=True)
+    
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def email_inbox():

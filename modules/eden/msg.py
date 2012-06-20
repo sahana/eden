@@ -379,6 +379,8 @@ class S3InboundEmailModel(S3Model):
                                   # Set true to delete messages from the remote
                                   # inbox after fetching them.
                                   Field("delete_from_server", "boolean"),
+                                  Field("enable_schedule", "boolean",
+                                        default = True),
                                   *s3.meta_fields())
 
         # Incoming Email

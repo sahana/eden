@@ -30,7 +30,7 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_1(message=""):
+    def parse_5(message=""):
             """
                 Parsing Workflow 1.
             """
@@ -94,14 +94,16 @@ class S3Parsing(object):
                         recipient = db(query).select(table.value,
                                                      orderby = table.priority,
                                                      limitby=(0, 1)).first()
-                        reply = "%s Email->%s" % (reply, recipient.value)
+                        if recipient:
+                            reply = "%s Email->%s" % (reply, recipient.value)
                     if "phone" in pquery:
                         query = (table.pe_id == result[0]["id"]) & \
                             (table.contact_method == "SMS")
                         recipient = db(query).select(table.value,
                                                      orderby = table.priority,
                                                      limitby=(0, 1)).first()
-                        reply = "%s Mobile->%s" % (reply,
+                        if recipient:
+                            reply = "%s Mobile->%s" % (reply,
                                                    recipient.value)
     
                 if len(result) == 0:
@@ -114,7 +116,7 @@ class S3Parsing(object):
     # ---------------------------------------------------------------------
     
     @staticmethod
-    def parse_2(message=""):
+    def parse_6(message=""):
             """
                Parsing Workflow 2. 
             """
@@ -190,7 +192,7 @@ class S3Parsing(object):
     # ---------------------------------------------------------------------
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_3(message=""):
+    def parse_7(message=""):
             """
                Parsing Workflow 3.
             """
@@ -267,14 +269,14 @@ class S3Parsing(object):
            Called by parse_import() in s3msg.py.
         """
         
-        if workflow == 1:
-            return S3Parsing.parse_1(message)
+        if workflow == 5:
+            return S3Parsing.parse_5(message)
         
-        elif workflow == 2:
-            return S3Parsing.parse_2(message)
+        elif workflow == 6:
+            return S3Parsing.parse_6(message)
 
-        elif workflow == 3:
-            return S3Parsing.parse_3(message)
+        elif workflow == 6:
+            return S3Parsing.parse_7(message)
         else:
             return None
     

@@ -344,7 +344,7 @@ settings.L10n.decimal_separator = "."
 
 #Message Parser Settings
 #Add the enabled parsing workflows to the list below
-#settings.parser.parser_enabled = ["parser_1", "parser_2", "parser_3"]
+#settings.parser.parser_enabled = ["parser_5", "parser_6", "parser_7"]
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled
