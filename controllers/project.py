@@ -249,6 +249,12 @@ def hazard():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def framework():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader=s3db.project_rheader)
+
 # =============================================================================
 def organisation():
     """ RESTful CRUD controller """
@@ -354,16 +360,7 @@ def activity():
         return output
     response.s3.postp = postp
 
-    tabs = [(T("Details"), None),
-            (T("Contact Persons"), "contact")]
-    if mode_task:
-        tabs.append((T("Tasks"), "task"))
-        tabs.append((T("Attachments"), "document"))
-    else:
-        tabs.append((T("Documents"), "document"))
-
-    rheader = lambda r: s3db.project_rheader(r, tabs)
-    return s3_rest_controller(rheader=rheader,
+    return s3_rest_controller(rheader=s3db.project_rheader,
                               csv_template="activity")
 
 # -----------------------------------------------------------------------------
@@ -454,14 +451,8 @@ def location():
         return output
     response.s3.postp = postp
 
-    tabs = [(T("Details"), None),
-            (T("Beneficiaries"), "beneficiary"),
-            (T("Contact People"), "contact"),
-            ]
-
-    rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
-                              rheader=rheader,
+                              rheader=s3db.project_rheader,
                               csv_template="location")
 
 # -----------------------------------------------------------------------------

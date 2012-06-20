@@ -417,7 +417,7 @@ class S3AutocompleteWidget(FormWidget):
         dummy_input = "dummy_%s" % real_input
 
         # Script defined in static/scripts/S3/S3.js
-        js_autocomplete = "S3.autocomplete('%s','%s','%s','%s','%s','%s',%s,%s);\n" % \
+        js_autocomplete = "S3.autocomplete('%s','%s','%s','%s','%s',\"%s\",%s,%s);\n" % \
             (self.fieldname, self.module, self.resourcename, real_input,
              self.link_filter, self.post_process, self.delay, self.min_length)
 
@@ -1035,7 +1035,6 @@ def S3GenericAutocompleteTemplate(
         Renders a SELECT as an INPUT field with AJAX Autocomplete
     """
     request = current.request
-    response = current.response
 
     value = transform_value(value)
 
@@ -1051,8 +1050,7 @@ def S3GenericAutocompleteTemplate(
     real_input = str(field).replace(".", "_")
     dummy_input = "dummy_%s" % real_input
 
-    js_autocomplete = "".join((
-            """
+    js_autocomplete = "".join(("""
 var data = { val:$('#%(dummy_input)s').val(), accept:false };
 var get_name = %(name_getter)s;
 var get_id = %(id_getter)s;
@@ -1061,21 +1059,21 @@ $('#%(dummy_input)s').autocomplete({
     delay: %(delay)d,
     minLength: %(min_length)d,
     search: function(event, ui) {
-        $( '#%(dummy_input)s_throbber' ).removeClass('hidden').show();
+        $('#%(dummy_input)s_throbber').removeClass('hidden').show();
         return true;
     },
     response: function(event, ui, content) {
-        $( '#%(dummy_input)s_throbber' ).hide();
+        $('#%(dummy_input)s_throbber').hide();
         return content;
     },
-    focus: function( event, ui ) {
-        $( '#%(dummy_input)s' ).val( get_name(ui.item) );
+    focus: function(event, ui) {
+        $('#%(dummy_input)s').val(get_name(ui.item));
         return false;
     },
     select: function( event, ui ) {
         var item = ui.item
-        $( '#%(dummy_input)s' ).val( get_name(ui.item) );
-        $( '#%(real_input)s' ).val( get_id(ui.item) ).change();
+        $('#%(dummy_input)s').val(get_name(ui.item));
+        $('#%(real_input)s').val(get_id(ui.item)).change();
         """ % locals(),
         post_process or "",
         """
@@ -1083,11 +1081,11 @@ $('#%(dummy_input)s').autocomplete({
         return false;
     }
 })
-.data( 'autocomplete' )._renderItem = function( ul, item ) {
-    return $( '<li></li>' )
-        .data( 'item.autocomplete', item )
-        .append( '<a>' + get_name(item) + '</a>' )
-        .appendTo( ul );
+.data('autocomplete')._renderItem = function(ul, item) {
+    return $('<li></li>')
+        .data('item.autocomplete', item)
+        .append('<a>' + get_name(item) + '</a>')
+        .appendTo(ul);
 };
 $('#%(dummy_input)s').blur(function() {
     if (!$('#%(dummy_input)s').val()) {
@@ -1120,7 +1118,7 @@ $('#%(dummy_input)s').blur(function() {
     else:
         represent = ""
 
-    response.s3.jquery_ready.append(js_autocomplete)
+    current.response.s3.jquery_ready.append(js_autocomplete)
     return TAG[""](
                     INPUT(_id=dummy_input,
                           _class="string",
