@@ -202,6 +202,7 @@ class S3Msg(object):
         db = current.db
         ltable = current.s3db.msg_log
         wtable = current.s3db.msg_workflow
+        otable = current.s3db.msg_outbox
         
         query = (wtable.workflow_task_id == workflow)
         records = db(query).select(wtable.source_task_id)
@@ -216,11 +217,52 @@ class S3Msg(object):
                 message = row .message 
                 reply = S3Parsing.parser(workflow, message)
                 db(ltable.id == row.id).update(reply = reply,is_parsed = True)
+                reply = ltable.insert(sender = auth.user.firstname, recipient = row.sender, subject ="Parsed Reply", message = reply) 
+                otable.insert(message_id = reply.id, address = row.sender) 
                 db.commit()
                 
         return        
                 
+    # -----------------------------------------------------------------------------
+    # Enabled Parsing Workflows
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def get_msg_parsers():
+        """
+        Returns the list of the enabled Parsign Workflows.
+        """
+        
+        settings = current.deployment_settings
+        workflows = []
+        for workflow in settings.get_parser_enabled():
+            workflow = int(workflow.split("_")[1])
+            workflows += [workflow]
             
+        return workflows
+           
+    # -----------------------------------------------------------------------------
+    # Scheduling of Parsing Workflows
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def schedule_parser():
+        """
+        Schedules different parsing workflows.
+        """
+        
+        s3task = current.s3task
+        db = current.db
+        #Message Parsing Tasks for each enabled workflows 
+        for workflow in S3Msg.get_msg_parsers():
+            s3task.schedule_task("parse_workflow",
+                                 vars={"workflow": workflow},
+                                 period=300,  # seconds
+                                 timeout=300, # seconds
+                                 repeats=0    # unlimited
+                                 )
+            db.commit()
+            
+        return
+        
     # =========================================================================
     # Outbound Messages
     # =========================================================================
@@ -1151,7 +1193,8 @@ class S3Msg(object):
         inbound_status_table = s3db.msg_inbound_email_status
         inbox_table = s3db.msg_email_inbox
         log_table = s3db.msg_log
-
+        source_task_id = self.source_id(username)
+               
         # Read-in configuration from Database
         settings = db(s3db.msg_inbound_email_settings.username == username).select(limitby=(0, 1)).first()
         if not settings:
@@ -1320,6 +1363,27 @@ class S3Msg(object):
         for record in records:
             if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
                 return record.id
+    # =============================================================================
+    @staticmethod
+    def schedule_mail():
+        """
+        Schedules the inbound mail task.
+        """
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.msg_inbound_email_settings
+        s3task = current.s3task
+        settings = db(stable.id>0).select()
+        for setting in settings:
+            if setting.enable_schedule:
+                s3task.schedule_task("process_inbound_email",
+                                     vars={"username":setting.username},
+                                     period=900,  # seconds
+                                     timeout=300, # seconds
+                                     repeats=0    # unlimited
+                                     )
+                db.commit()
+        return
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """

@@ -145,7 +145,13 @@ if len(pop_list) > 0:
     #
 
     if settings.has_module("msg"):
-
+        #Message Parsing Tasks for each enabled workflows 
+        #s3task.schedule_task("schedule_parser",
+        #                    period=900,  # seconds
+        #                     timeout=300, # seconds
+        #                     repeats=0    # unlimited
+        #                     )
+        
         # Send Messages from Outbox
         # SMS every minute
         s3task.schedule_task("process_outbox",
@@ -161,7 +167,14 @@ if len(pop_list) > 0:
                              timeout=300, # seconds
                              repeats=0    # unlimited
                             )
-
+        #Inbound Email Scheduling Task
+        #Controls different Inbound Email Sources
+        #s3task.schedule_task("schedule_mail",
+        #                     period=900,  # seconds
+        #                     timeout=300, # seconds
+        #                     repeats=0    # unlimited
+        #                     )
+        
     # =========================================================================
     # Import PrePopulate data
     #
@@ -210,14 +223,15 @@ if len(pop_list) > 0:
     if settings.has_module("msg"):
         # To read inbound email, set username (email address), password, etc.
         # here. Insert multiple records for multiple email sources.
-        db.msg_inbound_email_settings.insert(server = "imap.gmail.com",
-                                             protocol = "imap",
-                                             use_ssl = True,
-                                             port = 993,
-                                             username = "example-username",
-                                             password = "password",
-                                             delete_from_server = False
-                                            )
+        #db.msg_inbound_email_settings.insert(server = "imap.gmail.com",
+        #                                     protocol = "imap",
+        #                                     use_ssl = True,
+        #                                     port = 993,
+        #                                     username = "example-username",
+        #                                     password = "password",
+        #                                     delete_from_server = False
+        #                                    )
+        
         # Need entries for the Settings/1/Update URLs to work
         db.msg_setting.insert( outgoing_sms_handler = "WEB_API" )
         db.msg_modem_settings.insert( modem_baud = 115200 )
