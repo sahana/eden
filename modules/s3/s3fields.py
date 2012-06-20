@@ -206,7 +206,7 @@ s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
                        encoder = lambda x: "%s" % (s3_uuid().urn
                                     if x == ""
-                                    else unicode(x.encode("utf-8"))),
+                                    else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
 
 try:
