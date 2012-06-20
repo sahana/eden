@@ -98,6 +98,13 @@ class S3Config(Storage):
         return self.base.get("theme", "default")
 
     # -------------------------------------------------------------------------
+    def is_cd_version(self):
+        """
+            Whether we're running from a non-writable CD
+        """
+        return self.base.get("cd_version", False)
+
+    # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
         """

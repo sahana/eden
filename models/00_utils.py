@@ -244,7 +244,10 @@ def s3_include_debug():
     # CSS
     include = "%s\n <!-- CSS Syles -->" % include
     css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
-    f = open(css_cfg, "r")
+    try:
+        f = open(css_cfg, "r")
+    except:
+        raise HTTP(500, "Theme configuration file missing: private/templates/%s/css.cfg" % theme)
     files = f.readlines()
     files = files[:-1]
     for file in files:

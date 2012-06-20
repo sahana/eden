@@ -153,7 +153,7 @@ def index():
         except ImportError:
             # No Custom Page available, continue with the default
             page = "private/templates/%s/controllers.py" % \
-                            (appname, settings.get_template())
+                        settings.get_template()
             s3_debug("File not loadable: %s" % page)
         else:
             if page in custom_page.__dict__:

@@ -8,10 +8,6 @@ T = current.T
 
 """
     Template settings for RGIMS
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
 """
 
 settings.base.system_name = T("Relief Goods Inventory & Monitoring System")
