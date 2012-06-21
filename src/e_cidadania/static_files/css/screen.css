@@ -410,6 +410,14 @@ td.filled ul li a {
     border-style: none;
 }
 
+.note #view-note a {
+    color: #FFF;
+}
+
+.note #edit-note a {
+    color: #FFF;
+}
+
 #debate td, th {
   	border-width: 1px;
 	border-spacing: 0px;

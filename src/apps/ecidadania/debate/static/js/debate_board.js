@@ -30,7 +30,7 @@ function showControls() {
      showControls() - Hides the edit and delete controls from the notes. If the
      users hovers over a note created by himself, the note shows the controls.
      */
-    $(".mine").hover(function(){
+    $(".note").hover(function(){
             $(this).find(".deletenote").show();
             $(this).find("#edit-note").show();
             $(this).find("#view-note").show();
@@ -222,6 +222,7 @@ function makeSortable() {
     // Get all the div elements starting by sortable
     $('#[id^=sortable]').sortable({
         connectWith: ".connectedSortable",
+        cancel: ".disabled",
     	cursor: "move",
     	placeholder: "note-alpha",
     	start: function(e,ui) { 

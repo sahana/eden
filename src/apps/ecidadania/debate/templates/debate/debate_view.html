@@ -66,20 +66,20 @@
                                 {% with row.id as row_id %}
                                 <th id="row-{{ row_id }}" width="1%"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
-                                		{% with td.id as td_id %}
+                                    {% with td.id as td_id %}
                                     <td headers="{{ td_id }}-{{ row_id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
                                             {% if note.column.id == td_id and note.row_id == row_id %}
-                                                <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %}">
+                                                <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %} {% if note.author == request.user or request.user.is_staff %}{% else %}disabled{% endif %}">
                                                     <div class="handler">
                                                         {% if note.author == request.user and perms.note.delete_note or request.user.is_staff %}
                                                             <div class="deletenote hidden"><a href="#" onclick="deleteNote(this)" id="deletenote" title="{% trans 'Delete note' %}">x</a></div>
                                                         {% endif %}
                                                     </div>
                                                     <p class="note-text">{{ note.title }}</p>
-                                                    <span id="view-note" class="label hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
+                                                    <span id="view-note" class="label label-info hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
                                                     {% if note.author == request.user %}
-                                                        <span id="edit-note" class="label hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
+                                                        <span id="edit-note" class="label label-info hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
                                                     {% endif %}
                                                 </div>
                                             {% endif %}
