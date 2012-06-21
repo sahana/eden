@@ -35,10 +35,10 @@ class LoginPageTest(FunctionalTestCase):
         
         url = self.live_server_url + self.getURL('site-index')
         self.browser.get(url)
-        self.wait(2)
+        #self.wait(2)
         
         self.browser.find_element_by_link_text("Login").click()
-        #self.wait(2)
+        self.wait(2)
         
         self.create_user('praveen', 'something')
         
@@ -49,5 +49,5 @@ class LoginPageTest(FunctionalTestCase):
         password_field.send_keys('something')
         self.wait(2)
         password_field.send_keys(Keys.RETURN)
-        self.wait(5)
+        self.wait(1)
         
