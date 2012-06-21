@@ -60,7 +60,7 @@ class CreateProject(SeleniumUnitTest):
                      ( "role",
                        "Lead Implementer",
                        "option"),
-                     ( "currency_type",
+                     ( "currency",
                        "USD",
                        "option"),
                      ( "comments",

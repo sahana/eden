@@ -182,6 +182,10 @@ def spreadsheetview():
     return dict(ss=v)
 
 def import_spreadsheet():
+    """
+        @ToDo: Check all indents
+    """
+
     spreadsheet = request.body.read()
     import cStringIO
     spreadsheet_json = cStringIO.StringIO(spreadsheet)
@@ -195,24 +199,25 @@ def import_spreadsheet():
          j["rows"] -= 1
     if j.has_key("re_import"):
         for x in range(0, len(j["map"])):
-	    j["map"][x][2] = j["map"][x][2].replace("&gt;", ">")
+            j["map"][x][2] = j["map"][x][2].replace("&gt;", ">")
     if not j.has_key("re_import"):# and j["re_import"] is not True:
+        jaro_winkler_distance_row = s3base.jaro_winkler_distance_row
     	for x in range(0, len(j["spreadsheet"])):
-	    for y in range(x + 1, len(j["spreadsheet"])):
- 	        k = jaro_winkler_distance_row(j["spreadsheet"][x], j["spreadsheet"][y])
-	        if k is True:
-	           similar_rows.append(j["spreadsheet"][x])
-	           similar_rows.append(j["spreadsheet"][y])
-	        else:
-	           pass
+            for y in range(x + 1, len(j["spreadsheet"])):
+                k = jaro_winkler_distance_row(j["spreadsheet"][x], j["spreadsheet"][y])
+                if k is True:
+                    similar_rows.append(j["spreadsheet"][x])
+                    similar_rows.append(j["spreadsheet"][y])
+                else:
+                    pass
 	for k in similar_rows:
 	    for l in k:
-	       l = l.encode("ascii")
+	        l = l.encode("ascii")
         session.similar_rows = similar_rows
     for k in j["spreadsheet"]:
         if k in similar_rows:
-	    j["spreadsheet"].remove(k)
-	    j["rows"] -= 1
+            j["spreadsheet"].remove(k)
+            j["rows"] -= 1
     i = k = 0
     send_dict = {}
     resource = j["resource"].encode("ascii")
@@ -222,10 +227,10 @@ def import_spreadsheet():
 	k = 0
 	while (k < j["columns"]):
 	    if " --> " in j["map"][k][2]:
-		field, nested_resource, nested_field = j["map"][k][2].split(" --> ")
-		field = "$k_" + field
-		nr = nested_resource
-		nested_resource= "$_" + nested_resource
+            field, nested_resource, nested_field = j["map"][k][2].split(" --> ")
+            field = "$k_" + field
+            nr = nested_resource
+            nested_resource= "$_" + nested_resource
 		if res.has_key(field) is False:
 		   res[field] = {}
 		   res[field]["@resource"] = nr
@@ -234,10 +239,10 @@ def import_spreadsheet():
 		k += 1
 		continue
 	    if "opt_" in j["map"][k][2]:
-		res[j["map"][k][2].encode("ascii")]["@value"] = j["spreadsheet"][i][k].encode("ascii")
+            res[j["map"][k][2].encode("ascii")]["@value"] = j["spreadsheet"][i][k].encode("ascii")
 	    	res[j["map"][k][2].encode("ascii")]["$"] = j["spreadsheet"][i][k].encode("ascii")
 	    else:
-		res[j["map"][k][2].encode("ascii")] = j["spreadsheet"][i][k].encode("ascii")
+            res[j["map"][k][2].encode("ascii")] = j["spreadsheet"][i][k].encode("ascii")
 		if j["map"][k][2].encode("ascii") == "comments":
 			res[j["map"][k][2].encode("ascii")] = j["map"][k][1] + "-->" + j["spreadsheet"][i][k].encode("ascii")
 	    res["@modified_at"] = j["modtime"]

@@ -51,22 +51,23 @@ class S3Config(Storage):
         self.frontpage = Storage()
         self.frontpage.rss = []
         self.fin = Storage()
-        self.gis = Storage()
-        self.mail = Storage()
-        self.twitter = Storage()
         self.L10n = Storage()
-        self.options = Storage()
-        self.security = Storage()
         self.aaa = Storage()
+        self.mail = Storage()
+        self.options = Storage()
+        self.parser = Storage()
+        self.save_search = Storage()
+        self.security = Storage()
+        self.twitter = Storage()
         self.ui = Storage()
-        self.req = Storage()
+        self.gis = Storage()
+        self.hrm = Storage()
         self.inv = Storage()
         self.org = Storage()
-        self.supply = Storage()
-        self.hrm = Storage()
+        self.proc = Storage()
         self.project = Storage()
-        self.save_search = Storage()
-        self.parser = Storage()
+        self.req = Storage()
+        self.supply = Storage()
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -621,9 +622,24 @@ class S3Config(Storage):
         return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
-    # Inventory Management Setting
+    # Inventory Management Settings
+    #
+
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
+
+    def get_inv_item_status(self):
+        """
+            Item Statuses which can also be Sent Shipment Types
+        """
+        T = current.T
+        return self.inv.get("item_status", {
+                1: T("Dump"),
+                2: T("Sale"),
+                3: T("Reject"),
+                4: T("Surplus")
+           })
+
     def get_inv_shipment_name(self):
         """
             Get the name of Shipments
@@ -632,26 +648,54 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
+
     def get_inv_shipment_types(self):
+        """
+            Shipment types which are common to both Send & Receive
+        """
+        return self.inv.get("shipment_type", {
+                0 : current.messages.NONE,
+                11: current.T("Internal"),
+            })
+
+    def get_inv_send_types(self):
+        """
+            Shipment types which are just for Send
+        """
+        return self.inv.get("send_type", {
+                21: current.T("Distribution"),
+            })
+
+    def get_inv_recv_types(self):
+        """
+            Shipment types which are just for Receive
+        """
         T = current.T
-        return self.inv.get("shipment_types", {
-                          0: current.messages.NONE,
-                          1: T("Other Warehouse"),
-                          2: T("Local Donation"),
-                          3: T("Foreign Donation"),
-                          4: T("Local Purchases"),
-                          #5: T("Confiscated Goods")
-                        })
-    def get_send_form_name(self):
+        return self.inv.get("recv_type", {
+                31: T("Other Warehouse"),
+                32: T("Local Donation"),
+                33: T("Foreign Donation"),
+                34: T("Local Purchases"),
+                35: T("Confiscated Goods from Bureau Of Customs")
+           })
+
+    def get_inv_send_form_name(self):
         return self.inv.get("send_form_name", "Waybill")
-    def get_send_ref_field_name(self):
+    def get_inv_send_ref_field_name(self):
         return self.inv.get("send_ref_field_name", "Waybill Number")
-    def get_send_shortname(self):
+    def get_inv_send_shortname(self):
         return self.inv.get("send_shortname", "WB")
-    def get_recv_form_name(self):
+    def get_inv_recv_form_name(self):
         return self.inv.get("recv_form_name", "Goods Received Note")
-    def get_recv_shortname(self):
+    def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
+
+    # -------------------------------------------------------------------------
+    # Proc
+    def get_proc_form_name(self):
+        return self.proc.get("form_name", "Purchase Order")
+    def get_proc_shortname(self):
+        return self.proc.get("form_name", "PO")
 
     # -------------------------------------------------------------------------
     # Supply

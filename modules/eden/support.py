@@ -85,7 +85,7 @@ class S3SupportModel(S3Model):
                                   Field("actions", "text",
                                         label = T("Actions"),
                                         comment = T("Actions taken as a result of this request.")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_REQUEST = T("New Support Request")

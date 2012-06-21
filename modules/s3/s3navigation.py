@@ -47,7 +47,6 @@ from gluon import *
 from gluon.storage import Storage
 
 # =============================================================================
-
 class S3NavigationItem(object):
     """
         Base class and API for navigation items.

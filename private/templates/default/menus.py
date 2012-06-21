@@ -9,6 +9,8 @@ except ImportError:
     pass
 import eden.menus as default
 
+# Below is an example which you can base your own template's menus.py on
+
 # =============================================================================
 #class S3MainMenu(default.S3MainMenu):
     #"""
@@ -41,15 +43,15 @@ import eden.menus as default
     # -------------------------------------------------------------------------
     #@classmethod
     #def menu(cls):
-        #""" Compose Menu (example) """
+        #""" Compose Menu """
 
         #main_menu = MM()(
 
-            ## Standard modules-menu, left
+            ## Modules-menu, align-left
             #cls.menu_modules(),
 
-            ## Standard service menus, right
-            ## @note: always define right-hand items in reverse order!
+            ## Service menus, align-right
+            ## Note: always define right-hand items in reverse order!
             #cls.menu_help(right=True),
             #cls.menu_auth(right=True),
             #cls.menu_lang(right=True),
@@ -61,7 +63,7 @@ import eden.menus as default
     # -------------------------------------------------------------------------
     #@classmethod
     #def menu_modules(cls):
-        #""" Custom Modules Menu (example) """
+        #""" Custom Modules Menu """
 
         #return [
             #homepage(),
@@ -99,7 +101,7 @@ import eden.menus as default
     #"""
 
     #def cr(self):
-        #""" CR / Shelter Registry (example) """
+        #""" CR / Shelter Registry """
 
         #return M(c="cr")(
                     #M("Camp", f="shelter")(

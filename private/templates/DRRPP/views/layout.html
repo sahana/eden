@@ -23,7 +23,7 @@
 {{if s3.debug:}}
  {{include "s3_include_debug.html"}}
  <link href="/{{=appname}}/static/styles/IFRC/xtheme-ifrc.css" rel="stylesheet" type="text/css" />
- {{=s3_include_debug()}}
+ {{=s3base.s3_include_debug()}}
 {{else:}}
  {{include "s3_include_min.html"}}
  <link href="/{{=appname}}/static/styles/IFRC/ext-theme.min.css" rel="stylesheet" type="text/css" />
@@ -83,17 +83,14 @@
   <div id='strapline'>
     <h1>Sharing information on disaster risk reduction initiatives for effective coordination in Asia Pacific</h1>
   </div>
-  <div id='menu_top'>{{#=current.menu.main}}</div>
+  <div id='menu_top'>{{=current.menu.top}}</div>
   {{if s3.cd_to_live_btn:}}
    {{=s3.cd_to_live_btn}}
   {{pass}}
 </div>
 </div>
 <div id='menu_modules'>
-{{=current.menu.main}}
-{{if current.menu.options:}}
- {{=current.menu.options}}
-{{pass}}
+ {{=current.menu.main}}
 </div>
 {{pass}}
 <div class='container'>

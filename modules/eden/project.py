@@ -101,7 +101,6 @@ class S3ProjectModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         countries_id = self.gis_countries_id
@@ -125,11 +124,11 @@ class S3ProjectModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -293,10 +292,10 @@ class S3ProjectModel(S3Model):
                                    label = T("Budget"),
                                    represent = lambda v, row=None: \
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             currency_type(
-                                       readable = False if multi_budgets else True,
-                                       writable = False if multi_budgets else True,
-                                       ),
+                             s3_currency(
+                                         readable = False if multi_budgets else True,
+                                         writable = False if multi_budgets else True,
+                                         ),
                              sector_id(
                                        readable = use_sectors,
                                        writable = use_sectors,
@@ -624,7 +623,7 @@ class S3ProjectModel(S3Model):
                                                         T("hours"))),
                              comments(),
                              format="%(name)s",
-                             *(s3.lx_fields() + meta_fields()))
+                             *(s3_lx_fields() + meta_fields()))
         # CRUD Strings
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
@@ -1117,17 +1116,16 @@ class S3Project3WModel(S3Model):
         project_id = self.project_project_id
         multi_activity_type_id = self.project_multi_activity_type_id
         multi_theme_percentage_id = self.project_multi_theme_percentage_id
-        currency_type = s3.currency_type
 
         messages = current.messages
         NONE = messages.NONE
 
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -1160,7 +1158,7 @@ class S3Project3WModel(S3Model):
                                    label = T("Number of Families")),
                              comments(),
                              #format=lambda r: self.gis_location_lx_represent(r.location_id),
-                             *(s3.lx_fields() + meta_fields()))
+                             *(s3_lx_fields() + meta_fields()))
 
         table.virtualfields.append(S3ProjectLocationVirtualFields())
 
@@ -1612,7 +1610,7 @@ class S3Project3WModel(S3Model):
                                                IS_FLOAT_AMOUNT.represent(v, precision=2),
                                    widget = IS_FLOAT_AMOUNT.widget,
                                    label = T("Funds Contributed by this Organization")),
-                             currency_type(),
+                             s3_currency(),
                              comments(),
                              *meta_fields())
 
@@ -1752,7 +1750,7 @@ class S3Project3WModel(S3Model):
         if location_id:
             # Populate the Lx fields
             ctable = current.s3db.project_location
-            current.response.s3.lx_update(ctable, vars.id)
+            s3_lx_update(ctable, vars.id)
 
         return
 
@@ -1917,7 +1915,6 @@ class S3ProjectAnnualBudgetModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-        currency_type = s3.currency_type
 
         # ---------------------------------------------------------------------
         # Annual Budgets
@@ -1939,8 +1936,8 @@ class S3ProjectAnnualBudgetModel(S3Model):
                                 requires=IS_FLOAT_AMOUNT(),
                                 label=T("Amount"),
                                 ),
-                         currency_type(required=True),
-                          *s3.meta_fields()
+                         s3_currency(required=True),
+                          *s3_meta_fields()
                         )
 
 
@@ -1967,7 +1964,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
                             "id",
                             "year",
                             "amount",
-                            "currency_type",
+                            "currency",
                             ]
                         )
 
@@ -1995,7 +1992,7 @@ class S3ProjectFrameworkModel(S3Model):
 
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Project Frameworks
@@ -2006,7 +2003,7 @@ class S3ProjectFrameworkModel(S3Model):
                      Field("name",
                            label = T("Name"),
                           ),
-                     s3.comments("description",
+                     s3_comments("description",
                                  label = T("Description"),
                                  comment=None,
                                  ),
@@ -2147,7 +2144,7 @@ class S3ProjectThemeModel(S3Model):
                                 default = 0,
                                 requires = IS_INT_IN_RANGE(0, 101),
                           ),
-                          *s3.meta_fields()
+                          *s3_meta_fields()
                         )
 
 
@@ -2262,12 +2259,12 @@ class S3ProjectTaskModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Project Milestone
@@ -3156,7 +3153,7 @@ class S3ProjectTaskHRMModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              human_resource_id(),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Link Tasks <> Job Roles
@@ -3164,7 +3161,7 @@ class S3ProjectTaskHRMModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              job_role_id(),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -3197,7 +3194,7 @@ class S3ProjectTaskIReportModel(S3Model):
         table = self.define_table(tablename,
                                   task_id(),
                                   ireport_id(),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         self.configure(tablename,
                        onaccept=self.task_ireport_onaccept)

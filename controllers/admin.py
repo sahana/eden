@@ -258,7 +258,7 @@ def user():
         response.s3.dataTableDisplay = values
 
         # Add client-side validation
-        s3_register_validation()
+        s3base.s3_register_validation()
 
         return output
     response.s3.postp = postp
@@ -466,7 +466,7 @@ def ticket():
 
     return dict(app=app,
                 ticket=ticket,
-                traceback=Traceback(e.traceback),
+                traceback=s3base.Traceback(e.traceback),
                 code=e.code,
                 layer=e.layer)
 

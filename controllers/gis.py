@@ -2559,7 +2559,7 @@ def display_features():
     query = query & deleted
     # Filter out inaccessible
     query2 = (ltable.id == jtable.location_id)
-    accessible = s3_accessible_query("read", ltable)
+    accessible = auth.s3_accessible_query("read", ltable)
     query2 = query2 & accessible
 
     features = db(query).select(ltable.ALL, left = [ltable.on(query2)])

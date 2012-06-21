@@ -93,11 +93,11 @@ class S3SupplyModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # =====================================================================
@@ -794,7 +794,7 @@ S3FilterFieldChange({
                                         label = T("Quantity"),
                                         default = 1.0,
                                         notnull = True),
-                                  *s3.ownerstamp()
+                                  *s3_ownerstamp()
                                   )
 
         # ---------------------------------------------------------------------

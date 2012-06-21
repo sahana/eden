@@ -1491,9 +1491,7 @@ $('#%s').live('click', function() {
                                  _href=r.url(method="", representation="rss",
                                              vars=filter)),
                                _id="list_formats")
-            tabs = [(T("List"), None),
-                    #(T("Export"), "export")
-                    ]
+            tabs = []
 
             if "location_id" in table or \
                "site_id" in table:
@@ -1542,6 +1540,8 @@ $('#%s').live('click', function() {
                 # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
 
+            if tabs:
+                tabs.insert(0, ((T("List"), None)))
         else:
             list_formats = ""
             tabs = []

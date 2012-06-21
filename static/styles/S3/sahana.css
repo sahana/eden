@@ -52,11 +52,6 @@ address {
 dd, blockquote {
     margin-left: 1em;
 }
-/* Breaks CSS dropdown menus
-li {
-    margin-left: 1em;
-}
-*/
 
 /* Over-ride Ext */
 ol, ul {
@@ -278,7 +273,7 @@ table {
     top: 0;
 }
 */
-/* response.menu_modules */
+/* Modules Menu */
 #menu_modules {
     position: absolute;
     /* top: 255px; */

@@ -169,7 +169,7 @@ class S3HRModel(S3Model):
                                             (T("No"),
                                              T("Yes"))[opt == True],
                                         ),
-                                  *(s3.lx_fields() + s3.meta_fields()))
+                                  *(s3_lx_fields() + s3_meta_fields()))
 
         hrm_human_resource_requires = IS_NULL_OR(IS_ONE_OF(db,
                                             "hrm_human_resource.id",
@@ -527,7 +527,7 @@ class S3HRModel(S3Model):
 
             if data.location_id:
                 # Populate the Lx fields
-                current.response.s3.lx_update(htable, record.id)
+                s3_lx_update(htable, record.id)
 
         if user and record.organisation_id:
             profile = dict()
@@ -622,8 +622,8 @@ class S3HRJobModel(S3Model):
                                                   readable = False,
                                                   writable = False,
                                                   ),
-                                  s3.comments(label="Description", comment=None),
-                                  *s3.meta_fields())
+                                  s3_comments(label="Description", comment=None),
+                                  *s3_meta_fields())
 
         vars = current.request.get_vars
         if "group" in vars and \
@@ -695,7 +695,7 @@ class S3HRJobModel(S3Model):
         #                          organisation_id(empty=False),
         #                          site_id,
         #                          group_id(label="Team"),
-        #                          *s3.meta_fields())
+        #                          *s3_meta_fields())
         #table.site_id.readable = table.site_id.writable = True
 
         #s3.crud_strings[tablename] = Storage(
@@ -771,7 +771,7 @@ class S3HRJobModel(S3Model):
                                                                   ##filter_opts=gis.region_level_keys,
                                                                   ##orderby="gis_location.name"),
                                                ##widget=None),
-                                   #*s3.meta_fields())
+                                   #*s3_meta_fields())
 
         ## Availability as component of human resources
         #self.add_component(table,
@@ -787,7 +787,7 @@ class S3HRJobModel(S3Model):
                                   #Field("timestmp_in", "datetime"),
                                   #Field("timestmp_out", "datetime"),
                                   #Field("hours", "double"),
-                                  #*s3.meta_fields())
+                                  #*s3_meta_fields())
 
         ## Hours as component of human resources
         #self.add_component(table,
@@ -825,7 +825,7 @@ class S3HRJobModel(S3Model):
                                         #default=False),
                                   #Field("app_deadline", "date",
                                         #label=T("Application Deadline")),
-                                  #*s3.meta_fields())
+                                  #*s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -910,11 +910,11 @@ class S3HRSkillModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         s3_has_role = auth.s3_has_role
         super_link = self.super_link
 
@@ -2408,8 +2408,8 @@ class S3HRExperienceModel(S3Model):
                                         label=T("Hours")),
                                   Field("place",              # We could make this an event_id?
                                         label=T("Place")),
-                                  s3.comments(comment=None),
-                                  *s3.meta_fields())
+                                  s3_comments(comment=None),
+                                  *s3_meta_fields())
 
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Professional Experience"),
@@ -2465,10 +2465,10 @@ class S3HRProgrammeModel(S3Model):
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
 
-        comments = s3.comments
+        comments = s3_comments
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # =========================================================================
         # Progammes

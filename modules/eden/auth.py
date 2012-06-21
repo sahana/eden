@@ -83,8 +83,8 @@ class S3AuthModel(S3Model):
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Approver"),
                                                                       APPROVER_HELP))),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)

@@ -65,6 +65,7 @@ from gluon.tools import fetch
 import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
@@ -956,6 +957,7 @@ class GIS(object):
 
         session = current.session
         s3 = current.response.s3
+        all_meta_field_names = s3_all_meta_field_names()
 
         # If an id has been supplied, try it first. If it matches what's in
         # response, there's no work to do.
@@ -1034,7 +1036,7 @@ class GIS(object):
                                         left=left,
                                         orderby=ctable.pe_type)
                 cache["ids"] = []
-                exclude = list(s3.all_meta_field_names)
+                exclude = list(all_meta_field_names)
                 append = exclude.append
                 for fieldname in ["delete_record", "update_record",
                                   "pe_path",
@@ -1094,7 +1096,7 @@ class GIS(object):
             cache["ids"] = [config_id]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
-            fields = filter(lambda key: key not in s3.all_meta_field_names,
+            fields = filter(lambda key: key not in all_meta_field_names,
                             config)
             for key in fields:
                 cache[key] = config[key]
@@ -2572,7 +2574,7 @@ class GIS(object):
         s3db = current.s3db
         cache = s3db.cache
         table = s3db.gis_location
-        table = s3db.gis_location_tag
+        ttable = s3db.gis_location_tag
 
         if level == "L1":
             layer = {
@@ -4835,7 +4837,7 @@ class Layer(object):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = s3.all_meta_field_names
+        metafields = s3_all_meta_field_names()
         fields = [table[f] for f in fields if f not in metafields]
         fields.append(ltable.enabled)
         fields.append(ltable.visible)

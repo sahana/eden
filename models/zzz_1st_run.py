@@ -37,6 +37,7 @@ if len(pop_list) > 0:
                 "System Administrator - can access & make changes to any data",
                 uid=sysroles.ADMIN,
                 system=True, protected=True)
+
     authenticated = create_role("Authenticated",
                                 "Authenticated - all logged-in users",
                                 # Authenticated users can see the Map
@@ -57,57 +58,21 @@ if len(pop_list) > 0:
                                 dict(c="msg", f="search", uacl=acl.READ),
                                 # Authenticated  users can see the Supply Catalogue
                                 dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                                # HRM access is controlled to just HR Staff, except for:
+                                # Access to your own record
+                                # - requires security policy 4+
+                                dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
+                                dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
+                                dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
                                 uid=sysroles.AUTHENTICATED,
                                 protected=True)
-    # Authenticated users:
-    # Have access to all Orgs, Hospitals, Shelters
-    update_acls(authenticated,
-                dict(c="org", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                # Since we specify a Table ACL for Anonymous, we also need 1 for Authenticated
-                dict(t="org_organisation", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="hms", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="cr", uacl=acl.READ|acl.CREATE, oacl=default_oacl)
-                )
-
-    # If we don't have OrgAuth active, then Authenticated users:
-    # Have access to all Orgs, Sites & the Inventory & Requests thereof
-    update_acls(authenticated,
-                dict(c="asset", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="inv", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
-                dict(c="req", uacl=acl.READ|acl.CREATE|acl.UPDATE, oacl=default_oacl),
-                # Allow authenticated users to view the Certificate Catalog
-                dict(t="hrm_certificate", uacl=acl.READ),
-                # HRM access is controlled to just HR Staff, except for:
-                # Access to your own record & to be able to search for Skills
-                # requires security policy 4+
-                dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
-                dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
-                dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                dict(c="hrm", f="skill", uacl=acl.READ, oacl=acl.READ)
-                )
 
     create_role("Anonymous",
                 "Unauthenticated users",
-
-                # Defaults for Trunk
-                dict(c="org", uacl=acl.READ, oacl=default_oacl),
-                dict(c="project", uacl=acl.READ, oacl=default_oacl),
-                dict(c="cr", uacl=acl.READ, oacl=default_oacl),
-                dict(c="hms", uacl=acl.READ, oacl=default_oacl),
-                #dict(c="inv", uacl=acl.READ, oacl=default_oacl),
-                dict(c="supply", uacl=acl.READ, oacl=default_oacl),
-                dict(c="delphi", uacl=acl.READ, oacl=default_oacl),
-
                 # Allow unauthenticated users to view the list of organisations
                 # so they can select an organisation when registering
                 dict(t="org_organisation", uacl=acl.READ, entity="any"),
-                # Allow unauthenticated users to view the Map
-                dict(c="gis", uacl=acl.READ, oacl=default_oacl),
-                # Allow unauthenticated users to cache Map feeds
-                dict(c="gis", f="cache_feed", uacl=acl.ALL, oacl=default_oacl),
-                # Allow unauthenticated users to view feature queries
-                dict(c="gis", f="feature_query", uacl=acl.NONE, oacl=default_oacl),
                 uid=sysroles.ANONYMOUS,
                 protected=True)
 

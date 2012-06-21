@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana-Eden GUI Layouts (HTML Renderers)
+""" Sahana Eden GUI Layouts (HTML Renderers)
 
     @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT

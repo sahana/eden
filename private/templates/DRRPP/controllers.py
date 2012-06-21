@@ -5,6 +5,12 @@ from gluon import *
 #from s3 import *
 
 # =============================================================================
+def INPUT_BTN(**attributes):
+    return SPAN(INPUT(_class = "button-right",
+                      **attributes), 
+                _class = "button-left")
+
+# =============================================================================
 class index():
     """ Custom Home Page """
 
@@ -203,11 +209,10 @@ class index():
         _table_user.language.represent = lambda opt: \
             languages.get(opt, current.messages.UNKNOWN_OPT)  
 
-        request.args[0] = "login"
+        request.args = ["login"]
         login = auth()
-        #login[0][-1][0][1][0][0] = INPUT_BTN(_type = "submit",
-        #                                     _value = T("Login")
-        #                                    )
+        login[0][-1][1][0] = INPUT_BTN(_type = "submit",
+                                      _value = T("Login"))
 
         return dict(title = T("Home"),
                     home_img = home_img,                

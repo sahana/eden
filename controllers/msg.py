@@ -792,11 +792,15 @@ def load_search(id):
 
 # -----------------------------------------------------------------------------
 def check_updates(user_id):
-    #Check Updates for all the Saved Searches Subscribed by the User
+    """
+        Check Updates for all the Saved Searches Subscribed by the User
+    """
+
     message = "<h2>Saved Searches' Update</h2>"
     flag = 0
     table = s3db.pr_save_search
     rows = db(table.user_id == user_id).select()
+    search_vars_represent = s3base.search_vars_represent
     for row in rows :
         if row.subscribed:
             records = load_search(row.id)

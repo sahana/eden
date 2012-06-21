@@ -4,6 +4,8 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 
+# Below is an example which you can base your own template's menus.py on
+
 # =============================================================================
 #class S3MainMenuLayout(S3NavigationItem):
     #"""
@@ -22,7 +24,7 @@ from s3 import *
 
     #@classmethod
     #def layout(cls, item):
-        #""" Custom Layout Method (example) """
+        #""" Custom Layout Method """
 
         ## Manage flags: hide any disabled/unauthorized items
         #if not item.authorized:

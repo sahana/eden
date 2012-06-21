@@ -262,7 +262,7 @@ def comment_parse(comment, comments, post_id=None):
         post_id = comment.post_id
     else:
         header = author
-    thread = LI(DIV(s3_avatar_represent(comment.created_by),
+    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
                         DIV(XML(comment.body)),
@@ -401,7 +401,7 @@ def posts():
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)
         if post.avatar:
-            avatar = s3_avatar_represent(post.created_by)
+            avatar = s3base.s3_avatar_represent(post.created_by)
         else:
             avatar = ""
         row = LI(DIV(avatar,

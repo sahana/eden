@@ -27,6 +27,10 @@ if not settings.has_module(module):
 # Load the models we depend on
 project_id = s3db.project_project_id
 
+s3_deletion_status = s3base.s3_deletion_status
+s3_timestamp = s3base.s3_timestamp
+s3_uid = s3base.s3_uid
+
 module = "budget"
 
 # Parameters
@@ -309,7 +313,7 @@ table = db.define_table(tablename,
                         Field("name", length=128, notnull=True, unique=True),
                         Field("grade", notnull=True),
                         Field("salary", "integer", notnull=True),
-                        currency_type(),
+                        s3base.s3_currency(),
                         Field("travel", "integer", default=0),
                         # Shouldn't be grade-dependent, but purely location-dependent
                         #Field("subsistence", "double", default=0.00),
@@ -1094,7 +1098,7 @@ def kit_export_csv():
         _table = module + "_" + resourcename
         table = db[_table]
         # Filter Search list to just those records which user can read
-        query = s3_accessible_query("read", table)
+        query = auth.s3_accessible_query("read", table)
         # Filter Search List to remove entries which have been deleted
         if "deleted" in table:
             query = ((table.deleted == False) | (table.deleted == None)) & query # includes None for backward compatability

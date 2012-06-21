@@ -450,7 +450,6 @@ def tooltip():
 
 # -----------------------------------------------------------------------------
 def person_duplicates():
-
     """ Handle De-duplication of People
 
         @todo: permissions, audit, update super entity, PEP8, optimization?
@@ -458,7 +457,6 @@ def person_duplicates():
         @todo: user accounts, subscriptions?
     """
 
-    # Shortcut
     persons = s3db.pr_person
 
     table_header = THEAD(TR(TH(T("Person 1")),
@@ -495,6 +493,8 @@ def person_duplicates():
                                                           persons.comments)
 
         # Calculate the match percentage using Jaro wrinkler Algorithm
+        jaro_winkler_distance_row = s3base.jaro_winkler_distance_row
+        soundex = s3base.soundex
         count = 1
         i = 0
         for onePerson in records: #[:len(records)/2]:
