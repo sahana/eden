@@ -17,6 +17,8 @@ from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
+from s3 import s3_debug
+
 import time
 
 # -----------------------------------------------------------------------------
@@ -57,8 +59,7 @@ def convert_repr_number (number):
         return float("%s%s" % (part_one, part_two))
 
 # -----------------------------------------------------------------------------
-def dt_filter(reporter,
-              search_string=" ",
+def dt_filter(search_string=" ",
               forceClear = True,
               quiet = True):
     """
@@ -66,8 +67,7 @@ def dt_filter(reporter,
     """
 
     if forceClear:
-        if not dt_filter(reporter,
-                         forceClear = False,
+        if not dt_filter(forceClear = False,
                          quiet = quiet):
             return False
     config = current.test_config
@@ -86,13 +86,12 @@ def dt_filter(reporter,
         sleep_time += 1
         if sleep_time > sleep_limit:
             if not quiet:
-                reporter("DataTable filter didn't respond within %d seconds" % sleep_limit)
+                s3_debug("DataTable filter didn't respond within %d seconds" % sleep_limit)
             return False
     return True
 
 # -----------------------------------------------------------------------------
-def dt_row_cnt(reporter,
-               check = (),
+def dt_row_cnt(check = (),
                quiet = True,
                utObj = None):
     """
@@ -105,7 +104,7 @@ def dt_row_cnt(reporter,
     elem = browser.find_element_by_id("list_info")
     details = elem.text
     if not quiet:
-        reporter(details)
+        s3_debug(details)
     words = details.split()
     start = int(words[1])
     end = int(words[3])
@@ -298,8 +297,7 @@ def dt_find(search = "",
     return result
         
 # -----------------------------------------------------------------------------
-def dt_links(reporter,
-             row = 1,
+def dt_links(row = 1,
              tableID = "list",
              quiet = True
             ):
@@ -327,7 +325,7 @@ def dt_links(reporter,
                 break
             cnt += 1
             if not quiet:
-                reporter("%2d) %s" % (column, elem.text))
+                s3_debug("%2d) %s" % (column, elem.text))
             links.append([column,elem.text])
         column += 1
     return links

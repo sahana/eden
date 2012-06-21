@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 from gluon import current
+from s3 import s3_debug
 from .utils import *
 
 current.data["auth"] = {
@@ -23,7 +24,7 @@ current.data["auth"] = {
     }
 
 # -----------------------------------------------------------------------------
-def login(reporter, account="normal", nexturl=None):
+def login(account="normal", nexturl=None):
     """ Login to the system """
 
     config = current.test_config
@@ -67,15 +68,15 @@ def login(reporter, account="normal", nexturl=None):
     try:
         elem = browser.find_element_by_xpath("//div[@class='confirmation']")
     except NoSuchElementException:
-        reporter("Login failed.. so registering account")
+        s3_debug("Login failed.. so registering account")
         # Try registering
-        register(account, reporter)
+        register(account)
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
 
 # -----------------------------------------------------------------------------
-def logout(reporter):
+def logout():
     """ Logout """
 
     config = current.test_config
@@ -89,7 +90,7 @@ def logout(reporter):
     try:
         elem = browser.find_element_by_id("auth_menu_logout")
     except NoSuchElementException:
-        reporter("Logged-out already")
+        s3_debug("Logged-out already")
         return True
 
     elem.click()
@@ -100,11 +101,11 @@ def logout(reporter):
     except NoSuchElementException:
         assert 0, "Logout unsuccesful"
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
 
 # -----------------------------------------------------------------------------
-def register(reporter, account="normal"):
+def register(account="normal"):
     """ Register on the system """
 
     config = current.test_config
@@ -142,7 +143,7 @@ def register(reporter, account="normal"):
     except NoSuchElementException:
         assert 0, "Registration unsuccesful"
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
 
 # END =========================================================================

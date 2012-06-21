@@ -1,4 +1,3 @@
-import sys
 import unittest
 
 # Selenium WebDriver
@@ -6,11 +5,15 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 
+import datetime
+import time
+
+
 from gluon import current
 
-#from s3 import s3_debug
+from s3 import s3_debug
 
-from tests.core import *
+from tests import *
 
 # =============================================================================
 class Web2UnitTest(unittest.TestCase):
@@ -20,15 +23,12 @@ class Web2UnitTest(unittest.TestCase):
                  methodName="runTest"):
         unittest.TestCase.__init__(self, methodName)
         #current should always be looked up from gluon.current
+        #self.current = current
         self.config = current.test_config
         self.browser = self.config.browser
         self.app = current.request.application
         self.url = self.config.url
         self.user = "admin"
-
-    def reporter(self, msg, verbose_level = 1):
-        if self.config.verbose >= verbose_level:
-            print >> sys.stderr, msg
 
 # =============================================================================
 class SeleniumUnitTest(Web2UnitTest):
@@ -39,7 +39,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         if account == None:
             account = self.user
-        login(self.reporter, account, nexturl)
+        login(account, nexturl)
 
     # -------------------------------------------------------------------------
     def getRows (self, table, data, dbcallback):
@@ -81,14 +81,20 @@ class SeleniumUnitTest(Web2UnitTest):
         result = {}
         id_data = []
         table = current.s3db[tablename]
+        
+        date_format = str(current.deployment_settings.get_L10n_date_format())
+        datetime_format = str(current.deployment_settings.get_L10n_datetime_format())
         # Fill in the Form
         for details in data:
             el_id = "%s_%s" % (tablename, details[0])
             el_value = details[1]
-            if len(details) == 3:
+            if len(details) >= 4:
+                time.sleep(details[3])
+            if len(details) >= 3:
                 el_type = details[2]
                 if el_type == "option":
                     el = browser.find_element_by_id(el_id)
+                    raw_value = False
                     for option in el.find_elements_by_tag_name("option"):
                         if option.text == el_value:
                             option.click()
@@ -98,6 +104,7 @@ class SeleniumUnitTest(Web2UnitTest):
                             except:
                                 pass
                             break
+                    self.assertTrue(raw_value,"%s option cannot be found in %s" % (el_value, el_id))
                 elif el_type == "autocomplete":
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
@@ -117,18 +124,33 @@ class SeleniumUnitTest(Web2UnitTest):
                                         details[0],
                                        )
                     raw_value = None
-                #@ToDp: Fix this statement:
-                #else:
-                #    raise "Invalid element type"
+                else: # Embedded form fields
+                    el_id = "%s_%s" % (el_type, details[0])
+                    el = browser.find_element_by_id(el_id)
+                    el.send_keys(el_value)
+                    raw_value = None
                 
             else:
                 # Normal Input field
                 el = browser.find_element_by_id(el_id)
-                el.send_keys(el_value)
-                raw_value = el_value
+                if table[details[0]].type =="date":
+                    el_value_date = datetime.datetime.strptime(el_value,"%Y-%m-%d")# %H:%M:%S")
+                    el_value = el_value_date.strftime(date_format)
+                    el.send_keys(el_value)
+                    raw_value = el_value_date
+                elif table[details[0]].type =="datetime":
+                    el_value_datetime = datetime.datetime.strptime(el_value,"%Y-%m-%d %H:%M:%S")
+                    el_value = el_value_datetime.strftime(datetime_format)
+                    el.send_keys(el_value)
+                    #raw_value = el_value_datetime
+                    raw_value = el_value
+                    # @ToDo: Fix hack to stop checking datetime field. This is because the field does not support data entry by key press  
+                    # Use the raw value to check that the record was added succesfully
+                else:
+                    el.send_keys(el_value)
+                    raw_value = el_value
 
-            if raw_value:
-                # Use the raw value to check that the record was added succesfully
+            if raw_value: 
                 id_data.append([details[0], raw_value])
 
         result["before"] = self.getRows(table, id_data, dbcallback)
@@ -138,7 +160,7 @@ class SeleniumUnitTest(Web2UnitTest):
         confirm = True
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
-            self.reporter(elem.text)
+            s3_debug(elem.text)
         except NoSuchElementException:
             confirm = False
         self.assertTrue(confirm == success,
@@ -149,11 +171,11 @@ class SeleniumUnitTest(Web2UnitTest):
         if success:
             self.assertTrue((len(result["after"]) - len(result["before"])) == 1,
                             failMsg)
-            self.reporter(successMsg)
+            s3_debug(successMsg)
         else:
             self.assertTrue((len(result["after"]) == len(result["before"])),
                             successMsg)
-            self.reporter(failMsg)
+            s3_debug(failMsg)
         return result
 
     # -------------------------------------------------------------------------
@@ -162,14 +184,14 @@ class SeleniumUnitTest(Web2UnitTest):
                   forceClear = True,
                   quiet = True):
 
-        return dt_filter(self.reporter, search_string, forceClear, quiet)
+        return dt_filter(search_string, forceClear, quiet)
 
     # -------------------------------------------------------------------------
     def dt_row_cnt(self,
                    check = (),
                    quiet = True):
 
-        return dt_row_cnt(self.reporter,check, quiet, self)
+        return dt_row_cnt(check, quiet, self)
 
     # -------------------------------------------------------------------------
     def dt_data(self,
@@ -197,7 +219,7 @@ class SeleniumUnitTest(Web2UnitTest):
                  quiet = True
                 ):
 
-        return dt_links(self.reporter, row, tableID, quiet)
+        return dt_links(row, tableID, quiet)
 
     # -------------------------------------------------------------------------
     def dt_action(self,
