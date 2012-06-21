@@ -114,3 +114,8 @@ class Note(models.Model):
 
     def __unicode__(self):
         return self.message
+
+    class Meta:
+        permissions = (
+            ('move_note', 'Can move note across the debate.')
+        )
