@@ -52,6 +52,7 @@ from apps.ecidadania.debate.forms import DebateForm, UpdateNoteForm, \
     NoteForm, RowForm, ColumnForm, UpdateNotePosition
 from core.spaces.models import Space
 
+from helpers.cache import get_or_insert_object_in_cache
 
 def add_new_debate(request, space_url):
 
@@ -260,7 +261,8 @@ class ViewDebate(DetailView):
     template_name = 'debate/debate_view.html'
 
     def get_object(self):
-        debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+        key = self.kwargs['debate_id']
+        debate = get_or_insert_object_in_cache(Debate, key, pk=key)
         
         # Check debate dates
         if datetime.date.today() >= debate.end_date or datetime.date.today() <  debate.start_date:
@@ -275,8 +277,12 @@ class ViewDebate(DetailView):
         context = super(ViewDebate, self).get_context_data(**kwargs)
         columns = Column.objects.filter(debate=self.kwargs['debate_id'])
         rows = Row.objects.filter(debate=self.kwargs['debate_id'])
-        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
-        current_debate = get_object_or_404(Debate, pk=self.kwargs['debate_id'])
+        space_key = self.kwargs['space_url']
+        current_space = get_or_insert_object_in_cache(Space, space_key, 
+                                                      url=space_key)
+        debate_key = self.kwargs['debate_id']
+        current_debate = get_or_insert_object_in_cache(Debate, debate_key, 
+                                                       pk=debate_key)
         notes = Note.objects.filter(debate=current_debate.pk)
         try:
             last_note = Note.objects.latest('id')
@@ -304,7 +310,8 @@ class ListDebates(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        current_space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        key = self.kwargs['space_url']
+        current_space = get_or_insert_object_in_cache(Space, key, url=key)
         debates = Debate.objects.filter(space=current_space)
 
         # Here must go a validation so a user registered to the space
@@ -315,5 +322,7 @@ class ListDebates(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListDebates, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        key = self.kwargs['space_url']
+        space = get_or_insert_object_in_cache(Space, key, url=key)
+        context['get_place'] = space
         return context
