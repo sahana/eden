@@ -26,12 +26,12 @@
             <p><strong>{% trans "Theme:" %}</strong> {{ debate.theme}}</p>
         </div>
         <div class="span6">
-			{% with debate.start_date as start_date %}
-			{% with debate.end_date as end_date %}
+            {% with debate.start_date as start_date %}
+            {% with debate.end_date as end_date %}
                 <p><strong>{% trans "Start date:" %}</strong> {% if start_date %}{{ start_date }}{% else %}{% trans "No date" %}{% endif %}</p>
                 <p><strong>{% trans "End date:" %}</strong> {% if end_date %}{{ end_date }}{% else %}{% trans "No date" %}{% endif %}</p>
-			{% endwith %}
-			{% endwith %}
+            {% endwith %}
+            {% endwith %}
         </div>
     </div>
 
@@ -45,11 +45,11 @@
             <div id="last-note" class="hidden">{{ lastnote }}</div>
 
             <div id="debate">
-							{% with debate.pk as debate_pk %}
+                {% with debate.pk as debate_pk %}
                 <table id="debate{{ debate_pk }}" cellspacing="0" style="width:100%;" align="left">
                     <thead>
                         <tr id="debate{{ debate_pk }}-headers">
-														{% endwith %}
+                            {% endwith %}
                             <th id="corner" class="corner-criteria"></th>
                             {% for col in columns %}
                                 <th id="col-{{ col.id }}">{{ col.criteria }}</th>
@@ -63,7 +63,7 @@
                                     The th style width is meant to make smaller the th, since most browsers make
                                     the th fill all the space.
                                 {% endcomment %}
-																{% with row.id as row_id %}
+                                {% with row.id as row_id %}
                                 <th id="row-{{ row_id }}" width="1%"><div class="debate-ttitle">{{ row.criteria }}</div></th>
                                 {% for td in columns %}
                                 		{% with td.id as td_id %}
@@ -84,10 +84,10 @@
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
-																				{% endwith %}
+                                        {% endwith %}
                                     </td>
                                 {% endfor %}
-																{% endwith %}
+                                {% endwith %}
                             </tr>
                         {% endfor %}
                     </tbody>
