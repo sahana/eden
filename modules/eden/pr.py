@@ -1973,8 +1973,8 @@ class S3PersonEducationModel(S3Model):
                                     "grade",
                                     "institute",
                                    ],
-                      orderby = "~db.pr_education.year",
-                      sortby = [[1, 'desc']])
+                      orderby = ~table.year,
+                      sortby = [[1, "desc"]])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
