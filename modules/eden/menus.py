@@ -61,26 +61,20 @@ class S3MainMenu(object):
     @classmethod
     def menu_modules(cls):
 
-        request = current.request
-        response = current.response
-        auth = current.auth
-        settings = current.deployment_settings
-
-        s3 = current.response.s3
-
         # ---------------------------------------------------------------------
         # Modules Menu
         # @todo: this is very ugly - cleanup or make a better solution
         # @todo: probably define the menu explicitly?
         #
         menu_modules = []
+        all_modules = current.deployment_settings.modules
 
         # Home always 1st
-        module = settings.modules["default"]
+        module = all_modules["default"]
         menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
+        auth = current.auth
         # Modules to hide due to insufficient permissions
-        all_modules = settings.modules
         hidden_modules = auth.permission.hidden_modules()
 
         has_role = auth.s3_has_role
@@ -129,7 +123,7 @@ class S3MainMenu(object):
     def menu_lang(cls, **attr):
         """ Language menu """
 
-        s3 = current.response.s3
+        languages = current.response.s3.l10n_languages
         request = current.request
 
         settings = current.deployment_settings
@@ -137,8 +131,8 @@ class S3MainMenu(object):
             return None
 
         menu_lang = MM("Language", **attr)
-        for language in s3.l10n_languages:
-            menu_lang.append(MM(s3.l10n_languages[language], r=request,
+        for language in languages:
+            menu_lang.append(MM(languages[language], r=request,
                                 translate=False,
                                 vars={"_language":language}))
         return menu_lang
@@ -159,18 +153,12 @@ class S3MainMenu(object):
     def menu_auth(cls, **attr):
         """ Auth Menu """
 
-        T = current.T
-        session = current.session
-
-        request = current.request
         auth = current.auth
-        settings = current.deployment_settings
-
         logged_in = auth.is_logged_in()
-        self_registration = settings.get_security_self_registration()
+        self_registration = current.deployment_settings.get_security_self_registration()
 
         if not logged_in:
-
+            request = current.request
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \
                request.function == "user" and \
@@ -188,6 +176,7 @@ class S3MainMenu(object):
                             MM("Lost Password", m="retrieve_password")
                         )
         else:
+            # Logged-in
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
@@ -203,9 +192,9 @@ class S3MainMenu(object):
                                 #vars={"person.pe_id" : auth.user.pe_id}),
                             MM("Change Password", m="change_password"),
                             SEP(),
-                            MM({"name": T("Rapid Data Entry"),
+                            MM({"name": current.T("Rapid Data Entry"),
                                "id": "rapid_toggle",
-                               "value": session.s3.rapid_data_entry is True},
+                               "value": current.session.s3.rapid_data_entry is True},
                                f="rapid"),
                         )
 
@@ -216,13 +205,10 @@ class S3MainMenu(object):
     def menu_admin(cls, **attr):
         """ Administrator Menu """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
+        name_nice = current.deployment_settings.modules["admin"].name_nice
 
-        settings = current.deployment_settings
-        module = settings.modules["admin"]
-
-        menu_admin = MM(module.name_nice, c="admin",
+        menu_admin = MM(name_nice, c="admin",
                         restrict=[ADMIN], **attr)(
                             MM("Settings", f="setting"),
                             MM("Users", f="user"),
@@ -316,22 +302,20 @@ class S3MainMenu(object):
                 )
         return gis_menu
 
+    # -------------------------------------------------------------------------
     @classmethod
     def menu_climate(cls, **attr):
-        settings = current.deployment_settings
-        module = settings.modules["climate"]
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
-        menu_climate = MM(
-            module.name_nice,
-            c="climate",
-            **attr
-        )(
-            MM("Station Parameters", f="station_parameter"),
-            #MM("Saved Queries", f="save_query"),
-            MM("Purchase Data", f="purchase"),
-            MM("DataSet Prices", f="prices", restrict=[ADMIN]),
-        )
+        """ Climate module menu """
+
+        name_nice = current.deployment_settings.modules["climate"].name_nice
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        menu_climate = MM(name_nice, c="climate", **attr)(
+                MM("Station Parameters", f="station_parameter"),
+                #MM("Saved Queries", f="save_query"),
+                MM("Purchase Data", f="purchase"),
+                MM("DataSet Prices", f="prices", restrict=[ADMIN]),
+            )
         return menu_climate
 
 # =============================================================================
@@ -363,9 +347,7 @@ class S3OptionsMenu(object):
     def admin(self):
         """ ADMIN menu """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
-
+        ADMIN = current.session.s3.system_roles.ADMIN
         settings_messaging = self.settings_messaging()
 
         # ATTN: Do not specify a controller for the main menu to allow
@@ -404,8 +386,7 @@ class S3OptionsMenu(object):
     def assess(self):
         """ ASSESS Menu """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="assess")(
                     M("Rapid Assessments", f="rat")(
@@ -526,11 +507,9 @@ class S3OptionsMenu(object):
     def cr(self):
         """ CR / Shelter Registry """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
 
-        settings = current.deployment_settings
-        if settings.get_ui_camp():
+        if current.deployment_settings.get_ui_camp():
             shelter = "Camps"
             types = "Camp Settings"
         else:
@@ -573,8 +552,7 @@ class S3OptionsMenu(object):
     def delphi(self):
         """ DELPHI / Delphi Decision Maker """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="delphi")(
                     M("Active Problems", f="problem")(
@@ -722,16 +700,14 @@ class S3OptionsMenu(object):
     def gis(self):
         """ GIS / GIS Controllers """
 
-        auth = current.auth
-        db = current.db
-        s3db = current.s3db
-        s3 = current.session.s3
-        MAP_ADMIN = s3.system_roles.MAP_ADMIN
+        MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
 
         def config_menu(i):
+            auth = current.auth
             if not auth.is_logged_in():
                 # Anonymous users can never cofnigure the Map
                 return False
+            s3db = current.s3db
             if auth.s3_has_permission("create",
                                       s3db.gis_config):
                 # If users can create configs then they can see the menu item
@@ -739,13 +715,14 @@ class S3OptionsMenu(object):
             # Look for this user's config
             table = s3db.gis_config
             query = (table.pe_id == auth.user.pe_id)
-            config = db(query).select(table.id,
-                                      limitby=(0, 1),
-                                      cache=s3db.cache).first()
+            config = current.db(query).select(table.id,
+                                              limitby=(0, 1),
+                                              cache=s3db.cache).first()
             if config:
                 return True
 
         def config_args():
+            auth = current.auth
             if not auth.user:
                 # Won't show anyway due to check
                 return []
@@ -755,11 +732,12 @@ class S3OptionsMenu(object):
                 return []
 
             # Look for this user's config
+            s3db = current.s3db
             table = s3db.gis_config
             query = (table.pe_id == auth.user.pe_id)
-            config = db(query).select(table.id,
-                                      limitby=(0, 1),
-                                      cache=s3db.cache).first()
+            config = current.db(query).select(table.id,
+                                              limitby=(0, 1),
+                                              cache=s3db.cache).first()
             if config:
                 # Link direct to the User's config
                 return [config.id, "layer_entity"]
@@ -799,7 +777,7 @@ class S3OptionsMenu(object):
     def hms(self):
         """ HMS / Hospital Status Assessment and Request Management """
 
-        s3 = current.response.s3
+        #s3 = current.response.s3
 
         return M(c="hms")(
                     M("Hospitals", f="hospital", m="search")(
@@ -1279,8 +1257,8 @@ class S3OptionsMenu(object):
         """ ORG / Organization Registry """
 
         ADMIN = current.session.s3.system_roles.ADMIN
-        SECTORS = lambda i: "Clusters" if current.deployment_settings.get_ui_cluster() \
-                       else "Sectors"
+        SECTORS = "Clusters" if current.deployment_settings.get_ui_cluster() \
+                             else "Sectors"
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
@@ -1323,8 +1301,7 @@ class S3OptionsMenu(object):
     def pr(self):
         """ PR / Person Registry """
 
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="pr", restrict=ADMIN)(
                     M("Person", f="person")(
@@ -1360,9 +1337,7 @@ class S3OptionsMenu(object):
     def project(self):
         """ PROJECT / Project Tracking & Management """
 
-        auth = current.auth
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
+        ADMIN = current.session.s3.system_roles.ADMIN
 
         settings = current.deployment_settings
         #activities = settings.get_project_activities()
@@ -1457,7 +1432,7 @@ class S3OptionsMenu(object):
                     M("Search", m="search"),
                  ),
                 )
-            if auth.s3_has_role("STAFF"):
+            if current.auth.s3_has_role("STAFF"):
                 menu(
                      M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),
@@ -1570,10 +1545,9 @@ class S3OptionsMenu(object):
         layout = S3BreadcrumbsLayout
 
         request = current.request
-        settings = current.deployment_settings
-        all_modules = settings.modules
         controller = request.controller
         function = request.function
+        all_modules = current.deployment_settings.modules
 
         # Start with a link to the homepage - always:
         breadcrumbs = layout()(
@@ -1610,4 +1584,3 @@ class S3OptionsMenu(object):
         return breadcrumbs
 
 # END =========================================================================
-

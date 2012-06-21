@@ -2572,6 +2572,7 @@ class GIS(object):
         s3db = current.s3db
         cache = s3db.cache
         table = s3db.gis_location
+        table = s3db.gis_location_tag
 
         if level == "L1":
             layer = {
