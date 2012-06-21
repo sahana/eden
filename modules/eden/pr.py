@@ -1936,8 +1936,8 @@ class S3PersonEducationModel(S3Model):
 
         tablename = "pr_education"
         table = self.define_table("pr_education",
-                                  self.person_id(label = T("Person"),
-                                                 ondelete="CASCADE"),
+                                  self.pr_person_id(label = T("Person"),
+                                                    ondelete="CASCADE"),
                                   Field("level", label=T("Level of Award")),
                                   Field("award", label=T("Name of Award")),
                                   Field("institute", label=T("Name of Institute")),
