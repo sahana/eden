@@ -29,6 +29,10 @@ class Web2UnitTest(unittest.TestCase):
         self.app = current.request.application
         self.url = self.config.url
         self.user = "admin"
+        
+    def reporter(self, msg, verbose_level = 1):
+        if self.config.verbose >= verbose_level:
+            print >> sys.stderr, msg
 
 # =============================================================================
 class SeleniumUnitTest(Web2UnitTest):
@@ -39,7 +43,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         if account == None:
             account = self.user
-        login(account, nexturl)
+        login(self.reporter, account, nexturl)
 
     # -------------------------------------------------------------------------
     def getRows (self, table, data, dbcallback):
@@ -160,7 +164,7 @@ class SeleniumUnitTest(Web2UnitTest):
         confirm = True
         try:
             elem = browser.find_element_by_xpath("//div[@class='confirmation']")
-            s3_debug(elem.text)
+            self.reporter(elem.text)
         except NoSuchElementException:
             confirm = False
         self.assertTrue(confirm == success,
@@ -171,11 +175,11 @@ class SeleniumUnitTest(Web2UnitTest):
         if success:
             self.assertTrue((len(result["after"]) - len(result["before"])) == 1,
                             failMsg)
-            s3_debug(successMsg)
+            self.reporter(successMsg)
         else:
             self.assertTrue((len(result["after"]) == len(result["before"])),
                             successMsg)
-            s3_debug(failMsg)
+            self.reporter(failMsg)
         return result
 
     # -------------------------------------------------------------------------
@@ -184,14 +188,14 @@ class SeleniumUnitTest(Web2UnitTest):
                   forceClear = True,
                   quiet = True):
 
-        return dt_filter(search_string, forceClear, quiet)
+        return dt_filter(self.reporter, search_string, forceClear, quiet)
 
     # -------------------------------------------------------------------------
     def dt_row_cnt(self,
                    check = (),
                    quiet = True):
 
-        return dt_row_cnt(check, quiet, self)
+        return dt_links(self.reporter, row, tableID, quiet)
 
     # -------------------------------------------------------------------------
     def dt_data(self,
