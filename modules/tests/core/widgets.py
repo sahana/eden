@@ -13,6 +13,8 @@ from selenium.common.exceptions import NoSuchElementException
 
 from gluon import current
 
+from s3 import s3_debug
+
 import time
 
 def _autocomple_finish(el_id, browser):
@@ -29,7 +31,6 @@ def _autocomple_finish(el_id, browser):
         # The pack drop down hasn't been populated yet so sleep
         time.sleep(sleeptime)
         giveup += sleeptime
-
 # -----------------------------------------------------------------------------
 def w_autocomplete(search,
                    autocomplete,
