@@ -117,5 +117,5 @@ class Note(models.Model):
 
     class Meta:
         permissions = (
-            ('move_note', 'Can move note across the debate.')
+            ('move_note', 'Can move note across the debate.'),
         )
