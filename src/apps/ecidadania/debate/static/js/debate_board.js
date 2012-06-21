@@ -130,7 +130,7 @@ function editNote(obj) {
 
         $("input[name='notename']").val(note.title);
         $("textarea#id_note_message").val(note.message);
-        $("#last-edited-note").text(noteID);
+        $("#last-edited-note").html(noteID);
     });
 
     request.fail(function (jqXHR, textStatus) {

@@ -78,7 +78,7 @@
                                                     </div>
                                                     <p class="note-text">{{ note.title }}</p>
                                                     <span id="view-note" class="label label-info hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
-                                                    {% if note.author == request.user %}
+                                                    {% if note.author == request.user or request.user.is_staff %}
                                                         <span id="edit-note" class="label label-info hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
                                                     {% endif %}
                                                 </div>
@@ -135,10 +135,9 @@
                 <div id="view-current-note" class="modal hide fade" style="display: none; ">
                     <div class="modal-header">
                         <a class="close" data-dismiss="modal">×</a>
-                        <h3>{% trans "View note" %}</h3>
+                        <h3 id="view-note-title"></h3>
                     </div>
                     <div class="modal-body">
-                        <h3 id="view-note-title"></h3>
                         <p id="view-note-desc"></p>
                     </div>
                     <div class="modal-footer">

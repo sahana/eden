@@ -53,7 +53,7 @@ class AddPost(FormView):
     located at apps.news.views
     """
     form_class = NewsForm
-    template_name = 'news/post_add.html'
+    template_name = 'news/post_form.html'
     
     def get_success_url(self):
         return '/news/'
@@ -90,7 +90,7 @@ class EditPost(UpdateView):
     Edit an existent post.
     """
     model = Post
-    template_name = 'news/post_edit.html'
+    template_name = 'news/post_form.html'
     success_url = '/'
     
     def get_object(self):
