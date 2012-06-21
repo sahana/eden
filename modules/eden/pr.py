@@ -1932,25 +1932,20 @@ class S3PersonEducationModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-        request = current.request
         s3 = current.response.s3
-
-        person_id = self.pr_person_id
 
         tablename = "pr_education"
         table = self.define_table("pr_education",
-                                  person_id(label = T("Person"),
-                                            ondelete="CASCADE"),
+                                  self.person_id(label = T("Person"),
+                                                 ondelete="CASCADE"),
                                   Field("level", label=T("Level of Award")),
                                   Field("award", label=T("Name of Award")),
-                                  Field("institute", label = T("Name of Institute")),
-                                  Field("year",),
-                                  Field("major"),
-                                  Field("grade"),
+                                  Field("institute", label=T("Name of Institute")),
+                                  Field("year", label=T("Year")),
+                                  Field("major", label=T("Major")),
+                                  Field("grade", label=T("Grade")),
                                   s3.comments(),
                                   *s3.meta_fields())
-
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Educational Achievements")
@@ -1978,7 +1973,7 @@ class S3PersonEducationModel(S3Model):
                                     "grade",
                                     "institute",
                                    ],
-                      orderby = "~pr_education.year",
+                      orderby = "~db.pr_education.year",
                       sortby = [[1, 'desc']])
 
         # ---------------------------------------------------------------------

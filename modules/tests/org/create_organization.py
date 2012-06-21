@@ -52,7 +52,7 @@ class CreateOrganisation(SeleniumUnitTest):
         # Configuration
         tablename = "org_organisation"
         url = "org/organisation/create"
-        account = "normal"
+        account = "admin"
         data = [
     [
         # 1st field used to check whether record already exists
