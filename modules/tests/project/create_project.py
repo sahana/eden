@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Project Module Automated Tests
+""" Sahana Eden Module Automated Tests - PROJECT001 Create Project
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -30,11 +30,19 @@
 from gluon import current
 from tests.web2unittest import SeleniumUnitTest
 
-class project_create(SeleniumUnitTest):
-    def test_project_create(self):
+class CreateProject(SeleniumUnitTest):
+    def test_project001_create_project(self):
         """
             @case: Project001
-            @description: Create a Project
+            @description:
+            
+            * Create Project
+            * Create Project Organisation 
+            * Create Project Community
+            * Create Project Beneficiary
+            
+            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
+            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
 
@@ -43,7 +51,7 @@ class project_create(SeleniumUnitTest):
         
         self.create("project_project", 
                     [( "name",
-                       "Test Project" )]
+                       "Community Strengthening through Dance" )]
                      )
         self.create("project_organisation", 
                     [( "organisation_id",
@@ -104,6 +112,7 @@ class project_create(SeleniumUnitTest):
                      ( "lon",
                        "0",
                        "gis_location"),
+                     # @ToDo: Activities - Community Organisation, Contingency Planning, Logistics
                      ( "population",
                        "1000"),
                      ( "number_families",
