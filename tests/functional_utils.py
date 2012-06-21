@@ -21,6 +21,7 @@
 import time
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 from django.test import LiveServerTestCase
 
@@ -60,3 +61,14 @@ class FunctionalTestCase(ECDTestCase, LiveServerTestCase):
         time.sleep(sec)
         return
 
+    def login(self, browser, username='test_user', password='test_password'):
+        """
+        Logs into e-cidadania.
+        """
+        username_field = browser.find_element_by_name('username')
+        username_field.send_keys(username)
+        
+        password_field  = browser.find_element_by_name('password')
+        password_field.send_keys(password)
+        self.wait(2)
+        password_field.send_keys(Keys.RETURN)
