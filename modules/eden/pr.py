@@ -1978,7 +1978,7 @@ class S3PersonEducationModel(S3Model):
                                     "grade",
                                     "institute",
                                    ],
-                      orderby = "~pr_education.year",
+                      orderby = ~table.year,
                       sortby = [[1, 'desc']])
 
         # ---------------------------------------------------------------------
