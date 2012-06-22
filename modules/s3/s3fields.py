@@ -415,30 +415,42 @@ def s3_role_required():
     
 
 # -------------------------------------------------------------------------
-def s3_roles_permitted():
+def s3_roles_permitted(name="roles_permitted", **attr):
     """
         List of Roles Permitted to access a resource
         - used by CMS
     """
 
     T = current.T
-    db = current.db
-    f = S3ReusableField("roles_permitted", 'list:reference auth_group',
-            sortby="role",
-            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                            "auth_group.id",
-                                            "%(role)s",
-                                            multiple=True)),
-            # @ToDo
-            #widget = S3CheckboxesWidget(lookup_table_name = "auth_group",
-            #                            lookup_field_name = "role",
-            #                            multiple = True),
-            represent = s3_auth_group_represent,
-            label = T("Roles Permitted"),
-            comment = DIV(_class="tooltip",
+    if "label" not in attr:
+        label = T("Roles Permitted")
+    if "sortby" not in attr:
+        sortby = "role"
+    if "represent" not in attr:
+        represent = s3_auth_group_represent
+    if "requires" not in attr:
+        requires = IS_NULL_OR(IS_ONE_OF(current.db,
+                                        "auth_group.id",
+                                        "%(role)s",
+                                        multiple=True))
+    if "comment" not in attr:
+        comment = DIV(_class="tooltip",
                           _title="%s|%s" % (T("Roles Permitted"),
-                                            T("If this record should be restricted then select which role(s) are permitted to access the record here."))),
-            ondelete = "RESTRICT")
+                                            T("If this record should be restricted then select which role(s) are permitted to access the record here.")))
+    if "ondelete" not in attr:
+        ondelete = "RESTRICT"
+    
+    f = S3ReusableField(name, "list:reference auth_group",
+                        sortby = sortby,
+                        requires = requires,
+                        represent = represent,
+                        # @ToDo
+                        #widget = S3CheckboxesWidget(lookup_table_name = "auth_group",
+                        #                            lookup_field_name = "role",
+                        #                            multiple = True),
+                        label = label,
+                        comment = comment,
+                        ondelete = ondelete)
     return f()
 
 # =============================================================================
