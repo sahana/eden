@@ -66,9 +66,7 @@ try:
     db = current.db
 except:
     # Running from 000_1st_run
-    DB = False
-else:
-    DB = True
+    db = None
 
 # =============================================================================
 class FieldS3(Field):
@@ -207,6 +205,8 @@ class S3ReusableField(object):
             return Field(name, self.__type, **ia)
 
 # =============================================================================
+# Record identity meta-fields
+
 # Use URNs according to http://tools.ietf.org/html/rfc4122
 s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
@@ -215,7 +215,7 @@ s3uuid = SQLCustomType(type = "string",
                                     else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
 
-if DB and current.db._adapter.represent("X", s3uuid) != "'X'":
+if db and current.db._adapter.represent("X", s3uuid) != "'X'":
     # Old web2py DAL, must add quotes in encoder
     s3uuid = SQLCustomType(type = "string",
                            native = "VARCHAR(128)",
@@ -223,9 +223,6 @@ if DB and current.db._adapter.represent("X", s3uuid) != "'X'":
                                         if x == ""
                                         else str(x.encode("utf-8")).replace("'", "''"))),
                            decoder = (lambda x: x))
-
-# =============================================================================
-# Record identity meta-fields
 
 # Universally unique identifier for a record
 s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
@@ -283,179 +280,166 @@ def s3_timestamp():
     return (s3_meta_created_on(),
             s3_meta_modified_on())
 
-# =============================================================================
+# =========================================================================
 # Record authorship meta-fields
+def s3_ownerstamp():
+    """
+        Record ownership meta-fields
+    """
 
-if DB:
+    db = current.db
+    auth = current.auth
+    session = current.session
 
-    # =========================================================================
-    def s3_ownerstamp():
-        """
-            Record ownership meta-fields
-        """
+    # Individual user who owns the record
+    s3_meta_owned_by_user = S3ReusableField("owned_by_user", db.auth_user,
+                                            readable=False,
+                                            writable=False,
+                                            requires=None,
+                                            default=session.auth.user.id
+                                                        if auth.is_logged_in()
+                                                        else None,
+                                            represent=lambda id: \
+                                                id and s3_auth_user_represent(id) or \
+                                                       UNKNOWN_OPT,
+                                            ondelete="RESTRICT")
 
-        auth = current.auth
-        session = current.session
-
-        # Individual user who owns the record
-        s3_meta_owned_by_user = S3ReusableField("owned_by_user", db.auth_user,
-                                                readable=False,
-                                                writable=False,
-                                                requires=None,
-                                                default=session.auth.user.id
-                                                            if auth.is_logged_in()
-                                                            else None,
-                                                represent=lambda id: \
-                                                    id and s3_auth_user_represent(id) or \
-                                                           UNKNOWN_OPT,
-                                                ondelete="RESTRICT")
-
-        # Role of users who collectively own the record
-        s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
-                                                 readable=False,
-                                                 writable=False,
-                                                 requires=None,
-                                                 default=None,
-                                                 represent=s3_auth_group_represent)
-
-        # Person Entity owning the record
-        s3_meta_owned_by_entity = S3ReusableField("owned_by_entity", "integer",
-                                                  readable=False,
-                                                  writable=False,
-                                                  requires=None,
-                                                  default=None,
-                                                  # use a lambda here as we don't
-                                                  # want the model to be loaded yet
-                                                  represent=lambda val: \
-                                                            current.s3db.pr_pentity_represent(val))
-        return (s3_meta_owned_by_user(),
-                s3_meta_owned_by_group(),
-                s3_meta_owned_by_entity())
-
-    # =========================================================================
-    def s3_meta_fields():
-        """
-            Normal meta-fields added to every table
-        """
-
-        auth = current.auth
-        session = current.session
-
-        # Author of a record
-        s3_meta_created_by = S3ReusableField("created_by", db.auth_user,
+    # Role of users who collectively own the record
+    s3_meta_owned_by_group = S3ReusableField("owned_by_group", "integer",
                                              readable=False,
                                              writable=False,
                                              requires=None,
-                                             default=session.auth.user.id
-                                                        if auth.is_logged_in()
-                                                        else None,
-                                             represent=s3_auth_user_represent,
-                                             ondelete="RESTRICT")
+                                             default=None,
+                                             represent=s3_auth_group_represent)
 
-        # Last author of a record
-        s3_meta_modified_by = S3ReusableField("modified_by", db.auth_user,
+    # Person Entity owning the record
+    s3_meta_owned_by_entity = S3ReusableField("owned_by_entity", "integer",
                                               readable=False,
                                               writable=False,
                                               requires=None,
-                                              default=session.auth.user.id
-                                                        if auth.is_logged_in()
-                                                        else None,
-                                              update=session.auth.user.id
-                                                        if auth.is_logged_in()
-                                                        else None,
-                                              represent=s3_auth_user_represent,
-                                              ondelete="RESTRICT")
+                                              default=None,
+                                              # use a lambda here as we don't
+                                              # want the model to be loaded yet
+                                              represent=lambda val: \
+                                                        current.s3db.pr_pentity_represent(val))
+    return (s3_meta_owned_by_user(),
+            s3_meta_owned_by_group(),
+            s3_meta_owned_by_entity())
 
-        # Approver of a record
-        s3_meta_approved_by = S3ReusableField("approved_by", db.auth_user,
-                                              readable=False,
-                                              writable=False,
-                                              requires=None,
-                                              represent=s3_auth_user_represent,
-                                              ondelete="RESTRICT")
+# =========================================================================
+def s3_meta_fields():
+    """
+        Normal meta-fields added to every table
+    """
 
-        fields = (s3_meta_uuid(),
-                  s3_meta_mci(),
-                  s3_meta_deletion_status(),
-                  s3_meta_deletion_fk(),
-                  s3_meta_created_on(),
-                  s3_meta_modified_on(),
-                  s3_meta_created_by(),
-                  s3_meta_modified_by(),
-                  s3_meta_approved_by(),
-                  )
-        fields = (fields + s3_ownerstamp())
-        return fields
+    db = current.db
+    auth = current.auth
+    session = current.session
 
-    def s3_all_meta_field_names():
-        return [field.name for field in s3_meta_fields()]
+    # Author of a record
+    s3_meta_created_by = S3ReusableField("created_by", db.auth_user,
+                                         readable=False,
+                                         writable=False,
+                                         requires=None,
+                                         default=session.auth.user.id
+                                                    if auth.is_logged_in()
+                                                    else None,
+                                         represent=s3_auth_user_represent,
+                                         ondelete="RESTRICT")
 
-    # =========================================================================
-    # Reusable roles fields
+    # Last author of a record
+    s3_meta_modified_by = S3ReusableField("modified_by", db.auth_user,
+                                          readable=False,
+                                          writable=False,
+                                          requires=None,
+                                          default=session.auth.user.id
+                                                    if auth.is_logged_in()
+                                                    else None,
+                                          update=session.auth.user.id
+                                                    if auth.is_logged_in()
+                                                    else None,
+                                          represent=s3_auth_user_represent,
+                                          ondelete="RESTRICT")
 
-    def s3_role_required():
-        """
-            Role Required to access a resource
-            - used by GIS for map layer permissions management
-        """
+    # Approver of a record
+    s3_meta_approved_by = S3ReusableField("approved_by", db.auth_user,
+                                          readable=False,
+                                          writable=False,
+                                          requires=None,
+                                          represent=s3_auth_user_represent,
+                                          ondelete="RESTRICT")
 
-        T = current.T
-        f = S3ReusableField("role_required", db.auth_group,
-                sortby="role",
-                requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                "auth_group.id",
-                                                "%(role)s",
-                                                zero=T("Public"))),
-                widget = S3AutocompleteWidget("admin",
-                                              "group",
-                                              fieldname="role"),
-                represent = s3_auth_group_represent,
-                label = T("Role Required"),
-                comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (T("Role Required"),
-                                                T("If this record should be restricted then select which role is required to access the record here."))),
-                ondelete = "RESTRICT")
-        return f()
-        
+    fields = (s3_meta_uuid(),
+              s3_meta_mci(),
+              s3_meta_deletion_status(),
+              s3_meta_deletion_fk(),
+              s3_meta_created_on(),
+              s3_meta_modified_on(),
+              s3_meta_created_by(),
+              s3_meta_modified_by(),
+              s3_meta_approved_by(),
+              )
+    fields = (fields + s3_ownerstamp())
+    return fields
 
-    # -------------------------------------------------------------------------
-    def s3_roles_permitted():
-        """
-            List of Roles Permitted to access a resource
-            - used by CMS
-        """
+def s3_all_meta_field_names():
+    return [field.name for field in s3_meta_fields()]
 
-        T = current.T
-        f = S3ReusableField("roles_permitted", 'list:reference auth_group',
-                sortby="role",
-                requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                "auth_group.id",
-                                                "%(role)s",
-                                                multiple=True)),
-                # @ToDo
-                #widget = S3CheckboxesWidget(lookup_table_name = "auth_group",
-                #                            lookup_field_name = "role",
-                #                            multiple = True),
-                represent = s3_auth_group_represent,
-                label = T("Roles Permitted"),
-                comment = DIV(_class="tooltip",
-                              _title="%s|%s" % (T("Roles Permitted"),
-                                                T("If this record should be restricted then select which role(s) are permitted to access the record here."))),
-                ondelete = "RESTRICT")
-        return f()
+# =========================================================================
+# Reusable roles fields
 
-else:
-    # Running from 000_1st_run
-    def s3_ownerstamp():
-        return None
-    def s3_meta_fields():
-        return None
-    def s3_all_meta_field_names():
-        return None
-    def s3_role_required():
-        return None
-    def s3_roles_permitted():
-        return None
+def s3_role_required():
+    """
+        Role Required to access a resource
+        - used by GIS for map layer permissions management
+    """
+
+    T = current.T
+    db = current.db
+    f = S3ReusableField("role_required", db.auth_group,
+            sortby="role",
+            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                            "auth_group.id",
+                                            "%(role)s",
+                                            zero=T("Public"))),
+            widget = S3AutocompleteWidget("admin",
+                                          "group",
+                                          fieldname="role"),
+            represent = s3_auth_group_represent,
+            label = T("Role Required"),
+            comment = DIV(_class="tooltip",
+                          _title="%s|%s" % (T("Role Required"),
+                                            T("If this record should be restricted then select which role is required to access the record here."))),
+            ondelete = "RESTRICT")
+    return f()
+    
+
+# -------------------------------------------------------------------------
+def s3_roles_permitted():
+    """
+        List of Roles Permitted to access a resource
+        - used by CMS
+    """
+
+    T = current.T
+    db = current.db
+    f = S3ReusableField("roles_permitted", 'list:reference auth_group',
+            sortby="role",
+            requires = IS_NULL_OR(IS_ONE_OF(db,
+                                            "auth_group.id",
+                                            "%(role)s",
+                                            multiple=True)),
+            # @ToDo
+            #widget = S3CheckboxesWidget(lookup_table_name = "auth_group",
+            #                            lookup_field_name = "role",
+            #                            multiple = True),
+            represent = s3_auth_group_represent,
+            label = T("Roles Permitted"),
+            comment = DIV(_class="tooltip",
+                          _title="%s|%s" % (T("Roles Permitted"),
+                                            T("If this record should be restricted then select which role(s) are permitted to access the record here."))),
+            ondelete = "RESTRICT")
+    return f()
 
 # =============================================================================
 # Lx
@@ -509,6 +493,7 @@ def s3_lx_onvalidation(form):
     vars = form.vars
     if "location_id" in vars and vars.location_id:
 
+        db = current.db
         table = current.s3db.gis_location
         query = (table.id == vars.location_id)
         location = db(query).select(table.name,
@@ -547,6 +532,7 @@ def s3_lx_update(table, record_id):
 
     if "location_id" in table:
 
+        db = current.db
         ltable = current.s3db.gis_location
         query = (table.id == record_id) & \
                 (ltable.id == table.location_id)
@@ -641,6 +627,7 @@ def s3_address_onvalidation(form):
     vars = form.vars
     if "location_id" in vars and vars.location_id:
 
+        db = current.db
         table = current.s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == vars.location_id)
@@ -686,6 +673,7 @@ def s3_address_update(table, record_id):
 
     if "location_id" in table:
 
+        db = current.db
         ltable = current.s3db.gis_location
         # Read Postcode & Street Address
         query = (table.id == record_id) & \
