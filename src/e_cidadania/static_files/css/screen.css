@@ -100,6 +100,39 @@ footer {
     margin:0px;
 }
 
+.indexrow {
+    width: 960px;
+    margin: 0px auto;
+}
+
+.indexblock {
+    width: 91%;
+    padding: 1% 4%;
+    padding: 40px 4.52%;
+    box-shadow: 0 -1px 1px #AAA;
+}
+
+.one {
+    background: #333;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #999;
+    box-shadow: 0 -1px 1px #AAA;
+    margin-top:25px;
+}
+
+.two {
+    background: #EFEFEF;
+    border-top: 1px solid #EFEFEF;
+    border-bottom: 1px solid #999;
+    box-shadow: 0 -1px 1px #AAA;
+}
+
+.three {
+    background: #FFF;
+    border-top: 1px solid #EFEFEF;
+    box-shadow: 0 -2px 2px #AAA;
+}
+
 .languageform img {
     float:left; 
     padding-right:15px;
