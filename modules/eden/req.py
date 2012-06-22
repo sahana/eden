@@ -302,8 +302,8 @@ class S3RequestModel(S3Model):
                                         "boolean",
                                         label = T("Cancel"),
                                         default = False),
-                                  s3.comments(comment=""),
-                                  *s3.meta_fields())
+                                  s3_comments(comment=""),
+                                  *s3_meta_fields())
 
         if len(req_type_opts) == 1:
             k,v = req_type_opts.popitem()
@@ -894,7 +894,6 @@ class S3RequestItemModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        currency_type = s3.currency_type
         site_id = self.org_site_id
         item_id = self.supply_item_entity_id
         supply_item_id = self.supply_item_id
@@ -926,7 +925,7 @@ class S3RequestItemModel(S3Model):
                                         "double",
                                         label = T("Estimated Value per Pack")),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  currency_type("currency"),
+                                  s3_currency(),
                                   site_id,
                                   Field("quantity_commit",
                                         "double",
@@ -950,8 +949,8 @@ class S3RequestItemModel(S3Model):
                                         default = 0,
                                         requires = IS_FLOAT_IN_RANGE(minimum=0),
                                         writable = quantities_writable),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         table.site_id.label = T("Requested From")
 
@@ -1187,7 +1186,7 @@ class S3RequestSkillModel(S3Model):
         use_commit = settings.get_req_use_commit()
 
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # -----------------------------------------------------------------
         # Request Skills
@@ -1228,7 +1227,7 @@ class S3RequestSkillModel(S3Model):
                                    label = T("Quantity Fulfilled"),
                                    default = 0,
                                    writable = quantities_writable),
-                             s3.comments(label = T("Task Details"),
+                             s3_comments(label = T("Task Details"),
                                          comment = DIV(_class="tooltip",
                                                        _title="%s|%s" % (T("Task Details"),
                                                                         T("Include any special requirements such as equipment which they need to bring.")))),
@@ -1376,8 +1375,8 @@ class S3CommitModel(S3Model):
                                             default = auth.s3_logged_in_person(),
                                             label = T("Committed By"),
                                             comment = self.pr_person_comment(child="committer_id")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
@@ -1545,8 +1544,8 @@ class S3CommitItemModel(S3Model):
                                         "double",
                                         label = T("Quantity"),
                                         notnull = True),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # pack_quantity virtual field
         if item_pack_virtualfields:
@@ -1646,8 +1645,8 @@ class S3CommitPersonModel(S3Model):
                                   multi_skill_id(writable=False, comment=None),
                                   # This should be person not hrm as we want to mark them as allocated
                                   person_id(),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_COMMIT_PERSON = T("Add Person to Commitment")

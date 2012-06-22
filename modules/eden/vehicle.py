@@ -109,8 +109,8 @@ class S3VehicleModel(S3Model):
                                         comment=T("Date")),
                                   Field("insurance_date", "date",
                                         label=T("Insurance Renewal Due")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_VEHICLE_DETAILS = T("Add Vehicle Detail")
@@ -157,7 +157,7 @@ class S3VehicleModel(S3Model):
                                         label=T("Direction")),
                                   Field("speed",
                                         label=T("Speed")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_GPS = T("Add GPS data")

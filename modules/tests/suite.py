@@ -90,20 +90,14 @@ else:
     # Setup New Volunteer
     addTests(loadTests(CreateVolunteer))
     
-    # Create Staff Training
+    # Create Staff & Volunteer Training
     addTests(loadTests(CreateStaffTraining))
-    
-    # Setup Training Event
-    # Staff Training
-    addTests(loadTests(CreateStaffTraining))
-    
-    # Volunteer Training
-    #addTests(loadTests(CreateVolunteerTraining)) # To be automated.
-    
+    addTests(loadTests(CreateVolunteerTraining))
+
     # Inventory tests
-    addTests(loadTests(InvSendItem))
-    addTests(loadTests(InvReceiveItem))
-    addTests(loadTests(InvSendReceiveItem))
+    addTests(loadTests(SendItem))
+    addTests(loadTests(ReceiveItem))
+    addTests(loadTests(SendReceiveItem))
     
     # Project Tests
     addTests(loadTests(CreateProject))
@@ -122,10 +116,10 @@ else:
 
 try:
     import HTMLTestRunner
-    fp = file("Sahana-Eden.html", "wb")
+    fp = file("Sahana-Eden-Test-Result.html", "wb")
     runner = HTMLTestRunner.HTMLTestRunner(
                                            stream=fp,
-                                           title="Sahana Eden",
+                                           title="Sahana Eden Test Result",
                                           )
     runner.run(suite)
 except:

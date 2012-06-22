@@ -76,6 +76,7 @@ def w_autocomplete(search,
                     menuitem = browser.find_element_by_id("ui-menu-%s-%s" % (automenu,autoitem))
                     menuitem.click()
                     db_id = browser.find_element_by_id(autocomplete)
+                    time.sleep(11)
                     # The id is copied into the value attribute so use that
                     return int(db_id.get_attribute("value"))
                 autoitem += 1

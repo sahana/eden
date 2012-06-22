@@ -354,7 +354,7 @@ class S3ClimateModel(S3Model):
                                         )
                                        )
                                    ),
-                             *s3.meta_fields()
+                             *s3_meta_fields()
                             )
         table.owned_by_user.label = T("User")
 

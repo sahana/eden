@@ -11,7 +11,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # S3 framework functions
@@ -19,7 +19,7 @@ if not deployment_settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -73,11 +73,6 @@ def shelter():
     tablename = "cr_shelter"
     table = s3db[tablename]
 
-    # Load Models to add tabs
-    if deployment_settings.has_module("req"):
-        # (gets loaded by Inv if available)
-        s3mgr.load("req_req")
-
     field = s3db.pr_presence.shelter_id
     field.requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter.id",
                                           "%(name)s",
@@ -85,12 +80,12 @@ def shelter():
     field.represent = lambda id: \
         (id and [db.cr_shelter[id].name] or ["None"])[0]
     field.ondelete = "RESTRICT"
-    if deployment_settings.get_ui_camp():
+    if settings.get_ui_camp():
         HELP = T("The Camp this person is checking into.")
     else:
         HELP = T("The Shelter this person is checking into.")
-    ADD_SHELTER = response.s3.ADD_SHELTER
-    SHELTER_LABEL = response.s3.SHELTER_LABEL
+    ADD_SHELTER = s3.ADD_SHELTER
+    SHELTER_LABEL = s3.SHELTER_LABEL
     field.comment = S3AddResourceLink(c="cr",
                                       f="shelter",
                                       title=ADD_SHELTER,
@@ -136,7 +131,7 @@ def shelter():
                                       args=["[id]", "presence"]))
 
     # Pre-processor
-    response.s3.prep = cr_shelter_prep
+    s3.prep = cr_shelter_prep
 
     rheader = s3db.cr_shelter_rheader
     output = s3_rest_controller(rheader=rheader)
@@ -156,7 +151,7 @@ def cr_shelter_prep(r):
         if r.method != "read":
             # Don't want to see in Create forms
             # inc list_create (list_fields over-rides)
-            address_hide(r.table)
+            s3base.s3_address_hide(r.table)
 
         if r.component:
             if r.component.name == "inv_item" or \
@@ -167,7 +162,7 @@ def cr_shelter_prep(r):
 
             elif r.component.name == "human_resource":
                 # Filter out people which are already staff for this warehouse
-                s3_filter_staff(r)
+                s3base.s3_filter_staff(r)
                 # Cascade the organisation_id from the hospital to the staff
                 s3db.hrm_human_resource.organisation_id.default = r.record.organisation_id
                 s3db.hrm_human_resource.organisation_id.writable = False
@@ -257,45 +252,51 @@ def req_match():
 # http://.../eden/cr/call/<service>/rpc/<method>/<id>
 # e.g.:
 # http://.../eden/cr/call/jsonrpc/rpc/list/2
+
 # It is not currently in use but left in as an example, and because it may
 # be used in future for interoperating with or transferring data from Agasti
-# which uses xml-rpc.  See:
+# which uses xml-rpc. See:
 # http://www.web2py.com/examples/default/tools#services
 # http://groups.google.com/group/web2py/browse_thread/thread/53086d5f89ac3ae2
-def call():
-    "Call an XMLRPC, JSONRPC or RSS service"
-    return service()
 
-@service.jsonrpc
-@service.xmlrpc
-@service.amfrpc
-def rpc(method, id=0):
-    if method == "list":
-        return db().select(db.cr_shelter.ALL).as_list()
-    if method == "read":
-        return db(db.cr_shelter.id == id).select().as_list()
-    if method == "delete":
-        status=db(db.cr_shelter.id == id).delete()
-        if status:
-            return "Success - record %d deleted!" % id
-        else:
-            return "Failed - no record %d!" % id
-    else:
-        return "Method not implemented!"
+#from gluon.tools import Service
+#service = Service()
 
-@service.xmlrpc
-def create(name):
-    # Need to do validation manually!
-    id = db.cr_shelter.insert(name=name)
-    return id
+# def call():
+    # "Call an XMLRPC, JSONRPC or RSS service"
+    # return service()
 
-@service.xmlrpc
-def update(id, name):
-    # Need to do validation manually!
-    status = db(db.cr_shelter.id == id).update(name=name)
-    #@todo: audit!
-    if status:
-        return "Success - record %d updated!" % id
-    else:
-        return "Failed - no record %d!" % id
+# @service.jsonrpc
+# @service.xmlrpc
+# @service.amfrpc
+# def rpc(method, id=0):
+    # if method == "list":
+        # return db().select(db.cr_shelter.ALL).as_list()
+    # if method == "read":
+        # return db(db.cr_shelter.id == id).select().as_list()
+    # if method == "delete":
+        # status=db(db.cr_shelter.id == id).delete()
+        # if status:
+            # return "Success - record %d deleted!" % id
+        # else:
+            # return "Failed - no record %d!" % id
+    # else:
+        # return "Method not implemented!"
 
+# @service.xmlrpc
+# def create(name):
+    ##Need to do validation manually!
+    # id = db.cr_shelter.insert(name=name)
+    # return id
+
+# @service.xmlrpc
+# def update(id, name):
+    ##Need to do validation manually!
+    # status = db(db.cr_shelter.id == id).update(name=name)
+    ##@todo: audit!
+    # if status:
+        # return "Success - record %d updated!" % id
+    # else:
+        # return "Failed - no record %d!" % id
+
+# END =========================================================================

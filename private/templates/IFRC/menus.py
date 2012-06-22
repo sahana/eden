@@ -16,13 +16,14 @@ class S3MainMenu(default.S3MainMenu):
     # -------------------------------------------------------------------------
     @classmethod
     def menu(cls):
-        """ Compose Menu (example) """
+        """ Compose Menu """
 
+        # Modules menus
         main_menu = MM()(
             cls.menu_modules(),
         )
 
-        # Have an additional separate personal menu
+        # Additional menus
         current.menu.personal = cls.menu_personal()
         current.menu.dashboard = cls.menu_dashboard()
 

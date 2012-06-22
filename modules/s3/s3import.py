@@ -57,7 +57,7 @@ from gluon.tools import callback
 import gluon.contrib.simplejson as simplejson
 from gluon.serializers import json
 
-from s3tools import SQLTABLES3
+from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
 from s3utils import s3_mark_required

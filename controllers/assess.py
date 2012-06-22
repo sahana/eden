@@ -52,6 +52,8 @@ def s3_assess_severity_represent(value):
     else:
         return NONE
 
+repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
+s3_get_db_field_value = s3base.s3_get_db_field_value
 
 location_id = s3db.gis_location_id
 person_id = s3db.pr_person_id

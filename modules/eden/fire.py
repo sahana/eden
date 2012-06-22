@@ -99,8 +99,8 @@ class S3FireStationModel(S3Model):
                                         ),
                                   Field("fax", label = T("Fax"),
                                         requires = IS_NULL_OR(s3_phone_requires)),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         self.configure("fire_station",
                        super_entity="org_site")
@@ -217,8 +217,8 @@ class S3FireStationModel(S3Model):
                                   #Field("anti_seismic_construction", "boolean"),
                                   #Field("isolated_from_air", "boolean"),
                                   #Field("hermetic", "boolean"),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # =====================================================================
         # Hazards
@@ -231,8 +231,8 @@ class S3FireStationModel(S3Model):
                                   # What are the Org & Person for? Contacts?
                                   organisation_id(),
                                   person_id(),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # =====================================================================
         # Shifts
@@ -251,7 +251,7 @@ class S3FireStationModel(S3Model):
                                         widget = S3DateTimeWidget(),
                                         default = request.utcnow,
                                         represent = s3_utc_represent),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         shift_id = S3ReusableField("shift_id", table,
                                    requires = IS_NULL_OR(IS_ONE_OF(db, "fire_shift.id",
@@ -266,7 +266,7 @@ class S3FireStationModel(S3Model):
                                   station_id(),
                                   #shift_id(),
                                   human_resource_id(),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)

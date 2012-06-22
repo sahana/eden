@@ -40,8 +40,7 @@ from gluon.serializers import json
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug
-from s3tools import S3DateTime
+from s3utils import s3_debug, S3DateTime
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
@@ -1491,9 +1490,7 @@ $('#%s').live('click', function() {
                                  _href=r.url(method="", representation="rss",
                                              vars=filter)),
                                _id="list_formats")
-            tabs = [(T("List"), None),
-                    #(T("Export"), "export")
-                    ]
+            tabs = []
 
             if "location_id" in table or \
                "site_id" in table:
@@ -1542,6 +1539,8 @@ $('#%s').live('click', function() {
                 # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
 
+            if tabs:
+                tabs.insert(0, ((T("List"), None)))
         else:
             list_formats = ""
             tabs = []

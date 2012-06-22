@@ -77,9 +77,9 @@ class S3LocationModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Locations
@@ -102,9 +102,9 @@ class S3LocationModel(S3Model):
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
-            meta_spatial_fields = (s3.lx_fields() + meta_fields() + (Field("the_geom", "geometry()"),))
+            meta_spatial_fields = (s3_lx_fields() + meta_fields() + (Field("the_geom", "geometry()"),))
         else:
-            meta_spatial_fields = (s3.lx_fields() + meta_fields())
+            meta_spatial_fields = (s3_lx_fields() + meta_fields())
 
         tablename = "gis_location"
         table = define_table(tablename,
@@ -648,8 +648,8 @@ class S3LocationNameModel(S3Model):
                                                                   UNKNOWN_OPT)),
                                   Field("name_l10n",
                                         label = T("Name")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -693,8 +693,8 @@ class S3LocationTagModel(S3Model):
                                   # key is a reserved word in MySQL
                                   Field("tag", label=T("Key")),
                                   Field("value", label=T("Value")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -721,9 +721,9 @@ class S3LocationGroupModel(S3Model):
 
         location_id = self.gis_location_id
 
-        comments = s3.comments
+        comments = s3_comments
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Location Groups
@@ -807,7 +807,7 @@ class S3LocationHierarchyModel(S3Model):
                                   Field("edit_L3", "boolean", default=True),
                                   Field("edit_L4", "boolean", default=True),
                                   Field("edit_L5", "boolean", default=True),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         ADD_HIERARCHY = T("Add Location Hierarchy")
         s3.crud_strings[tablename] = Storage(
@@ -968,7 +968,7 @@ class S3GISConfigModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # =====================================================================
@@ -1845,7 +1845,7 @@ class S3LayerEntityModel(S3Model):
         add_component = self.add_component
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # =====================================================================
         #  Layer Entity
@@ -2161,9 +2161,9 @@ class S3FeatureLayerModel(S3Model):
                         gis_refresh()(),
                         cluster_distance()(),
                         cluster_threshold()(),
-                        s3.role_required(),       # Single Role
-                        #s3.roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                        *s3.meta_fields())
+                        s3_role_required(),    # Single Role
+                        #s3_roles_permitted(), # Multiple Roles (needs implementing in modules/s3gis.py)
+                        *s3_meta_fields())
 
         # CRUD Strings
         ADD_FEATURE_LAYER = T("Add Feature Layer")
@@ -2298,14 +2298,14 @@ class S3MapModel(S3Model):
 
         layer_id = self.super_link("layer_id", "gis_layer_entity")
 
-        role_required = s3.role_required
+        role_required = s3_role_required
         #roles_permitted = s3.roles_permitted
 
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # GIS Feature Queries
@@ -3237,15 +3237,15 @@ class S3GISThemeModel(S3Model):
 
         #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        role_required = s3.role_required
-        #roles_permitted = s3.roles_permitted
+        role_required = s3_role_required
+        #roles_permitted = s3_roles_permitted
 
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # =====================================================================
         # Theme Layer

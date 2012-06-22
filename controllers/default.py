@@ -26,10 +26,13 @@ def download():
 # =============================================================================
 def register_validation(form):
     """ Validate the fields in registration form """
+
+    vars = form.vars
     # Mobile Phone
-    if "mobile" in form.vars and form.vars.mobile:
+    if "mobile" in vars and vars.mobile:
+        import re
         regex = re.compile(single_phone_number_pattern)
-        if not regex.match(form.vars.mobile):
+        if not regex.match(vars.mobile):
             form.errors.mobile = T("Invalid phone number")
     elif settings.get_auth_registration_mobile_phone_mandatory():
         form.errors.mobile = T("Phone number is required")
@@ -37,7 +40,7 @@ def register_validation(form):
     org = settings.get_auth_registration_organisation_id_default()
     if org:
         # Add to default organisation
-        form.vars.organisation_id = org
+        vars.organisation_id = org
 
     return
 
@@ -150,14 +153,15 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
+            pass
         except ImportError:
             # No Custom Page available, continue with the default
             page = "private/templates/%s/controllers.py" % \
                         settings.get_template()
-            s3_debug("File not loadable: %s" % page)
+            s3base.s3_debug("File not loadable: %s" % page)
         else:
             if page in custom.__dict__:
-                exec("output = custom.%s()()" % page)
+                exec ("output = custom.%s()()" % page)
                 return output
             else:
                 raise(HTTP(404, "Function not found: %s()" % page))
@@ -167,9 +171,10 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
+            pass
         except ImportError:
             # No Custom Page available, continue with the default
-            # @ToDo: cache this result
+            # @ToDo: cache this result - at least in session, ideally in class startup
             pass
         else:
             if "index" in custom.__dict__:
@@ -273,8 +278,8 @@ def index():
         permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
         manage_facility_box = ""
         if permitted_facilities:
-            facility_list = s3_represent_facilities(db, permitted_facilities,
-                                                    link=False)
+            facility_list = s3base.s3_represent_facilities(db, permitted_facilities,
+                                                           link=False)
             facility_opts = [OPTION(opt[1], _value = opt[0])
                              for opt in facility_list]
             if facility_list:
@@ -352,7 +357,7 @@ $('#manage_facility_select').change(function() {
                                         dict(sign_up_now=B(T("sign-up now"))))))
 
              # Add client-side validation
-            s3_register_validation()
+            s3base.s3_register_validation()
 
             if s3.debug:
                 s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )
@@ -609,7 +614,7 @@ def user():
         form = auth()
         register_form = form
         # Add client-side validation
-        s3_register_validation()
+        s3base.s3_register_validation()
     elif request.args and request.args(0) == "change_password":
         form = auth()
     elif request.args and request.args(0) == "profile":

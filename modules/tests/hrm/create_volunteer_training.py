@@ -1,4 +1,4 @@
-""" Sahana Eden Module Automated Tests - HRM005 Add Staff To Organization
+""" Sahana Eden Automated Test - HRM004 Create Volunteer Training
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -24,6 +24,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
+
 from gluon import current
 import unittest
 from tests.web2unittest import SeleniumUnitTest
@@ -33,33 +34,44 @@ from tests import *
 #import unittest, re, time
 import time
 
-class AddStaffToOrganisation(SeleniumUnitTest):
-    def test_hrm005_add_staff_to_organization(self):
-        
+class CreateVolunteerTraining(SeleniumUnitTest):
+    def test_hrm003_create_volunteer_training(self):
         """
-            @case: HRM005
-            @description: Add a premade made staff to a Organisation
+            @case: HRM004
+            @description: Create a Volunteer Training
+            * Create Course
+            * Create Training Event
             
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
+            
+            @ToDo: 
+            * Add Staff Participants
         """
         
-        self.login(account="admin", nexturl="org/organisation/41/human_resource")
-        self.browser.find_element_by_id("show-add-btn").click()
-        
-        self.create("hrm_human_resource", 
-                    [( "first_name",
-                       "Herculanofd",
-                       "pr_person"),
-                     ( "last_name",
-                       "Hughfd",
-                       "pr_person"),
-                     ( "email",
-                       "herculandfo@icandodfmybest.com",
-                       "pr_person"),
-                     ( "job_role_id",
-                       "Chairman",
-                       "option"),
+        browser = self.browser
+        self.login(account="admin", nexturl="vol/course/create")
+
+        self.create("hrm_course", 
+                    [( "code",
+                       "32329408",),
+                     ( "name",
+                       "Emergency First Aid"),
                      ]
                      )
-
+        self.login(account="admin", nexturl="vol/training_event/create")
+        self.create("hrm_training_event", 
+                    [( "course_id",
+                       "Emergency First Aid",
+                       "option"),
+                     ( "site_id",
+                       "Bucharest RFAAT Centre",
+                       "autocomplete"),
+                     ( "start_date",
+                       "2012-04-11"),
+                     ( "end_date",
+                       "2012-04-12"),
+                     ( "comment",
+                       "Testing comments"),
+                     ]
+                     )

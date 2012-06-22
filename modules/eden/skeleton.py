@@ -74,12 +74,12 @@ class S3SkeletonDataModel(S3Model):
         # Now define your table(s),
         # -> always use self.define_table instead of db.define_table, this
         #    makes sure the table won't be re-defined if it's already in db
-        # -> use s3.meta_fields to include meta fields (not s3_meta_fields!),
+        # -> use s3_meta_fields to include meta fields (not s3_meta_fields!),
         #    of course this needs the s3 assignment above
         tablename = "skeleton_example"
         table = self.define_table(tablename,
                                   Field("name"),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # Use self.configure to configure your model (not s3mgr.configure!)
         self.configure(tablename,

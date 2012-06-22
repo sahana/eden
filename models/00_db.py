@@ -11,19 +11,12 @@ s3.debug = request.vars.get("debug", None) or \
                     settings.get_base_debug()
 
 if s3.debug:
-    # Needed for s3_include_debug
-    import sys
     # Reload all modules every request
     # Doesn't catch s3cfg or s3/*
     from gluon.custom_import import track_changes
     track_changes(True)
 
 import datetime
-import re
-import time
-
-from gluon.dal import Row
-from gluon.sqlhtml import RadioWidget
 
 import gluon.contrib.simplejson as json
 
@@ -102,60 +95,66 @@ messages = Messages(T)
 current.messages = messages
 
 # Import the S3 Framework
-import s3 as s3base
+if update_check_needed:
+    # Reload the Field definitions
+    reload(s3base.s3fields)
+else:
+    import s3 as s3base
+
+# Use session for persistent per-user variables (beware of a user having multiple tabs open!)
+if not session.s3:
+    session.s3 = Storage()
 
 # AAA
 auth = s3base.AuthS3()
 current.auth = auth
+
 s3_audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
 current.s3_audit = s3_audit
-s3_logged_in_person = auth.s3_logged_in_person
-s3_logged_in_human_resource = auth.s3_logged_in_human_resource
-aURL = auth.permission.accessible_url
 
-# Shortcuts
+# Use username instead of email address for logins
+# - would probably require further customisation
+#   to get this working within Eden
+#auth.settings.username_field = True
+
+auth.settings.hmac_key = settings.get_auth_hmac_key()
+auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)
+
+# Shortcuts for models/controllers/views
 s3_has_role = auth.s3_has_role
 s3_has_permission = auth.s3_has_permission
-s3_accessible_query = auth.s3_accessible_query
+s3_logged_in_person = auth.s3_logged_in_person
 
-# Custom classes which extend default Gluon
+# CRUD
 crud = s3base.CrudS3()
 current.crud = crud
-S3DateTime = s3base.S3DateTime
+s3.crud = Storage()
+
+# S3 Custom Utilities, Validators and Widgets
+# imported here into the global namespace in order
+# to access them without the s3base namespace prefix
+# @ToDo: Investigate how many of these really need to be here
+s3_action_buttons = s3base.S3CRUD.action_buttons
+s3_fullname = s3base.s3_fullname
 S3ResourceHeader = s3base.S3ResourceHeader
-
-from gluon.tools import Service
-service = Service()
-
-from gluon.tools import callback
-
-# S3 Custom Validators,
-# imported here into the global namespace in order
-# to access them without the s3base namespace prefix
-from s3.s3validators import *
-
-# S3 Custom Utilities and Widgets
-# imported here into the global namespace in order
-# to access them without the s3base namespace prefix
-from s3.s3utils import *
-from s3.s3widgets import *
-from s3.s3navigation import s3_rheader_resource
 from s3.s3navigation import s3_rheader_tabs
+from s3.s3validators import *
+from s3.s3widgets import *
 
 # GIS Module
 gis = s3base.GIS()
 current.gis = gis
 
 # S3RequestManager
-s3.crud = Storage()
 s3mgr = s3base.S3RequestManager()
 current.manager = s3mgr
 
-# MSG
+# Messaging
 msg = s3base.S3Msg()
 current.msg = msg
 
 # Charting
+# - matplotlib currently used just by Survey module
 s3chart = s3base.S3Chart
 current.chart = s3chart
 
@@ -170,10 +169,11 @@ def s3_clear_session():
         del session["owned_records"]
 
     if "s3" in session:
+        s3 = session.s3
         opts = ["hrm", "report_options", "utc_offset"]
         for o in opts:
-            if o in session.s3:
-                del session.s3[o]
+            if o in s3:
+                del s3[o]
 
 # -----------------------------------------------------------------------------
 def s3_auth_on_login(form):

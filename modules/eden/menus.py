@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana-Eden Menu Structure and Layout
+""" Sahana Eden Menu Structure and Layout
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -45,10 +45,11 @@ class S3MainMenu(object):
 
         main_menu = MM()(
 
-            # Standard modules-menu, left
+            # Modules-menu, align-left
             cls.menu_modules(),
 
-            # Standard service menus, right
+            # Service menus, align-right
+            # Note: always define right-hand items in reverse order!
             cls.menu_help(right=True),
             cls.menu_auth(right=True),
             cls.menu_lang(right=True),
@@ -1002,12 +1003,21 @@ class S3OptionsMenu(object):
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
+                        M("Stock Report", f="inv_item",
+                          m="report", vars=Storage(rows="item_id",
+                                                   cols="site_id",
+                                                   fact="quantity",
+                                                   aggregate="sum")),
                         M("Monetization", c="inv", f="inv_item",
-                          vars=dict(report="mon")),
-                        M("Summary of Releases", c="inv", f="inv_item",
-                          vars=dict(report="rel")),
-                        M("Summary of Incoming Supplies", c="inv", f="inv_item",
-                          vars=dict(report="inc")),
+                          m="search", vars=dict(report="mon")),
+                        M("Summary of Releases", c="inv", f="track_item",
+                          m="search", vars=dict(report="rel")),
+                        M("Summary of Incoming Supplies", c="inv", f="track_item",
+                          m="search", vars=dict(report="inc")),
+                        M("Utilization Report", c="inv", f="track_item",
+                          m="search", vars=dict(report="util")),
+                        M("Expiration Report", c="inv", f="track_item",
+                          m="search", vars=dict(report="exp")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),

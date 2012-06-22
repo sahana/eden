@@ -43,7 +43,7 @@ class CreateOffice(SeleniumUnitTest):
         # Configuration
         tablename = "org_office"
         url = "org/office/create"
-        account = "normal"
+        account = "admin"
         data = [
     [
         # 1st field used to check whether record already exists

@@ -119,7 +119,7 @@ class S3PersonEntity(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields= s3.meta_fields
+        meta_fields= s3_meta_fields
         super_entity = self.super_entity
         super_key = self.super_key
         super_link = self.super_link
@@ -489,7 +489,7 @@ class S3OrgAuthModel(S3Model):
 
         define_table = self.define_table
         super_link = self.super_link
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Delegation: Role <-> Auth Group Link
@@ -695,8 +695,8 @@ class S3PersonModel(S3Model):
                                                      _title="%s|%s" % (T("Mailing list"),
                                                                        T("By selecting this you agree that we may contact you.")))),
                                    ),
-                             s3.comments(),
-                             *(s3.lx_fields() + s3.meta_fields()))
+                             s3_comments(),
+                             *(s3_lx_fields() + s3_meta_fields()))
 
         # CRUD Strings
         ADD_PERSON = current.messages.ADD_PERSON
@@ -939,11 +939,11 @@ class S3GroupModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Group
@@ -1195,9 +1195,9 @@ class S3ContactModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        comments = s3.comments
+        comments = s3_comments
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -1367,8 +1367,8 @@ class S3PersonAddressModel(S3Model):
                                         represent = lambda opt: \
                                                     pr_address_type_opts.get(opt, UNKNOWN_OPT)),
                                   location_id(),
-                                  s3.comments(),
-                                  *(s3.address_fields() + s3.meta_fields()))
+                                  s3_comments(),
+                                  *(s3_address_fields() + s3_meta_fields()))
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -1399,7 +1399,7 @@ class S3PersonAddressModel(S3Model):
         # Resource configuration
         self.configure(tablename,
                        onaccept=self.address_onaccept,
-                       onvalidation=s3.address_onvalidation,
+                       onvalidation=s3_address_onvalidation,
                        deduplicate=self.address_deduplicate,
                        list_fields = ["id",
                                       "type",
@@ -1433,7 +1433,6 @@ class S3PersonAddressModel(S3Model):
         s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
-        lx_update = current.response.s3.lx_update
 
         vars = form.vars
         location_id = vars.location_id
@@ -1450,7 +1449,7 @@ class S3PersonAddressModel(S3Model):
                                                          limitby=(0, 1)).first()
                 if person:
                     # Update the Lx fields
-                    lx_update(table, person.id)
+                    s3_lx_update(table, person.id)
             else:
                 # Check if a base location already exists
                 query = (table.pe_id == pe_id)
@@ -1460,7 +1459,7 @@ class S3PersonAddressModel(S3Model):
                     # Hasn't yet been set so use this
                     S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
                     # Update the Lx fields
-                    lx_update(table, person.id)
+                    s3_lx_update(table, person.id)
 
             if person and str(vars.type) == "1": # Home Address
                 if settings.has_module("hrm"):
@@ -1473,7 +1472,7 @@ class S3PersonAddressModel(S3Model):
                     for hr in hrs:
                         db(htable.id == hr.id).update(location_id=location_id)
                         # Update the Lx fields
-                        lx_update(htable, hr.id)
+                        s3_lx_update(htable, hr.id)
                 if settings.has_module("member"):
                     # Also check for any Member record(s)
                     mtable = s3db.member_membership
@@ -1483,7 +1482,7 @@ class S3PersonAddressModel(S3Model):
                     for member in members:
                         db(mtable.id == member.id).update(location_id=location_id)
                         # Update the Lx fields
-                        lx_update(mtable, member.id)
+                        s3_lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -1562,12 +1561,12 @@ class S3PersonImageModel(S3Model):
                                         label = T("Image Type"),
                                         represent = lambda opt: pr_image_type_opts.get(opt,
                                                                                         UNKNOWN_OPT)),
-                                  s3.comments("description",
+                                  s3_comments("description",
                                               label=T("Description"),
                                               comment = DIV(_class="tooltip",
                                                             _title="%s|%s" % (T("Description"),
                                                                               T("Give a brief description of the image, e.g. what can be seen where on the picture (optional).")))),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -1862,8 +1861,8 @@ class S3PersonIdentityModel(S3Model):
                                   Field("ia_name", label = T("Issuing Authority")),
                                   #Field("ia_subdivision"), # Name of issuing authority subdivision
                                   #Field("ia_code"), # Code of issuing authority (if any)
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Identity")
@@ -1944,8 +1943,8 @@ class S3PersonEducationModel(S3Model):
                                   Field("year", label=T("Year")),
                                   Field("major", label=T("Major")),
                                   Field("grade", label=T("Grade")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Educational Achievements")
@@ -1974,7 +1973,7 @@ class S3PersonEducationModel(S3Model):
                                     "institute",
                                    ],
                       orderby = ~table.year,
-                      sortby = [[1, 'desc']])
+                      sortby = [[1, "desc"]])
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -2015,7 +2014,7 @@ class S3SavedSearch(S3Model):
                                   person_id(label = T("Person"),
                                             ondelete="CASCADE",
                                             default = auth.s3_logged_in_person()),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
 
         # CRUD Strings
@@ -2196,7 +2195,7 @@ class S3PersonPresence(S3Model):
                                          default=False,
                                          readable = False,
                                          writable = False),
-                                   *s3.meta_fields())
+                                   *s3_meta_fields())
 
         # CRUD Strings
         ADD_LOG_ENTRY = T("Add Log Entry")
@@ -2466,7 +2465,7 @@ class S3PersonDescription(S3Model):
                                         readable=False,
                                         writable=False),
                                   location_id(label=T("Last known location")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_NOTE = T("New Entry")
@@ -2698,8 +2697,8 @@ class S3PersonDescription(S3Model):
                                   # Other details
                                   Field("other_details", "text"),
 
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # Field configuration
         table.height_cm.comment = DIV(DIV(_class="tooltip",

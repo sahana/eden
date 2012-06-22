@@ -94,8 +94,8 @@ class S3PatientModel(S3Model):
                                         requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                         widget = S3DateWidget()
                                        ),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_PATIENT = T("New Patient")
@@ -144,8 +144,8 @@ class S3PatientModel(S3Model):
                                             requires=IS_ADD_PERSON_WIDGET(),
                                             label=T("Accompanying Relative"),
                                             comment=None),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_RELATIVE = T("New Relative")
@@ -184,8 +184,8 @@ class S3PatientModel(S3Model):
                                   Field("phone",
                                         requires=IS_NULL_OR(s3_phone_requires),
                                         label=T("Home Phone Number")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_HOME = T("New Home")

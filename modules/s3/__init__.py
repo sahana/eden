@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Framework Extensions for web2py
+"""
+    S3 Framework Extensions for web2py
 
     This package is loaded in models/000_1st_run.py as "s3base",
     this namespace can be used to access all S3 classes, e.g.::
@@ -40,7 +41,6 @@
 # under the s3base namespace:
 
 # Basic Tools
-from s3tools import *
 from s3navigation import *
 
 # Model helpers

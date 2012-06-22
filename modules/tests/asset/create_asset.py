@@ -51,7 +51,7 @@ class CreateAsset(SeleniumUnitTest):
         
         self.create("asset_asset", 
                     [( "number",
-                       "WS-100-17"),
+                       "WS_100_17"),
                      ( "item_id",
                        "Blankets",
                        "autocomplete"),
@@ -62,7 +62,7 @@ class CreateAsset(SeleniumUnitTest):
                      ( "purchase_date",
                        today ),
                      ( "purchase_price",
-                       "8.50"),
+                       "8"),
                      ( "purchase_currency",
                        "USD",
                        "option"),

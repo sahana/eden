@@ -32,11 +32,11 @@ from selenium.common.exceptions import NoSuchElementException
 from s3 import s3_debug
 from helper import InvTestFunctions
 
-class InvSendReceiveItem(InvTestFunctions):
+class SendReceiveItem(InvTestFunctions):
 
     """
             Inventory Test - Send-Receive Workflow (Send-Receive items)
-            
+            @Case: INV003
             @param items: This test Send-Receive a specific item to another party.
         This test assume that regression/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
@@ -104,18 +104,18 @@ class InvSendReceiveItem(InvTestFunctions):
                       ],
                      ]
         # Create the send record
-        send_result = self.helper_inv_send(user, send_data)
-        send_id = self.helper_inv_send_get_id(send_result)
-        send_ref= self.helper_inv_send_get_ref(send_result)
+        send_result = self.send(user, send_data)
+        send_id = self.send_get_id(send_result)
+        send_ref= self.send_get_ref(send_result)
         # Add the items to the send record
         cnt = 0
         for data in item_data:
-            item_result = self.helper_inv_track_send_item(user, send_id, data)
+            item_result = self.track_send_item(user, send_id, data)
             recv_data[cnt].append(item_result["after"].records[0])
             cnt += 1
         # Send the shipment
-        self.helper_inv_send_shipment(user, send_id)
+        self.send_shipment(user, send_id)
         # Receive the shipment
-        self.helper_inv_recv_sent_shipment(method, user, send_ref, recv_data)
+        self.recv_sent_shipment(method, user, send_ref, recv_data)
 
 # END =========================================================================

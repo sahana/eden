@@ -99,7 +99,6 @@ class S3AssetModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -120,11 +119,11 @@ class S3AssetModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         #--------------------------------------------------------------------------
@@ -182,7 +181,7 @@ class S3AssetModel(S3Model):
                              Field("purchase_price", "double",
                                    default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             currency_type("purchase_currency"),
+                             s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,
                                          writable=False),
@@ -192,7 +191,7 @@ class S3AssetModel(S3Model):
                                        writable=False,
                                        comment=self.pr_person_comment(child="assigned_to_id")),
                              comments(),
-                             *(s3.address_fields() + meta_fields()))
+                             *(s3_address_fields() + meta_fields()))
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
@@ -601,7 +600,7 @@ $(document).ready(function() {
                 asset_tracker.set_base_location(tracker(s3db.org_site,
                                                         vars.site_id))
                 # Populate the address fields
-                s3.address_update(atable, asset_id)
+                s3_address_update(atable, asset_id)
             if status == ASSET_LOG_ASSIGN:
                 if type == "person":#
                     if vars.check_in_to_person:
@@ -963,7 +962,7 @@ def asset_controller():
     # Pre-process
     def prep(r):
         if r.interactive:
-            s3.address_hide(r.table)
+            s3_address_hide(r.table)
         if r.component_name == "log":
             s3db.asset_log_prep(r)
             #if r.method == "update":

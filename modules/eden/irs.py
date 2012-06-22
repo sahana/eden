@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden IRS Model
+""" Sahana Eden Incident Reporting Model
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -59,7 +59,7 @@ class S3IRSModel(S3Model):
         add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         set_method = self.set_method
         super_link = self.super_link
 
@@ -326,8 +326,8 @@ class S3IRSModel(S3Model):
                                    represent = lambda closed: \
                                          (T("No"),
                                           T("Yes"))[closed == True]),
-                             s3.comments(),
-                             *(s3.lx_fields() + meta_fields()))
+                             s3_comments(),
+                             *(s3_lx_fields() + meta_fields()))
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
         s3.crud_strings[tablename] = Storage(
@@ -518,7 +518,7 @@ class S3IRSModel(S3Model):
 
         configure("irs_ireport",
                   create_onaccept=self.ireport_onaccept,
-                  onvalidation=s3.lx_onvalidation,
+                  onvalidation=s3_lx_onvalidation,
                   create_next=create_next,
                   update_next=URL(args=["[id]", "update"])
                   )
@@ -529,8 +529,8 @@ class S3IRSModel(S3Model):
         table = define_table(tablename,
                              ireport_id(),
                              self.pr_person_id(),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -990,7 +990,7 @@ class S3IRSResponseModel(S3Model):
                                         represent = lambda incident_commander: \
                                                 (T("No"),
                                                  T("Yes"))[incident_commander == True]),
-                                 *s3.meta_fields())
+                                 *s3_meta_fields())
 
         if not current.deployment_settings.has_module("vehicle"):
             return None
@@ -1017,8 +1017,8 @@ class S3IRSResponseModel(S3Model):
                                         # @ToDo: Close all assignments when Incident closed
                                         readable=False,
                                         writable=False),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # Field options
         table.site_id.label = T("Fire Station")
@@ -1049,7 +1049,7 @@ class S3IRSResponseModel(S3Model):
                                         # @ToDo: Close all assignments when Incident closed
                                         readable=False,
                                         writable=False),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3

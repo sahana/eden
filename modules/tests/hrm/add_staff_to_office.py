@@ -40,18 +40,19 @@ class AddStaffToOffice(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         
-        browser = self.browser
-        homepage()
-        browser.find_element_by_xpath("//div[@id='facility_box']/a[4]/div").click()
-        browser.find_element_by_xpath("(//a[contains(text(),'Open')])[3]").click()
-        browser.find_element_by_link_text("Staff").click()
-        browser.find_element_by_id("show-add-btn").click()
-        browser.find_element_by_id("select_from_registry").click()
-        browser.find_element_by_id("dummy_hrm_human_resource_person_id").clear()
-        w_autocomplete("Robe",
-                       "hrm_human_resource_person_id",
-                       "Robert James Lemon",
-                       False)
-        browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_css_selector("span.S3menulogo").click()
-        browser.find_element_by_link_text("Home").click()
+        import datetime
+        from dateutil.relativedelta import relativedelta
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        
+        self.login(account="admin", nexturl="org/office/15/human_resource")
+        self.browser.find_element_by_id("show-add-btn").click()
+        self.browser.find_element_by_id("select_from_registry").click()
+        
+        
+        self.create("hrm_human_resource", 
+                    [
+                     ( "person_id",
+                       "Liliana Otilia",
+                       "autocomplete")
+                     ]
+                     )

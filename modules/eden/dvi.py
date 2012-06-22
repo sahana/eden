@@ -112,7 +112,7 @@ class S3DVIModel(S3Model):
                                         label = T("Task Status"),
                                         represent = lambda opt: \
                                                     task_status.get(opt, UNKNOWN_OPT)),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -163,7 +163,7 @@ class S3DVIModel(S3Model):
                                 organisation_id(),
                                 Field("description"),
                                 location_id(),
-                                *s3.meta_fields())
+                                *s3_meta_fields())
 
         # Reusable Field
         morgue_id = S3ReusableField("morgue_id", table,
@@ -229,7 +229,7 @@ class S3DVIModel(S3Model):
                                   pr_gender(label=T("Apparent Gender")),
                                   pr_age_group(label=T("Apparent Age")),
                                   location_id(label=T("Place of Recovery")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -297,7 +297,7 @@ class S3DVIModel(S3Model):
                                                  label = T("DNA Profiling")),
                                   checklist_item("dental",
                                                  label = T("Dental Examination")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         CREATE_CHECKLIST = T("Create Checklist")
@@ -329,7 +329,7 @@ class S3DVIModel(S3Model):
                                   Field("footwear", "text"),  # @todo: elaborate
                                   Field("watch", "text"),     # @todo: elaborate
                                   Field("other", "text"),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         ADD_PERSONAL_EFFECTS = T("Add Personal Effects")
@@ -393,7 +393,7 @@ class S3DVIModel(S3Model):
                                         represent = lambda opt: \
                                                     dvi_id_methods.get(opt, UNKNOWN_OPT)),
                                   Field("comment", "text"),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(

@@ -64,7 +64,6 @@ class S3ProcurementModel(S3Model):
         db = current.db
         s3 = current.response.s3
 
-        currency_type = s3.currency_type
         item_id = self.supply_item_entity_id
         supply_item_id = self.supply_item_id
         item_pack_id = self.supply_item_pack_id
@@ -126,8 +125,8 @@ class S3ProcurementModel(S3Model):
                                         default = 0,
                                         ),
                                   # @ToDo: Add estimated shipping costs
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         s3.crud_strings[tablename] = Storage(
@@ -183,10 +182,10 @@ class S3ProcurementModel(S3Model):
                                         label = T("Quantity"),
                                         ),
                                   # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  currency_type("currency",
-                                                readable=False,
-                                                writable=False
-                                            ),
+                                  s3_currency(
+                                              readable=False,
+                                              writable=False
+                                              ),
                                   Field("pack_value",
                                         "double",
                                         readable=False,
@@ -195,8 +194,8 @@ class S3ProcurementModel(S3Model):
                                   #Field("pack_quantity",
                                   #      "double",
                                   #      compute = record_pack_quantity), # defined in supply
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         s3.crud_strings[tablename] = Storage(
@@ -331,8 +330,8 @@ class S3SupplierModel(S3Model):
                                   Field("website", label = T("Website"),
                                         requires = IS_NULL_OR(IS_URL()),
                                         represent = s3_url_represent),
-                                  s3.comments(),
-                                  *(s3.address_fields() + s3.meta_fields()))
+                                  s3_comments(),
+                                  *(s3_address_fields() + s3_meta_fields()))
 
         # CRUD strings
         s3.crud_strings[tablename] = Storage(

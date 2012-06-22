@@ -17,10 +17,6 @@ s3.formats = Storage()
 #    http://code.google.com/p/selenium/issues/detail?id=1604
 s3.interactive = settings.get_ui_confirm()
 
-# Use session for persistent per-user variables (beware of a user having multiple tabs open!)
-if not session.s3:
-    session.s3 = Storage()
-
 s3.base_url = "%s/%s" % (settings.get_base_public_url(),
                          appname)
 s3.download_url = "%s/default/download" % s3.base_url
@@ -28,116 +24,13 @@ s3.download_url = "%s/default/download" % s3.base_url
 ###############
 # Client tests
 ###############
-def s3_is_mobile_client(request):
-    """
-        Simple UA Test whether client is a mobile device
-    """
 
-    if request.env.http_x_wap_profile or request.env.http_profile:
-        return True
-    if request.env.http_accept and \
-       request.env.http_accept.find("text/vnd.wap.wml") > 0:
-        return True
-    keys = ["iphone", "ipod", "android", "opera mini", "blackberry", "palm",
-            "windows ce", "iemobile", "smartphone", "medi", "sk-0", "vk-v",
-            "aptu", "xda-", "mtv ", "v750", "p800", "opwv", "send", "xda2",
-            "sage", "t618", "qwap", "veri", "t610", "tcl-", "vx60", "vx61",
-            "lg-k", "lg-l", "lg-m", "lg-o", "lg-a", "lg-b", "lg-c", "xdag",
-            "lg-f", "lg-g", "sl45", "emul", "lg-p", "lg-s", "lg-t", "lg-u",
-            "lg-w", "6590", "t250", "qc21", "ig01", "port", "m1-w", "770s",
-            "n710", "ez60", "mt50", "g1 u", "vk40", "bird", "tagt", "pose",
-            "jemu", "beck", "go.w", "jata", "gene", "smar", "g-mo", "o2-x",
-            "htc_", "hei-", "fake", "qc-7", "smal", "htcp", "htcs", "craw",
-            "htct", "aste", "htca", "htcg", "teli", "telm", "kgt", "mwbp",
-            "kwc-", "owg1", "htc ", "kgt/", "htc-", "benq", "slid", "qc60",
-            "dmob", "blac", "smt5", "nec-", "sec-", "sec1", "sec0", "fetc",
-            "spv ", "mcca", "nem-", "spv-", "o2im", "m50/", "ts70", "arch",
-            "qtek", "opti", "devi", "winw", "rove", "winc", "talk", "pant",
-            "netf", "pana", "esl8", "pand", "vite", "v400", "whit", "scoo",
-            "good", "nzph", "mtp1", "doco", "raks", "wonu", "cmd-", "cell",
-            "mode", "im1k", "modo", "lg-d", "idea", "jigs", "bumb", "sany",
-            "vulc", "vx70", "psio", "fly_", "mate", "pock", "cdm-", "fly-",
-            "i230", "lge-", "lge/", "argo", "qc32", "n701", "n700", "mc21",
-            "n500", "midp", "t-mo", "airn", "bw-u", "iac", "bw-n", "lg g",
-            "erk0", "sony", "alav", "503i", "pt-g", "au-m", "treo", "ipaq",
-            "dang", "seri", "mywa", "eml2", "smb3", "brvw", "sgh-", "maxo",
-            "pg-c", "qci-", "vx85", "vx83", "vx80", "vx81", "pg-8", "pg-6",
-            "phil", "pg-1", "pg-2", "pg-3", "ds12", "scp-", "dc-s", "brew",
-            "hipt", "kddi", "qc07", "elai", "802s", "506i", "dica", "mo01",
-            "mo02", "avan", "kyoc", "ikom", "siem", "kyok", "dopo", "g560",
-            "i-ma", "6310", "sie-", "grad", "ibro", "sy01", "nok6", "el49",
-            "rim9", "upsi", "inno", "wap-", "sc01", "ds-d", "aur ", "comp",
-            "wapp", "wapr", "waps", "wapt", "wapu", "wapv", "wapy", "newg",
-            "wapa", "wapi", "wapj", "wapm", "hutc", "lg/u", "yas-", "hita",
-            "lg/l", "lg/k", "i-go", "4thp", "bell", "502i", "zeto", "ez40",
-            "java", "n300", "n302", "mmef", "pn-2", "newt", "1207", "sdk/",
-            "gf-5", "bilb", "zte-", "maui", "qc-3", "qc-2", "blaz", "r600",
-            "hp i", "qc-5", "moto", "cond", "motv", "virg", "ccwa", "audi",
-            "shar", "i-20", "samm", "sama", "sams", "sch-", "mot ", "http",
-            "505i", "mot-", "n502", "topl", "n505", "mobi", "3gso", "wmlb",
-            "ezwa", "qc12", "abac", "tdg-", "neon", "mio8", "sp01", "rozo",
-            "vx98", "dait", "t600", "anyw", "tx-9", "sava", "m-cr", "tsm-",
-            "mioa", "tsm5", "klon", "capi", "tsm3", "hcit", "libw", "lg50",
-            "mc01", "amoi", "lg54", "ez70", "se47", "n203", "vk52", "vk53",
-            "vk50", "webc", "haie", "semc", "grun", "play", "palm", "a wa",
-            "anny", "prox", "o2 x", "ezze", "symb", "hs-c", "pg13", "mits",
-            "kpt ", "qa-a", "501i", "pdxg", "iris", "pluc", "acoo", "soft",
-            "hpip", "iac/", "iac-", "aus ", "s55/", "vx53", "vx52", "chtm",
-            "meri", "merc", "your", "huaw", "cldc", "voda", "smit", "x700",
-            "mozz", "lexi", "up.b", "sph-", "keji", "jbro", "wig ", "attw",
-            "pire", "r380", "lynx", "anex", "vm40", "hd-m", "504i", "w3c ",
-            "c55/", "w3c-", "upg1", "t218", "tosh", "acer", "hd-t", "eric",
-            "hd-p", "noki", "acs-", "dbte", "n202", "tim-", "alco", "ezos",
-            "dall", "leno", "alca", "asus", "m3ga", "utst", "aiko", "n102",
-            "n101", "n100", "oran"]
-    ua = (request.env.http_user_agent or "").lower()
-    if [key for key in keys if key in ua]:
-        return True
-    return False
-
-# Store in session
+# Check whether browser is Mobile & store result in session
 # - commented-out until we make use of it
 #if session.s3.mobile is None:
-#    session.s3.mobile = s3_is_mobile_client(request)
-
-def s3_populate_browser_compatibility(request):
-    """
-        Use WURFL for browser compatibility detection
-
-        @ToDo: define a list of features to store
-    """
-
-    features = Storage(
-        #category = ["list","of","features","to","store"]
-    )
-
-    try:
-        from pywurfl.algorithms import TwoStepAnalysis
-    except ImportError:
-        s3_debug("pywurfl python module has not been installed, browser compatibility listing will not be populated. Download pywurfl from http://pypi.python.org/pypi/pywurfl/")
-        return False
-    import wurfl
-    device = wurfl.devices.select_ua(unicode(request.env.http_user_agent),
-                                     search=TwoStepAnalysis(wurfl.devices))
-
-    browser = Storage()
-    #for feature in device:
-        #if feature[0] not in category_list:
-            #category_list.append(feature[0])
-    #for category in features:
-        #if category in
-        #browser[category] = Storage()
-    for feature in device:
-        if feature[0] in features and \
-           feature[1] in features[feature[0]]:
-            browser[feature[0]][feature[1]] = feature[2]
-
-    return browser
-
-# Store in session
-# - commented-out until we make use of it
+#    session.s3.mobile = s3base.s3_is_mobile_client(request)
 #if session.s3.browser is None:
-#    session.s3.browser = s3_populate_browser_compatibility(request)
+#    session.s3.browser = s3base.s3_populate_browser_compatibility(request)
 
 ##################
 # Global variables
@@ -176,10 +69,6 @@ s3mgr.LABEL["READ"] = READ
 s3mgr.LABEL["UPDATE"] = UPDATE
 s3mgr.LABEL["DELETE"] = DELETE
 s3mgr.LABEL["COPY"] = COPY
-
-# Data Export Settings
-ROWSPERPAGE = 20
-PRETTY_PRINT = False
 
 # To get included in <HEAD>
 s3.stylesheets = []
@@ -242,34 +131,15 @@ else:
     s3.rtl = False
 
 ######
-# Mail
-######
-
-# These settings could be made configurable as part of the Messaging Module
-# - however also need to be used by Auth (order issues), DB calls are overheads
-# - as easy for admin to edit source here as to edit DB (although an admin panel can be nice)
-mail.settings.server = settings.get_mail_server()
-mail.settings.tls = settings.get_mail_server_tls()
-mail_server_login = settings.get_mail_server_login()
-if mail_server_login:
-    mail.settings.login = mail_server_login
-mail.settings.sender = settings.get_mail_sender()
-
-######
 # Auth
 ######
-_messages = auth.messages
 _settings = auth.settings
 _settings.lock_keys = False
 
 _settings.password_min_length = 4
 _settings.expiration = 28800  # seconds
 
-#auth.settings.username_field = True
-_settings.hmac_key = settings.get_auth_hmac_key()
-auth.define_tables(migrate=migrate,
-                   fake_migrate=fake_migrate)
-
+# Authentication options
 _settings.facebook = settings.get_auth_facebook()
 _settings.google = settings.get_auth_google()
 
@@ -285,22 +155,42 @@ if settings.get_auth_openid():
     except ImportError:
         session.warning = T("Library support not available for OpenID")
 
+# Allow use of LDAP accounts for login
+# NB Currently this means that change password should be disabled:
+#_settings.actions_disabled.append("change_password")
+# (NB These are not automatically added to PR or to Authenticated role since they enter via the login() method not register())
+#from gluon.contrib.login_methods.ldap_auth import ldap_auth
+# Require even alternate login methods to register users 1st
+#_settings.alternate_requires_registration = True
+# Active Directory
+#_settings.login_methods.append(ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org"))
+# or if not wanting local users at all (no passwords saved within DB):
+#_settings.login_methods = [ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org")]
+# Domino
+#_settings.login_methods.append(ldap_auth(mode="domino", server="domino.domain.org"))
+# OpenLDAP
+#_settings.login_methods.append(ldap_auth(server="directory.sahanafoundation.org", base_dn="ou=users,dc=sahanafoundation,dc=org"))
+# Allow use of Email accounts for login
+#_settings.login_methods.append(email_auth("smtp.gmail.com:587", "@gmail.com"))
+
 # Require captcha verification for registration
 #auth.settings.captcha = RECAPTCHA(request, public_key="PUBLIC_KEY", private_key="PRIVATE_KEY")
 # Require Email Verification
 _settings.registration_requires_verification = settings.get_auth_registration_requires_verification()
-# Email settings for registration verification
-_settings.mailer = mail
+_settings.on_failed_authorization = URL(c="default", f="user",
+                                        args="not_authorized")
+_settings.reset_password_requires_verification = True
+_settings.verify_email_next = URL(c="default", f="index")
+# Notify Approver of new pending user registration. Action may be required.
+_settings.verify_email_onaccept = auth.s3_verify_email_onaccept
+
+# Auth Messages
+_messages = auth.messages
 _messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
     dict(url="%s/default/user/verify_email/" % s3.base_url,
          key="%(key)s")
-_settings.on_failed_authorization = URL(c="default", f="user",
-                                        args="not_authorized")
-
 _messages.verify_email_subject = "%(system_name)s - Verify Email" % \
     {"system_name" : settings.get_system_name()}
-
-_settings.reset_password_requires_verification = True
 _messages.reset_password = "%s %s/default/user/reset_password/%s %s" % \
     (T("Click on the link"),
      s3.base_url,
@@ -313,10 +203,6 @@ _messages.registration_pending = "Registration is still pending approval from Ap
     settings.get_mail_approver()
 _messages.registration_pending_approval = "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s).You will get a notification by email when your account is activated." % \
     settings.get_mail_approver()
-_settings.verify_email_next = URL(c="default", f="index")
-
-# Notify Approver of new pending user registration. Action may be required.
-_settings.verify_email_onaccept = auth.s3_verify_email_onaccept
 
 _messages["approve_user"] = \
 """Your action is required to approve a New User for %(system_name)s:
@@ -337,23 +223,6 @@ No action is required.""" \
 """%(first_name)s %(last_name)s
 %(email)s""")
 
-# Allow use of LDAP accounts for login
-# NB Currently this means that change password should be disabled:
-#_settings.actions_disabled.append("change_password")
-# (NB These are not automatically added to PR or to Authenticated role since they enter via the login() method not register())
-#from gluon.contrib.login_methods.ldap_auth import ldap_auth
-# Require even alternate login methods to register users 1st
-#_settings.alternate_requires_registration = True
-# Active Directory
-#_settings.login_methods.append(ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org"))
-# or if not wanting local users at all (no passwords saved within DB):
-#_settings.login_methods = [ldap_auth(mode="ad", server="dc.domain.org", base_dn="ou=Users,dc=domain,dc=org")]
-# Domino
-#_settings.login_methods.append(ldap_auth(mode="domino", server="domino.domain.org"))
-# OpenLDAP
-#_settings.login_methods.append(ldap_auth(server="directory.sahanafoundation.org", base_dn="ou=users,dc=sahanafoundation,dc=org"))
-# Allow use of Email accounts for login
-#_settings.login_methods.append(email_auth("smtp.gmail.com:587", "@gmail.com"))
 # We don't wish to clutter the groups list with 1 per user.
 _settings.create_user_groups = False
 # We need to allow basic logins for Webservices
@@ -380,27 +249,35 @@ else:
 
 _settings.lock_keys = True
 
+######
+# Mail
+######
+
+# These settings could be made configurable as part of the Messaging Module
+# - however also need to be used by Auth (order issues), DB calls are overheads
+# - as easy for admin to edit source here as to edit DB (although an admin panel can be nice)
+mail.settings.server = settings.get_mail_server()
+mail.settings.tls = settings.get_mail_server_tls()
+mail_server_login = settings.get_mail_server_login()
+if mail_server_login:
+    mail.settings.login = mail_server_login
+mail.settings.sender = settings.get_mail_sender()
+# Email settings for registration verification
+_settings.mailer = mail
+
 #########
 # Session
 #########
-def s3_sessions():
-    """
-        Extend session to support multiple flash classes
-    """
 
-    response.error = session.error
-    response.confirmation = session.confirmation
-    response.information = session.information
-    response.warning = session.warning
-    session.error = []
-    session.confirmation = []
-    session.information = []
-    session.warning = []
-
-    return
-
-# Extend the session
-s3_sessions()
+# Custom Notifications
+response.error = session.error
+response.confirmation = session.confirmation
+response.information = session.information
+response.warning = session.warning
+session.error = []
+session.confirmation = []
+session.information = []
+session.warning = []
 
 # Shortcuts for system role IDs, see modules/s3aaa.py/AuthS3
 system_roles = auth.get_system_roles()
@@ -413,14 +290,13 @@ ORG_ADMIN = system_roles.ORG_ADMIN
 
 if s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py
-    s3.toolbar = s3_dev_toolbar
+    s3.toolbar = s3base.s3_dev_toolbar
 
 ######
 # CRUD
 ######
 
 def s3_formstyle(id, label, widget, comment, hidden=False):
-
     """
         Provide the Sahana Eden Form Style
 
@@ -444,15 +320,15 @@ def s3_formstyle(id, label, widget, comment, hidden=False):
 
 s3_formstyle_mobile = s3_formstyle
 
-s3.crud.formstyle = s3_formstyle
-s3.crud.submit_button = T("Save")
+_crud = s3.crud
+_crud.formstyle = s3_formstyle
+_crud.submit_button = T("Save")
 # Optional class for Submit buttons
-#s3.crud.submit_style = "submit-button"
-s3.crud.confirm_delete = T("Do you really want to delete these records?")
+#_crud.submit_style = "submit-button"
+_crud.confirm_delete = T("Do you really want to delete these records?")
 
-s3.crud.archive_not_delete = settings.get_security_archive_not_delete()
-s3.crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
-#s3.navigate_away_confirm = s3.crud.navigate_away_confirm
+_crud.archive_not_delete = settings.get_security_archive_not_delete()
+_crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 
 # Web2py Crud
 
@@ -526,7 +402,6 @@ s3_menu_dict = {}
 ##########
 # Messages
 ##########
-from gluon.storage import Messages
 s3.messages = Messages(T)
 system_name = settings.get_system_name_short()
 s3.messages.confirmation_email_subject = "%s %s" % (system_name,
@@ -538,7 +413,28 @@ s3.messages.confirmation_email = "%s %s %s %s. %s." % (T("Welcome to the"),
                                                        T("Thanks for your assistance"))
 
 # Valid Extensions for Image Upload fields
-IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
-s3.IMAGE_EXTENSIONS = IMAGE_EXTENSIONS
+s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
+
+# Default CRUD strings
+ADD_RECORD = T("Add Record")
+s3.crud_strings = Storage(
+    title_create = ADD_RECORD,
+    title_display = T("Record Details"),
+    title_list = T("Records"),
+    title_update = T("Edit Record"),
+    title_search = T("Search Records"),
+    title_map = T("Map"),
+    subtitle_create = T("Add New Record"),
+    label_list_button = T("List Records"),
+    label_create_button = ADD_RECORD,
+    label_delete_button = T("Delete Record"),
+    msg_record_created = T("Record added"),
+    msg_record_modified = T("Record updated"),
+    msg_record_deleted = T("Record deleted"),
+    msg_list_empty = T("No Records currently available"),
+    msg_match = T("Matching Records"),
+    msg_no_match = T("No Matching Records"),
+    name_nice = T("Record"),
+    name_nice_plural = T("Records"))
 
 # END =========================================================================

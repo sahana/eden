@@ -177,6 +177,7 @@ def upload_bulk():
         # onaccept callback
         onaccept = s3mgr.model.get_config(tablename, "create_onaccept",
                    s3mgr.model.get_config(tablename, "onaccept"))
+        from gluon.tools import callback
         callback(onaccept, form, tablename=tablename)
     else:
         error_msg = ""

@@ -77,7 +77,7 @@ class SyncDataModel(S3Model):
                              Field("proxy",
                                    label=T("Proxy Server URL"),
                                    requires=IS_EMPTY_OR(IS_URL(mode="generic"))),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.uuid.readable = True
@@ -146,7 +146,7 @@ class SyncDataModel(S3Model):
                              Field("accept_push", "boolean",
                                    default=False,
                                    label=T("Accept Push")),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.uuid.label = "UUID"
@@ -320,7 +320,7 @@ class SyncDataModel(S3Model):
                                    default = sync_policies.NEWER,
                                    label = T("Conflict Policy"),
                                    represent = sync_policy_represent),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.resource_name.comment = DIV(_class="tooltip",
@@ -439,7 +439,7 @@ class SyncDataModel(S3Model):
                                    label=T("Remote Error"),
                                    represent=lambda opt: opt and T("yes") or ("no")),
                              Field("message", "text"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(

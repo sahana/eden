@@ -111,7 +111,7 @@ def hospital():
             if r.method and r.method != "read":
                 # Don't want to see in Create forms
                 # inc list_create (list_fields over-rides)
-                #address_hide(r.table)   # Once separate fields have been migrated from location_id
+                #s3base.s3_address_hide(r.table)   # Once separate fields have been migrated from location_id
                 pass
 
             if r.component:
@@ -123,7 +123,7 @@ def hospital():
 
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this hospital
-                    s3_filter_staff(r)
+                    s3base.s3_filter_staff(r)
                     # Cascade the organisation_id from the hospital to the staff
                     db.hrm_human_resource.organisation_id.default = r.record.organisation_id
                     db.hrm_human_resource.organisation_id.writable = False

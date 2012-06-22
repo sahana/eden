@@ -575,7 +575,7 @@ def person():
             configure("hrm_human_resource",
                       insertable = False)
             if not r.component_id or r.method in ("create", "update"):
-                address_hide(s3db.pr_address)
+                s3base.s3_address_hide(s3db.pr_address)
         return True
     s3.prep = prep
 
