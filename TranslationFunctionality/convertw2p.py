@@ -33,7 +33,16 @@ def convert_to_w2p( csvfiles, w2pfilename, option):
 		data.append( [ d[k][0] , k ,d[k][1] ])
 
 	csvfilename = w2pfilename[:-2] + "csv"
-        parsecsv.write_csvfile( csvfilename , data)		       
+        parsecsv.write_csvfile( csvfilename , data)
+
+	pofilename = w2pfilename[:-2] + "po"
+	call(["csv2po","-i",csvfilename,"-o",pofilename])
+
+	call(["po2web2py","-i",pofilename,"-o",w2pfilename])
+
+	call(["rm",pofilename,csvfilename])
+
+
 
 
 def main():
