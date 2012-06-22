@@ -57,56 +57,59 @@ function s3_tb_refresh() {
         var child_resource = child;
     }
     s3_debug('child_resource', child_resource);
-    var selector;
-    if ( child_resource == 'item_id' ) {
-        selector = self.parent.$('#supply_catalog_item_item_id');
-        if ( selector != undefined) {
-            // S3SearchAutocompleteWidget
-            //caller = 'supply_catalog_item_item_id';
-        }
-    }
 
-    // @ToDo: Make this less fragile by passing these fields as separate vars?
-    var parent_field = caller.replace('_' + child_resource, '');
-    s3_debug('parent_field', parent_field);
-    var parent_module = parent_field.replace(/_.*/, '');
+    var parent = $_GET['parent'];
+    if (typeof parent === 'undefined') {
+        // @ToDo: Make this less fragile by passing these fields as separate vars?
+        var parent_field = caller.replace('_' + child_resource, '');
+        s3_debug('parent_field', parent_field);
+        var parent_module = parent_field.replace(/_.*/, '');
 
-    // Find the parent resource (fixed for components)
-    var parent_resource = parent_field.replace(parent_module + '_', '');
-    var parent_url = new String(self.parent.location);
-    var rel_url = parent_url.replace(re, '');
-    var args = rel_url.split('?')[0].split('/');
-    var parent_component = null;
-    var caller_prefix = args[0]
-    var parent_function = args[1]
-    if (args.length > 2) {
-        if (args[2].match(/\d*/) != null) {
-            if (args.length > 3) {
-                parent_component = args[3];
+        // Find the parent resource (fixed for components)
+        var parent_resource = parent_field.replace(parent_module + '_', '');
+        var parent_url = new String(self.parent.location);
+        var rel_url = parent_url.replace(re, '');
+        var args = rel_url.split('?')[0].split('/');
+        var parent_component = null;
+        var caller_prefix = args[0];
+        var parent_function = args[1];
+        if (args.length > 2) {
+            if (args[2].match(/\d*/) != null) {
+                if (args.length > 3) {
+                    parent_component = args[3];
+                }
+            } else {
+                parent_component = args[2];
             }
-        } else {
-            parent_component = args[2];
         }
+        if ((parent_component != null) && (parent_resource != parent_function) && (parent_resource == parent_component)) {
+            parent_resource = parent_function + '/' + parent_component;
+        }
+    } else {
+        // Use manual override
+        var parent_resource = parent;
+        var parent_url = new String(self.parent.location);
+        var rel_url = parent_url.replace(re, '');
+        var args = rel_url.split('?')[0].split('/');
+        var caller_prefix = args[0];
     }
-    if ((parent_component != null) && (parent_resource != parent_function) && (parent_resource == parent_component)) {
-        parent_resource = parent_function + '/' + parent_component;
-    }
+    s3_debug('parent_resource', parent_resource);
+    s3_debug('caller_prefix', caller_prefix);
 
     // URL to retrieve the Options list for the field of the master resource
     var url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
-    if ( selector === undefined ) {
-        var selector = self.parent.$('#' + caller);
-        var dummy = self.parent.$('#dummy_' + caller);
-        var has_dummy = (dummy.val() != undefined);
-        var options = self.parent.$('#' + caller + ' >option')
-        var dropdown = options.length
-    } else {
-        // S3SearchAutocompleteWidget
-        var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
-        var has_dummy = (dummy.val() != undefined);
-        s3_debug('has_dummy', has_dummy);
-        var dropdown;
-    }
+
+    // Dropdown or Autocomplete
+    var selector = self.parent.$('#' + caller);
+    s3_debug('selector', selector);
+    var dummy = self.parent.$('#dummy_' + caller);
+    var has_dummy = (dummy.val() != undefined);
+    s3_debug('has_dummy', has_dummy);
+    var options = self.parent.$('#' + caller + ' >option');
+    var dropdown = options.length;
+    /* S3SearchAutocompleteWidget should do something like this instead */
+    //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
+    //var has_dummy = (dummy.val() != undefined);
     if (dropdown) {
         var append = [];
     } else {
@@ -142,6 +145,7 @@ function s3_tb_refresh() {
             // Clean up the caller
             options.remove();
             selector.append(append.join('')).change();
+            selector.val(value_high).change();
         }
 
         // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html

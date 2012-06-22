@@ -143,6 +143,16 @@ button {
 .fcenter {
     float: center !important;
 }
+/* Clears - unused currently
+.cboth {
+    clear: both;
+}
+.cleft {
+    clear: left;
+}
+.cright {
+    clear: right;
+} */
 /* Text aligns */
 .tacenter {
     text-align: center !important;
@@ -870,6 +880,10 @@ div#table-container td.totals_header {
 }
 #list_formats a {
     padding: 1px;
+}
+/* msg_list_empty */
+.empty {
+    margin-top: 30px;
 }
 
 /* dataTables Styling */

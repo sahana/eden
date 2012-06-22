@@ -39,6 +39,7 @@ import re
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
 
@@ -74,6 +75,7 @@ class S3SupplyModel(S3Model):
              "supply_item_pack_id",
              "supply_kit_item",
              "supply_item_represent",
+             "supply_item_category_represent",
              "supply_item_add",
              "supply_item_duplicate_fields",
              "supply_item_pack_virtualfields",
@@ -201,6 +203,9 @@ class S3SupplyModel(S3Model):
         # =====================================================================
         # Item Category
         #
+        asset = settings.has_module("asset")
+        vehicle = settings.has_module("vehicle")
+
         tablename = "supply_item_category"
         table = define_table(tablename,
                              catalog_id(),
@@ -218,13 +223,13 @@ class S3SupplyModel(S3Model):
                                    ),
                              Field("can_be_asset", "boolean",
                                    default=True,
-                                   readable=settings.has_module("asset"),
-                                   writable=settings.has_module("asset"),
+                                   readable=asset,
+                                   writable=asset,
                                    label=T("Items in Category can be Assets")),
                              Field("is_vehicle", "boolean",
                                    default=False,
-                                   readable=settings.has_module("vehicle"),
-                                   writable=settings.has_module("vehicle"),
+                                   readable=vehicle,
+                                   writable=vehicle,
                                    label=T("Items in Category are Vehicles")),
                              comments(),
                              *meta_fields())
@@ -249,7 +254,8 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         item_category_requires = IS_NULL_OR(IS_ONE_OF(db,
                                                     "supply_item_category.id",
-                                                    label = lambda v: self.item_category_represent(v,False),
+                                                    label = lambda v: \
+                                                        self.item_category_represent(v, False),
                                                     sort=True))
 
         item_category_comment = S3AddResourceLink(c="supply",
@@ -307,7 +313,7 @@ class S3SupplyModel(S3Model):
                                    notnull=True,
                                    default = "piece"),
                              # Needed to auto-create a catalog_item
-                             item_category_id("item_category_id"),
+                             item_category_id(),
                              brand_id(),
                              Field("kit", "boolean",
                                    default=False,
@@ -321,27 +327,32 @@ class S3SupplyModel(S3Model):
                              Field("weight",
                                    "double",
                                    label = T("Weight (kg)"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("length",
                                    "double",
                                    label = T("Length (m)"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("width",
                                    "double",
                                    label = T("Width (m)"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("height",
                                    "double",
                                    label = T("Height (m)"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              Field("volume",
                                    "double",
                                    label = T("Volume (m3)"),
-                                   represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
+                                   represent = lambda v, row=None: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
                              comments(),
@@ -435,6 +446,7 @@ class S3SupplyModel(S3Model):
 
         configure(tablename,
                   onaccept = self.supply_item_onaccept,
+                  orderby = table.name,
                   search_method = item_search)
 
         # Catalog Items as component of Items
@@ -854,6 +866,7 @@ S3FilterFieldChange({
                 supply_item_entity_id = item_id,
                 supply_item_pack_id = item_pack_id,
                 supply_item_represent = self.supply_item_represent,
+                supply_item_category_represent = self.item_category_represent,
                 supply_item_pack_virtualfields = supply_item_pack_virtualfields,
                 supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
@@ -930,12 +943,13 @@ S3FilterFieldChange({
         """
         """
 
-        db = current.db
-        s3db = current.s3db
-        cache=s3db.cache
-
         if not id:
             return current.messages.NONE
+
+        db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
+
         table = s3db.supply_item_category
 
         represent = ""
@@ -1145,32 +1159,32 @@ S3FilterFieldChange({
 
         db = current.db
         s3db = current.s3db
-        request = current.request
-        settings = current.deployment_settings
 
-        item_id = form.vars.id
+        vars = form.vars
+        item_id = vars.id
 
         if isinstance(form, SQLFORM):
             # Create a supply_catalog_item for items added via browser
-            table = s3db.supply_catalog_item
-
-            catalog_id = request.vars.catalog_id
-            ctable = s3db.supply_catalog
+            catalog_id = current.request.vars.catalog_id
             if not catalog_id:
                 # Default Catalog
-                catalog = db(ctable.name == settings.get_supply_catalog_default()
-                             ).select( ctable.id, limitby=(0, 1)).first()
+                default = current.deployment_settings.get_supply_catalog_default()
+                ctable = s3db.supply_catalog
+                query = (ctable.name == default)
+                catalog = db(query).select(ctable.id,
+                                           limitby=(0, 1)).first()
 
+            table = s3db.supply_catalog_item
             query = (table.item_id == item_id) & \
                     (table.deleted == False )
             if not db(query).count():
                 table.insert(catalog_id = catalog_id,
-                             item_category_id = form.vars.item_category_id,
+                             item_category_id = vars.item_category_id,
                              item_id = item_id,
                              )
 
         # Update UM
-        um = form.vars.um or s3db.supply_item.um.default
+        um = vars.um or s3db.supply_item.um.default
         table = s3db.supply_item_pack
         # Try to update the existing record
         query = (table.item_id == item_id) & \
@@ -1182,6 +1196,13 @@ S3FilterFieldChange({
                          name = um,
                          quantity = 1)
 
+        if vars.kit:
+            # Go to that tab afterwards
+            url = URL(args=["[id]", "kit_item"])
+            s3db.configure("supply_item",
+                           create_next=url,
+                           update_next=url,
+                           )
 
 # =============================================================================
 def item_um_from_name(name, um):
@@ -1618,20 +1639,24 @@ def supply_item_controller():
 
     s3db = current.s3db
 
-    if "vehicle" in current.request.get_vars:
-        # Limit the Categories to just those with vehicles in
-        field = s3db.supply_item.item_category_id
-        field.requires = IS_NULL_OR(IS_ONE_OF(current.db,
-                                              "supply_item_category.id",
-                                              "%(name)s",
-                                              sort=True,
-                                              filterby = "is_vehicle",
-                                              filter_opts = [True])
-                                            )
-
+    # Inventory Items need proper accountability so are edited through inv_adj
     s3db.configure("inv_inv_item",
                    listadd=False,
                    deletable=False)
+
+    def prep(r):
+        if r.component and r.component.name == "inv_item":
+            # Filter to just item packs for this Item
+            inv_item_pack_requires = IS_ONE_OF(current.db,
+                                               "supply_item_pack.id",
+                                               s3db.supply_item_pack_represent,
+                                               sort=True,
+                                               filterby = "item_id",
+                                               filter_opts = [r.record.id],
+                                               )
+            s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+        return True
+    current.response.s3.prep = prep
 
     return current.rest_controller("supply", "item",
                                    rheader=s3db.supply_item_rheader)

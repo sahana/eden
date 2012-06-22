@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import *
+from gluon import current
 from s3 import *
 from eden.layouts import *
 try:
@@ -36,7 +36,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [
-            homepage("project", name=T("Projects"))(),
+            homepage("project", name=current.T("Projects"))(),
         ]
 
     # -------------------------------------------------------------------------

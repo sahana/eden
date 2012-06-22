@@ -31,6 +31,12 @@ def create():
 def asset():
     """ RESTful CRUD controller """
 
+    # Use the 'item()' controller in this module to set options correctly
+    s3db.asset_asset.item_id.comment = S3AddResourceLink(f="item",
+        label=T("Add New Item"),
+        title=T("Item"),
+        tooltip=T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog."))
+
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()
 
@@ -38,12 +44,46 @@ def asset():
 def item():
     """ RESTful CRUD controller """
 
-    # Sort Alphabetically for the AJAX-pulled dropdown
-    s3mgr.configure("supply_item",
-                    orderby=s3db.supply_item.name)
+    # Filter to just Assets
+    table = s3db.supply_item
+    ctable = s3db.supply_item_category
+    s3.filter = (table.item_category_id == ctable.id) & \
+                (ctable.can_be_asset == True)
+
+    # Limit the Categories to just those with vehicles in
+    # - make category mandatory so that filter works
+    field = s3db.supply_item.item_category_id
+    field.requires = IS_ONE_OF(db,
+                               "supply_item_category.id",
+                               s3db.supply_item_category_represent,
+                               sort=True,
+                               filterby = "can_be_asset",
+                               filter_opts = [True]
+                               )
+                
+    field.comment = S3AddResourceLink(f="item_category",
+                                      label=T("Add Item Category"),
+                                      title=T("Item Category"),
+                                      tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
 
     # Defined in the Model for use from Multiple Controllers for unified menus
-    return supply_item_controller()
+    return s3db.supply_item_controller()
+
+# =============================================================================
+def item_category():
+    """ RESTful CRUD controller """
+
+    table = s3db.supply_item_category
+
+    # Filter to just Assets
+    s3.filter = (table.can_be_asset == True)
+
+    # Default to Assets
+    field = table.can_be_asset
+    field.readable = field.writable = False
+    field.default = True
+    
+    return s3_rest_controller("supply", "item_category")
 
 # END =========================================================================
 

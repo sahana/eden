@@ -1517,11 +1517,15 @@ class S3OptionsMenu(object):
         """ VEHICLE / Vehicle Tracking """
 
         return M(c="vehicle")(
-                    #M("Home", f="index"),
                     M("Vehicles", f="vehicle")(
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
+                        M("Search", m="search"),
+                    ),
+                    M("Vehicle Types", f="item")(
+                        M("New", m="create"),
+                        M("List All"),
                         M("Search", m="search"),
                     ),
                 )

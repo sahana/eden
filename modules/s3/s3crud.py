@@ -409,7 +409,8 @@ class S3CRUD(S3Method):
                 if subheadings:
                     self.insert_subheadings(item, self.tablename, subheadings)
             else:
-                item = crud_string(tablename, "msg_list_empty")
+                item = DIV(crud_string(tablename, "msg_list_empty"),
+                           _class="empty")
 
             # View
             if representation == "html":
@@ -936,15 +937,17 @@ class S3CRUD(S3Method):
                 # This is faster:
                 if available_records.select(self.table._id,
                                             limitby=(0, 1)).first():
-                    items = crud_string(self.tablename, "msg_no_match")
+                    items = DIV(crud_string(self.tablename, "msg_no_match"),
+                                _class="empty")
                 else:
-                    items = crud_string(self.tablename, "msg_list_empty")
+                    items = DIV(crud_string(self.tablename, "msg_list_empty"),
+                                _class="empty")
+                s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     #del output["subtitle"]
                     items = ""
-                    s3.no_formats = True
 
             # Update output
             output["items"] = items

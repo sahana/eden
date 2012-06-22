@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import *
+from gluon import current
 from s3 import *
 from eden.layouts import *
 try:
@@ -341,8 +341,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def irs(self):
         """ IRS Incident Reporting """
 
-        s3_has_role = current.auth.s3_has_role
-
         return M()(
                     M("Events", c="event", f="event")(
                         M("New", m="create"),
@@ -361,7 +359,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                     aggregate="count"))
                     ),
                     M("Incident Categories", c="irs", f="icategory",
-                      check=s3_has_role(ADMIN))(
+                      check=current.auth.s3_has_role(ADMIN))(
                         M("New", m="create"),
                         M("List All"),
                     ),

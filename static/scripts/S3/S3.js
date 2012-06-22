@@ -182,20 +182,6 @@ $(document).ready(function() {
         function() { $('ul', this).css('display', 'none');  }
     );
 
-    /*
-    // unused in new sidebar subnav
-    $('#subnav li').hover(
-        function() {
-                var popup_width = $(this).width()-2;
-                $('ul', this).css({
-                    'display': 'block',
-                    'width': popup_width.toString() + 'px'
-                });
-            },
-        function() { $('ul', this).css('display', 'none');  }
-    );
-    */
-
     // Colorbox Popups
     $('a.colorbox').attr('href', function(index, attr) {
         // Add the caller to the URL vars so that the popup knows which field to refresh/set

@@ -58,16 +58,17 @@ def vehicle():
     list_fields.remove("type")
     s3mgr.configure(tablename, list_fields=list_fields)
 
-    # Only select from vehicles
     field = table.item_id
     field.label = T("Vehicle Type")
-    field.comment = S3AddResourceLink(c="supply",
-                                      f="item",
+    field.comment = S3AddResourceLink(f="item",
+                                      # Use this controller for options.json rather than looking for one called 'asset'
+                                      vars=dict(parent="vehicle"),
                                       label=T("Add Vehicle Type"),
                                       info=T("Add a new vehicle type"),
                                       title=T("Vehicle Type"),
                                       tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
 
+    # Only select from vehicles
     field.widget = None # We want a simple dropdown
     ctable = s3db.supply_item_category
     itable = s3db.supply_item
@@ -76,8 +77,7 @@ def vehicle():
     field.requires = IS_ONE_OF(db(query),
                                "supply_item.id",
                                "%(name)s",
-                               sort=True,
-                            )
+                               sort=True)
     # Label changes
     table.sn.label = T("License Plate")
     s3db.asset_log.room_id.label = T("Parking Area")
@@ -130,5 +130,75 @@ def vehicle():
 
     # Defined in Model
     return s3db.asset_controller()
+
+# =============================================================================
+def item():
+    """ RESTful CRUD controller """
+
+    # Filter to just Vehicles
+    table = s3db.supply_item
+    ctable = s3db.supply_item_category
+    s3.filter = (table.item_category_id == ctable.id) & \
+                (ctable.is_vehicle == True)
+
+    # Limit the Categories to just those with vehicles in
+    # - make category mandatory so that filter works
+    field = s3db.supply_item.item_category_id
+    field.requires = IS_ONE_OF(db,
+                               "supply_item_category.id",
+                               s3db.supply_item_category_represent,
+                               sort=True,
+                               filterby = "is_vehicle",
+                               filter_opts = [True]
+                               )
+
+    field.label = T("Vehicle Categories")
+    field.comment = S3AddResourceLink(f="item_category",
+                                      label=T("Add Vehicle Category"),
+                                      info=T("Add a new vehicle category"),
+                                      title=T("Vehicle Category"),
+                                      tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
+
+    # CRUD strings
+    ADD_ITEM = T("Add New Vehicle Type")
+    s3.crud_strings["supply_item"] = Storage(
+        title_create = ADD_ITEM,
+        title_display = T("Vehicle Type Details"),
+        title_list = T("Vehicle Types"),
+        title_update = T("Edit Vehicle Type"),
+        title_search = T("Search Vehicle Types"),
+        subtitle_create = T("Add New Vehicle Type"),
+        label_list_button = T("List Vehicle Types"),
+        label_create_button = ADD_ITEM,
+        label_delete_button = T("Delete Vehicle Type"),
+        msg_record_created = T("Vehicle Type added"),
+        msg_record_modified = T("Vehicle Type updated"),
+        msg_record_deleted = T("Vehicle Type deleted"),
+        msg_list_empty = T("No Vehicle Types currently registered"),
+        msg_match = T("Matching Vehicle Types"),
+        msg_no_match = T("No Matching Vehicle Types")
+        )
+
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return s3db.supply_item_controller()
+
+# =============================================================================
+def item_category():
+    """ RESTful CRUD controller """
+
+    table = s3db.supply_item_category
+
+    # Filter to just Vehicles
+    s3.filter = (table.is_vehicle == True)
+
+    # Default to Vehicles
+    field = table.can_be_asset
+    field.readable = field.writable = False
+    field.default = True
+    field = table.is_vehicle
+    field.readable = field.writable = False
+    field.default = True
+    
+    return s3_rest_controller("supply", "item_category")
 
 # END =========================================================================
