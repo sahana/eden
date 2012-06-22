@@ -73,14 +73,14 @@ __all__ = ["S3SearchWidget",
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
 
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
+#SHAPELY = False
+#try:
+    #import shapely
+    #import shapely.geometry
+    #from shapely.wkt import loads as wkt_loads
+    #SHAPELY = True
+#except ImportError:
+    #s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
 # =============================================================================
 class S3SearchWidget(object):
@@ -868,7 +868,12 @@ class S3SearchLocationWidget(S3SearchWidget):
         """
 
         format = current.auth.permission.format
-        if format == "plain" or not SHAPELY:
+        try:
+            import shapely
+        except ImportError:
+            s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
+            return None
+        if format == "plain":
             return None
 
         T = current.T
@@ -932,6 +937,11 @@ class S3SearchLocationWidget(S3SearchWidget):
 
             # @ToDo: A PostGIS routine, where-available
             #        - requires a Spatial DAL?
+            try:
+                from shapely.wkt import loads as wkt_loads
+            except ImportError:
+                s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
+                return None
             try:
                 shape = wkt_loads(value)
             except:

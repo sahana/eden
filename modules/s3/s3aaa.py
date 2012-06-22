@@ -58,6 +58,7 @@ except ImportError:
 
 from gluon import *
 from gluon.storage import Storage, Messages
+
 from gluon.dal import Field, Row, Query, Set, Table, Expression
 from gluon.sqlhtml import CheckboxesWidget, OptionsWidget, StringWidget
 from gluon.tools import Auth, callback, addrow
@@ -68,7 +69,7 @@ from gluon.contrib.login_methods.oauth20_account import OAuthAccount
 
 from s3method import S3Method
 from s3validators import IS_ACL
-from s3widgets import S3ACLWidget, CheckboxesWidgetS3
+
 from s3utils import s3_mark_required
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status
 
@@ -4942,6 +4943,7 @@ class S3RoleManager(S3Method):
                                       SPAN("*", _class="req"))
             acl_table.oacl.requires = IS_ACL(auth.permission.PERMISSION_OPTS)
             acl_table.uacl.requires = IS_ACL(auth.permission.PERMISSION_OPTS)
+            from s3widgets import S3ACLWidget
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")

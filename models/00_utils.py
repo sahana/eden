@@ -206,11 +206,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("compose", s3base.S3Compose())
     r.set_handler("copy", s3_copy)
     r.set_handler("report", s3base.S3Cube())
-    r.set_handler("import", s3base.S3PDF(),
-                  http = ["GET", "POST"],
-                  representation="pdf")
     r.set_handler("import", s3base.S3Importer())
     r.set_handler("map", s3base.S3Map())
+
+    # Don't load S3PDF unless needed (very slow import with reportlab)
+    if r.method == "import" and r.representation == "pdf":
+        from s3.s3pdf import S3PDF
+        r.set_handler("import", S3PDF(),
+                      http = ["GET", "POST"],
+                      representation="pdf")
 
     # Execute the request
     output = r(**attr)
