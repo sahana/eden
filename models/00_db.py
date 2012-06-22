@@ -95,7 +95,11 @@ messages = Messages(T)
 current.messages = messages
 
 # Import the S3 Framework
-import s3 as s3base
+if update_check_needed:
+    # Reload the Field definitions
+    reload(s3base.s3fields)
+else:
+    import s3 as s3base
 
 # Use session for persistent per-user variables (beware of a user having multiple tabs open!)
 if not session.s3:
