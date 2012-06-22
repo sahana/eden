@@ -339,7 +339,16 @@ class S3HRModel(S3Model):
                         ]
 
         # Redirect to the Details tabs after creation
-        hrm_url = URL(args=["[id]", "update"])
+        if controller == "vol":
+            function = "volunteer"
+            hrm_url = URL(c=controller, f=function, args=["[id]", "update"])
+        elif controller == "hrm":
+            function = "staff"
+            hrm_url = URL(c=controller, f=function, args=["[id]", "update"])
+        else:
+            # Being added as a component to Org, Site or Project
+            hrm_url = None
+        
         self.configure(tablename,
                     super_entity = "sit_trackable",
                     deletable = settings.get_hrm_deletable(),

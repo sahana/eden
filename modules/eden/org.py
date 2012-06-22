@@ -1611,6 +1611,9 @@ def org_organisation_logo(id, type="png"):
         The type can either be png or bmp and is the format of the saved image
     """
 
+    if not id:
+        return None
+
     s3db = current.s3db
     if isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
