@@ -110,7 +110,7 @@ def group():
                 s3mgr.configure(tablename,
                                 list_fields=list_fields)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     rheader = group_rheader
     return s3_rest_controller(rheader=rheader)
@@ -209,7 +209,7 @@ def problem():
                            action=results)
 
     # Filter to just Active Problems
-    response.s3.filter = (table.active == True)
+    s3.filter = (table.active == True)
 
     # @ToDo: Check for Group Moderators too
     if not s3_has_role("DelphiAdmin"):
@@ -222,12 +222,12 @@ def problem():
             if r.component and r.component_name == "solution":
                 r.component.table.modified_on.label = T("Last Updated")
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                response.s3.actions = [
+                s3.actions = [
                         dict(label=str(T("Solutions")),
                              _class="action-btn",
                              url=URL(args=["[id]", "solution"])),
@@ -236,15 +236,15 @@ def problem():
                              url=URL(args=["[id]", "vote"])),
                     ]
             elif r.component_name == "solution":
-                response.s3.actions = [
+                s3.actions = [
                         dict(label=str(T("Discuss")),
                              _class="action-btn",
                              url=URL(args=["solution", "[id]", "discuss"])),
                     ]
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
-    response.s3.dataTableResize = True
+    s3.dataTableResize = True
 
     rheader = problem_rheader
     return s3_rest_controller(rheader=rheader)
@@ -291,21 +291,21 @@ def vote(r, **attr):
         options.pop(v.solution_id)
 
     # Add Custom CSS from Static (cacheable)
-    response.s3.stylesheets.append("S3/delphi.css")
+    s3.stylesheets.append("S3/delphi.css")
 
     # Add Custom Javascript
     # Settings to be picked up by Static code
-    js = "".join(("""
-var problem_id = """, str(problem.id), """;
-S3.i18n.delphi_failed = '""", str(T("Failed!")), """';
-S3.i18n.delphi_saving = '""", str(T("Saving...")), """';
-S3.i18n.delphi_saved = '""", str(T("Saved.")), """';
-S3.i18n.delphi_vote = '""", str(T("Save Vote")), """';
-"""))
-    response.s3.js_global.append(js)
+    js = "".join(('''
+var problem_id = ''', str(problem.id), ''';
+S3.i18n.delphi_failed = '''', str(T("Failed!")), '''';
+S3.i18n.delphi_saving = '''', str(T("Saving...")), '''';
+S3.i18n.delphi_saved = '''', str(T("Saved.")), '''';
+S3.i18n.delphi_vote = '''', str(T("Save Vote")), '''';
+'''))
+    s3.js_global.append(js)
 
     # Static code which can be cached
-    response.s3.scripts.append(URL(c="static", f="scripts",
+    s3.scripts.append(URL(c="static", f="scripts",
                                    args=["S3", "s3.delphi.js"]))
 
     response.view = "delphi/vote.html"
@@ -924,7 +924,7 @@ def results(r, **attr):
                     _class="delphi_wide")
 
     # Add Custom CSS from Static (cacheable)
-    response.s3.stylesheets.append("S3/delphi.css")
+    s3.stylesheets.append("S3/delphi.css")
 
     return dict(rheader=rheader,
                 num_voted=num_voted,
@@ -950,14 +950,14 @@ def discuss(r, **attr):
     rheader = problem_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-    response.s3.scripts.append(ckeditor)
+    s3.scripts.append(ckeditor)
     adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                   "jquery.js"])
-    response.s3.scripts.append(adapter)
+    s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-    js = "".join(("""
-S3.i18n.reply = '""", str(T("Reply")), """';
+    js = "".join(('''
+S3.i18n.reply = '''', str(T("Reply")), '''';
 var img_path = S3.Ap.concat('/static/img/jCollapsible/');
 var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
 function comment_reply(id) {
@@ -974,9 +974,9 @@ function comment_reply(id) {
     } else {
         $('#delphi_comment_solution_id').val(solution_id);
     }
-}"""))
+}'''))
 
-    response.s3.js_global.append(js)
+    s3.js_global.append(js)
 
     response.view = "delphi/discuss.html"
     return dict(rheader=rheader,
@@ -1119,16 +1119,16 @@ def comments():
             output.append(thread)
 
     # Also see the outer discuss()
-    script = "".join(("""
+    script = "".join(('''
 $('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false});
 $('#delphi_comment_parent__row1').hide();
 $('#delphi_comment_parent__row').hide();
 $('#delphi_comment_body').ckeditor(ck_config);
 $('#submit_record__row input').click(function(){$('#comment-form').hide();$('#delphi_comment_body').ckeditorGet().destroy();return true;});
-"""))
+'''))
 
     # No layout in this output!
-    #response.s3.jquery_ready.append(script)
+    #s3.jquery_ready.append(script)
 
     output = DIV(output,
                  DIV(H4(T("New Post"),

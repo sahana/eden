@@ -425,15 +425,13 @@ def docss():
     compressCSS(mergedCSS, outputFilenameCSS)
 
     # Move files to correct locations
-    if theme == "default":
-        theme = "S3"
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../styles/%s/%s" % (theme, outputFilenameCSS))
+        os.remove("../../themes/%s/css/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/%s" % theme)
+    shutil.move(outputFilenameCSS, "../../themes/%s/css" % theme)
 
 def main(argv):
     try:

@@ -73,15 +73,6 @@ __all__ = ["S3SearchWidget",
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
 
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
-
 # =============================================================================
 class S3SearchWidget(object):
     """
@@ -868,7 +859,12 @@ class S3SearchLocationWidget(S3SearchWidget):
         """
 
         format = current.auth.permission.format
-        if format == "plain" or not SHAPELY:
+        if format == "plain":
+            return None
+
+        try:
+            from shapely.wkt import loads as wkt_loads
+        except:
             return None
 
         T = current.T
@@ -887,14 +883,14 @@ class S3SearchLocationWidget(S3SearchWidget):
                               _name=self.attr._name,
                               _class="hidden")
 
+        # Map Popup
+        # - not added as we reuse the one that comes with dataTables
+
         # Button to open the Map
         OPEN_MAP = T("Open Map")
         map_button = A(OPEN_MAP,
                        _style="cursor:pointer; cursor:hand",
                        _id="gis_search_map-btn")
-
-        # Map Popup
-        # - reuse the one that comes with dataTables
 
         # Settings to be read by static/scripts/S3/s3.gis.js
         js_location_search = """S3.gis.draw_polygon = true;"""
@@ -908,22 +904,14 @@ class S3SearchLocationWidget(S3SearchWidget):
                       )
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    @staticmethod
+    def query(resource, value):
         """
             Returns a sub-query for this search option
 
             @param resource: the resource to search in
             @param value: the value returned from the widget: WKT format
         """
-
-        #gis = current.gis
-        # table = resource.table
-        # s3db = current.s3db
-        # locations = s3db.gis_location
-
-        # Get master query and search fields
-        #self.build_master_query(resource)
-        #master_query = self.master_query
 
         if value:
             # @ToDo: Turn this into a Resource filter
@@ -932,10 +920,11 @@ class S3SearchLocationWidget(S3SearchWidget):
 
             # @ToDo: A PostGIS routine, where-available
             #        - requires a Spatial DAL?
+            from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(value)
             except:
-                s3_debug("WARNING: s3search: Invalid WKT")
+                s3_debug("WARNING: S3Search: Invalid WKT")
                 return None
 
             bounds = shape.bounds

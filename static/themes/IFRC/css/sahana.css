@@ -141,7 +141,7 @@ textarea.richtext {
     color: #891735;
 }
 #left-col .sub-menu .highlight:after {
-    content: url(../../img/ifrc/sidenav_tab.png);
+    content: url(../img/sidenav_tab.png);
     position: absolute;
     top: -3px;
     right: -18px;
@@ -810,7 +810,7 @@ div#last_update {
 
 /* Action Buttons */
 .add-btn {
-    background: url("../../img/ifrc/button_plus_end.png") no-repeat scroll right top transparent;
+    background: url("../img/button_plus_end.png") no-repeat scroll right top transparent;
     display: block;
     float: left;
     height: 36px;
@@ -820,7 +820,7 @@ div#last_update {
 }
 
 .add-btn span {
-    background: url("../../img/ifrc/button_red_start.png") no-repeat scroll 0 0 transparent;
+    background: url("../img/button_red_start.png") no-repeat scroll 0 0 transparent;
     color: #FFFFFF;
     display: block;
     font-size: 1.25em;

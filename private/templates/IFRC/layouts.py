@@ -194,15 +194,15 @@ class S3DashBoardMenuLayout(S3NavigationItem):
             if item.components:
                 return LI(A(H2(item.label),
                           UL(items),
-                          IMG(_src=URL(c="static", f="img",
-                                       args=["ifrc", item.opts.image]),
+                          IMG(_src=URL(c="static", f="themes",
+                                       args=["IFRC", "img", item.opts.image]),
                               _alt=T(item.opts.title)),
                           _href=item.url()))
             elif item.opts.text:
                 return LI(A(H2(item.label),
                           P(item.opts.text),
-                          IMG(_src=URL(c="static", f="img",
-                                       args=["ifrc", item.opts.image]),
+                          IMG(_src=URL(c="static", f="themes",
+                                       args=["IFRC", "img", item.opts.image]),
                               _alt=item.opts.image),
                           _href=item.url()))
             else:

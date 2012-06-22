@@ -4067,10 +4067,11 @@ class S3Permission(object):
             @param env: the environment
         """
 
-        # Hide disabled modules
-        settings = current.deployment_settings
-        if not settings.has_module(c):
-            return False
+        if c != "static":
+            # Hide disabled modules
+            settings = current.deployment_settings
+            if not settings.has_module(c):
+                return False
 
         if t is None:
             t = "%s_%s" % (c, f)

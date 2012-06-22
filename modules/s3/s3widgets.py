@@ -113,7 +113,6 @@ class S3HiddenWidget(StringWidget):
 
 # =============================================================================
 class S3DateWidget(FormWidget):
-
     """
         Standard Date widget, but with a modified yearRange to support Birth dates
 
@@ -154,12 +153,12 @@ class S3DateWidget(FormWidget):
 
         selector = str(field).replace(".", "_")
 
-        response.s3.jquery_ready.append("""
+        response.s3.jquery_ready.append('''
 $( '#%s' ).datepicker( 'option', 'minDate', '-%sm' );
 $( '#%s' ).datepicker( 'option', 'maxDate', '+%sm' );
 $( '#%s' ).datepicker( 'option', 'yearRange', 'c-100:c+100' );
 $( '#%s' ).datepicker( 'option', 'dateFormat', '%s' );
-""" % (selector,
+''' % (selector,
        self.past,
        selector,
        self.future,
@@ -174,7 +173,6 @@ $( '#%s' ).datepicker( 'option', 'dateFormat', '%s' );
 
 # =============================================================================
 class S3DateTimeWidget(FormWidget):
-
     """
         Standard DateTime widget, based on the widget above, but instead of using
         jQuery datepicker we use Anytime.
@@ -226,14 +224,14 @@ class S3DateTimeWidget(FormWidget):
         earliest = earliest.strftime(format)
         latest = latest.strftime(format)
 
-        s3_script_dir = "/%s/static/scripts/S3" % request.application
+        script_dir = "/%s/static/scripts" % request.application
         if s3.debug and \
-           "%s/anytime.js" % s3_script_dir not in s3.scripts:
-            s3.scripts.append( "%s/anytime.js" % s3_script_dir )
-            s3.stylesheets.append( "S3/anytime.css" )
-        elif "%s/anytimec.js" % s3_script_dir not in s3.scripts:
-            s3.scripts.append( "%s/anytimec.js" % s3_script_dir )
-            s3.stylesheets.append( "S3/anytimec.css" )
+           "%s/anytime.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/anytime.js" % script_dir)
+            s3.stylesheets.append("anytime.css")
+        elif "%s/anytimec.js" % script_dir not in s3.scripts:
+            s3.scripts.append("%s/anytimec.js" % script_dir)
+            s3.stylesheets.append("anytimec.css")
 
         s3.jquery_ready.append('''
 $('#{0}').AnyTime_picker({{
@@ -243,11 +241,9 @@ $('#{0}').AnyTime_picker({{
     latest: "{2}",
     format: "{3}",
 }});
-
 clear_button = $('<input type="button" value="clear"/>').click(function(e){{
     $("#{0}").val("");
 }});
-
 $('#{0}').after(clear_button);'''.format(selector,
                                          earliest,
                                          latest,
@@ -258,10 +254,8 @@ $('#{0}').after(clear_button);'''.format(selector,
                         requires = field.requires
                       )
 
-
 # =============================================================================
 class S3BooleanWidget(BooleanWidget):
-
     """
         Standard Boolean widget, with an option to hide/reveal fields conditionally.
     """
@@ -293,21 +287,21 @@ class S3BooleanWidget(BooleanWidget):
         show = ""
         for _field in fields:
             fieldname = "%s_%s" % (tablename, _field)
-            hide += """
+            hide += '''
 $( '#%s__row1' ).hide();
 $( '#%s__row' ).hide();
-""" % (fieldname, fieldname)
-            show += """
+''' % (fieldname, fieldname)
+            show += '''
 $( '#%s__row1' ).show();
 $( '#%s__row' ).show();
-""" % (fieldname, fieldname)
+''' % (fieldname, fieldname)
 
         if fields:
             checkbox = "%s_%s" % (tablename, field.name)
-            click_start = """
+            click_start = '''
 $( '#%s' ).click(function() {
     if (this.checked) {
-""" % checkbox
+''' % checkbox
             middle = "} else {\n"
             click_end = "}})"
             if click_to_show:
@@ -326,7 +320,6 @@ $( '#%s' ).click(function() {
 
 # =============================================================================
 class S3UploadWidget(UploadWidget):
-
     """
         Subclassed to not show the delete checkbox when field is mandatory
             - This now been included as standard within Web2Py from r2867
@@ -379,7 +372,6 @@ class S3UploadWidget(UploadWidget):
 
 # =============================================================================
 class S3AutocompleteWidget(FormWidget):
-
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
     """
@@ -460,7 +452,6 @@ class S3AutocompleteWidget(FormWidget):
 
 # =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
-
     """
         Renders a gis_location SELECT as an INPUT field with AJAX Autocomplete
 
@@ -551,7 +542,6 @@ class S3LocationAutocompleteWidget(FormWidget):
 
 # =============================================================================
 class S3OrganisationAutocompleteWidget(FormWidget):
-
     """
         Renders an org_organisation SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it can default to the setting in the profile.
@@ -640,13 +630,12 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
                                                  json.dumps(options))
         s3.js_global.append(javascript_array)
         s3.scripts.append("%s/%s" % (s3.script_dir, "s3.orghierarchy.js"))
-        s3.stylesheets.append("S3/jquery.ui.menu.css")
+        s3.stylesheets.append("jquery-ui/jquery.ui.menu.css")
 
         return self.widget(field, value, **attributes)
 
 # =============================================================================
 class S3PersonAutocompleteWidget(FormWidget):
-
     """
         Renders a pr_person SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses 3 name fields
@@ -690,7 +679,7 @@ class S3PersonAutocompleteWidget(FormWidget):
                   args="search.json",
                   vars={"filter":"~"})
 
-        js_autocomplete = "".join(("""
+        js_autocomplete = "".join(('''
 var data = { val:$('#%s').val(), accept:false };
 $('#%s').autocomplete({
     source: '%s',
@@ -732,7 +721,7 @@ $('#%s').autocomplete({
         $( '#%s' ).val( name );
         $( '#%s' ).val( ui.item.id )
                   .change();
-        """ % (dummy_input,
+        ''' % (dummy_input,
                dummy_input,
                url,
                self.delay,
@@ -741,7 +730,7 @@ $('#%s').autocomplete({
                dummy_input,
                dummy_input,
                dummy_input,
-               real_input), self.post_process, """
+               real_input), self.post_process, '''
         data.accept = true;
         return false;
     }
@@ -774,7 +763,7 @@ $('#%s').blur(function() {
         data.val = $('#%s').val();
     }
     data.accept = false;
-});""" % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
+});''' % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
 
         if value:
             # Provide the representation for the current/default Value
@@ -810,7 +799,6 @@ $('#%s').blur(function() {
 
 # =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):
-
     """
         Renders an org_site SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses name & type fields
@@ -854,18 +842,18 @@ class S3SiteAutocompleteWidget(FormWidget):
         case = -1
         for instance_type in auth.org_site_types.keys():
             case = case + 1
-            cases += """
+            cases += '''
                     case '%s':
                         return '%s';
-            """ % (instance_type,
+            ''' % (instance_type,
                    auth.org_site_types[instance_type])
 
-        js_autocomplete = "".join(("""
+        js_autocomplete = "".join(('''
 function s3_site_lookup(instance_type) {
     switch (instance_type) {
         %s
     }
-}""" % cases, """
+}''' % cases, '''
 var data = { val:$('#%s').val(), accept:false };
 $('#%s').autocomplete({
     source: '%s',
@@ -901,7 +889,7 @@ $('#%s').autocomplete({
         $( '#%s' ).val( name );
         $( '#%s' ).val( ui.item.site_id )
                   .change();
-        """ % (dummy_input,
+        ''' % (dummy_input,
                dummy_input,
                url,
                self.delay,
@@ -910,7 +898,7 @@ $('#%s').autocomplete({
                dummy_input,
                dummy_input,
                dummy_input,
-               real_input), self.post_process, """
+               real_input), self.post_process, '''
         data.accept = true;
         return false;
     }
@@ -940,7 +928,7 @@ $('#%s').blur(function() {
         data.val = $('#%s').val();
     }
     data.accept = false;
-});""" % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
+});''' % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
 
         if value:
             # Provide the representation for the current/default Value
@@ -976,7 +964,6 @@ $('#%s').blur(function() {
 
 # =============================================================================
 class S3TrainingAutocompleteWidget(FormWidget):
-
     """
         Renders an hrm_training_event SELECT as an INPUT field with AJAX Autocomplete.
         Differs from the S3AutocompleteWidget in that it uses course, site and date fields
@@ -1008,7 +995,7 @@ class S3TrainingAutocompleteWidget(FormWidget):
                     args="search.json",
                     vars={"filter":"~"})
             ),
-            name_getter = """function (item) {
+            name_getter = '''function (item) {
     var name = '';
     if (item.course != null) {
         name += item.course;
@@ -1020,7 +1007,7 @@ class S3TrainingAutocompleteWidget(FormWidget):
         name += ' [' + item.date + ']';
     }
     return name;
-}""",
+}''',
         )
 
 # -----------------------------------------------------------------------------
@@ -1055,7 +1042,7 @@ def S3GenericAutocompleteTemplate(
     real_input = str(field).replace(".", "_")
     dummy_input = "dummy_%s" % real_input
 
-    js_autocomplete = "".join(("""
+    js_autocomplete = "".join(('''
 var data = { val:$('#%(dummy_input)s').val(), accept:false };
 var get_name = %(name_getter)s;
 var get_id = %(id_getter)s;
@@ -1079,9 +1066,9 @@ $('#%(dummy_input)s').autocomplete({
         var item = ui.item
         $('#%(dummy_input)s').val(get_name(ui.item));
         $('#%(real_input)s').val(get_id(ui.item)).change();
-        """ % locals(),
+        ''' % locals(),
         post_process or "",
-        """
+        '''
         data.accept = true;
         return false;
     }
@@ -1103,7 +1090,7 @@ $('#%(dummy_input)s').blur(function() {
         data.val = $('#%(dummy_input)s').val();
     }
     data.accept = false;
-});""" % locals()))
+});''' % locals()))
 
     if value:
         # Provide the representation for the current/default Value
@@ -1190,7 +1177,6 @@ class S3LocationDropdownWidget(FormWidget):
 
 # =============================================================================
 class S3LocationSelectorWidget(FormWidget):
-
     """
         Renders a gis_location Foreign Key to allow inline display/editing of linked fields.
 
@@ -1347,16 +1333,16 @@ class S3LocationSelectorWidget(FormWidget):
         latlon_selector = settings.get_gis_latlon_selector()
         # Navigate Away Confirm?
         if settings.get_ui_navigate_away_confirm():
-            navigate_away_confirm = """
-S3.navigate_away_confirm = true;"""
+            navigate_away_confirm = '''
+S3.navigate_away_confirm = true;'''
         else:
             navigate_away_confirm = ""
 
         # Which tab should the widget open to by default?
         # @ToDo: Act on this server-side instead of client-side
         if response.s3.gis.tab:
-            tab = """
-S3.gis.tab = '%s';""" % response.s3.gis.tab
+            tab = '''
+S3.gis.tab = '%s';''' % response.s3.gis.tab
         else:
             # Default to Create
             tab = ""
@@ -1783,8 +1769,8 @@ S3.gis.tab = '%s';""" % response.s3.gis.tab
                              _id="gis_location_street_search__row",
                              _class="hidden locselect box_middle"))
         if config.geocoder:
-            geocoder = """
-S3.gis.geocoder = true;"""
+            geocoder = '''
+S3.gis.geocoder = true;'''
         else:
             geocoder = ""
 
@@ -1885,14 +1871,14 @@ S3.gis.geocoder = true;"""
         COUNTRY_REQUIRED = T("Country is required!")
 
         # Settings to be read by static/scripts/S3/s3.locationselector.widget.js
-        js_location_selector = """
+        js_location_selector = '''
 %s%s%s%s%s%s
 S3.gis.location_id = '%s';
 S3.gis.site = '%s';
 S3.i18n.gis_place_on_map = '%s';
 S3.i18n.gis_view_on_map = '%s';
 S3.i18n.gis_name_required = '%s';
-S3.i18n.gis_country_required = '%s';""" % (country_snippet,
+S3.i18n.gis_country_required = '%s';''' % (country_snippet,
                                            geocoder,
                                            navigate_away_confirm,
                                            no_latlon,
@@ -1982,13 +1968,13 @@ class S3LatLonWidget(DoubleWidget):
                   )
 
         if not s3.lat_lon_i18n_appended:
-            s3.js_global.append("""
+            s3.js_global.append('''
 S3.i18n.gis_only_numbers =
   {degrees: '%s', minutes: '%s',seconds: '%s', decimal: '%s'};
 S3.i18n.gis_range_error =
   {degrees: {lat: '%s', lon: '%s'}, minutes: '%s', seconds: '%s',
     decimal: {lat: '%s', lon: '%s'}}
-"""     %  (T("Degrees must be a number."),
+'''     %  (T("Degrees must be a number."),
             T("Minutes must be a number."),
             T("Seconds must be a number."),
             T("Degrees must be a number."),
@@ -2021,7 +2007,6 @@ S3.i18n.gis_range_error =
 
 # =============================================================================
 class S3CheckboxesWidget(OptionsWidget):
-
     """
         Generates a TABLE tag with <num_column> columns of INPUT
         checkboxes (multiple allowed)
@@ -2158,7 +2143,6 @@ class S3CheckboxesWidget(OptionsWidget):
 
 # =============================================================================
 class S3MultiSelectWidget(MultipleOptionsWidget):
-
     """
         Standard MultipleOptionsWidget, but using the jQuery UI:
         http://www.quasipartikel.at/multiselect/
@@ -2175,24 +2159,24 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
 
         selector = str(field).replace(".", "_")
 
-        s3.js_global.append("""
+        s3.js_global.append('''
 S3.i18n.addAll = '%s';
 S3.i18n.removeAll = '%s';
 S3.i18n.itemsCount = '%s';
 S3.i18n.search = '%s';
-""" % (T("Add all"),
+''' % (T("Add all"),
        T("Remove all"),
        T("items selected"),
        T("search")))
 
-        s3.jquery_ready.append("""
+        s3.jquery_ready.append('''
 $( '#%s' ).removeClass('list');
 $( '#%s' ).addClass('multiselect');
 $( '#%s' ).multiselect({
         dividerLocation: 0.5,
         sortable: false
     });
-""" % (selector,
+''' % (selector,
        selector,
        selector))
 
@@ -2203,7 +2187,6 @@ $( '#%s' ).multiselect({
 
 # =============================================================================
 class S3ACLWidget(CheckboxesWidget):
-
     """
         Widget class for ACLs
 
@@ -2578,7 +2561,7 @@ class S3AddObjectWidget(FormWidget):
             s3.scripts.append(script_name)
         return TAG[""](
             # @ToDo: this might be better moved to its own script.
-            SCRIPT("""
+            SCRIPT('''
 $(function () {
     var form_field = $('#%(form_field_name)s')
     var throbber = $('<div id="%(form_field_name)s_ajax_throbber" class="ajax_throbber"/>')
@@ -2714,7 +2697,7 @@ $(function () {
     var add_object_link = $('<a>%(Add)s</a>')
     add_object_link.click(request_add_form)
     add_object_link.insertAfter(form_field)
-})""" % dict(
+})''' % dict(
             field_name = field.name,
             form_field_name = "_".join((self.table_name, field.name)),
             form_url = self.form_url,
@@ -3152,7 +3135,6 @@ def s3_richtext_widget(field, value):
 
 # =============================================================================
 class S3SliderWidget(FormWidget):
-
     """
         Standard Slider Widget
 

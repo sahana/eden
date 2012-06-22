@@ -1,7 +1,7 @@
 {{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
-<link href="/{{=appname}}/static/styles/S3/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{try:}}{{=H2(title)}}
 {{except:}}{{pass}}
@@ -61,25 +61,25 @@ var json_data = {cols:null, rows:null};
 {{pass}}
 //]]></script>
 {{if s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.barRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.categoryAxisRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pointLabels.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasTextRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasAxisTickRenderer.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.highlighter.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.search.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.js"></script>
 {{else:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.barRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.categoryAxisRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.pointLabels.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/jqplot_plugins/jqplot.highlighter.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.barRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pointLabels.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.highlighter.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.search.min.js"></script>
 <script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/s3.report.min.js"></script>
 {{pass}}

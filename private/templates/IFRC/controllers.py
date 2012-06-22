@@ -26,52 +26,6 @@ $('.marker').mouseout(function() {
 })"""
         s3.jquery_ready.append(script)
 
-        dashboard = UL(LI(A(H2(T("Staff")),
-                            P(T("Add new and manage existing staff.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_staff.png"]),
-                                _alt=T("Staff")),
-                          _href=URL(c="hrm", f="staff",
-                                    args=["search"]))),
-                       LI(A(H2(T("Volunteers")),
-                            P(T("Add new and manage existing volunteers.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_volunteers.png"]),
-                                _alt=T("Volunteers")),
-                          _href=URL(c="vol", f="volunteer",
-                                    args=["search"]))),
-                       LI(A(H2(T("Members")),
-                            P(T("Add new and manage existing members.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_members.png"]),
-                                _alt=T("Members")),
-                          _href=URL(c="member", f="index"))),
-                       LI(A(H2(T("Warehouses")),
-                            P(T("Stocks and relief items.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_warehouse.png"]),
-                                _alt=T("Warehouses")),
-                          _href=URL(c="inv", f="index"))),
-                       LI(A(H2(T("Assets")),
-                            P(T("Manage office inventories and assets.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_assets.png"]),
-                                _alt=T("Assests")),
-                          _href=URL(c="asset", f="index"))),
-                       LI(A(H2(T("Assessments")),
-                            P(T("Design, deploy & analyze surveys.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_assessments.png"]),
-                                _alt=T("Assessments")),
-                          _href=URL(c="survey", f="index"))),
-                       LI(A(H2(T("Projects")),
-                            P(T("Tracking and analysis of Projects and Activities.")),
-                            IMG(_src=URL(c="static", f="img",
-                                         args=["ifrc", "graphic_tools.png"]),
-                                _alt=T("Projects")),
-                          _href=URL(c="project", f="index"))),
-                       _id="dashboard")
-
         markers = [
             Storage(name = "Afghan Red Crescent Society",
                     direction = "right",
@@ -247,7 +201,6 @@ $('.marker').mouseout(function() {
 
         current.menu.breadcrumbs = None
 
-        return dict(dashboard=dashboard,
-                    map=map)
+        return dict(map=map)
 
 # END =========================================================================

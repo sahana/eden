@@ -64,7 +64,10 @@ class S3MainMenu(default.S3MainMenu):
                             MM("Register", m="register",
                                vars=dict(_next=login_next),
                                check=self_registration),
-                            MM("Lost Password", m="retrieve_password")
+                            #MM("Lost Password", m="retrieve_password"),
+                            MM("About", c="default", f="about"),
+                            MM("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
+                            MM("Contact", url="mailto:admin@drrprojects.net"),
                         )
         else:
             # Logged-in
@@ -73,20 +76,15 @@ class S3MainMenu(default.S3MainMenu):
                            **attr)(
                             MM("Logout", m="logout", _id="auth_menu_logout"),
                             MM("User Profile", m="profile"),
-                            MM("Personal Data", c="pr", f="person", m="update",
+                            #MM("Personal Data", c="pr", f="person", m="update",
+                            #    vars={"person.pe_id" : auth.user.pe_id}),
+                            #MM("Contact Details", c="pr", f="person",
+                            #    args="contact",
+                            #    vars={"person.pe_id" : auth.user.pe_id}),
+                            MM("Subscriptions", c="pr", f="person",
+                                args="pe_subscription",
                                 vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Contact Details", c="pr", f="person",
-                                args="contact",
-                                vars={"person.pe_id" : auth.user.pe_id}),
-                            #MM("Subscriptions", c="pr", f="person",
-                                #args="pe_subscription",
-                                #vars={"person.pe_id" : auth.user.pe_id}),
                             MM("Change Password", m="change_password"),
-                            SEP(),
-                            MM({"name": current.T("Rapid Data Entry"),
-                               "id": "rapid_toggle",
-                               "value": current.session.s3.rapid_data_entry is True},
-                               f="rapid"),
                         )
 
         return menu_auth

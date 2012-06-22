@@ -18,7 +18,7 @@
 """
 
 from gluon.http import defined_status
-response.s3.stylesheets.append( "S3/errorpages.css" )
+#s3.stylesheets.append("S3/errorpages.css")
 
 error_messages = {
   "NA":(T("Oops! Something went wrong..."),[]),

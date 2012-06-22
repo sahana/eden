@@ -77,15 +77,6 @@ from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
 
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
-
 DEBUG = False
 if DEBUG:
     import datetime
@@ -1527,6 +1518,9 @@ class GIS(object):
             gis_location table
         """
 
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
         db = current.db
         s3db = current.s3db
         session = current.session
@@ -1607,7 +1601,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value=row.id
@@ -1636,7 +1630,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value = row.id,
@@ -3102,6 +3096,10 @@ class GIS(object):
 
         import codecs
 
+        from shapely.geometry import point
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
         db = current.db
         s3db = current.s3db
         cache = s3db.cache
@@ -3234,7 +3232,7 @@ class GIS(object):
                 lon = float(lon)
                 wkt = self.latlon_to_wkt(lat, lon)
 
-                shape = shapely.geometry.point.Point(lon, lat)
+                shape = point.Point(lon, lat)
 
                 # Add Bounds
                 lon_min = lon_max = lon
@@ -3258,7 +3256,7 @@ class GIS(object):
                             parent = row.id
                             # Should be just a single parent
                             break
-                    except shapely.geos.ReadingError:
+                    except ReadingError:
                         s3_debug("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
@@ -3326,8 +3324,14 @@ class GIS(object):
             geom_type = GEOM_TYPES["point"]
             bbox = (lon, lat, lon, lat)
         else:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                SHAPELY = True
+            except:
+                SHAPELY = False
+
             if SHAPELY:
-                shape = shapely.wkt.loads(wkt)
+                shape = wkt_loads(wkt)
                 centroid = shape.centroid
                 lat = centroid.y
                 lon = centroid.x
@@ -3432,6 +3436,7 @@ class GIS(object):
 
         if vars.wkt:
             # Parse WKT for LineString, Polygon, etc
+            from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(vars.wkt)
             except:
@@ -3470,6 +3475,10 @@ class GIS(object):
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
+            if current.deployment_settings.get_gis_spatialdb():
+                # Also populate the spatial field
+                vars.the_geom = vars.wkt
+
         elif (vars.lon is None and vars.lat is None) or \
              (vars.lon == "" and vars.lat == ""):
             # No Geometry available
@@ -3489,10 +3498,6 @@ class GIS(object):
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
 
-        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
-            # Also populate the spatial field
-            vars.the_geom = vars.wkt
-
         return
 
     # -------------------------------------------------------------------------
@@ -3501,8 +3506,8 @@ class GIS(object):
         """
             Returns a query of all Locations inside the given bounding box
         """
-        s3db = current.s3db
-        table = s3db.gis_location
+
+        table = current.s3db.gis_location
         query = (table.lat_min <= lat_max) & \
                 (table.lat_max >= lat_min) & \
                 (table.lon_min <= lon_max) & \
@@ -3510,18 +3515,21 @@ class GIS(object):
         return query
 
     # -------------------------------------------------------------------------
-    def get_features_by_bbox(self, lon_min, lat_min, lon_max, lat_max):
+    @staticmethod
+    def get_features_by_bbox(lon_min, lat_min, lon_max, lat_max):
         """
             Returns Rows of Locations whose shape intersects the given bbox.
         """
-        db = current.db
-        return db(self.query_features_by_bbox(lon_min,
-                                              lat_min,
-                                              lon_max,
-                                              lat_max)).select()
+
+        query = current.gis.query_features_by_bbox(lon_min,
+                                                   lat_min,
+                                                   lon_max,
+                                                   lat_max)
+        return current.db(query).select()
 
     # -------------------------------------------------------------------------
-    def _get_features_by_shape(self, shape):
+    @staticmethod
+    def get_features_by_shape(shape):
         """
             Returns Rows of locations which intersect the given shape.
 
@@ -3529,22 +3537,24 @@ class GIS(object):
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-        in_bbox = self.query_features_by_bbox(*shape.bounds)
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
+        table = current.s3db.gis_location
+        in_bbox = current.gis.query_features_by_bbox(*shape.bounds)
         has_wkt = (table.wkt != None) & (table.wkt != "")
 
-        for loc in db(in_bbox & has_wkt).select():
+        for loc in current.db(in_bbox & has_wkt).select():
             try:
                 location_shape = wkt_loads(loc.wkt)
                 if location_shape.intersects(shape):
                     yield loc
-            except shapely.geos.ReadingError:
+            except ReadingError:
                 s3_debug("Error reading wkt of location with id", loc.id)
 
     # -------------------------------------------------------------------------
-    def _get_features_by_latlon(self, lat, lon):
+    @staticmethod
+    def get_features_by_latlon(lat, lon):
         """
             Returns a generator of locations whose shape intersects the given LatLon.
 
@@ -3552,25 +3562,24 @@ class GIS(object):
             @todo: provide an option to use PostGIS/Spatialite
         """
 
-        point = shapely.geometry.point.Point(lon, lat)
-        return self._get_features_by_shape(point)
+        from shapely.geometry import point
+
+        return current.gis.get_features_by_shape(point.Point(lon, lat))
 
     # -------------------------------------------------------------------------
-    def _get_features_by_feature(self, feature):
+    @staticmethod
+    def get_features_by_feature(feature):
         """
             Returns all Locations whose geometry intersects the given feature.
 
             Relies on Shapely.
             @ToDo: provide an option to use PostGIS/Spatialite
         """
-        shape = wkt_loads(feature.wkt)
-        return self.get_features_by_shape(shape)
 
-    # -------------------------------------------------------------------------
-    if SHAPELY:
-        get_features_by_shape = _get_features_by_shape
-        get_features_by_latlon = _get_features_by_latlon
-        get_features_by_feature = _get_features_by_feature
+        from shapely.wkt import loads as wkt_loads
+
+        shape = wkt_loads(feature.wkt)
+        return current.gis.get_features_by_shape(shape)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3581,9 +3590,15 @@ class GIS(object):
             If shapely is present, and a location has wkt, bounds of the geometry
             are used.  Otherwise, the (lat, lon) are used as bounds.
         """
+
+        try:
+            from shapely.wkt import loads as wkt_loads
+            SHAPELY = True
+        except:
+            SHAPELY = False
+
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
+        table = current.s3db.gis_location
 
         # Query to find all locations without bounds set
         no_bounds = (table.lon_min == None) & \
@@ -3620,7 +3635,7 @@ class GIS(object):
     def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
         """
             Simplify a complex Polygon
-            - NB This uses Python, better performance will be gaiend by doing
+            - NB This uses Python, better performance will be gained by doing
                  this direct from the database if you are using PostGIS:
             ST_Simplify() is available as
             db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
@@ -3629,6 +3644,8 @@ class GIS(object):
             @ToDo: Reduce the number of decimal points to 4
                    - requires patching modules/geojson?
         """
+
+        from shapely.wkt import loads as wkt_loads
 
         try:
             # Enable C-based speedups available from 1.2.10+
