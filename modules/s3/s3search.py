@@ -864,7 +864,8 @@ class S3SearchLocationWidget(S3SearchWidget):
 
         try:
             from shapely.wkt import loads as wkt_loads
-        except:
+        except ImportError:
+            s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
             return None
 
         T = current.T

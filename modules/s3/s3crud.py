@@ -45,7 +45,6 @@ from gluon.tools import callback
 from s3method import S3Method
 from s3export import S3Exporter
 #from s3gis import S3MAP
-from s3pdf import S3PDF
 from s3utils import s3_mark_required
 from s3widgets import S3EmbedComponentWidget
 
@@ -317,6 +316,7 @@ class S3CRUD(S3Method):
                 session.confirmation = T("Data uploaded")
 
         elif representation == "pdf":
+            from s3pdf import S3PDF
             exporter = S3PDF()
             return exporter(r, **attr)
 

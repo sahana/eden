@@ -68,8 +68,10 @@ from s3method import *
 from s3crud import *
 from s3search import *
 from s3report import *
-from s3pdf import S3PDF
+# Don't load S3PDF unless needed (very slow import with reportlab)
+#from s3pdf import S3PDF
 from s3import import *
+#from s3merge import *
 
 # GIS Mapping
 from s3gis import *

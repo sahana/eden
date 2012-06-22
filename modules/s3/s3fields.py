@@ -32,6 +32,9 @@
 __all__ = [
            "S3ReusableField",
            "s3_uid",
+           "s3_meta_deletion_status",
+           "s3_meta_deletion_fk",
+           "s3_meta_deletion_rb",
            "s3_deletion_status",
            "s3_timestamp",
            "s3_ownerstamp",
@@ -60,7 +63,6 @@ from gluon.html import *
 from gluon.validators import *
 
 from s3utils import s3_auth_user_represent, s3_auth_group_represent
-from s3widgets import IS_ONE_OF, S3AutocompleteWidget, s3_comments_widget
 
 try:
     db = current.db
@@ -258,9 +260,16 @@ s3_meta_deletion_fk = S3ReusableField("deleted_fk", #"text",
                                       readable=False,
                                       writable=False)
 
+# ID of the record replacing this record
+# => for record merger (de-duplication)
+s3_meta_deletion_rb = S3ReusableField("deleted_rb", "integer",
+                                      readable=False,
+                                      writable=False)
+
 def s3_deletion_status():
     return (s3_meta_deletion_status(),
-            s3_meta_deletion_fk())
+            s3_meta_deletion_fk(),
+            s3_meta_deletion_rb())
 
 # =============================================================================
 # Record timestamp meta-fields
@@ -336,14 +345,17 @@ def s3_meta_fields():
     auth = current.auth
     session = current.session
 
+    if auth.is_logged_in():
+        current_user = session.auth.user.id
+    else:
+        current_user = None
+
     # Author of a record
     s3_meta_created_by = S3ReusableField("created_by", db.auth_user,
                                          readable=False,
                                          writable=False,
                                          requires=None,
-                                         default=session.auth.user.id
-                                                    if auth.is_logged_in()
-                                                    else None,
+                                         default=current_user,
                                          represent=s3_auth_user_represent,
                                          ondelete="RESTRICT")
 
@@ -352,12 +364,8 @@ def s3_meta_fields():
                                           readable=False,
                                           writable=False,
                                           requires=None,
-                                          default=session.auth.user.id
-                                                    if auth.is_logged_in()
-                                                    else None,
-                                          update=session.auth.user.id
-                                                    if auth.is_logged_in()
-                                                    else None,
+                                          default=current_user,
+                                          update=current_user,
                                           represent=s3_auth_user_represent,
                                           ondelete="RESTRICT")
 
@@ -373,6 +381,7 @@ def s3_meta_fields():
               s3_meta_mci(),
               s3_meta_deletion_status(),
               s3_meta_deletion_fk(),
+              s3_meta_deletion_rb(),
               s3_meta_created_on(),
               s3_meta_modified_on(),
               s3_meta_created_by(),
@@ -394,6 +403,9 @@ def s3_role_required():
         - used by GIS for map layer permissions management
     """
 
+    from s3validators import IS_ONE_OF
+    from s3widgets import S3AutocompleteWidget
+
     T = current.T
     db = current.db
     f = S3ReusableField("role_required", db.auth_group,
@@ -412,7 +424,7 @@ def s3_role_required():
                                             T("If this record should be restricted then select which role is required to access the record here."))),
             ondelete = "RESTRICT")
     return f()
-    
+
 
 # -------------------------------------------------------------------------
 def s3_roles_permitted(name="roles_permitted", **attr):
@@ -420,6 +432,8 @@ def s3_roles_permitted(name="roles_permitted", **attr):
         List of Roles Permitted to access a resource
         - used by CMS
     """
+
+    from s3validators import IS_ONE_OF
 
     T = current.T
     if "label" not in attr:
@@ -439,7 +453,7 @@ def s3_roles_permitted(name="roles_permitted", **attr):
                                             T("If this record should be restricted then select which role(s) are permitted to access the record here.")))
     if "ondelete" not in attr:
         ondelete = "RESTRICT"
-    
+
     f = S3ReusableField(name, "list:reference auth_group",
                         sortby = sortby,
                         requires = requires,
@@ -731,6 +745,8 @@ def s3_comments(name="comments", **attr):
     """
         Return a standard Comments field
     """
+
+    from s3widgets import s3_comments_widget
 
     T = current.T
     if "label" not in attr:
