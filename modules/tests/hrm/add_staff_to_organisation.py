@@ -24,10 +24,14 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-
+from gluon import current
+import unittest
 from tests.web2unittest import SeleniumUnitTest
+from selenium.common.exceptions import NoSuchElementException
+from s3 import s3_debug
 from tests import *
 #import unittest, re, time
+import time
 
 class AddStaffToOrganisation(SeleniumUnitTest):
     def test_hrm005_add_staff_to_organization(self):
@@ -40,17 +44,22 @@ class AddStaffToOrganisation(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         
-        browser = self.browser
-        #browser.find_element_by_link_text("Organizations").click()
-        browser.get("%s/org" % self.config.url)
-        browser.find_element_by_link_text("List All").click()
-        browser.find_element_by_link_text("Open").click()
-        browser.find_element_by_xpath("(//a[contains(text(),'Staff & Volunteers')])[2]").click()
-        browser.find_element_by_id("pr_person_first_name").send_keys("Herculano")
-        browser.find_element_by_id("pr_person_last_name").send_keys("Hugh")
-        browser.find_element_by_id("pr_person_date_of_birth").send_keys("1968-10-18")
-        browser.find_element_by_id("pr_person_gender").send_keys("male")
-        browser.find_element_by_id("pr_person_email").send_keys("herculano@icandomybest.com")
-        browser.find_element_by_id("hrm_human_resource_job_title").send_keys("Staff")
-        browser.find_element_by_css_selector("input[type=\"submit\"]").click()
-        browser.find_element_by_link_text("Home").click()
+        self.login(account="admin", nexturl="org/organisation/41/human_resource")
+        self.browser.find_element_by_id("show-add-btn").click()
+        
+        self.create("hrm_human_resource", 
+                    [( "first_name",
+                       "Herculanofd",
+                       "pr_person"),
+                     ( "last_name",
+                       "Hughfd",
+                       "pr_person"),
+                     ( "email",
+                       "herculandfo@icandodfmybest.com",
+                       "pr_person"),
+                     ( "job_role_id",
+                       "Chairman",
+                       "option"),
+                     ]
+                     )
+

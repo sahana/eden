@@ -32,7 +32,7 @@ from selenium.common.exceptions import NoSuchElementException
 from s3 import s3_debug
 from helper import InvTestFunctions
 
-class InvSendItem(InvTestFunctions):
+class SendItem(InvTestFunctions):
 
     """
             Inventory Test - Send Workflow (Send items)
@@ -40,7 +40,8 @@ class InvSendItem(InvTestFunctions):
             @param items: This test sends a specific item to another party.
         This test assume that regression/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
-        
+            @Case: INV001
+            
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
     """
@@ -49,7 +50,7 @@ class InvSendItem(InvTestFunctions):
     def test_inv001_send_items(self):
         """ Tests for Send Workflow """
         user = "normal"
-        self.login(account=user, nexturl="inv/send/create")
+        self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
                  "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
                  "option",
@@ -86,134 +87,10 @@ class InvSendItem(InvTestFunctions):
                      ],
                     ]
 
-        result = self.helper_inv_send(user, send_data)
-        send_id = self.helper_inv_send_get_id(result)
+        result = self.send(user, send_data)
+        send_id = self.send_get_id(result)
         for data in item_data:
-            result = self.helper_inv_track_send_item(user, send_id, data)
+            result = self.track_send_item(user, send_id, data)
         # Send the shipment
-        self.helper_inv_send_shipment(user, send_id)
+        self.send_shipment(user, send_id)
 
-    # -------------------------------------------------------------------------
-    def test020_receive_workflow(self):
-        """ Tests for Receive Workflow """
-        user = "normal"
-        recv_data = [("send_ref",
-                      "WB_TEST_000001",
-                     ),
-                     ("purchase_ref",
-                      "PO_TEST_000001",
-                     ),
-                     ("site_id",
-                      "Same Warehouse",
-                      "autocomplete",
-                     ),
-                     ("type",
-                      "Other Warehouse",
-                      "option",
-                     )
-                    ]
-
-        item_data = [
-                     [
-                      ("item_id",
-                       "Blankets",
-                       "supply_widget",
-                      ),
-                      ("item_pack_id",
-                       "Piece",
-                       "option",
-                      ),
-                      ("quantity",
-                       "3",
-                      ),
-                     ]
-                    ]
-
-        # Create the receive shipment
-        result = self.helper_inv_receive(user, recv_data)
-        recv_id = self.helper_inv_recv_get_id(result)
-        # Add items to the shipment
-        item_list = []
-        for data in item_data:
-            result = self.helper_inv_track_recv_item(user, recv_id, data)
-            text = "%s %s" % (data[2][1], data[0][1])
-            item_list.append({"text": text,
-                              "record":result["after"].records[0]
-                             })
-        # Receive the shipment
-        self.helper_inv_recv_shipment(user, recv_id, item_list)
-
-    def test030_receive_workflow(self):
-        """ Tests for Send - Receive Workflow """
-        user = "normal"
-        method = "search"
-        send_data = [("site_id",
-                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
-                 "option",
-                ),
-                ("to_site_id",
-                 "Lospalos Warehouse (Warehouse)",
-                 "option",
-                ),
-                ("sender_id",
-                 "Beatriz de Carvalho",
-                 "autocomplete",
-                ),
-                ("recipient_id",
-                 "Liliana Otilia",
-                 "autocomplete",
-                )
-               ]
-        item_data = [
-                     [("send_inv_item_id",
-                       "Blankets - 123457 - Australian Red Cross",
-                       "inv_widget",
-                      ),
-                      ("quantity",
-                       "8",
-                      ),
-                     ],
-                     [("send_inv_item_id",
-                       "Jerry Cans - 123461 - Australian Red Cross",
-                       "inv_widget",
-                      ),
-                      ("quantity",
-                       "13",
-                      ),
-                     ],
-                     [("send_inv_item_id",
-                       "Kitchen Sets - 123458 - Australian Red Cross",
-                       "inv_widget",
-                      ),
-                      ("quantity",
-                       "4",
-                      ),
-                     ]
-                    ]
-        recv_data = [
-                     ["Blankets",
-                       "8",
-                      ],
-                     ["Jerry Cans",
-                       "13",
-                      ],
-                     ["Kitchen Sets",
-                       "4",
-                      ],
-                     ]
-        # Create the send record
-        send_result = self.helper_inv_send(user, send_data)
-        send_id = self.helper_inv_send_get_id(send_result)
-        send_ref= self.helper_inv_send_get_ref(send_result)
-        # Add the items to the send record
-        cnt = 0
-        for data in item_data:
-            item_result = self.helper_inv_track_send_item(user, send_id, data)
-            recv_data[cnt].append(item_result["after"].records[0])
-            cnt += 1
-        # Send the shipment
-        self.helper_inv_send_shipment(user, send_id)
-        # Receive the shipment
-        self.helper_inv_recv_sent_shipment(method, user, send_ref, recv_data)
-
-# END =========================================================================

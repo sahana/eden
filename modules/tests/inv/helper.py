@@ -1,15 +1,15 @@
-__all__ = ["helper_inv_send",
-       "helper_inv_track_send_item",
-       "helper_inv_send_shipment",
-       "helper_inv_receive",
-       "helper_inv_track_recv_item",
-       "helper_inv_recv_shipment",
-       "helper_inv_recv_sent_shipment",
-       "helper_inv_send_rec",
-       "helper_inv_send_get_id",
-       "helper_inv_send_get_ref",
-       "helper_inv_recv_rec",
-       "helper_inv_recv_get_id",
+__all__ = ["send",
+       "track_send_item",
+       "send_shipment",
+       "receive",
+       "track_recv_item",
+       "recv_shipment",
+       "recv_sent_shipment",
+       "send_rec",
+       "send_get_id",
+       "send_get_ref",
+       "recv_rec",
+       "recv_get_id",
        "dbcallback_getStockLevels",
       ]
 from selenium import webdriver
@@ -22,7 +22,7 @@ from tests import *
 
 class InvTestFunctions(SeleniumUnitTest):
 
-    def helper_inv_send(self, user, data):
+    def send(self, user, data):
         """
             @case: INV
             @description: Functions which runs specific workflows for Inventory tes
@@ -38,12 +38,12 @@ class InvTestFunctions(SeleniumUnitTest):
         self.login(account=user, nexturl="inv/send/create")
         table = "inv_send"
         result = self.create(table, data)
-        s3_debug("WB reference: %s" % self.helper_inv_send_get_ref(result))
+        s3_debug("WB reference: %s" % self.send_get_ref(result))
         return result
     
         # -------------------------------------------------------------------------
     
-    def helper_inv_track_send_item(self, user, send_id, data, removed=True):
+    def track_send_item(self, user, send_id, data, removed=True):
         """
             Helper method to add a track item to the inv_send with the
             given send_id by the given user
@@ -74,7 +74,7 @@ class InvTestFunctions(SeleniumUnitTest):
         return result
     
         # -------------------------------------------------------------------------
-    def helper_inv_send_shipment(self, user, send_id):
+    def send_shipment(self, user, send_id):
         """
             Helper method to send a shipment with id of send_id
         """
@@ -114,7 +114,7 @@ class InvTestFunctions(SeleniumUnitTest):
         s3_debug("Shipment items are all of status: sent")
     
         # -------------------------------------------------------------------------
-    def helper_inv_receive(self, user, data):
+    def receive(self, user, data):
         """
             Helper method to add a inv_send record by the given user
         """
@@ -124,7 +124,7 @@ class InvTestFunctions(SeleniumUnitTest):
         return result
     
         # -------------------------------------------------------------------------
-    def helper_inv_track_recv_item(self, user, recv_id, data, removed=True):
+    def track_recv_item(self, user, recv_id, data, removed=True):
         """
             Helper method to add a track item to the inv_recv with the
             given recv_id
@@ -141,7 +141,7 @@ class InvTestFunctions(SeleniumUnitTest):
         return result
     
         # -------------------------------------------------------------------------
-    def helper_inv_recv_shipment(self, user, recv_id, data):
+    def recv_shipment(self, user, recv_id, data):
         """
             Helper method that will receive the shipment, adding the
             totals that arrived
@@ -206,7 +206,7 @@ class InvTestFunctions(SeleniumUnitTest):
                 s3_debug("%s not accounted for." % line["text"])
     
         # -------------------------------------------------------------------------
-    def helper_inv_recv_sent_shipment(self, method, user, WB_ref, item_list):
+    def recv_sent_shipment(self, method, user, WB_ref, item_list):
         """
             Helper method that will receive the sent shipment.
     
@@ -272,13 +272,13 @@ class InvTestFunctions(SeleniumUnitTest):
             # Save the form
             browser.find_element_by_css_selector("input[type='submit']").submit()
         # Now receive the shipment and check the totals
-        self.helper_inv_recv_shipment(user, recv_id, data)
+        self.recv_shipment(user, recv_id, data)
     
     
         # -------------------------------------------------------------------------
         # Functions which extract data from the create results
         #
-    def helper_inv_send_rec(self, result):
+    def send_rec(self, result):
         """
             Simple helper function to get the newly created inv_send row
         """
@@ -288,7 +288,7 @@ class InvTestFunctions(SeleniumUnitTest):
             return new_inv_send.inv_send
         return None
     
-    def helper_inv_send_get_id(self, result):
+    def send_get_id(self, result):
         """
             Simple helper function to get the record id of the newly
             created inv_send row so it can be used to open the record
@@ -299,7 +299,7 @@ class InvTestFunctions(SeleniumUnitTest):
             return new_inv_send.inv_send.id
         return None
     
-    def helper_inv_send_get_ref(self, result):
+    def send_get_ref(self, result):
         """
             Simple helper function to get the waybill reference of the newly
             created inv_send row so it can be used to filter dataTables
@@ -311,7 +311,7 @@ class InvTestFunctions(SeleniumUnitTest):
         return None
     
         # -------------------------------------------------------------------------
-    def helper_inv_recv_rec(self, result):
+    def recv_rec(self, result):
         """
             Simple helper function to get the newly created inv_recv row
         """
@@ -322,7 +322,7 @@ class InvTestFunctions(SeleniumUnitTest):
         return None
     
         # -------------------------------------------------------------------------
-    def helper_inv_recv_get_id(self, result):
+    def recv_get_id(self, result):
         """
             Simple helper function to get the record id of the newly
             created inv_recv row so it can be used to open the record

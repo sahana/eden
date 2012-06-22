@@ -1,4 +1,4 @@
-""" Sahana Eden Automated Test - HRM003 Create Staff Training
+""" Sahana Eden Automated Test - HRM004 Create Volunteer Training
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -34,11 +34,11 @@ from tests import *
 #import unittest, re, time
 import time
 
-class CreateStaffTraining(SeleniumUnitTest):
-    def test_hrm003_create_staff_training(self):
+class CreateVolunteerTraining(SeleniumUnitTest):
+    def test_hrm003_create_volunteer_training(self):
         """
-            @case: HRM003
-            @description: Create a Staff Training
+            @case: HRM004
+            @description: Create a Volunteer Training
             * Create Course
             * Create Training Event
             
@@ -50,7 +50,7 @@ class CreateStaffTraining(SeleniumUnitTest):
         """
         
         browser = self.browser
-        self.login(account="admin", nexturl="hrm/course/create")
+        self.login(account="admin", nexturl="vol/course/create")
 
         self.create("hrm_course", 
                     [( "code",
@@ -59,7 +59,7 @@ class CreateStaffTraining(SeleniumUnitTest):
                        "Emergency First Aid"),
                      ]
                      )
-        self.login(account="admin", nexturl="hrm/training_event/create")
+        self.login(account="admin", nexturl="vol/training_event/create")
         self.create("hrm_trianing_event", 
                     [( "course_id",
                        "Emergency First Aid",

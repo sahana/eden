@@ -47,7 +47,7 @@ class CreateProject(SeleniumUnitTest):
         print "\n"
 
         # Login, if not-already done so
-        self.login(account="normal", nexturl="project/project/create")
+        self.login(account="admin", nexturl="project/project/create")
         
         self.create("project_project", 
                     [( "name",
