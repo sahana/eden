@@ -1241,10 +1241,8 @@ class S3LocationSelectorWidget(FormWidget):
 
         auth = current.auth
         settings = current.deployment_settings
-        request = current.request
         response = current.response
         s3 = current.response.s3
-        manager = current.manager
         cache = s3.cache
 
         locations = s3db.gis_location
@@ -1288,8 +1286,20 @@ class S3LocationSelectorWidget(FormWidget):
             if tablename in auth.org_site_types:
                 site = tablename
 
-        # Full list of countries
+        # Full list of countries (by ID)
         countries = gis.get_countries()
+
+        # Countries we should select from
+        _countries = settings.get_gis_countries()
+        if _countries:
+            __countries = gis.get_countries(key_type="code")
+            countrynames = []
+            for k, v in __countries.iteritems():
+                if k in _countries:
+                    countrynames.append(v)
+            for k, v in countries.iteritems():
+                if v not in countrynames:
+                    del countries[k]
 
         # Read Options
         config = gis.get_config()
@@ -1340,9 +1350,9 @@ S3.navigate_away_confirm = true;'''
 
         # Which tab should the widget open to by default?
         # @ToDo: Act on this server-side instead of client-side
-        if response.s3.gis.tab:
+        if s3.gis.tab:
             tab = '''
-S3.gis.tab = '%s';''' % response.s3.gis.tab
+S3.gis.tab = '%s';''' % s3.gis.tab
         else:
             # Default to Create
             tab = ""
@@ -1479,8 +1489,6 @@ S3.gis.tab = '%s';''' % response.s3.gis.tab
                 #addr_street_encoded = ""
                 postcode = ""
                 if map_selector:
-                    # Load the Models
-                    manager.load("gis_layer_openstreetmap")
                     map_popup = gis.show_map(
                                              add_feature = True,
                                              add_feature_active = True,
@@ -1614,7 +1622,7 @@ S3.gis.tab = '%s';''' % response.s3.gis.tab
                         _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
 
         hidden = ""
-        throbber = "/%s/static/img/ajax-loader.gif" % request.application
+        throbber = "/%s/static/img/ajax-loader.gif" % current.request.application
         Lx_rows = DIV()
         if value:
             # Display Read-only Fields

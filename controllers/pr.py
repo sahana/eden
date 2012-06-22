@@ -137,7 +137,7 @@ def person():
                 response.s3.gis_config_form_setup()
                 # Name will be generated from person's name.
                 _config.name.readable = _config.name.writable = False
-                # Hide region fields
+                # Hide Location
                 _config.region_location_id.readable = _config.region_location_id.writable = False
 
             elif r.component_name == "competency":

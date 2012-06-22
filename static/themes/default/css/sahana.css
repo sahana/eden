@@ -274,7 +274,7 @@ table {
     width: 1280px;
 }
 #banner {
-    background: url(../../img/BANNER.jpg) 0 0 no-repeat;
+    background: url(../../../img/BANNER.jpg) 0 0 no-repeat;
     padding: none;
     width: 1280px;
     height: 255px;
@@ -288,7 +288,7 @@ table {
     position: absolute;
     /* top: 255px; */
     height: 36px;
-    background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
+    background: #CACACA  url(../../../img/BFTBmenu_back.png) repeat-x;
     border-top: 1px solid #2a323f;
     /* alternate gradient
     background-image: -webkit-gradient(
@@ -366,7 +366,7 @@ table {
 /* Menu Buttons */
 #modulenav li div {
     text-align: center;
-    background: url(../../img/BFTBmenu_side.png) right 10px no-repeat;
+    background: url(../../../img/BFTBmenu_side.png) right 10px no-repeat;
     text-shadow: 0 1px 1px #58606c;
 }
 #modulenav li div a{
@@ -375,7 +375,7 @@ table {
 }
 #modulenav li div.hovered,
 #modulenav li div:hover {
-    background: #3177bc url(../../img/BFTBmenu_hilight.png) repeat-x;
+    background: #3177bc url(../../../img/BFTBmenu_hilight.png) repeat-x;
     /* alternate gradient
     background-image: -webkit-gradient(
         linear,
@@ -429,7 +429,7 @@ table {
 }
 
 .S3menulogo {
-    background: url(../../img/S3menu_logo.png) left top no-repeat;
+    background: url(../../../img/S3menu_logo.png) left top no-repeat;
     text-shadow: none;
     padding: none;
     width: 35px;
@@ -1007,7 +1007,7 @@ div#map {
     text-transform: uppercase;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_off.gif);
+    background-image: url(../../../img/help_off.gif);
 }
 .tooltip span,
 .tooltipbody span,
@@ -1022,7 +1022,7 @@ div#map {
     background-color: transparent;
     height: 20px;
     width: 50px;
-    background-image: url(../../img/help_on.gif);
+    background-image: url(../../../img/help_on.gif);
 }
 
 /* Form Popup */
@@ -1036,7 +1036,7 @@ div.confirmation {
     font-weight: bold;
     text-align: center;
     border: #070 1px solid;
-    background: url(../../img/dialog-confirmation.png) #e5ffe5 no-repeat 5px 5px;
+    background: url(../../../img/dialog-confirmation.png) #e5ffe5 no-repeat 5px 5px;
     margin-top: 0.0em;
     margin-bottom: 0.5em;
     padding-left: 30px;
@@ -1054,7 +1054,7 @@ div.confirmation {
     font-weight: bold;
     text-align: center;
     border: #c00 1px solid;
-    background: url(../../img/dialog-error.png) #ffe5e5 no-repeat 5px 5px;
+    background: url(../../../img/dialog-error.png) #ffe5e5 no-repeat 5px 5px;
     margin-top: 0.0em;
     margin-bottom: 0.5em;
     padding-left: 30px;
@@ -1072,7 +1072,7 @@ div.confirmation {
     font-weight: bold;
     text-align: center;
     border: #9ed8d7 1px solid;
-    background: url(../../img/dialog-information.png) #ecfdff no-repeat 5px 5px;
+    background: url(../../../img/dialog-information.png) #ecfdff no-repeat 5px 5px;
     margin-top: 0.0em;
     margin-bottom: 0.5em;
     padding-left: 30px;
@@ -1090,7 +1090,7 @@ div.confirmation {
     font-weight: bold;
     text-align: center;
     border: #fc6 1px solid;
-    background: url(../../img/dialog-warning.png) #ffc no-repeat 5px 5px;
+    background: url(../../../img/dialog-warning.png) #ffc no-repeat 5px 5px;
     margin-top: 0.0em;
     margin-bottom: 0.5em;
     padding-left: 30px;
@@ -1311,24 +1311,24 @@ div#last_update {
     position: static;
     height: 16px;
     width: 16px;
-    background-image: url(../../img/icon_blue_plus15px.png);
+    background-image: url(../../../img/icon_blue_plus15px.png);
 }
 .minus {
     position: static;
     height: 16px;
     width: 16px;
-    background-image: url(../../img/icon_blue_minus15px.png);
+    background-image: url(../../../img/icon_blue_minus15px.png);
 }
 .expand {
     /*position: static;*/
     height: 16px;
     width: 16px;
     float: left;
-    background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
+    background-image: url(../../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -64px -16px;
 }
 .expanded {
-    background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
+    background-image: url(../../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
     white-space:nowrap; /* prevent the label from wrapping */
 }
@@ -1527,7 +1527,7 @@ li input + a {
     margin: 0;
     padding: 15px 15px 15px 15px;
     overflow: hidden;
-    background: url(../../img/menu_box-r.png) no-repeat scroll top right;
+    background: url(../../../img/menu_box-r.png) no-repeat scroll top right;
     display: block;
     white-space:nowrap;
     text-align: center;
@@ -1536,7 +1536,7 @@ li input + a {
 .menu-btn-l {
     margin-top:4px;
     overflow: hidden;
-    background: url(../../img/menu_box-lstretch.png) no-repeat;
+    background: url(../../../img/menu_box-lstretch.png) no-repeat;
     display: block;
     /*float: left;*/
     height: 50px;
@@ -1763,11 +1763,11 @@ a:visited:after {
 .search_select_letter_label {
     margin: 10px 0 0 7px;
     padding-left: 20px;
-    background: url( ../../img/icon_blue_plus15px.png ) no-repeat;
+    background: url( ../../../img/icon_blue_plus15px.png ) no-repeat;
     cursor: pointer;
 }
 .search_select_letter_label.expanded {
-    background: url( ../../img/icon_blue_minus15px.png ) no-repeat;
+    background: url( ../../../img/icon_blue_minus15px.png ) no-repeat;
 }
 .search_select_letter_widget {
     margin-left: 2em;

@@ -251,19 +251,6 @@ class GIS(object):
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
-        self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
-        # Info for countries. These will be filled in once the gis_location
-        # table is available and populated with L0 countries.
-        # countries and site countries are lists (or Rows) of Storage, ordered
-        # by country name. Each element contains L0 location id (key "id"),
-        # country code (key "code"), and name (key "name").
-        self.countries = None  # id, code, and name for all countries
-        self.site_countries = None  # same for this site's countries
-        # These will be OrderedDicts of id or code vs. country name.
-        self.countries_by_id = None
-        self.countries_by_code = None
-        self.site_countries_by_id = None
-        self.site_countries_by_code = None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1312,7 +1299,7 @@ class GIS(object):
         T = current.T
         all_levels = OrderedDict()
         all_levels.update(self.get_location_hierarchy())
-        all_levels["GR"] = T("Location Group")
+        #all_levels["GR"] = T("Location Group")
         #all_levels["XX"] = T("Imported")
 
         if level:
@@ -1369,23 +1356,27 @@ class GIS(object):
         return edit
 
     # -------------------------------------------------------------------------
-    def get_countries(self, key_type="id"):
+    @staticmethod
+    def get_countries(key_type="id"):
         """
             Returns country code or L0 location id versus name for all countries.
+
+            The lookup is cached in the session
 
             If key_type is "code", these are returned as an OrderedDict with
             country code as the key.  If key_type is "id", then the location id
             is the key.  In all cases, the value is the name.
         """
 
-        settings = current.deployment_settings
+        session = current.session
+        if "gis" not in session:
+            session.gis = Storage()
+        gis = session.gis
 
-        cached = False
-        if settings.countries:
-            # This may have been changed since the initial config
-            cached = False
-        elif self.countries:
+        if gis.countries_by_id:
             cached = True
+        else:
+            cached = False
 
         if not cached:
             s3db = current.s3db
@@ -1394,9 +1385,6 @@ class GIS(object):
             query = (table.level == "L0") & \
                     (ttable.tag == "ISO2") & \
                     (ttable.location_id == table.id)
-            _countries = settings.get_gis_countries()
-            if _countries:
-                query = query & (ttable.value.belongs(_countries))
             countries = current.db(query).select(table.id,
                                                  table.name,
                                                  ttable.value,
@@ -1407,23 +1395,22 @@ class GIS(object):
             countries_by_id = OrderedDict()
             countries_by_code = OrderedDict()
             for row in countries:
-                _location = row["gis_location"]
-                countries_by_id[_location.id] = _location.name
-                countries_by_code[row["gis_location_tag"].value] = _location.name
+                location = row["gis_location"]
+                countries_by_id[location.id] = location.name
+                countries_by_code[row["gis_location_tag"].value] = location.name
 
-            # Don't expose these while they're being built. Set countries last
-            # so it can be used to tell when all exist.
-            self.countries_by_id = countries_by_id
-            self.countries_by_code = countries_by_code
-            self.countries = countries
+            # Cache in the session
+            gis.countries_by_id = countries_by_id
+            gis.countries_by_code = countries_by_code
 
         if key_type == "id":
-            return self.countries_by_id
+            return gis.countries_by_id
         else:
-            return self.countries_by_code
+            return gis.countries_by_code
 
     # -------------------------------------------------------------------------
-    def get_country(self, key, key_type="id"):
+    @staticmethod
+    def get_country(key, key_type="id"):
         """
             Returns country name for given code or id from L0 locations.
 
@@ -1432,11 +1419,11 @@ class GIS(object):
         """
 
         if key:
-            if self.countries or self.get_countries(key_type):
+            if current.gis.get_countries(key_type):
                 if key_type == "id":
-                    return self.countries_by_id[key]
+                    return current.session.gis.countries_by_id[key]
                 else:
-                    return self.countries_by_code[key]
+                    return current.session.gis.countries_by_code[key]
 
         return None
 
@@ -1523,9 +1510,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-        session = current.session
-        T = current.T
-        locations = db.gis_location
+        locations = s3db.gis_location
 
         try:
             location_id = int(location)
@@ -1588,10 +1573,11 @@ class GIS(object):
         if lon_min is None:
             # We have no BBOX so go straight to the full geometry check
             for row in features:
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:
@@ -1617,10 +1603,11 @@ class GIS(object):
             for row in features.find(lambda row: in_bbox(row)):
                 # Search within this subset with a full geometry check
                 # Uses Shapely.
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:

@@ -371,7 +371,6 @@ class S3LocationModel(S3Model):
         gis = current.gis
         request = current.request
         response = current.response
-        s3 = response.s3
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
@@ -396,6 +395,12 @@ class S3LocationModel(S3Model):
         parent = "parent" in vars and vars.parent
         lat = "lat" in vars and vars.lat
         lon = "lon" in vars and vars.lon
+        if lon > 180:
+            # Map Selector wrapped
+            lon = lon - 360
+        elif lon < -180:
+            # Map Selector wrapped
+            lon = lon + 360
         id = "id" in request.vars and request.vars.id
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
@@ -1211,7 +1216,7 @@ class S3GISConfigModel(S3Model):
                              # Region field
                              location_id("region_location_id",
                                          widget = S3LocationAutocompleteWidget(),
-                                         requires = IS_NULL_OR(IS_LOCATION(level=gis.region_level_keys))),
+                                         requires = IS_NULL_OR(IS_LOCATION(level=gis.hierarchy_level_keys))),
 
                              # CRUD Settings
                              # Default Location
