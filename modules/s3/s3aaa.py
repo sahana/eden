@@ -3293,7 +3293,7 @@ class S3Permission(object):
         self.function = request.function
 
         # Request format
-        # @todo: move this into s3tools.py:
+        # @todo: move this into s3utils.py:
         self.format = request.extension
         if "format" in request.get_vars:
             ext = request.get_vars.format

@@ -60,7 +60,7 @@ class CreateStaffTraining(SeleniumUnitTest):
                      ]
                      )
         self.login(account="admin", nexturl="hrm/training_event/create")
-        self.create("hrm_trianing_event", 
+        self.create("hrm_training_event", 
                     [( "course_id",
                        "Emergency First Aid",
                        "option"),

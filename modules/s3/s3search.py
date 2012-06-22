@@ -40,8 +40,7 @@ from gluon.serializers import json
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug
-from s3tools import S3DateTime
+from s3utils import s3_debug, S3DateTime
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 

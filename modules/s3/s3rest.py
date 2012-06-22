@@ -63,8 +63,8 @@ from gluon.storage import Storage
 from gluon.tools import callback
 import gluon.contrib.simplejson as json
 
+from s3utils import SQLTABLES3
 from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
-from s3tools import SQLTABLES3
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
 from s3export import S3Exporter

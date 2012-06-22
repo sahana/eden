@@ -73,7 +73,7 @@ except ImportError:
     raise
 
 from s3method import S3Method
-from s3tools import S3DateTime
+from s3utils import S3DateTime
 
 try:
     from PIL import Image
