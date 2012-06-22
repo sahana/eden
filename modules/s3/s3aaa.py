@@ -1610,6 +1610,7 @@ class AuthS3(Auth):
             else:
                 self.user = Storage(table_user._filter_fields(user, id=True))
 
+        session.auth = self
         self.s3_set_roles()
 
         if self.user:
