@@ -56,12 +56,19 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.languages import lazyT
 from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
-import gluon.contrib.simplejson as json
 
 from s3utils import SQLTABLES3
 from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT

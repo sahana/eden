@@ -31,12 +31,19 @@
 """
 
 import re
-import gluon.contrib.simplejson as jsonlib
 import cPickle
 
-from gluon.storage import Storage
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
-from gluon.serializers import json
+from gluon.serializers import json as jsons
+from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
@@ -1262,7 +1269,7 @@ $('#%s').live('click', function() {
        save_search_processing_id,
        save_search_btn_id,
        jurl,
-       jsonlib.dumps(search_vars),
+       json.dumps(search_vars),
        save_search_a_id,
        save_search_processing_id))
 
@@ -1463,7 +1470,7 @@ $('#%s').live('click', function() {
                     aadata = dict(aaData=sqltable or [])
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
-                    response.aadata = json(aadata)
+                    response.aadata = jsons(aadata)
                     s3.start = 0
                     s3.limit = limit
 
@@ -1855,9 +1862,9 @@ $('#%s').live('click', function() {
 
             if filter == "~":
                 if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                    output = json([dict(id="",
-                                       name="Search results are over %d. Please input more characters." \
-                                       % MAX_SEARCH_RESULTS)])
+                    output = jsons([dict(id="",
+                                         name="Search results are over %d. Please input more characters." \
+                                         % MAX_SEARCH_RESULTS)])
 
             if output is None:
                 output = resource.exporter.json(resource,
@@ -2087,9 +2094,9 @@ $('#%s').live('click', function() {
                        "represent" : str(represent(row[get_fieldname]))
                        } for row in rows ]
         else:
-            json("{}")
+            jsons("{}")
 
-        return json(output)
+        return jsons(output)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2108,7 +2115,7 @@ $('#%s').live('click', function() {
         auth = current.auth
 
         user_id = auth.user.id
-        search_vars = jsonlib.load(r.body)
+        search_vars = json.load(r.body)
         s_vars = {}
 
         for i in search_vars.iterkeys():
@@ -2321,12 +2328,12 @@ class S3LocationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
         elif not parent:
             if (not limit or limit > MAX_RESULTS) and resource.count() > MAX_RESULTS:
-                output = json([])
+                output = jsons([])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2405,9 +2412,9 @@ class S3OrganisationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             attributes = dict(orderby=field)
@@ -2438,7 +2445,7 @@ class S3OrganisationSearch(S3Search):
                     name = name,
                     )
                 append(record)
-            output = json(output)
+            output = jsons(output)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2515,9 +2522,9 @@ class S3PersonSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2605,9 +2612,9 @@ class S3HRSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2690,7 +2697,7 @@ class S3PentitySearch(S3Search):
 
         output = resource.exporter.json(resource, start=0, limit=limit,
                                         fields=[table.pe_id], orderby=field)
-        items = jsonlib.loads(output)
+        items = json.loads(output)
 
         # Add Groups
         if filter and value:
@@ -2705,7 +2712,7 @@ class S3PentitySearch(S3Search):
                                             limit=limit,
                                             fields=[table.pe_id],
                                             orderby=field)
-            items += jsonlib.loads(output)
+            items += json.loads(output)
 
         # Add Organisations
         if filter and value:
@@ -2720,13 +2727,13 @@ class S3PentitySearch(S3Search):
                                             limit=limit,
                                             fields=[table.pe_id],
                                             orderby=field)
-            items += jsonlib.loads(output)
+            items += json.loads(output)
 
         items = [ { "id" : item[u'pe_id'],
                     "name" : s3db.pr_pentity_represent(item[u'pe_id'],
                                                        show_label=False) }
                   for item in items ]
-        output = jsonlib.dumps(items)
+        output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
         return output
 
@@ -2812,9 +2819,9 @@ class S3TrainingSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             attributes = dict(orderby=field)
@@ -2832,7 +2839,7 @@ class S3TrainingSearch(S3Search):
                     date = S3DateTime.date_represent(row[table].start_date),
                     )
                 append(record)
-            output = json(output)
+            output = jsons(output)
 
 
         response.headers["Content-Type"] = "application/json"

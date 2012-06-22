@@ -42,9 +42,18 @@ __all__ = ["S3OrganisationModel",
            "org_office_controller",
            ]
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
 
@@ -872,7 +881,6 @@ class S3OrganisationModel(S3Model):
             branch_id = record.branch_id
             organisation_id = record.organisation_id
             if branch_id and organisation_id and not record.deleted:
-                import gluon.contrib.simplejson as json
                 query = (ltable.branch_id == branch_id) & \
                         (ltable.organisation_id == organisation_id) & \
                         (ltable.id != record.id) & \

@@ -98,7 +98,6 @@ def climate_overlay_data():
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
-        import gluon.contrib.simplejson as json
         try:
             data_path = _map_plugin().get_overlay_data(**arguments)
         # only DSL exception types should be raised here
@@ -172,7 +171,6 @@ def _climate_chart(content_type):
     """
 
     kwargs = dict(request.vars)
-    import gluon.contrib.simplejson as json
     specs = json.loads(kwargs.pop("spec"))
     def list_of(converter):
         def convert_list(choices):

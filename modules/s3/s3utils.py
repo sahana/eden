@@ -72,13 +72,19 @@ import uuid
 
 from xml.sax.saxutils import unescape
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
 from gluon.sqlhtml import SQLTABLE
 from gluon.tools import Crud
-
-import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3validators import IS_UTC_OFFSET

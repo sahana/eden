@@ -81,15 +81,22 @@ __all__ = ["S3PersonEntity",
            "pr_image_format",
            ]
 
-import re
 import os
+import re
 
-import gluon.contrib.simplejson as json
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
+
 from ..s3 import *
 from layouts import *
 from eden.layouts import S3AddResourceLink

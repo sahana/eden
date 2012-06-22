@@ -31,8 +31,17 @@ __all__ = ["S3IRSModel",
            "S3IRSResponseModel",
            "irs_rheader"]
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
 
 # =============================================================================
@@ -732,8 +741,6 @@ class S3IRSModel(S3Model):
         """
 
         if r.representation == "html" and r.name == "ireport":
-
-            import gluon.contrib.simplejson as json
 
             T = current.T
             db = current.db

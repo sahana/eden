@@ -37,11 +37,19 @@ __all__ = ["S3Cube", "S3Report", "S3ContingencyTable"]
 
 import sys
 import datetime
-import gluon.contrib.simplejson as json
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.storage import Storage
 from gluon.html import *
+from gluon.storage import Storage
+
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search

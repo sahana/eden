@@ -58,11 +58,18 @@ except ImportError:
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.dal import Rows
 from gluon.storage import Storage, Messages
 from gluon.tools import fetch
-import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names

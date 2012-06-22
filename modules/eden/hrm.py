@@ -45,9 +45,21 @@ __all__ = ["S3HRModel",
            ]
 
 import datetime
+
+try:
+    # try stdlib (Python 2.6)
+    import json
+except ImportError:
+    try:
+        # try external module
+        import simplejson as json
+    except:
+        # fallback to pure-Python module
+        import gluon.contrib.simplejson as json
+
 from gluon import *
 from gluon.storage import Storage
-import gluon.contrib.simplejson as json
+
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
 

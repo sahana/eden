@@ -18,7 +18,13 @@ if s3.debug:
 
 import datetime
 
-import gluon.contrib.simplejson as json
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 # All dates should be stored in UTC for Sync to work reliably
 request.utcnow = datetime.datetime.utcnow()

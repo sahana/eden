@@ -32,8 +32,8 @@ __all__ = ["S3Model", "S3ModelExtensions", "S3MultiPath"]
 
 import sys
 
-from gluon.storage import Storage
 from gluon import *
+from gluon.storage import Storage
 
 from s3validators import IS_ONE_OF
 

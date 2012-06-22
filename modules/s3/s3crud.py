@@ -36,10 +36,10 @@
 
 __all__ = ["S3CRUD"]
 
-from gluon.storage import Storage
-from gluon.dal import Row
 from gluon import *
+from gluon.dal import Row
 from gluon.serializers import json
+from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3method import S3Method
