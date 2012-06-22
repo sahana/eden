@@ -1763,6 +1763,7 @@ def org_site_represent(id, show_link=True):
     db = current.db
     s3db = current.s3db
     represent = current.messages.NONE
+    T = current.T
 
     stable = s3db.org_site
 

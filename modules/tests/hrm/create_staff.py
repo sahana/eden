@@ -1,4 +1,4 @@
-""" Sahana Eden Module Automated Tests - HRM001 Create Staff
+""" Sahana Eden Automated Test - HRM001 Create Staff
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -25,8 +25,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from gluon import current
+import unittest
 from tests.web2unittest import SeleniumUnitTest
+from selenium.common.exceptions import NoSuchElementException
+from s3 import s3_debug
 from tests import *
+#import unittest, re, time
+import time
 
 class CreateStaff(SeleniumUnitTest):
     def test_hrm001_create_staff(self):
@@ -38,44 +44,46 @@ class CreateStaff(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
+        
         browser = self.browser
-        browser.get("%s/hrm" % self.config.url)
-        browser.find_element_by_link_text("New Staff Member").click()
-        w_autocomplete("Rom",
-                       "hrm_human_resource_organisation_id",
-                       "Romanian Food Assistance Association (Test) (RFAAT)",
-                       False)
-        browser.find_element_by_id("pr_person_first_name").clear()
-        browser.find_element_by_id("pr_person_first_name").send_keys("Robert")
-        browser.find_element_by_id("pr_person_middle_name").clear()
-        browser.find_element_by_id("pr_person_middle_name").send_keys("James")
-        browser.find_element_by_id("pr_person_last_name").clear()
-        browser.find_element_by_id("pr_person_last_name").send_keys("Lemon")
-        browser.find_element_by_id("pr_person_date_of_birth").click()
-        browser.find_element_by_id("pr_person_date_of_birth").clear()
-        browser.find_element_by_id("pr_person_date_of_birth").send_keys("1980-10-14")
-        browser.find_element_by_id("pr_person_gender").click()
-        browser.find_element_by_id("pr_person_gender").send_keys("male")
-        browser.find_element_by_id("pr_person_occupation").clear()
-        browser.find_element_by_id("pr_person_occupation").send_keys("Social Worker")
-        browser.find_element_by_id("pr_person_email").clear()
-        browser.find_element_by_id("pr_person_email").send_keys("rjltestdonotusetest4@romanianfoodassistanceassociation.com")
-        el = browser.find_element_by_id("hrm_human_resource_job_role_id")
-        for option in el.find_elements_by_tag_name("option"):
-            if option.text == "Administrative Officer":
-                option.click()
-                #To check afterwards
-                #raw_value = int(option.get_attribute("Administrative Officer"))
-                break
-        browser.find_element_by_id("hrm_human_resource_start_date").click()
-        browser.find_element_by_id("hrm_human_resource_start_date").clear()
-        browser.find_element_by_id("hrm_human_resource_start_date").send_keys("2012-02-02")
-        browser.find_element_by_css_selector("#hrm_human_resource_start_date__row > td").click()
-        browser.find_element_by_id("hrm_human_resource_end_date").click()
-        browser.find_element_by_id("hrm_human_resource_end_date").clear()
-        browser.find_element_by_id("hrm_human_resource_end_date").send_keys("2015-03-02")
-        w_autocomplete("Buch",
-                       "hrm_human_resource_site_id",
-                       "Bucharest RFAAT Centre (Test) (Office)",
-                       False)
-        browser.find_element_by_css_selector("input[type=\"submit\"]").click()
+        self.login(account="admin", nexturl="hrm/staff/create")
+
+        self.create("hrm_human_resource", 
+                    [( "organisation_id",
+                       "Romanian Food Assistance Association",
+                       "autocomplete"),
+                     ( "first_name",
+                       "Robert",
+                       "pr_person"),
+                     ( "middle_name",
+                       "James",
+                       "pr_person"),
+                     ( "last_name",
+                       "Lemon",
+                       "pr_person"),
+                     ( "date_of_birth",
+                       "1980-10-14",
+                       "pr_person"),
+                     # To Do: Make 4th arg for this to support option
+#                     ( "gender",
+#                       "male",
+#                       "option",
+#                       "pr_person"),
+                     ( "email",
+                       "rjltestdonotusetest4@romanianfoodassistanceassociation.com",
+                       "pr_person"),
+                     ( "job_role_id",
+                       "Administrative Officer",
+                       "option"),
+#                     ( "start_date",
+#                       today),
+#                     ( "end_date",
+#                       now_1_week),
+                     ( "site_id",
+                       "Bucharest RFAAT Centre",
+                       "autocomplete"),
+
+                     ]
+                     )
+
+
