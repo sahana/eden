@@ -5,86 +5,75 @@ from gluon.storage import Storage
 from s3 import *
 
 # =============================================================================
-#class S3MainMenuLayout(S3NavigationItem):
-    #"""
-        #Application Main Menu Layout
+class S3MainMenuLayout(S3NavigationItem):
+    """
+        Application Main Menu Layout
+    """
 
-        #The layout() function takes an S3NavigationItem instance as input
-        #and renders it as an HTML helper class instance. If the item can
-        #or shall not be rendered on the page, this method must return None.
+    @staticmethod
+    def layout(item):
+        """ Custom Layout Method """
 
-        #S3NavigationItem instances provide a number of attributes and methods
-        #to support context-sensisitve rendering (see modules/s3/s3navigation.py).
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized:
+            item.enabled = False
+            item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = True
+            item.visible = True
 
-        #Note that individual items can override the layout method by explicitly
-        #setting the layout-property in the item's constructor.
-    #"""
+        if item.enabled and item.visible:
 
-    #@classmethod
-    #def layout(cls, item):
-        #""" Custom Layout Method (example) """
+            items = item.render_components()
+            if item.parent is not None:
+                # Menu Item
+                _class = item.selected and "selected" or ""
+                if item.opts.right:
+                    _class = "fright selected" if _class else "fright"
+                else:
+                    _class = "fleft selected" if _class else "fleft"
+                _href = item.url()
+                link = A(DIV(item.label,
+                             _class="hoverable"),
+                         _href=item.url(),
+                         _id=item.attr._id)
+                return LI(link, _class=_class)
+            else:
+                # Main menu
+                return UL(items, _id="modulenav")
 
-        ## Manage flags: hide any disabled/unauthorized items
-        #if not item.authorized:
-            #item.enabled = False
-            #item.visible = False
-        #elif item.enabled is None or item.enabled:
-            #item.enabled = True
-            #item.visible = True
+        else:
+            return None
 
-        #if item.enabled and item.visible:
+# =============================================================================
+class S3TopMenuLayout(S3NavigationItem):
+    """
+        Top Menu Layout
+    """
 
-            #items = item.render_components()
-            #if item.parent is not None:
-                #if item.opts.right:
-                    #_class = "fright"
-                #else:
-                    #_class = "fleft"
-                #if item.components:
-                    ## Submenu, render only if there's at list one active item
-                    #if item.get_first(enabled=True):
-                        #_href = item.url()
-                        #return LI(DIV(A(item.label,
-                                        #_href=_href,
-                                        #_id=item.attr._id),
-                                        #_class="hoverable"),
-                                  #UL(items,
-                                     #_class="submenu"),
-                                  #_class=_class)
-                #else:
-                    ## Menu item
-                    #if item.parent.parent is None:
-                        ## Top-level item
-                        #_href = item.url()
-                        #if item.is_first():
-                            ## 1st item, so display logo
-                            #link = DIV(SPAN(A(_href=_href),
-                                            #_class="S3menulogo"),
-                                       #SPAN(A(item.label, _href=_href),
-                                            #_class="S3menuHome"),
-                                       #_class="hoverable")
-                        #else:
-                            #link = DIV(A(item.label,
-                                         #_href=item.url(),
-                                         #_id=item.attr._id),
-                                       #_class="hoverable")
-                        #return LI(link, _class=_class)
-                    #else:
-                        ## Submenu item
-                        #if isinstance(item.label, dict):
-                            #if "name" in item.label:
-                                #label = item.label["name"]
-                            #else:
-                                #return None
-                        #else:
-                            #label = item.label
-                        #link = A(label, _href=item.url(), _id=item.attr._id)
-                        #return LI(link)
-            #else:
-                ## Main menu
-                #return UL(items, _id="modulenav")
+    @staticmethod
+    def layout(item):
+        """ Custom Layout Method """
 
-        #else:
-            #return None
+        if item.parent is None:
+            # The menu
+            items = item.render_components()
+            if items:
+                return UL(items)
+            else:
+                return "" # menu is empty
+        else:
+            # A menu item
+            if item.enabled and item.authorized:
+                return LI(A(DIV(item.label,
+                                _class="hoverable"),
+                            _href=item.url()),
+                          _class="fleft")
+            else:
+                return None
 
-## =============================================================================
+# -----------------------------------------------------------------------------
+# Shortcut
+MT = S3TopMenuLayout
+
+# END =========================================================================

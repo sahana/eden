@@ -357,7 +357,7 @@ class S3Msg(object):
         pe_row = TR(TD(LABEL("%s:" % ocustom.label.pe_id)),
                     _id="msg_outbox_pe_id__row")
         if recipient:
-            ocustom.widget.pe_id["_class"] = "hidden"
+            ocustom.widget.pe_id["_class"] = "hide"
             pe_row.append(TD(ocustom.widget.pe_id,
                              s3.pr_pentity_represent(recipient,
                                                      show_label=False)))

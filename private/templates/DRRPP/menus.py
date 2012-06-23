@@ -11,9 +11,7 @@ import eden.menus as default
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
-    """
-        Custom Application Main Menu:
-    """
+    """ Custom Application Main Menu """
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -26,7 +24,7 @@ class S3MainMenu(default.S3MainMenu):
         )
 
         # Additional menus
-        current.menu.top = cls.menu_auth()
+        current.menu.top = cls.menu_top()
 
         return main_menu
 
@@ -36,19 +34,23 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [
-            homepage("project", name=current.T("Projects"))(),
+            MM("Home", c="default", f="index"),
+            MM("Project List", c="project", f="project"),
+            MM("Project Analysis", c="project", f="analysis"),
+            MM("Regional Organizations", "project", f="organisation"),
+            MM("DRR Frameworks", c="project", f="framework"),
+            MM("My Page", c="default", f="index", args="mypage"),
         ]
 
     # -------------------------------------------------------------------------
     @classmethod
-    def menu_auth(cls, **attr):
-        """ Custom Auth Menu """
+    def menu_top(cls, **attr):
+        """ Custom Top Menu """
 
         auth = current.auth
-        logged_in = auth.is_logged_in()
-        self_registration = current.deployment_settings.get_security_self_registration()
 
-        if not logged_in:
+        if not auth.is_logged_in():
+            self_registration = current.deployment_settings.get_security_self_registration()
             request = current.request
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \
@@ -56,37 +58,32 @@ class S3MainMenu(default.S3MainMenu):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            menu_auth = MM("Login", c="default", f="user", m="login",
-                           _id="auth_menu_login",
-                           vars=dict(_next=login_next), **attr)(
-                            MM("Login", m="login",
-                               vars=dict(_next=login_next)),
-                            MM("Register", m="register",
-                               vars=dict(_next=login_next),
-                               check=self_registration),
-                            #MM("Lost Password", m="retrieve_password"),
-                            MM("About", c="default", f="about"),
-                            MM("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
-                            MM("Contact", url="mailto:admin@drrprojects.net"),
-                        )
+            menu_top = MT()(
+                    MT("Login", c="default", f="user", m="login",
+                       _id="auth_menu_login",
+                       vars=dict(_next=login_next), **attr),
+                    MT("Register", c="default", f="user", args="register",
+                       vars=dict(_next=login_next),
+                       check=self_registration),
+                    MT("About", c="default", f="about"),
+                    MT("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
+                    MT("Contact", url="mailto:admin@drrprojects.net"),
+                )
         else:
             # Logged-in
-            menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
-                           **attr)(
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
-                            MM("User Profile", m="profile"),
-                            #MM("Personal Data", c="pr", f="person", m="update",
-                            #    vars={"person.pe_id" : auth.user.pe_id}),
-                            #MM("Contact Details", c="pr", f="person",
-                            #    args="contact",
-                            #    vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Subscriptions", c="pr", f="person",
-                                args="pe_subscription",
-                                vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Change Password", m="change_password"),
-                        )
+            user = auth.user
+            welcome = "Welcome %s %s" % (user.first_name, user.last_name)
 
-        return menu_auth
+            menu_top = MT()(
+                    MT(welcome, c="default", f="user",
+                       translate=False, link=False, _id="auth_menu_email",
+                       **attr),
+                    MT("Logout", c="default", f="user", args="logout", _id="auth_menu_logout"),
+                    MT("About", c="default", f="about"),
+                    MT("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
+                    MT("Contact", url="mailto:admin@drrprojects.net"),
+                )
+
+        return menu_top
 
 # END =========================================================================

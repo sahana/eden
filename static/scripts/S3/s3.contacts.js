@@ -1,7 +1,7 @@
 /* Addresses not done in this controller for now as can't load Google Maps properly
 $('#address-add').click(function () {
     // Show a Spinner
-    $('#address-add_throbber').removeClass('hidden').show();
+    $('#address-add_throbber').removeClass('hide').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -29,7 +29,7 @@ $('.address').each(function () {
     var id = address.attr('id').match(/\d+/);
     address.find('a.editBtn').click(function () {
         // Show a Spinner
-        $('#address-add_throbber').removeClass('hidden').show();
+        $('#address-add_throbber').removeClass('hide').show();
         // Download the form
         var url = S3.Ap.concat('/pr/address/' + id + '.iframe/update')
         $.get(url, function(data) {
@@ -55,7 +55,7 @@ $('.address').each(function () {
 
 $('#contact-add').click(function () {
     // Show a Spinner
-    $('#contact-add_throbber').removeClass('hidden').show();
+    $('#contact-add_throbber').removeClass('hide').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -85,7 +85,7 @@ $('.contact').each(function () {
     contact.find('a.deleteBtn').click(function (e) {
         if (confirm(S3.i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '/delete'));
-            contact.addClass('hidden');
+            contact.addClass('hide');
         }
     });
 
@@ -113,7 +113,7 @@ $('.contact').each(function () {
             e.preventDefault();
             contact.removeClass('edit').addClass('saving');
             form.append($('<img src="' + S3.Ap.concat('/static/img/jquery-ui/ui-anim_basic_16x16.gif') + '">').addClass('fright'));
-            form.find('input[type=submit]').addClass('hidden');
+            form.find('input[type=submit]').addClass('hide');
             $.post(S3.Ap.concat('/pr/contact/' + id[0] + '.s3json'),
                    '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
                    function () {
@@ -128,7 +128,7 @@ $('.contact').each(function () {
 
 $('#emergency-add').click(function () {
     // Show a Spinner
-    $('#emergency-add_throbber').removeClass('hidden').show();
+    $('#emergency-add_throbber').removeClass('hide').show();
     var button = $(this);
     // Remove any existing form
     $('#popup').remove()
@@ -156,13 +156,13 @@ $('.emergency').each(function () {
     emergency.find('a.deleteBtn').click(function (e) {
         if (confirm(S3.i18n.delete_confirmation)) {
             $.post(S3.Ap.concat('/pr/contact_emergency/' + id + '/delete'));
-            emergency.addClass('hidden');
+            emergency.addClass('hide');
         }
     });
 
     emergency.find('a.editBtn').click(function () {
         // Show a Spinner
-        $('#emergency-add_throbber').removeClass('hidden').show();
+        $('#emergency-add_throbber').removeClass('hide').show();
         // Download the form
         var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update')
         $.get(url, function(data) {

@@ -3161,7 +3161,7 @@ def pr_contacts(r, **attr):
                               # IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
                                   # _height=32, _width=32,
                                   # _id="address-add_throbber",
-                                  # _class="throbber hidden"),
+                                  # _class="throbber hide"),
                               # _class="margin"))
 
     # items = address_groups.items()
@@ -3207,7 +3207,7 @@ def pr_contacts(r, **attr):
                       IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
                           _height=32, _width=32,
                           _id="contact-add_throbber",
-                          _class="throbber hidden"),
+                          _class="throbber hide"),
                       _class="margin")
         contacts_wrapper.append(add_btn)
 
@@ -3274,7 +3274,7 @@ def pr_contacts(r, **attr):
                       IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
                           _height=32, _width=32,
                           _id="emergency-add_throbber",
-                          _class="throbber hidden"),
+                          _class="throbber hide"),
                       _class="margin")
         emergency_wrapper.append(add_btn)
 

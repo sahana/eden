@@ -8,8 +8,6 @@
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <!-- http://dev.w3.org/html5/markup/meta.name.html -->
 <meta name="application-name" content="{{=appname}}" />
-<!-- Set your site up with Google: http://google.com/webmasters -->
-<meta name="google-site-verification" content="" />
 <!--  Mobile Viewport Fix
   j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
   device-width: Occupy full width of the screen in its current orientation
@@ -20,9 +18,6 @@
 <!-- Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references -->
 <link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon">
 <link rel="apple-touch-icon" href="/{{=appname}}/static/favicon.png">
-<!-- All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects -->
-<!-- This kills the map in IE8: VML.js -->
-<!--<script src="/{{=appname}}/static/scripts/web2py/modernizr-1.7.min.js"></script>-->
 <style type="text/css">
 {{if s3.rtl:}}
   div { direction: rtl; }
@@ -30,11 +25,7 @@
   body { direction: ltr; }
 {{pass}}
 </style>
-{{if s3.debug:}}
-  {{include "s3_include_debug.html"}}
-{{else:}}
-  {{include "s3_include_min.html"}}
-{{pass}}
+{{include "load.html"}}
 <script type="text/javascript">//<![CDATA[
   // Translation Strings
   {{include "l10n.js"}}
@@ -48,7 +39,7 @@
 //]]></script>
 </head>
 <body>
-<div id='content' class='clearfix'>
+<div id='content' class='cf'>
 {{=XML(map)}}
 </div>
 </body>

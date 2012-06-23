@@ -2046,8 +2046,8 @@ def org_organisation_controller():
                 tn = r.link.tablename
                 manager.configure(tn,
                                   post_process="hide_host_role($('#%s').val());")
-                script = "s3.hide_host_role.js"
-                s3.scripts.append( "%s/%s" % (s3.script_dir, script))
+                s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
+                    current.request.application)
         return True
     s3.prep = prep
 

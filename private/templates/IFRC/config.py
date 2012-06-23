@@ -108,7 +108,7 @@ settings.save_search.widget = False
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
     ("default", Storage(
-            name_nice = T("Home"),
+            name_nice = "RMS",
             restricted = False, # Use ACLs to control access to this module
             access = None,      # All Users (inc Anonymous) can see this module in the default menu & access the controller
             module_type = None  # This item is not shown in the menu
@@ -198,7 +198,7 @@ settings.modules = OrderedDict([
             module_type = None, # Not displayed
         )),
     ("inv", Storage(
-            name_nice = T("Warehouse"),
+            name_nice = T("Warehouses"),
             #description = "Receiving and Sending Items",
             restricted = True,
             module_type = 4
@@ -222,7 +222,7 @@ settings.modules = OrderedDict([
             module_type = 2
         )),
     ("survey", Storage(
-            name_nice = T("Surveys"),
+            name_nice = T("Assessments"),
             #description = "Create, enter, and manage surveys.",
             restricted = True,
             module_type = 5,

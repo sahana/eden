@@ -689,7 +689,7 @@ function addToolbar() {
             tag: 'img',
             src: S3.gis.ajax_loader
         },
-        cls: 'hidden',
+        cls: 'hide',
         id: 'layer_throbber'
     });
     toolbar.add(throbber);

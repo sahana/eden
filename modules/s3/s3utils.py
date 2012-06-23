@@ -503,11 +503,11 @@ def s3_comments_represent(text, showlink=True):
         represent = DIV(
                         DIV(text,
                             _id=unique,
-                            _class="hidden popup",
+                            _class="hide popup",
                             _onmouseout="$('#%s').hide();" % unique
                            ),
                         A("%s..." % text[:76],
-                          _onmouseover="$('#%s').removeClass('hidden').show();" % unique,
+                          _onmouseover="$('#%s').removeClass('hide').show();" % unique,
                          ),
                        )
         return represent
@@ -641,17 +641,17 @@ def s3_include_debug():
     """
 
     # Disable printing
-    class dummyStream:
-        """ dummyStream behaves like a stream but does nothing. """
-        def __init__(self): pass
-        def write(self,data): pass
-        def read(self,data): pass
-        def flush(self): pass
-        def close(self): pass
+    #class dummyStream:
+    #    """ dummyStream behaves like a stream but does nothing. """
+    #    def __init__(self): pass
+    #    def write(self,data): pass
+    #    def read(self,data): pass
+    #    def flush(self): pass
+    #    def close(self): pass
 
-    save_stdout = sys.stdout
+    #save_stdout = sys.stdout
     # Redirect all prints
-    sys.stdout = dummyStream()
+    #sys.stdout = dummyStream()
 
     request = current.request
     folder = request.folder
@@ -659,20 +659,21 @@ def s3_include_debug():
     theme = current.deployment_settings.get_theme()
 
     # JavaScript
-    scripts_dir_path = "%s/static/scripts" % folder
-    sys.path.append( "%s/tools" % scripts_dir_path)
+    scripts_dir = os.path.join(folder, "static", "scripts")
+    sys.path.append(os.path.join(scripts_dir, "tools"))
     import mergejsmf
 
     configDictCore = {
-        "web2py": scripts_dir_path,
-        "T2":     scripts_dir_path,
-        "S3":     scripts_dir_path
+        ".": scripts_dir,
+        "web2py": scripts_dir,
+        #"T2":     scripts_dir_path,
+        "S3":     scripts_dir
     }
-    configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir_path
+    configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir
     (fs, files) = mergejsmf.getFiles(configDictCore, configFilename)
 
     # Restore prints
-    sys.stdout = save_stdout
+    #sys.stdout = save_stdout
 
     include = ""
     for file in files:

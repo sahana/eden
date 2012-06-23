@@ -3907,7 +3907,7 @@ class GIS(object):
 
         # JS Loader
         html_append(SCRIPT(_type="text/javascript",
-                           _src=URL(c="static", f="scripts/S3/yepnope.1.5.4-min.js")))
+                           _src=URL(c="static", f="scripts/yepnope.1.5.4-min.js")))
 
         scripts = []
         scripts_append = scripts.append

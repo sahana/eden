@@ -4,7 +4,9 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 
-# Below is an example which you can base your own template's menus.py on
+# Below is an example which you can base your own template's layout.py on
+# - there are also other examples in the other templates folders
+# - you will need to restart web2py after making changes to this file
 
 # =============================================================================
 #class S3MainMenuLayout(S3NavigationItem):
@@ -22,8 +24,8 @@ from s3 import *
         #setting the layout-property in the item's constructor.
     #"""
 
-    #@classmethod
-    #def layout(cls, item):
+    #@staticmethod
+    #def layout(item):
         #""" Custom Layout Method """
 
         ## Manage flags: hide any disabled/unauthorized items
@@ -89,4 +91,4 @@ from s3 import *
         #else:
             #return None
 
-## =============================================================================
+# END =========================================================================

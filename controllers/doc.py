@@ -115,7 +115,7 @@ def bulk_upload():
         See r1595 for the previous draft of this work
     """
 
-    s3.stylesheets.append("fileuploader.css")
+    s3.stylesheets.append("plugins/fileuploader.css")
     return dict()
 
 def upload_bulk():

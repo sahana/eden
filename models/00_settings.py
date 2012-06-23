@@ -74,8 +74,6 @@ s3mgr.LABEL["COPY"] = COPY
 s3.stylesheets = []
 s3.external_stylesheets = []
 # To get included at the end of <BODY>
-s3_script_dir = "/%s/static/scripts/S3" % appname
-s3.script_dir = s3_script_dir
 s3.scripts = []
 s3.js_global = []
 s3.jquery_ready = []
@@ -307,7 +305,7 @@ def s3_formstyle(id, label, widget, comment, hidden=False):
     row = []
 
     if hidden:
-        _class = "hidden"
+        _class = "hide"
     else:
         _class = ""
 

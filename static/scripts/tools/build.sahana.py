@@ -155,7 +155,7 @@ def dojs(dogis = False, warnings = True):
 
     # Also do dataTables
     print "Compressing dataTables"
-    sourceDirectorydataTables = "../S3"
+    sourceDirectorydataTables = ".."
     configFilenamedataTables = "sahana.js.dataTables.cfg"
     outputFilenamedataTables = "s3.dataTables.min.js"
     mergeddataTables = mergejs.run(sourceDirectorydataTables,
@@ -414,7 +414,7 @@ def docss():
         file = p.sub("", file)
         listCSS.append("../../styles/%s" % file)
 
-    outputFilenameCSS = "sahana.min.css"
+    outputFilenameCSS = "eden.min.css"
 
     # Merge CSS files
     print "Merging Core styles."
@@ -427,11 +427,11 @@ def docss():
     # Move files to correct locations
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../themes/%s/css/%s" % (theme, outputFilenameCSS))
+        os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../themes/%s/css" % theme)
+    shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
 def main(argv):
     try:

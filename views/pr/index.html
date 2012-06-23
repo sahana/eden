@@ -1,8 +1,8 @@
 {{extend "layout.html"}}
 {{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
-<link href="/{{=appname}}/static/styles/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 <div id='home'>
 {{=H2(module_name)}}

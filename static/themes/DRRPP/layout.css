@@ -1,0 +1,75 @@
+@charset "UTF-8";
+
+/* Layout Elements */
+   
+#header,
+#menu_modules,
+.container, 
+#footer .content {
+    width: 886px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#header {
+    position: relative;
+    height: 70px;           
+    overflow:auto;
+}
+
+#strapline {
+    position: absolute;
+    bottom: 0;
+    right: 0;              
+    width: 600px;
+    margin: 42px 0 5px 10px;
+}
+
+#strapline h1 { 			 
+    color: #FAB73D;
+    font-size: 1.3em;
+    line-height: 1em;  
+    text-align: left;
+    font-style: italic;           
+}
+
+#logo {
+    width: 250px; 
+    height: 59px;
+    background: url(img/head_title.png) no-repeat; 
+    margin-top: 10px;
+    float: left;
+}
+
+/* Content Container */
+.container {
+    margin-top: -3px;
+    margin-bottom: 30px;
+    height: 100%;
+    z-index: 0;
+}
+
+.container .header {
+    height: 13px;
+    font-size: 0px;
+    background: url(img/page_top.png) no-repeat;
+}
+
+.container .footer {
+    height: 13px;
+    font-size: 0;                   
+    background: url(img/page_bottom.png) no-repeat;
+}
+
+/* CD Version cd-to-live button */
+#cd_to_live_div  {
+    float: right;
+    font-size: 1.07em;
+    font-weight: bold; 
+    color: #F5902E;
+    width: 196px;
+    height: 10px;
+    margin: -50px 1px 0 7px;
+    padding: 10px 0 10px 10px;
+    background: url(img/box_cd_to_live.png) no-repeat;
+}

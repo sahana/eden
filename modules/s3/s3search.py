@@ -882,7 +882,7 @@ class S3SearchLocationWidget(S3SearchWidget):
         # Hidden Field to store the Polygon value in
         polygon_input = INPUT(_id="gis_search_polygon_input",
                               _name=self.attr._name,
-                              _class="hidden")
+                              _class="hide")
 
         # Map Popup
         # - not added as we reuse the one that comes with dataTables

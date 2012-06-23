@@ -21,7 +21,8 @@ FINISHED_EDITING_CONFIG_FILE = False
 # - PrePopulate data
 # - Security Policy
 # - Workflows
-# - Theme (tbc)
+# - Theme
+# - note that you should restart your web2py after changing this setting
 settings.base.template = "default"
 
 # Database settings

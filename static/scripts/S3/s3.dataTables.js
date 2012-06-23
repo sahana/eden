@@ -21,7 +21,10 @@ $(document).ready(function() {
     if (S3.dataTables.Actions) {
         var actionCallBacks = new Array();
         var currentID;
-        ColumnSettings[0] = { 'sTitle': ' ', 'bSortable': false  }
+        ColumnSettings[0] = {
+            'sTitle': ' ',
+            'bSortable': false
+        }
     } else {
         ColumnSettings[0] = null;
     }
@@ -43,15 +46,15 @@ $(document).ready(function() {
         var sAjaxSource = null;
         function fnDataTablesPipeline ( url, data, callback ) {
             $.ajax( {
-                "url": url,
-                "data": data,
-                "success": callback,
-                "dataType": "json",
-                "cache": false,
-                "error": function (xhr, error, thrown) {
-                    if ( error == "parsererror" ) {
-                        alert( "DataTables warning: JSON data from server could not be parsed. "+
-                            "This is caused by a JSON formatting error." );
+                'url': url,
+                'data': data,
+                'success': callback,
+                'dataType': "json",
+                'cache': false,
+                'error': function (xhr, error, thrown) {
+                    if (error == 'parsererror') {
+                        alert('DataTables warning: JSON data from server could not be parsed. '+
+                            'This is caused by a JSON formatting error.');
                     }
                 }
             } );

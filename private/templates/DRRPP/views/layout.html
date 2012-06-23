@@ -8,9 +8,9 @@
 <meta name="application-name" content="{{=appname}}" />
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
 {{if "MSIE" in request.wsgi.environ.get("HTTP_USER_AGENT",[]):}}
-<link href="/{{=appname}}/static/themes/DRRPP/css/font_ie.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/themes/DRRPP/font_ie.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
-<link href="/{{=appname}}/static/themes/DRRPP/css/font_other.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/themes/DRRPP/font_other.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 <link rel="shortcut icon" href="/{{=appname}}/static/themes/DRRPP/favicon.ico" type="image/x-icon">
 <style type="text/css">
@@ -20,16 +20,7 @@
  body{direction:ltr;}
 {{pass}}
 </style>
-{{if s3.debug:}}
- {{include "s3_include_debug.html"}}
- <link href="/{{=appname}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />
- {{=s3base.s3_include_debug()}}
-{{else:}}
- {{include "s3_include_min.html"}}
- <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
- {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/DRRPP/css/sahana.min.css" rel="stylesheet" type="text/css" />
-{{pass}}
+{{include "load.html"}}
 {{for sheet in s3.external_stylesheets:}}
   <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
@@ -65,7 +56,7 @@
 {{if representation == "popup":}}
  {{include "layout_popup.html"}}
  {{if response.flash or response.confirmation:}}
-  <div id='popup' class='clearfix'><center>
+  <div id='popup' class='cf'><center>
   <p style='padding:20px 20px;'><h2>
   {{=T("Submission successful - please wait")}}...
   </h2><p></center></div>
@@ -95,7 +86,7 @@
 {{pass}}
 <div class='container'>
  <div class='header'></div>
-  <div id='content' class='clearfix'>
+  <div id='content' class='cf'>
    {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
    {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
    {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}

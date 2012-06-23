@@ -448,7 +448,7 @@ settings.modules = OrderedDict([
             module_type = None, # Not displayed
         )),
     ("inv", Storage(
-            name_nice = T("Warehouse"),
+            name_nice = T("Warehouses"),
             #description = "Receiving and Sending Items",
             restricted = True,
             module_type = 4

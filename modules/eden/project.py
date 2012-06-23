@@ -4370,7 +4370,8 @@ def project_task_controller():
                             output["form"][0].insert(0, activity[0])
                         except:
                             pass
-                        s3.scripts.append("%s/s3.project.js" % s3_script_dir)
+                        s3.scripts.append("/%s/static/scripts/%s/S3/s3.project.js" % \
+                            current.request.application)
                     if "project" in request.get_vars:
                         widget = INPUT(value=request.get_vars.project, _name="project_id")
                         project = s3.crud.formstyle("project_task_project__row", "", widget, "")

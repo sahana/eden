@@ -360,9 +360,9 @@ $('#manage_facility_select').change(function() {
             s3base.s3_register_validation()
 
             if s3.debug:
-                s3.scripts.append( "%s/jquery.validate.js" % s3_script_dir )
+                s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
             else:
-                s3.scripts.append( "%s/jquery.validate.min.js" % s3_script_dir )
+                s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
             if request.env.request_method == "POST":
                 post_script = """// Unhide register form
     $('#register_form').removeClass('hide');

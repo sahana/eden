@@ -6,10 +6,13 @@ from s3 import *
 
 # =============================================================================
 class S3MainMenuLayout(S3NavigationItem):
-    """ Application Main Menu Layout """
+    """
+        Application Main Menu Layout
+    """
 
     @staticmethod
     def layout(item):
+        """ Custom Layout Method """
 
         # Manage flags: hide any disabled/unauthorized items
         if not item.authorized:
@@ -44,10 +47,13 @@ class S3MainMenuLayout(S3NavigationItem):
 
 # =============================================================================
 class S3OptionsMenuLayout(S3NavigationItem):
-    """ Controller Options Menu Layout """
+    """
+        Controller Options Menu Layout
+    """
 
     @staticmethod
     def layout(item):
+        """ Custom Layout Method """
 
         # Manage flags: hide any disabled/unauthorized items
         if not item.authorized:
