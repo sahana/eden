@@ -56,8 +56,9 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from ..s3 import *
-from layouts import *
+from layouts import S3AddResourceLink
 
 try:
     from lxml import etree, html

@@ -574,7 +574,7 @@ def comment_parse(comment, comments, task_id=None):
             username = s3_fullname(person)
             email = user.email.strip().lower()
             import hashlib
-            hash = hashlib.new(email).hexdigest()
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not task_id and comment.task_id:

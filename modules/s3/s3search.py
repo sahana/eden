@@ -404,6 +404,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         return w
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def widget_label(widget):
         """
@@ -413,6 +414,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         """
         return LABEL(widget["label"], _for="id-%s" % widget["name"])
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def widget_input(widget):
         """
@@ -496,6 +498,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         @param cols: The number of columns which the options will be
                      displayed in
     """
+
     def __init__(self, field=None, name=None, options=None, **attr):
         """
             Configures the search option
@@ -511,6 +514,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         super(S3SearchOptionsWidget, self).__init__(field, name, **attr)
         self.options = options
 
+    # -------------------------------------------------------------------------
     def _get_reference_resource(self, resource):
         """
             If the field is entered as kfield$field, will search field in the
@@ -528,6 +532,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                                        resource_name)
         return resource, field, kfield
 
+    # -------------------------------------------------------------------------
     def widget(self, resource, vars):
         """
             Returns the widget
@@ -986,6 +991,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
                - meanwhile at least sort by level of competency
     """
 
+    # -------------------------------------------------------------------------
     def widget(self, resource, vars):
         manager = current.manager
         c = manager.define_resource("hrm", "competency")

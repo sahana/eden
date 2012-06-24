@@ -252,7 +252,7 @@ def comment_parse(comment, comments, post_id=None):
             username = s3_fullname(person)
             email = user.email.strip().lower()
             import hashlib
-            hash = hashlib.new(email).hexdigest()
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not post_id and comment.post_id:
@@ -396,7 +396,7 @@ def posts():
                 user = row[utable._tablename]
                 username = s3_fullname(person)
                 email = user.email.strip().lower()
-                hash = hashlib.new(email).hexdigest()
+                hash = hashlib.md5(email).hexdigest()
                 url = "http://www.gravatar.com/%s" % hash
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)

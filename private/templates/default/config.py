@@ -302,6 +302,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.skill_types = True
 # Uncomment to use an alternate table for HR experience
 #settings.hrm.experience = "programme"
+# Uncomment to show the Organisation name in HRM represents
+#settings.hrm.show_organisation = True
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -335,6 +337,10 @@ settings.L10n.decimal_separator = "."
 #    5: T("Super"), # T("Beneficiary")?
 #}
 #settings.project.organisation_lead_role = 1
+
+# Incidents
+# Uncomment this to use vehicles when responding to Incident Reports
+#settings.irs.vehicle = True
 
 # Save Search Widget
 #settings.save_search.widget = False

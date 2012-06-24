@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """ Deployment Settings
 
@@ -63,6 +62,7 @@ class S3Config(Storage):
         self.gis = Storage()
         self.hrm = Storage()
         self.inv = Storage()
+        self.irs = Storage()
         self.org = Storage()
         self.proc = Storage()
         self.project = Storage()
@@ -742,9 +742,15 @@ class S3Config(Storage):
             Which table to use for showing the experience of HRs
             - currently supported options are:
                 * experience (default)
-                * programme (used by IFRC)
+                * programme (used by IFRC for Volunteers)
         """
         return self.hrm.get("experience", "experience")
+
+    def get_hrm_show_organisation(self):
+        """
+            Whether Human Resource representations should include the Organisation
+        """
+        return self.hrm.get("show_organisation", False)
 
     # -------------------------------------------------------------------------
     # Project Tracking
@@ -828,12 +834,21 @@ class S3Config(Storage):
         return self.project.get("organisation_lead_role", 1)
 
     # -------------------------------------------------------------------------
+    # IRS
+    def get_irs_vehicle(self):
+        """
+            Use Vehicles to respond to Incident Reports
+        """
+        return self.irs.get("vehicle", False)
+
+    # -------------------------------------------------------------------------
     # Save Search and Subscription
     def get_save_search_widget(self):
         """
             Enable the Saved Search widget
         """
         return self.save_search.get("widget", True)
+
     # -------------------------------------------------------------------------
     # Message Parser Settings
     def get_parser_enabled(self):

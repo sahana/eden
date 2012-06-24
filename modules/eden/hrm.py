@@ -92,6 +92,8 @@ class S3HRModel(S3Model):
 
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
+        
+        crud_strings = s3.crud_strings
 
         # =========================================================================
         # Human Resource
@@ -183,12 +185,7 @@ class S3HRModel(S3Model):
                                         ),
                                   *(s3_lx_fields() + s3_meta_fields()))
 
-        hrm_human_resource_requires = IS_NULL_OR(IS_ONE_OF(db,
-                                            "hrm_human_resource.id",
-                                            hrm_human_resource_represent,
-                                            orderby="hrm_human_resource.type"))
-
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Staff Member"),
             title_display = T("Staff Member Details"),
             title_list = T("Staff & Volunteers"),
@@ -204,7 +201,7 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Record deleted"),
             msg_list_empty = T("No staff or volunteers currently registered"))
 
-        s3.crud_strings["hrm_staff"] = Storage(
+        crud_strings["hrm_staff"] = Storage(
             title_create = T("Add Staff Member"),
             title_display = T("Staff Member Details"),
             title_list = T("Staff"),
@@ -220,7 +217,7 @@ class S3HRModel(S3Model):
             msg_record_deleted = T("Staff Member deleted"),
             msg_list_empty = T("No Staff currently registered"))
 
-        s3.crud_strings["hrm_volunteer"] = Storage(
+        crud_strings["hrm_volunteer"] = Storage(
             title_create = T("Add Volunteer"),
             title_display = T("Volunteer Details"),
             title_list = T("Volunteers"),
@@ -237,14 +234,19 @@ class S3HRModel(S3Model):
             msg_list_empty = T("No Volunteers currently registered"))
 
         if controller == "hrm":
-            s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
+            crud_strings[tablename] = crud_strings["hrm_staff"]
         elif controller == "vol":
-            s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
+            crud_strings[tablename] = crud_strings["hrm_volunteer"]
 
         human_resource_id = S3ReusableField("human_resource_id",
                                             db.hrm_human_resource,
                                             sortby = ["type", "status"],
-                                            requires = hrm_human_resource_requires,
+                                            requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "hrm_human_resource.id",
+                                                                  hrm_human_resource_represent,
+                                                                  sort=True
+                                                                  )),
                                             represent = hrm_human_resource_represent,
                                             label = T("Human Resource"),
                                             comment = T("Enter some characters to bring up a list of possible matches"),
@@ -2677,55 +2679,53 @@ def hrm_hr_represent(id):
     return repr_str
 
 # -------------------------------------------------------------------------
-def hrm_human_resource_represent(id,
-                                 show_link = False,
-                                 none_value = None
-                                 ):
+def hrm_human_resource_represent(id, show_link=False):
     """ Representation of human resource records """
 
-    db = current.db
+    if not id:
+        return current.messages.NONE
+
     s3db = current.s3db
-    request = current.request
-
-    if none_value:
-        repr_str = none_value
-    else:
-        repr_str = current.messages.NONE
-
     htable = s3db.hrm_human_resource
     ptable = s3db.pr_person
 
-    query = (htable.id == id)
-    row = db(query).select(htable.job_role_id,
-                           htable.organisation_id,
-                           htable.type,
-                           ptable.first_name,
-                           ptable.middle_name,
-                           ptable.last_name,
-                           left=htable.on(ptable.id == htable.person_id),
-                           limitby=(0, 1)).first()
-    if row:
-        hr = row[str(htable)]
-        if hr.organisation_id:
-            repr_str = ", %s" % s3db.org_organisation_represent(hr.organisation_id)
-        if hr.job_role_id:
-            repr_str = ", %s%s" % (hrm_job_role_represent(hr.job_role_id), repr_str)
-        person = row[str(ptable)]
-        repr_str = "%s%s" % (s3_fullname(person), repr_str)
+    query = (htable.id == id) & \
+            (htable.person_id == ptable.id)
+    row = current.db(query).select(htable.job_role_id,
+                                   htable.organisation_id,
+                                   htable.type,
+                                   ptable.first_name,
+                                   ptable.middle_name,
+                                   ptable.last_name,
+                                   limitby=(0, 1)).first()
+
+    if not row:
+        return current.messages.NONE
+
+    hr = row["hrm_human_resource"]
+    repr = ""
+    if hr.organisation_id and \
+       current.deployment_settings.get_hrm_show_organisation():
+        repr = ", %s" % s3db.org_organisation_represent(hr.organisation_id)
+    if hr.job_role_id:
+        repr = ", %s%s" % (hrm_job_role_represent(hr.job_role_id), repr)
+    person = row["pr_person"]
+    repr = "%s%s" % (s3_fullname(person), repr)
+    if show_link:
         if hr.type == 1:
             controller = "hrm"
+            function = "staff"
         else:
             controller = "vol"
-        if show_link:
-            request.extension = "html"
-            return A(repr_str,
-                     _href = URL(c = controller,
-                                 f = "human_resource",
-                                 args = [id]
-                                 )
-                     )
-    else:
-        return repr_str
+            function = "volunteer"
+        current.request.extension = "html"
+        return A(repr,
+                 _href = URL(c = controller,
+                             f = function,
+                             args = [id]
+                             )
+                 )
+    return repr
 
 # =============================================================================
 def hrm_job_role_represent(id):

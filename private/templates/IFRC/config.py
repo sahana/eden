@@ -80,6 +80,8 @@ settings.org.site_code_len = 3
 settings.hrm.email_required = False
 # Uncomment to use an alternate table for HR experience
 settings.hrm.experience = "programme"
+# Uncomment to show the Organisation name in HRM represents
+settings.hrm.show_organisation = True
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

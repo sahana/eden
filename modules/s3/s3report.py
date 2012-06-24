@@ -6,10 +6,7 @@
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
-    @status: work in progress
-
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
-    @requires: U{B{I{SQLite3}} <http://www.sqlite.org>}
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -82,11 +79,10 @@ class S3Cube(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        manager = current.manager
         if r.http in ("GET", "POST"):
             output = self.report(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -441,7 +437,6 @@ class S3Cube(S3CRUD):
             Builds the filter form widgets
         """
 
-        request = self.request
         resource = self.resource
 
         report_options = self._config("report_options", None)
@@ -452,7 +447,7 @@ class S3Cube(S3CRUD):
         if not filter_widgets:
             return None
 
-        vars = form_values if form_values else request.vars
+        vars = form_values if form_values else self.request.vars
         trows = []
         for widget in filter_widgets:
             name = widget.attr["_name"]
@@ -485,9 +480,6 @@ class S3Cube(S3CRUD):
             @rtype: tuple
             @return: A tuple containing (query object, validation errors)
         """
-
-        session = current.session
-        response = current.response
 
         query = None
         errors = None

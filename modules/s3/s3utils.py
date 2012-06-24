@@ -576,7 +576,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
                   args=image)
     elif email:
         # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
-        hash = hashlib.new(email).hexdigest()
+        hash = hashlib.md5(email).hexdigest()
         url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
     else:
         url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"

@@ -401,8 +401,7 @@ class S3SupplyModel(S3Model):
                     #                    self.supply_item_represent(id,
                     #                                               show_link=False,
                     #                                               # @ToDo: this doesn't work
-                    #                                               show_um=False,
-                    #                                               none_value=None),
+                    #                                               show_um=False),
                     #                ),
                     comment=S3AddResourceLink(c="supply",
                                               f="item",
@@ -1030,29 +1029,26 @@ S3FilterFieldChange({
     def supply_item_represent(id,
                               # Needed for S3SearchAutocompleteWidget
                               show_um = False,
-                              show_link = True,
-                              none_value = None):
+                              show_link = True):
         """
             Representation of a supply_item
         """
 
-        db = current.db
+        if not id:
+            return current.messages.NONE
+
         s3db = current.s3db
-
-        if not none_value:
-            none_value = current.messages.NONE
-
         table = s3db.supply_item
         btable = s3db.supply_brand
         query = (table.id == id)
-        r = db(query).select(table.name,
-                             table.model,
-                             table.um,
-                             btable.name,
-                             left = btable.on(table.brand_id == btable.id),
-                             limitby=(0, 1)).first()
+        r = current.db(query).select(table.name,
+                                     table.model,
+                                     table.um,
+                                     btable.name,
+                                     left = btable.on(table.brand_id == btable.id),
+                                     limitby=(0, 1)).first()
         if not r:
-            return none_value
+            return current.messages.NONE
 
         represent = [r.supply_item.name,
                      r.supply_brand.name,
@@ -1067,10 +1063,10 @@ S3FilterFieldChange({
         local_request.extension = "html"
         if show_link:
             return A(represent,
-                     _href = URL( r = local_request,
-                                  c = "supply",
-                                  f = "item",
-                                  args = [id]
+                     _href = URL(r = local_request,
+                                 c = "supply",
+                                 f = "item",
+                                 args = [id]
                                  )
                      )
         else:
