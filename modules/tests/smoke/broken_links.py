@@ -42,9 +42,25 @@ class BrokenLinkTest(Web2UnitTest):
         self.strip_url = ("?_next=",
                           )
         self.maxDepth = 2 # sanity check
+        self.setUser("test@example.com/eden")
 
     def setDepth(self, depth):
         self.maxDepth = depth
+
+    def setUser(self, user):
+        try:
+            (self.user, self.password) = user.split("/",1)
+        except:
+            msg = "Unable to split %s into a user name and password" % user
+            self.reporter(msg)
+            return
+        url = "%s/default/user/login" % self.homeURL
+        self.b.go(url)
+        forms = self.b.get_all_forms()
+        form = forms[0]
+        form["email"] = self.user
+        form["password"] = self.password
+        form.click()
 
     def runTest(self):
         url = self.homeURL

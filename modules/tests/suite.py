@@ -46,6 +46,9 @@ parser.add_argument("--link-depth",
                     type = int,
                     default = 3,
                     help = "The recursive depth when looking for links")
+parser.add_argument("--user-password",
+                    default = "admin@example.com/testing",
+                    )
 parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
                     type = bool,
@@ -109,6 +112,7 @@ elif args["suite"] == "smoke":
     from tests.smoke import *
     broken_links = BrokenLinkTest()
     broken_links.setDepth(args["link_depth"])
+    broken_links.setUser(args["user_password"])
     broken_links.run()
 #    except NameError as msg:
 #        s3_debug("%s, unable to run the smoke tests." % msg)

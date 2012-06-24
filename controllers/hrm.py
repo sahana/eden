@@ -361,6 +361,8 @@ def person():
     _crud = s3.crud_strings.pr_address
     _crud.title_create = T("Add Home Address")
     _crud.title_update = T("Edit Home Address")
+    if not current.auth.s3_has_role("staff_super"):
+        current.response.s3.filter = (table.type >= 3)
     #s3mgr.model.add_component("pr_address",
     #                          pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
     #                                          multiple=False))

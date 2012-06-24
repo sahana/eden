@@ -331,8 +331,12 @@ def person():
         pr_desc_table[field].writable = False
         pr_desc_table[field].readable = False
     # Now enable those that we want
-    pr_desc_table.ethnicity.writable = True
-    pr_desc_table.ethnicity.readable = True
+    if current.auth.s3_has_role("vol_super"):
+            # The following fields fall under the category of 
+            # Sensitive Information and will only be accessible by
+            # the super editor.
+        pr_desc_table.ethnicity.writable = True
+        pr_desc_table.ethnicity.readable = True
     pr_desc_table.blood_type.writable = True
     pr_desc_table.blood_type.readable = True
     pr_desc_table.medical_conditions.writable = True
@@ -597,6 +601,8 @@ def person():
     else:
         orgname = None
 
+    if not current.auth.s3_has_role("vol_super"):
+        current.response.s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.hrm_rheader,

@@ -270,7 +270,7 @@ def address():
                 s3db.pr_address.pe_id.default = pe_id
         return True
     response.s3.prep = prep
-
+    response.s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller()
     return output
 
