@@ -251,8 +251,8 @@ def comment_parse(comment, comments, post_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.new(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not post_id and comment.post_id:
@@ -376,6 +376,7 @@ def posts():
                              limitby=(0, recent))
 
     output = UL(_id="comments")
+    import hashlib
     for post in posts:
         author = B(T("Anonymous"))
         if post.created_by:
@@ -395,8 +396,7 @@ def posts():
                 user = row[utable._tablename]
                 username = s3_fullname(person)
                 email = user.email.strip().lower()
-                import md5
-                hash = md5.new(email).hexdigest()
+                hash = hashlib.new(email).hexdigest()
                 url = "http://www.gravatar.com/%s" % hash
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)

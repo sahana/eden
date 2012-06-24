@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from gluon import *
 from gluon.storage import Storage
 #from s3 import *
@@ -15,15 +17,21 @@ class index():
         s3 = response.s3
 
         response.title = current.deployment_settings.get_system_name()
-        response.view = "../private/templates/%s/views/index.html"  % s3.theme
+        path = os.path.join(current.request.folder, "private", "templates",
+                            s3.theme, "views", "index.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(path, "rb")
+        except IOError:
+            raise HTTP("404", "Unable to open Custom View: %s" % path)
 
-        script = """
+        script = '''
 $('.marker').mouseover(function() {
     $(this).children('.marker-window').show();
 })
 $('.marker').mouseout(function() {
     $(this).children('.marker-window').hide();
-})"""
+})'''
         s3.jquery_ready.append(script)
 
         markers = [

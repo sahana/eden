@@ -1011,8 +1011,8 @@ def comment_parse(comment, comments, solution_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.new(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not solution_id and comment.solution_id:

@@ -153,7 +153,6 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
-            pass
         except ImportError:
             # No Custom Page available, continue with the default
             page = "private/templates/%s/controllers.py" % \
@@ -171,7 +170,6 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
-            pass
         except ImportError:
             # No Custom Page available, continue with the default
             # @ToDo: cache this result - at least in session, ideally in class startup

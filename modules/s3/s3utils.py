@@ -65,12 +65,10 @@ import sys
 import os
 import csv
 import datetime
-import md5
+import hashlib
 import re
 import urllib
 import uuid
-
-from xml.sax.saxutils import unescape
 
 try:
     import json # try stdlib (Python 2.6)
@@ -578,7 +576,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
                   args=image)
     elif email:
         # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
-        hash = md5.new(email).hexdigest()
+        hash = hashlib.new(email).hexdigest()
         url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
     else:
         url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
@@ -1441,13 +1439,17 @@ class S3BulkImporter(object):
 
     def __init__(self):
         """ Constructor """
-        response = current.response
+
+        from xml.sax.saxutils import unescape
+
+        self.unescape = unescape
         self.importTasks = []
         self.specialTasks = []
         self.tasks = []
         # loaders aren't defined currently
+        #s3 = current.response.s3
         self.alternateTables = {"hrm_person": {"tablename":"hrm_human_resource",
-                                               #"loader":response.s3.hrm_person_loader,
+                                               #"loader":s3.hrm_person_loader,
                                                "prefix":"pr",
                                                "name":"person"},
                                 "inv_warehouse": {"tablename":"org_office",
@@ -1456,8 +1458,8 @@ class S3BulkImporter(object):
                                 "member_person": {"tablename":"member_membership",
                                                   "prefix":"pr",
                                                   "name":"person"},
-                                #"req_req":     {"loader":response.s3.req_loader},
-                                #"req_req_item":{"loader":response.s3.req_item_loader},
+                                #"req_req":     {"loader":s3.req_loader},
+                                #"req_req_item":{"loader":s3.req_item_loader},
                                }
         self.errorList = []
         self.resultList = []

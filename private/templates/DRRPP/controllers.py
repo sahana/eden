@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 from gluon import *
 #from gluon.storage import Storage
 #from s3 import *
@@ -21,7 +23,13 @@ class index():
         response = current.response
         appname = request.application
 
-        response.view = "../private/templates/%s/views/index.html"  % response.s3.theme
+        path = os.path.join(current.request.folder, "private", "templates",
+                            response.s3.theme, "views", "index.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(path, "rb")
+        except IOError:
+            raise HTTP("404", "Unable to open Custom View: %s" % path)
 
         home_img = IMG(_src="/%s/static/themes/DRRPP/img/home_img.jpg" % appname,
                        _id="home_img")

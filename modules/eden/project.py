@@ -43,12 +43,19 @@ __all__ = ["S3ProjectModel",
 
 import datetime
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import CheckboxesWidget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from gluon.contrib import simplejson as json
 from ..s3 import *
 from layouts import *
 
