@@ -622,6 +622,7 @@ class S3PersonModel(S3Model):
                                                      _title="%s|%s" % (T("Preferred Name"),
                                                                        T("The name to be used when calling for or directly addressing the person (optional).")))),
                                    ),
+                             # @ToDo: Move these fields to a component to keep the main heavily-used table as clean as possible
                              Field("local_name",
                                    label = T("Local Name"),
                                     comment = DIV(DIV(_class="tooltip",
@@ -629,9 +630,13 @@ class S3PersonModel(S3Model):
                                                                         T("Name of the person in local language and script (optional)."))))),
                              Field("father_name",
                                    label = T("Name of Father"),
+                                   readable = False,
+                                   writable = False,
                                   ),
                              Field("mother_name",
                                    label = T("Name of Mother"),
+                                   readable = False,
+                                   writable = False,
                                   ),
                              pr_gender(label = T("Gender")),
                              s3_date("date_of_birth",
@@ -639,9 +644,9 @@ class S3PersonModel(S3Model):
                                      past = 1320,  # Months, so 110 years
                                      ),
                              pr_age_group(
-                                    readable = False,
-                                    writable = False,
-                                ),
+                                     readable = False,
+                                     writable = False,
+                                    ),
                              Field("nationality",
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                                 lambda: gis.get_countries(key_type="code"),
@@ -657,6 +662,8 @@ class S3PersonModel(S3Model):
                                    requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
                                    represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
+                                   #readable=False,
+                                   #writable=False,
                                    ),
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
@@ -710,7 +717,22 @@ class S3PersonModel(S3Model):
                                        "identity.value"
                                       ])
 
+
         # Resource configuration
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
+        #    # The following fields fall under the category of
+        #    # Sensitive Information and will only be accessible by
+        #    # the super editor.
+        #    table.father_name.readable = True
+        #    table.father_name.writable = True
+        #    table.mother_name.readable = True
+        #    table.mother_name.writable = True
+        #    table.date_of_birth.readable = True
+        #    table.date_of_birth.writable = True
+        #    table.religion.readable = True
+        #    table.religion.writable = True
         self.configure(tablename,
                         super_entity=("pr_pentity", "sit_trackable"),
                         list_fields = ["id",
@@ -1234,7 +1256,8 @@ class S3ContactModel(S3Model):
                              Field("value",
                                    label= T("Value"),
                                    notnull=True,
-                                   requires = IS_NOT_EMPTY()),
+                                   requires = IS_NOT_EMPTY(),
+                                  ),
                              Field("priority", "integer",
                                    label= T("Priority"),
                                    comment = DIV(_class="tooltip",
@@ -1351,6 +1374,9 @@ class S3PersonAddressModel(S3Model):
         # ---------------------------------------------------------------------
         # Address
         #
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
         pr_address_type_opts = {
             1:T("Current Home Address"),
             2:T("Permanent Home Address"),
@@ -1358,6 +1384,12 @@ class S3PersonAddressModel(S3Model):
             #4:T("Holiday Address"),
             9:T("Other Address")
         }
+        #else:
+        #    pr_address_type_opts = {
+        #        3:T("Office Address"),
+        #        #4:T("Holiday Address"),
+        #        9:T("Other Address")
+        #    }
 
         tablename = "pr_address"
         table = self.define_table(tablename,
@@ -2592,9 +2624,11 @@ class S3PersonDescription(S3Model):
                                    label = T("Complexion"),
                                    represent = lambda opt: \
                                                 pr_complexion_opts.get(opt, UNKNOWN_OPT)),
-                             Field("ethnicity",
+                             Field("ethnicity", length=64,
                                    #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
-                                   length=64),   # Mayon Compatibility
+                                   #readable=False,
+                                   #writable=False,
+                                  ),   # Mayon Compatibility
 
                              # Height and weight
                              Field("height", "integer",
@@ -2621,7 +2655,6 @@ class S3PersonDescription(S3Model):
                                                  _title="%s|%s" % (T("Weight"),
                                                                    T("The weight in kg.")))
                                    ),
-
                              # Blood type, eye color
                              Field("blood_type",
                                    requires = IS_EMPTY_OR(IS_IN_SET(pr_blood_type_opts)),
@@ -2690,6 +2723,16 @@ class S3PersonDescription(S3Model):
         # Field configuration
         table.pe_id.readable = False
         table.pe_id.writable = False
+
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
+        #    # The following fields fall under the category of
+        #    # Sensitive Information and will only be accessible by
+        #    # the super editor.
+        #    table.ethnicity.readable = True
+        #    table.ethnicity.writable = True
+
 
         # CRUD Strings
         # ?
@@ -3152,6 +3195,11 @@ def pr_contacts(r, **attr):
     # Contacts
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
+    # Deployment Roles shouldn't be hardcoded in trunk models
+    #if not current.auth.s3_has_role("staff_super") and \
+    #   not current.auth.s3_has_role("vol_super"):
+    #    query = query & (ctable.contact_method != "HOME_PHONE" and \
+    #                     ctable.contact_method != "SMS")
     contacts = db(query).select(ctable.id,
                                 ctable.value,
                                 ctable.contact_method,

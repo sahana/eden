@@ -1601,7 +1601,8 @@ $(document).ready(function(){
                                                          limitby=(0, 1)).first()
                 if row:
                     return A(value,
-                             _href = URL(f = "send",
+                             _href = URL(c = "inv",
+                                         f = "send",
                                          args = [row.id, "form"]
                                         ),
                             )
@@ -1627,7 +1628,8 @@ $(document).ready(function(){
                 recv_row = db(table.recv_ref == value).select(table.id,
                                                               limitby=(0, 1)).first()
                 return A(value,
-                         _href = URL(f = "recv",
+                         _href = URL(c = "inv",
+                                     f = "recv",
                                      args = [recv_row.id, "form"]
                                     ),
                         )

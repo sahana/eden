@@ -1,4 +1,4 @@
-from HTMLTestRunner import HTMLTestRunner
+from tests.HTMLTestRunner import HTMLTestRunner
 
 class EdenHTMLTestRunner(HTMLTestRunner):
 

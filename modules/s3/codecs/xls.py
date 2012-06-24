@@ -176,6 +176,8 @@ class S3XLS(S3Codec):
         except ImportError:
             current.session.error = self.ERROR.XLRD_ERROR
             redirect(URL(extension=""))
+        # The xlwt library supports a maximum of 182 character in a single cell 
+        max_cell_size = 182
 
         # Get the attributes
         title = attr.get("title")
@@ -209,8 +211,8 @@ class S3XLS(S3Codec):
 
         # Create the workbook and a sheet in it
         book = xlwt.Workbook(encoding="utf-8")
-        # Length of the title Needs to be fixed...
-        sheet1 = book.add_sheet(str(title[0:10]))
+        # The spreadsheet doesn't like a / in the sheet name, so replace any with a space
+        sheet1 = book.add_sheet(str(title.replace("/"," ")))
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
@@ -302,6 +304,8 @@ class S3XLS(S3Codec):
                 represent = item[colCnt]
                 if type(represent) is not str:
                     represent = unicode(represent)
+                if len(represent) > max_cell_size:
+                    represent = represent[:max_cell_size]
                 # Strip away markup from representation
                 try:
                     markup = etree.XML(str(represent))

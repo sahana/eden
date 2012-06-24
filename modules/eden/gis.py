@@ -3025,8 +3025,6 @@ class S3MapModel(S3Model):
                              #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                              *s3_meta_fields())
 
-        #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
-
         configure(tablename,
                   onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")
