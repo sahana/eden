@@ -1128,6 +1128,9 @@ class S3Project3WModel(S3Model):
 
         messages = current.messages
         NONE = messages.NONE
+        
+        s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         add_component = self.add_component
         comments = s3_comments
