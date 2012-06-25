@@ -260,8 +260,12 @@ class S3LocationModel(S3Model):
                        list_fields = ["id",
                                       "name",
                                       "level",
-                                      "parent",
-                                      "gis_feature_type",
+                                      #"parent",
+                                      "L0",
+                                      "L1",
+                                      "L2",
+                                      "L3",
+                                      "L4",
                                       "lat",
                                       "lon"
                                     ]
@@ -582,21 +586,18 @@ class S3LocationModel(S3Model):
             # @ToDo: check the the lat and lon if they exist?
             #lat = "lat" in data and data.lat
             #lon = "lon" in data and data.lon
-            _duplicate = None
 
-            db = current.db
+            # Try the Name
+            # @ToDo: Hook for possible duplicates vs definite?
+            #query = (table.name.lower().like('%%%s%%' % name.lower()))
+            query = (table.name.lower() == name.lower())
+            if parent:
+                query = query & (table.parent == parent)
+            if level:
+                query = query & (table.level == level)
 
-            if not _duplicate:
-                # Try the Name
-                #query = (table.name.lower().like('%%%s%%' % name.lower()))
-                query = (table.name.lower() == name.lower())
-                if parent:
-                    query = query & (table.parent == parent)
-                if level:
-                    query = query & (table.level == level)
-
-            _duplicate = db(query).select(table.id,
-                                          limitby=(0, 1)).first()
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
             if _duplicate:
                 job.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
@@ -702,11 +703,39 @@ class S3LocationTagModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate=self.gis_location_tag_deduplicate)
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         #
         return Storage(
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_location_tag_deduplicate(job):
+        """
+           If the record is a duplicate then it will set the job method to update
+        """
+
+        if job.tablename == "gis_location_tag":
+            table = job.table
+            data = job.data
+            tag = "tag" in data and data.tag or None
+            location = "location_id" in data and data.location_id or None
+
+            if not tag or not location:
+                return
+
+            query = (table.tag.lower() == tag.lower()) & \
+                    (table.location_id == location)
+
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class S3LocationGroupModel(S3Model):

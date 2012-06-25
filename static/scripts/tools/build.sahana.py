@@ -169,6 +169,19 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    # Also do s3.locationselector.widget.js
+    print "Compressing s3.locationselector.widget.js"
+    inputFilename = os.path.join("..", "S3", "s3.locationselector.widget.js")
+    outputFilename = "s3.locationselector.widget.min.js"
+    input = open(inputFilename, "r").read()
+    minimized = minimize(input)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Also do s3.embed_component.js
     print "Compressing s3.embed_component.js"
     inputFilename = os.path.join("..", "S3", "s3.embed_component.js")

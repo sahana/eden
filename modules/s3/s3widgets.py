@@ -1241,7 +1241,7 @@ class S3LocationSelectorWidget(FormWidget):
         settings = current.deployment_settings
         response = current.response
         s3 = current.response.s3
-        cache = s3.cache
+        appname = current.request.application
 
         locations = s3db.gis_location
         ctable = s3db.gis_config
@@ -1620,7 +1620,7 @@ S3.gis.tab = '%s';''' % s3.gis.tab
                         _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
 
         hidden = ""
-        throbber = "/%s/static/img/ajax-loader.gif" % current.request.application
+        throbber = "/%s/static/img/ajax-loader.gif" % appname
         Lx_rows = DIV()
         if value:
             # Display Read-only Fields
@@ -1877,6 +1877,7 @@ S3.gis.geocoder = true;'''
         COUNTRY_REQUIRED = T("Country is required!")
 
         # Settings to be read by static/scripts/S3/s3.locationselector.widget.js
+        # Note: Currently we're limited to a single location selector per page
         js_location_selector = '''
 %s%s%s%s%s%s
 S3.gis.location_id = '%s';
@@ -1898,6 +1899,14 @@ S3.i18n.gis_country_required = '%s';''' % (country_snippet,
                                            COUNTRY_REQUIRED
                                           )
 
+        s3.js_global.append(js_location_selector)
+        if s3.debug:
+            script = "s3.locationselector.widget.js"
+        else:
+            script = "s3.locationselector.widget.min.js"
+
+        s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
+
         # The overall layout of the components
         return TAG[""](
                         TR(INPUT(**attr)),  # Real input, which is hidden
@@ -1914,7 +1923,6 @@ S3.i18n.gis_country_required = '%s';''' % (country_snippet,
                         latlon_rows,
                         divider,
                         TR(map_popup, TD(), _class="box_middle"),
-                        SCRIPT(js_location_selector),
                         requires=requires
                       )
 

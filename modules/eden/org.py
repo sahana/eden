@@ -267,10 +267,10 @@ class S3OrganisationModel(S3Model):
                                             tooltip=help),
                                 ondelete = "SET NULL")
 
-        # Tags as component of Locations
-        add_component("gis_location_tag",
-                      gis_location=dict(joinby="location_id",
-                                        name="tag"))
+        # Tags as component of Organisation Types
+        add_component("org_organisation_type_tag",
+                      org_organisation_type=dict(joinby="organisation_type_id",
+                                                 name="tag"))
 
         # ---------------------------------------------------------------------
         # Organisations
