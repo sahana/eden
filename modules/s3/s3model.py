@@ -30,9 +30,9 @@
 
 __all__ = ["S3Model", "S3ModelExtensions", "S3MultiPath"]
 
-import sys
-
-from gluon import *
+from gluon import current
+from gluon.dal import Field
+from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 
 from s3validators import IS_ONE_OF
@@ -41,6 +41,7 @@ DEFAULT = lambda: None
 
 DEBUG = False
 if DEBUG:
+    import sys
     print >> sys.stderr, "S3MODEL: DEBUG MODE"
     def _debug(m):
         print >> sys.stderr, m
@@ -178,7 +179,6 @@ class S3Model(object):
             response.s3 = Storage()
         s3 = response.s3
         db = current.db
-        settings = current.deployment_settings
 
         if tablename in db:
             return db[tablename]
@@ -457,8 +457,7 @@ class S3ModelExtensions(object):
             output = loader()
         # If the loader returns a dict, then update response.s3 with it
         if isinstance(output, dict):
-            response = current.response
-            response.s3.update(output)
+            current.response.s3.update(output)
         return output
 
     # -------------------------------------------------------------------------
@@ -493,8 +492,6 @@ class S3ModelExtensions(object):
             @param table: the component table or table name
             @param links: the component links
         """
-
-        db = current.db
 
         if not links:
             return
@@ -586,7 +583,6 @@ class S3ModelExtensions(object):
                           None or empty list for all available components
         """
 
-        db = current.db
         load = S3Model.table
 
         hooks = Storage()
@@ -696,7 +692,6 @@ class S3ModelExtensions(object):
             @param table: the table or table name
         """
 
-        db = current.db
         load = S3Model.table
 
         hooks = Storage()
@@ -734,8 +729,6 @@ class S3ModelExtensions(object):
         """
             DRY Helper method to filter component hooks
         """
-
-        db = current.db
 
         for alias in hooks:
             if alias in components:
@@ -853,14 +846,15 @@ class S3ModelExtensions(object):
             @param keys: keys of attributes to remove (maybe multiple)
         """
 
+        config = self.config
         if not keys:
-            if tablename in self.config:
-                del self.config[tablename]
+            if tablename in config:
+                del config[tablename]
         else:
-            if tablename in self.config:
+            if tablename in config:
                 for k in keys:
-                    if k in self.config[tablename]:
-                        del self.config[tablename][k]
+                    if k in config[tablename]:
+                        del config[tablename][k]
 
     # -------------------------------------------------------------------------
     # Super-Entity API
@@ -876,30 +870,30 @@ class S3ModelExtensions(object):
             @param args: table arguments (e.g. migrate)
         """
 
-        # postgres workaround
-        if current.db._dbname == "postgres":
+        db = current.db
+        if db._dbname == "postgres":
             sequence_name = "%s_%s_Seq" % (tablename, key)
         else:
             sequence_name = None
 
-        table = current.db.define_table(tablename,
-                                     Field(key, "id",
-                                           readable=False,
-                                           writable=False),
-                                     Field("deleted", "boolean",
-                                           readable=False,
-                                           writable=False,
-                                           default=False),
-                                     Field("instance_type",
-                                           readable=False,
-                                           writable=False),
-                                     Field("uuid", length=128,
-                                           readable=False,
-                                           writable=False),
-                                     sequence_name=sequence_name,
-                                     *fields, **args)
-
-        table.instance_type.represent = lambda opt: types.get(opt, opt)
+        table = db.define_table(tablename,
+                                Field(key, "id",
+                                      readable=False,
+                                      writable=False),
+                                Field("deleted", "boolean",
+                                      readable=False,
+                                      writable=False,
+                                      default=False),
+                                Field("instance_type",
+                                      represent = lambda opt: \
+                                        types.get(opt, opt),
+                                      readable=False,
+                                      writable=False),
+                                Field("uuid", length=128,
+                                      readable=False,
+                                      writable=False),
+                                sequence_name=sequence_name,
+                                *fields, **args)
 
         return table
 
@@ -991,9 +985,11 @@ class S3ModelExtensions(object):
             @param record: the instance record
         """
 
+        get_config = self.get_config
+
         # Get all super-entities of this table
         tablename = table._tablename
-        supertable = self.get_config(tablename, "super_entity")
+        supertable = get_config(tablename, "super_entity")
         if not supertable:
             return True
         elif not isinstance(supertable, (list, tuple)):
@@ -1001,8 +997,9 @@ class S3ModelExtensions(object):
 
         # Get the record
         id = record.get("id", None)
-        _record = current.db(table.id == id).select(table.ALL,
-                                                    limitby=(0, 1)).first()
+        db = current.db
+        _record = db(table.id == id).select(table.ALL,
+                                            limitby=(0, 1)).first()
         if not _record:
             return True
 
@@ -1016,7 +1013,7 @@ class S3ModelExtensions(object):
             key = self.super_key(s)
             skey = _record.get(key, None)
             # Get the shared field map
-            shared = self.get_config(tablename, "%s_fields" % s._tablename)
+            shared = get_config(tablename, "%s_fields" % s._tablename)
             if shared:
                 data = Storage([(f, _record[shared[f]])
                                 for f in shared
@@ -1033,29 +1030,29 @@ class S3ModelExtensions(object):
             # Update records
             if skey:
                 query = s[key] == skey
-                row = current.db(query).select(s[key], limitby=(0, 1)).first()
+                row = db(query).select(s[key], limitby=(0, 1)).first()
             else:
                 row = Storage()
             _tablename = s._tablename
             form = Storage(vars=row)
             if row:
-                onaccept = self.get_config(_tablename, "update_onaccept",
-                           self.get_config(_tablename, "onaccept", None))
-                current.db(s[key] == row[key]).update(**data)
+                onaccept = get_config(_tablename, "update_onaccept",
+                           get_config(_tablename, "onaccept", None))
+                db(s[key] == row[key]).update(**data)
                 k = {key:row[key]}
                 super_keys.update(k)
                 if _record[key] != row[key]:
-                    current.db(table.id == id).update(**k)
+                    db(table.id == id).update(**k)
                 data.update(k)
                 if onaccept:
                     form.vars.update(data)
                     onaccept(form)
             else:
-                onaccept = self.get_config(_tablename, "create_onaccept",
-                           self.get_config(_tablename, "onaccept", None))
+                onaccept = get_config(_tablename, "create_onaccept",
+                           get_config(_tablename, "onaccept", None))
                 k = s.insert(**data)
                 if k:
-                    current.db(table.id == id).update(**{key:k})
+                    db(table.id == id).update(**{key:k})
                     super_keys.update({key:k})
                 data.update({key:k})
                 if onaccept:
@@ -1073,9 +1070,8 @@ class S3ModelExtensions(object):
             @param record: the instance record
         """
 
-        manager = current.manager
-
-        supertable = self.get_config(table._tablename, "super_entity")
+        get_config = self.get_config
+        supertable = get_config(table._tablename, "super_entity")
         if not supertable:
             return True
         if not isinstance(supertable, (list, tuple)):
@@ -1083,6 +1079,7 @@ class S3ModelExtensions(object):
 
         uid = record.get("uuid", None)
         if uid:
+            define_resource = current.manager.define_resource
             for s in supertable:
                 if isinstance(s, str):
                     s = S3Model.table(s)
@@ -1090,8 +1087,8 @@ class S3ModelExtensions(object):
                     continue
                 tn = s._tablename
                 prefix, name = tn.split("_", 1)
-                resource = manager.define_resource(prefix, name, uid=uid)
-                ondelete = self.get_config(tn, "ondelete")
+                resource = define_resource(prefix, name, uid=uid)
+                ondelete = get_config(tn, "ondelete")
                 resource.delete(ondelete=ondelete, cascade=True)
         return True
 
@@ -1106,22 +1103,20 @@ class S3ModelExtensions(object):
                       record (if it exists)
         """
 
-        db = current.db
-        s3db = current.s3db
-
         if not hasattr(supertable, "_tablename"):
             # tablename passed instead of Table
             supertable = S3Model.table(supertable)
         if supertable is None:
             return (None, None, None)
-        query = supertable._id == superid
+        db = current.db
+        query = (supertable._id == superid)
         entry = db(query).select(supertable.instance_type,
                                  supertable.uuid,
                                  limitby=(0, 1)).first()
         if entry:
             instance_type = entry.instance_type
             prefix, name = instance_type.split("_", 1)
-            instancetable = s3db[entry.instance_type]
+            instancetable = current.s3db[entry.instance_type]
             query = instancetable.uuid == entry.uuid
             record = db(query).select(instancetable.id,
                                       limitby=(0, 1)).first()

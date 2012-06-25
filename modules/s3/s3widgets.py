@@ -125,9 +125,6 @@ class S3DateWidget(FormWidget):
                  future=1440    # how many months into the future the date can be set to
                 ):
 
-        if not format:
-            # default: "yy-mm-dd"
-            format = current.deployment_settings.get_L10n_date_format().replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
         self.format = format
         self.past = past
         self.future = future
@@ -136,10 +133,16 @@ class S3DateWidget(FormWidget):
 
         # Need to convert value into ISO-format
         # (widget expects ISO, but value comes in custom format)
-        format = current.deployment_settings.get_L10n_date_format()
-        v, error = IS_DATE_IN_RANGE(format=format)(value)
+        _format = current.deployment_settings.get_L10n_date_format()
+        v, error = IS_DATE_IN_RANGE(format=_format)(value)
         if not error:
             value = v.isoformat()
+
+        if self.format:
+           # default: "yy-mm-dd"
+            format = str(self.format)
+        else:
+            format = _format.replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
 
         default = dict(
                         _type = "text",
@@ -162,7 +165,7 @@ $('#%s').datepicker('option','dateFormat','%s');
        self.future,
        selector,
        selector,
-       self.format))
+       format))
 
         return TAG[""](
                         INPUT(**attr),
@@ -182,16 +185,17 @@ class S3DateTimeWidget(FormWidget):
                  future=876000    # how many hours into the future the date can be set to
                 ):
 
-        if not format:
-            # default: "%Y-%m-%d %T"
-            format = current.deployment_settings.get_L10n_datetime_format()
         self.format = format
         self.past = past
         self.future = future
 
     def __call__(self, field, value, **attributes):
 
-        format = str(self.format)
+        if self.format:
+            # default: "%Y-%m-%d %T"
+            format = str(self.format)
+        else:
+            format = current.deployment_settings.get_L10n_datetime_format()
         request = current.request
         s3 = current.response.s3
 
@@ -232,14 +236,14 @@ class S3DateTimeWidget(FormWidget):
 
         s3.jquery_ready.append('''
 $('#{0}').AnyTime_picker({{
-    askSecond: false,
-    firstDOW: 1,
-    earliest: "{1}",
-    latest: "{2}",
-    format: "{3}",
+ askSecond:false,
+ firstDOW:1,
+ earliest:'{1}',
+ latest:'{2}',
+ format:'{3}',
 }});
 clear_button = $('<input type="button" value="clear"/>').click(function(e){{
-    $("#{0}").val("");
+ $('#{0}').val('');
 }});
 $('#{0}').after(clear_button);'''.format(selector,
                                          earliest,
@@ -2027,15 +2031,14 @@ class S3CheckboxesWidget(OptionsWidget):
 
         help_lookup_table_name_field will display tooltip help
 
-        :param db: int -
         :param lookup_table_name: int -
         :param lookup_field_name: int -
         :param multple: int -
 
         :param options: list - optional -
         value,text pairs for the Checkboxs -
-        If options = None,  use options from self.requires.options().
-        This argument is useful for displaying a sub-set of the self.requires.options()
+        If options = None,  use options from requires.options().
+        This argument is useful for displaying a sub-set of the requires.options()
 
         :param num_column: int -
 
@@ -2047,7 +2050,6 @@ class S3CheckboxesWidget(OptionsWidget):
     """
 
     def __init__(self,
-                 db = None,
                  lookup_table_name = None,
                  lookup_field_name = None,
                  multiple = False,
@@ -2057,60 +2059,63 @@ class S3CheckboxesWidget(OptionsWidget):
                  help_footer = None
                  ):
 
-        current.db = db
         self.lookup_table_name = lookup_table_name
         self.lookup_field_name =  lookup_field_name
         self.multiple = multiple
-
+        self.options = options
         self.num_column = num_column
-
         self.help_lookup_field_name = help_lookup_field_name
         self.help_footer = help_footer
 
-        if db and lookup_table_name and lookup_field_name:
-            self.requires = IS_NULL_OR(IS_IN_DB(db,
-                                   db[lookup_table_name].id,
-                                   "%(" + lookup_field_name + ")s",
-                                   multiple = multiple))
+    # -------------------------------------------------------------------------
+    def widget(self,
+               field,
+               value = None
+               ):
 
-        if options:
-            self.options = options
-        else:
-            if hasattr(self.requires, "options"):
-                self.options = self.requires.options()
-            else:
-                raise SyntaxError, "widget cannot determine options of %s" % field
-
-
-    def widget( self,
-                field,
-                value = None
-                ):
         if current.db:
             db = current.db
         else:
             db = field._db
 
+        lookup_table_name = self.lookup_table_name
+        lookup_field_name = self.lookup_field_name
+        if lookup_table_name and lookup_field_name:
+            requires = IS_NULL_OR(IS_IN_DB(db,
+                                   db[lookup_table_name].id,
+                                   "%(" + lookup_field_name + ")s",
+                                   multiple = multiple))
+        else:
+            requires = self.requires
+
+        options = self.options
+        if not options:
+            if hasattr(requires, "options"):
+                options = requires.options()
+            else:
+                raise SyntaxError, "widget cannot determine options of %s" % field
+
         values = s3_split_multi_value(value)
 
         attr = OptionsWidget._attributes(field, {})
 
-        num_row  = len(self.options)/self.num_column
+        num_column = self.num_column
+        num_row  = len(options) / num_column
         # Ensure division  rounds up
-        if len(self.options) % self.num_column > 0:
+        if len(options) % num_column > 0:
              num_row = num_row +1
 
         table = TABLE(_id = str(field).replace(".", "_"))
-
-        for i in range(0,num_row):
+        append = table.append
+        for i in range(0, num_row):
             table_row = TR()
-            for j in range(0, self.num_column):
-                # Check that the index is still within self.options
-                index = num_row*j + i
-                if index < len(self.options):
+            for j in range(0, num_column):
+                # Check that the index is still within options
+                index = num_row * j + i
+                if index < len(options):
                     input_options = {}
                     input_options = dict(requires = attr.get("requires", None),
-                                         _value = str(self.options[index][0]),
+                                         _value = str(options[index][0]),
                                          value = values,
                                          _type = "checkbox",
                                          _name = field.name,
@@ -2119,33 +2124,34 @@ class S3CheckboxesWidget(OptionsWidget):
                     tip_attr = {}
                     help_text = ""
                     if self.help_lookup_field_name:
-                        help_text = str(P(s3_get_db_field_value(tablename = self.lookup_table_name,
+                        help_text = str(P(s3_get_db_field_value(tablename = lookup_table_name,
                                                                 fieldname = self.help_lookup_field_name,
-                                                                look_up_value = self.options[index][0],
+                                                                look_up_value = options[index][0],
                                                                 look_up_field = "id")))
                     if self.help_footer:
                         help_text = help_text + str(self.help_footer)
                     if help_text:
                         tip_attr = dict(_class = "s3_checkbox_label",
-                                        #_title = self.options[index][1] + "|" + help_text
+                                        #_title = options[index][1] + "|" + help_text
                                         _rel =  help_text
                                         )
 
-                    #table_row.append(TD(A(self.options[index][1],**option_attr )))
+                    #table_row.append(TD(A(options[index][1],**option_attr )))
                     table_row.append(TD(INPUT(**input_options),
-                                        SPAN(self.options[index][1], **tip_attr)
+                                        SPAN(options[index][1], **tip_attr)
                                         )
                                     )
-            table.append (table_row)
+            append(table_row)
         if self.multiple:
-            table.append(TR(I("(Multiple selections allowed)")))
+            append(TR(I("(Multiple selections allowed)")))
         return table
 
-
+    # -------------------------------------------------------------------------
     def represent(self,
                   value):
-        list = [s3_get_db_field_value(tablename = self.lookup_table_name,
-                                      fieldname = self.lookup_field_name,
+
+        list = [s3_get_db_field_value(tablename = lookup_table_name,
+                                      fieldname = lookup_field_name,
                                       look_up_value = id,
                                       look_up_field = "id")
                    for id in s3_split_multi_value(value) if id]
