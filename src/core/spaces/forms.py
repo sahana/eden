@@ -27,6 +27,7 @@ from django.forms import ModelForm, ValidationError
 from django.forms.models import modelformset_factory
 
 from core.spaces.models import Space, Document, Event, Entity
+from apps.thirdparty.userroles.models import UserRole
 
 class SpaceForm(ModelForm):
     
@@ -89,3 +90,17 @@ class EventForm(ModelForm):
     """
     class Meta:
         model = Event
+
+class UserRoleForm(ModelForm):
+
+    """
+    Return a form which will list the users and roles. The space admin can 
+    assign a user a specific role.
+
+    :rtype: HTML Form
+
+    .. versionadded:: 0.1
+    """
+    class Meta:
+        model = UserRole
+        exclude = ('child',)
