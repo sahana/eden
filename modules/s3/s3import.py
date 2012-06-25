@@ -2761,6 +2761,8 @@ class S3ImportJob():
             table = item.table
 
             components = model.get_components(table, names=components)
+            cinfos = Storage()
+
             for alias in components:
                 component = components[alias]
                 pkey = component.pkey
@@ -2771,37 +2773,50 @@ class S3ImportJob():
                     ctable = component.table
                     fkey = component.fkey
                 ctablename = ctable._tablename
+                cinfos[ctablename] = Storage(component = component,
+                                             ctable = ctable,
+                                             pkey = pkey,
+                                             fkey = fkey,
+                                             original = None,
+                                             uid = None)
 
-                celements = xml.select_resources(element, ctablename)
-                if celements:
-                    original = None
-                    if not component.multiple:
-                        uid = None
-                        if item.id:
-                            query = (table.id == item.id) & \
-                                    (table[pkey] == ctable[fkey])
-                            original = db(query).select(ctable.ALL,
-                                                        limitby=(0, 1)).first()
-                            if original:
-                                uid = original.get(xml.UID, None)
-                        celements = [celements[0]]
-                        if uid:
-                            celements[0].set(xml.UID, uid)
+            for celement in xml.components(element, names=cinfos.keys()):
 
-                    # @todo: match to component_id
+                ctablename = celement.get(xml.ATTRIBUTE.name, None)
+                if ctablename is None or ctablename not in cinfos:
+                    continue
+                else:
+                    cinfo = cinfos[ctablename]
 
-                    for celement in celements:
-                        item_id = self.add_item(element=celement,
-                                                original=original,
-                                                parent=item,
-                                                joinby=(pkey, fkey))
-                        if item_id is None:
-                            item.error = self.error
-                            self.error_tree.append(deepcopy(item.element))
-                        else:
-                            citem = self.items[item_id]
-                            citem.parent = item
-                            item.components.append(citem)
+                component = cinfo.component
+                original = cinfo.original
+                ctable = cinfo.ctable
+                pkey = cinfo.pkey
+                fkey = cinfo.fkey
+                if not component.multiple:
+                    if cinfo.uid is not None:
+                        continue
+                    if original is None and item.id:
+                        query = (table.id == item.id) & \
+                                (table[pkey] == ctable[fkey])
+                        original = db(query).select(ctable.ALL,
+                                                    limitby=(0, 1)).first()
+                    if original:
+                        cinfo.uid = uid = original.get(xml.UID, None)
+                        celement.set(xml.UID, uid)
+                    cinfo.original = original
+
+                item_id = self.add_item(element=celement,
+                                        original=original,
+                                        parent=item,
+                                        joinby=(pkey, fkey))
+                if item_id is None:
+                    item.error = self.error
+                    self.error_tree.append(deepcopy(item.element))
+                else:
+                    citem = self.items[item_id]
+                    citem.parent = item
+                    item.components.append(citem)
 
             # Handle references
             table = item.table
@@ -3020,17 +3035,14 @@ class S3ImportJob():
             return False
         references = []
         for reference in item.references:
-            entry = reference.entry
-            if entry.item_id:
-                references.append(entry.item_id)
+            ritem_id = reference.entry.item_id
+            if ritem_id and ritem_id not in import_list:
+                references.append(ritem_id)
         for ritem_id in references:
-            if ritem_id in import_list:
-                continue
-            else:
-                item.lock = True
-                if self.resolve(ritem_id, import_list):
-                    import_list.append(ritem_id)
-                item.lock = False
+            item.lock = True
+            if self.resolve(ritem_id, import_list):
+                import_list.append(ritem_id)
+            item.lock = False
         return True
 
     # -------------------------------------------------------------------------
@@ -3051,9 +3063,12 @@ class S3ImportJob():
             self.resolve(item_id, import_list)
             if item_id not in import_list:
                 import_list.append(item_id)
-        imports = [self.items[_id] for _id in import_list]
         # Commit the items
-        for item in imports:
+        items = self.items
+        count = 0
+        tablename = self.table._tablename
+        for item_id in import_list:
+            item = items[item_id]
             error = None
             success = item.commit(ignore_errors=ignore_errors)
             error = item.error
@@ -3066,8 +3081,9 @@ class S3ImportJob():
                     self.error_tree.append(deepcopy(element))
                 if not ignore_errors:
                     return False
-            elif item.tablename == self.table._tablename:
-                self.count += 1
+            elif item.tablename == tablename:
+                count += 1
+        self.count = count
         return True
 
     # -------------------------------------------------------------------------

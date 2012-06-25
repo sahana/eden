@@ -700,7 +700,7 @@ function S3FilterFieldChange (setting) {
  * Add an Autocomplete to a field - used by S3AutocompleteWidget
  */
 
-S3.autocomplete = function(fieldname, module, resourcename, input, link, post_process, delay, min_length) {
+S3.autocomplete = function(fieldname, module, resourcename, input, link, postprocess, delay, min_length) {
     var real_input = '#' + input;
     var dummy = 'dummy_' + input;
     var dummy_input = '#' + dummy;
@@ -713,7 +713,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
     if (link != 'undefined') {
         url += '&link=' + link;
     }
-    
+
     // Optional args
     if (postprocess == 'undefined') {
         var postprocess = '';
@@ -749,7 +749,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
             $( real_input ).val( ui.item.id );
             $( real_input ).change();
             if (postprocess) {
-                postprocess();
+                eval(postprocess);
             }
             data.accept = true;
             return false;

@@ -1008,6 +1008,20 @@ class S3XML(S3Codec):
         return resources
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def components(cls, element, names=None):
+        """ Selects component elements in a resource element """
+
+        RESOURCE = cls.TAG.resource
+        NAME = cls.ATTRIBUTE.name
+
+        for child in element.iterchildren():
+            if child.tag == RESOURCE:
+                if names is None or child.get(NAME, None) in names:
+                    yield child
+        return
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def _dtparse(dtstr, field_type="datetime"):
         """
