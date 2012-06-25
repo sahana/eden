@@ -395,12 +395,13 @@ class S3LocationModel(S3Model):
         parent = "parent" in vars and vars.parent
         lat = "lat" in vars and vars.lat
         lon = "lon" in vars and vars.lon
-        if lon > 180:
-            # Map Selector wrapped
-            lon = lon - 360
-        elif lon < -180:
-            # Map Selector wrapped
-            lon = lon + 360
+        if lon:
+            if lon > 180:
+                # Map Selector wrapped
+                lon = lon - 360
+            elif lon < -180:
+                # Map Selector wrapped
+                lon = lon + 360
         id = "id" in request.vars and request.vars.id
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what

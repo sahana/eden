@@ -67,11 +67,11 @@ class CreateStaffTraining(SeleniumUnitTest):
                      ( "site_id",
                        "Bucharest RFAAT Centre",
                        "autocomplete"),
-                     ( "start_date",
-                       "2012-04-11"),
-                     ( "end_date",
-                       "2012-04-12"),
-                     ( "comment",
+#                     ( "start_date",
+#                       "2012-04-11"),
+#                     ( "end_date",
+#                       "2012-04-12"),
+                     ( "comments",
                        "Testing comments"),
                      ]
                      )
