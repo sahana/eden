@@ -46,23 +46,26 @@
                     <div class="controls">
                         <div class="input-append">
                             {{ form.user }}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% if form.user.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                            {% if form.user.errors %}
+                                <p class="help-block">
+                                    {% for error in form.user.errors %}
+                                        {{ error|escape }}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
                         </div>
-                        {% if form.user.errors %}
-                            <p class="help-block">
-                                {% for error in form.user.errors %}
-                                    {{ error|escape }}
-                                {% endfor %}
-                            </p>
-                        {% endif %}
                     </div>
-                </div>
                 <div class="control-group {% if form.name.errors %}error{% endif%}">
                     <label>{{ form.name.label }}</label>
                     <div class="controls">
                         <div class="input-append">
                             {{ form.name }}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% if form.name.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
                         </div>
                         {% if form.name.errors %}
                             <p class="help-block">

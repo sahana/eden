@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from userroles import roles
+from apps.thirdparty.userroles import roles
 import pdb
 
 class UserRole(models.Model):

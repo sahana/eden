@@ -98,6 +98,8 @@ urlpatterns += i18n_patterns('',
     # For smart_selects app
     url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
 
+    url(_(r'role/$'), include('apps.thirdparty.userroles.urls')),
+
     # WARNING: This URLs aren't supposed to be here, but apparently on development
     # they are needed
 )

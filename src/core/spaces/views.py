@@ -35,8 +35,9 @@ from django.views.generic import FormView
 # Decorators. the first is a wrapper to convert function-based decorators
 # to method decorators that can be put in subclass methods.
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required, permission_required
+from django.conf import settings
 
 # Response types
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -60,16 +61,10 @@ from django.views.generic.create_update import delete_object
 from core.spaces.models import Space, Entity, Document, Event, Intent
 from apps.ecidadania.news.models import Post
 from core.spaces.forms import SpaceForm, DocForm, EventForm, \
-     EntityFormSet, UserRoleForm
+     EntityFormSet
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
-from django.conf import settings
-
-#thirdparty 
-
-from apps.thirdparty.userroles import roles
-from apps.thirdparty.userroles.models import set_user_role 
 
 #
 # RSS FEED
@@ -78,7 +73,7 @@ from apps.thirdparty.userroles.models import set_user_role
 class SpaceFeed(Feed):
 
     """
-    Returns a space feed with the content of various applciations. In the future
+    Returns a space feed with the content of various applications. In the future
     this function must detect applications and returns their own feeds.
     """
 
@@ -164,30 +159,6 @@ class ValidateIntent(DetailView):
         context['heading'] = self.heading
         return context
 
-
-#
-# User roles. 
-#
-@user_passes_test(lambda u: u.is_superuser)
-def add_role(request):
-
-    """
-    This function will allow the site admin to assign roles to the users. 
-
-    """
-    
-    userrole_form = UserRoleForm(request.POST or None)
-
-    if request.method == 'POST':
-        if userrole_form.is_valid():
-            userrole_uncommitted = userrole_form.save(commit=False)
-            set_user_role(userrole_uncommitted.user, userrole_uncommitted.name) 
-            return redirect('/spaces/')           
-        else:
-            return render_to_response('spaces/space_roles.html', {'form':userrole_form}, context_instance = RequestContext(request))
-
-    else:
-        return render_to_response('spaces/space_roles.html', {'form':userrole_form}, context_instance = RequestContext(request))
 
 # SPACE VIEWS
 #

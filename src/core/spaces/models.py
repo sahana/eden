@@ -70,6 +70,8 @@ class Space(models.Model):
     public = models.BooleanField(_('Public space'), help_text=_("This will make \
     the space visible to everyone, but registration will be necessary to participate."))
     #theme = models.CharField(_('Theme'), m)
+    admins = models.ManyToManyField(User, related_name="space_admins", verbose_name=_('Administrators'),
+    help_text=_('Please select the users that will be administrators of this space'))
     
     # Modules
     mod_debate = models.BooleanField(_('Debate'))

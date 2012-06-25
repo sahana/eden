@@ -4,10 +4,10 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from milkman.dairy import milkman
-from userroles.models import set_user_role, UserRole
-from userroles.testapp.models import TestModeratorProfile
-from userroles.utils import SettingsTestCase
-from userroles import Roles
+from apps.thirdparty.userroles.models import set_user_role, UserRole
+from apps.thirdparty.userroles.testapp.models import TestModeratorProfile
+from apps.thirdparty.userroles.utils import SettingsTestCase
+from apps.thirdparty.userroles import Roles
 
 # Test setup
 
