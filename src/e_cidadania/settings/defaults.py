@@ -148,6 +148,7 @@ THIRDPARTY_APPS = (
     # system-wide dependencies.
     'apps.thirdparty.smart_selects',
     'apps.thirdparty.userprofile',
+    'apps.thirdparty.userrole',
     'apps.thirdparty.tagging',
     'django_extensions',
 )
@@ -163,6 +164,15 @@ ECIDADANIA_MODULES = (
     'apps.ecidadania.staticpages',
     'apps.ecidadania.cal',
     'extras.custom_stuff',
+)
+
+#Defining user roles
+
+USER_ROLE = (
+    'space_admin',
+    'space_moderator',
+    'user',
+    'anonymous'
 )
 
 
