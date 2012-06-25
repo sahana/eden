@@ -99,6 +99,8 @@ urlpatterns += patterns('core.spaces.views',
         
     url(_(r'^add/$'), 'create_space', name='create-space'),
 
+    url(_(r'role/$'), 'add_role', name='add-role'),
+
     url(r'^$', ListSpaces.as_view(), name='list-spaces'),
 
     url(_(r'^go/'), GoToSpace.as_view(), name='goto-space'),

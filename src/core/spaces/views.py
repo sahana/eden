@@ -35,7 +35,7 @@ from django.views.generic import FormView
 # Decorators. the first is a wrapper to convert function-based decorators
 # to method decorators that can be put in subclass methods.
 from django.utils.decorators import method_decorator
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Response types
@@ -60,11 +60,16 @@ from django.views.generic.create_update import delete_object
 from core.spaces.models import Space, Entity, Document, Event, Intent
 from apps.ecidadania.news.models import Post
 from core.spaces.forms import SpaceForm, DocForm, EventForm, \
-     EntityFormSet
+     EntityFormSet, UserRoleForm
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from django.conf import settings
+
+#thirdparty 
+
+from apps.thirdparty.userroles import roles
+from apps.thirdparty.userroles.models import set_user_role 
 
 #
 # RSS FEED
@@ -150,7 +155,7 @@ class ValidateIntent(DetailView):
             intent = get_object_or_404(Intent, token=self.kwargs['token'])
             intent.user.profile.spaces.add(space_object)
             self.heading = _("The user has been authorized to participate in space \"%s\"." % space_object.name)
-            messages.info(self.request, _("Autorization succesful"))
+            messages.info(self.request, _("Authorization successful"))
             self.template_name = 'validate_intent.html'
         return space_object
 
@@ -160,6 +165,29 @@ class ValidateIntent(DetailView):
         return context
 
 
+#
+# User roles. 
+#
+@user_passes_test(lambda u: u.is_superuser)
+def add_role(request):
+
+    """
+    This function will allow the site admin to assign roles to the users. 
+
+    """
+    
+    userrole_form = UserRoleForm(request.POST or None)
+
+    if request.method == 'POST':
+        if userrole_form.is_valid():
+            userrole_uncommitted = userrole_form.save(commit=False)
+            set_user_role(userrole_uncommitted.user, userrole_uncommitted.name) 
+            return redirect('/spaces/')           
+        else:
+            return render_to_response('spaces/space_roles.html', {'form':userrole_form}, context_instance = RequestContext(request))
+
+    else:
+        return render_to_response('spaces/space_roles.html', {'form':userrole_form}, context_instance = RequestContext(request))
 
 # SPACE VIEWS
 #
@@ -231,6 +259,7 @@ class ViewSpaceIndex(DetailView):
         space_url = self.kwargs['space_url']
         space_object = get_object_or_404(Space, url=space_url)
 
+        
         if space_object.public == True or self.request.user.is_staff:
             if self.request.user.is_anonymous():
                 messages.info(self.request, _("Hello anonymous user. Remember \
@@ -238,6 +267,8 @@ class ViewSpaceIndex(DetailView):
                                               you must <a href=\"/accounts/register\">register</a> \
                                               or <a href=\"/accounts/login\">login</a> to participate."))
             return space_object
+        
+        
 
         if self.request.user.is_anonymous():
             messages.info(self.request, _("You're an anonymous user. \

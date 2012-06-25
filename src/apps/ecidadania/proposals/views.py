@@ -39,9 +39,12 @@ from django.http import HttpResponse
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
      ProposalSetForm
+from apps.thirdparty.userroles.decorators import role_required
+from apps.thirdparty.userroles import roles
 from core.spaces.models import Space
 
 
+m_roles_required = method_decorator(role_required(roles.space_admin))
 class AddProposal(FormView):
 
     """
@@ -71,7 +74,7 @@ class AddProposal(FormView):
         context['get_place'] = self.space
         return context
         
-    @method_decorator(permission_required('proposals.add_proposal'))
+    @m_roles_required
     def dispatch(self, *args, **kwargs):
         return super(AddProposal, self).dispatch(*args, **kwargs)
 
