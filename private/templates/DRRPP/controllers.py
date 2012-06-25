@@ -23,11 +23,12 @@ class index():
 
         T = current.T
         request = current.request
-        response = current.response
         appname = request.application
+        response = current.response
 
-        view = path.join(current.request.folder, "private", "templates",
-                         response.s3.theme, "views", "index.html")
+        response.title = current.deployment_settings.get_system_name()
+        view = path.join(request.folder, "private", "templates",
+                         "DRRPP", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")

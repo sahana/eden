@@ -285,7 +285,7 @@ class S3AssetModel(S3Model):
         configure(tablename,
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
-                  super_entity=("supply_item_entity", "sit_trackable"),
+                  super_entity = ("supply_item_entity", "sit_trackable"),
                   search_method=asset_search,
                   report_options=Storage(
                         search=[

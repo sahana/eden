@@ -12,6 +12,7 @@ import time
 from gluon import current
 
 from s3 import s3_debug
+from s3.s3widgets import *
 
 from tests import *
 
@@ -137,12 +138,12 @@ class SeleniumUnitTest(Web2UnitTest):
             else:
                 # Normal Input field
                 el = browser.find_element_by_id(el_id)
-                if table[details[0]].type =="date":
+                if isinstance(table[details[0]].widget, S3DateWidget):
                     el_value_date = datetime.datetime.strptime(el_value,"%Y-%m-%d")# %H:%M:%S")
                     el_value = el_value_date.strftime(date_format)
                     el.send_keys(el_value)
                     raw_value = el_value_date
-                elif table[details[0]].type =="datetime":
+                elif isinstance(table[details[0]].widget, S3DateTimeWidget):
                     el_value_datetime = datetime.datetime.strptime(el_value,"%Y-%m-%d %H:%M:%S")
                     el_value = el_value_datetime.strftime(datetime_format)
                     el.send_keys(el_value)

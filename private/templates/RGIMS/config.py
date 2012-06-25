@@ -10,8 +10,8 @@ T = current.T
     Template settings for RGIMS
 """
 
-settings.base.system_name = T("Relief Goods Inventory & Monitoring System")
-settings.base.system_name_short = T("RGIMS")
+settings.base.system_name = "Relief Goods Inventory & Monitoring System"
+settings.base.system_name_short = "RGIMS"
 
 # Pre-Populate
 settings.base.prepopulate = ["RGIMS"]

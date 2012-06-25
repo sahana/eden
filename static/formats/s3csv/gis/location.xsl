@@ -31,8 +31,7 @@
          L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row)
          For specific locations:
          Name...............Location Name
-         KV1................Key,Value
-         KV2................Key,Value
+         KV:XX..............Key,Value
          For lowest-level specified:
          WKT................WKT
          Lat................Lat
@@ -241,6 +240,10 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'L1 KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
                     <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4'] or col[@field='Name']">
@@ -325,6 +328,10 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'L2 KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
                  <xsl:choose>
@@ -419,6 +426,10 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'L3 KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
@@ -522,6 +533,10 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'L4 KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
@@ -609,6 +624,10 @@
                         <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                     </resource>
                 </xsl:if>
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
                 <xsl:choose>
                     <xsl:when test="col[@field='L4']!=''">
                         <!-- Parent to L4 -->

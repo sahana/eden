@@ -58,9 +58,10 @@ import re
 import time
 from datetime import datetime, timedelta
 
-from gluon import current, Field, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+from gluon import current
+from gluon.dal import Field
 from gluon.languages import lazyT
-from gluon.validators import Validator
+from gluon.validators import Validator, IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.storage import Storage
 
 def translate(text):
@@ -1227,17 +1228,17 @@ class IS_ADD_PERSON_WIDGET(Validator):
                  error_message=None,
                  mark_required=True):
 
-        self.error_message = error_message or \
-                             current.T("Could not add person record")
-
+        self.error_message = error_message
         self.mark_required = mark_required
 
     def __call__(self, value):
 
+        T = current.T
         db = current.db
         manager = current.manager
+        validate = manager.validate
         request = current.request
-        T = current.T
+        settings = current.deployment_settings
 
         try:
             person_id = int(value)
@@ -1257,7 +1258,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
             # No email?
             if not value:
-                email_required = current.deployment_settings.get_hrm_email_required()
+                email_required = settings.get_hrm_email_required()
                 if email_required:
                     return (value, error_message)
                 return (value, None)
@@ -1301,7 +1302,16 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 # Validate and update the person record
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
-                    value, error = manager.validate(ptable, None, f, _vars[f])
+                    if f == "date_of_birth":
+                        # Need to convert value into ISO-format
+                        # (widget expects ISO, but value comes in custom format)
+                        format = settings.get_L10n_date_format()
+                        v, error = IS_DATE_IN_RANGE(format=format)(_vars[f])
+                        if not error:
+                            value = v.isoformat()
+                            _vars[f] = value
+                    else:
+                        value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, None)
                     else:
@@ -1349,7 +1359,16 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    value, error = manager.validate(ptable, None, f, _vars[f])
+                    if f == "date_of_birth":
+                        # Need to convert value into ISO-format
+                        # (widget expects ISO, but value comes in custom format)
+                        format = settings.get_L10n_date_format()
+                        v, error = IS_DATE_IN_RANGE(format=format)(_vars[f])
+                        if not error:
+                            value = v.isoformat()
+                            _vars[f] = value
+                    else:
+                        value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, None)
                 person_id = ptable.insert(**ptable._filter_fields(_vars))
@@ -1376,7 +1395,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                       value=_vars.mobile_phone)
                 else:
                     # Something went wrong
-                    return (person_id, self.error_message)
+                    return (person_id, self.error_message or \
+                                       T("Could not add person record"))
 
         return (person_id, None)
 

@@ -605,6 +605,7 @@ class S3PersonModel(S3Model):
         else:
             last_name_validate = None
 
+        s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
 
         tablename = "pr_person"
@@ -667,6 +668,7 @@ class S3PersonModel(S3Model):
                              pr_gender(label = T("Gender")),
                              Field("date_of_birth", "date",
                                    label = T("Date of Birth"),
+                                   represent = s3_date_represent,
                                    requires = [IS_EMPTY_OR(IS_DATE_IN_RANGE(
                                                 format = s3_date_format,
                                                 maximum=request.utcnow.date(),

@@ -14,11 +14,10 @@ class index():
 
         T = current.T
         response = current.response
-        s3 = response.s3
 
         response.title = current.deployment_settings.get_system_name()
         view = path.join(current.request.folder, "private", "templates",
-                         s3.theme, "views", "index.html")
+                         "IFRC", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -27,13 +26,13 @@ class index():
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         script = '''
-$('.marker').mouseover(function() {
-    $(this).children('.marker-window').show();
+$('.marker').mouseover(function(){
+ $(this).children('.marker-window').show();
 })
-$('.marker').mouseout(function() {
-    $(this).children('.marker-window').hide();
+$('.marker').mouseout(function(){
+ $(this).children('.marker-window').hide();
 })'''
-        s3.jquery_ready.append(script)
+        response.s3.jquery_ready.append(script)
 
         markers = [
             Storage(name = "Afghan Red Crescent Society",
