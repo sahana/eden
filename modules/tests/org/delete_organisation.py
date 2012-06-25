@@ -1,4 +1,4 @@
-""" Sahana Eden Module Automated Tests - HRM005 Add Staff To Organization
+""" Sahana Eden Automated Test - ORG004 Delete Organisation
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -24,42 +24,19 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-from gluon import current
-import unittest
-from tests.web2unittest import SeleniumUnitTest
-from selenium.common.exceptions import NoSuchElementException
-from s3 import s3_debug
-from tests import *
-#import unittest, re, time
-import time
 
-class AddStaffToOrganisation(SeleniumUnitTest):
-    def test_hrm005_add_staff_to_organization(self):
-        
+from gluon import current
+from tests.web2unittest import SeleniumUnitTest
+
+class DeleteOrganisation(SeleniumUnitTest):
+    def test_hrm004_delete_organisation(self):
         """
-            @case: HRM005
-            @description: Add a premade made staff to a Organisation
+            @case: HRM004
+            @description: Delete a prepop Organisation. Organisation ID: 40 (org/organisation/40/)
             
-            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
+            @Test Doc: https://docs.google.com/a/aidiq.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE#gid=2
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        
-        self.login(account="admin", nexturl="org/organisation/41/human_resource")
-        self.browser.find_element_by_id("show-add-btn").click()
-        
-        self.create("hrm_human_resource", 
-                    [( "first_name",
-                       "Herculano",
-                       "pr_person"),
-                     ( "last_name",
-                       "Hugh",
-                       "pr_person"),
-                     ( "email",
-                       "herculandfo@icandodfmybest.com",
-                       "pr_person"),
-                     ( "job_role_id",
-                       "Chairman",
-                       "option"),
-                     ]
-                     )
 
+        # Login, if not-already done so
+        self.login(account="normal", nexturl="org/organisation/40/delete")
