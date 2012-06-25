@@ -1,31 +1,5 @@
 @charset "UTF-8";
 
-/*
-Sahana - Default Theme - Stylesheet
------------------------------------------------------------------------------------
-designer : Prabhath Sirisena - prabhath@vesess.com - http://nidahas.com
-updated : Priyanga Fonseka  - jo@opensource.lk
-updated for SahanaPy : Fran Boon  - francisboon@gmail.com
-updated for print form : Michael Howden - michael.howden@gmail.com
-Some content used from: http://matthewjamestaylor.com/blog/perfect-full-page.htm
-
-Selectors are listed in their order of appearance in the html, where applicable.
-----------------------------------------------------------------------------------
-
-  |---- Neutralizing Styles
-  |---- Basic Page Formatting Styles
-  |---- Header
-    +---- menu_auth
-  |---- menu_modules
-  |---- Content ( Home, Result, Module specific styles )
-  |---- Footer
-  |---- Form Layout Styles
-  |---- Popup Form Styles
-  |---- Popup Menu Styles
-  |---- Message Display Styles
-
-*/
-
 /* Neutralizing Styles
    ------------------------------------------------------------------------------- */
 /* Neutralize styling: Elements we want to clean out entirely */
@@ -82,7 +56,6 @@ table { border-collapse: collapse }
 
 
 #form-header {
-    /*background: url(../../img/fdm_logo_black.png) no-repeat right top;*/
     height: 70;
 }
 
@@ -132,7 +105,4 @@ div#table-container table thead tr th { border: 1px solid black; padding: 10;}
 div#table-container table tbody th { border: 1px solid black; }
 div#table-container table tr.even td { border: 1px solid black; text-align: center;}
 div#table-container table tr.odd td { border: 1px solid black; text-align: center; }
-
-
-
 

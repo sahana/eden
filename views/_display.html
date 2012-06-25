@@ -1,5 +1,4 @@
-{{try:}}{{=H2(title)}}
-{{except:}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=rheader}}
  </div>
@@ -8,13 +7,11 @@
   </div>
   <div>
  {{pass}}
-	{{try:}}{{=H3(subtitle)}}
-	{{except:}}{{pass}}
-	{{try:}}{{=delete_btn}}
-	{{except:}}{{pass}}
+	{{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+	{{try:}}{{=delete_btn}}{{except:}}{{pass}}
 	{{include "last_update.html"}}
 	{{try:}}{{include}}
-	{{except:}}{{pass}}
+    {{except:}}{{pass}}
 	{{try:}}
 	 <p>
 	 {{=edit_btn}}
@@ -22,14 +19,8 @@
 	{{except:}}{{pass}}
 	<div id='map'></div>
 	<div class='item-container'>
-	{{try:}}{{=item}}
-	{{except:}}{{pass}}
+	{{try:}}{{=item}}{{except:}}{{pass}}
 	</div>
-	{{try:}}{{=list_btn}}
-	{{except:}}{{pass}}
+	{{try:}}{{=list_btn}}{{except:}}{{pass}}
 </div>
-{{if response.s3.rfooter:}}
-  <div id='rfooter'>
-    {{=XML(response.s3.rfooter)}}
-  </div>
-{{pass}}
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

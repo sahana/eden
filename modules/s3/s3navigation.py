@@ -47,7 +47,6 @@ from gluon import *
 from gluon.storage import Storage
 
 # =============================================================================
-
 class S3NavigationItem(object):
     """
         Base class and API for navigation items.
@@ -101,6 +100,7 @@ class S3NavigationItem(object):
                  m=None,
                  p=None,
                  t=None,
+                 url=None,
                  tags=None,
                  parent=None,
                  translate=True,
@@ -127,6 +127,9 @@ class S3NavigationItem(object):
             @param p: the method to check authorization for (will not be appended to args)
             @param t: the table concerned by this request (overrides c_f for auth)
 
+            @param url: a URL to use instead of building one manually
+                        - e.g. for external websites or mailto: links
+
             @param tags: list of tags for this item
             @param parent: the parent item
 
@@ -136,6 +139,7 @@ class S3NavigationItem(object):
                           enable/disable this item
             @param restrict: restrict to roles (role UID or list of role UIDs)
             @param link: item has its own URL
+            @param mandatory: item is always active
 
             @param attributes: attributes to use in layout
         """
@@ -211,6 +215,8 @@ class S3NavigationItem(object):
             self.p = p
         else:
             self.p = m
+
+        self.override_url = url
 
         # Layout attributes and options
         attr = attributes.items()
@@ -683,6 +689,9 @@ class S3NavigationItem(object):
         if not self.link:
             return None
 
+        if self.override_url:
+            return self.override_url
+
         args = self.args
         if self.vars:
             vars = Storage(self.vars)
@@ -713,8 +722,7 @@ class S3NavigationItem(object):
             @param kwargs: override URL query vars
         """
 
-        auth = current.auth
-        aURL = auth.permission.accessible_url
+        aURL = current.auth.permission.accessible_url
 
         if not self.link:
             return None
@@ -752,6 +760,7 @@ class S3NavigationItem(object):
 
             @returns: tuple (f, args)
         """
+
         if not ext or ext == "html":
             return f, args
         items = [f]

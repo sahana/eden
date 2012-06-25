@@ -31,12 +31,15 @@ __all__ = ["S3AssetModel",
            "asset_rheader",
            "asset_types",
            "asset_log_status",
+           "asset_controller",
           ]
 
 from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
+
 from ..s3 import *
+from layouts import S3AddResourceLink
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
 ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
@@ -98,7 +101,6 @@ class S3AssetModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -119,11 +121,11 @@ class S3AssetModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
+        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         #--------------------------------------------------------------------------
@@ -181,7 +183,7 @@ class S3AssetModel(S3Model):
                              Field("purchase_price", "double",
                                    #default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             currency_type("purchase_currency"),
+                             s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,
                                          writable=False),
@@ -191,7 +193,7 @@ class S3AssetModel(S3Model):
                                        writable=False,
                                        comment=self.pr_person_comment(child="assigned_to_id")),
                              comments(),
-                             *(s3.address_fields() + meta_fields()))
+                             *(s3_address_fields() + meta_fields()))
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
@@ -220,6 +222,8 @@ class S3AssetModel(S3Model):
                                                                    sort=True)),
                                    represent = self.asset_represent,
                                    label = T("Asset"),
+                                   comment = S3AddResourceLink(c="asset", f="asset",
+                                                tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
                                    ondelete = "CASCADE")
 
         table.virtualfields.append(AssetVirtualFields())
@@ -602,7 +606,7 @@ $(document).ready(function() {
                 asset_tracker.set_base_location(tracker(s3db.org_site,
                                                         vars.site_id))
                 # Populate the address fields
-                s3.address_update(atable, asset_id)
+                s3_address_update(atable, asset_id)
             if status == ASSET_LOG_ASSIGN:
                 if type == "person":#
                     if vars.check_in_to_person:
@@ -953,5 +957,54 @@ class AssetVirtualFields:
             if site:
                 return s3db.org_site_represent(site, show_link=False)
         return current.messages.NONE
+
+# =============================================================================
+def asset_controller():
+    """ RESTful CRUD controller """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            s3_address_hide(r.table)
+        if r.component_name == "log":
+            s3db.asset_log_prep(r)
+            #if r.method == "update":
+                # We don't want to exclude fields in update forms
+                #pass
+            #elif r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                #table = r.component.table
+                #table.returned.readable = table.returned.writable = False
+                #table.returned_status.readable = table.returned_status.writable = False
+                # Process Base Site
+                #s3mgr.configure(table._tablename,
+                #                onaccept=asset_transfer_onaccept)
+        #else:
+            # @ToDo: Add Virtual Fields to the List view for 'Currently assigned to' & 'Current Location'
+
+        return True
+    s3.prep = prep
+
+    # Post-processor
+    def postp(r, output):
+        if r.method != "import":
+            S3CRUD.action_buttons(r, deletable=False)
+            #if not r.component:
+                #s3.actions.append({"url" : URL(c="asset", f="asset",
+                #                               args = ["[id]", "log", "create"],
+                #                               vars = {"status" : eden.asset.asset_log_status["ASSIGN"],
+                #                                       "type" : "person"}),
+                #                   "_class" : "action-btn",
+                #                   "label" : str(T("Assign"))})
+        return output
+    s3.postp = postp
+
+    output = current.rest_controller("asset", "asset",
+                                     rheader=s3db.asset_rheader)
+    return output
 
 # END =========================================================================

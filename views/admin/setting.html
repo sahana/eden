@@ -1,0 +1,21 @@
+{{extend "layout.html"}}
+
+<div id='home'>
+<h2>{{=T("Settings")}}</h2>
+<p>{{=T("Settings which can be configured through the web interface are available here.")}}</p>
+<p>{{=T("Other settings can only be set by editing a file on the server")}}:<i>models/000_config.py</i></p>
+{{if settings.has_module("msg"):}}
+<h3>{{=T("Messaging")}}:</h3>
+<ul>
+  <li><a href='{{=URL(c="msg", f="email_settings", args=[1, "update"])}}'>{{=T("Email")}}</a>
+  <li><a href='{{=URL(c="msg", f="setting", args=[1, "update"])}}'>{{=T("SMS Outbound")}}</a>
+  <li><a href='{{=URL(c="msg", f="modem_settings")}}'>{{=T("SMS Modems (Inbound & Outbound)")}}</a>
+  <li><a href='{{=URL(c="msg", f="twitter_settings", args=[1, "update"])}}'>{{=T("Twitter")}}</a>
+</ul>
+<h3>{{=T("Other")}}:</h3>
+{{else:}}
+<h3>{{=T("Options")}}:</h3>
+{{pass}}
+<ul>
+</ul>
+</div>

@@ -31,19 +31,25 @@
 """
 
 import re
-import gluon.contrib.simplejson as jsonlib
 import cPickle
 
-from gluon.storage import Storage
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
-from gluon.serializers import json
+from gluon.serializers import json as jsons
+from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug
-from s3tools import S3DateTime
+from s3utils import s3_debug, S3DateTime
 from s3validators import *
-from s3widgets import CheckboxesWidgetS3
+from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
 from s3rest import S3FieldSelector
 
@@ -54,6 +60,7 @@ __all__ = ["S3SearchWidget",
            "S3SearchLocationHierarchyWidget",
            "S3SearchLocationWidget",
            "S3SearchSkillsWidget",
+           "S3SearchOrgHierarchyWidget",
            "S3Search",
            "S3LocationSearch",
            "S3OrganisationSearch",
@@ -65,15 +72,6 @@ __all__ = ["S3SearchWidget",
 
 MAX_RESULTS = 1000
 MAX_SEARCH_RESULTS = 200
-
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
 # =============================================================================
 class S3SearchWidget(object):
@@ -406,6 +404,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
 
         return w
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def widget_label(widget):
         """
@@ -415,6 +414,7 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         """
         return LABEL(widget["label"], _for="id-%s" % widget["name"])
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def widget_input(widget):
         """
@@ -498,6 +498,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         @param cols: The number of columns which the options will be
                      displayed in
     """
+
     def __init__(self, field=None, name=None, options=None, **attr):
         """
             Configures the search option
@@ -513,6 +514,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         super(S3SearchOptionsWidget, self).__init__(field, name, **attr)
         self.options = options
 
+    # -------------------------------------------------------------------------
     def _get_reference_resource(self, resource):
         """
             If the field is entered as kfield$field, will search field in the
@@ -530,6 +532,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                                        resource_name)
         return resource, field, kfield
 
+    # -------------------------------------------------------------------------
     def widget(self, resource, vars):
         """
             Returns the widget
@@ -861,7 +864,13 @@ class S3SearchLocationWidget(S3SearchWidget):
         """
 
         format = current.auth.permission.format
-        if format == "plain" or not SHAPELY:
+        if format == "plain":
+            return None
+
+        try:
+            from shapely.wkt import loads as wkt_loads
+        except ImportError:
+            s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
             return None
 
         T = current.T
@@ -878,16 +887,16 @@ class S3SearchLocationWidget(S3SearchWidget):
         # Hidden Field to store the Polygon value in
         polygon_input = INPUT(_id="gis_search_polygon_input",
                               _name=self.attr._name,
-                              _class="hidden")
+                              _class="hide")
+
+        # Map Popup
+        # - not added as we reuse the one that comes with dataTables
 
         # Button to open the Map
         OPEN_MAP = T("Open Map")
         map_button = A(OPEN_MAP,
                        _style="cursor:pointer; cursor:hand",
                        _id="gis_search_map-btn")
-
-        # Map Popup
-        # - reuse the one that comes with dataTables
 
         # Settings to be read by static/scripts/S3/s3.gis.js
         js_location_search = """S3.gis.draw_polygon = true;"""
@@ -901,22 +910,14 @@ class S3SearchLocationWidget(S3SearchWidget):
                       )
 
     # -------------------------------------------------------------------------
-    def query(self, resource, value):
+    @staticmethod
+    def query(resource, value):
         """
             Returns a sub-query for this search option
 
             @param resource: the resource to search in
             @param value: the value returned from the widget: WKT format
         """
-
-        #gis = current.gis
-        # table = resource.table
-        # s3db = current.s3db
-        # locations = s3db.gis_location
-
-        # Get master query and search fields
-        #self.build_master_query(resource)
-        #master_query = self.master_query
 
         if value:
             # @ToDo: Turn this into a Resource filter
@@ -925,10 +926,11 @@ class S3SearchLocationWidget(S3SearchWidget):
 
             # @ToDo: A PostGIS routine, where-available
             #        - requires a Spatial DAL?
+            from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(value)
             except:
-                s3_debug("WARNING: s3search: Invalid WKT")
+                s3_debug("WARNING: S3Search: Invalid WKT")
                 return None
 
             bounds = shape.bounds
@@ -989,6 +991,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
                - meanwhile at least sort by level of competency
     """
 
+    # -------------------------------------------------------------------------
     def widget(self, resource, vars):
         manager = current.manager
         c = manager.define_resource("hrm", "competency")
@@ -1262,7 +1265,7 @@ $('#%s').live('click', function() {
        save_search_processing_id,
        save_search_btn_id,
        jurl,
-       jsonlib.dumps(search_vars),
+       json.dumps(search_vars),
        save_search_a_id,
        save_search_processing_id))
 
@@ -1463,7 +1466,7 @@ $('#%s').live('click', function() {
                     aadata = dict(aaData=sqltable or [])
                     aadata.update(iTotalRecords=totalrows,
                                   iTotalDisplayRecords=totalrows)
-                    response.aadata = json(aadata)
+                    response.aadata = jsons(aadata)
                     s3.start = 0
                     s3.limit = limit
 
@@ -1476,7 +1479,8 @@ $('#%s').live('click', function() {
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
-            list_formats = DIV(A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
+            list_formats = DIV(T("Export to:"),
+                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
                                  _href=r.url(method="", representation="pdf",
                                              vars=filter)),
@@ -1489,9 +1493,7 @@ $('#%s').live('click', function() {
                                  _href=r.url(method="", representation="rss",
                                              vars=filter)),
                                _id="list_formats")
-            tabs = [(T("List"), None),
-                    #(T("Export"), "export")
-                    ]
+            tabs = []
 
             if "location_id" in table or \
                "site_id" in table:
@@ -1540,6 +1542,8 @@ $('#%s').live('click', function() {
                 # Provide the ability to Message person entities in search results
                 tabs.append((T("Message"), "compose"))
 
+            if tabs:
+                tabs.insert(0, ((T("List"), None)))
         else:
             list_formats = ""
             tabs = []
@@ -1718,8 +1722,8 @@ $('#%s').live('click', function() {
             if hasattr(widget, "attr"):
                 label = widget.attr.get("label", label)
                 comment = widget.attr.get("comment", comment)
-            tr = TR(TD("%s: " % label, _class="w2p_fl"),
-                    widget.widget(resource, form_values))
+
+            tr = TR(TD("%s: " % label, _class="w2p_fl"), _widget)
 
             if comment:
                 tr.append(DIV(DIV(_class="tooltip",
@@ -1854,9 +1858,9 @@ $('#%s').live('click', function() {
 
             if filter == "~":
                 if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                    output = json([dict(id="",
-                                       name="Search results are over %d. Please input more characters." \
-                                       % MAX_SEARCH_RESULTS)])
+                    output = jsons([dict(id="",
+                                         name="Search results are over %d. Please input more characters." \
+                                         % MAX_SEARCH_RESULTS)])
 
             if output is None:
                 output = resource.exporter.json(resource,
@@ -2086,9 +2090,9 @@ $('#%s').live('click', function() {
                        "represent" : str(represent(row[get_fieldname]))
                        } for row in rows ]
         else:
-            json("{}")
+            jsons("{}")
 
-        return json(output)
+        return jsons(output)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2107,7 +2111,7 @@ $('#%s').live('click', function() {
         auth = current.auth
 
         user_id = auth.user.id
-        search_vars = jsonlib.load(r.body)
+        search_vars = json.load(r.body)
         s_vars = {}
 
         for i in search_vars.iterkeys():
@@ -2320,12 +2324,12 @@ class S3LocationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
         elif not parent:
             if (not limit or limit > MAX_RESULTS) and resource.count() > MAX_RESULTS:
-                output = json([])
+                output = jsons([])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2404,9 +2408,9 @@ class S3OrganisationSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             attributes = dict(orderby=field)
@@ -2437,7 +2441,7 @@ class S3OrganisationSearch(S3Search):
                     name = name,
                     )
                 append(record)
-            output = json(output)
+            output = jsons(output)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2514,9 +2518,9 @@ class S3PersonSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2604,9 +2608,9 @@ class S3HRSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             output = resource.exporter.json(resource,
@@ -2689,7 +2693,7 @@ class S3PentitySearch(S3Search):
 
         output = resource.exporter.json(resource, start=0, limit=limit,
                                         fields=[table.pe_id], orderby=field)
-        items = jsonlib.loads(output)
+        items = json.loads(output)
 
         # Add Groups
         if filter and value:
@@ -2704,7 +2708,7 @@ class S3PentitySearch(S3Search):
                                             limit=limit,
                                             fields=[table.pe_id],
                                             orderby=field)
-            items += jsonlib.loads(output)
+            items += json.loads(output)
 
         # Add Organisations
         if filter and value:
@@ -2719,13 +2723,13 @@ class S3PentitySearch(S3Search):
                                             limit=limit,
                                             fields=[table.pe_id],
                                             orderby=field)
-            items += jsonlib.loads(output)
+            items += json.loads(output)
 
         items = [ { "id" : item[u'pe_id'],
                     "name" : s3db.pr_pentity_represent(item[u'pe_id'],
                                                        show_label=False) }
                   for item in items ]
-        output = jsonlib.dumps(items)
+        output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
         return output
 
@@ -2811,9 +2815,9 @@ class S3TrainingSearch(S3Search):
 
         if filter == "~":
             if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = json([dict(id="",
-                                   name="Search results are over %d. Please input more characters." \
-                                   % MAX_SEARCH_RESULTS)])
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
 
         if output is None:
             attributes = dict(orderby=field)
@@ -2831,10 +2835,26 @@ class S3TrainingSearch(S3Search):
                     date = S3DateTime.date_represent(row[table].start_date),
                     )
                 append(record)
-            output = json(output)
+            output = jsons(output)
 
 
         response.headers["Content-Type"] = "application/json"
         return output
+
+
+# =============================================================================
+class S3SearchOrgHierarchyWidget(S3SearchOptionsWidget):
+    def widget(self, resource, vars):
+        field_name = self.field
+
+        # check the field type
+        try:
+            field = resource.table[field_name]
+        except:
+            field_type = "virtual"
+        else:
+            field_type = str(field.type)
+
+        return S3OrganisationHierarchyWidget()(field, {}, **self.attr)
 
 # END =========================================================================

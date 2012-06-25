@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+/* Layout of the survey questionnaire form */
+
+tr.survey_section th {
+    color: #003399;
+    font-size: 150%;
+    text-align: center;
+}
+
+tr.survey_question th {
+    color: #112038;
+    font-size: 90%;
+    font-weight: bold;
+    vertical-align: top;
+}
+
+div.survey_map-legend td {
+    vertical-align: top;
+}
+
+div.survey_scrollable {
+    width:900px;
+    overflow:scroll;
+}

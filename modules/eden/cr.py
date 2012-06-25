@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Shelter (Camp) Registry, model
-
+""" Shelter (Camp) Registry, model
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -69,7 +67,7 @@ class S3CampDataModel(S3Model):
                                 Field("name", notnull=True,
                                       requires = IS_NOT_ONE_OF(db,
                                                                "%s.name" % tablename)),
-                                s3.comments(),
+                                s3_comments(),
 
                                 *(s3_timestamp() + s3_uid() + s3_deletion_status()))
 
@@ -128,7 +126,7 @@ class S3CampDataModel(S3Model):
         tablename = "cr_shelter_service"
         table = db.define_table(tablename,
                                 Field("name", notnull=True),
-                                s3.comments(),
+                                s3_comments(),
 
                                 *(s3_timestamp() + s3_uid() + s3_deletion_status()))
 
@@ -239,8 +237,8 @@ class S3CampDataModel(S3Model):
                                       label = T("Status")),
                                 Field("source",
                                       label = T("Source")),
-                                s3.comments(),
-                                *(s3.address_fields() + s3.meta_fields()))
+                                s3_comments(),
+                                *(s3_address_fields() + s3_meta_fields()))
 
         # CRUD strings
         if settings.get_ui_camp():
@@ -312,7 +310,7 @@ class S3CampDataModel(S3Model):
         self.configure(tablename,
                         super_entity="org_site",
                         # Update the Address Fields
-                        onvalidation=s3.address_onvalidation,
+                        onvalidation=s3_address_onvalidation,
                         list_fields=["id",
                                      "name",
                                      "status",

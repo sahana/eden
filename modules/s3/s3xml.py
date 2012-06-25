@@ -43,9 +43,16 @@ import csv
 import datetime
 import urllib2
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.storage import Storage
-import gluon.contrib.simplejson as json
 
 from s3codec import S3Codec
 
@@ -800,7 +807,7 @@ class S3XML(S3Codec):
                     # Assume being used outside the Sahana Mapping client so use public URLs
                     url = "%s%s/%i" % (settings.get_base_public_url(), url, record.id)
                 attr[ATTRIBUTE.url] = url
-                
+
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip

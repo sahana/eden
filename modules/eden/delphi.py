@@ -68,7 +68,7 @@ class S3DelphiModel(S3Model):
                                         label = T("Description")),
                                   Field("active", "boolean", default=True,
                                         label = T("Active")),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                 )
 
         # CRUD Strings
@@ -146,7 +146,7 @@ class S3DelphiModel(S3Model):
                                                                                   T("A Participant can additionally Vote"),
                                                                                   T("A Moderator can additionally create Problems & control Memberships")))
                                         ),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                 )
 
         # CRUD Strings
@@ -188,7 +188,7 @@ class S3DelphiModel(S3Model):
                                         label = T("Criteria")),
                                   Field("active", "boolean", default=True,
                                         label = T("Active")),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                 )
 
         table.modified_on.label = T("Last Modification")
@@ -246,7 +246,7 @@ class S3DelphiModel(S3Model):
                                         default = 0,
                                         writable = False,
                                         label = T("Changes")),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                 )
 
         table.created_by.label = T("Suggested By")
@@ -299,7 +299,7 @@ class S3DelphiModel(S3Model):
                                   solution_id(empty=False),
                                   Field("rank", "integer",
                                         label = T("Rank")),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                   )
 
         # ---------------------------------------------------------------------
@@ -324,7 +324,7 @@ class S3DelphiModel(S3Model):
                                   solution_id(),
                                   Field("body", "text", notnull=True,
                                         label = T("Comment")),
-                                  *s3.meta_fields()
+                                  *s3_meta_fields()
                                 )
 
         self.configure(tablename,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden IRS Model
+""" Sahana Eden Incident Reporting Model
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -31,9 +31,19 @@ __all__ = ["S3IRSModel",
            "S3IRSResponseModel",
            "irs_rheader"]
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
+from layouts import S3AddResourceLink
 
 # =============================================================================
 class S3IRSModel(S3Model):
@@ -59,7 +69,7 @@ class S3IRSModel(S3Model):
         add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
-        meta_fields = s3.meta_fields
+        meta_fields = s3_meta_fields
         set_method = self.set_method
         super_link = self.super_link
 
@@ -326,8 +336,8 @@ class S3IRSModel(S3Model):
                                    represent = lambda closed: \
                                          (T("No"),
                                           T("Yes"))[closed == True]),
-                             s3.comments(),
-                             *(s3.lx_fields() + meta_fields()))
+                             s3_comments(),
+                             *(s3_lx_fields() + meta_fields()))
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
         s3.crud_strings[tablename] = Storage(
@@ -459,7 +469,8 @@ class S3IRSModel(S3Model):
                             autocomplete="name",
                             autodelete=False))
 
-        if settings.has_module("vehicle"):
+        if settings.get_irs_vehicle():
+            # @ToDo: This workflow requires more work
             link_table = "irs_ireport_vehicle_human_resource"
         else:
             link_table = "irs_ireport_human_resource"
@@ -518,7 +529,7 @@ class S3IRSModel(S3Model):
 
         configure("irs_ireport",
                   create_onaccept=self.ireport_onaccept,
-                  onvalidation=s3.lx_onvalidation,
+                  onvalidation=s3_lx_onvalidation,
                   create_next=create_next,
                   update_next=URL(args=["[id]", "update"])
                   )
@@ -529,8 +540,8 @@ class S3IRSModel(S3Model):
         table = define_table(tablename,
                              ireport_id(),
                              self.pr_person_id(),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -579,14 +590,13 @@ class S3IRSModel(S3Model):
             @ToDo: Make more generic (currently Porto-specific)
         """
 
-        db = current.db
-        s3db = current.s3db
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         if not settings.has_module("fire"):
             return
 
+        db = current.db
+        s3db = current.s3db
         vars = form.vars
         ireport = vars.id
         category = vars.category
@@ -676,18 +686,26 @@ class S3IRSModel(S3Model):
             - this will be formatted as an OpenGeoSMS
         """
 
-        T = current.T
-        msg = current.msg
-        response = current.response
-
         if r.representation == "html" and \
            r.name == "ireport" and r.id and not r.component:
 
+            T = current.T
+            msg = current.msg
+
             record = r.record
-            text = "%s %s:%s; %s" % (record.name,
-                                     T("Contact"),
-                                     record.contact,
-                                     record.message)
+            id = record.id
+
+            contact = ""
+            if record.contact:
+                contact = "\n%s: %s" (T("Contact"),
+                                      record.contact)
+            message = ""
+            if record.message:
+                message = "\n%s" % record.message
+            text = "%s\n%s%s%s" % (id,
+                                   record.name,
+                                   contact,
+                                   message)
 
             # Encode the message as an OpenGeoSMS
             message = msg.prepare_opengeosms(record.location_id,
@@ -701,10 +719,49 @@ class S3IRSModel(S3Model):
                       args=r.id)
 
             # Create the form
-            output = msg.compose(type="SMS",
-                                 recipient_type = "pr_person",
-                                 message = message,
-                                 url = url)
+            opts = dict(
+                    type="SMS",
+                    # @ToDo: deployment_setting
+                    subject = T("Deployment Request"),
+                    message = message,
+                    url = url
+                )
+            # Pre-populate the recipients list if we can
+            # @ToDo: Check that we have valid contact details
+            #        - slower, but useful to fail early if we need to
+            s3db = current.s3db
+            if current.deployment_settings.get_irs_vehicle():
+                # @ToDo: This workflow requires more work
+                #        - no ic defined yet in this case
+                table = s3db.irs_ireport_vehicle_human_resource
+            else:
+                table = s3db.irs_ireport_human_resource
+            htable = s3db.hrm_human_resource
+            ptable = s3db.pr_person
+            query = (table.ireport_id == id) & \
+                    (table.deleted == False) & \
+                    (table.human_resource_id == htable.id) & \
+                    (htable.person_id == ptable.id)
+            recipients = current.db(query).select(table.incident_commander,
+                                                  ptable.pe_id)
+            if not recipients:
+                # Provide an Autocomplete the select the person to send the notice to
+                opts["recipient_type"] = "pr_person"
+            elif len(recipients) == 1:
+                # Send to this person
+                opts["recipient"] = recipients.first()["pr_person"].pe_id
+            else:
+                # Send to the Incident Commander
+                ic = False
+                for row in recipients:
+                    if row["irs_ireport_human_resource"].incident_commander == True:
+                        opts["recipient"] = row["pr_person"].pe_id
+                        ic = True
+                        break
+                if not ic:
+                    # Provide an Autocomplete the select the person to send the notice to
+                    opts["recipient_type"] = "pr_person"
+            output = msg.compose(**opts)
 
             # Maintain RHeader for consistency
             if "rheader" in attr:
@@ -713,7 +770,7 @@ class S3IRSModel(S3Model):
                     output["rheader"] = rheader
 
             output["title"] = T("Send Dispatch Update")
-            response.view = "msg/compose.html"
+            current.response.view = "msg/compose.html"
             return output
 
         else:
@@ -733,14 +790,11 @@ class S3IRSModel(S3Model):
 
         if r.representation == "html" and r.name == "ireport":
 
-            import gluon.contrib.simplejson as json
-
             T = current.T
             db = current.db
             s3db = current.s3db
             request = current.request
             response = current.response
-            session = current.session
             s3 = response.s3
             now = request.utcnow
 
@@ -751,7 +805,7 @@ class S3IRSModel(S3Model):
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
 
             # Add our control script
-            if session.s3.debug:
+            if s3.debug:
                 s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % request.application)
             else:
                 s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % request.application)
@@ -982,16 +1036,19 @@ class S3IRSResponseModel(S3Model):
         tablename = "irs_ireport_human_resource"
         table = self.define_table(tablename,
                                   ireport_id(),
-                                  # Simple dropdown is faster for a small team
+                                  # @ToDo: Limit Staff to those which are not already assigned to an Incident
                                   human_resource_id(label = hrm_label,
-                                                    widget=None),
+                                                    # Simple dropdown is faster for a small team
+                                                    widget=None,
+                                                    comment=None,
+                                                    ),
                                   Field("incident_commander", "boolean",
                                         default = False,
                                         label = T("Incident Commander"),
                                         represent = lambda incident_commander: \
                                                 (T("No"),
                                                  T("Yes"))[incident_commander == True]),
-                                 *s3.meta_fields())
+                                 *s3_meta_fields())
 
         if not current.deployment_settings.has_module("vehicle"):
             return None
@@ -1005,7 +1062,14 @@ class S3IRSResponseModel(S3Model):
                                   ireport_id(),
                                   asset_id(
                                         label = T("Vehicle"),
-                                        requires=self.irs_vehicle_requires
+                                        # Limit Vehicles to those which are not already assigned to an Incident
+                                        requires=self.irs_vehicle_requires,
+                                        comment = S3AddResourceLink(
+                                            c="vehicle",
+                                            f="vehicle",
+                                            label=T("Add Vehicle"),
+                                            tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                                   
                                     ),
                                   Field("datetime", "datetime",
                                         label=T("Dispatch Time"),
@@ -1018,8 +1082,8 @@ class S3IRSResponseModel(S3Model):
                                         # @ToDo: Close all assignments when Incident closed
                                         readable=False,
                                         writable=False),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # Field options
         table.site_id.label = T("Fire Station")
@@ -1032,25 +1096,36 @@ class S3IRSResponseModel(S3Model):
         # ---------------------------------------------------------------------
         # Which Staff are assigned to which Vehicle?
         #
-        hr_represent = self.hrm_hr_represent
         tablename = "irs_ireport_vehicle_human_resource"
         table = self.define_table(tablename,
                                   ireport_id(),
-                                  # Simple dropdown is faster for a small team
+                                  # @ToDo: Limit Staff to those which are not already assigned to an Incident
                                   human_resource_id(label = hrm_label,
-                                                    represent=hr_represent,
-                                                    requires = IS_ONE_OF(db,
-                                                                         "hrm_human_resource.id",
-                                                                         hr_represent,
-                                                                         #orderby="pr_person.first_name"
-                                                                         ),
-                                                    widget=None),
-                                  asset_id(label = T("Vehicle")),
+                                                    # Simple dropdown is faster for a small team
+                                                    widget=None,
+                                                    comment=None,
+                                                    ),
+                                  asset_id(label=T("Vehicle"),
+                                           # @ToDo: Limit to Vehicles which are assigned to this Incident
+                                           requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "asset_asset.id",
+                                                                  self.asset_represent,
+                                                                  filterby="type",
+                                                                  filter_opts=(1,),
+                                                                  sort=True)),
+                                          comment = S3AddResourceLink(
+                                            c="vehicle",
+                                            f="vehicle",
+                                            label=T("Add Vehicle"),
+                                            tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                                   
+                                          ),
                                   Field("closed",
                                         # @ToDo: Close all assignments when Incident closed
                                         readable=False,
                                         writable=False),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -1102,18 +1177,18 @@ def irs_rheader(r, tabs=[]):
 
         T = current.T
         s3db = current.s3db
-        #s3 = current.response.s3
         settings = current.deployment_settings
         hrm_label = T("Responder(s)")
             
         tabs = [(T("Report Details"), None),
                 (T("Photos"), "image"),
                 (T("Documents"), "document"),
-                (T("Vehicles"), "vehicle"),
                 (T("Affected Persons"), "person"),
-                (hrm_label, "human_resource"),
-                (T("Tasks"), "task"),
                ]
+        if settings.get_irs_vehicle():
+            tabs.append((T("Vehicles"), "vehicle"))
+        tabs.append((hrm_label, "human_resource"))
+        tabs.append((T("Tasks"), "task"))
         if settings.has_module("msg"):
             tabs.append((T("Dispatch"), "dispatch"))
 
@@ -1127,7 +1202,7 @@ def irs_rheader(r, tabs=[]):
             datetime = table.datetime.represent(report.datetime)
             expiry = table.datetime.represent(report.expiry)
             location = table.location_id.represent(report.location_id)
-            category = table.category.represent(report.category)
+            category = table.category.represent(report.category) or ""
             contact = ""
             if report.person:
                 if report.contact:

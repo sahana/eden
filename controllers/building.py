@@ -38,6 +38,8 @@ person_id = s3db.pr_person_id
 location_id = s3db.gis_location_id
 organisation_id = s3db.org_organisation_id
 
+s3_datetime_format = settings.get_L10n_datetime_format()
+
 # Options
 building_area_inspected = {
     1:T("Exterior and Interior"),

@@ -83,7 +83,7 @@ class OCRDataModel(S3Model):
                                    notnull=True,
                                    unique=True),
                              Field("pages", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Payload
@@ -98,7 +98,7 @@ class OCRDataModel(S3Model):
                                    uploadfolder=payload_folder),
                              Field("page_number", "integer",
                                    notnull=True),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Form Status
@@ -116,7 +116,7 @@ class OCRDataModel(S3Model):
                              Field("job_uuid",
                                    unique=True),
                              Field("job_has_errors", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Field Crops
@@ -134,7 +134,7 @@ class OCRDataModel(S3Model):
                                    uploadfolder=payload_folder),
                              Field("value"),
                              Field("sequence", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR XML Data
@@ -150,7 +150,7 @@ class OCRDataModel(S3Model):
                              Field("form_uuid",
                                    notnull=True,
                                    default=""),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
 # =============================================================================
 def ocr_buttons(r):

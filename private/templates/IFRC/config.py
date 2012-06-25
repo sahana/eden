@@ -8,10 +8,6 @@ T = current.T
 
 """
     Template settings for IFRC
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
 """
 
 # Pre-Populate
@@ -84,6 +80,8 @@ settings.org.site_code_len = 3
 settings.hrm.email_required = False
 # Uncomment to use an alternate table for HR experience
 settings.hrm.experience = "programme"
+# Uncomment to show the Organisation name in HRM represents
+settings.hrm.show_organisation = True
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -112,7 +110,7 @@ settings.save_search.widget = False
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
     ("default", Storage(
-            name_nice = T("Home"),
+            name_nice = "RMS",
             restricted = False, # Use ACLs to control access to this module
             access = None,      # All Users (inc Anonymous) can see this module in the default menu & access the controller
             module_type = None  # This item is not shown in the menu
@@ -202,7 +200,7 @@ settings.modules = OrderedDict([
             module_type = None, # Not displayed
         )),
     ("inv", Storage(
-            name_nice = T("Warehouse"),
+            name_nice = T("Warehouses"),
             #description = "Receiving and Sending Items",
             restricted = True,
             module_type = 4
@@ -226,7 +224,7 @@ settings.modules = OrderedDict([
             module_type = 2
         )),
     ("survey", Storage(
-            name_nice = T("Surveys"),
+            name_nice = T("Assessments"),
             #description = "Create, enter, and manage surveys.",
             restricted = True,
             module_type = 5,

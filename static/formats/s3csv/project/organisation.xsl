@@ -72,7 +72,7 @@
                 <data field="amount">
                     <xsl:value-of select="col[@field='Amount']"/>
                 </data>
-                <data field="currency_type">
+                <data field="currency">
                     <xsl:choose>
                         <xsl:when test="col[@field='Currency']/text()">
                             <xsl:value-of select="col[@field='Currency']/text()"/>

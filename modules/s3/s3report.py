@@ -6,10 +6,7 @@
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
-    @status: work in progress
-
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
-    @requires: U{B{I{SQLite3}} <http://www.sqlite.org>}
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -37,11 +34,19 @@ __all__ = ["S3Cube", "S3Report", "S3ContingencyTable"]
 
 import sys
 import datetime
-import gluon.contrib.simplejson as json
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.storage import Storage
 from gluon.html import *
+from gluon.storage import Storage
+
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
@@ -74,12 +79,17 @@ class S3Cube(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        manager = current.manager
         if r.http in ("GET", "POST"):
             output = self.report(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
         return output
+
+    # -------------------------------------------------------------------------
+    def _process_report_options(self, form):
+        dupe = form.vars.rows == form.vars.cols
+        if dupe:
+           form.errors.cols = "Duplicate label selected"
 
     # -------------------------------------------------------------------------
     def report(self, r, **attr):
@@ -92,17 +102,18 @@ class S3Cube(S3CRUD):
 
         T = current.T
         manager = current.manager
-        session = current.session
         response = current.response
-        table = self.table
+        session = current.session
+        s3 = session.s3
 
+        table = self.table
         tablename = self.tablename
 
         # Report options  -----------------------------------------------------
         #
 
         # Get the session options
-        session_options = session.s3.report_options
+        session_options = s3.report_options
         if session_options and tablename in session_options:
             session_options = session_options[tablename]
         else:
@@ -156,14 +167,21 @@ class S3Cube(S3CRUD):
             # We only compare to the session if POSTing to prevent cross-site
             # scripting.
             if r.http == "POST" and \
-                form.accepts(form_values, session, formname="report", keepvalues=True) or \
-                form.accepts(form_values, formname="report", keepvalues=True):
+                form.accepts(form_values,
+                             session,
+                             formname="report",
+                             keepvalues=True,
+                             onvalidation=self._process_report_options) or \
+                form.accepts(form_values,
+                             formname="report",
+                             keepvalues=True,
+                             onvalidation=self._process_report_options):
 
                 # The form is valid so save the form values into the session
-                if 'report_options' not in session.s3:
-                    session.s3.report_options = Storage()
+                if "report_options" not in s3:
+                    s3.report_options = Storage()
 
-                session.s3.report_options[tablename] = Storage([(k, v) for k, v in
+                s3.report_options[tablename] = Storage([(k, v) for k, v in
                                                         form_values.iteritems() if v])
 
             # Use the values to generate the query filter
@@ -223,7 +241,7 @@ class S3Cube(S3CRUD):
         resource = self.resource
         representation = r.representation
 
-        if self.method == "report":
+        if not form.errors and self.method == "report":
 
             # Generate the report ---------------------------------------------
             #
@@ -419,7 +437,6 @@ class S3Cube(S3CRUD):
             Builds the filter form widgets
         """
 
-        request = self.request
         resource = self.resource
 
         report_options = self._config("report_options", None)
@@ -430,7 +447,7 @@ class S3Cube(S3CRUD):
         if not filter_widgets:
             return None
 
-        vars = form_values if form_values else request.vars
+        vars = form_values if form_values else self.request.vars
         trows = []
         for widget in filter_widgets:
             name = widget.attr["_name"]
@@ -463,9 +480,6 @@ class S3Cube(S3CRUD):
             @rtype: tuple
             @return: A tuple containing (query object, validation errors)
         """
-
-        session = current.session
-        response = current.response
 
         query = None
         errors = None

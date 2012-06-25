@@ -20,6 +20,9 @@ try:
 except NameError:
     update_check_needed = True
 
+# shortcut
+appname = request.application
+
 if update_check_needed:
     # Run update checks
     from s3_update_check import update_check
@@ -59,7 +62,7 @@ if update_check_needed:
 
     # Create or update the canary file.
     from gluon import portalocker
-    canary = open("applications/%s/models/0000_update_check.py" % request.application, "w")
+    canary = open("applications/%s/models/0000_update_check.py" % appname, "w")
     portalocker.lock(canary, portalocker.LOCK_EX)
 
     statement = "CANARY_UPDATE_CHECK_ID = %s" % CURRENT_UPDATE_CHECK_ID
@@ -79,7 +82,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 # http://en.wikipedia.org/wiki/Anti_pattern#Programming_anti-patterns
 response.s3 = Storage()
 s3 = response.s3
-response.s3.gis = Storage()  # Defined early for use by S3Config.
+s3.gis = Storage()  # Defined early for use by S3Config.
 
 current.cache = cache
 

@@ -1,0 +1,96 @@
+@charset "UTF-8";
+
+/*** Layout/Sections ***/
+
+/* Main Sections */
+#container {
+    background: #fff;
+    width: 1024px;
+    margin:0 auto;
+}
+#header {
+    position: relative;
+    /* z-index: 99999999999; We don't want to override the Fullscreen Map */
+    z-index: 999;
+    height: 132px;
+    background: #f4edd4;
+}
+#wrapper{
+    overflow:hidden;
+}
+#single-col,
+#right-col,
+#left-col{
+    background:#fff;
+}
+#single-col{
+    position:relative;
+    clear:both;
+}
+#right-col{
+    /*width: 788px;
+    padding: 15px 50px 0 15px;*/
+    width: 823px;
+    padding: 15px 15px 0 15px;
+    border-left: 1px #9c9c9c solid;
+}
+#left-col{
+    width: 170px;
+    padding-top: 15px;
+}
+#right-col,#left-col{
+    float: left;
+    margin-bottom: -99999px;
+    padding-bottom: 99999px;
+}
+#footer {
+    clear: both;
+    height: 62px;
+    margin: 0;
+    padding-left: 60px;
+    background: #f4edd4;
+    border-top: 1px solid #9c9c9c;
+}
+
+/*** Header ***/
+#header > div {float:left;}
+#header #society-icon{width:60px;}
+#header #logo{width:600px;height:90px;border:1px solid #9c9c9c; border-width:0 1px 0 1px; }
+#header #personal-menu{width:359px}
+#header #logo h1{float:left;}
+#header #logo a{display:block;margin:20px 0 0 15px;background:url(img/logo.png) no-repeat;width:425px;height:64px;text-indent:-99999px;}
+#header #logo #region{float:left;margin:34px 0 0 10px;font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;color:#891735;}
+#header #logo #region.big{font-size:1.7em;line-height:1.20em;}
+#header #logo #region.small{font-size:1.25em;}
+
+#header #personal-menu {padding:1px;font-size:0.9em;}
+#header #personal-menu ul{float:right;}
+#header #personal-menu li {float:left;list-style:none;padding:5px 7px 0px; border-left:1px #000 solid;}
+#header #personal-menu li:first-child {border-left:0px #fff solid;}
+#header #personal-menu a {color:#000; font-size:0.9em;}
+#header #personal-menu a:hover {color:#891735;}
+#header #personal-menu p {clear:both;color:#891735;margin:0px;padding:0px 15px;}
+#header #personal-menu .username {color:#891735;padding:0px 25px 3px 15px;}
+#header:after {
+    position: absolute;
+    top: 132px;
+    content: " ";
+    display: block;
+    height: 20px;
+    width: 1024px;
+    background: url(img/header_shadow.png) repeat-x;
+}
+
+/* Search Box */
+/*
+div#searchbox{position:absolute; right:15px; bottom:0;padding:10px 0;}
+#searchbox div{float:left;}
+
+#searchbox .text-search{width:110px;border: 1px solid #CCC;margin:0;padding:0;}
+#searchbox select{height:20px;background:#fff;border:0;}
+*/
+
+/* Skip Navigation */
+a.skipnavigation {position: absolute; left: -10000px; }
+a.skipnavigation:focus, a.skipnavigation:active { position: static; left: 0; }
+

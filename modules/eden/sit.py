@@ -2,8 +2,6 @@
 
 """ Sahana Eden Situation Model
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -107,7 +105,7 @@ class S3SituationModel(S3Model):
                                   Field("interlock",
                                         readable=False,
                                         writable=False),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # Shared component of all trackable types
         self.add_component(table,

@@ -50,22 +50,24 @@ class S3Config(Storage):
         self.frontpage = Storage()
         self.frontpage.rss = []
         self.fin = Storage()
-        self.gis = Storage()
-        self.mail = Storage()
-        self.twitter = Storage()
         self.L10n = Storage()
-        self.options = Storage()
-        self.security = Storage()
         self.aaa = Storage()
-        self.ui = Storage()
-        self.req = Storage()
-        self.inv = Storage()
-        self.org = Storage()
-        self.supply = Storage()
-        self.hrm = Storage()
-        self.project = Storage()
-        self.save_search = Storage()
+        self.mail = Storage()
+        self.options = Storage()
         self.parser = Storage()
+        self.save_search = Storage()
+        self.security = Storage()
+        self.twitter = Storage()
+        self.ui = Storage()
+        self.gis = Storage()
+        self.hrm = Storage()
+        self.inv = Storage()
+        self.irs = Storage()
+        self.org = Storage()
+        self.proc = Storage()
+        self.project = Storage()
+        self.req = Storage()
+        self.supply = Storage()
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -95,6 +97,13 @@ class S3Config(Storage):
             Which templates folder to use for views/layout.html
         """
         return self.base.get("theme", "default")
+
+    # -------------------------------------------------------------------------
+    def is_cd_version(self):
+        """
+            Whether we're running from a non-writable CD
+        """
+        return self.base.get("cd_version", False)
 
     # -------------------------------------------------------------------------
     # Auth settings
@@ -613,9 +622,24 @@ class S3Config(Storage):
         return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
-    # Inventory Management Setting
+    # Inventory Management Settings
+    #
+
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
+
+    def get_inv_item_status(self):
+        """
+            Item Statuses which can also be Sent Shipment Types
+        """
+        T = current.T
+        return self.inv.get("item_status", {
+                1: T("Dump"),
+                2: T("Sale"),
+                3: T("Reject"),
+                4: T("Surplus")
+           })
+
     def get_inv_shipment_name(self):
         """
             Get the name of Shipments
@@ -624,26 +648,54 @@ class S3Config(Storage):
             * order
         """
         return self.inv.get("shipment_name", "shipment")
+
     def get_inv_shipment_types(self):
+        """
+            Shipment types which are common to both Send & Receive
+        """
+        return self.inv.get("shipment_type", {
+                0 : current.messages.NONE,
+                11: current.T("Internal"),
+            })
+
+    def get_inv_send_types(self):
+        """
+            Shipment types which are just for Send
+        """
+        return self.inv.get("send_type", {
+                21: current.T("Distribution"),
+            })
+
+    def get_inv_recv_types(self):
+        """
+            Shipment types which are just for Receive
+        """
         T = current.T
-        return self.inv.get("shipment_types", {
-                          0: current.messages.NONE,
-                          1: T("Other Warehouse"),
-                          2: T("Local Donation"),
-                          3: T("Foreign Donation"),
-                          4: T("Local Purchases"),
-                          #5: T("Confiscated Goods")
-                        })
-    def get_send_form_name(self):
+        return self.inv.get("recv_type", {
+                31: T("Other Warehouse"),
+                32: T("Local Donation"),
+                33: T("Foreign Donation"),
+                34: T("Local Purchases"),
+                35: T("Confiscated Goods from Bureau Of Customs")
+           })
+
+    def get_inv_send_form_name(self):
         return self.inv.get("send_form_name", "Waybill")
-    def get_send_ref_field_name(self):
+    def get_inv_send_ref_field_name(self):
         return self.inv.get("send_ref_field_name", "Waybill Number")
-    def get_send_shortname(self):
+    def get_inv_send_shortname(self):
         return self.inv.get("send_shortname", "WB")
-    def get_recv_form_name(self):
+    def get_inv_recv_form_name(self):
         return self.inv.get("recv_form_name", "Goods Received Note")
-    def get_recv_shortname(self):
+    def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
+
+    # -------------------------------------------------------------------------
+    # Proc
+    def get_proc_form_name(self):
+        return self.proc.get("form_name", "Purchase Order")
+    def get_proc_shortname(self):
+        return self.proc.get("form_name", "PO")
 
     # -------------------------------------------------------------------------
     # Supply
@@ -690,9 +742,15 @@ class S3Config(Storage):
             Which table to use for showing the experience of HRs
             - currently supported options are:
                 * experience (default)
-                * programme (used by IFRC)
+                * programme (used by IFRC for Volunteers)
         """
         return self.hrm.get("experience", "experience")
+
+    def get_hrm_show_organisation(self):
+        """
+            Whether Human Resource representations should include the Organisation
+        """
+        return self.hrm.get("show_organisation", False)
 
     # -------------------------------------------------------------------------
     # Project Tracking
@@ -776,18 +834,27 @@ class S3Config(Storage):
         return self.project.get("organisation_lead_role", 1)
 
     # -------------------------------------------------------------------------
+    # IRS
+    def get_irs_vehicle(self):
+        """
+            Use Vehicles to respond to Incident Reports
+        """
+        return self.irs.get("vehicle", False)
+
+    # -------------------------------------------------------------------------
     # Save Search and Subscription
     def get_save_search_widget(self):
         """
             Enable the Saved Search widget
         """
         return self.save_search.get("widget", True)
+
     # -------------------------------------------------------------------------
     # Message Parser Settings
     def get_parser_enabled(self):
             return self.parser.get("parser_enabled")
-    
-    
+
+
     # -------------------------------------------------------------------------
     # Active modules list
     def has_module(self, module_name):

@@ -4,12 +4,10 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>{{try:}}{{=title}}{{except:}}{{=response.title or deployment_settings.get_system_name_short()}}{{pass}}</title>
+<title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <!-- http://dev.w3.org/html5/markup/meta.name.html -->
-<meta name="application-name" content="{{=request.application}}" />
-<!-- Set your site up with Google: http://google.com/webmasters -->
-<meta name="google-site-verification" content="" />
+<meta name="application-name" content="{{=appname}}" />
 <!--  Mobile Viewport Fix
   j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
   device-width: Occupy full width of the screen in its current orientation
@@ -18,29 +16,22 @@
   -->
 <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
 <!-- Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references -->
-<link rel="shortcut icon" href="/{{=request.application}}/static/favicon.ico" type="image/x-icon">
-<link rel="apple-touch-icon" href="/{{=request.application}}/static/favicon.png">
-<!-- All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects -->
-<!-- This kills the map in IE8: VML.js -->
-<!--<script src="/{{=request.application}}/static/scripts/web2py/modernizr-1.7.min.js"></script>-->
+<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="/{{=appname}}/static/favicon.png">
 <style type="text/css">
-{{if response.s3.rtl:}}
+{{if s3.rtl:}}
   div { direction: rtl; }
 {{else:}}
   body { direction: ltr; }
 {{pass}}
 </style>
-{{if session.s3.debug:}}
-  {{include "s3_include_debug.html"}}
-{{else:}}
-  {{include "s3_include_min.html"}}
-{{pass}}
+{{include "load.html"}}
 <script type="text/javascript">//<![CDATA[
   // Translation Strings
   {{include "l10n.js"}}
   // Global variables
-  S3.Ap = '/{{=request.application}}';
-{{if response.s3.rtl:}}
+  S3.Ap = '/{{=appname}}';
+{{if s3.rtl:}}
   S3.rtl = true;
 {{else:}}
   S3.rtl = false;
@@ -48,7 +39,7 @@
 //]]></script>
 </head>
 <body>
-<div id='content' class='clearfix'>
+<div id='content' class='cf'>
 {{=XML(map)}}
 </div>
 </body>

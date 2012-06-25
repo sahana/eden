@@ -1,15 +1,14 @@
 {{extend "layout.html"}}
 <div id='list_formats'>
-    <a href='{{=URL(args=r.id)}}.gpx' title='{{=T("Export in GPX format")}}'><img src='/{{=request.application}}/static/img/gpx_icon.png'/></a>
-    <a href='{{=URL(args=r.id)}}.kml' title='{{=T("Export in KML format")}}'><img src='/{{=request.application}}/static/img/kml_icon.png'/></a>
-    <a href='{{=URL(args=r.id)}}.osm' title='{{=T("Export in OSM format")}}'><img src='/{{=request.application}}/static/img/osm_icon.png'/></a>
+ <a href='{{=URL(args=r.id)}}.gpx' title='{{=T("Export in GPX format")}}'><img src='/{{=appname}}/static/img/gpx_icon.png'/></a>
+ <a href='{{=URL(args=r.id)}}.kml' title='{{=T("Export in KML format")}}'><img src='/{{=appname}}/static/img/kml_icon.png'/></a>
+ <a href='{{=URL(args=r.id)}}.osm' title='{{=T("Export in OSM format")}}'><img src='/{{=appname}}/static/img/osm_icon.png'/></a>
 </div>
 {{include "_update.html"}}
 <p>&nbsp;</p>
-{{="%s (" % T("You can select the Draw tool")}}<img src="/{{=request.application}}/static/img/gis/add_point_off.png">{{=") %s:" % T("& then click on the map below to adjust the Lat/Lon fields")}}
+{{="%s (" % T("You can select the Draw tool")}}<img src="/{{=appname}}/static/img/gis/add_point_off.png">{{=") %s:" % T("& then click on the map below to adjust the Lat/Lon fields")}}
 <p>&nbsp;</p>
-{{try:}}
-{{=XML(_map)}}
+{{try:}}{{=XML(_map)}}
 {{except:}}{{pass}}
 <script type="text/javascript">//<![CDATA[
 $(function() {

@@ -32,8 +32,8 @@ __all__ = ["S3Model", "S3ModelExtensions", "S3MultiPath"]
 
 import sys
 
-from gluon.storage import Storage
 from gluon import *
+from gluon.storage import Storage
 
 from s3validators import IS_ONE_OF
 
@@ -71,7 +71,6 @@ class S3Model(object):
                             "gis",
                             "pr",
                             "sit",
-                            #"doc",
                             "org")
 
         if module is not None:
@@ -139,17 +138,17 @@ class S3Model(object):
     def __getitem__(self, key):
         """ Model auto-loader """
 
-        response = current.response
-        db = current.db
         if str(key) in self.__dict__:
             return dict.__getitem__(self, str(key))
-        elif key in db:
-            return db[key]
-        elif key in response.s3:
-            return response.s3[key]
         else:
-            return self.table(key,
-                              AttributeError("undefined table: %s" % key))
+            db = current.db
+            if key in db:
+                return db[key]
+            elif key in current.response.s3:
+                return current.response.s3[key]
+            else:
+                return self.table(key,
+                                  AttributeError("undefined table: %s" % key))
 
     # -------------------------------------------------------------------------
     def model(self):
@@ -177,6 +176,7 @@ class S3Model(object):
         response = current.response
         if "s3" not in response:
             response.s3 = Storage()
+        s3 = response.s3
         db = current.db
         settings = current.deployment_settings
 
@@ -204,7 +204,7 @@ class S3Model(object):
                         else:
                             generic.append(n)
                     elif n.startswith("%s_" % prefix):
-                        response.s3[n] = model
+                        s3[n] = model
                 [module.__dict__[n](prefix) for n in generic]
         if tablename not in db:
             # Backward compatiblity
@@ -212,8 +212,8 @@ class S3Model(object):
             manager.model.load(tablename)
         if tablename in db:
             return db[tablename]
-        elif tablename in response.s3:
-            return response.s3[tablename]
+        elif tablename in s3:
+            return s3[tablename]
         elif isinstance(default, Exception):
             raise default
         else:
@@ -228,6 +228,7 @@ class S3Model(object):
         response = current.response
         if "s3" not in response:
             response.s3 = Storage()
+        s3 = response.s3
 
         if name in response.s3:
             return response.s3[name]
@@ -253,10 +254,10 @@ class S3Model(object):
                         else:
                             generic.append(n)
                     elif n.startswith("%s_" % prefix):
-                        response.s3[n] = model
+                        s3[n] = model
                 [module.__dict__[n](prefix) for n in generic]
-        if name in response.s3:
-            return response.s3[name]
+        if name in s3:
+            return s3[name]
         elif isinstance(default, Exception):
             raise default
         else:
@@ -272,16 +273,18 @@ class S3Model(object):
         response = current.response
         if "s3" not in response:
             response.s3 = Storage()
+        s3 = response.s3
         models = current.models
 
         if models is not None and hasattr(models, name):
             module = models.__dict__[name]
             for n in module.__all__:
                 model = module.__dict__[n]
-                if type(model).__name__ == "type":
+                if type(model).__name__ == "type" and \
+                   issubclass(model, S3Model):
                     model(name)
                 elif n.startswith("%s_" % name):
-                    response.s3[n] = model
+                    s3[n] = model
         return
 
     # -------------------------------------------------------------------------

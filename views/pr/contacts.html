@@ -9,9 +9,5 @@
 <div>
  {{pass}}
  {{=content}}
- {{if response.s3.rfooter:}}
- <div id='rfooter'>
-  {{=XML(response.s3.rfooter)}}
- </div>
- {{pass}}
+ {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 </div>

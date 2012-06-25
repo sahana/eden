@@ -58,25 +58,24 @@ except ImportError:
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.dal import Rows
 from gluon.storage import Storage, Messages
 from gluon.tools import fetch
-import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname
-
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
 
 DEBUG = False
 if DEBUG:
@@ -252,19 +251,6 @@ class GIS(object):
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
-        self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
-        # Info for countries. These will be filled in once the gis_location
-        # table is available and populated with L0 countries.
-        # countries and site countries are lists (or Rows) of Storage, ordered
-        # by country name. Each element contains L0 location id (key "id"),
-        # country code (key "code"), and name (key "name").
-        self.countries = None  # id, code, and name for all countries
-        self.site_countries = None  # same for this site's countries
-        # These will be OrderedDicts of id or code vs. country name.
-        self.countries_by_id = None
-        self.countries_by_code = None
-        self.site_countries_by_id = None
-        self.site_countries_by_code = None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -676,11 +662,6 @@ class GIS(object):
             update_location_tree to get the path.
         """
 
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
-
         if not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
 
@@ -704,9 +685,12 @@ class GIS(object):
                 return reverse_path
 
             # Retrieve parents - order in which they're returned is arbitrary.
+            s3db = current.s3db
+            cache = s3db.cache
+            table = s3db.gis_location
             query = (table.id.belongs(reverse_path))
-            fields = [table.id, table.name, table.code, table.level, table.lat, table.lon]
-            unordered_parents = db(query).select(cache=cache, *fields)
+            fields = [table.id, table.name, table.level, table.lat, table.lon]
+            unordered_parents = current.db(query).select(cache=cache, *fields)
 
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
@@ -958,6 +942,7 @@ class GIS(object):
 
         session = current.session
         s3 = current.response.s3
+        all_meta_field_names = s3_all_meta_field_names()
 
         # If an id has been supplied, try it first. If it matches what's in
         # response, there's no work to do.
@@ -1036,7 +1021,7 @@ class GIS(object):
                                         left=left,
                                         orderby=ctable.pe_type)
                 cache["ids"] = []
-                exclude = list(s3.all_meta_field_names)
+                exclude = list(all_meta_field_names)
                 append = exclude.append
                 for fieldname in ["delete_record", "update_record",
                                   "pe_path",
@@ -1096,7 +1081,7 @@ class GIS(object):
             cache["ids"] = [config_id]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
-            fields = filter(lambda key: key not in s3.all_meta_field_names,
+            fields = filter(lambda key: key not in all_meta_field_names,
                             config)
             for key in fields:
                 cache[key] = config[key]
@@ -1314,7 +1299,7 @@ class GIS(object):
         T = current.T
         all_levels = OrderedDict()
         all_levels.update(self.get_location_hierarchy())
-        all_levels["GR"] = T("Location Group")
+        #all_levels["GR"] = T("Location Group")
         #all_levels["XX"] = T("Imported")
 
         if level:
@@ -1371,61 +1356,61 @@ class GIS(object):
         return edit
 
     # -------------------------------------------------------------------------
-    def get_countries(self, key_type="id"):
+    @staticmethod
+    def get_countries(key_type="id"):
         """
             Returns country code or L0 location id versus name for all countries.
+
+            The lookup is cached in the session
 
             If key_type is "code", these are returned as an OrderedDict with
             country code as the key.  If key_type is "id", then the location id
             is the key.  In all cases, the value is the name.
         """
 
-        settings = current.deployment_settings
+        session = current.session
+        if "gis" not in session:
+            session.gis = Storage()
+        gis = session.gis
 
-        cached = False
-        if settings.countries:
-            # This may have been changed since the initial config
-            cached = False
-        elif self.countries:
+        if gis.countries_by_id:
             cached = True
+        else:
+            cached = False
 
         if not cached:
-            db = current.db
-            _location = "gis_location" in db and db.gis_location
-            if not _location:
-                # Called before gis_location is in db
-                return None
-
-            query = (_location.level == "L0")
-            _countries = settings.get_gis_countries()
-            if _countries:
-                query = query & (_location.code.belongs(_countries))
-            countries = db(query).select(_location.id,
-                                         _location.code,
-                                         _location.name,
-                                         orderby=_location.name)
+            s3db = current.s3db
+            table = s3db.gis_location
+            ttable = s3db.gis_location_tag
+            query = (table.level == "L0") & \
+                    (ttable.tag == "ISO2") & \
+                    (ttable.location_id == table.id)
+            countries = current.db(query).select(table.id,
+                                                 table.name,
+                                                 ttable.value,
+                                                 orderby=table.name)
             if not countries:
                 return []
 
             countries_by_id = OrderedDict()
             countries_by_code = OrderedDict()
             for row in countries:
-                countries_by_id[row.id] = row.name
-                countries_by_code[row.code] = row.name
+                location = row["gis_location"]
+                countries_by_id[location.id] = location.name
+                countries_by_code[row["gis_location_tag"].value] = location.name
 
-            # Don't expose these while they're being built. Set countries last
-            # so it can be used to tell when all exist.
-            self.countries_by_id = countries_by_id
-            self.countries_by_code = countries_by_code
-            self.countries = countries
+            # Cache in the session
+            gis.countries_by_id = countries_by_id
+            gis.countries_by_code = countries_by_code
 
         if key_type == "id":
-            return self.countries_by_id
+            return gis.countries_by_id
         else:
-            return self.countries_by_code
+            return gis.countries_by_code
 
     # -------------------------------------------------------------------------
-    def get_country(self, key, key_type="id"):
+    @staticmethod
+    def get_country(key, key_type="id"):
         """
             Returns country name for given code or id from L0 locations.
 
@@ -1434,11 +1419,11 @@ class GIS(object):
         """
 
         if key:
-            if self.countries or self.get_countries(key_type):
+            if current.gis.get_countries(key_type):
                 if key_type == "id":
-                    return self.countries_by_id[key]
+                    return current.session.gis.countries_by_id[key]
                 else:
-                    return self.countries_by_code[key]
+                    return current.session.gis.countries_by_code[key]
 
         return None
 
@@ -1461,7 +1446,6 @@ class GIS(object):
             query = (table.id == location)
             location = db(query).select(table.id,
                                         table.path,
-                                        table.code,
                                         table.level,
                                         limitby=(0, 1),
                                         cache=cache).first()
@@ -1473,19 +1457,30 @@ class GIS(object):
             if key_type == "id":
                 return location.id
             elif key_type == "code":
-                return location.code
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.location_id == location.id)
+                tag = db(query).select(ttable.value,
+                                       limitby=(0, 1)).first()
+                if tag:
+                    return tag.value
         else:
-            parents = self.get_parents(location.id, feature=location)
+            parents = self.get_parents(location.id,
+                                       feature=location)
             if parents:
                 for row in parents:
                     if row.level == "L0":
                         if key_type == "id":
                             return row.id
                         elif key_type == "code":
-                            return row.code
-
+                            ttable = s3db.gis_location_tag
+                            query = (ttable.tag == "ISO2") & \
+                                    (ttable.location_id == row.id)
+                            tag = db(query).select(ttable.value,
+                                                   limitby=(0, 1)).first()
+                            if tag:
+                                return tag.value
         return None
-
 
     # -------------------------------------------------------------------------
     def get_default_country(self, key_type="id"):
@@ -1510,11 +1505,12 @@ class GIS(object):
             gis_location table
         """
 
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
         db = current.db
         s3db = current.s3db
-        session = current.session
-        T = current.T
-        locations = db.gis_location
+        locations = s3db.gis_location
 
         try:
             location_id = int(location)
@@ -1577,10 +1573,11 @@ class GIS(object):
         if lon_min is None:
             # We have no BBOX so go straight to the full geometry check
             for row in features:
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:
@@ -1590,7 +1587,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value=row.id
@@ -1606,10 +1603,11 @@ class GIS(object):
             for row in features.find(lambda row: in_bbox(row)):
                 # Search within this subset with a full geometry check
                 # Uses Shapely.
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:
@@ -1619,7 +1617,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value = row.id,
@@ -1939,6 +1937,7 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
+        request = current.request
         gis = current.gis
 
         format = current.auth.permission.format
@@ -1958,7 +1957,6 @@ class GIS(object):
 
         else:
             # e.g. Search results loaded as a Feature Resource layer
-            request = current.request
             query = (ftable.controller == request.controller) & \
                     (ftable.function == request.function)
 
@@ -1992,7 +1990,8 @@ class GIS(object):
         if format == "geojson":
             # Build the Popup Tooltips now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
-            if popup_label:
+            label_off = request.vars.get("label_off", None)
+            if popup_label and not label_off:
                 _tooltip = "(%s)" % current.T(popup_label)
             else:
                 _tooltip = ""
@@ -2415,6 +2414,7 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         layer = {
             "url" : "http://gadm.org/data/gadm_v1_lev0_shp.zip",
@@ -2499,7 +2499,9 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     pass
                 else:
-                    query = (table.code == code)
+                    query = (table.id == ttable.location_id) & \
+                            (ttable.tag == "ISO2") & \
+                            (ttable.value == code)
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
                         gis_feature_type = 2
@@ -2514,12 +2516,19 @@ class GIS(object):
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
                     code2 = feat.GetField(code2Field)
-                    area = feat.GetField("Shape_Area")
+                    #area = feat.GetField("Shape_Area")
                     try:
+                        id = db(query).select(table.id,
+                                              limitby=(0, 1)).first().id
+                        query = (table.id == id)
                         db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt,
-                                         code2=code2,
-                                         area=area)
+                                         wkt=wkt)
+                        ttable.insert(location_id = id,
+                                      tag = "ISO3",
+                                      value = code2)
+                        #ttable.insert(location_id = location_id,
+                        #              tag = "area",
+                        #              value = area)
                     except db._adapter.driver.OperationalError, exception:
                         s3_debug(exception)
 
@@ -2553,6 +2562,7 @@ class GIS(object):
         s3db = current.s3db
         cache = s3db.cache
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         if level == "L1":
             layer = {
@@ -2560,10 +2570,13 @@ class GIS(object):
                 "zipfile" : "gadm_v1_lev1_shp.zip",
                 "shapefile" : "gadm1_lev1",
                 "namefield" : "NAME_1",
-                "codefield" : "ID_1",   # This field is used to uniquely identify the L1 for updates
-                "code2field" : "ISO",   # This field is used to uniquely identify the L0 for parenting the L1s
+                # Uniquely identify the L1 for updates
+                "sourceCodeField" : "ID_1",
+                "edenCodeField" : "GADM1",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L0",
-                "parentCode" : "code2"
+                "parentSourceCodeField" : "ISO",
+                "parentEdenCodeField" : "ISO3",
             }
         elif level == "L2":
             layer = {
@@ -2571,10 +2584,13 @@ class GIS(object):
                 "zipfile" : "gadm_v1_lev2_shp.zip",
                 "shapefile" : "gadm_v1_lev2",
                 "namefield" : "NAME_2",
-                "codefield" : "ID_2",    # This field is used to uniquely identify the L2 for updates
-                "code2field" : "ID_1",   # This field is used to uniquely identify the L1 for parenting the L2s
+                # Uniquely identify the L2 for updates
+                "sourceCodeField" : "ID_2",
+                "edenCodeField" : "GADM2",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L1",
-                "parentCode" : "code"
+                "parentSourceCodeField" : "ID_1",
+                "parentEdenCodeField" : "GADM1",
             }
         else:
             s3_debug("Level %s not supported!" % level)
@@ -2667,30 +2683,29 @@ class GIS(object):
         nGroupTransactions = 200
         nFIDToFetch = ogr.NullFID
         inputFileName = "%s.shp" % layerName
-        inputDS = ogr.Open( inputFileName, False )
+        inputDS = ogr.Open(inputFileName, False)
         outputFileName = "CSV"
         outputDriver = ogr.GetDriverByName("CSV")
-        outputDS = outputDriver.CreateDataSource( outputFileName, options = [] )
+        outputDS = outputDriver.CreateDataSource(outputFileName, options=[])
         # GADM only has 1 layer/source
         inputLayer = inputDS.GetLayer(0)
         inputFDefn = inputLayer.GetLayerDefn()
         # Create the output Layer
-        outputLayer = outputDS.CreateLayer( layerName )
+        outputLayer = outputDS.CreateLayer(layerName)
         # Copy all Fields
         papszFieldTypesToString = []
         inputFieldCount = inputFDefn.GetFieldCount()
-        panMap = [ -1 for i in range(inputFieldCount) ]
+        panMap = [-1 for i in range(inputFieldCount)]
         outputFDefn = outputLayer.GetLayerDefn()
         nDstFieldCount = 0
         if outputFDefn is not None:
             nDstFieldCount = outputFDefn.GetFieldCount()
         for iField in range(inputFieldCount):
             inputFieldDefn = inputFDefn.GetFieldDefn(iField)
-            oFieldDefn = ogr.FieldDefn( inputFieldDefn.GetNameRef(),
-                                        inputFieldDefn.GetType() )
-            oFieldDefn.SetWidth( inputFieldDefn.GetWidth() )
-            oFieldDefn.SetPrecision( inputFieldDefn.GetPrecision() )
-
+            oFieldDefn = ogr.FieldDefn(inputFieldDefn.GetNameRef(),
+                                       inputFieldDefn.GetType())
+            oFieldDefn.SetWidth(inputFieldDefn.GetWidth())
+            oFieldDefn.SetPrecision(inputFieldDefn.GetPrecision())
             # The field may have been already created at layer creation
             iDstField = -1;
             if outputFDefn is not None:
@@ -2701,77 +2716,57 @@ class GIS(object):
                 # now that we've created a field, GetLayerDefn() won't return NULL
                 if outputFDefn is None:
                     outputFDefn = outputLayer.GetLayerDefn()
-
                 panMap[iField] = nDstFieldCount
                 nDstFieldCount = nDstFieldCount + 1
-
         # Transfer features
         nFeaturesInTransaction = 0
         iSrcZField = -1
-
         inputLayer.ResetReading()
-
         if nGroupTransactions > 0:
             outputLayer.StartTransaction()
-
         while True:
             poDstFeature = None
-
             if nFIDToFetch != ogr.NullFID:
-
                 # Only fetch feature on first pass.
                 if nFeaturesInTransaction == 0:
                     poFeature = inputLayer.GetFeature(nFIDToFetch)
                 else:
                     poFeature = None
-
             else:
                 poFeature = inputLayer.GetNextFeature()
-
             if poFeature is None:
                 break
-
             nParts = 0
             nIters = 1
-
             for iPart in range(nIters):
                 nFeaturesInTransaction = nFeaturesInTransaction + 1
                 if nFeaturesInTransaction == nGroupTransactions:
                     outputLayer.CommitTransaction()
                     outputLayer.StartTransaction()
                     nFeaturesInTransaction = 0
-
-                poDstFeature = ogr.Feature( outputLayer.GetLayerDefn() )
-
-                if poDstFeature.SetFromWithMap( poFeature, 1, panMap ) != 0:
-
+                poDstFeature = ogr.Feature(outputLayer.GetLayerDefn())
+                if poDstFeature.SetFromWithMap(poFeature, 1, panMap) != 0:
                     if nGroupTransactions > 0:
                         outputLayer.CommitTransaction()
-
                     s3_debug("Unable to translate feature %d from layer %s" % (poFeature.GetFID() , inputFDefn.GetName() ))
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
                 poDstGeometry = poDstFeature.GetGeometryRef()
                 if poDstGeometry is not None:
-
                     if nParts > 0:
                         # For -explodecollections, extract the iPart(th) of the geometry
                         poPart = poDstGeometry.GetGeometryRef(iPart).Clone()
                         poDstFeature.SetGeometryDirectly(poPart)
                         poDstGeometry = poPart
-
                 if outputLayer.CreateFeature( poDstFeature ) != 0 and not bSkipFailures:
                     if nGroupTransactions > 0:
                         outputLayer.RollbackTransaction()
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
         if nGroupTransactions > 0:
             outputLayer.CommitTransaction()
-
         # Cleanup
         outputDS.Destroy()
         inputDS.Destroy()
@@ -2790,7 +2785,7 @@ class GIS(object):
             os.chdir(old_working_directory)
             return
 
-        lyr = ds.GetLayerByName( layerName )
+        lyr = ds.GetLayerByName(layerName)
 
         lyr.ResetReading()
 
@@ -2799,33 +2794,36 @@ class GIS(object):
         rows = latin_dict_reader(open("%s.csv" % layerName))
 
         nameField = layer["namefield"]
-        codeField = layer["codefield"]
-        code2Field = layer["code2field"]
+        sourceCodeField = layer["sourceCodeField"]
+        edenCodeField = layer["edenCodeField"]
+        parentSourceCodeField = layer["parentSourceCodeField"]
         parentLevel = layer["parent"]
-        parentCodeField = table[layer["parentCode"]]
+        parentEdenCodeField = layer["parentEdenCodeField"]
+        parentCodeQuery = (ttable.tag == parentEdenCodeField)
         count = 0
         for row in rows:
             # Read Attributes
             feat = lyr[count]
 
-            code2 = feat.GetField(code2Field)
+            parentCode = feat.GetField(parentSourceCodeField)
             query = (table.level == parentLevel) & \
-                    (parentCodeField == code2)
+                    parentCodeQuery & \
+                    (ttable.value == parentCode)
             parent = db(query).select(table.id,
-                                      table.code,
+                                      ttable.value,
                                       limitby=(0, 1),
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
-                #s3_debug("Skipping - cannot find parent with code2: %s" % code2)
+                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % (parentEdenCodeField, parentCode))
                 count += 1
                 continue
 
             if countries:
                 # Skip the countries which we're not interested in
                 if level == "L1":
-                    if parent.code not in countries:
-                        #s3_debug("Skipping %s as not in countries list" % parent.code)
+                    if parent["gis_location_tag"].value not in countries:
+                        #s3_debug("Skipping %s as not in countries list" % parent["gis_location_tag"].value)
                         count += 1
                         continue
                 else:
@@ -2839,7 +2837,7 @@ class GIS(object):
             name = row.pop(nameField)
             name.encode("utf8")
 
-            code = feat.GetField(codeField)
+            code = feat.GetField(sourceCodeField)
             area = feat.GetField("Shape_Area")
 
             geom = feat.GetGeometryRef()
@@ -2847,14 +2845,18 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     lat = geom.GetX()
                     lon = geom.GetY()
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=1,
-                                 lat=lat,
-                                 lon=lon,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=1,
+                                      lat=lat,
+                                      lon=lon,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
                 else:
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
@@ -2869,13 +2871,17 @@ class GIS(object):
                         gis_feature_type = 6
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=gis_feature_type,
-                                 wkt=wkt,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=gis_feature_type,
+                                      wkt=wkt,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
             else:
                 s3_debug("No geometry\n")
 
@@ -2890,7 +2896,8 @@ class GIS(object):
         try:
             self.update_location_tree()
         except MemoryError:
-            # If doing all L2s, it can break memory limits - how can we avoid this?
+            # If doing all L2s, it can break memory limits
+            # @ToDo: Amend function to do in chunks
             s3_debug("Memory error when trying to update_location_tree()!")
 
         db.commit()
@@ -2916,6 +2923,7 @@ class GIS(object):
             @ToDo: Complete this
                 - not currently possible to get all data from the 1 file easily
                 - no ISO2
+                - needs updating for gis_location_tag model
                 - only the lowest available levels accessible
                 - use GADMv1 for L0, L1, L2 & GADMv2 for specific lower?
         """
@@ -3019,7 +3027,8 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     pass
                 else:
-                    query = (table.code == code)
+                    ## FIXME
+                    ##query = (table.code == code)
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
                         gis_feature_type = 2
@@ -3036,10 +3045,11 @@ class GIS(object):
                     code2 = feat.GetField(code2Field)
                     area = feat.GetField("Shape_Area")
                     try:
+                        ## FIXME
                         db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt,
-                                         code2=code2,
-                                         area=area)
+                                         wkt=wkt)
+                                         #code2=code2,
+                                         #area=area
                     except db._adapter.driver.OperationalError, exception:
                         s3_debug(exception)
 
@@ -3073,12 +3083,17 @@ class GIS(object):
 
         import codecs
 
+        from shapely.geometry import point
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
         db = current.db
         s3db = current.s3db
         cache = s3db.cache
         request = current.request
         settings = current.deployment_settings
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         url = "http://download.geonames.org/export/dump/" + country + ".zip"
 
@@ -3199,17 +3214,12 @@ class GIS(object):
             modification_date = line.split("\t")
 
             if feature_code == fc:
-                # @ToDo: Agree on a global repository for UUIDs:
-                # http://eden.sahanafoundation.org/wiki/UserGuidelinesGISData#UUIDs
-                import uuid
-                uuid = "geo.sahanafoundation.org/" + uuid.uuid4()
-
                 # Add WKT
                 lat = float(lat)
                 lon = float(lon)
                 wkt = self.latlon_to_wkt(lat, lon)
 
-                shape = shapely.geometry.point.Point(lon, lat)
+                shape = point.Point(lon, lat)
 
                 # Add Bounds
                 lon_min = lon_max = lon
@@ -3233,24 +3243,23 @@ class GIS(object):
                             parent = row.id
                             # Should be just a single parent
                             break
-                    except shapely.geos.ReadingError:
+                    except ReadingError:
                         s3_debug("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
-                table.insert(uuid=uuid,
-                             geonames_id=geonames_id,
-                             source="geonames",
-                             name=name,
-                             level=level,
-                             parent=parent,
-                             lat=lat,
-                             lon=lon,
-                             wkt=wkt,
-                             lon_min=lon_min,
-                             lon_max=lon_max,
-                             lat_min=lat_min,
-                             lat_max=lat_max)
-
+                new_id = table.insert(name=name,
+                                      level=level,
+                                      parent=parent,
+                                      lat=lat,
+                                      lon=lon,
+                                      wkt=wkt,
+                                      lon_min=lon_min,
+                                      lon_max=lon_max,
+                                      lat_min=lat_min,
+                                      lat_max=lat_max)
+                ttable.insert(location_id=new_id,
+                              tag="geonames",
+                              value=geonames_id)
             else:
                 continue
 
@@ -3302,8 +3311,14 @@ class GIS(object):
             geom_type = GEOM_TYPES["point"]
             bbox = (lon, lat, lon, lat)
         else:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                SHAPELY = True
+            except:
+                SHAPELY = False
+
             if SHAPELY:
-                shape = shapely.wkt.loads(wkt)
+                shape = wkt_loads(wkt)
                 centroid = shape.centroid
                 lat = centroid.y
                 lon = centroid.x
@@ -3408,6 +3423,7 @@ class GIS(object):
 
         if vars.wkt:
             # Parse WKT for LineString, Polygon, etc
+            from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(vars.wkt)
             except:
@@ -3446,6 +3462,10 @@ class GIS(object):
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
+            if current.deployment_settings.get_gis_spatialdb():
+                # Also populate the spatial field
+                vars.the_geom = vars.wkt
+
         elif (vars.lon is None and vars.lat is None) or \
              (vars.lon == "" and vars.lat == ""):
             # No Geometry available
@@ -3465,10 +3485,6 @@ class GIS(object):
                 vars.lon_min = vars.lon_max = vars.lon
                 vars.lat_min = vars.lat_max = vars.lat
 
-        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
-            # Also populate the spatial field
-            vars.the_geom = vars.wkt
-
         return
 
     # -------------------------------------------------------------------------
@@ -3477,8 +3493,8 @@ class GIS(object):
         """
             Returns a query of all Locations inside the given bounding box
         """
-        s3db = current.s3db
-        table = s3db.gis_location
+
+        table = current.s3db.gis_location
         query = (table.lat_min <= lat_max) & \
                 (table.lat_max >= lat_min) & \
                 (table.lon_min <= lon_max) & \
@@ -3486,18 +3502,21 @@ class GIS(object):
         return query
 
     # -------------------------------------------------------------------------
-    def get_features_by_bbox(self, lon_min, lat_min, lon_max, lat_max):
+    @staticmethod
+    def get_features_by_bbox(lon_min, lat_min, lon_max, lat_max):
         """
             Returns Rows of Locations whose shape intersects the given bbox.
         """
-        db = current.db
-        return db(self.query_features_by_bbox(lon_min,
-                                              lat_min,
-                                              lon_max,
-                                              lat_max)).select()
+
+        query = current.gis.query_features_by_bbox(lon_min,
+                                                   lat_min,
+                                                   lon_max,
+                                                   lat_max)
+        return current.db(query).select()
 
     # -------------------------------------------------------------------------
-    def _get_features_by_shape(self, shape):
+    @staticmethod
+    def get_features_by_shape(shape):
         """
             Returns Rows of locations which intersect the given shape.
 
@@ -3505,22 +3524,24 @@ class GIS(object):
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-        in_bbox = self.query_features_by_bbox(*shape.bounds)
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
+        table = current.s3db.gis_location
+        in_bbox = current.gis.query_features_by_bbox(*shape.bounds)
         has_wkt = (table.wkt != None) & (table.wkt != "")
 
-        for loc in db(in_bbox & has_wkt).select():
+        for loc in current.db(in_bbox & has_wkt).select():
             try:
                 location_shape = wkt_loads(loc.wkt)
                 if location_shape.intersects(shape):
                     yield loc
-            except shapely.geos.ReadingError:
+            except ReadingError:
                 s3_debug("Error reading wkt of location with id", loc.id)
 
     # -------------------------------------------------------------------------
-    def _get_features_by_latlon(self, lat, lon):
+    @staticmethod
+    def get_features_by_latlon(lat, lon):
         """
             Returns a generator of locations whose shape intersects the given LatLon.
 
@@ -3528,25 +3549,24 @@ class GIS(object):
             @todo: provide an option to use PostGIS/Spatialite
         """
 
-        point = shapely.geometry.point.Point(lon, lat)
-        return self._get_features_by_shape(point)
+        from shapely.geometry import point
+
+        return current.gis.get_features_by_shape(point.Point(lon, lat))
 
     # -------------------------------------------------------------------------
-    def _get_features_by_feature(self, feature):
+    @staticmethod
+    def get_features_by_feature(feature):
         """
             Returns all Locations whose geometry intersects the given feature.
 
             Relies on Shapely.
             @ToDo: provide an option to use PostGIS/Spatialite
         """
-        shape = wkt_loads(feature.wkt)
-        return self.get_features_by_shape(shape)
 
-    # -------------------------------------------------------------------------
-    if SHAPELY:
-        get_features_by_shape = _get_features_by_shape
-        get_features_by_latlon = _get_features_by_latlon
-        get_features_by_feature = _get_features_by_feature
+        from shapely.wkt import loads as wkt_loads
+
+        shape = wkt_loads(feature.wkt)
+        return current.gis.get_features_by_shape(shape)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3557,9 +3577,15 @@ class GIS(object):
             If shapely is present, and a location has wkt, bounds of the geometry
             are used.  Otherwise, the (lat, lon) are used as bounds.
         """
+
+        try:
+            from shapely.wkt import loads as wkt_loads
+            SHAPELY = True
+        except:
+            SHAPELY = False
+
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
+        table = current.s3db.gis_location
 
         # Query to find all locations without bounds set
         no_bounds = (table.lon_min == None) & \
@@ -3596,7 +3622,7 @@ class GIS(object):
     def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
         """
             Simplify a complex Polygon
-            - NB This uses Python, better performance will be gaiend by doing
+            - NB This uses Python, better performance will be gained by doing
                  this direct from the database if you are using PostGIS:
             ST_Simplify() is available as
             db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
@@ -3605,6 +3631,8 @@ class GIS(object):
             @ToDo: Reduce the number of decimal points to 4
                    - requires patching modules/geojson?
         """
+
+        from shapely.wkt import loads as wkt_loads
 
         try:
             # Enable C-based speedups available from 1.2.10+
@@ -3879,7 +3907,7 @@ class GIS(object):
 
         # JS Loader
         html_append(SCRIPT(_type="text/javascript",
-                           _src=URL(c="static", f="scripts/S3/yepnope.1.5.4-min.js")))
+                           _src=URL(c="static", f="scripts/yepnope.1.5.4-min.js")))
 
         scripts = []
         scripts_append = scripts.append
@@ -3897,7 +3925,7 @@ class GIS(object):
                 script = URL(c="static", f=script)
                 scripts_append(script)
 
-        debug = session.s3.debug
+        debug = response.s3.debug
         if debug:
             if projection not in (900913, 4326):
                 add_javascript("scripts/gis/proj4js/lib/proj4js-combined.js")
@@ -4452,15 +4480,12 @@ S3.gis.layers_feature_resources = new Array();"""
 
             # URL to retrieve the data
             url = layer["url"]
-            # Optimise the query
+            # Optimise the query & & tell back-end not to add the type to the tooltips
+            options = "components=None&maxdepth=0&references=location_id&fields=name&label_off=1"
             if "?" in url:
-                url = "%s%s" % (url,
-                                #"layer=%i",
-                                "&components=None&maxdepth=0&references=location_id&fields=name")
+                url = "%s&%s" % (url, options)
             else:
-                url = "%s%s" % (url,
-                                #"layer=%i",
-                                "?components=None&maxdepth=0&references=location_id&fields=name")
+                url = "%s?%s" % (url, options)
 
             if "active" in layer and not layer["active"]:
                 visibility = """,
@@ -4823,7 +4848,7 @@ class Layer(object):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = s3.all_meta_field_names
+        metafields = s3_all_meta_field_names()
         fields = [table[f] for f in fields if f not in metafields]
         fields.append(ltable.enabled)
         fields.append(ltable.visible)
@@ -5312,7 +5337,7 @@ class GoogleLayer(Layer):
             T = current.T
             epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
-            debug = current.session.s3.debug
+            debug = current.response.s3.debug
             add_script = self.scripts.append
 
             output = {}
@@ -5713,7 +5738,7 @@ class WMSLayer(Layer):
     def __init__(self):
         super(WMSLayer, self).__init__()
         if self.sublayers:
-            debug = current.session.s3.debug
+            debug = current.response.s3.debug
             add_script = self.scripts.append
             if debug:
                 # Non-debug has this included within GeoExt.js
@@ -5820,7 +5845,8 @@ class S3Map(S3Search):
              search._S3Search__interactive:
                 # Put shortcuts where other methods expect them
                 self.advanced = search.advanced
-                self.simple = search.simple
+                # We want advanced open by default
+                #self.simple = search.simple
                 output = self.search_interactive(r, **attr)
 
         if not output:

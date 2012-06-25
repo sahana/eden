@@ -62,8 +62,8 @@ class S3SecurityModel(S3Model):
         table = define_table(tablename,
                              Field("name",
                                    label=T("Name")),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE = T("Add Zone Type")
@@ -100,8 +100,8 @@ class S3SecurityModel(S3Model):
                                                                     tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                                         label=T("Type")),
                                   location_id(),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE = T("Add Zone")
@@ -127,8 +127,8 @@ class S3SecurityModel(S3Model):
         table = define_table(tablename,
                                   Field("name",
                                         label=T("Name")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_STAFF = T("Add Staff Type")
@@ -179,8 +179,8 @@ class S3SecurityModel(S3Model):
                                                   represent=self.org_site_represent,
                                                   readable=True,
                                                   writable=True),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_STAFF = T("Add Security-Related Staff")

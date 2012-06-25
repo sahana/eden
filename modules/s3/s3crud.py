@@ -36,16 +36,15 @@
 
 __all__ = ["S3CRUD"]
 
-from gluon.storage import Storage
-from gluon.dal import Row
 from gluon import *
+from gluon.dal import Row
 from gluon.serializers import json
+from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3method import S3Method
 from s3export import S3Exporter
 #from s3gis import S3MAP
-from s3pdf import S3PDF
 from s3utils import s3_mark_required
 from s3widgets import S3EmbedComponentWidget
 
@@ -317,6 +316,7 @@ class S3CRUD(S3Method):
                 session.confirmation = T("Data uploaded")
 
         elif representation == "pdf":
+            from s3pdf import S3PDF
             exporter = S3PDF()
             return exporter(r, **attr)
 
@@ -409,7 +409,8 @@ class S3CRUD(S3Method):
                 if subheadings:
                     self.insert_subheadings(item, self.tablename, subheadings)
             else:
-                item = crud_string(tablename, "msg_list_empty")
+                item = DIV(crud_string(tablename, "msg_list_empty"),
+                           _class="empty")
 
             # View
             if representation == "html":
@@ -936,15 +937,17 @@ class S3CRUD(S3Method):
                 # This is faster:
                 if available_records.select(self.table._id,
                                             limitby=(0, 1)).first():
-                    items = crud_string(self.tablename, "msg_no_match")
+                    items = DIV(crud_string(self.tablename, "msg_no_match"),
+                                _class="empty")
                 else:
-                    items = crud_string(self.tablename, "msg_list_empty")
+                    items = DIV(crud_string(self.tablename, "msg_list_empty"),
+                                _class="empty")
+                s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
                     #del output["subtitle"]
                     items = ""
-                    s3.no_formats = True
 
             # Update output
             output["items"] = items

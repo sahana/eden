@@ -7,16 +7,16 @@ settings = current.deployment_settings
 T = current.T
 
 """
-    Template settings for UK
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Template settings for Oxfam
 """
 
 # Pre-Populate
 settings.base.prepopulate = ["Oxfam"]
 
+# L10n settings
+settings.L10n.languages = OrderedDict([
+    ("en-gb", "English"),
+])
 # Default Language
 settings.L10n.default_language = "en-gb"
 # Uncomment to Hide the language toolbar

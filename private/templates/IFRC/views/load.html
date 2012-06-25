@@ -1,0 +1,10 @@
+{{if s3.debug:}}
+ {{include "s3_include_debug.html"}}
+ <link href="/{{=appname}}/static/themes/IFRC/xtheme-ifrc.css" rel="stylesheet" type="text/css" />
+ {{=s3base.s3_include_debug()}}
+{{else:}}
+ {{include "s3_include_min.html"}}
+ <link href="/{{=appname}}/static/themes/IFRC/ext-theme.min.css" rel="stylesheet" type="text/css" />
+ {{# Built by /static/scripts/tools/build.sahana.py }}
+ <link href="/{{=appname}}/static/themes/IFRC/eden.min.css" rel="stylesheet" type="text/css" />
+{{pass}}

@@ -21,7 +21,8 @@ FINISHED_EDITING_CONFIG_FILE = False
 # - PrePopulate data
 # - Security Policy
 # - Workflows
-# - Theme (tbc)
+# - Theme
+# - note that you should restart your web2py after changing this setting
 settings.base.template = "default"
 
 # Database settings
@@ -171,6 +172,15 @@ if os.path.exists(path):
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs
+# Enable Additional Module(s)
+#settings.modules["delphi"] = Storage(
+#        name_nice = T("Delphi Decision Maker"),
+#        restricted = False,
+#        module_type = 10,
+#    )
+
+# After 1st_run, set this for Production to save 1x DAL hit/request
+#settings.base.prepopulate = 0
 
 # =============================================================================
 # A version number to tell update_check if there is a need to refresh the

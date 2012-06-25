@@ -181,7 +181,7 @@ def update_check():
                         version = version_result.group(1)
                         break
             if not has_version:
-                error = "Your %s is using settings from the old templates system. Please switch to the new templates system: http://eden.sahanafoundation.org/wiki/BluePrint/Templates" % t
+                error = "Your %s is using settings from the old templates system. Please switch to the new templates system: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates" % t
                 errors.append(error)
             elif int(version) != VERSION:
                 error = "Your %s is using settings from template version %s. Please update with new settings from template version %s before starting the system." % \

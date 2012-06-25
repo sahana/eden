@@ -111,18 +111,19 @@ $(document).ready(function() {
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
-    try { $('input.datetime').focus( function() {
-        Calendar.setup({
-            inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-        });
-    }); } catch(e) {};
+    // Use S3DateTimeWidget
+    //try { $('input.datetime').focus( function() {
+    //    Calendar.setup({
+    //        inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
+    //    });
+    //}); } catch(e) {};
 
     // T2 Layer
-    try { $('.zoom').fancyZoom( {
-        scaleImg: true,
-        closeOnClick: true,
-        directory: S3.Ap.concat('/static/media')
-    }); } catch(e) {};
+    //try { $('.zoom').fancyZoom( {
+    //    scaleImg: true,
+    //    closeOnClick: true,
+    //    directory: S3.Ap.concat('/static/media')
+    //}); } catch(e) {};
 
     // S3 Layer
     // dataTables' delete button
@@ -181,20 +182,6 @@ $(document).ready(function() {
             },
         function() { $('ul', this).css('display', 'none');  }
     );
-
-    /*
-    // unused in new sidebar subnav
-    $('#subnav li').hover(
-        function() {
-                var popup_width = $(this).width()-2;
-                $('ul', this).css({
-                    'display': 'block',
-                    'width': popup_width.toString() + 'px'
-                });
-            },
-        function() { $('ul', this).css('display', 'none');  }
-    );
-    */
 
     // Colorbox Popups
     $('a.colorbox').attr('href', function(index, attr) {
@@ -746,7 +733,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
         delay: delay,
         minLength: min_length,
         search: function(event, ui) {
-            $( '#' + dummy + '_throbber' ).removeClass('hidden').show();
+            $( '#' + dummy + '_throbber' ).removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {

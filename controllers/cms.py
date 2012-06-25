@@ -118,6 +118,8 @@ def post():
         table.module.readable = table.module.writable = False
         table.name.default = "%s Home Page" % _module
         table.name.readable = table.name.writable = False
+        s3.crud_strings[tablename].title_create = T("New Page")
+        s3.crud_strings[tablename].title_update = T("Edit Page")
         url = URL(c=_module, f="index")
         s3mgr.configure(tablename,
                         create_next = url,
@@ -249,8 +251,8 @@ def comment_parse(comment, comments, post_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not post_id and comment.post_id:
@@ -260,7 +262,7 @@ def comment_parse(comment, comments, post_id=None):
         post_id = comment.post_id
     else:
         header = author
-    thread = LI(DIV(s3_avatar_represent(comment.created_by),
+    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
                         DIV(XML(comment.body)),
@@ -374,6 +376,7 @@ def posts():
                              limitby=(0, recent))
 
     output = UL(_id="comments")
+    import hashlib
     for post in posts:
         author = B(T("Anonymous"))
         if post.created_by:
@@ -393,13 +396,12 @@ def posts():
                 user = row[utable._tablename]
                 username = s3_fullname(person)
                 email = user.email.strip().lower()
-                import md5
-                hash = md5.new(email).hexdigest()
+                hash = hashlib.md5(email).hexdigest()
                 url = "http://www.gravatar.com/%s" % hash
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)
         if post.avatar:
-            avatar = s3_avatar_represent(post.created_by)
+            avatar = s3base.s3_avatar_represent(post.created_by)
         else:
             avatar = ""
         row = LI(DIV(avatar,

@@ -1,9 +1,9 @@
-<link href="/{{=request.application}}/static/styles/gis/ie6-style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<link href="/{{=request.application}}/static/styles/gis/google.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<link href="/{{=request.application}}/static/styles/gis/geoext-all-debug.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<link href="/{{=request.application}}/static/styles/gis/cdauth.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<link href="/{{=request.application}}/static/styles/gis/gis.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-<link href="/{{=request.application}}/static/styles/gis/style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/ie6-style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/google.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/geoext-all-debug.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/cdauth.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/gis.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+<link href="/{{=appname}}/static/styles/gis/style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{include "jquery.html"}}
 {{include "ext.html"}}
 <script type="text/javascript">//<![CDATA[
@@ -11,7 +11,7 @@
 var S3 = Object();
 S3.gis = Object();
 function s3_debug(message, value) {
-        // no debug
-    }
+ // no debug
+}
 //]]></script>
 {{=XML(map)}}

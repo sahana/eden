@@ -41,6 +41,7 @@ except ImportError:
     raise
 
 from xml.sax.saxutils import escape, unescape
+
 from gluon import current
 from gluon.storage import Storage
 

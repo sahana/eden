@@ -67,8 +67,17 @@ class S3Exporter(object):
             XLWT_ERROR = T("%(module)s not installed") % dict(module="xlwt"),
         )
 
-        self.xls = S3Codec.get_codec("xls").encode
-        self.pdf = S3Codec.get_codec("pdf").encode
+    # -------------------------------------------------------------------------
+    def xls(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("xls").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def pdf(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("pdf").encode
+        return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def csv(self, resource):

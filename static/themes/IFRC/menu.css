@@ -1,0 +1,170 @@
+@charset "UTF-8";
+
+/*** Navigation ***/
+
+/* Language Menu */
+#language_selector select {
+    font-size: 0.9em;
+    margin: 0;
+}
+
+/* Main Navigation (S3MainMenu or modules menu) */
+#nav{clear:both;float:left;width:964px;height:40px;margin:0 0 0 60px;padding:0px;border-top:1px solid #9c9c9c;}
+#nav > li{position:relative;float:left;list-style:none;padding: 0;border-right:1px solid #9c9c9c;}
+#nav > li:first-child{border-left:1px solid #9c9c9c;}
+#nav > li > a{display:block;min-width:50px;background:#fcf9ed;padding:12px 10px 10px 10px;font-size:1em;font-weight:bold;color:#000;text-transform:uppercase;text-decoration:none;}
+#nav > li > a:hover{border-top:2px solid #dc032e;padding-top:10px}
+#nav .highlight{background:#891735;color:#fff;}
+
+#nav li .sub-menu{display:none;position:absolute;width:150px;list-style:none;margin:0; padding:0;background:#fff;border:1px solid #d6d4d1;z-index:999999;}
+#nav li .sub-menu li{padding:5px 0;border-bottom:1px solid #dbcca8;}
+#nav li .sub-menu li a{display:block;margin:0 0;padding:0 10px;font-size:0.9em; color:#590f12;}
+#nav li .sub-menu li a:hover{color:#dc032e;}
+
+/* Side Menu (S3OptionsMenu) */
+#left-col .sub-menu {
+    margin-top: 10px;
+    list-style: none;
+}
+#left-col .sub-menu li {
+    padding: 5px 0;
+}
+#left-col .sub-menu li ul {
+    list-style: none;
+}
+#left-col .sub-menu a {
+    display: block;
+    position: relative;
+    font-size: 1.05em;
+    font-weight: bold;
+    color: #000;
+    line-height:1em;
+}
+#left-col .sub-menu a:hover {
+    color: #dc032e;
+}
+#left-col .sub-menu li > a.highlight {
+    color: #891735;
+}
+#left-col .sub-menu .highlight:after {
+    content: url(img/sidenav_tab.png);
+    position: absolute;
+    top: -3px;
+    right: -18px;
+}
+#left-col .menu-extention a.highlight:after {
+    content: "";
+}
+
+#left-col .sub-menu .menu-extention{margin:0px;padding:0 10px;list-style:none;}
+#left-col .sub-menu .menu-extention li{padding:3px 0;}
+#left-col .sub-menu .menu-extention a{font-size:0.9em;font-weight:normal;}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    width: 100%;
+    float: left;/* Needs disabling to stop overlap with notifications, but this breaks other stuff */
+}
+.breadcrumbs ul{
+    overflow: auto;
+    margin-bottom: 20px;
+    padding: 0;
+    font-size: 0.9em;
+    list-style: none;
+    border-bottom: 1px #000 dashed;
+}
+.breadcrumbs ul li{
+    float: left;
+    margin: 0;
+    padding: 5px 5px 0 0;
+}
+.breadcrumbs ul li a{
+    color: #891735;
+}
+.breadcrumbs ul li a:hover {
+    color: #dc032e;
+}
+.breadcrumbs ul li a:after {
+    content: "»";
+    font-size: 1.5em;
+    color: #000;
+    padding-left: 5px;
+}
+.breadcrumbs ul li a.highlight:after {
+    content: "";
+}
+
+/* Dashboard */
+#dashboard {
+    float: left;
+    position: relative;
+    margin: 0px;
+    padding: 0;
+    border-right: 1px solid #9c9c9c;
+}
+#dashboard li{position:relative;margin:0;padding:0;background:#fcf9ed;list-style:none;float:left;border-right:1px solid #9c9c9c;}
+#dashboard li:first-child{border-left:1px solid #9c9c9c;}
+#dashboard li a {
+    display: block;
+    width: 115px;
+    height: 160px;
+    padding: 15px;
+}
+#dashboard li a:hover{background:url(img/dashboard_hover.png) repeat-x;}
+#dashboard li h2 {
+    font-size: 1.4em;
+    margin-bottom: 0;
+}
+#dashboard li p{color:#891735;line-height:1.25em;}
+#dashboard li img {
+    position: absolute;
+    bottom: 20px;
+}
+#dashboard:before {
+    position: absolute;
+    top: -14px;
+    /*left: -59px;*/
+    content: " ";
+    display: block;
+    height: 40px;
+    width: 1024px;
+    background: url(img/dashboard_shadow.png) repeat-x;
+}
+
+#sub-dashboard {
+    position: relative;
+    width: 854px;
+    margin: 50px 0 0 -15px;
+    padding: 0;
+    float: left;
+}
+#sub-dashboard > li {
+    position: relative;
+    /*width: 229px;*/
+    width: 240px;
+    height: 210px;
+    padding: 20px;
+    list-style: none;
+    float:left;
+    border-left: 1px solid #9c9c9c;
+    background: #fcf9ed
+}
+#sub-dashboard > li:first-child{border-left:0px solid #9c9c9c;}
+#sub-dashboard > li a{}
+#sub-dashboard > li h2{margin-bottom:0;}
+#sub-dashboard > li p{color:#891735;line-height:1.25em;}
+#sub-dashboard > li img{position:absolute; bottom:30px; left:auto;right:auto;}
+#sub-dashboard > li ul{margin:0; padding:0;list-style:none;}
+#sub-dashboard > li ul li{padding-left:10px;font-size:0.9em;background:url(img/bullet-triangle.png) no-repeat 0px 4px;}
+#sub-dashboard > li ul li a{color:#590f12;}
+#sub-dashboard:before {
+    position: absolute;
+    top: -14px;
+    left: 0;
+    content: " ";
+    display: block;
+    height: 20px;
+    /*width: 810px;*/
+    width: 845px;
+    background: url(img/dashboard_shadow.png) repeat-x;
+}

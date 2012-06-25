@@ -57,7 +57,7 @@ def project():
                                               read_url=read_url,
                                               update_url=update_url)
             return output
-        response.s3.postp = postp
+        s3.postp = postp
         return s3_rest_controller()
 
     table = s3db.hrm_human_resource
@@ -67,12 +67,9 @@ def project():
 
     doc_table = s3db.table("doc_document", None)
     if doc_table is not None:
-        doc_table.organisation_id.readable = False
-        doc_table.person_id.readable = False
-        doc_table.location_id.readable = False
-        doc_table.organisation_id.writable = False
-        doc_table.person_id.writable = False
-        doc_table.location_id.writable = False
+        doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
+        doc_table.person_id.readable = doc_table.person_id.writable = False
+        doc_table.location_id.readable = doc_table.location_id.writable = False
 
     # Pre-process
     def prep(r):
@@ -100,7 +97,7 @@ def project():
                         ltable = s3db.gis_location
                         query = (ltable.id.belongs(countries))
                         countries = db(query).select(ltable.code)
-                        deployment_settings.gis.countries = [c.code for c in countries]
+                        settings.gis.countries = [c.code for c in countries]
                 elif r.component_name == "task":
                     r.component.table.milestone_id.requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                 "project_milestone.id",
@@ -110,7 +107,7 @@ def project():
                                                                 ))
                     if "open" in request.get_vars:
                         # Show only the Open Tasks for this Project
-                        statuses = response.s3.project_task_active_statuses
+                        statuses = s3.project_task_active_statuses
                         filter = (r.component.table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
                 elif r.component_name == "beneficiary":
@@ -121,7 +118,7 @@ def project():
                                   sort=True,
                                   filterby="project_id",
                                   filter_opts=[r.id])
-                    )
+                                )
                 elif r.component_name == "human_resource":
                     from eden.hrm import hrm_human_resource_represent
 
@@ -166,7 +163,7 @@ def project():
                 #r.method = "list"
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
@@ -218,7 +215,7 @@ def project():
           end_date_string,
           T("End date should be after start date"))
                 if validate:
-                    response.s3.jquery_ready.append(script)
+                    s3.jquery_ready.append(script)
 
                 if mode_task:
                     read_url = URL(args=["[id]", "task"])
@@ -227,7 +224,7 @@ def project():
                                               read_url=read_url,
                                               update_url=update_url)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     rheader = s3db.project_rheader
     return s3_rest_controller(module,
@@ -246,6 +243,12 @@ def hazard():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def framework():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(rheader=s3db.project_rheader)
 
 # =============================================================================
 def organisation():
@@ -325,7 +328,7 @@ def activity():
                     doc_table.location_id.writable = False
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Pre-process
     def postp(r, output):
@@ -350,18 +353,9 @@ def activity():
                 item.append(TR(TD(hierarchy[field]), TD(record[field])))
             output["item"] = item
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
-    tabs = [(T("Details"), None),
-            (T("Contact Persons"), "contact")]
-    if mode_task:
-        tabs.append((T("Tasks"), "task"))
-        tabs.append((T("Attachments"), "document"))
-    else:
-        tabs.append((T("Documents"), "document"))
-
-    rheader = lambda r: s3db.project_rheader(r, tabs)
-    return s3_rest_controller(rheader=rheader,
+    return s3_rest_controller(rheader=s3db.project_rheader,
                               csv_template="activity")
 
 # -----------------------------------------------------------------------------
@@ -387,7 +381,7 @@ def location():
                     doc_table.location_id.writable = False
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Pre-process
     def postp(r, output):
@@ -450,16 +444,10 @@ def location():
                     )
             
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
-    tabs = [(T("Details"), None),
-            (T("Beneficiaries"), "beneficiary"),
-            (T("Contact People"), "contact"),
-            ]
-
-    rheader = lambda r: s3db.project_rheader(r, tabs)
     return s3_rest_controller(interactive_report=True,
-                              rheader=rheader,
+                              rheader=s3db.project_rheader,
                               csv_template="location")
 
 # -----------------------------------------------------------------------------
@@ -496,7 +484,7 @@ def task_project():
         if r.method != "options":
             return False
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller()
 
@@ -512,7 +500,7 @@ def task_activity():
         if r.method != "options":
             return False
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller()
 
@@ -536,7 +524,7 @@ def time():
                         listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
-            response.s3.filter = (table.person_id == person_id)
+            s3.filter = (table.person_id == person_id)
         try:
             list_fields = s3mgr.model.get_config(tablename,
                                                  "list_fields")
@@ -549,7 +537,7 @@ def time():
     elif "week" in request.get_vars:
         now = request.utcnow
         week = datetime.timedelta(days=7)
-        response.s3.filter = (table.date > (now - week))
+        s3.filter = (table.date > (now - week))
 
     return s3_rest_controller()
 
@@ -583,8 +571,8 @@ def comment_parse(comment, comments, task_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not task_id and comment.task_id:
@@ -594,7 +582,7 @@ def comment_parse(comment, comments, task_id=None):
         task_id = comment.task_id
     else:
         header = author
-    thread = LI(DIV(s3_avatar_represent(comment.created_by),
+    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
                         DIV(XML(comment.body)),
@@ -683,7 +671,7 @@ $('#submit_record__row input').click(function(){$('#comment-form').hide();$('#pr
 """))
 
     # No layout in this output!
-    #response.s3.jquery_ready.append(script)
+    #s3.jquery_ready.append(script)
 
     output = DIV(output,
                  DIV(H4(T("New Post"),

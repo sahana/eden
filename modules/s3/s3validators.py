@@ -54,9 +54,10 @@ __all__ = ["single_phone_number_pattern",
            "QUANTITY_INV_ITEM",
            "IS_IN_SET_LAZY"]
 
-import time
 import re
+import time
 from datetime import datetime, timedelta
+
 from gluon import current, Field, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.languages import lazyT
 from gluon.validators import Validator
@@ -434,7 +435,6 @@ class IS_ONE_OF_EMPTY(Validator):
         if self.ktable in db:
 
             table = db[self.ktable]
-            auth = current.auth
 
             if self.fields == "all":
                 fields = [f for f in table if isinstance(f, Field)]
@@ -447,7 +447,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Caching breaks Colorbox dropdown refreshes
                 #dd = dict(orderby=orderby, groupby=groupby, cache=(current.cache.ram, 60))
                 dd = dict(orderby=orderby, groupby=groupby)
-                query = auth.s3_accessible_query("read", table)
+                query = current.auth.s3_accessible_query("read", table)
                 if "deleted" in table:
                     query = ((table["deleted"] == False) & query)
                 if self.filterby and self.filterby in table:
@@ -500,12 +500,14 @@ class IS_ONE_OF_EMPTY(Validator):
     def __call__(self, value):
 
         try:
-            table = self.dbset._db[self.ktable]
+            dbset = self.dbset
+            table = dbset._db[self.ktable]
             deleted_q = ("deleted" in table) and (table["deleted"] == False) or False
             filter_opts_q = False
-            if self.filterby and self.filterby in table:
+            filterby = self.filterby
+            if filterby and filterby in table:
                 if self.filter_opts:
-                    filter_opts_q = table[self.filterby].belongs(self.filter_opts)
+                    filter_opts_q = table[filterby].belongs(self.filter_opts)
 
             if self.multiple:
                 if isinstance(value, list):
@@ -524,8 +526,9 @@ class IS_ONE_OF_EMPTY(Validator):
                     else:
                         return (value, self.error_message)
                 else:
+                    field = table[self.kfield]
                     for v in values:
-                        q = (table[self.kfield] == v)
+                        q = (field == v)
                         query = query is not None and query | q or q
                     if filter_opts_q != False:
                         query = query is not None and \
@@ -533,7 +536,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     if deleted_q != False:
                         query = query is not None and \
                                 (deleted_q & (query)) or deleted_q
-                    if self.dbset(query).count() < 1:
+                    if dbset(query).count() < 1:
                         return (value, self.error_message)
                     return (values, None)
             elif self.theset:
@@ -554,7 +557,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 if deleted_q != False:
                     query = query is not None and \
                             (deleted_q & (query)) or deleted_q
-                if self.dbset(query).count():
+                if dbset(query).count():
                     if self._and:
                         return self._and(value)
                     else:
@@ -1293,7 +1296,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
             if person_id:
                 # Update the person record
-                query = ptable.id == person_id
+                query = (ptable.id == person_id)
 
                 # Validate and update the person record
                 data = Storage()
@@ -1358,7 +1361,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 if person_id:
                     # Update the super-entities
                     manager.model.update_super(ptable, dict(id=person_id))
-                    person = ptable[person_id]
+                    # Read the created pe_id
+                    query = (ptable.id == person_id)
+                    person = db(query).select(ptable.pe_id,
+                                              limitby=(0, 1)).first()
 
                     # Add contact information as provided
                     ctable.insert(pe_id=person.pe_id,
@@ -1401,7 +1407,7 @@ class IS_UTC_OFFSET(Validator):
             offset_str[-4:].isdigit():
             offset_hrs = int(offset_str[-5] + offset_str[-4:-2])
             offset_min = int(offset_str[-5] + offset_str[-2:])
-            offset = 3600*offset_hrs + 60*offset_min
+            offset = 3600 * offset_hrs + 60 * offset_min
             return offset
         else:
             return None

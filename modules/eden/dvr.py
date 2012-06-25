@@ -92,8 +92,8 @@ class S3DVRModel(S3Model):
                                         represent = lambda opt: dvr_status_opts.get(opt, NONE),
                                         label= T("Status")),
                                   multi_activity_id(),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD Strings
         ADD_CASE = T("Add Case")
@@ -163,7 +163,7 @@ class S3DVRModel(S3Model):
                                _config("pr_address", "onaccept")
                     callback(onaccept, _form, tablename="pr_address")
                     # Normally happens onvalidation:
-                    current.response.s3.lx_update(atable, id)
+                    s3_lx_update(atable, id)
                 else:
                     # Update Home Address from location_id
                     id = person["pr_address"].id
@@ -180,7 +180,7 @@ class S3DVRModel(S3Model):
                     _form = Storage(vars=_vars)
                     callback(onaccept, _form, tablename="pr_address")
                     # Normally happens onvalidation:
-                    current.response.s3.lx_update(atable, id)
+                    s3_lx_update(atable, id)
         return
 
 # END =========================================================================

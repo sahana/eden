@@ -21,15 +21,7 @@ def index():
 def document():
     """ RESTful CRUD controller """
 
-    resourcename = request.function
-
-    # Load Models
-    s3mgr.load("doc_document")
-
-    rheader = lambda r: document_rheader(r)
-
-    output = s3_rest_controller(rheader=rheader)
-
+    output = s3_rest_controller(rheader=document_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -88,12 +80,16 @@ def document_tabs(r):
                 },
                 ]
     tabs = [(T("Details"), None)]
+    crud_string = s3base.S3CRUD.crud_string
     for tab_opt in tab_opts:
         tablename = tab_opt["tablename"]
         if tablename in db and document_id in db[tablename]:
-            tab_count = db( (db[tablename].deleted == False) & (db[tablename].document_id == r.id) ).count()
+            table = db[tablename]
+            query = (table.deleted == False) & \
+                    (table.document_id == r.id)
+            tab_count = db(query).count()
             if tab_count == 0:
-                label = s3base.S3CRUD.crud_string(tablename, "title_create")
+                label = crud_string(tablename, "title_create")
             elif tab_count == 1:
                 label = tab_opt["one_title"]
             else:
@@ -106,14 +102,9 @@ def document_tabs(r):
 def image():
     """ RESTful CRUD controller """
 
-    resourcename = request.function
-
-    # Load Models
-    s3mgr.load("doc_image")
-
     output = s3_rest_controller()
-
     return output
+
 # =============================================================================
 def bulk_upload():
     """
@@ -124,7 +115,7 @@ def bulk_upload():
         See r1595 for the previous draft of this work
     """
 
-    response.s3.stylesheets.append( "S3/fileuploader.css" )
+    s3.stylesheets.append("plugins/fileuploader.css")
     return dict()
 
 def upload_bulk():
@@ -177,6 +168,7 @@ def upload_bulk():
         # onaccept callback
         onaccept = s3mgr.model.get_config(tablename, "create_onaccept",
                    s3mgr.model.get_config(tablename, "onaccept"))
+        from gluon.tools import callback
         callback(onaccept, form, tablename=tablename)
     else:
         error_msg = ""

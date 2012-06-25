@@ -23,7 +23,7 @@ if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 import sys
-sys.path.append("applications/%s/modules/s3" % request.application)
+sys.path.append("applications/%s/modules/s3" % appname)
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -275,7 +275,7 @@ def templateTranslateDownload():
     code = record.code
     language = record.language
     lang_fileName = "applications/%s/languages/%s.py" % \
-                                    (request.application, code)
+                                    (appname, code)
     try:
         strings = read_dict(lang_fileName)
     except:
@@ -513,7 +513,7 @@ def series_export_formatted():
             langDict = dict()
         else:
             try:
-                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (request.application, lang)
+                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (appname, lang)
                 langDict = read_dict(lang_fileName)
             except:
                 langDict = dict()

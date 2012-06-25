@@ -1,13 +1,5 @@
 <div id="last_update">
-{{try:}}
-{{if modified_on or modified_by:}}
-{{=T("Last updated ")}}
-{{pass}}
-{{except:}}{{pass}}
-{{try:}}
-<span id="modified_on">{{=modified_on}}</span>
-{{except:}}{{pass}}
-{{try:}}
-<span id="modified_by">{{=modified_by}}</span>
-{{except:}}{{pass}}
+{{try:}}{{if modified_on or modified_by:}}{{=T("Last updated ")}}{{pass}}{{except:}}{{pass}}
+{{try:}}<span id="modified_on">{{=modified_on}}</span>{{except:}}{{pass}}
+{{try:}}<span id="modified_by">{{=modified_by}}</span>{{except:}}{{pass}}
 </div>

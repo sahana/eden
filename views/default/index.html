@@ -4,8 +4,6 @@
 <h2 align='center'>{{=title}}</h2>
 {{except:}}{{pass}}
 {{=XML(item)}}
-<table width="50%" align="center">
-<tr><td>
 <div id='menu_box_center'>
 {{try:}}
 {{=sit_dec_res_box}}
@@ -36,11 +34,6 @@
 {{=manage_facility_box}}
 {{=org_box}}
 </div>
-</td></tr>
-</table>
-<div id='menu_box_2'>
-<!-- More boxes can go here -->
-</div>
 </div>
 <div id='about'>
     <!--
@@ -54,7 +47,6 @@
     {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
     <br/>{{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
     </p>
-    <p>&nbsp;</p>
 </div>
 {{if deployment_settings.frontpage.rss:}}
 <div id="feed-control">

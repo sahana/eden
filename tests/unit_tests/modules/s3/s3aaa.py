@@ -915,7 +915,7 @@ class S3PermissionTests(unittest.TestCase):
 
             self.assertTrue(isinstance(acls, Storage))
             self.assertTrue(org2 in acls)
-            self.assertEqual(acls[org2], (acl.READ|acl.CREATE, acl.ALL))
+            self.assertEqual(acls[org2], (acl.READ, acl.ALL))
 
         finally:
             s3db.pr_remove_affiliation(org1, org2, role="TestOrgUnit")
@@ -930,6 +930,7 @@ class S3PermissionTests(unittest.TestCase):
     def create_test_record(self):
 
         # Create a record
+        auth.s3_impersonate(None)
         auth.override = True
         table = s3db.org_office
         record_id = table.insert(name="New Office")

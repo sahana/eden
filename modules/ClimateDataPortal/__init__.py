@@ -6,6 +6,15 @@
     @author: Mike Amy
 """
 
+from datetime import date, timedelta
+from math import floor
+from calendar import isleap
+
+from gluon import current
+from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
+db = current.db
+
 same = lambda x: x
 # keyed off the units field in the sample_table_spec table
 standard_unit = {
@@ -44,8 +53,6 @@ units_in_out = {
 }
 
 # date handling
-
-from datetime import date, timedelta
 start_year = 2011
 start_month_0_indexed = 10
 start_date = date(start_year, start_month_0_indexed+1, 11)
@@ -81,10 +88,6 @@ def month_number_to_year_month(month_number):
 def month_number_to_date(month_number):
     year, month = month_number_to_year_month(month_number)
     return date(year, month, 1)
-
-from math import floor
-
-from calendar import isleap
 
 def rounded_date_to_month_number(date):
     """This function converts a date to a month number by rounding
@@ -152,15 +155,10 @@ Gridded.__name__ = "Observed Gridded"
 class Projected(object):
     code = "P"
 
-from simplejson import OrderedDict
 sample_table_types = (Observed, Gridded, Projected)
 sample_table_types_by_code = OrderedDict()
 for SampleTableType in sample_table_types:
     sample_table_types_by_code[SampleTableType.code] = SampleTableType
-
-
-from gluon import current
-db = current.db
 
 class SampleTable(object):
     # Samples always have places and time (periods)
@@ -495,12 +493,14 @@ class SampleTable(object):
         return years
 
 def init_SampleTable():
+    """
+    """
+
+    table = current.s3db.climate_sample_table_spec
     for SampleTableType in sample_table_types:
-        for sample_table_spec in db(
-            (db.climate_sample_table_spec.sample_type_code == SampleTableType.code) 
-        ).select(
-            orderby = db.climate_sample_table_spec.name
-        ):
+        query = (table.sample_type_code == SampleTableType.code)
+        rows = db(query).select(orderby=table.name)
+        for sample_table_spec in rows:
             sample_type_code = sample_table_spec.sample_type_code
             parameter_name = sample_table_spec.name
             sample_type = sample_table_types_by_code[sample_table_spec.sample_type_code]

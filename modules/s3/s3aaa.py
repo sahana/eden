@@ -48,22 +48,27 @@ from urllib import urlencode
 import urllib2
 import math
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.storage import Storage, Messages
 
 from gluon.dal import Field, Row, Query, Set, Table, Expression
-from gluon.sqlhtml import CheckboxesWidget, StringWidget
+from gluon.sqlhtml import CheckboxesWidget, OptionsWidget, StringWidget
 from gluon.tools import Auth, callback, addrow
 from gluon.utils import web2py_uuid
 from gluon.validators import IS_SLUG
-from gluon.contrib import simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
-from gluon.sqlhtml import OptionsWidget
 
 from s3method import S3Method
 from s3validators import IS_ACL
-from s3widgets import S3ACLWidget, CheckboxesWidgetS3
 
 from s3utils import s3_mark_required
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status
@@ -1610,6 +1615,7 @@ class AuthS3(Auth):
             else:
                 self.user = Storage(table_user._filter_fields(user, id=True))
 
+        session.auth = self
         self.s3_set_roles()
 
         if self.user:
@@ -2160,18 +2166,19 @@ class AuthS3(Auth):
             return True
 
         db = current.db
-        session = current.session
+        s3 = current.session.s3
 
         # Trigger HTTP basic auth
         self.s3_logged_in()
 
         # Get the realms
-        if not session.s3:
+        if not s3:
             return False
+        realms = None
         if self.user:
             realms = self.user.realms
-        else:
-            realms = Storage([(r, None) for r in session.s3.roles])
+        elif s3.roles:
+            realms = Storage([(r, None) for r in s3.roles])
         if not realms:
             return False
 
@@ -3292,7 +3299,7 @@ class S3Permission(object):
         self.function = request.function
 
         # Request format
-        # @todo: move this into s3tools.py:
+        # @todo: move this into s3utils.py:
         self.format = request.extension
         if "format" in request.get_vars:
             ext = request.get_vars.format
@@ -4061,10 +4068,11 @@ class S3Permission(object):
             @param env: the environment
         """
 
-        # Hide disabled modules
-        settings = current.deployment_settings
-        if not settings.has_module(c):
-            return False
+        if c != "static":
+            # Hide disabled modules
+            settings = current.deployment_settings
+            if not settings.has_module(c):
+                return False
 
         if t is None:
             t = "%s_%s" % (c, f)
@@ -4572,7 +4580,7 @@ class S3Audit(object):
             @param representation: the representation format
         """
 
-        settings = current.session.s3
+        settings = current.deployment_settings
 
         #print >>sys.stderr, "Audit %s: %s_%s record=%s representation=%s" % \
                             #(operation, prefix, name, record, representation)
@@ -4608,7 +4616,7 @@ class S3Audit(object):
             record = None
 
         if operation in ("list", "read"):
-            if settings.audit_read:
+            if settings.get_security_audit_read():
                 table.insert(timestmp = now,
                              person = self.user,
                              operation = operation,
@@ -4617,7 +4625,7 @@ class S3Audit(object):
                              representation = representation)
 
         elif operation in ("create", "update"):
-            if settings.audit_write:
+            if settings.get_security_audit_write():
                 if form:
                     record = form.vars.id
                     new_value = ["%s:%s" % (var, str(form.vars[var]))
@@ -4634,7 +4642,7 @@ class S3Audit(object):
                 self.diff = None
 
         elif operation == "delete":
-            if settings.audit_write:
+            if settings.get_security_audit_write():
                 query = db[tablename].id == record
                 row = db(query).select(limitby=(0, 1)).first()
                 old_value = []
@@ -4936,6 +4944,7 @@ class S3RoleManager(S3Method):
                                       SPAN("*", _class="req"))
             acl_table.oacl.requires = IS_ACL(auth.permission.PERMISSION_OPTS)
             acl_table.uacl.requires = IS_ACL(auth.permission.PERMISSION_OPTS)
+            from s3widgets import S3ACLWidget
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")
@@ -6341,7 +6350,7 @@ class S3EntityRoleManager(S3Method):
                     ...
                 },
 
-                "paginated_list": [
+                "pagination_list": [
                     (
                         "User One",
                         "1"
@@ -6411,7 +6420,7 @@ class S3EntityRoleManager(S3Method):
             pagination_offset = int(r.get_vars.get("page_offset", 0))
             # the number of pages of assigned roles
             pagination_pages = int(math.ceil(len(self.assigned_roles) / float(pagination_size)))
-            # the list of objects to show on this page
+            # the list of objects to show on this page sorted by name
             pagination_list = [(self.objects[id], id) for id in self.assigned_roles]
             pagination_list = sorted(pagination_list)[pagination_offset * pagination_size:pagination_offset * pagination_size + pagination_size]
 

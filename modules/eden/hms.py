@@ -59,7 +59,6 @@ class HospitalDataModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -336,8 +335,8 @@ class HospitalDataModel(S3Model):
                              Field("access_status",
                                    label = T("Road Conditions")),
 
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
         ADD_HOSPITAL = T("Add Hospital")
@@ -454,7 +453,7 @@ class HospitalDataModel(S3Model):
                                     requires = IS_NULL_OR(s3_phone_requires)),
                               Field("skype", label = T("Skype ID")),
                               Field("website", label=T("Website")),
-                              *s3.meta_fields())
+                              *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -517,7 +516,7 @@ class HospitalDataModel(S3Model):
                                    label = T("Deaths/24hrs"),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              Field("comment", length=128),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -604,8 +603,8 @@ class HospitalDataModel(S3Model):
                                    requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
                                    label = T("Additional Beds / 24hrs"),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # Field configuration
         # CRUD Strings
@@ -677,7 +676,7 @@ class HospitalDataModel(S3Model):
                                    label = T("Psychiatrics/Pediatric")),
                              Field("obgy", "boolean", default=False,
                                    label = T("Obstetrics/Gynecology")),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -771,8 +770,8 @@ class HospitalDataModel(S3Model):
                                    label = T("Current problems, categories")),
                              Field("problem_details", "text",
                                    label = T("Current problems, details")),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # Field configuration
         table.modified_on.label = T("Last updated on")
@@ -815,8 +814,8 @@ class HospitalDataModel(S3Model):
                              Field("type"),
                              Field("description"),
                              Field("quantity"),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(

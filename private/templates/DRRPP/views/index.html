@@ -1,0 +1,35 @@
+{{extend "layout.html"}}
+<div id='home_col1'>
+ {{=home_img}}
+ <div id='info_prod'>
+  <h1>Information Products</h1>
+   {{=list_img}}
+   {{=graph_img}}
+   {{=map_img}}
+   {{=matrix_img}}
+  </div>
+  {{=why_box}}
+  {{=what_box}}
+  {{=how_help_box}}
+  {{=home_map_img}}
+  {{=how_start_box}}
+</div>
+<div id='home_col2'>
+ {{=add_div}}    
+ {{if auth.user is None and not settings.is_cd_version():}}
+ <div id='login_div'>
+  <h1>Login</h1>
+  {{=login}}
+  <table>
+   <tr>
+    <td><a id='register-btn' href='{{=URL(f="user", args="register")}}'>{{=T("Register")}}</a></td>
+    <td><a id='retrieve-btn' href='{{=URL(f="user", args="retrieve_password")}}'>{{=T("Lost Password")}}</a>
+   </tr>
+  </table>
+ </div>
+ {{pass}}
+ {{=tour}}
+ {{=help}}   
+ {{=stats}}
+ {{=market}}
+</div>

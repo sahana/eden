@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-""" Sahana Eden Survey Tool
 
-    ADAT - Assessment Data Analysis Tool
+""" Sahana Eden Survey Tool
 
     @author: Graeme Foster <graeme at acm dot org>
 
-    For more details see the blueprint at:
-    http://eden.sahanafoundation.org/wiki/BluePrint/SurveyTool/ADAT
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
+
+    ADAT - Assessment Data Analysis Tool
+
+    For more details see the blueprint at:
+    http://eden.sahanafoundation.org/wiki/BluePrint/SurveyTool/ADAT
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -209,7 +210,7 @@ class S3TemplateModel(S3Model):
                                          length=16,
                                          label = T("Default map question"),
                                         ),
-                                   *s3.meta_fields())
+                                   *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -280,7 +281,7 @@ class S3TemplateModel(S3Model):
                                        writable=False,
                                        ),
                                  template_id(),
-                                 *s3.meta_fields())
+                                 *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -889,7 +890,7 @@ class S3QuestionModel(S3Model):
                                  Field("metadata",
                                        "text",
                                       ),
-                                 *s3.meta_fields()
+                                 *s3_meta_fields()
                                )
 
         # CRUD Strings
@@ -944,7 +945,7 @@ class S3QuestionModel(S3Model):
                                        "text",
                                        notnull=True,
                                        ),
-                                 *s3.meta_fields()
+                                 *s3_meta_fields()
                                )
 
         # CRUD Strings
@@ -994,7 +995,7 @@ class S3QuestionModel(S3Model):
                                        readable=False,
                                        writable=False
                                        ),
-                                 *s3.meta_fields()
+                                 *s3_meta_fields()
                                )
 
         # CRUD Strings
@@ -1443,7 +1444,7 @@ class S3FormatterModel(S3Model):
                                       readable=True,
                                       writable=False),
                                 Field("rules", "text", default=""),
-                                 *s3.meta_fields()
+                                 *s3_meta_fields()
                                )
 
         self.configure(tablename,
@@ -1638,7 +1639,7 @@ class S3SeriesModel(S3Model):
                                        represent = s3_date_represent,
                                        widget = S3DateWidget(),
                                        default=None),
-                                 *s3.meta_fields())
+                                 *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -2638,7 +2639,7 @@ class S3CompleteModel(S3Model):
                                        readable=False,
                                        writable=False
                                        ),
-                                 *s3.meta_fields())
+                                 *s3_meta_fields())
 
         # CRUD Strings
         s3.crud_strings[tablename] = Storage(
@@ -2690,7 +2691,7 @@ class S3CompleteModel(S3Model):
                                        readable=True,
                                        writable=True
                                        ),
-                                *s3.meta_fields())
+                                *s3_meta_fields())
 
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Assessment Answer"),
@@ -3289,7 +3290,7 @@ class S3TranslateModel(S3Model):
                                 Field("filename",
                                       readable=False,
                                       writable=False),
-                                *s3.meta_fields())
+                                *s3_meta_fields())
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add new translation language"),
         )

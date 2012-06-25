@@ -22,17 +22,11 @@ def index():
 def sector():
     """ RESTful CRUD controller """
 
-    #tablename = "%s_%s" % (module, resourcename)
-    #table = db[tablename]
-
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def subsector():
     """ RESTful CRUD controller """
-
-    #tablename = "%s_%s" % (module, resourcename)
-    #table = db[tablename]
 
     return s3_rest_controller()
 
@@ -76,6 +70,12 @@ def facility_type():
     return s3_rest_controller()
 
 # =============================================================================
+def organisation_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def organisation():
     """ RESTful CRUD controller """
 

@@ -76,41 +76,50 @@ else:
     # Run all Tests
 
     # Create Organisation
-    suite = loadTests(Org_Organisation)
+    suite = loadTests(CreateOrganisation)
+    
     # Shortcut
     addTests = suite.addTests
+    
     # Create Office
-    addTests(loadTests(org_create_office))
+    addTests(loadTests(CreateOffice))
+    
     # Setup Staff
-    addTests(loadTests(hrm_setup_staff))
+    addTests(loadTests(CreateStaff))
+    
     # Setup New Volunteer
-    addTests(loadTests(hrm_setup_volunteer))
-    # Setup Training Course
-    addTests(loadTests(hrm_setup_trainingcourse))
-    # Setup Training Event
-    #addTests(loadTests(hrm_setup_trainingevent))
+    addTests(loadTests(CreateVolunteer))
+    
+    # Create Staff & Volunteer Training
+    addTests(loadTests(CreateStaffTraining))
+    addTests(loadTests(CreateVolunteerTraining))
+
     # Inventory tests
-    addTests(loadTests(Logistics))
+    addTests(loadTests(SendItem))
+    addTests(loadTests(ReceiveItem))
+    addTests(loadTests(SendReceiveItem))
     
     # Project Tests
-    addTests(loadTests(Project))
+    addTests(loadTests(CreateProject))
 
     # Asset Tests
-    addTests(loadTests(Asset))
+    addTests(loadTests(CreateAsset))
 
     # Assign Staff to Organisation
-    #addTests(loadTests(hrm_assign_organisationstaff))
+    addTests(loadTests(AddStaffToOrganisation))
+    
     # Assign Staff to Office
-    #addTests(loadTests(hrm_assign_officestaff))
+    addTests(loadTests(AddStaffToOffice))
+    
     # Assign Staff to Warehouse
-    #addTests(loadTests(hrm_assign_warehousestaff))
+    addTests(loadTests(AddStaffToWarehouse))
 
 try:
     import HTMLTestRunner
-    fp = file("Sahana-Eden.html", "wb")
+    fp = file("Sahana-Eden-Test-Result.html", "wb")
     runner = HTMLTestRunner.HTMLTestRunner(
                                            stream=fp,
-                                           title="Sahana Eden",
+                                           title="Sahana Eden Test Result",
                                           )
     runner.run(suite)
 except:

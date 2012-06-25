@@ -102,11 +102,11 @@ def req():
                     s3.crud_strings["req_req"] = crud_strings
 
                 # Filter the query based on type
-                if response.s3.filter:
-                    response.s3.filter = response.s3.filter & \
+                if s3.filter:
+                    s3.filter = s3.filter & \
                                          (s3db.req_req.type == type)
                 else:
-                    response.s3.filter = (s3db.req_req.type == type)
+                    s3.filter = (s3db.req_req.type == type)
 
             # @ToDo: apply these changes via JS for the create form where type is edittable
             if type == 1: # Item
@@ -226,7 +226,7 @@ def req():
                                       error_msg=T("You do not have permission for any facility to make a request."))
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
@@ -236,7 +236,7 @@ def req():
             if not r.component:
                 if deployment_settings.get_req_use_commit():
                     # This is appropriate to all
-                    response.s3.actions.append(
+                    s3.actions.append(
                         dict(url = URL(c = "req",
                                        f = "req",
                                        args = ["[id]", "commit", "create"]),
@@ -248,7 +248,7 @@ def req():
                 query = (r.table.type == 1)
                 rows = db(query).select(r.table.id)
                 restrict = [str(row.id) for row in rows]
-                response.s3.actions.append(
+                s3.actions.append(
                     dict(url = URL(c = "req",
                                    f = "req",
                                    args = ["[id]", "req_item"]),
@@ -265,7 +265,7 @@ def req():
                                              _class = "action-btn",
                                              label = str(T("Request from Facility")),
                                             )
-                response.s3.actions.append(req_item_inv_item_btn)
+                s3.actions.append(req_item_inv_item_btn)
             elif r.component.name == "req_skill":
                 pass
             else:
@@ -273,7 +273,7 @@ def req():
                 pass
 
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller("req", "req",
                                 rheader=eden.req.req_rheader)
@@ -296,7 +296,7 @@ def req_item():
                 s3db.req_hide_quantities(r.table)
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller()
 
@@ -307,10 +307,10 @@ def req_item():
                                 _class = "action-btn",
                                 label = str(T("Request from Facility")),
                                )
-    if response.s3.actions:
-        response.s3.actions += [req_item_inv_item_btn]
+    if s3.actions:
+        s3.actions += [req_item_inv_item_btn]
     else:
-        response.s3.actions = [req_item_inv_item_btn]
+        s3.actions = [req_item_inv_item_btn]
 
     return output
 
@@ -388,11 +388,11 @@ def req_item_inv_item():
                                    )
                                )
 
-    response.s3.no_sspag = True # pagination won't work with 2 datatables on one page @todo: test
+    s3.no_sspag = True # pagination won't work with 2 datatables on one page @todo: test
 
     itable = s3db.inv_inv_item
     # Get list of matching inventory items
-    response.s3.filter = (itable.item_id == req_item.item_id)
+    s3.filter = (itable.item_id == req_item.item_id)
     # Tweak CRUD String for this context
     s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Inventories currently have this item in stock")
 
@@ -408,14 +408,14 @@ def req_item_inv_item():
         alt_item_ids = [alt_item_row.alt_item_id for alt_item_row in alt_item_rows]
 
         if alt_item_ids:
-            response.s3.filter = (itable.item_id.belongs(alt_item_ids))
+            s3.filter = (itable.item_id.belongs(alt_item_ids))
             inv_items_alt = s3_rest_controller("inv", "inv_item")
             output["items_alt"] = inv_items_alt["items"]
         else:
             output["items_alt"] = T("No Inventories currently have suitable alternative items in stock")
 
     response.view = "req/req_item_inv_item.html"
-    response.s3.actions = [dict(url = URL(c = request.controller,
+    s3.actions = [dict(url = URL(c = request.controller,
                                           f = "req",
                                           args = [req_item.req_id, "req_item"],
                                           vars = dict(req_item_id = req_item_id,
@@ -494,7 +494,7 @@ def commit():
                 #db.req_commit_skill.req_skill_id.requires = \
                 #    IS_ONE_OF(db,
                 #              "req_req_skill.id",
-                #              response.s3.req_skill_represent,
+                #              s3.req_skill_represent,
                 #              orderby = "req_req_skill.id",
                 #              filterby = "req_id",
                 #              filter_opts = [req_id],
@@ -502,7 +502,7 @@ def commit():
                 #              )
         return True
 
-    response.s3.prep = prep
+    s3.prep = prep
 
     rheader = commit_rheader
 
@@ -517,6 +517,9 @@ def commit_rheader(r):
     if r.representation == "html":
         record = r.record
         if record and r.name == "commit":
+
+            s3_date_represent = s3base.S3DateTime.date_represent
+
             tabs = [(T("Edit Details"), None)]
             type = record.type and int(record.type)
 
@@ -548,7 +551,7 @@ def commit_rheader(r):
                               _class = "action-btn"
                               )
 
-                response.s3.rfooter = TAG[""](prepare_btn)
+                s3.rfooter = TAG[""](prepare_btn)
 
 #                send_btn = A( T("Send Commitment as Shipment"),
 #                              _href = URL(c = "inv",
@@ -561,7 +564,7 @@ def commit_rheader(r):
 #
 #                send_btn_confirm = SCRIPT("S3ConfirmClick('#send_commit', '%s')" %
 #                                          T("Do you want to send these Committed items?") )
-#                response.s3.rfooter = TAG[""](send_btn,send_btn_confirm)
+#                s3.rfooter = TAG[""](send_btn,send_btn_confirm)
                 #rheader.append(send_btn)
                 #rheader.append(send_btn_confirm)
 

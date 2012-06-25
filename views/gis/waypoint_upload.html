@@ -1,5 +1,5 @@
 {{extend "layout.html"}}
-<link href="/{{=request.application}}/static/scripts/ext/examples/fileuploadfield.css" rel="stylesheet" type="text/css" charset="utf-8" />
+<link href="/{{=appname}}/static/scripts/ext/examples/fileuploadfield.css" rel="stylesheet" type="text/css" charset="utf-8" />
 <style type="text/css">
     .x-grid3 .x-window-ml{
         padding-left: 0;	
@@ -38,10 +38,10 @@
         zoom:1;
     }
     .icon-user-add {
-        background-image: url(/{{=request.application}}/static/img/silk/user_add.png) !important;
+        background-image: url(/{{=appname}}/static/img/silk/user_add.png) !important;
     }
     .icon-user-delete {
-        background-image: url(/{{=request.application}}/static/img/silk/user_delete.png) !important;
+        background-image: url(/{{=appname}}/static/img/silk/user_delete.png) !important;
     }        
 </style>
     
@@ -57,8 +57,8 @@
 </table>
 </div>
 
-<script type="text/javascript" src="/{{=request.application}}/static/scripts/ext/examples/FileUploadField.js"></script>
-<script type="text/javascript" src="/{{=request.application}}/static/scripts/ext/examples/RowEditor.js"></script>
+<script type="text/javascript" src="/{{=appname}}/static/scripts/ext/examples/FileUploadField.js"></script>
+<script type="text/javascript" src="/{{=appname}}/static/scripts/ext/examples/RowEditor.js"></script>
 
 <script type="text/javascript">//<![CDATA[
 Ext.onReady(function() {
