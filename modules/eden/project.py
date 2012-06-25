@@ -365,7 +365,7 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Projects currently registered"))
 
         # Search Method
-        
+
         advanced = [S3SearchSimpleWidget(
                         name = "project_search_text_advanced",
                         label = T("Description"),
@@ -374,7 +374,12 @@ class S3ProjectModel(S3Model):
                                  "code",
                                  "description",
                                 ]
-                        )]
+                        ),
+                    S3SearchOptionsWidget(
+                        name = "project_search_country",
+                        label = T("Countries"),
+                        field = "countries_id",
+                    )]
         append = advanced.append
 
         if use_sectors:
@@ -406,8 +411,7 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_hfa",
                         label = T("HFA"),
-                        field = "hfa",
-                        cols = 4
+                        field = "hfa"
                     ))
 
         project_search = S3Search(advanced = advanced)
@@ -443,6 +447,7 @@ class S3ProjectModel(S3Model):
             append("countries_id")
         if mode_drr:
             append("multi_hazard_id")
+            append("hfa")
         if not theme_percentages:
             append("multi_theme_id")
         if multi_orgs:
@@ -453,13 +458,30 @@ class S3ProjectModel(S3Model):
         append("start_date")
         append("end_date")
 
-        configure(tablename,
-                  super_entity = "doc_entity",
-                  deduplicate = self.project_project_deduplicate,
-                  onvalidation = self.project_project_onvalidation,
-                  create_next = create_next,
-                  search_method = project_search,
-                  list_fields = list_fields)
+        report_fields = list_fields
+
+        configure(
+            tablename,
+            super_entity="doc_entity",
+            deduplicate=self.project_project_deduplicate,
+            onvalidation=self.project_project_onvalidation,
+            create_next=create_next,
+            search_method=project_search,
+            list_fields=list_fields,
+            report_options=Storage(
+                search=advanced,
+                rows=report_fields,
+                cols=report_fields,
+                facts=report_fields,
+                defaults=Storage(
+                    rows="multi_hazard_id",
+                    cols="countries_id",
+                    fact="multi_theme_id",
+                    aggregate="count",
+                    totals=True
+                )
+            )
+        )
 
         # Reusable Field
         project_id = S3ReusableField("project_id", db.project_project,
@@ -693,25 +715,26 @@ class S3ProjectModel(S3Model):
             create_next = URL(c="project", f="activity",
                               args=["[id]"])
 
-        configure(tablename,
-                  super_entity="doc_entity",
-                  create_next=create_next,
-                  search_method=project_activity_search,
-                  deduplicate=self.project_activity_deduplicate,
-                  report_options=Storage(
-                                         rows=report_fields,
-                                         cols=report_fields,
-                                         facts=report_fields,
-                                         defaults=Storage(
-                                                          rows="project_id",
-                                                          cols="name",
-                                                          fact="time_actual",
-                                                          aggregate="sum",
-                                                          totals=True
-                                                          )
-                                         ),
-                  list_fields = list_fields,
-                  )
+        configure(
+            tablename,
+            super_entity="doc_entity",
+            create_next=create_next,
+            search_method=project_activity_search,
+            deduplicate=self.project_activity_deduplicate,
+            report_options=Storage(
+                rows=report_fields,
+                cols=report_fields,
+                facts=report_fields,
+                defaults=Storage(
+                    rows="project_id",
+                    cols="name",
+                    fact="time_actual",
+                    aggregate="sum",
+                    totals=True
+                )
+            ),
+            list_fields = list_fields,
+        )
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", db.project_activity,
@@ -1037,7 +1060,7 @@ class S3ProjectModel(S3Model):
             opts = [opt]
         elif not isinstance(opt, (list, tuple)):
             return NONE
-        vals = [project_hfa_opts.get(o, NONE) for o in opts]
+        vals = [str(project_hfa_opts.get(o, NONE)) for o in opts]
         return ", ".join(vals)
 
     # -------------------------------------------------------------------------
@@ -1300,7 +1323,7 @@ class S3Project3WModel(S3Model):
                 cols = 3
             )
         )
-        
+
         project_location_search = S3Search(
             simple = (simple),
             advanced = advanced_search,
@@ -3278,7 +3301,7 @@ def project_location_represent(id, row=None):
     """
     """
 
-    return current.s3db.gis_location_lx_represent( 
+    return current.s3db.gis_location_lx_represent(
                s3_get_db_field_value(tablename = "project_location",
                                      fieldname = "location_id",
                                      look_up_value = id)
@@ -3344,7 +3367,7 @@ def project_theme_represent(id):
 
     if not id:
         return current.messages.NONE
-    
+
     if isinstance(id, Row):
         # Do not repeat the lookup if already done by IS_ONE_OF
         theme = id
@@ -3513,7 +3536,7 @@ class S3ProjectOrganisationVirtualFields:
         else:
             return None
 
-    def total_organisation_amount(self): 
+    def total_organisation_amount(self):
         """ Total of project_organisation amounts for project"""
 
         potable = current.s3db.project_organisation
@@ -3521,7 +3544,7 @@ class S3ProjectOrganisationVirtualFields:
                 (potable.project_id == self.project_project.id)
         sum_field = potable.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-    
+
 # =============================================================================
 class S3ProjectBudgetVirtualFields:
     """ Virtual fields for the project_project table when multi_budgets=True """
@@ -3534,7 +3557,7 @@ class S3ProjectBudgetVirtualFields:
                 (pabtable.project_id == self.project_project.id)
         sum_field = pabtable.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-        
+
 # =============================================================================
 class S3ProjectActivityVirtualFields:
     """ Virtual fields for the project_activity table """
@@ -3806,7 +3829,7 @@ class S3ProjectThemeVirtualFields:
                                                "%")
             else:
                 represent = "%s (%s%s)" % (name, percentage, "%")
-                                  
+
         return represent
 
 # =============================================================================
@@ -3954,7 +3977,7 @@ def project_rheader(r, tabs=[]):
     T = current.T
     auth = current.auth
     settings = current.deployment_settings
-    
+
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()

@@ -146,14 +146,14 @@ class IS_LON(object):
 
 class IS_NUMBER(object):
     @staticmethod
-    def represent(number):
+    def represent(number, precision=2):
         if number is None:
             return ""
 
         if isinstance(number, int):
             return IS_INT_AMOUNT.represent(number)
         elif isinstance(number, float):
-            return IS_FLOAT_AMOUNT.represent(number)
+            return IS_FLOAT_AMOUNT.represent(number, precision)
         else:
             return number
 
