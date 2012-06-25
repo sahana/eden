@@ -22,6 +22,7 @@ from tests.web2unittest import *
 from tests import *
 
 # Read Settings
+current.deployment_settings.ui.navigate_away_confirm = False
 settings = current.deployment_settings
 public_url = settings.get_base_public_url()
 base_url = "%s/%s" % (public_url, current.request.application)
@@ -68,7 +69,6 @@ if test:
     # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
     # Maybe this could be bypassed for a test run within the suite by passing it an argument
 
-    #login(account="admin")
     print test
     suite = loadTests(globals()[test])
 
@@ -113,6 +113,8 @@ else:
     
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
+    # Delete a prepop organisation
+    addTests(loadTests(DeleteOrganisation))
 
 try:
     import HTMLTestRunner

@@ -62,10 +62,9 @@ class CreateAsset(SeleniumUnitTest):
                      ( "purchase_date",
                        today ),
                      ( "purchase_price",
-                       "8"),
+                       8),
                      ( "purchase_currency",
-                       "USD",
-                       "option"),
+                       "USD"),
                      ( "comments",
                        "Test Asset")]
                      )
