@@ -2333,11 +2333,10 @@ class CheckboxesWidgetS3(OptionsWidget):
                                     _name=field.name,
                                     _value=None))))
 
-        w_index = 0
         for r_index in range(rows):
             tds = []
             for k, v in options[r_index * cols:(r_index + 1) * cols]:
-                field_id = "id_%s_%s" % (field.name, w_index)
+                field_id = "id-%s-%s" % (field.name, k)
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
                                     _id=field_id,
@@ -2346,7 +2345,6 @@ class CheckboxesWidgetS3(OptionsWidget):
                                     _value=k,
                                     value=(str(k) in values)),
                               LABEL(v, _for=field_id)))
-                w_index += 1
             opts.append(TR(tds))
 
         if opts:
