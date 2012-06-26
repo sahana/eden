@@ -15,10 +15,14 @@ def init():
 
       for m in mod:
 	   d[m] = []
-      d["core"] = []      # Files belonging to "core" module
-      d["special"] = []   # Special files which contain strings belonging to more than one module
+	
+      # List of files belonging to 'core' module	   
+      d["core"] = []  
 
-      # Directories which are not required to be searched are appended to the rest_dirs list
+      # List of 'special' files which contains strings from more than one module
+      d["special"] = []   
+
+      # Directories which are not required to be searched
       rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git", "TranslationFunctionality"]
       
       #Calls the function to group the files
@@ -54,7 +58,8 @@ def group_files(currentDir,curmod, vflag):
       if base_dir in rest_dirs:    
              return
 
-      if base_dir == "views":            # If current directory is /eden/views set vflag
+      # If current directory is '/eden/views', set vflag
+      if base_dir == "views":            
             vflag=1
       
 
@@ -78,7 +83,8 @@ def group_files(currentDir,curmod, vflag):
 		  elif curFile.endswith("/eden/modules/eden/menus.py") or curFile.endswith("/eden/modules/s3cfg.py") or curFile.endswith("/eden/models/000_config.py"):
                      base = "special"
 		  else:
-		     base = os.path.splitext(f)[0]         # Removing the ".py" extension
+                     # Removing '.py'
+		     base = os.path.splitext(f)[0]   
 		     
 		     # If file is inside /eden/modules/s3 directory and it contains "s3" as a prefix, remove that prefix to get the module name
                      if base_dir == "s3" and "s3" in base:
@@ -87,11 +93,13 @@ def group_files(currentDir,curmod, vflag):
 		     # If file is inside /eden/models and file is of the type var_module.py, remove the "var_" prefix
 		     elif base_dir == "models" and "_" in base:
 		       base = base.split('_')[1]
-
-		  if base in d.keys():               # If base refers to a module, append it to the corresponding list
+                  
+		  # If base refers to a module, append to corresponding list
+		  if base in d.keys():               
 		     d[base].append(curFile)
 		  else:
-		     d["core"].append(curFile)       # else append it to list of "core" files
+                     # else append it to "core" files list
+		     d["core"].append(curFile)       
      
 
 #-----------------------------------------------------------------------------------------------------------------------------
@@ -169,13 +177,13 @@ def _main():
 
       if len(sys.argv) > 1:
 
-	   if sys.argv[1] == "-gml":             # Get list of modules
+	   if sys.argv[1] == "-gml":      # Get list of modules
 	      l = get_module_list()
 	      for m in l:
 	         print m
 
 	     
-	   elif sys.argv[1] == "-gfm":            # Get list of files for a given module(s)
+	   elif sys.argv[1] == "-gfm":    # Get list of files for a given module(s)
 	     init()
 	     it = 2
 	     while it < len(sys.argv):
@@ -189,7 +197,7 @@ def _main():
 		 it += 1
 
             
-           elif sys.argv[1] == "-gsf":            # Get list of strings for a given file(s)
+           elif sys.argv[1] == "-gsf":    # Get list of strings for a given file(s)
 	       it=2
 	       while it < len(sys.argv):
 		       strings = get_strings_by_file(sys.argv[it])
@@ -199,7 +207,7 @@ def _main():
 
 		       it += 1
           
-	   elif sys.argv[1] == "-gsm":            # Get list of strings for a given module(s)
+	   elif sys.argv[1] == "-gsm":    # Get list of strings for a given module(s)
                 init()
 	        it=2
 		while it < len(sys.argv):
