@@ -47,6 +47,8 @@ from apps.thirdparty.userprofile.forms import AvatarForm, AvatarCropForm, \
                           EmailValidationForm, ProfileForm, RegistrationForm, \
                           LocationForm, PublicFieldsForm, ChangeEmail
 from apps.thirdparty.userprofile.models import EmailValidation, Avatar
+from apps.thirdparty.userroles.models import set_user_role
+from apps.thirdparty.userroles import roles
 
 
 if not settings.AUTH_PROFILE_MODULE:
@@ -337,10 +339,9 @@ def register(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             newuser = User.objects.create_user(username=username, email='', password=password)
-
             newuser.email = form.cleaned_data.get('email')
             EmailValidation.objects.add(user=newuser, email=newuser.email)
-
+            set_user_role(newuser, roles.user)
             newuser.save()
             return HttpResponseRedirect('%scomplete/' % request.path_info)
     else:
