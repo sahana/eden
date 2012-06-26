@@ -57,12 +57,8 @@ class CreateProject(SeleniumUnitTest):
                     [( "organisation_id",
                        "Timor-Leste Red Cross Society",
                        "autocomplete"),
-                     ( "role",
-                       "Lead Implementer",
-                       "option"),
                      ( "currency",
-                       "USD",
-                       "option"),
+                       "USD",),
                      ( "comments",
                        "Host National Society")
                      ]
@@ -80,15 +76,14 @@ class CreateProject(SeleniumUnitTest):
                        "option"),
                      ( "amount",
                        "1000"),
-                     ( "currency_type",
-                       "USD",
-                       "option"),
+                     ( "currency",
+                       "USD"),
                      ( "comments",
                        "International Donation")
                      ]
                      )
         
-        self.browser.find_element_by_id("rheader_tab_community").click()
+        self.browser.find_element_by_id("rheader_tab_location").click()
         
         self.create("project_location", 
                     [( "L0",

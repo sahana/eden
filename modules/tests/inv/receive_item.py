@@ -48,7 +48,7 @@ class ReceiveItem(InvTestFunctions):
     # -------------------------------------------------------------------------
     def test_inv002_receive_items(self):
         """ Tests for Receive Workflow """
-        user = "normal"
+        user = "admin"
         recv_data = [("send_ref",
                       "WB_TEST_000001",
                      ),
