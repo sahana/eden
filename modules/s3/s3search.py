@@ -1178,11 +1178,9 @@ class S3Search(S3CRUD):
             user's profile, to which they can subscribe
         """
 
-        request = self.request
-
         T = current.T
         db = current.db
-        s3db = current.s3db
+        request = self.request
 
         user_id = current.session.auth.user.id
         now = request.utcnow.microsecond
@@ -1203,7 +1201,7 @@ class S3Search(S3CRUD):
         search_vars["prefix"] = r.controller
         search_vars["function"] = r.function
 
-        table = s3db.pr_save_search
+        table = current.s3db.pr_save_search
         if len(db(table.user_id == user_id).select(table.id,
                                                    limitby=(0, 1))):
             rows = db(table.user_id == user_id).select(table.ALL)
@@ -1246,33 +1244,34 @@ class S3Search(S3CRUD):
         s_var["save"] = True
         jurl = URL(r=request, c=r.controller, f=r.function,
                    args=["search"], vars=s_var)
-        save_search_script = SCRIPT("""
-$('#%s').live('click', function() {
-    $('#%s').show();
-    $('#%s').hide();
-    $.ajax({
-        url: '%s',
-        data: '%s',
-        success: function(data) {
-            $('#%s').show();
-            $('#%s').hide();
-        },
-        type: 'POST'
-        });
-    return false;
-    });
-""" % (save_search_btn_id,
+        save_search_script = '''
+$('#%s').live('click',function(){
+ $('#%s').show();
+ $('#%s').hide();
+ $.ajax({
+  url: '%s',
+  data: '%s',
+  success: function(data) {
+   $('#%s').show();
+   $('#%s').hide();
+  },
+  type: 'POST'
+ });
+ return false;
+});
+''' % (save_search_btn_id,
        save_search_processing_id,
        save_search_btn_id,
        jurl,
        json.dumps(search_vars),
        save_search_a_id,
-       save_search_processing_id))
+       save_search_processing_id)
+
+        s3.jquery_ready.append(save_search_script)
 
         widget = DIV(save_search_processing,
                     save_search_a,
                     save_search_btn,
-                    save_search_script,
                     _style="font-size:12px; padding:5px 0px 5px 90px;",
                     _id="save_search"
                     )

@@ -460,28 +460,27 @@ class S3ProjectModel(S3Model):
 
         report_fields = list_fields
 
-        configure(
-            tablename,
-            super_entity="doc_entity",
-            deduplicate=self.project_project_deduplicate,
-            onvalidation=self.project_project_onvalidation,
-            create_next=create_next,
-            search_method=project_search,
-            list_fields=list_fields,
-            report_options=Storage(
-                search=advanced,
-                rows=report_fields,
-                cols=report_fields,
-                facts=report_fields,
-                defaults=Storage(
-                    rows="multi_hazard_id",
-                    cols="countries_id",
-                    fact="multi_theme_id",
-                    aggregate="count",
-                    totals=True
+        configure(tablename,
+                  super_entity="doc_entity",
+                  deduplicate=self.project_project_deduplicate,
+                  onvalidation=self.project_project_onvalidation,
+                  create_next=create_next,
+                  search_method=project_search,
+                  list_fields=list_fields,
+                  report_options=Storage(
+                    search=advanced,
+                    rows=report_fields,
+                    cols=report_fields,
+                    facts=report_fields,
+                    defaults=Storage(
+                        rows="multi_hazard_id",
+                        cols="countries_id",
+                        fact="multi_theme_id",
+                        aggregate="count",
+                        totals=True
+                    )
                 )
             )
-        )
 
         # Reusable Field
         project_id = S3ReusableField("project_id", db.project_project,
@@ -715,26 +714,25 @@ class S3ProjectModel(S3Model):
             create_next = URL(c="project", f="activity",
                               args=["[id]"])
 
-        configure(
-            tablename,
-            super_entity="doc_entity",
-            create_next=create_next,
-            search_method=project_activity_search,
-            deduplicate=self.project_activity_deduplicate,
-            report_options=Storage(
-                rows=report_fields,
-                cols=report_fields,
-                facts=report_fields,
-                defaults=Storage(
-                    rows="project_id",
-                    cols="name",
-                    fact="time_actual",
-                    aggregate="sum",
-                    totals=True
-                )
-            ),
-            list_fields = list_fields,
-        )
+        configure(tablename,
+                  super_entity="doc_entity",
+                  create_next=create_next,
+                  search_method=project_activity_search,
+                  deduplicate=self.project_activity_deduplicate,
+                  report_options=Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        defaults=Storage(
+                            rows="project_id",
+                            cols="name",
+                            fact="time_actual",
+                            aggregate="sum",
+                            totals=True
+                        )
+                    ),
+                  list_fields = list_fields,
+                 )
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", db.project_activity,
