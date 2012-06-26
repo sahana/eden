@@ -44,15 +44,15 @@
             <div class="control-group {% if form.user.errors %}error{% endif%}">
                 <label>{{ form.user.label }}</label>
                 <div class="controls">
-                    <div class="input-append">
+                    <div class="input-prepend">
                         {{ form.user }}
                         {% if form.user.help_text %}
-                        <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.user.help_text }}"><i class="icon-question-sign"></i></a></span>
                         {% endif %}
                         {% if form.user.errors %}
                         <p class="help-block">
                             {% for error in form.user.errors %}
-                            {{ error|escape }}
+                                {{ error|escape }}
                             {% endfor %}
                         </p>
                         {% endif %}
@@ -61,16 +61,16 @@
                 <div class="control-group {% if form.name.errors %}error{% endif%}">
                     <label>{{ form.name.label }}</label>
                     <div class="controls">
-                        <div class="input-append">
+                        <div class="input-prepend">
                             {{ form.name }}
                             {% if form.name.help_text %}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.name.help_text }}"><i class="icon-question-sign"></i></a></span>
                             {% endif %}
                         </div>
                         {% if form.name.errors %}
                         <p class="help-block">
                             {% for error in form.name.errors %}
-                            {{ error|escape }}
+                                {{ error|escape }}
                             {% endfor %}
                         </p>
                         {% endif %}
