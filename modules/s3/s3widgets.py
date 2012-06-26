@@ -2993,7 +2993,7 @@ class S3EmbedComponentWidget(FormWidget):
             clear = "%s%s" % (clear, pp)
 
         # Select from registry buttons
-        url = "/%s/%s/%s/" % (request.application, prefix, resourcename)
+        url = "/%s/%s/%s/" % (appname, prefix, resourcename)
         select_row = TR(TD(A(T("Select from registry"),
                              _href="#",
                              _id="select_from_registry",
@@ -3011,7 +3011,7 @@ class S3EmbedComponentWidget(FormWidget):
                              _class="action-btn hide",
                              _style="padding-left:15px;"),
                            IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                    request.application,
+                                    appname,
                                _height=32,
                                _width=32,
                                _id="load_throbber",
@@ -3070,7 +3070,7 @@ class S3EmbedComponentWidget(FormWidget):
                 if not isinstance(requires, (list, tuple)):
                     requires = [requires]
                 [r.set_self_id(selected) for r in requires
-                                         if hasattr(r, 'set_self_id')]
+                                         if hasattr(r, "set_self_id")]
         labels, required = s3_mark_required(fields)
         if required:
             s3.has_required = True

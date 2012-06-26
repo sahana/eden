@@ -1302,20 +1302,12 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 # Validate and update the person record
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
-                    if f == "date_of_birth":
-                        # Need to convert value into ISO-format
-                        # (widget expects ISO, but value comes in custom format)
-                        format = settings.get_L10n_date_format()
-                        v, error = IS_DATE_IN_RANGE(format=format)(_vars[f])
-                        if not error:
-                            value = v.isoformat()
-                            _vars[f] = value
-                    else:
-                        value, error = validate(ptable, None, f, _vars[f])
+                    value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, None)
-                    else:
-                        data[f] = value
+                    elif f == "date_of_birth" and \
+                         value:
+                        data[f] = value.isoformat()
                 if data:
                     db(query).update(**data)
 
@@ -1359,18 +1351,12 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    if f == "date_of_birth":
-                        # Need to convert value into ISO-format
-                        # (widget expects ISO, but value comes in custom format)
-                        format = settings.get_L10n_date_format()
-                        v, error = IS_DATE_IN_RANGE(format=format)(_vars[f])
-                        if not error:
-                            value = v.isoformat()
-                            _vars[f] = value
-                    else:
-                        value, error = validate(ptable, None, f, _vars[f])
+                    value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, None)
+                    elif f == "date_of_birth" and \
+                        value:
+                        _vars[f] = value.isoformat()
                 person_id = ptable.insert(**ptable._filter_fields(_vars))
 
                 # Need to update post_vars here,
