@@ -476,7 +476,7 @@ class S3OrganisationModel(S3Model):
                   list_fields = ["id",
                                  "name",
                                  "acronym",
-                                 "type",
+                                 "organisation_type_id",
                                  "sector_id",
                                  "country",
                                  "website"
@@ -1770,7 +1770,7 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
 def org_site_represent(id, show_link=True):
     """ Represent a Facility in option fields or list views """
 
-
+    T = current.T
     db = current.db
     s3db = current.s3db
     represent = current.messages.NONE

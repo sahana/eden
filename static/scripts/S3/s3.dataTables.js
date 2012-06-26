@@ -8,12 +8,15 @@ $(document).ready(function() {
     /* dataTables handling */
     // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
     if (S3.dataTables.id) {
-        var myList = document.getElementById(S3.dataTables.id);
+        //var myList = document.getElementById(S3.dataTables.id);
+        var myList = $("#" + S3.dataTables.id);
     } else {
-        var myList = document.getElementById('list');
+	//var myList = document.getElementById("list");
+        var myList = $("#list");
     }
     if (myList != null) {
-        var ColumnCount = myList.getElementsByTagName('th').length;
+        //var ColumnCount = myList.getElementsByTagName('th').length;
+        var ColumnCount = myList.find("tbody tr").first().children().length;
     } else {
         var ColumnCount = 0;
     }

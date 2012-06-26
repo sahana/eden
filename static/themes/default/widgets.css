@@ -29,11 +29,11 @@ div#table-container {
    margin-top: -1px;
    min-width: 640px;
 }
-div#table-container thead th {
+div#table-container th {
 	text-align: left;
     border: 1px solid #ccc;
 }
-div#table-container thead th.rtotal {
+div#table-container th.rtotal {
     border-left: 2px solid #aaa;
 }
 div#table-container tr.even td {
@@ -794,4 +794,19 @@ ul.x-tree-root-ct {
 .widget-org-hierarchy-crumbs li.selected a {
     text-decoration: none;
     border-bottom: 1px dashed black;
+}
+
+table.report a.report-cell-zoom {
+    width: 16px;
+    height: 16px;
+    float: right;
+    background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
+    cursor: pointer;
+}
+table.report a.report-cell-zoom.opened {
+    background-image: url(../../img/silk/magnifier_zoom_out.png);
+}
+table.report td {
+    white-space: nowrap;
+    padding-right: 16px;
 }
