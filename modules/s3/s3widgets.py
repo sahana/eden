@@ -2949,6 +2949,7 @@ class S3EmbedComponentWidget(FormWidget):
 
         request = current.request
         s3 = current.response.s3
+        appname = current.request.application
 
         formstyle = s3.crud.formstyle
 

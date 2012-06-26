@@ -1359,16 +1359,11 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    if f == "date_of_birth":
+                    value, error = validate(ptable, None, f, _vars[f])
+                    if f == "date_of_birth" and not error and value:
                         # Need to convert value into ISO-format
                         # (widget expects ISO, but value comes in custom format)
-                        format = settings.get_L10n_date_format()
-                        v, error = IS_DATE_IN_RANGE(format=format)(_vars[f])
-                        if not error:
-                            value = v.isoformat()
-                            _vars[f] = value
-                    else:
-                        value, error = validate(ptable, None, f, _vars[f])
+                        _vars[f] = value.isoformat()
                     if error:
                         return (None, None)
                 person_id = ptable.insert(**ptable._filter_fields(_vars))
