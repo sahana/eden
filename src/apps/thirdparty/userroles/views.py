@@ -18,7 +18,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
 from apps.thirdparty.userroles.models import set_user_role
