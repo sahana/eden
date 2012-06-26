@@ -2,9 +2,7 @@
 
 """ Sahana Eden Survey Tool
 
-    @author: Graeme Foster <graeme at acm dot org>
-
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
     ADAT - Assessment Data Analysis Tool
@@ -161,6 +159,11 @@ class S3TemplateModel(S3Model):
                             4: T("Master")
                           }
 
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        
         # ---------------------------------------------------------------------
         # survey_template
         #
@@ -168,59 +171,53 @@ class S3TemplateModel(S3Model):
         # the questions that will be used in a survey.
 
         tablename = "survey_template"
-        table = self.define_table(tablename,
-                                   Field("name",
-                                         "string",
-                                         label = T("Template Name"),
-                                         default="",
-                                         length=120,
-                                         notnull=True,
-                                         unique=True,
-                                         ),
-                                   Field("description", "text", default="", length=500),
-                                   Field("status",
-                                         "integer",
-                                         requires = IS_IN_SET(template_status,
-                                                              zero=None),
-                                         default=1,
-                                         represent = lambda index: template_status[index],
-                                         readable=True,
-                                         writable=False),
-                                   # Standard questions which may belong to all template
-                                   # competion_qstn: who completed the assessment
-                                   # date_qstn: when it was completed (date)
-                                   # time_qstn: when it was completed (time)
-                                   # location_detail: json of the location question
-                                   #                  May consist of any of the following:
-                                   #                  L0, L1, L2, L3, L4, Lat, Lon
-                                   Field("competion_qstn",
-                                         "string",
-                                         length=200,
-                                        ),
-                                   Field("date_qstn",
-                                         "string",
-                                         length=200,
-                                        ),
-                                   Field("time_qstn",
-                                         "string",
-                                         length=200,
-                                        ),
-                                   Field("location_detail",
-                                         "string",
-                                         length=200,
-                                        ),
-                                   # The priority question is the default question used in the map
-                                   # to determine to priority need of each point.
-                                   # The data is stored as the question code.
-                                   Field("priority_qstn",
-                                         "string",
-                                         length=16,
-                                         label = T("Default map question"),
-                                        ),
-                                   *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name", "string", length=120,
+                                   notnull=True, unique=True,
+                                   label = T("Template Name"),
+                                   default="",
+                                   ),
+                             Field("description", "text", length=500,
+                                   label = T("Description"),
+                                   default=""),
+                             Field("status", "integer",
+                                   label = T("Status"),
+                                   requires = IS_IN_SET(template_status,
+                                                        zero=None),
+                                   default=1,
+                                   represent = lambda index: \
+                                        template_status[index],
+                                   readable=True,
+                                   writable=False),
+                             # Standard questions which may belong to all template
+                             # competion_qstn: who completed the assessment
+                             Field("competion_qstn", "string", length=200,
+                                   label = T("Completion Question"),
+                                   ),
+                             # date_qstn: when it was completed (date)
+                             Field("date_qstn", "string", length=200,
+                                   label = T("Date Question"),
+                                   ),
+                             # time_qstn: when it was completed (time)
+                             Field("time_qstn", "string", length=200,
+                                   label = T("Time Question"),
+                                   ),
+                             # location_detail: json of the location question
+                             #                  May consist of any of the following:
+                             #                  L0, L1, L2, L3, L4, Lat, Lon
+                             Field("location_detail", "string", length=200,
+                                   label = T("Location Detail"),
+                                   ),
+                             # The priority question is the default question used in the map
+                             # to determine to priority need of each point.
+                             # The data is stored as the question code.
+                             Field("priority_qstn", "string", length=16,
+                                   label = T("Default map question"),
+                                   ),
+                             *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Assessment Template"),
             title_display = T("Assessment Template Details"),
             title_list = T("Assessment Templates"),
@@ -247,16 +244,15 @@ class S3TemplateModel(S3Model):
                                                            ),
                                       represent = self.survey_template_represent,
                                       ondelete = "RESTRICT")
-        self.add_component(table, survey_template="template_id")
-        # components
-        self.add_component("survey_translate",
-                           survey_template = "template_id"
-                          )
-        self.configure(tablename,
-                        onvalidation = self.template_onvalidate,
-                        onaccept = self.template_onaccept,
-                        deduplicate = self.survey_template_duplicate,
-                        )
+        # Components
+        add_component(table, survey_template="template_id")
+        add_component("survey_translate",
+                      survey_template = "template_id")
+        configure(tablename,
+                  onvalidation = self.template_onvalidate,
+                  onaccept = self.template_onaccept,
+                  deduplicate = self.survey_template_duplicate,
+                 )
 
         # ---------------------------------------------------------------------
         # survey_sections
@@ -266,30 +262,25 @@ class S3TemplateModel(S3Model):
         # the position of the section within the template
 
         tablename = "survey_section"
-        table = self.define_table(tablename,
-                                 Field("name",
-                                       "string",
-                                       default="",
-                                       length=120,
-                                       notnull=True,
-                                       ),
-                                 Field("description",
-                                       "text",
-                                       default="",
-                                       length=500),
-                                 Field("posn",
-                                       "integer",
-                                       ),
-                                 Field("cloned_section_id",
-                                       "integer",
-                                       readable=False,
-                                       writable=False,
-                                       ),
-                                 template_id(),
-                                 *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name", "string", length=120,
+                                   notnull=True,
+                                   default="",
+                                   ),
+                             Field("description", "text", length=500,
+                                   default="",
+                                   ),
+                             Field("posn", "integer",
+                                   ),
+                             Field("cloned_section_id", "integer",
+                                   readable=False,
+                                   writable=False,
+                                   ),
+                             template_id(),
+                             *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Template Section"),
             title_display = T("Template Section Details"),
             title_list = T("Template Sections"),
@@ -303,9 +294,9 @@ class S3TemplateModel(S3Model):
             msg_record_deleted = T("Template Section deleted"),
             msg_list_empty = T("No Template Sections"))
 
-        self.configure(tablename, orderby = tablename+".posn",
-                       deduplicate=self.survey_section_duplicate
-                      )
+        configure(tablename, orderby = tablename+".posn",
+                  deduplicate=self.survey_section_duplicate
+                 )
 
 
         # Return names to response.s3
@@ -456,12 +447,13 @@ class S3TemplateModel(S3Model):
     def survey_template_duplicate(job):
         """
           Rules for finding a duplicate:
-           - Look for a record with the same name, ignoring case
+           - Look for a record with a similar name, ignoring case
         """
 
         if job.tablename == "survey_template":
             table = job.table
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
             query =  table.name.lower().like('%%%s%%' % name.lower())
             return duplicator(job, query)
 
@@ -478,11 +470,12 @@ class S3TemplateModel(S3Model):
 
         if job.tablename == "survey_section":
             table = job.table
-            name = "name" in job.data and job.data.name
-            template = "template_id" in job.data and job.data.template_id
+            data = job.data
+            name = "name" in data and data.name
+            template = "template_id" in data and data.template_id
             query = (table.name == name) & \
                     (table.template_id == template)
-            posn = "posn" in job.data and job.data.posn
+            posn = "posn" in data and data.posn
             query = query & (table.posn == 0)
             record = current.db(query).select(table.posn,
                                               limitby=(0, 1)).first()
@@ -818,7 +811,6 @@ def survey_build_template_summary(template_id):
         tr.append(TD(B(cell))) # don't use TH() otherwise dataTables will fail
     foot.append(tr)
 
-
     table.append(header)
     table.append(body)
     table.append(foot)
@@ -847,6 +839,10 @@ class S3QuestionModel(S3Model):
         T = current.T
         s3 = current.response.s3
 
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+
         # ---------------------------------------------------------------------
         # survey_question
         # Defines a question that will appear within a section, and thus belong
@@ -862,35 +858,26 @@ class S3QuestionModel(S3Model):
         #    footnote in the printed form.
 
         tablename = "survey_question"
-        table = self.define_table(tablename,
-                                 Field("name",
-                                       "string",
-                                       length=200,
-                                       notnull=True,
-                                       represent = self.qstn_name_represent,
-                                       ),
-                                 Field("code",
-                                       "string",
-                                       length=16,
-                                       notnull=True,
-                                       ),
-                                 Field("notes",
-                                       "string",
-                                       length=400
-                                       ),
-                                 Field("type",
-                                       "string",
-                                       length=40,
-                                       notnull=True,
-                                       ),
-                                 Field("metadata",
-                                       "text",
-                                      ),
-                                 *s3_meta_fields()
-                               )
+        table = define_table(tablename,
+                             Field("name", "string", length=200,
+                                   notnull=True,
+                                   represent = self.qstn_name_represent,
+                                   ),
+                             Field("code", "string", length=16,
+                                   notnull=True,
+                                   ),
+                             Field("notes", "string", length=400
+                                   ),
+                             Field("type", "string", length=40,
+                                   notnull=True,
+                                   ),
+                             Field("metadata", "text",
+                                  ),
+                             *s3_meta_fields()
+                            )
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add an Assessment Question"),
             title_display = T("Assessment Question Details"),
             title_list = T("Assessment Questions"),
@@ -904,12 +891,11 @@ class S3QuestionModel(S3Model):
             msg_record_deleted = T("Assessment Question deleted"),
             msg_list_empty = T("No Assessment Questions"))
 
-        self.configure(tablename,
-                        onvalidation = self.question_onvalidate,
-                        onaccept = self.question_onaccept,
-                        deduplicate = self.survey_question_duplicate,
-                        )
-
+        configure(tablename,
+                  onvalidation = self.question_onvalidate,
+                  onaccept = self.question_onaccept,
+                  deduplicate = self.survey_question_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # survey_question_metadata
@@ -926,26 +912,26 @@ class S3QuestionModel(S3Model):
         #    question_metadata records.
 
         tablename = "survey_question_metadata"
-        table = self.define_table(tablename,
-                                 Field("question_id",
-                                       "reference survey_question",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                 Field("descriptor",
-                                       "string",
-                                       length=20,
-                                       notnull=True,
-                                       ),
-                                 Field("value",
-                                       "text",
-                                       notnull=True,
-                                       ),
-                                 *s3_meta_fields()
-                               )
+        table = define_table(tablename,
+                             Field("question_id",
+                                   "reference survey_question",
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             Field("descriptor",
+                                   "string",
+                                   length=20,
+                                   notnull=True,
+                                   ),
+                             Field("value",
+                                   "text",
+                                   notnull=True,
+                                   ),
+                             *s3_meta_fields()
+                            )
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Question Meta-Data"),
             title_display = T("Question Meta-Data Details"),
             title_list = T("Question Meta-Data"),
@@ -961,9 +947,9 @@ class S3QuestionModel(S3Model):
             title_upload = T("Upload a Question List import file")
             )
 
-        self.configure(tablename,
-                       deduplicate = self.survey_question_metadata_duplicate
-                      )
+        configure(tablename,
+                  deduplicate = self.survey_question_metadata_duplicate
+                  )
 
         # -------------------------------------------------------------------------
         # The survey_question_list table is a resolver between
@@ -975,34 +961,34 @@ class S3QuestionModel(S3Model):
         
         tablename = "survey_question_list"
         template_id = self.survey_template_id
-        table = self.define_table(tablename,
-                                 Field("posn",
-                                       "integer",
-                                       notnull=True,
-                                       ),
-                                 template_id(),
-                                 Field("question_id",
-                                       "reference survey_question",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                 Field("section_id",
-                                       "reference survey_section",
-                                       readable=False,
-                                       writable=False
-                                       ),
-                                 *s3_meta_fields()
-                               )
+        table = define_table(tablename,
+                             Field("posn",
+                                   "integer",
+                                   notnull=True,
+                                   ),
+                             template_id(),
+                             Field("question_id",
+                                   "reference survey_question",
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             Field("section_id",
+                                   "reference survey_section",
+                                   readable=False,
+                                   writable=False
+                                   ),
+                             *s3_meta_fields()
+                            )
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_upload = T("Upload an Assessment Template import file")
             )
 
-        self.configure(tablename,
-                        onaccept = self.question_list_onaccept,
-                        deduplicate = self.survey_question_list_duplicate,
-                        )
+        configure(tablename,
+                  onaccept = self.question_list_onaccept,
+                  deduplicate = self.survey_question_list_duplicate,
+                  )
         # ---------------------------------------------------------------------
         return Storage(
                 survey_qstn_name_represent = self.qstn_name_represent
@@ -1032,8 +1018,10 @@ class S3QuestionModel(S3Model):
         """
 
         from xml.sax.saxutils import unescape
-        if form.vars.metadata != None:
-            form.vars.metadata = unescape(form.vars.metadata,{"'":'"'})
+
+        metadata = form.vars.metadata
+        if metadata != None:
+            metadata = unescape(metadata, {"'":'"'})
         return True
 
     # -------------------------------------------------------------------------
@@ -1071,7 +1059,8 @@ class S3QuestionModel(S3Model):
 
         if job.tablename == "survey_question":
             table = job.table
-            code = "code" in job.data and job.data.code
+            data = job.data
+            code = "code" in data and data.code
             query = (table.code == code)
             return duplicator(job, query)
 
@@ -1085,8 +1074,9 @@ class S3QuestionModel(S3Model):
 
         if job.tablename == "survey_question_metadata":
             table = job.table
-            question = "question_id" in job.data and job.data.question_id
-            descriptor  = "descriptor" in job.data and job.data.descriptor
+            data = job.data
+            question = "question_id" in data and data.question_id
+            descriptor  = "descriptor" in data and data.descriptor
             query = (table.descriptor == descriptor) & \
                     (table.question_id == question)
             return duplicator(job, query)
@@ -1233,10 +1223,9 @@ def survey_getAllQuestionsForSeries(series_id):
         qstn_id, code, name, type, posn, section
     """
 
-    sertable = current.s3db.survey_series
-    query = (sertable.id == series_id)
-    row = current.db(query).select(sertable.template_id,
-                                   limitby=(0, 1)).first()
+    table = current.s3db.survey_series
+    row = current.db(table.id == series_id).select(table.template_id,
+                                                   limitby=(0, 1)).first()
     template_id = row.template_id
     questions = survey_getAllQuestionsForTemplate(template_id)
     return questions
@@ -1254,10 +1243,9 @@ def survey_getAllQuestionsForComplete(complete_id):
         qstn_id, code, name, type, posn, section
     """
 
-    comtable = current.s3db.survey_complete
-    query = (comtable.id == complete_id)
-    row = current.db(query).select(comtable.series_id,
-                                   limitby=(0, 1)).first()
+    table = current.s3db.survey_complete
+    row = current.db(table.id == complete_id).select(table.series_id,
+                                                     limitby=(0, 1)).first()
     series_id = row.series_id
     questions = survey_getAllQuestionsForSeries(series_id)
     return (questions, series_id)
@@ -1651,10 +1639,11 @@ class S3SeriesModel(S3Model):
                         deduplicate = self.survey_series_duplicate,
                         )
 
-        self.add_component(table, survey_template="template_id")
-        self.add_component("survey_complete",
-                           survey_series = "series_id"
-                          )
+        add_component = self.add_component
+        add_component(table, survey_template="template_id")
+        add_component("survey_complete",
+                      survey_series = "series_id"
+                      )
         set_method = self.set_method
         set_method("survey_series", method="summary", action=self.seriesSummary)
         set_method("survey_series", method="graph", action=self.seriesGraph)
@@ -1689,7 +1678,7 @@ class S3SeriesModel(S3Model):
     def survey_series_duplicate(job):
         """
           Rules for finding a duplicate:
-           - Look for a record with the same name, ignoring case
+           - Look for a record with a similar name, ignoring case
         """
 
         if job.tablename == "survey_series":
@@ -2061,8 +2050,8 @@ $('#chart_btn').click(function(){
         """
         """
 
-        from s3survey import S3AnalysisPriority
         import math
+        from s3survey import S3AnalysisPriority
 
         T = current.T
         response = current.response

@@ -3,17 +3,12 @@
 """
     survey - Assessment Data Analysis Tool
 
-    @author: Graeme Foster <graeme at acm dot org>
-
     For more details see the blueprint at:
     http://eden.sahanafoundation.org/wiki/BluePrint/SurveyTool/ADAT
-"""
 
-"""
     @todo: open template from the dataTables into the section tab not update
     @todo: in the pages that add a link to a template make the combobox display the label not the numbers
     @todo: restrict the deletion of a template to only those with status Pending
-
 """
 
 module = request.controller
@@ -28,8 +23,6 @@ except:
     from StringIO import StringIO
 
 from gluon.contenttype import contenttype
-
-s3_debug = s3base.s3_debug
 
 from s3survey import S3AnalysisPriority, \
                      survey_question_type, \
@@ -694,6 +687,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
         Now take the matrix data type and generate a spreadsheet from it
     """
 
+    import sys
     import math
     try:
         import xlwt
@@ -725,12 +719,12 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                   style
                                  )
             except Exception as msg:
-                s3_debug(msg)
-                s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                    (cell.row, cell.mergeV, cell.col, cell.mergeH))
-                posn = "%s,%s"%(cell.row, cell.col)
+                print >> sys.stderr, msg
+                print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % \
+                    (cell.row, cell.mergeV, cell.col, cell.mergeH)
+                posn = "%s,%s" % (cell.row, cell.col)
                 if matrix.matrix[posn]:
-                    s3_debug(matrix.matrix[posn])
+                    print >> sys.stderr, matrix.matrix[posn]
             rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
         else:
             sheet.write(cell.row,
@@ -912,8 +906,8 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     maxCol = 0
     for cell in matrix.matrix.values():
         if cell.col + cell.mergeH > 255:
-            s3_debug("Cell (%s,%s) - (%s,%s) ignored" % \
-                (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
+            print >> sys.stderr, "Cell (%s,%s) - (%s,%s) ignored" % \
+                (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV)
             continue
         if cell.col + cell.mergeH > maxCol:
             maxCol = cell.col + cell.mergeH
@@ -944,12 +938,12 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                        joinedStyle
                                        )
                 except Exception as msg:
-                    s3_debug(msg)
-                    s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                        (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                    print >> sys.stderr, msg
+                    print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % \
+                        (cell.row, cell.mergeV, cell.col, cell.mergeH)
                     posn = "%s,%s" % (cell.row, cell.col)
                     if matrix.matrix[posn]:
-                        s3_debug(matrix.matrix[posn])
+                        print >> sys.stderr, matrix.matrix[posn]
             else:
                 sheet1.write(cell.row,
                              cell.col,
@@ -1196,7 +1190,7 @@ def complete():
             import xlrd
             from xlwt.Utils import cell_to_rowcol2
         except ImportError:
-            s3_debug("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
+            s3base.s3_debug("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         try:
