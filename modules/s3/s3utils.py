@@ -1665,7 +1665,7 @@ class S3BulkImporter(object):
     def execute_special_task(self, task):
         """
         """
-        
+
         start = datetime.datetime.now()
         s3 = current.response.s3
         if task[0] == 2:

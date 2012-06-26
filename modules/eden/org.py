@@ -271,6 +271,9 @@ class S3OrganisationModel(S3Model):
         add_component("org_organisation_type_tag",
                       org_organisation_type=dict(joinby="organisation_type_id",
                                                  name="tag"))
+        # Tags as component of Locations
+        add_component("org_organisation",
+                      org_organisation_type="organisation_type_id")
 
         # ---------------------------------------------------------------------
         # Organisations
@@ -467,10 +470,12 @@ class S3OrganisationModel(S3Model):
                 )
             )
 
+        utablename = current.auth.settings.table_user_name
         configure(tablename,
                   onaccept = self.org_organisation_onaccept,
                   ondelete = self.org_organisation_ondelete,
                   super_entity = "pr_pentity",
+                  referenced_by = [(utablename, "organisation_id")],
                   search_method=organisation_search,
                   deduplicate=self.organisation_deduplicate,
                   list_fields = ["id",
@@ -1056,6 +1061,8 @@ class S3SiteModel(S3Model):
         settings = current.deployment_settings
 
         name = form.vars.name
+        if not name:
+            return
         code_len = settings.get_org_site_code_len()
         temp_code = name[:code_len].upper()
         query = (site_table.code == temp_code)

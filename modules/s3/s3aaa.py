@@ -3198,6 +3198,12 @@ class AuthS3(Auth):
         return []
 
 # =============================================================================
+class S3PermissionError(StandardError):
+    """ Custom exception class for low-level permission checks """
+
+    pass
+
+# =============================================================================
 class S3Permission(object):
     """ S3 Class to handle permissions """
 
@@ -3260,6 +3266,8 @@ class S3Permission(object):
         # Store auth reference in self because current.auth is not
         # available at this point yet, but needed in define_table.
         self.auth = auth
+
+        self.error = S3PermissionError
 
         settings = current.deployment_settings
 
@@ -3882,7 +3890,7 @@ class S3Permission(object):
                     permitted = False
 
         if permitted is None:
-            raise RuntimeError("Cannot determine permission.")
+            raise self.error("Cannot determine permission.")
         elif permitted:
             _debug("*** GRANTED ***")
         else:

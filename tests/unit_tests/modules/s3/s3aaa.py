@@ -8,7 +8,7 @@
 import unittest
 
 from gluon import current
-from s3aaa import S3EntityRoleManager
+from s3.s3aaa import S3EntityRoleManager
 
 # =============================================================================
 class S3AuthTests(unittest.TestCase):

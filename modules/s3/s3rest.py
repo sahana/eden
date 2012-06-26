@@ -2373,7 +2373,8 @@ class S3Resource(object):
     def delete(self,
                ondelete=None,
                format=None,
-               cascade=False):
+               cascade=False,
+               replaced_by=None):
         """
             Delete all (deletable) records in this resource
 
@@ -2558,6 +2559,12 @@ class S3Resource(object):
                         if fk:
                             fields.update(deleted_fk=json.dumps(fk))
 
+                    # Annotate the replacement record
+                    record_id = str(row[pkey])
+                    if replaced_by and record_id in replaced_by and \
+                       "deleted_rb" in table.fields:
+                        fields.update(deleted_rb=replaced_by[record_id])
+
                     # Update the row, finally
                     db(table._id == row[pkey]).update(**fields)
                     numrows += 1
@@ -2613,6 +2620,301 @@ class S3Resource(object):
             manager.error = INTEGRITY_ERROR
 
         return numrows
+
+    # -------------------------------------------------------------------------
+    def merge(self,
+              original_id,
+              duplicate_id,
+              replace=None,
+              update=None,
+              main=None):
+        """
+            Merge a duplicate record into its original and remove the
+            duplicate, updating all references in the database.
+
+            @param original_id: the ID of the original record
+            @param duplicate_id: the ID of the duplicate record
+            @param replace: list fields names for which to replace the
+                            values in the original record with the values
+                            of the duplicate
+            @param update: dict of {field:value} to update the final record
+            @param main: internal indicator for recursive calls
+
+            @status: work in progress
+            @todo: de-duplicate components and link table entries
+
+            @note: virtual references (i.e. non-SQL, without foreign key
+                   constraints) must be declared in the table configuration
+                   of the referenced table like:
+
+                   s3mgr.configure(tablename, referenced_by=[(tablename, fieldname)])
+
+                   This does not apply for list:references which will be found
+                   automatically.
+
+            @note: this method can only be run from master resources (in order
+                   to find all components). To merge component records, you have
+                   to re-define the component as a master resource.
+
+            @note: CLI calls must db.commit()
+        """
+
+        db = current.db
+        s3db = current.s3db
+        manager = current.manager
+        model = manager.model
+        auth = current.auth
+
+        original = None
+        duplicate = None
+
+        table = self.table
+        tablename = self.tablename
+
+        # Check for master resource
+        if self.parent:
+            # Must be master to find all components
+            # @todo: do this automatically instead of raising an error?
+            raise SyntaxError("Must not merge from component")
+
+        # Check permissions
+        has_permission = auth.s3_has_permission
+        permitted = has_permission("update", table,
+                                   record_id = original_id) and \
+                    has_permission("delete", table,
+                                   record_id = duplicate_id)
+        if not permitted:
+            raise auth.permission.error("Operation not permitted")
+
+        # Load all models
+        if main is None:
+            s3db.load_all_models()
+
+        # Helper functions
+        def update_record(table, id, row, data):
+            """ Helper method to update a record """
+
+            form = Storage(vars = Storage([(f, row[f])
+                                  for f in table.fields if f in row]))
+            form.vars.update(data)
+            success = db(table._id==row[table._id]).update(**data)
+            if success:
+                model.update_super(table, form.vars)
+                auth.s3_set_record_owner(table, row[table._id], force_update=True)
+                manager.onaccept(table, form, method="update")
+            return form.vars
+
+        def delete_record(table, id, replaced_by=None):
+            """ Helper method to remove a record """
+
+            if replaced_by is not None:
+                replaced_by = {str(id): replaced_by}
+
+            prefix, name = table._tablename.split("_", 1)
+            resource = manager.define_resource(prefix, name, id=id)
+            ondelete = model.get_config(resource.tablename, "ondelete")
+            success = resource.delete(ondelete=ondelete,
+                                      replaced_by=replaced_by,
+                                      cascade=True)
+            return success
+
+        def fieldname(key):
+            """ Helper method to identify a replace-field """
+            fn = None
+            if "." in k:
+                alias, fn = k.split(".", 1)
+                if alias != self.alias:
+                    fn = None
+            elif main is None:
+                fn = k
+            return fn
+
+        # Get the records
+        query = table._id.belongs([original_id, duplicate_id])
+        if "deleted" in table.fields:
+            query &= table.deleted != True
+        rows = db(query).select(table.ALL, limitby=(0, 2))
+        for row in rows:
+            record_id = row[table._id]
+            if str(record_id) == str(original_id):
+                original = row
+                original_id = row[table._id]
+            elif str(record_id) == str(duplicate_id):
+                duplicate = row
+                duplicate_id = row[table._id]
+        msg = "Record not found: %s.%s"
+        if original is None:
+            raise KeyError(msg % (tablename, original_id))
+        if duplicate is None:
+            raise KeyError(msg % (tablename, duplicate_id))
+
+        # Find all single-components
+        single = Storage()
+        for alias in self.components:
+            component = self.components[alias]
+            if not component.multiple:
+                single[component.tablename] = component
+
+        # Is this a super-entity?
+        is_super_entity = table._id.name != "id" and \
+                          "instance_type" in table.fields
+
+        # Find all references
+        referenced_by = table._referenced_by
+
+        # Append virtual references
+        virtual_references = model.get_config(tablename, "referenced_by")
+        if virtual_references:
+            referenced_by.extend(virtual_references)
+
+        # Find and append list:references
+        for t in db:
+            for f in t:
+                ftype = str(f.type)
+                if ftype[:14] == "list:reference" and \
+                   ftype[15:15+len(tablename)] == tablename:
+                    referenced_by.append((t._tablename, f.name))
+
+        # Update all references
+        for tn, fn in referenced_by:
+
+            se = manager.model.get_config(tn, "super_entity")
+            if is_super_entity and \
+               (isinstance(se, (list, tuple)) and tablename in se or \
+                se == tablename):
+                # Skip instance types of this super-entity
+                continue
+
+            # Reference field must exist
+            if tn not in db or fn not in db[tn].fields:
+                continue
+
+            rtable = db[tn]
+            if tn in single:
+                component = single[tn]
+                if component.link is not None:
+                    component = component.link
+
+                if fn == component.fkey:
+                    # Single component => must reduce to one record
+                    join = component.get_join()
+                    pkey = component.pkey
+                    lkey = component.lkey or component.fkey
+
+                    # Get the component records
+                    query = (table[pkey] == original[pkey]) & join
+                    osub = db(query).select(limitby=(0, 1)).first()
+                    query = (table[pkey] == duplicate[pkey]) & join
+                    dsub = db(query).select(limitby=(0, 1)).first()
+
+                    ctable = component.table
+
+                    if dsub is None:
+                        # No duplicate => skip this step
+                        continue
+                    elif not osub:
+                        # No original => re-link the duplicate
+                        dsub_id = dsub[ctable._id]
+                        data = {lkey: original[pkey]}
+                        # @todo: check for success
+                        update_record(ctable, dsub_id, dsub, data)
+                    elif component.linked is not None:
+                        # Duplicate link => remove it
+                        dsub_id = dsub[component.table._id]
+                        # @todo: check for success
+                        delete_record(ctable, dsub_id)
+                    else:
+                        # Two records => merge them
+                        osub_id = osub[component.table._id]
+                        dsub_id = dsub[component.table._id]
+                        cresource = manager.define_resource(component.prefix,
+                                                            component.name)
+                        # @todo: check for success
+                        cresource.merge(osub_id, dsub_id,
+                                        replace=replace, update=update, main=self)
+                    continue
+
+            # Find the foreign key
+            rfield = rtable[fn]
+            ftype = str(rfield.type)
+            if ftype[:9] == "reference":
+                multiple = False
+                key = ftype[10]
+            elif ftype[:14] == "list:reference":
+                multiple = True
+                key = ftype[15:]
+            elif ftype == "integer":
+                # Virtual reference
+                key = tablename
+            else:
+                continue
+            if "." in key:
+                key = key.split(".", 1)[1]
+            else:
+                key = table._id.name
+
+            # Find the referencing records
+            if multiple:
+                query = rtable[fn].contains(duplicate[key])
+            else:
+                query = rtable[fn] == duplicate[key]
+            rows = db(query).select(rtable._id, rtable[fn])
+
+            # Update the referencing records
+            for row in rows:
+                if not multiple:
+                    data = {fn:original[key]}
+                else:
+                    keys = [k for k in row[fn] if k != duplicate[key]]
+                    if original[key] not in keys:
+                        keys.append(original[key])
+                    data = {fn:keys}
+                # @todo: check for success
+                update_record(rtable, row[rtable._id], row, data)
+
+        # Merge super-entity records
+        se = model.get_config(self.tablename, "super_entity")
+        if se is not None:
+            if not isinstance(se, (list, tuple)):
+                se = [se]
+            for entity in se:
+                supertable = s3db[entity]
+                # Get the super-keys
+                superkey = supertable._id.name
+                skey_o = original[superkey]
+                skey_d = duplicate[superkey]
+                # Merge the super-records
+                prefix, name = entity.split("_", 1)
+                sresource = manager.define_resource(prefix, name)
+                # @todo: check for success
+                sresource.merge(skey_o, skey_d,
+                                replace=replace,
+                                update=update,
+                                main=self)
+
+        # Merge and update original data
+        data = Storage()
+        if replace:
+            for k in replace:
+                fn = fieldname(k)
+                if fn and fn in duplicate:
+                    data[fn] = duplicate[fn]
+        if update:
+            for k, v in update.items():
+                fn = fieldname(k)
+                if fn in table.fields:
+                    data[fn] = v
+        if len(data):
+            # @todo: check for success
+            update_record(table, original_id, original, data)
+
+        # Delete the duplicate
+        if not is_super_entity:
+            # @todo: check for success
+            delete_record(table, duplicate_id, replaced_by=original_id)
+
+        # Success
+        return True
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):

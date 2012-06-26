@@ -715,6 +715,487 @@ class S3ResourceFilterTests(unittest.TestCase):
         auth.s3_impersonate(None)
 
 # =============================================================================
+class S3MergeOrganisationsTests(unittest.TestCase):
+
+    def setUp(self):
+        """ Set up organisation records """
+
+        auth.override = True
+
+        otable = s3db.org_organisation
+
+        org1 = Storage(name="Merge Test Organisation",
+                       acronym="MTO",
+                       country="UK",
+                       website="http://www.example.org")
+        org1_id = otable.insert(**org1)
+        org1.update(id=org1_id)
+        s3mgr.model.update_super(otable, org1)
+
+        org2 = Storage(name="Merger Test Organisation",
+                       acronym="MTOrg",
+                       country="US",
+                       website="http://www.example.com")
+        org2_id = otable.insert(**org2)
+        org2.update(id=org2_id)
+        s3mgr.model.update_super(otable, org2)
+
+        self.id1 = org1_id
+        self.id2 = org2_id
+
+        self.resource = s3mgr.define_resource("org", "organisation")
+
+    def testMerge(self):
+        """ Test merge """
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+        org1, org2 = self.get_records()
+
+        self.assertNotEqual(org1, None)
+        self.assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        self.assertTrue(org2.deleted)
+        self.assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        self.assertEqual(org1.name, "Merge Test Organisation")
+        self.assertEqual(org1.acronym, "MTO")
+        self.assertEqual(org1.country, "UK")
+        self.assertEqual(org1.website, "http://www.example.org")
+
+        self.assertEqual(org2.name, "Merger Test Organisation")
+        self.assertEqual(org2.acronym, "MTOrg")
+        self.assertEqual(org2.country, "US")
+        self.assertEqual(org2.website, "http://www.example.com")
+
+    def testMergeReplace(self):
+        """ Test merge with replace"""
+
+        success = self.resource.merge(self.id1, self.id2,
+                                      replace = ["acronym", "website"])
+        self.assertTrue(success)
+        org1, org2 = self.get_records()
+
+        self.assertNotEqual(org1, None)
+        self.assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        self.assertTrue(org2.deleted)
+        self.assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        self.assertEqual(org1.name, "Merge Test Organisation")
+        self.assertEqual(org1.acronym, "MTOrg")
+        self.assertEqual(org1.country, "UK")
+        self.assertEqual(org1.website, "http://www.example.com")
+
+        self.assertEqual(org2.name, "Merger Test Organisation")
+        self.assertEqual(org2.acronym, "MTOrg")
+        self.assertEqual(org2.country, "US")
+        self.assertEqual(org2.website, "http://www.example.com")
+
+    def testMergeReplaceAndUpdate(self):
+        """ Test merge with replace and Update"""
+
+        success = self.resource.merge(self.id1, self.id2,
+                                      replace = ["acronym"],
+                                      update = Storage(website = "http://www.example.co.uk"))
+        self.assertTrue(success)
+        org1, org2 = self.get_records()
+
+        self.assertNotEqual(org1, None)
+        self.assertNotEqual(org2, None)
+
+        self.assertFalse(org1.deleted)
+        self.assertTrue(org2.deleted)
+        self.assertEqual(str(self.id1), str(org2.deleted_rb))
+
+        self.assertEqual(org1.name, "Merge Test Organisation")
+        self.assertEqual(org1.acronym, "MTOrg")
+        self.assertEqual(org1.country, "UK")
+        self.assertEqual(org1.website, "http://www.example.co.uk")
+
+        self.assertEqual(org2.name, "Merger Test Organisation")
+        self.assertEqual(org2.acronym, "MTOrg")
+        self.assertEqual(org2.country, "US")
+        self.assertEqual(org2.website, "http://www.example.com")
+
+    def testMergeLinkTable(self):
+        """ Test merge of link table entries """
+
+        org1, org2 = self.get_records()
+
+        org1_pe_id = s3db.pr_get_pe_id(org1)
+        org2_pe_id = s3db.pr_get_pe_id(org2)
+
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
+
+        branch1 = Storage(name="TestBranch1")
+        branch1_id = otable.insert(**branch1)
+        self.assertNotEqual(branch1_id, None)
+        branch1.update(id=branch1_id)
+        s3mgr.model.update_super(otable, branch1)
+        branch1_pe_id = s3db.pr_get_pe_id(otable, branch1_id)
+        self.assertNotEqual(branch1_pe_id, None)
+        link1 = Storage(organisation_id=self.id1, branch_id=branch1_id)
+        link1_id = btable.insert(**link1)
+        s3db.pr_update_affiliations(btable, link1_id)
+        ancestors = s3db.pr_get_ancestors(branch1_pe_id)
+        self.assertEqual(ancestors, [str(org1_pe_id)])
+
+        branch2 = Storage(name="TestBranch2")
+        branch2_id = otable.insert(**branch2)
+        self.assertNotEqual(branch2_id, None)
+        branch2.update(id=branch2_id)
+        s3mgr.model.update_super(otable, branch2)
+        branch2_pe_id = s3db.pr_get_pe_id("org_organisation", branch2_id)
+        self.assertNotEqual(branch2_pe_id, None)
+        link2 = Storage(organisation_id=self.id2, branch_id=branch2_id)
+        link2_id = btable.insert(**link2)
+        s3db.pr_update_affiliations(btable, link2_id)
+        ancestors = s3db.pr_get_ancestors(branch2_pe_id)
+        self.assertEqual(ancestors, [str(org2_pe_id)])
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        link1 = db(btable._id == link1_id).select(limitby=(0, 1)).first()
+        link2 = db(btable._id == link2_id).select(limitby=(0, 1)).first()
+
+        self.assertEqual(str(link1.organisation_id), str(self.id1))
+        self.assertEqual(str(link2.organisation_id), str(self.id1))
+
+        ancestors = s3db.pr_get_ancestors(branch1_pe_id)
+        self.assertEqual(ancestors, [str(org1_pe_id)])
+
+        ancestors = s3db.pr_get_ancestors(branch2_pe_id)
+        self.assertEqual(ancestors, [str(org1_pe_id)])
+
+    def testMergeVirtualReference(self):
+        """ Test merge with virtual references """
+
+        utable = auth.settings.table_user
+        user = Storage(first_name="Test",
+                       last_name="User",
+                       password="xyz",
+                       email="testuser@example.com",
+                       organisation_id=self.id2)
+        user_id = utable.insert(**user)
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        user = db(utable.id == user_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(user, None)
+
+        self.assertEqual(str(user.organisation_id), str(self.id1))
+
+    def get_records(self):
+
+        table = self.resource.table
+        query = (table._id.belongs(self.id1, self.id2))
+        rows = db(query).select(limitby=(0, 2))
+        row1 = row2 = None
+        for row in rows:
+            row_id = row[table._id]
+            if row_id == self.id1:
+                row1 = row
+            elif row_id == self.id2:
+                row2 = row
+        return (row1, row2)
+
+    def tearDown(self):
+
+        db.rollback()
+        auth.override = False
+
+# =============================================================================
+class S3MergePersonsTests(unittest.TestCase):
+
+    def setUp(self):
+        """ Set up person records """
+
+        auth.override = True
+
+        ptable = s3db.pr_person
+
+        person1 = Storage(first_name="Test",
+                          last_name="Person")
+        person1_id = ptable.insert(**person1)
+        person1.update(id=person1_id)
+        s3mgr.model.update_super(ptable, person1)
+
+        person2 = Storage(first_name="Test",
+                          last_name="Person")
+        person2_id = ptable.insert(**person2)
+        person2.update(id=person2_id)
+        s3mgr.model.update_super(ptable, person2)
+
+        self.id1 = person1_id
+        self.id2 = person2_id
+
+        self.resource = s3mgr.define_resource("pr", "person")
+
+    def testMerge(self):
+        """ Test merge """
+
+        # Must raise exception if not authorized
+        auth.override = False
+        auth.s3_impersonate(None)
+        self.assertRaises(auth.permission.error,
+                          self.resource.merge, self.id1, self.id2)
+
+        # Must raise exception for non-existent records
+        auth.override = True
+        self.assertRaises(KeyError, self.resource.merge, 0, self.id2)
+        self.assertRaises(KeyError, self.resource.merge, self.id1, 0)
+
+        # Merge records
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        # Check the merged records
+        person1, person2 = self.get_records()
+        self.assertNotEqual(person1, None)
+        self.assertNotEqual(person2, None)
+
+        # Check deleted status
+        self.assertFalse(person1.deleted)
+        self.assertTrue(person2.deleted)
+        self.assertEqual(str(self.id1), str(person2.deleted_rb))
+
+        # Check values
+        self.assertEqual(person1.first_name, "Test")
+        self.assertEqual(person1.last_name, "Person")
+
+        self.assertEqual(person2.first_name, "Test")
+        self.assertEqual(person2.last_name, "Person")
+
+    def testMergeWithUpdate(self):
+        """ Test merge with update """
+
+        success = self.resource.merge(self.id1, self.id2,
+                                      update = Storage(first_name = "Changed"))
+        self.assertTrue(success)
+        person1, person2 = self.get_records()
+
+        self.assertNotEqual(person1, None)
+        self.assertNotEqual(person2, None)
+
+        self.assertFalse(person1.deleted)
+        self.assertTrue(person2.deleted)
+        self.assertEqual(str(self.id1), str(person2.deleted_rb))
+
+        self.assertEqual(person1.first_name, "Changed")
+        self.assertEqual(person1.last_name, "Person")
+
+        self.assertEqual(person2.first_name, "Test")
+        self.assertEqual(person2.last_name, "Person")
+
+    def testMergeSingleComponent(self):
+        """ Test merge of single-component """
+
+        person1, person2 = self.get_records()
+
+        dtable = s3db.pr_physical_description
+
+        pd1 = Storage(pe_id=person1.pe_id,
+                      blood_type="B+")
+        pd1_id = dtable.insert(**pd1)
+        pd1.update(id=pd1_id)
+        s3mgr.model.update_super(dtable, pd1)
+
+        pd2 = Storage(pe_id=person2.pe_id,
+                      blood_type="B-")
+        pd2_id = dtable.insert(**pd2)
+        pd2.update(id=pd2_id)
+        s3mgr.model.update_super(dtable, pd2)
+
+        success = self.resource.merge(self.id1, self.id2,
+                                      replace = ["physical_description.blood_type"])
+
+        self.assertTrue(success)
+
+        pd1 = db(dtable._id == pd1_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(pd1, None)
+        self.assertFalse(pd1.deleted)
+        self.assertEqual(pd1.blood_type, "B-")
+        self.assertEqual(pd1.pe_id, person1.pe_id)
+
+        pd2 = db(dtable._id == pd2_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(pd2, None)
+        self.assertTrue(pd2.deleted)
+        self.assertEqual(str(pd2.deleted_rb), str(pd1.id))
+
+    def testMergeMultiComponent(self):
+        """ Test merge of multiple-component """
+
+        person1, person2 = self.get_records()
+
+        itable = s3db.pr_identity
+
+        id1 = Storage(person_id=person1.id,
+                      type=1,
+                      value="TEST1")
+        id1_id = itable.insert(**id1)
+        id1.update(id=id1_id)
+        s3mgr.model.update_super(itable, id1)
+
+        id2 = Storage(person_id=person2.id,
+                      type=1,
+                      value="TEST2")
+        id2_id = itable.insert(**id2)
+        id2.update(id=id2_id)
+        s3mgr.model.update_super(itable, id2)
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        id1 = db(itable._id == id1_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(id1, None)
+        self.assertFalse(id1.deleted)
+        self.assertEqual(id1.person_id, self.id1)
+
+        id2 = db(itable._id == id2_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(id2, None)
+        self.assertFalse(id2.deleted)
+        self.assertEqual(id2.person_id, self.id1)
+
+    def get_records(self):
+
+        table = self.resource.table
+        query = (table._id.belongs(self.id1, self.id2))
+        rows = db(query).select(limitby=(0, 2))
+        row1 = row2 = None
+        for row in rows:
+            row_id = row[table._id]
+            if row_id == self.id1:
+                row1 = row
+            elif row_id == self.id2:
+                row2 = row
+        return (row1, row2)
+
+    def tearDown(self):
+
+        db.rollback()
+        auth.override = False
+
+# =============================================================================
+class S3MergeLocationsTests(unittest.TestCase):
+
+    def setUp(self):
+        """ Set up location records """
+
+        auth.override = True
+
+        ltable = s3db.gis_location
+
+        location1 = Storage(name="TestLocation")
+        location1_id = ltable.insert(**location1)
+        location1.update(id=location1_id)
+        s3mgr.model.update_super(ltable, location1)
+
+        location2 = Storage(name="TestLocation")
+        location2_id = ltable.insert(**location2)
+        location2.update(id=location2_id)
+        s3mgr.model.update_super(ltable, location2)
+
+        self.id1 = location1_id
+        self.id2 = location2_id
+
+        self.resource = s3mgr.define_resource("gis", "location")
+
+    def testMerge(self):
+        """ Test merge """
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+        location1, location2 = self.get_records()
+
+        self.assertNotEqual(location1, None)
+        self.assertNotEqual(location2, None)
+
+        self.assertFalse(location1.deleted)
+        self.assertTrue(location2.deleted)
+        self.assertEqual(str(self.id1), str(location2.deleted_rb))
+
+        self.assertEqual(location1.name, "TestLocation")
+        self.assertEqual(location2.name, "TestLocation")
+
+    def testMergeSimpleReference(self):
+        """ Test merge of a simple reference including super-entity """
+
+        # Create an office referencing location 2
+        otable = s3db.org_office
+        office = Storage(name="Test Office",
+                         location_id = self.id2)
+        office_id = otable.insert(**office)
+        office.update(id=office_id)
+        s3mgr.model.update_super(otable, office)
+
+        # Merge location 2 into 1
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        # Check the location_id in office is now location 1
+        office = db(otable._id == office.id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(office, None)
+        self.assertEqual(office.location_id, self.id1)
+
+        # Check the location_id in the org_site super record is also location 1
+        stable = s3db.org_site
+        site = db(stable.site_id == office.site_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(site, None)
+        self.assertEqual(site.location_id, self.id1)
+
+    def testMergeReferenceLists(self):
+
+        ptable = s3db.project_project
+        project = Storage(name="Test Project",
+                          countries_id=[self.id1, self.id2])
+        project_id = ptable.insert(**project)
+        project.update(id=project_id)
+        s3mgr.model.update_super(ptable, project)
+
+        # Merge location 2 into 1
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        project = db(ptable.id == project_id).select(limitby=(0, 1)).first()
+        self.assertNotEqual(project, None)
+
+        self.assertEqual(project.countries_id, [self.id1])
+
+    #def testMergeLocationHierarchy(self):
+        #""" Test update of the location hierarchy when merging locations """
+        #pass
+
+    #def testMergeDeduplicateComponents(self):
+        #""" Test merged components deduplication """
+        ## Test by gis_location_tags
+        #pass
+
+    def get_records(self):
+
+        table = self.resource.table
+        query = (table._id.belongs(self.id1, self.id2))
+        rows = db(query).select(limitby=(0, 2))
+        row1 = row2 = None
+        for row in rows:
+            row_id = row[table._id]
+            if row_id == self.id1:
+                row1 = row
+            elif row_id == self.id2:
+                row2 = row
+        return (row1, row2)
+
+    def tearDown(self):
+
+        db.rollback()
+        auth.override = False
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -732,6 +1213,9 @@ if __name__ == "__main__":
     run_suite(
         S3ResourceTests,
         S3ResourceFilterTests,
+        S3MergeOrganisationsTests,
+        S3MergePersonsTests,
+        S3MergeLocationsTests,
     )
 
 # END ========================================================================

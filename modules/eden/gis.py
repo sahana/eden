@@ -133,7 +133,7 @@ class S3LocationModel(S3Model):
                                                                                      UNKNOWN_OPT),
                                    label = T("Feature Type")),
                              # Points or Centroid for Polygons
-                             Field("lat", "double",               
+                             Field("lat", "double",
                                    label = T("Latitude"),
                                    requires = IS_NULL_OR(IS_LAT()),
                                    comment = DIV(_class="tooltip",
@@ -293,10 +293,10 @@ class S3LocationModel(S3Model):
         # table = define_table(tablename,
                              # location_id(),
                              ##Circular 'Error' around Lat/Lon (in m).
-                             # Field("ce", "integer", 
+                             # Field("ce", "integer",
                                    # writable=False,
                                    # readable=False),
-                             ##Linear 'Error' for the Elevation (in m).                                   
+                             ##Linear 'Error' for the Elevation (in m).
                              # Field("le", "integer",
                                    # writable=False,
                                    # readable=False),
@@ -690,7 +690,7 @@ class S3LocationTagModel(S3Model):
         #   * UN P-Codes
         #   * GeoNames
         #   * Wikipedia URL
-        #   * Christchurch 'prupi'(Property reference in the council system) & 
+        #   * Christchurch 'prupi'(Property reference in the council system) &
         #                  'gisratingid' (Polygon reference of the rating unit)
         # - can be a Triple Store for Semantic Web support
         #
@@ -3789,7 +3789,7 @@ def gis_rheader(r, tabs=[]):
                                 record.level,
                                 ),
                         ), rheader_tabs)
-        
+
     elif resourcename == "config":
         # Tabs
         if not tabs:
