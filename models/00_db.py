@@ -136,10 +136,9 @@ crud = s3base.CrudS3()
 current.crud = crud
 s3.crud = Storage()
 
-# S3 Custom Utilities, Validators and Widgets
+# S3 Custom Validators and Widgets
 # imported here into the global namespace in order
 # to access them without the s3base namespace prefix
-# @ToDo: Investigate how many of these really need to be here
 s3_action_buttons = s3base.S3CRUD.action_buttons
 s3_fullname = s3base.s3_fullname
 S3ResourceHeader = s3base.S3ResourceHeader
@@ -158,11 +157,6 @@ current.manager = s3mgr
 # Messaging
 msg = s3base.S3Msg()
 current.msg = msg
-
-# Charting
-# - matplotlib currently used just by Survey module
-s3chart = s3base.S3Chart
-current.chart = s3chart
 
 # -----------------------------------------------------------------------------
 def s3_clear_session():

@@ -1114,11 +1114,12 @@ class S3HRSkillModel(S3Model):
         competency_id = S3ReusableField("competency_id", db.hrm_competency_rating,
                                         sortby = "priority",
                                         label = T("Competency"),
-                                        requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                "hrm_competency_rating.id",
-                                                                "%(name)s",
-                                                                orderby="~hrm_competency_rating.priority",
-                                                                sort=True)),
+                                        requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "hrm_competency_rating.id",
+                                                              "%(name)s",
+                                                              orderby="~hrm_competency_rating.priority",
+                                                              sort=True)),
                                         represent = lambda id: \
                                             (id and [db.hrm_competency_rating[id].name] or [NONE])[0],
                                         comment = self.competency_rating_comment(),

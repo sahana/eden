@@ -853,7 +853,8 @@ def results(r, **attr):
     n = len(solutions)
 
     # Canvas of 900x600
-    chart = s3chart(9, 6)
+    from s3chart import S3Chart
+    chart = S3Chart(9, 6)
     fig = chart.fig
     # Add Axes with padding of 10px for the labels (fractional left, bottom, width, height)
     ax = fig.add_axes([0.35, 0.1, 0.6, 0.8])

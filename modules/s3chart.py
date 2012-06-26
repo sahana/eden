@@ -33,9 +33,6 @@
 
 __all__ = ["S3Chart"]
 
-import sys
-import base64
-
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -46,7 +43,6 @@ from gluon.storage import Storage
 from gluon.html import IMG
 
 # =============================================================================
-
 class S3Chart(object):
     """
         Module for graphing
@@ -78,10 +74,10 @@ class S3Chart(object):
             self.Figure = Figure
             MATPLOTLIB = True
         except ImportError:
+            import sys
             print >> sys.stderr, "WARNING: S3Chart unresolved dependency: matplotlib required for charting"
             MATPLOTLIB = False
 
-        #from numpy import array
         self.filename = path
         self.width = width
         self.height = height
@@ -91,6 +87,7 @@ class S3Chart(object):
         else:
             self.fig = None
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def getCachedPath(filename):
         import os
@@ -102,6 +99,7 @@ class S3Chart(object):
         else:
             return None
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def getCachedFile(filename):
         """
@@ -118,11 +116,13 @@ class S3Chart(object):
                 pass
         return None
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def storeCachedFile(filename, image):
         """
             Save the file in the cache area, and return the path to this file
         """
+
         path = "applications"
         chartFile = "%s/%s.png" % (S3Chart.CACHE_PATH, filename)
         fullPath = "%s%s" % (path, chartFile)
@@ -133,12 +133,14 @@ class S3Chart(object):
             return None
         return chartFile
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def purgeCache(prefix=None):
         """
             Delete the files in the cache that match the file name prefix,
             if the prefix is None then all files will be deleted
         """
+
         import os
         folder = "applications%s/" % S3Chart.CACHE_PATH
         if os.path.exists(folder):
@@ -179,6 +181,7 @@ class S3Chart(object):
             if cachePath != None:
                 image = IMG(_src = cachePath)
             else:
+                import base64
                 base64Img = base64.b64encode(image)
                 image = IMG(_src="data:image/png;base64,%s" % base64Img)
         else:
@@ -192,6 +195,7 @@ class S3Chart(object):
             Draw a Histogram
                 - used by the Survey module
         """
+
         fig = self.fig
         if not fig:
             return "Matplotlib not installed"
@@ -218,6 +222,7 @@ class S3Chart(object):
             Draw a Pie Chart
                 - used by the Survey module
         """
+
         fig = self.fig
         if not fig:
             return "Matplotlib not installed"
@@ -234,6 +239,7 @@ class S3Chart(object):
             Draw a Bar Chart
                 - used by the Survey module
         """
+
         barColourList = ["#F2D7A0", "#7B77A8", "#69889A", "#9D7B34"]
         barColourListExt = [(242, 215, 160),
                             (123, 118, 168),
@@ -315,4 +321,4 @@ class S3Chart(object):
                        prop={"size":10},
                       )
 
-# =============================================================================
+# END =========================================================================

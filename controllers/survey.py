@@ -19,21 +19,17 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-import sys
-sys.path.append("applications/%s/modules/s3" % appname)
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
 
-import base64
-import math
-
 from gluon.contenttype import contenttype
-from gluon.languages import read_dict, write_dict
+
+s3_debug = s3base.s3_debug
 
 from s3survey import S3AnalysisPriority, \
                      survey_question_type, \
@@ -45,37 +41,35 @@ from s3survey import S3AnalysisPriority, \
                      S3QuestionTypeOptionWidget, \
                      survey_T
 
+# -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
+# -----------------------------------------------------------------------------
 def template():
-
     """ RESTful CRUD controller """
 
     # Load Model
     table = s3db.survey_template
-    s3 = response.s3
 
     def prep(r):
         if r.component and r.component_name == "translate":
-            table = db["survey_translate"]
-            # list existing translations and allow the addition of a new translation
+            table = s3db.survey_translate
             if r.component_id == None:
+                # list existing translations and allow the addition of a new translation
                 table.file.readable = False
                 table.file.writable = False
-            # edit the selected translation
             else:
+                # edit the selected translation
                 table.language.writable = False
                 table.code.writable = False
             # remove CRUD generated buttons in the tabs
             s3mgr.configure(table,
-                            deletable=False,
-                           )
+                            deletable=False)
         else:
             s3_action_buttons(r)
             query = (r.table.status == 1) # Status of Pending
@@ -92,13 +86,15 @@ def template():
                             update_next = URL(c="survey", f="template"),
                             )
         return True
+    s3.prep = prep
 
-     # Post-processor
+    # Post-processor
     def postp(r, output):
         if r.component:
             template_id = request.args[0]
             if r.component_name == "section":
                 # Add the section select widget to the form
+                # Where is this defined?
                 sectionSelect = s3.survey_section_select_widget(template_id)
                 output.update(form = sectionSelect)
                 return output
@@ -124,15 +120,15 @@ def template():
 
 
         # Add a button to show what the questionnaire looks like
-#        s3_action_buttons(r)
-#        s3.actions = s3.actions + [
-#                               dict(label=str(T("Display")),
-#                                    _class="action-btn",
-#                                    url=URL(c=module,
-#                                            f="templateRead",
-#                                            args=["[id]"])
-#                                   ),
-#                              ]
+        #s3_action_buttons(r)
+        #s3.actions = s3.actions + [
+        #                       dict(label=str(T("Display")),
+        #                            _class="action-btn",
+        #                            url=URL(c=module,
+        #                                    f="templateRead",
+        #                                    args=["[id]"])
+        #                           ),
+        #                      ]
 
         # Add some highlighting to the rows
         query = (r.table.status == 3) # Status of closed
@@ -146,6 +142,7 @@ def template():
         rows = db(query).select(r.table.id)
         s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
         return output
+    s3.postp = postp
 
     if request.ajax:
         post = request.post_vars
@@ -161,29 +158,20 @@ def template():
                 print "Failed to insert record"
             return
 
-    response.s3.prep = prep
-
-    response.s3.postp = postp
-    rheader = response.s3.survey_template_rheader
     # remove CRUD generated buttons in the tabs
     s3mgr.configure("survey_template",
                     listadd=False,
                     deletable=False,
                    )
-    output = s3_rest_controller(rheader=rheader)
+    output = s3_rest_controller(rheader=s3db.survey_template_rheader)
 
     return output
 
+# -----------------------------------------------------------------------------
 def templateRead():
-    # Load Model
-    module = "survey"
-    resourcename = "template"
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    s3mgr.load("survey_complete")
+    """
+    """
 
-    s3 = response.s3
-    crud_strings = s3.crud_strings[tablename]
     if "vars" in request and len(request.vars) > 0:
         dummy, template_id = request.vars.viewing.split(".")
     else:
@@ -192,33 +180,35 @@ def templateRead():
     def postp(r, output):
         if r.interactive:
             template_id = r.id
-            form = s3.survey_buildQuestionnaireFromTemplate(template_id)
+            form = s3db.survey_buildQuestionnaireFromTemplate(template_id)
             output["items"] = None
             output["form"] = None
             output["item"] = form
-            output["title"] = crud_strings.title_question_details
+            output["title"] = s3.crud_strings["survey_template"].title_question_details
             return output
+    s3.postp = postp
 
     # remove CRUD generated buttons in the tabs
-    s3mgr.configure(tablename,
+    s3mgr.configure("survey_template",
                     listadd=False,
                     editable=False,
                     deletable=False,
                    )
 
-    response.s3.postp = postp
-    r = s3mgr.parse_request(module, resourcename, args=[template_id])
-    output  = r(method = "read", rheader=s3.survey_template_rheader)
+    r = s3mgr.parse_request("survey", "template", args=[template_id])
+    output  = r(method = "read", rheader=s3db.survey_template_rheader)
     return output
 
+# -----------------------------------------------------------------------------
 def templateSummary():
+    """
+    """
+
     # Load Model
-    module = "survey"
     resourcename = "template"
     tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
     s3mgr.load("survey_complete")
-    s3 = response.s3
     crud_strings = s3.crud_strings[tablename]
 
     def postp(r, output):
@@ -240,18 +230,21 @@ def templateSummary():
                     deletable=False,
                    )
 
-    response.s3.postp = postp
+    s3.postp = postp
     output = s3_rest_controller(module,
                                 resourcename,
                                 method = "list",
                                 rheader=s3.survey_template_rheader
                                )
-    response.s3.actions = None
+    s3.actions = None
     return output
 
+# -----------------------------------------------------------------------------
 def templateTranslateDownload():
+    """
+    """
+
     # Load Model
-    module = "survey"
     resourcename = "translate"
     tablename = "%s_%s" % (module, resourcename)
     s3mgr.load("survey_template")
@@ -265,7 +258,6 @@ def templateTranslateDownload():
                      f="templateTranslation",
                      args=[],
                      vars = {}))
-    s3 = response.s3
     record = s3.survey_getTranslation(request.args[0])
     if record == None:
         redirect(URL(c="survey",
@@ -277,6 +269,7 @@ def templateTranslateDownload():
     lang_fileName = "applications/%s/languages/%s.py" % \
                                     (appname, code)
     try:
+        from gluon.languages import read_dict
         strings = read_dict(lang_fileName)
     except:
         strings = dict()
@@ -341,19 +334,19 @@ def templateTranslateDownload():
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
+# -----------------------------------------------------------------------------
 def series():
     """ RESTful CRUD controller """
+
     # Load Model
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
-    s3 = response.s3
+    table = s3db[tablename]
     s3.survey_answerlist_dataTable_pre()
 
     def prep(r):
         if r.interactive:
             if r.method == "create":
-                allTemplates = response.s3.survey_getAllTemplates()
+                allTemplates = s3.survey_getAllTemplates()
                 if len(allTemplates) == 0:
                     session.warning = T("You need to create a template before you can create a series")
                     redirect(URL(c="survey",
@@ -367,7 +360,6 @@ def series():
     def postp(r, output):
         if request.ajax == True and r.method == "read":
             return output["item"]
-        s3 = response.s3
         if r.component_name == None:
             s3.survey_serieslist_dataTable_post(r)
         elif r.component_name == "complete":
@@ -399,14 +391,17 @@ def series():
                                 rheader=s3.survey_series_rheader)
     return output
 
+# -----------------------------------------------------------------------------
 def export_all_responses():
+    """
+    """
+
     s3mgr.load("survey_series")
     s3mgr.load("survey_section")
     s3mgr.load("survey_complete")
     # turn off lazy translation
     # otherwise xlwt will crash if it comes across a T string
     T.lazy = False
-    s3 = response.s3
     try:
         import xlwt
     except ImportError:
@@ -415,7 +410,7 @@ def export_all_responses():
                                     rheader=s3.survey_series_rheader)
         return output
     series_id = request.args[0]
-    seriesName = response.s3.survey_getSeriesName(series_id)
+    seriesName = s3.survey_getSeriesName(series_id)
     sectionBreak = False
 
     filename = "%s_All_responses.xls" % seriesName
@@ -426,7 +421,7 @@ def export_all_responses():
     col = 0
     completeRow = {}
     nextRow = 2
-    qstnList = response.s3.survey_getAllQuestionsForSeries(series_id)
+    qstnList = s3.survey_getAllQuestionsForSeries(series_id)
     if len(qstnList) > 256:
         sectionList = s3.survey_getAllSectionsForSeries(series_id)
         sectionBreak = True
@@ -477,19 +472,23 @@ def export_all_responses():
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
+# -----------------------------------------------------------------------------
 def series_export_formatted():
+    """
+    """
+
     s3mgr.load("survey_series")
     s3mgr.load("survey_complete")
     # Check that the series_id has been passed in
     if len(request.args) != 1:
-        output = s3_rest_controller(module,
-                                    resourcename,
-                                    rheader=response.s3.survey_series_rheader)
+        output = s3_rest_controller("survey",
+                                    "series",
+                                    rheader=s3db.survey_series_rheader)
         return output
     series_id = request.args[0]
-    vars = current.request.post_vars
-    seriesName = response.s3.survey_getSeriesName(series_id)
-    series = response.s3.survey_getSeries(series_id)
+    vars = request.post_vars
+    seriesName = s3db.survey_getSeriesName(series_id)
+    series = s3db.survey_getSeries(series_id)
     if not series.logo:
         logo = None
     else:
@@ -513,6 +512,7 @@ def series_export_formatted():
             langDict = dict()
         else:
             try:
+                from gluon.languages import read_dict
                 lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (appname, lang)
                 langDict = read_dict(lang_fileName)
             except:
@@ -531,30 +531,28 @@ def series_export_formatted():
         filename = "%s.xls" % seriesName
         contentType = ".xls"
     elif "Export_Word" in vars:
-        template = response.s3.survey_getTemplateFromSeries(series_id)
+        template = s3db.survey_getTemplateFromSeries(series_id)
         template_id = template.id
         title = "%s (%s)" % (series.name, template.name)
         title = survey_T(title, langDict)
-        widgetList = response.s3.survey_getAllWidgetsForTemplate(template_id)
+        widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
         output = series_export_word(widgetList, langDict, title, logo)
         filename = "%s.rtf" % seriesName
         contentType = ".rtf"
     else:
-        output = s3_rest_controller(module,
-                                    resourcename,
-                                    rheader=response.s3.survey_series_rheader)
+        output = s3_rest_controller("survey",
+                                    "series",
+                                    rheader=s3db.survey_series_rheader)
         return output
     output.seek(0)
     response.headers["Content-Type"] = contenttype(contentType)
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
+# -----------------------------------------------------------------------------
 def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
-    module = "survey"
-    resourcename = "series"
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("survey_series")
-    crud_strings = response.s3.crud_strings[tablename]
+    """
+    """
 
     ######################################################################
     #
@@ -565,25 +563,25 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     ######################################################################
     # Check that the series_id has been passed in
     if len(request.args) != 1:
-        output = s3_rest_controller(module,
-                                    resourcename,
-                                    rheader=response.s3.survey_series_rheader)
+        output = s3_rest_controller("survey",
+                                    "series",
+                                    rheader=s3db.survey_series_rheader)
         return output
     series_id = request.args[0]
-    template = response.s3.survey_getTemplateFromSeries(series_id)
+    template = s3db.survey_getTemplateFromSeries(series_id)
     template_id = template.id
-    sectionList = response.s3.survey_getAllSectionsForSeries(series_id)
+    sectionList = s3db.survey_getAllSectionsForSeries(series_id)
     title = "%s (%s)" % (series.name, template.name)
     title = survey_T(title, langDict)
     layout = []
+    survey_getQstnLayoutRules = s3db.survey_getQstnLayoutRules
     for section in sectionList:
         sectionName = survey_T(section["name"], langDict)
-        rules =  response.s3.survey_getQstnLayoutRules(template_id,
-                                                       section["section_id"]
-                                                      )
+        rules = survey_getQstnLayoutRules(template_id,
+                                          section["section_id"])
         layoutRules = [sectionName, rules]
         layout.append(layoutRules)
-    widgetList = response.s3.survey_getAllWidgetsForTemplate(template_id)
+    widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
     layoutBlocks = LayoutBlocks()
 
     ######################################################################
@@ -604,8 +602,6 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                   showSectionLabels = False,
                                   layoutBlocks = layoutBlocks
                                  )
-#    print >> sys.stdout, "preliminaryMatrix layoutBlocks"
-#    print >> sys.stdout, layoutBlocks
     if not justified:
         return preliminaryMatrix
     ######################################################################
@@ -614,8 +610,6 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     # each widget that is being printed
     ######################################################################
     layoutBlocks.align()
-#    print >> sys.stdout, "Aligned layoutBlocks"
-#    print >> sys.stdout, layoutBlocks
     ######################################################################
     # Now rebuild the matrix with the spacing for each widget set up so
     # that the document will be fully justified
@@ -630,11 +624,13 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                    langDict,
                                    showSectionLabels = False,
                                   )
-#    f = open("/home/graeme/web2py/applications/eden/uploads/debug.txt","w+")
-#    print >> f, matrix1
     return (matrix1, matrix2)
 
+# -----------------------------------------------------------------------------
 def series_export_word(widgetList, langDict, title, logo):
+    """
+    """
+
     try:
         from PyRTF import Document, \
                           Languages, \
@@ -650,8 +646,8 @@ def series_export_word(widgetList, langDict, title, logo):
                           Renderer
     except ImportError:
         output = s3_rest_controller(module,
-                                resourcename,
-                                rheader=response.s3.survey_series_rheader)
+                                    "survey_series",
+                                    rheader=s3db.survey_series_rheader)
         return output
     output  = StringIO()
     doc     = Document(default_language=Languages.EnglishUK)
@@ -660,7 +656,7 @@ def series_export_word(widgetList, langDict, title, logo):
     ps = ss.ParagraphStyles.Normal.Copy()
     ps.SetName("NormalGrey")
     ps.SetShadingPropertySet(ShadingPropertySet(pattern=1,
-                                                background=Colour('grey light', 224, 224, 224)))
+                                                background=Colour("grey light", 224, 224, 224)))
     ss.ParagraphStyles.append(ps)
     ps = ss.ParagraphStyles.Normal.Copy()
     ps.SetName("NormalCentre")
@@ -692,21 +688,22 @@ def series_export_word(widgetList, langDict, title, logo):
     renderer.Write(doc, output)
     return output
 
+# -----------------------------------------------------------------------------
 def series_export_spreadsheet(matrix, matrixAnswers, logo):
-    ######################################################################
-    #
-    # Now take the matrix data type and generate a spreadsheet from it
-    #
-    ######################################################################
+    """
+        Now take the matrix data type and generate a spreadsheet from it
+    """
+
     import math
     try:
         import xlwt
     except ImportError:
         output = s3_rest_controller(module,
-                                resourcename,
-                                rheader=response.s3.survey_series_rheader)
+                                    "survey_series",
+                                    rheader=s3db.survey_series_rheader)
         return output
 
+    # -------------------------------------------------------------------------
     def wrapText(sheet, cell, style):
         row = cell.row
         col = cell.col
@@ -728,11 +725,12 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                   style
                                  )
             except Exception as msg:
-                print >> sys.stderr, msg
-                print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % (cell.row, cell.mergeV, cell.col, cell.mergeH)
+                s3_debug(msg)
+                s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                    (cell.row, cell.mergeV, cell.col, cell.mergeH))
                 posn = "%s,%s"%(cell.row, cell.col)
                 if matrix.matrix[posn]:
-                    print >> sys.stderr, matrix.matrix[posn]
+                    s3_debug(matrix.matrix[posn])
             rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
         else:
             sheet.write(cell.row,
@@ -748,6 +746,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
         if sheet.col(col).width < new_col_width:
             sheet.col(col).width = new_col_width
 
+    # -------------------------------------------------------------------------
     def mergeStyles(listTemplate, styleList):
         """
             Take a list of styles and return a single style object with
@@ -767,11 +766,13 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                              zeroStyle)
         return finalStyle
 
+    # -------------------------------------------------------------------------
     def mergeObjectDiff(baseObj, newObj, zeroObj):
         """
             function to copy all the elements in newObj that are different from
             the zeroObj and place them in the baseObj
         """
+
         elementList = newObj.__dict__
         for (element, value) in elementList.items():
             try:
@@ -911,7 +912,8 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     maxCol = 0
     for cell in matrix.matrix.values():
         if cell.col + cell.mergeH > 255:
-            print  >> sys.stderr, "Cell (%s,%s) - (%s,%s) ignored" % (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV)
+            s3_debug("Cell (%s,%s) - (%s,%s) ignored" % \
+                (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
             continue
         if cell.col + cell.mergeH > maxCol:
             maxCol = cell.col + cell.mergeH
@@ -942,11 +944,12 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                        joinedStyle
                                        )
                 except Exception as msg:
-                    print >> sys.stderr, msg
-                    print >> sys.stderr, "row: %s + vert: %s, col: %s + horiz %s" % (cell.row, cell.mergeV, cell.col, cell.mergeH)
-                    posn = "%s,%s"%(cell.row, cell.col)
+                    s3_debug(msg)
+                    s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                        (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                    posn = "%s,%s" % (cell.row, cell.col)
                     if matrix.matrix[posn]:
-                        print >> sys.stderr, matrix.matrix[posn]
+                        s3_debug(matrix.matrix[posn])
             else:
                 sheet1.write(cell.row,
                              cell.col,
@@ -987,6 +990,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     book.save(output)
     return output
 
+# -----------------------------------------------------------------------------
 def completed_chart():
     """ RESTful CRUD controller
 
@@ -995,30 +999,32 @@ def completed_chart():
         drawn if it is an option type then a pie chart, although the type of
         chart drawn is managed by the analysis widget.
     """
-    # Load Model
-    s3mgr.load("survey_series")
-    s3mgr.load("survey_question")
-    if "series_id" in request.vars:
-        seriesID = request.vars.series_id
+
+    vars = request.vars
+    if "series_id" in vars:
+        seriesID = vars.series_id
     else:
         return "Programming Error: Series ID missing"
-    if "question_id" in request.vars:
-        qstnID = request.vars.question_id
+    if "question_id" in vars:
+        qstnID = vars.question_id
     else:
         return "Programming Error: Question ID missing"
-    if "type" in request.vars:
-        type = request.vars.type
+    if "type" in vars:
+        type = vars.type
     else:
         return "Programming Error: Question Type missing"
-    getAnswers = response.s3.survey_getAllAnswersForQuestionInSeries
+
+    getAnswers = s3db.survey_getAllAnswersForQuestionInSeries
     answers = getAnswers(qstnID, seriesID)
     analysisTool = survey_analysis_type[type](qstnID, answers)
     qstnName = analysisTool.qstnWidget.question.name
     image = analysisTool.drawChart(seriesID, output="png")
     return image
 
+# -----------------------------------------------------------------------------
 def section():
     """ RESTful CRUD controller """
+
     # Load Model
     tablename = "%s_%s" % (module, resourcename)
     s3mgr.load(tablename)
@@ -1027,9 +1033,10 @@ def section():
     def prep(r):
         s3mgr.configure(r.tablename,
                         deletable = False,
-                        orderby = r.tablename+".posn",
+                        orderby = "%s.posn" % r.tablename,
                         )
         return True
+    s3.prep = prep
 
      # Post-processor
     def postp(r, output):
@@ -1038,86 +1045,66 @@ def section():
             template_id = int(request.args[0])
         except:
             template_id = None
-        sectionSelect = response.s3.survey_section_select_widget(template_id)
+        # Where is this defined?
+        sectionSelect = s3.survey_section_select_widget(template_id)
         output["sectionSelect"] = sectionSelect
         return output
+    s3.postp = postp
 
-
-    response.s3.prep = prep
-    response.s3.postp = postp
-
-    rheader = response.s3.survey_section_rheader
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
+    output = s3_rest_controller(module, resourcename,
+                                # Undefined
+                                #rheader=s3db.survey_section_rheader
+                                )
     return output
 
-
-
+# -----------------------------------------------------------------------------
 def question():
     """ RESTful CRUD controller """
-    # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
 
     def prep(r):
         s3mgr.configure(r.tablename,
                         orderby = r.tablename+".posn",
                         )
         return True
+    s3.prep = prep
 
-     # Post-processor
-    def postp(r, output):
-        return output
-
-
-    response.s3.prep = prep
-    response.s3.postp = postp
-
-    rheader = response.s3.survey_section_rheader
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
+    output = s3_rest_controller(module, resourcename,
+                                # Undefined
+                                #rheader=s3db.survey_section_rheader
+                                )
     return output
 
+# -----------------------------------------------------------------------------
 def question_list():
     """ RESTful CRUD controller """
-    # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    s3mgr.load("survey_complete")
-    table = db[tablename]
 
     output = s3_rest_controller(module, resourcename)
     return output
 
+# -----------------------------------------------------------------------------
 def formatter():
     """ RESTful CRUD controller """
-    # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
 
     output = s3_rest_controller(module, resourcename)
     return output
 
+# -----------------------------------------------------------------------------
 def question_metadata():
     """ RESTful CRUD controller """
-    # Load Model
-    tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    table = db[tablename]
 
     output = s3_rest_controller(module, resourcename)
     return output
 
+# -----------------------------------------------------------------------------
 def newAssessment():
     """ RESTful CRUD controller """
+
     # Load Model
-    module = "survey"
     resourcename = "complete"
     tablename = "%s_%s" % (module, resourcename)
     s3mgr.load("survey_complete")
     s3mgr.load("survey_series")
     table = db[tablename]
-    s3 = response.s3
 
     def prep(r):
         if r.interactive:
@@ -1140,6 +1127,7 @@ def newAssessment():
                 response.confirmation = \
                     s3.crud_strings["survey_complete"].msg_record_created
         return True
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
@@ -1172,44 +1160,43 @@ def newAssessment():
             output["subtitle"] = buttons
             output["form"] = form
         return output
+    s3.postp = postp
 
-    response.s3.prep = prep
-    response.s3.postp = postp
     output = s3_rest_controller(module,
                                 resourcename,
                                 method = "create",
-                                rheader=s3.survey_series_rheader
+                                rheader=s3db.survey_series_rheader
                                )
     return output
 
-
+# -----------------------------------------------------------------------------
 def complete():
     """ RESTful CRUD controller """
+
     # Load Model
     s3mgr.load("survey_complete")
     s3mgr.load("survey_series")
     table = db["survey_complete"]
-    s3 = response.s3
-    s3.survey_answerlist_dataTable_pre()
+    s3db.survey_answerlist_dataTable_pre()
 
     def postp(r, output):
         if r.method == "import":
             pass # don't want the import dataTable to be modified
         else:
-            s3.survey_answerlist_dataTable_post(r)
+            s3db.survey_answerlist_dataTable_post(r)
         return output
+    s3.postp = postp
 
     def import_xls(uploadFile):
         if series_id == None:
             response.error = T("Series details missing")
             return
         openFile = StringIO()
-        from datetime import date
         try:
             import xlrd
             from xlwt.Utils import cell_to_rowcol2
         except ImportError:
-            print >> sys.stderr, "ERROR: xlrd & xlwt modules are needed for importing spreadsheets"
+            s3_debug("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         try:
@@ -1271,7 +1258,7 @@ def complete():
                                 (dtYear, dtMonth, dtDay, dtHour, dtMinute, dtSecond) = \
                                          xlrd.xldate_as_tuple(cellValue,
                                                               workbook.datemode)
-                                dtValue = date(dtYear, dtMonth, dtDay)
+                                dtValue = datetime.date(dtYear, dtMonth, dtDay)
                                 cellValue = dtValue.isoformat()
                             except:
                                 pass
@@ -1295,7 +1282,7 @@ def complete():
     try:
         if "viewing" in request.vars:
             dummy, series_id = request.vars.viewing.split(".")
-            series_name = response.s3.survey_getSeriesName(series_id)
+            series_name = s3.survey_getSeriesName(series_id)
         if series_name != "":
             csv_extra_fields = [dict(label="Series", value=series_name)]
         else:
@@ -1307,28 +1294,22 @@ def complete():
                     listadd=False,
                     deletable=False)
 
-    response.s3.postp = postp
-    response.s3.xls_parser = import_xls
+    s3.xls_parser = import_xls
     output = s3_rest_controller(module, resourcename,
                                 csv_extra_fields=csv_extra_fields)
     return output
 
+# -----------------------------------------------------------------------------
 def answer():
     """ RESTful CRUD controller """
-    # Load Model
-    s3mgr.load("survey_answer")
-    s3mgr.load("survey_question")
-    table = db["survey_answer"]
 
     output = s3_rest_controller(module, resourcename)
     return output
 
+# -----------------------------------------------------------------------------
 def analysis():
     """ Bespoke controller """
-    # Load Model
-#    tablename = "%s_%s" % (module, resourcename)
-#    s3mgr.load(tablename)
-#    table = db[tablename]
+
     try:
         template_id = request.args[0]
     except:
@@ -1338,3 +1319,5 @@ def analysis():
                     deletable=False)
     output = s3_rest_controller(module, "complete")
     return output
+
+# END =========================================================================

@@ -216,7 +216,6 @@ class AuthS3(Auth):
                                       org_facility = T("Site"),
                                       org_office = T("Office"),
                                       hms_hospital = T("Hospital"),
-                                      #project_site = T("Project Site"),
                                       #fire_station = T("Fire Station"),
                                       dvi_morgue = T("Morgue"),
                                       )
@@ -241,8 +240,6 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        request = current.request
-        session = current.session
         settings = self.settings
         messages = self.messages
 
@@ -448,10 +445,11 @@ class AuthS3(Auth):
             table.table_name.requires = IS_IN_SET(db.tables)
             table.record_id.requires = IS_INT_IN_RANGE(0, 10 ** 9)
 
-        # Event table (auth log)
+        # Event table (auth_event)
         # Records Logins & ?
         # @ToDo: Deprecate? At least make it configurable?
         if not settings.table_event:
+            request = current.request
             settings.table_event = db.define_table(
                 settings.table_event_name,
                 Field("time_stamp", "datetime",
@@ -482,10 +480,6 @@ class AuthS3(Auth):
                 - extended to understand session.s3.roles
         """
 
-        request = current.request
-        session = current.session
-        db = current.db
-
         table_user = self.settings.table_user
         table_membership = self.settings.table_membership
 
@@ -496,15 +490,16 @@ class AuthS3(Auth):
         else:
             userfield = "email"
         passfield = self.settings.password_field
-        user = db(table_user[userfield] == username).select().first()
+        query = (table_user[userfield] == username)
+        user = current.db(query).select(limitby=(0, 1)).first()
         password = table_user[passfield].validate(password)[0]
         if user:
             user_id = user.id
             if not user.registration_key and user[passfield] == password:
                 user = Storage(table_user._filter_fields(user, id=True))
-                session.auth = Storage(user=user,
-                                       last_visit=request.now,
-                                       expiration=self.settings.expiration)
+                current.session.auth = Storage(user=user,
+                                               last_visit=current.request.now,
+                                               expiration=self.settings.expiration)
                 self.user = user
                 self.s3_set_roles()
                 return user
@@ -617,7 +612,7 @@ class AuthS3(Auth):
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # Check for username in db
                 query = (table_user[username] == form.vars[username])
-                user = db(query).select().first()
+                user = db(query).select(limitby=(0, 1)).first()
                 if user:
                     # user in db, check if registration pending or disabled
                     temp_user = user
@@ -757,7 +752,6 @@ class AuthS3(Auth):
         settings = self.settings
         messages = self.messages
         request = current.request
-        response = current.response
         session = current.session
         deployment_settings = current.deployment_settings
 
@@ -926,7 +920,7 @@ class AuthS3(Auth):
                                             subject=messages.verify_email_subject,
                                             message=messages.verify_email % dict(key=key)):
                     db.rollback()
-                    response.error = messages.email_verification_failed
+                    current.response.error = messages.email_verification_failed
                     return form
                 # @ToDo: Deployment Setting?
                 #session.confirmation = messages.email_sent
@@ -1022,15 +1016,14 @@ class AuthS3(Auth):
                 [, onaccept=DEFAULT [, log=DEFAULT]]]])
         """
 
-        db = current.db
-
         settings = self.settings
         messages = self.messages
         deployment_settings = current.deployment_settings
 
         key = current.request.args[-1]
         table_user = settings.table_user
-        user = db(table_user.registration_key == key).select().first()
+        query = (table_user.registration_key == key)
+        user = current.db(query).select(limitby=(0, 1)).first()
         if not user:
             redirect(settings.verify_email_next)
         # S3: Lookup the Approver
@@ -1057,13 +1050,12 @@ class AuthS3(Auth):
         redirect(next)
 
     # -------------------------------------------------------------------------
-    def profile(
-        self,
-        next=DEFAULT,
-        onvalidation=DEFAULT,
-        onaccept=DEFAULT,
-        log=DEFAULT,
-        ):
+    def profile(self,
+                next=DEFAULT,
+                onvalidation=DEFAULT,
+                onaccept=DEFAULT,
+                log=DEFAULT,
+                ):
         """
             returns a form that lets the user change his/her profile
 
@@ -1140,10 +1132,6 @@ class AuthS3(Auth):
             @param form: the registration form
         """
 
-        db = current.db
-        manager = current.manager
-        s3db = current.s3db
-
         vars = form.vars
         user_id = vars.id
         if not user_id:
@@ -1153,12 +1141,16 @@ class AuthS3(Auth):
         authenticated = self.id_group("Authenticated")
         self.add_membership(authenticated, user_id)
 
+        db = current.db
+        s3db = current.s3db
+
         # Link to organisation, lookup the pe_id of the organisation
         organisation_id = self.s3_link_to_organisation(vars)
         if organisation_id:
             otable = s3db.org_organisation
             query = (otable.id == organisation_id)
-            org = db(query).select(otable.pe_id).first()
+            org = db(query).select(otable.pe_id,
+                                   limitby=(0, 1)).first()
             if org:
                 owned_by_entity = org.pe_id
         else:
@@ -1216,6 +1208,7 @@ class AuthS3(Auth):
                 record_id = htable.insert(**record)
                 if record_id:
                     record["id"] = record_id
+                    manager = current.manager
                     manager.model.update_super(htable, record)
                     manager.onaccept(htablename, record, method="create")
 
@@ -1442,7 +1435,8 @@ class AuthS3(Auth):
                         gm_table = s3db["pr_group_membership"]
                         for team in opt_in:
                             query = (g_table.name == team)
-                            team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                            team_rec = db(query).select(g_table.id,
+                                                        limitby=(0, 1)).first()
                             # if the team doesn't exist then add it
                             if team_rec == None:
                                 team_id = g_table.insert(name = team, group_type = 5)
@@ -6790,7 +6784,9 @@ class S3PersonRoleManager(S3EntityRoleManager):
             username = utable.email
 
         query = (ptable.pe_id == pe_id) & (ptable.user_id == utable.id)
-        record = current.db(query).select(utable.id, username).first()
+        record = current.db(query).select(utable.id,
+                                          username,
+                                          limitby=(0, 1)).first()
 
         return dict(id=record.id, name=record[username]) if record else None
 
