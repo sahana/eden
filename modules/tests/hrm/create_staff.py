@@ -61,9 +61,6 @@ class CreateStaff(SeleniumUnitTest):
                      ( "last_name",
                        "Lemon",
                        "pr_person"),
-                     ( "date_of_birth",
-                       "1980-10-14",
-                       "pr_person"),
                      # To Do: Make 4th arg for this to support option
 #                     ( "gender",
 #                       "male",

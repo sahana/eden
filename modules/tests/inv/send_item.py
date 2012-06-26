@@ -49,7 +49,7 @@ class SendItem(InvTestFunctions):
     # -------------------------------------------------------------------------
     def test_inv001_send_items(self):
         """ Tests for Send Workflow """
-        user = "normal"
+        user = "admin"
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
                  "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
