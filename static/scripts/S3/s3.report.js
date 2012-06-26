@@ -130,9 +130,45 @@ $(function() {
     });
 
     // Toggle the report options
-    $('legend').click(function(){
+    $('#reportform legend').click(function(){
         $(this).siblings().toggle();
         $(this).children().toggle();
+    });
+
+    /*
+     * User can click on a magnifying glass in the cell to show
+     * the list of values for each cell layer
+     */
+    $('table#list tbody').on('click', 'a.report-cell-zoom', function(event) {
+        zoom = $(event.currentTarget);
+        cell = zoom.parent();
+
+        lists = cell.find('.report-cell-records');
+
+        if (lists.length > 0) {
+            lists.remove();
+            zoom.removeClass('opened');
+        }
+        else {
+            layers = cell.data('records');
+
+            if (layers) {
+                lists = $('<div/>').addClass('report-cell-records');
+
+                for (var layer=0, ln=layers.length; layer<ln; layer++) {
+                    var list = $('<ul/>');
+                    var records = layers[layer];
+
+                    for (var record=0, rn=records.length; record<rn; record++) {
+                        list.append('<li>' + json_data.cell_lookup_table[layer][records[record]] + '</li>');
+                    }
+                    lists.append(list)
+                }
+
+                cell.append(lists);
+                zoom.addClass('opened');
+            }
+        }
     });
 });
 

@@ -263,12 +263,6 @@ class S3AssetModel(S3Model):
                         label=T("Category"),
                         cols = 3
                     ),
-                    # S3SearchOptionsWidget(
-                    #     name="asset_search_weight",
-                    #     field="weight",
-                    #     label=T("Weight"),
-                    #     cols = 3
-                    # ),
             ))
 
         hierarchy = current.gis.get_location_hierarchy()
@@ -330,7 +324,6 @@ class S3AssetModel(S3Model):
                                #"L2",
                                #"L3",
                                "comments",
-                               #"weight",
                                ])
 
         # Log as component of Assets
@@ -837,8 +830,8 @@ def asset_rheader(r):
                 func = "asset"
 
             # @ToDo: Check permissions before displaying buttons
-            
-            
+
+
             asset_action_btns = [ A( T("Set Base Facility/Site"),
                                      _href = URL(f=func,
                                                  args = [record.id, "log", "create"],
@@ -931,13 +924,6 @@ def asset_rheader(r):
 # =============================================================================
 class AssetVirtualFields:
     """ Virtual fields as dimension classes for reports """
-
-    def weight(self):
-        """
-        This is just a dummy field to help test S3Resource filters and S3Search
-        """
-        import random
-        return random.randint(1, 10)
 
     def site(self):
         # The site of the asset

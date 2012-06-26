@@ -4,8 +4,6 @@
     <!-- **********************************************************************
          survey-Response - CSV Import Stylesheet
 
-         2011-Jun-28 / Graeme Foster <graeme AT acm DOT org>
-
          - Specialist transform file for the 24H rapid assessment form
 
          - use for import to survey/question_response resource

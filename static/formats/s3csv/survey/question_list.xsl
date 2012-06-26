@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          survey-Template - CSV Import Stylesheet
 
-         2011-Jun-16 / Graeme Foster <graeme AT acm DOT org>
-
          - use for import to survey/question_list resource
 
          - example raw URL usage:

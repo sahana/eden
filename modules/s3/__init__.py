@@ -88,8 +88,5 @@ from s3sync import *
 # Asynchronous Tasks
 from s3task import *
 
-# Charting
-from s3chart import *
-
 # Codecs for data export/import
 from s3codec import *

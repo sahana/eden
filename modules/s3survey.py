@@ -46,6 +46,8 @@ except ImportError:
 from gluon import *
 from gluon.sqlhtml import *
 
+from s3chart import S3Chart
+
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3Survey: DEBUG MODE"
@@ -54,7 +56,7 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class LayoutBlocks():
     """
         Class that hold details of the layout blocks.
@@ -382,8 +384,7 @@ class LayoutBlocks():
                 if heightShortfall == 0:
                     break
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class DataMatrix():
     """
         Class that sets the data up ready for export to a specific format,
@@ -530,8 +531,7 @@ class DataMatrix():
             else:
                 self.addElement(MatrixElement(endrow - 1, c, "", "boxB%s"%width))
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class MatrixElement():
     """
         Class that holds the details of a single element in the matrix
@@ -588,6 +588,7 @@ class MatrixElement():
         else:
             return True
 
+# =============================================================================
 class DataMatrixBuilder():
     def __init__(self,
                  primaryMatrix,
@@ -808,11 +809,12 @@ class DataMatrixBuilder():
         except Exception as msg:
             print >> sys.stderr, msg
             return (row,col)
-#        if question["type"] == "Grid":
+        #if question["type"] == "Grid":
         if self.boxOpen == False:
             self.matrix.boxRange(row, col, endrow, endcol-1)
         return (endrow, endcol)
 
+# =============================================================================
 def getMatrix(title,
               logo,
               series,
@@ -871,7 +873,7 @@ def getMatrix(title,
     else:
         return matrix
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # Question Types
 def survey_stringType(question_id = None):
     return S3QuestionTypeStringWidget(question_id)
@@ -912,7 +914,6 @@ def survey_T(phrase, langDict):
     else:
         return phrase
 
-
 survey_question_type = {
     "String": survey_stringType,
     "Text": survey_textType,
@@ -926,14 +927,12 @@ survey_question_type = {
     "MultiOption" : survey_multiOptionType,
     "Location": survey_locationType,
     "Link" : survey_linkType,
-#    "Rating": survey_ratingType,
+    #"Rating": survey_ratingType,
     "Grid" : survey_gridType,
     "GridChild" : survey_gridChildType,
 }
 
-##########################################################################
-# Class S3QuestionTypeAbstractWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeAbstractWidget(FormWidget):
     """
         Abstract Question Type widget
@@ -1031,9 +1030,11 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             import sys
             print >> sys.stderr, "WARNING: S3Survey: xlwt module needed for XLS export"
 
+    # -------------------------------------------------------------------------
     def setDict(self, langDict):
         self.langDict = langDict
 
+    # -------------------------------------------------------------------------
     def _store_metadata(self, qstn_id=None, update=False):
         """
             This will store the question id in self.id,
@@ -1068,6 +1069,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                 # Remove any double quotes from around the data before storing
                 self.qstn_metadata[row.descriptor] = row.value.strip('"')
 
+    # -------------------------------------------------------------------------
     def get(self, value, default=None):
         """
             This will return a single metadata value held by the widget
@@ -1077,6 +1079,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         else:
             return default
 
+    # -------------------------------------------------------------------------
     def set(self, value, data):
         """
             This will store a single metadata value
@@ -1084,6 +1087,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         self.qstn_metadata[value] = data
 
 
+    # -------------------------------------------------------------------------
     def getAnswer(self):
         """
             Return the value of the answer for this question
@@ -1094,6 +1098,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             answer = ""
         return answer
 
+    # -------------------------------------------------------------------------
     def repr(self, value=None):
         """
             function to format the answer, which can be passed in
@@ -1102,6 +1107,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             value = self.getAnswer()
         return value
 
+    # -------------------------------------------------------------------------
     def loadAnswer(self, complete_id, question_id, forceDB=False):
         """
             This will return a value held by the widget
@@ -1125,6 +1131,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             self.question["complete_id"] = complete_id
         return value
 
+    # -------------------------------------------------------------------------
     def initDisplay(self, **attr):
         """
             This method set's up the variables that will be used by all
@@ -1140,6 +1147,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         attr["_name"] = self.question.code
         self.attr = attr
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         """
             This displays the widget on a web form. It uses the layout
@@ -1150,6 +1158,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         input = self.webwidget.widget(self.field, value, **self.attr)
         return self.layout(self.question.name, input, **attr)
 
+    # -------------------------------------------------------------------------
     def fullName(self):
         if "parentCode" in self.question:
             db = current.db
@@ -1164,6 +1173,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                                     subHeading)
         return self.question.name
 
+    # -------------------------------------------------------------------------
     def layout(self, label, widget, **attr):
         """
             This lays the label widget that is passed in on the screen.
@@ -1184,18 +1194,21 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         elif display == "Control Only":
             return TD(widget)
 
+    # -------------------------------------------------------------------------
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
         """
         return value
 
+    # -------------------------------------------------------------------------
     def type_represent(self):
         """
             Display the type in a DIV for displaying on the screen
         """
         return DIV(self.typeDescription, _class="surveyWidgetType")
 
+    # -------------------------------------------------------------------------
     def db_type(self):
         """
             Return the real database table type for this question
@@ -1203,12 +1216,14 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
         return "string"
 
+    # -------------------------------------------------------------------------
     def _Tquestion(self, langDict):
         """
             Function to translate the question using the dictionary passed in
         """
         return survey_T(self.question["name"], langDict)
 
+    # -------------------------------------------------------------------------
     def getLabelSize(self, maxWidth = 20):
         """
             function to return the size of the label, in terms of merged
@@ -1223,6 +1238,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             labelSize = (labelWidth, len(_TQstn)/(4 * labelWidth / 3) + 1)
         return labelSize
         
+    # -------------------------------------------------------------------------
     def getWidgetSize(self, maxWidth = 20):
         """
             function to return the size of the input control, in terms of merged
@@ -1230,6 +1246,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         """
         return (self.xlsWidgetSize[0] + 1, self.xlsWidgetSize[1] + 1)
         
+    # -------------------------------------------------------------------------
     def getMatrixSize(self):
         """
             function to return the size of the widget
@@ -1243,26 +1260,33 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             return (labelSize[1] + widgetSize[1] + self.xlsMargin[1],
                     max(labelSize[0],widgetSize[0]) + self.xlsMargin[0])
 
+    # -------------------------------------------------------------------------
     def canGrowHorizontal(self):
         return False
 
+    # -------------------------------------------------------------------------
     def canGrowVertical(self):
         return False
 
+    # -------------------------------------------------------------------------
     def growHorizontal(self, amount):
         if self.canGrowHorizontal():
             self.xlsWidgetSize[0] += amount
 
+    # -------------------------------------------------------------------------
     def growVertical(self, amount):
         if self.canGrowHorizontal():
             self.xlsWidgetSize[1] += amount
 
+    # -------------------------------------------------------------------------
     def addToHorizontalMargin(self, amount):
         self.xlsMargin[0] += amount
 
+    # -------------------------------------------------------------------------
     def addToVerticalMargin(self, amount):
         self.xlsMargin[1] += amount
 
+    # -------------------------------------------------------------------------
     def addPaddingAroundWidget(self, matrix, startrow, startcol, lWidth, lHeight, wWidth, wHeight):
         if self.labelLeft:
             # Add padding below the input boxes
@@ -1288,6 +1312,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                 cellPadding.merge(wWidth - lWidth - 1, wHeight-1)
                 matrix.addElement(cellPadding)
 
+    # -------------------------------------------------------------------------
     def addPaddingToCell(self,
                          matrix,
                          startrow,
@@ -1305,6 +1330,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             cellPadding.merge(endcol-startcol+self.xlsMargin[0]-1,self.xlsMargin[1]-1)
             matrix.addElement(cellPadding)
 
+    # -------------------------------------------------------------------------
     def writeToMatrix(self,
                       matrix,
                       row,
@@ -1369,11 +1395,12 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             # Only for debugging purposes
             self.verifyCoords(endrow, endcol)
         return (endrow, endcol)
-#        if self.labelLeft:
-#            return (row+self.xlsMargin[1]+height, col+self.xlsMargin[0]+mergeWH)
-#        else:
-#            return (row+self.xlsMargin[1]+mergeLV+mergeWV, col+self.xlsMargin[0]+max(mergeLH,mergeWH))
+        #if self.labelLeft:
+        #    return (row+self.xlsMargin[1]+height, col+self.xlsMargin[0]+mergeWH)
+        #else:
+        #    return (row+self.xlsMargin[1]+mergeLV+mergeWV, col+self.xlsMargin[0]+max(mergeLH,mergeWH))
 
+    # -------------------------------------------------------------------------
     def writeToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
@@ -1393,6 +1420,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         line.append(Cell(p))
         return line
 
+    # -------------------------------------------------------------------------
     def verifyCoords(self, endrow, endcol):
         (width, height) = self.getMatrixSize()
         calcrow = self.startPosn[1] + width
@@ -1426,6 +1454,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             return ANSWER_PARTLY_VALID
         return self.ANSWER_VALID
 
+    # -------------------------------------------------------------------------
     def metadata(self, **attr):
         """
             Create the input fields for the metadata for the QuestionType
@@ -1443,10 +1472,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             elements.append(TR(TD(fieldname), TD(input)))
         return TAG[""](elements)
 
-
-##########################################################################
-# Class S3QuestionTypeTextWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
     """
         Text Question Type widget
@@ -1469,12 +1495,15 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Long Text")
         self.xlsWidgetSize = [12,5]
 
+    # -------------------------------------------------------------------------
     def canGrowHorizontal(self):
         return True
 
+    # -------------------------------------------------------------------------
     def canGrowVertical(self):
         return True
 
+    # -------------------------------------------------------------------------
     def writeToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
@@ -1496,9 +1525,7 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
         line.append(Cell(p))
         return line
 
-##########################################################################
-# Class S3QuestionTypeStringWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
     """
         String Question Type widget
@@ -1521,9 +1548,11 @@ class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Short Text")
         self.xlsWidgetSize = [12,0]
 
+    # -------------------------------------------------------------------------
     def canGrowHorizontal(self):
         return True
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         if "length" in self.qstn_metadata:
             length = self.qstn_metadata["length"]
@@ -1531,9 +1560,7 @@ class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
             attr["_maxlength"] = length
         return S3QuestionTypeAbstractWidget.display(self, **attr)
 
-##########################################################################
-# Class S3QuestionTypeNumericWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
     """
         Numeric Question Type widget
@@ -1561,18 +1588,21 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
         self.metalist.append("Format")
         self.typeDescription = T("Numeric")
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         length = self.get("Length", 10)
         attr["_size"] = length
         attr["_maxlength"] = length
         return S3QuestionTypeAbstractWidget.display(self, **attr)
 
+    # -------------------------------------------------------------------------
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
         """
         return str(self.formattedAnswer(value))
 
+    # -------------------------------------------------------------------------
     def formattedAnswer(self, data, format=None):
         if format == None:
             format = self.get("Format", "n")
@@ -1589,6 +1619,7 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
             else:
                 return round(result, len(parts[2]))
 
+    # -------------------------------------------------------------------------
     def db_type(self):
         """
             Return the real database table type for this question
@@ -1622,9 +1653,7 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
 
         return self.ANSWER_VALID
 
-##########################################################################
-# Class S3QuestionTypeDateWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
     """
         Date Question Type widget
@@ -1644,14 +1673,16 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.typeDescription = T("Date")
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
+        #from s3widgets import S3DateWidget
+        #value = self.getAnswer()
+        #widget = S3DateWidget()
+        #input = widget(self.field, value, **self.attr)
+        #return self.layout(self.question.name, input, **attr)
         return S3QuestionTypeAbstractWidget.display(self, **attr)
-#        from s3widgets import S3DateWidget
-#        value = self.getAnswer()
-#        widget = S3DateWidget()
-#        input = widget(self.field, value, **self.attr)
-#        return self.layout(self.question.name, input, **attr)
 
+    # -------------------------------------------------------------------------
     def formattedAnswer(self, data):
         """
             This will take a string and do it's best to return a Date object
@@ -1754,10 +1785,8 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
 
         return self.ANSWER_VALID
 
+# =============================================================================
 class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
-##########################################################################
-# Class S3QuestionTypeAbstractWidget
-##########################################################################
     """
         Time Question Type widget
 
@@ -1776,9 +1805,7 @@ class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.typeDescription = T("Time")
 
-##########################################################################
-# Class S3QuestionTypeOptionWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
     """
         Option Question Type widget
@@ -1806,6 +1833,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         self.singleRow = False
         self.xlsWidgetSize = [10,0]
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
         self.field.requires = IS_IN_SET(self.getList())
@@ -1815,6 +1843,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         self.field.name = "value"
         return self.layout(self.question.name, input, **attr)
 
+    # -------------------------------------------------------------------------
     def getList(self):
         list = []
         length = self.get("Length")
@@ -1824,6 +1853,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             list.append(self.get(str(i + 1)))
         return list
 
+    # -------------------------------------------------------------------------
     def getWidgetSize(self, maxWidth = 20):
         """
             function to return the size of the input control
@@ -1836,6 +1866,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             widgetHeight = len(self.getList())
         return (maxWidth/2, instHeight + widgetHeight)
 
+    # -------------------------------------------------------------------------
     def writeToMatrix(self,
                       matrix,
                       row,
@@ -1949,6 +1980,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             self.verifyCoords(endrow, endcol)
         return (endrow, endcol)
 
+    # -------------------------------------------------------------------------
     def writeToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
@@ -1992,9 +2024,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             return self.ANSWER_VALID
         return self.ANSWER_INVALID
 
-##########################################################################
-# Class S3QuestionTypeOptionYNWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeOptionYNWidget(S3QuestionTypeOptionWidget):
     """
         YN Question Type widget
@@ -2017,12 +2047,11 @@ class S3QuestionTypeOptionYNWidget(S3QuestionTypeOptionWidget):
         self.qstn_metadata["Length"] = 2
         self.singleRow = True
 
+    # -------------------------------------------------------------------------
     def getList(self):
         return ["Yes", "No"]
 
-##########################################################################
-# Class S3QuestionTypeOptionYNDWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeOptionYNDWidget(S3QuestionTypeOptionWidget):
     """
         Yes, No, Don't Know: Question Type widget
@@ -2044,15 +2073,13 @@ class S3QuestionTypeOptionYNDWidget(S3QuestionTypeOptionWidget):
         self.typeDescription = T("Yes, No, Don't Know")
         self.qstn_metadata["Length"] = 3
 
+    # -------------------------------------------------------------------------
     def getList(self):
+        #T = current.T
+        #return [T("Yes"), T("No"), T("Don't Know")]
         return ["Yes", "No", "Don't Know"]
-#        T = current.T
-#        return [T("Yes"), T("No"), T("Don't Know")]
 
-
-##########################################################################
-# Class S3QuestionTypeOptionOtherWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeOptionOtherWidget(S3QuestionTypeOptionWidget):
     """
         Option Question Type widget with a final other option attached
@@ -2075,15 +2102,14 @@ class S3QuestionTypeOptionOtherWidget(S3QuestionTypeOptionWidget):
         S3QuestionTypeOptionWidget.__init__(self, question_id)
         self.typeDescription = T("Option Other")
 
+    # -------------------------------------------------------------------------
     def getList(self):
         list = S3QuestionTypeOptionWidget.getList(self)
         list.append("Other")
         return list
 
 
-##########################################################################
-# Class S3QuestionTypeMultiOptionWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
     """
         Multi Option Question Type widget
@@ -2099,11 +2125,11 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
     def __init__(self,
                  question_id = None
                 ):
-        T = current.T
         S3QuestionTypeOptionWidget.__init__(self, question_id)
         self.selectionInstructions = "Type x to mark box. Select all applicable options"
-        self.typeDescription = T("Multi-Option")
+        self.typeDescription = current.T("Multi-Option")
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
         self.field.requires = IS_IN_SET(self.getList())
@@ -2115,9 +2141,7 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
         self.field.name = "value"
         return self.layout(self.question.name, input, **attr)
 
-##########################################################################
-# Class S3QuestionTypeLocationWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
     """
         ***************************************
@@ -2145,9 +2169,11 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         self.typeDescription = T("Location")
         self.xlsWidgetSize = [12,0]
 
+    # -------------------------------------------------------------------------
     def canGrowHorizontal(self):
         return True
         
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         """
             This displays the widget on a web form. It uses the layout
@@ -2155,6 +2181,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         """
         return S3QuestionTypeAbstractWidget.display(self, **attr)
 
+    # -------------------------------------------------------------------------
     def getLocationRecord(self, complete_id, location):
         """
             Return the location record from the database
@@ -2176,13 +2203,14 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         else:
             return None
 
-
+    # -------------------------------------------------------------------------
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
         """
         return value
 
+    # -------------------------------------------------------------------------
     def getAnswerListFromJSON(self, answer):
         """
             If the answer is stored as a JSON value return the data as a map
@@ -2216,10 +2244,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
 
         return self.ANSWER_VALID
 
-
-##########################################################################
-# Class S3QuestionTypeLinkWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
     """
         Link widget: Question Type widget
@@ -2255,6 +2280,7 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         except:
             self.typeDescription = T("Link")
 
+    # -------------------------------------------------------------------------
     def realWidget(self):
         type = self.get("Type")
         realWidget = survey_question_type[type]()
@@ -2262,9 +2288,11 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         realWidget.qstn_metadata = self.qstn_metadata
         return realWidget
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         return self.realWidget().display(**attr)
 
+    # -------------------------------------------------------------------------
     def onaccept(self, value):
         """
             Method to format the value that has just been put on the database
@@ -2272,20 +2300,23 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         type = self.get("Type")
         return self.realWidget().onaccept(value)
 
+    # -------------------------------------------------------------------------
     def getParentType(self):
         self._store_metadata()
         return self.get("Type")
 
+    # -------------------------------------------------------------------------
     def getParentQstnID(self):
-        db = current.db
         parent = self.get("Parent")
         query = (self.qtable.code == parent)
-        row = db(query).select(limitby=(0, 1)).first()
+        row = current.db(query).select(limitby=(0, 1)).first()
         return row.id
 
+    # -------------------------------------------------------------------------
     def fullName(self):
         return self.question.name
 
+    # -------------------------------------------------------------------------
     def db_type(self):
         """
             Return the real database table type for this question
@@ -2305,9 +2336,7 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         realWidget = survey_question_type[type]()
         return realWidget.validate(valueList, qstn_id)
 
-##########################################################################
-# Class S3QuestionTypeGridWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
     """
         Grid widget: Question Type widget
@@ -2330,7 +2359,6 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
     def __init__(self,
                  question_id = None
                 ):
-        T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.metalist.append("Subtitle")
         self.metalist.append("QuestionNo")
@@ -2339,8 +2367,9 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         self.metalist.append("columns")
         self.metalist.append("rows")
         self.metalist.append("data")
-        self.typeDescription = T("Grid")
+        self.typeDescription = current.T("Grid")
 
+    # -------------------------------------------------------------------------
     def getMetaData(self, qstn_id=None):
         self._store_metadata(qstn_id=qstn_id, update=True)
         self.subtitle = self.get("Subtitle")
@@ -2351,11 +2380,13 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         self.rows = json.loads(self.get("rows"))
         self.data = json.loads(self.get("data"))
 
+    # -------------------------------------------------------------------------
     def getHeading(self, number):
         self.getMetaData()
         col = (number - self.qstnNo) % int(self.colCnt)
         return self.columns[col]
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         S3QuestionTypeAbstractWidget.display(self, **attr)
         complete_id = None
@@ -2395,6 +2426,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                 posn += 1
         return TABLE(table, _border=3)
 
+    # -------------------------------------------------------------------------
     def getMatrixSize(self, maxWidth = 20):
         self._store_metadata()
         self.getMetaData()
@@ -2424,8 +2456,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             print >> sys.stdout, "%s (%s,%s)" % (self.question["code"], height, width)
         self.xlsWidgetSize = (width,height)
         return (height, width)
-
         
+    # -------------------------------------------------------------------------
     def writeToMatrix(self,
                       matrix,
                       row,
@@ -2476,7 +2508,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                 type = childWidget.get("Type")
                 realWidget = survey_question_type[type](childWidget.id)
                 realWidget.label = False
-#                realWidget.xlsMargin = (0,0)
+                #realWidget.xlsMargin = (0,0)
                 col = endcol
                 realWidget.startPosn = (col, row)
                 (endrow, endcol) = realWidget.writeToMatrix(matrix,
@@ -2506,6 +2538,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         endcol += self.xlsMargin[0]
         return (row, endcol)
 
+    # -------------------------------------------------------------------------
     def writeToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
@@ -2522,6 +2555,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         line.append(Cell(p, span=2))
         return line
 
+    # -------------------------------------------------------------------------
     def insertChildren(self, record, metadata):
         self.id = record.id
         self.question = record
@@ -2570,6 +2604,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                                                                  "GridChild",
                                                                  childMetadata)
 
+    # -------------------------------------------------------------------------
     def insertChildrenToList(self, question_id, template_id, section_id,
                              qstn_posn):
         self.getMetaData(question_id)
@@ -2600,6 +2635,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                         except:
                             pass # already on the database no change required
 
+    # -------------------------------------------------------------------------
     def getChildWidget (self, code):
             # Get the question from the database
             query = (self.qtable.code == code)
@@ -2609,9 +2645,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             cellWidget = survey_question_type["GridChild"](question.id)
             return cellWidget
 
-##########################################################################
-# Class S3QuestionTypeGridChildWidget
-##########################################################################
+# =============================================================================
 class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
     """
         GridChild widget: Question Type widget
@@ -2639,11 +2673,13 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
             self.question.parentNumber = int(parentNumber)
         self.metalist.append("Type")
         self.typeDescription = self.qstn_metadata["Type"]
-        self.xlsWidgetSize = (0,0)
+        self.xlsWidgetSize = (0, 0)
 
+    # -------------------------------------------------------------------------
     def display(self, **attr):
         return None
 
+    # -------------------------------------------------------------------------
     def realWidget(self):
         type = self.get("Type")
         realWidget = survey_question_type[type]()
@@ -2651,14 +2687,17 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
         realWidget.qstn_metadata = self.qstn_metadata
         return realWidget
 
+    # -------------------------------------------------------------------------
     def subDisplay(self, **attr):
         S3QuestionTypeAbstractWidget.display(self, **attr)
         return self.realWidget().display(question_id=self.id, display = "Control Only")
 
+    # -------------------------------------------------------------------------
     def getParentType(self):
         self._store_metadata()
         return self.get("Type")
 
+    # -------------------------------------------------------------------------
     def db_type(self):
         """
             Return the real database table type for this question
@@ -2666,6 +2705,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
         """
         return self.realWidget().db_type()
 
+    # -------------------------------------------------------------------------
     def writeToMatrix(self,
                       matrix,
                       row,
@@ -2680,6 +2720,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
         """
         return (row, col)
 
+    # -------------------------------------------------------------------------
     def writeToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
@@ -2743,10 +2784,10 @@ survey_analysis_type = {
     "Link": analysis_linkType,
     "Grid": analysis_gridType,
     "GridChild" : analysis_gridChildType,
-#    "Rating": analysis_ratingType,
+    #"Rating": analysis_ratingType,
 }
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3AnalysisPriority():
     def __init__(self,
                  range=[-1, -0.5, 0, 0.5, 1],
@@ -2791,10 +2832,11 @@ class S3AnalysisPriority():
         self.image = image
         self.description = desc
 
+    # -------------------------------------------------------------------------
     def imageURL(self, app, key):
         T = current.T
         base_url = "/%s/static/img/survey/" % app
-        dot_url = base_url + "%s-dot.png" %self.image[key]
+        dot_url = base_url + "%s-dot.png" % self.image[key]
         image = IMG(_src=dot_url,
                     _alt=T(self.image[key]),
                     _height=12,
@@ -2802,10 +2844,12 @@ class S3AnalysisPriority():
                    )
         return image
 
+    # -------------------------------------------------------------------------
     def desc(self, key):
         T = current.T
         return T(self.description[key])
 
+    # -------------------------------------------------------------------------
     def rangeText(self, key, pBand):
         T = current.T
         if key == -1:
@@ -2841,6 +2885,7 @@ class S3AbstractAnalysis():
         priorityGroup  - The type of priority group to use in the map
         priorityGroups - The priority data used to colour the markers on the map
     """
+
     def __init__(self,
                  type,
                  question_id,
@@ -2870,6 +2915,7 @@ class S3AbstractAnalysis():
 
         self.basicResults()
 
+    # -------------------------------------------------------------------------
     def valid(self, answer):
         """
             used to validate a single answer
@@ -2880,6 +2926,7 @@ class S3AbstractAnalysis():
         # if widget.ANSWER_VALID:
         return True
 
+    # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
         """
             Used to modify the answer from its raw text format.
@@ -2887,6 +2934,7 @@ class S3AbstractAnalysis():
         """
         return answer
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         """
             Perform basic analysis of the answer set.
@@ -2894,6 +2942,7 @@ class S3AbstractAnalysis():
         """
         pass
 
+    # -------------------------------------------------------------------------
     def chartButton(self, series_id):
         """
             This will display a button which when pressed will display a chart
@@ -2915,6 +2964,7 @@ class S3AbstractAnalysis():
                  _class="action-btn")
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
+    # -------------------------------------------------------------------------
     def getChartName(self, series_id):
         import hashlib
         request = current.request
@@ -2927,6 +2977,7 @@ class S3AbstractAnalysis():
                     )
         return chartName
 
+    # -------------------------------------------------------------------------
     def drawChart(self, series_id, output=None, data=None, label=None,
                   xLabel=None, yLabel=None):
         """
@@ -2939,6 +2990,7 @@ class S3AbstractAnalysis():
         output.write(msg)
         current.response.body = output
 
+    # -------------------------------------------------------------------------
     def summary(self):
         """
             Calculate a summary of basic data.
@@ -2948,6 +3000,7 @@ class S3AbstractAnalysis():
         self.result = []
         return self.count()
 
+    # -------------------------------------------------------------------------
     def count(self):
         """
             Create a basic count of the data set.
@@ -2957,6 +3010,7 @@ class S3AbstractAnalysis():
         self.result.append(([current.T("Replies")], len(self.answerList)))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def format(self):
         """
             This function will take the results and present them in a HTML table
@@ -2966,6 +3020,7 @@ class S3AbstractAnalysis():
             table.append(TR(TD(B(key)), TD(value)))
         return table
 
+    # -------------------------------------------------------------------------
     def uniqueCount(self):
         """
             Calculate the number of occurances of each value
@@ -2978,6 +3033,7 @@ class S3AbstractAnalysis():
                 map[answer] = 1
         return map
 
+    # -------------------------------------------------------------------------
     def groupData(self, groupAnswer):
         """
             method to group the answers by the categories passed in
@@ -3015,12 +3071,14 @@ class S3AbstractAnalysis():
                     grouped[greply] = []
         return grouped
 
+    # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
         """
             Filter the data within the groups by the filter type
         """
         return groupedData
 
+    # -------------------------------------------------------------------------
     def splitGroupedData(self, groupedData):
         """
             Split the data set by the groups
@@ -3032,19 +3090,19 @@ class S3AbstractAnalysis():
             values.append(value)
         return (keys, values)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3StringAnalysis(S3AbstractAnalysis):
 
     def chartButton(self, series_id):
         return None
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3TextAnalysis(S3AbstractAnalysis):
 
     def chartButton(self, series_id):
         return None
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3DateAnalysis(S3AbstractAnalysis):
 
     def chartButton(self, series_id):
@@ -3055,8 +3113,8 @@ class S3TimeAnalysis(S3AbstractAnalysis):
 
     def chartButton(self, series_id):
         return None
-# -----------------------------------------------------------------------------
 
+# =============================================================================
 class S3NumericAnalysis(S3AbstractAnalysis):
 
     def __init__(self,
@@ -3067,12 +3125,14 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         S3AbstractAnalysis.__init__(self, type, question_id, answerList)
         self.histCutoff = 10
 
+    # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
         try:
             return float(answer)
         except:
             return None
 
+    # -------------------------------------------------------------------------
     def summary(self):
         T = current.T
         widget = S3QuestionTypeNumericWidget()
@@ -3087,12 +3147,14 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             self.result.append(([T("Minimum")], fmt(self.min)))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def count(self):
         T = current.T
         self.result.append((T("Replies"), len(self.answerList)))
         self.result.append((T("Valid"), self.cnt))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         self.cnt = 0
         if len(self.valueList) == 0:
@@ -3113,6 +3175,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
                 self.min = answer
         self.average = self.sum / float(self.cnt)
 
+    # -------------------------------------------------------------------------
     def advancedResults(self):
         try:
             from numpy import array
@@ -3132,6 +3195,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             if value != None:
                 self.zscore[complete_id] = (value - self.mean) / self.std
 
+    # -------------------------------------------------------------------------
     def priority(self, complete_id, priorityObj):
         priorityList = priorityObj.range
         priority = 0
@@ -3145,6 +3209,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         except:
             return -1
 
+    # -------------------------------------------------------------------------
     def priorityBand(self, priorityObj):
         priorityList = priorityObj.range
         priority = 0
@@ -3159,6 +3224,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             cnt += 1
         return band
 
+    # -------------------------------------------------------------------------
     def chartButton(self, series_id):
         # At the moment only draw charts for integers
         if self.qstnWidget.get("Format", "n") != "n":
@@ -3167,14 +3233,15 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             return None
         return S3AbstractAnalysis.chartButton(self, series_id)
 
+    # -------------------------------------------------------------------------
     def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
         chartFile = self.getChartName(series_id)
-        cached = current.chart.getCachedFile(chartFile)
+        cached = S3Chart.getCachedFile(chartFile)
         if cached:
             return cached
 
-        chart = current.chart(path=chartFile)
+        chart = S3Chart(path=chartFile)
         chart.asInt = True
         if data == None:
             chart.survey_hist(self.qstnWidget.question.name,
@@ -3194,6 +3261,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         image = chart.draw(output=output)
         return image
 
+    # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
         filteredData = {}
         if filterType == "Sum":
@@ -3209,15 +3277,17 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         return groupedData
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OptionAnalysis(S3AbstractAnalysis):
 
+    # -------------------------------------------------------------------------
     def summary(self):
         T = current.T
         for (key, value) in self.listp.items():
             self.result.append((T(key), value))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         self.cnt = 0
         self.list = {}
@@ -3232,13 +3302,15 @@ class S3OptionAnalysis(S3AbstractAnalysis):
             for (key, value) in self.list.items():
                 self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt,1)
 
+    # -------------------------------------------------------------------------
     def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
         chartFile = self.getChartName(series_id)
-        cached = current.chart.getCachedFile(chartFile)
+        cached = S3Chart.getCachedFile(chartFile)
         if cached:
             return cached
-        chart = current.chart(path=chartFile)
+
+        chart = S3Chart(path=chartFile)
         data = []
         label = []
         for (key, value) in self.list.items():
@@ -3250,8 +3322,10 @@ class S3OptionAnalysis(S3AbstractAnalysis):
         image = chart.draw(output=output)
         return image
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OptionYNAnalysis(S3OptionAnalysis):
+
+    # -------------------------------------------------------------------------
     def summary(self):
         T = current.T
         self.result.append((T("Yes"), self.yesp))
@@ -3259,6 +3333,7 @@ class S3OptionYNAnalysis(S3OptionAnalysis):
         return self.format()
 
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         S3OptionAnalysis.basicResults(self)
         T = current.T
@@ -3279,8 +3354,10 @@ class S3OptionYNAnalysis(S3OptionAnalysis):
                 self.list["No"] = 0
                 self.nop = T("0%")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OptionYNDAnalysis(S3OptionAnalysis):
+
+    # -------------------------------------------------------------------------
     def summary(self):
         T = current.T
         self.result.append((T("Yes"), self.yesp))
@@ -3288,6 +3365,7 @@ class S3OptionYNDAnalysis(S3OptionAnalysis):
         self.result.append((T("Don't Know"), self.dkp))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         S3OptionAnalysis.basicResults(self)
         T = current.T
@@ -3316,22 +3394,23 @@ class S3OptionYNDAnalysis(S3OptionAnalysis):
                 self.list["Don't Know"] = 0
                 self.dkp = T("0%")
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3OptionOtherAnalysis(S3OptionAnalysis):
     pass
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3MultiOptionAnalysis(S3OptionAnalysis):
 
+    # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
         """
             Used to modify the answer from its raw text format.
             Where necessary, this function will be overridden.
         """
-        s3 = current.response.s3
-        valueList = s3.survey_json2list(answer)
+        valueList = current.s3db.survey_json2list(answer)
         return valueList
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         self.cnt = 0
         self.list = {}
@@ -3351,13 +3430,15 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
             for (key, value) in self.list.items():
                 self.listp[key] = "%s%%" %((100 * value) / self.cnt)
 
+    # -------------------------------------------------------------------------
     def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
         chartFile = self.getChartName(series_id)
-        cached = current.chart.getCachedFile(chartFile)
+        cached = S3Chart.getCachedFile(chartFile)
         if cached:
             return cached
-        chart = current.chart(path=chartFile)
+
+        chart = S3Chart(path=chartFile)
         data = []
         label = []
         for (key, value) in self.list.items():
@@ -3371,8 +3452,7 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
         image = chart.draw(output=output)
         return image
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LocationAnalysis(S3AbstractAnalysis):
     """
         Widget for analysing Location type questions
@@ -3389,6 +3469,8 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         The alternative value is useful for matching duplicate responses that
         are using the same local name.
     """
+
+    # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
         """
             Convert the answer for the complete_id into a database record.
@@ -3401,6 +3483,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         records = self.qstnWidget.getLocationRecord(complete_id, answer)
         return records
 
+    # -------------------------------------------------------------------------
     def summary(self):
         """
             Returns a summary table
@@ -3411,6 +3494,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         self.result.append((T("Unknown Locations"), self.ucnt))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def count(self):
         """
             Returns a table of basic results
@@ -3420,6 +3504,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         self.result.append((T("Unique Locations"), self.cnt))
         return self.format()
 
+    # -------------------------------------------------------------------------
     def basicResults(self):
         """
             Calculate the basic results, which consists of a number of list
@@ -3475,12 +3560,14 @@ class S3LocationAnalysis(S3AbstractAnalysis):
             self.kper = "%s%%" %((100 * self.kcnt) / self.cnt)
         self.ucnt = self.cnt - self.kcnt - self.dcnt
 
+    # -------------------------------------------------------------------------
     def chartButton(self, series_id):
         """
             Ensures that no button is set up
         """
         return None
 
+    # -------------------------------------------------------------------------
     def uniqueCount(self):
         """
             Calculate the number of occurances of each value
@@ -3493,8 +3580,9 @@ class S3LocationAnalysis(S3AbstractAnalysis):
                 map[answer.key] = 1
         return map
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3LinkAnalysis(S3AbstractAnalysis):
+
     def __init__(self,
                  type,
                  question_id,
@@ -3521,29 +3609,34 @@ class S3LinkAnalysis(S3AbstractAnalysis):
             valueList.append(answer)
         self.widget = survey_analysis_type[type](question_id, valueList)
 
+    # -------------------------------------------------------------------------
     def summary(self):
         return self.widget.summary()
 
+    # -------------------------------------------------------------------------
     def count(self):
         return self.widget.count()
 
+    # -------------------------------------------------------------------------
     def chartButton(self, series_id):
         return self.widget.chartButton(series_id)
 
+    # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
         return self.widget.filter(filterType, groupedData)
 
+    # -------------------------------------------------------------------------
     def drawChart(self, series_id, output="xml",
                   data=None, label=None, xLabel=None, yLabel=None):
         return self.widget.drawChart(data, series_id, label, xLabel, yLabel)
 
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3GridAnalysis(S3AbstractAnalysis):
     pass
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3GridChildAnalysis(S3AbstractAnalysis):
+
     def __init__(self,
                  type,
                  question_id,
@@ -3561,6 +3654,7 @@ class S3GridChildAnalysis(S3AbstractAnalysis):
                     pass
         self.widget = survey_analysis_type[trueType](question_id, self.answerList)
 
+    # -------------------------------------------------------------------------
     def drawChart(self,
                   series_id,
                   output="xml",
@@ -3570,6 +3664,8 @@ class S3GridChildAnalysis(S3AbstractAnalysis):
                   yLabel=None):
         return self.widget.drawChart(series_id, output, data, label, xLabel, yLabel)
 
+    # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
         return self.widget.filter(filterType, groupedData)
+
 # END =========================================================================

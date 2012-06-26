@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          survey_formatter - CSV Import Stylesheet
 
-         14 Oct 2011 / Graeme Foster <graeme AT acm DOT org>
-
          - use for import to survey/formatter resource
 
          CSV fields:

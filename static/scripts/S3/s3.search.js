@@ -12,8 +12,10 @@ S3.search.AutocompleteTimer = function() {
 		clearTimeout(S3.TimeoutVar[$(this).attr('id')]);
 	} catch(err) {};
 	var selSearchDiv = $(this);
-	var fncSearchAutocompleteAjaxArg = function() { S3.search.AutocompleteAjax(selSearchDiv); };
-	S3.TimeoutVar[$(this).attr('id')] = setTimeout( fncSearchAutocompleteAjaxArg, 400);
+	var fncSearchAutocompleteAjaxArg = function() {
+        S3.search.AutocompleteAjax(selSearchDiv);
+    };
+	S3.TimeoutVar[$(this).attr('id')] = setTimeout(fncSearchAutocompleteAjaxArg, 400);
 };
 
 S3.search.AutocompleteAjax = function(selSearchDiv) {
@@ -137,15 +139,15 @@ $(document).ready(function() {
         // No Action Required
     } else if ( undefined == $('.simple-form').val() ) {
         // Only an Advanced Form
-        $('.simple-form').hide();
-        $('.advanced-form').show();
+        $('.simple-form').addClass('hide').hide();
+        $('.advanced-form').removeClass('hide').show();
     } else {
         // Simple & Advanced Search Forms
         if ($('#search-mode').attr('mode')=='advanced') {
-            $('.simple-form').hide();
-            $('.advanced-form').show();
+            $('.simple-form').addClass('hide').hide();
+            $('.advanced-form').removeClass('hide').show();
         } else {
-            $('.advanced-form').hide();
+            $('.advanced-form').addClass('hide').hide();
         }
         $('.advanced-lnk').click(function(e) {
         	e.preventDefault();
@@ -154,8 +156,8 @@ $(document).ready(function() {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
-            selSearchForm.find('.simple-form').hide();
-            selSearchForm.find('.advanced-form').show();
+            selSearchForm.find('.simple-form').addClass('hide').hide();
+            selSearchForm.find('.advanced-form').removeClass('hide').show();
             return false;
         });
         $('.simple-lnk').click(function(e) {
@@ -165,8 +167,8 @@ $(document).ready(function() {
                 // Not an Search Form embedded into a Big form, but a normal search page with a single form.
                 selSearchForm = $('.search_form');
             }
-            selSearchForm.find('.advanced-form').hide();
-            selSearchForm.find('.simple-form').show();
+            selSearchForm.find('.advanced-form').addClass('hide').hide();
+            selSearchForm.find('.simple-form').removeClass('hide').show();
             return false;
         });
     }
@@ -185,16 +187,16 @@ $(document).ready(function() {
             $(this).toggleClass('expanded');
         }
     })
+    .click( function(event) {
+        /*
+            Listen for click events on the expanding/collapsing letter widgets
+        */
+        var div = $(this)
+        div.next('table').toggle();
+        div.toggleClass('expanded');
+    });
 
-    /*
-        Listen for click events on the expanding/collapsing letter widgets
-    */
-    $('.search_select_letter_label').click( function() {
-        $(this).next('table').toggle();
-        $(this).toggleClass('expanded');
-    })
 
-    
 
     /* Search AutoComplete */
 

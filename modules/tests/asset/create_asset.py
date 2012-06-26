@@ -47,7 +47,7 @@ class CreateAsset(SeleniumUnitTest):
         now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
         
         # Login, if not-already done so
-        self.login(account="normal", nexturl="asset/asset/create")
+        self.login(account="admin", nexturl="asset/asset/create")
         
         self.create("asset_asset", 
                     [( "number",

@@ -5,8 +5,6 @@
     <!-- **********************************************************************
          survey-answer - CSV Import Stylesheet
 
-         2011-Jun-16 / Graeme Foster <graeme AT acm DOT org>
-
          - use for import to survey/answer resource
 
          - this is used in the survey model, by the function importAnswers

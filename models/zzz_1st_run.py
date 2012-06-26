@@ -256,14 +256,7 @@ if len(pop_list) > 0:
             if os.path.exists(path):
                 bi.perform_tasks(path)
             else:
-                path = os.path.join(request.folder,
-                                    "private",
-                                    "templates",
-                                    pop_setting)
-                if os.path.exists(path):
-                    bi.perform_tasks(path)
-                else:
-                    print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+                print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
         elif pop_setting == 1:
             # Populate with the default data
             path = os.path.join(request.folder,
