@@ -185,16 +185,16 @@ $(document).ready(function() {
             $(this).toggleClass('expanded');
         }
     })
+    .click( function(event) {
+        /*
+            Listen for click events on the expanding/collapsing letter widgets
+        */
+        var div = $(this)
+        div.next('table').toggle();
+        div.toggleClass('expanded');
+    });
 
-    /*
-        Listen for click events on the expanding/collapsing letter widgets
-    */
-    $('.search_select_letter_label').click( function() {
-        $(this).next('table').toggle();
-        $(this).toggleClass('expanded');
-    })
 
-    
 
     /* Search AutoComplete */
 

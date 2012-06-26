@@ -974,6 +974,7 @@ S3FilterFieldChange({
                                                  represent])
             else:
                 represent = represent_append
+
             # Feed the loop
             item_category_id = r.parent_item_category_id
 
