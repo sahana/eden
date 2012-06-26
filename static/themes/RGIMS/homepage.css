@@ -41,6 +41,10 @@
 	width: auto;
 }
 
+#sit_dec_res_box {
+    padding: 15px 10px 10px 10px;
+}
+
 #facility_box {
 	width: auto;
 	float: right;
@@ -78,7 +82,7 @@
 
 .div_arrow {
     padding: 0 15px;
-    margin-top: 36px;
+    margin-top: -10px;
 }
 .menu-btn-l {
     overflow: hidden;
