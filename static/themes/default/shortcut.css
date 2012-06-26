@@ -16,7 +16,6 @@
    css-discuss.incutio.com/wiki/Screenreader_Visibility */
 .hide {
     display: none;
-    visibility: hidden;
 }
 
 /* Hide only visually, but have it available for screenreaders
