@@ -254,7 +254,7 @@ s3_meta_deletion_status = S3ReusableField("deleted", "boolean",
                                           writable=False,
                                           default=False)
 
-# Parked foreign keys of a deleted record
+# Parked foreign keys of a deleted record in JSON format
 # => to be restored upon "un"-delete
 s3_meta_deletion_fk = S3ReusableField("deleted_fk", #"text",
                                       readable=False,

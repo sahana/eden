@@ -6,19 +6,6 @@
     <!-- **********************************************************************
          Facility - CSV Import Stylesheet
 
-         - use for import to org/office resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be org/organisation/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
-
          CSV fields:
          Name....................org_office
          Organisation............org_organisation

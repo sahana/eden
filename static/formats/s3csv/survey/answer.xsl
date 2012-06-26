@@ -3,9 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         survey-answer - CSV Import Stylesheet
-
-         - use for import to survey/answer resource
+         Survey Answer - CSV Import Stylesheet
 
          - this is used in the survey model, by the function importAnswers
            which is why it uses the id's directly

@@ -271,9 +271,6 @@ class S3OrganisationModel(S3Model):
         add_component("org_organisation_type_tag",
                       org_organisation_type=dict(joinby="organisation_type_id",
                                                  name="tag"))
-        # Tags as component of Locations
-        add_component("org_organisation",
-                      org_organisation_type="organisation_type_id")
 
         # ---------------------------------------------------------------------
         # Organisations
