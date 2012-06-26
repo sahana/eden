@@ -47,7 +47,7 @@ class SendReceiveItem(InvTestFunctions):
 
     def test_inv003_send_receive_items(self):
         """ Tests for Send-Receive - Receive Workflow """
-        user = "normal"
+        user = "admin"
         method = "search"
         send_data = [("site_id",
                  "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",

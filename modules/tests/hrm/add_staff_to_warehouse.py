@@ -38,16 +38,13 @@ class AddStaffToWarehouse(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        import datetime
-        from dateutil.relativedelta import relativedelta
-        self.login(account="admin", nexturl="inv/warehouse/4/human_resource")
+        self.login(account="admin", nexturl="inv/warehouse/5/human_resource")
         self.browser.find_element_by_id("select_from_registry").click()
-        today = datetime.date.today().strftime("%Y-%m-%d")
         
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
-                       "Herculano Hugh",
+                       "Quito Cromos",
                        "autocomplete")
                      ]
                      )
