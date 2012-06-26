@@ -69,7 +69,7 @@
                                     {% with td.id as td_id %}
                                     <td headers="{{ td_id }}-{{ row_id }}" id="sortable-debate" class="connectedSortable">
                                         {% for note in notes %}
-                                            {% if note.column.id == td_id and note.row_id == row_id %}
+                                            {% if note.column_id == td_id and note.row_id == row_id %}
                                                 <div id="{{ note.id }}" class="note {% if note.author == request.user %}mine{% endif %} {% if note.author == request.user or request.user.is_staff %}{% else %}disabled{% endif %}">
                                                     <div class="handler">
                                                         {% if note.author == request.user and perms.note.delete_note or request.user.is_staff %}
