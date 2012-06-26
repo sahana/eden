@@ -91,14 +91,14 @@ urlpatterns += i18n_patterns('',
 
     (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 
-    # This url is for the access to static pages. I hope this doesn't collide
-    # with the index view
-    url(r'^(?P<slug>[\w\-]+)/', include('apps.ecidadania.staticpages.urls')),
-    
     # For smart_selects app
     url(r'^chaining/', include('apps.thirdparty.smart_selects.urls')),
 
-    url(_(r'role/$'), include('apps.thirdparty.userroles.urls')),
+    url(_(r'role/'), include('apps.thirdparty.userroles.urls')),
+
+    # This url is for the access to static pages. I hope this doesn't collide
+    # with the index view
+    url(r'^(?P<slug>[\w\-]+)/', include('apps.ecidadania.staticpages.urls')),
 
     # WARNING: This URLs aren't supposed to be here, but apparently on development
     # they are needed
