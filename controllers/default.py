@@ -170,10 +170,10 @@ def index():
                             (appname, settings.get_template())
         try:
             exec("import %s as custom" % controller)
-        except ImportError:
+        except ImportError, e:
             # No Custom Page available, continue with the default
             # @ToDo: cache this result - at least in session, ideally in class startup
-            pass
+            s3base.s3_debug("Custom homepage cannot be loaded: %s" % e.message)
         else:
             if "index" in custom.__dict__:
                 output = custom.index()()

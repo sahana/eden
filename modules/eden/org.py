@@ -1767,32 +1767,34 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
     return represent
 
 # =============================================================================
-def org_site_represent(id, show_link=True):
-    """ Represent a Facility in option fields or list views """
+def org_site_represent(site_id, show_link=True):
+    """
+        Represent a Facility in option fields or list views
 
-    T = current.T
+        @param site_id: the org_site record ID or the org_site record
+        @param show_link: whether to render the representation as link
+    """
+
     db = current.db
     s3db = current.s3db
-    represent = current.messages.NONE
     T = current.T
 
     stable = s3db.org_site
 
-    if not id:
-        return represent
+    represent = current.messages.NONE
 
-    if isinstance(id, Row) and "instance_type" in id:
+    if not site_id:
+        return represent
+    if isinstance(site_id, Row) and "instance_type" in site_id:
         # Do not repeat the lookup if already done by IS_ONE_OF
-        site = id
+        site = site_id
     else:
-        site = db(stable._id == id).select(stable.id,
-                                           stable.name,
-                                           stable.site_id,
-                                           stable.instance_type,
-                                           limitby=(0, 1)).first()
+        site = db(stable._id == site_id).select(stable.site_id,
+                                                stable.name,
+                                                stable.instance_type,
+                                                limitby=(0, 1)).first()
         if not site:
             return represent
-    id = None
 
     instance_type = site.instance_type
     try:
@@ -1802,46 +1804,35 @@ def org_site_represent(id, show_link=True):
 
     instance_type_nice = stable.instance_type.represent(instance_type)
     tab = None
-    if instance_type == "org_office":
-        type = None
-        try:
-            type = site.type
-        except:
-            query = (table.site_id == site.site_id)
-            record = db(query).select(table.id,
-                                      table.type,
-                                      limitby=(0, 1)).first()
-            if record:
-                id = record.id
-                type = record.type
 
-        if type == 5:
+    if instance_type == "org_office":
+        # Need lookup the instance record for the "type" field
+        query = (table.site_id == site.site_id)
+        office = db(query).select(table.type, limitby=(0, 1)).first()
+        if not office:
+            return represent
+        if office.type == 5:
+            # Override instance type for warehouses
             instance_type = "inv_warehouse"
             instance_type_nice = current.T("Warehouse")
-            # add the url to the stock tab for the warehouse
+            # Add the url to the stock tab for the warehouse
             tab = "inv_item"
 
-    if site:
+    if site.name:
         represent = "%s (%s)" % (site.name, instance_type_nice)
     else:
-        # Since name is notnull for all types so far, this won't be reached.
         represent = "[site %d] (%s)" % (id, instance_type_nice)
 
-    if show_link and site:
-        if not id:
-            query = (table.site_id == site.site_id)
-            id = db(query).select(table.id,
-                                  limitby=(0, 1)).first().id
+    if show_link:
+        record_id = current.manager.model.get_instance(stable, site_id)[2]
         c, f = instance_type.split("_", 1)
-        args = [id]
-        if tab:
-            args.append(tab)
-        represent = A(represent,
-                      _href = URL(c=c, f=f,
-                                  args = args,
-                                  extension = "" # removes the .aaData extension in paginated views!
-                                ))
-
+        if record_id:
+            args = [record_id]
+            if tab:
+                args.append(tab)
+            # extension="" removes the .aaData extension in paginated views
+            represent = A(represent,
+                          _href = URL(c=c, f=f, args=args, extension=""))
     return represent
 
 # =============================================================================

@@ -78,7 +78,7 @@
 
 .div_arrow {
     padding: 0 15px;
-    margin-top: 80px;
+    margin-top: 36px;
 }
 .menu-btn-l {
     overflow: hidden;
@@ -107,16 +107,4 @@
     clear: both;
     padding: 10px;
     margin-bottom: 10px;
-}
-
-/* RSS Feed */
-#feed-control {
-    clear: both;
-}
-.gfg-title {
-    text-align: left;
-    padding: 0 0 0 10px;
-}
-.gfg-subtitle {
-    padding: 0 0 0 5px;
 }

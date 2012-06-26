@@ -16,6 +16,9 @@ settings.base.system_name_short = "RGIMS"
 # Pre-Populate
 settings.base.prepopulate = ["RGIMS"]
 
+# Theme
+settings.base.theme = "RGIMS"
+
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
 # Default timezone for users
