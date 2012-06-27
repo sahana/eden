@@ -78,6 +78,8 @@ from s3gis import *
 
 # Messaging
 from s3msg import *
+# Message Parsing
+from s3parser import *
 
 # Tracking System
 from s3track import *
