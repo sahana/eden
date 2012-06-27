@@ -54,7 +54,6 @@ class S3Config(Storage):
         self.aaa = Storage()
         self.mail = Storage()
         self.options = Storage()
-        self.parser = Storage()
         self.save_search = Storage()
         self.security = Storage()
         self.twitter = Storage()
@@ -68,6 +67,7 @@ class S3Config(Storage):
         self.project = Storage()
         self.req = Storage()
         self.supply = Storage()
+
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -851,9 +851,11 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Message Parser Settings
-    def get_parser_template(self):
-            return self.parser.get("template", "default")
-
+    def get_msg_parser(self):
+        """
+            Which template folder to use to load parser.py
+        """
+        return self.msg.get("parser", "default")
 
     # -------------------------------------------------------------------------
     # Active modules list

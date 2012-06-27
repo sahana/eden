@@ -2356,10 +2356,7 @@ class S3OrganisationSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = current.manager.xml
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
         table = self.table
@@ -2368,7 +2365,7 @@ class S3OrganisationSearch(S3Search):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars # should be request.get_vars?
+        _vars = self.request.vars # should be request.get_vars?
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -2398,9 +2395,11 @@ class S3OrganisationSearch(S3Search):
                         (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
 
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~"
+                            )
                 raise HTTP(400, body=output)
 
         resource.add_filter(query)
@@ -2459,10 +2458,7 @@ class S3PersonSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = current.manager.xml
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
         table = self.table
@@ -2471,7 +2467,7 @@ class S3PersonSearch(S3Search):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars # should be request.get_vars?
+        _vars = self.request.vars # should be request.get_vars?
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -2508,9 +2504,11 @@ class S3PersonSearch(S3Search):
                             (field3.lower().like(value + "%")))
 
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~"
+                            )
                 raise HTTP(400, body=output)
 
         resource.add_filter(query)
@@ -2545,21 +2543,16 @@ class S3HRSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = current.manager.xml
-        s3db = current.s3db
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
-        pr_table = s3db.pr_person
         table = self.table
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars # should be request.get_vars?
+        _vars = self.request.vars # should be request.get_vars?
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -2573,7 +2566,7 @@ class S3HRSearch(S3Search):
         limit = int(_vars.limit or 0)
 
         if filter and value:
-
+            pr_table = current.s3db.pr_person
             field = pr_table.first_name
             field2 = pr_table.middle_name
             field3 = pr_table.last_name
@@ -2598,9 +2591,11 @@ class S3HRSearch(S3Search):
                             (field3.lower().like(value + "%")))
 
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~"
+                            )
                 raise HTTP(400, body=output)
 
         resource.add_filter(query)
@@ -2635,20 +2630,17 @@ class S3PentitySearch(S3Search):
             @param attr: request attributes
         """
 
-        s3db = current.s3db
-        xml = current.manager.xml
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
         table = self.table
+        s3db = current.s3db
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars # should be request.get_vars?
+        _vars = self.request.vars # should be request.get_vars?
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -2683,9 +2675,11 @@ class S3PentitySearch(S3Search):
                             (field3.lower().like(value + "%")))
                 resource.add_filter(query)
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~"
+                            )
                 raise HTTP(400, body=output)
 
         resource.add_filter(ptable.pe_id == table.pe_id)
@@ -2749,10 +2743,7 @@ class S3TrainingSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = current.manager.xml
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
         table = self.table
@@ -2761,7 +2752,7 @@ class S3TrainingSearch(S3Search):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars # should be request.get_vars?
+        _vars = self.request.vars # should be request.get_vars?
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -2805,9 +2796,11 @@ class S3TrainingSearch(S3Search):
                                 (table.site_id == stable.id)
 
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~"
+                            )
                 raise HTTP(400, body=output)
 
         resource.add_filter(query)

@@ -171,6 +171,10 @@ settings.L10n.decimal_separator = "."
 # Mouse Position: 'normal', 'mgrs' or 'off'
 #settings.gis.mouse_position = "mgrs"
 
+# Messaging Settings
+# If you wish to use a parser.py in another folder than "default"
+#settings.msg.parser = "mytemplatefolder"
+
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
 
@@ -347,9 +351,6 @@ settings.L10n.decimal_separator = "."
 
 # Terms of Service to be able to Register on the system
 #settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
-
-# Message Parser Settings
-#settings.parser.template = "default"
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
-'''
+"""
    This file imports the Message parsers from the core code
    and links them with the respective parsing tasks defined in msg_workflow.
+
    @author: Ashwyn Sharma <ashwyn1092[at]gmail.com>
-   @copyright: 2009-2012 (c) Sahana Software Foundation
+   @copyright: 2012 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -28,15 +29,13 @@
    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
    OTHER DEALINGS IN THE SOFTWARE.
-
-
-'''
+"""
 
 class S3Parsing(object):
     """
        Message Parsing Framework.
     """
-  
+
     # ---------------------------------------------------------------------
     @staticmethod
     def parser(workflow, message = ""):
@@ -44,22 +43,17 @@ class S3Parsing(object):
            Parsing Workflow Filter.
            Called by parse_import() in s3msg.py.
         """
-        
+
         from s3.s3parser import S3Parsing
         import inspect
         parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
         parse_opts = []
         for parser in parsers:
             parse_opts += [parser[0]]
-            
-        
+
         for parser in parse_opts:
             if parser == workflow:
-                result = getattr(S3Parsing,parser)
+                result = getattr(S3Parsing, parser)
                 return result(message)
-                
-        
-               
+
 # END =========================================================================
-    
-    

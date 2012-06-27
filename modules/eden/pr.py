@@ -3082,22 +3082,15 @@ def pr_rheader(r, tabs=[]):
         - used in PR, HRM, DVI, MPR, MSG, VOL
     """
 
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    gis = current.gis
-    s3 = current.response.s3
-
-    tablename, record = s3_rheader_resource(r)
-
     if r.representation == "html":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
+        tablename, record = s3_rheader_resource(r)
+        if record:
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            T = current.T
+            db = current.db
+            s3db = current.s3db
 
-        if tablename == "pr_person":
-            person = record
-            if person:
-                s3 = current.response.s3
-                ptable = r.table
+            if tablename == "pr_person":
                 itable = s3db.pr_image
                 query = (itable.pe_id == record.pe_id) & \
                         (itable.profile == True)
@@ -3110,26 +3103,27 @@ def pr_rheader(r, tabs=[]):
                     image = ""
                 rheader = DIV(TABLE(
                     TR(TH("%s: " % T("Name")),
-                       s3_fullname(person),
+                       s3_fullname(record),
                        TH("%s: " % T("ID Tag Number")),
-                       "%(pe_label)s" % person,
+                       "%(pe_label)s" % record,
                        image),
                     TR(TH("%s: " % T("Date of Birth")),
-                       "%s" % (person.date_of_birth or T("unknown")),
+                       "%s" % (record.date_of_birth or T("unknown")),
                        TH("%s: " % T("Gender")),
-                       "%s" % s3.pr_gender_opts.get(person.gender, T("unknown"))),
+                       "%s" % s3db.pr_gender_opts.get(record.gender,
+                                                      T("unknown"))),
 
                     TR(TH("%s: " % T("Nationality")),
-                       "%s" % (gis.get_country(person.nationality, key_type="code") or T("unknown")),
+                       "%s" % (current.gis.get_country(record.nationality,
+                                                       key_type="code") or \
+                               T("unknown")),
                        TH("%s: " % T("Age Group")),
-                       "%s" % s3.pr_age_group_opts.get(person.age_group, T("unknown"))),
-
+                       "%s" % s3db.pr_age_group_opts.get(record.age_group,
+                                                         T("unknown"))),
                     ), rheader_tabs)
                 return rheader
 
-        elif tablename == "pr_group":
-            group = record
-            if group:
+            elif tablename == "pr_group":
                 table = s3db.pr_group_membership
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
@@ -3141,11 +3135,11 @@ def pr_rheader(r, tabs=[]):
                     leader = ""
                 rheader = DIV(TABLE(
                                 TR(TH("%s: " % T("Name")),
-                                   group.name,
+                                   record.name,
                                    TH("%s: " % T("Leader")) if leader else "",
                                    leader),
                                 TR(TH("%s: " % T("Description")),
-                                   group.description or "",
+                                   record.description or "",
                                    TH(""),
                                    "")
                                 ), rheader_tabs)
