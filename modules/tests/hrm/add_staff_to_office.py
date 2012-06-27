@@ -40,12 +40,7 @@ class AddStaffToOffice(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         
-        import datetime
-        from dateutil.relativedelta import relativedelta
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        
         self.login(account="admin", nexturl="org/office/15/human_resource")
-        self.browser.find_element_by_id("show-add-btn").click()
         self.browser.find_element_by_id("select_from_registry").click()
         
         
