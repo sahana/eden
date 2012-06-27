@@ -1267,7 +1267,7 @@ $('#%s').live('click',function(){
        save_search_a_id,
        save_search_processing_id)
 
-        s3.jquery_ready.append(save_search_script)
+        current.response.s3.jquery_ready.append(save_search_script)
 
         widget = DIV(save_search_processing,
                     save_search_a,
