@@ -181,7 +181,7 @@ class S3AssetModel(S3Model):
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
                              Field("purchase_price", "double",
-#                                   default=0.00,
+                                   #default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
@@ -568,22 +568,26 @@ $(document).ready(function() {
         """
         """
 
-        db = current.db
-        s3db = current.s3db
         request = current.request
-        s3 = current.response.s3
-        tracker = S3Tracker()
-
-        ltable = s3db.asset_log
+        status = request.vars.pop("status", None)
+        if not status:
+            # e.g. Import or Record merger
+            return
 
         vars = form.vars
-        query = (ltable.id == vars.id)
-        asset_id = db(query).select(ltable.asset_id,
-                                    limitby=(0, 1)).first().asset_id
+        status = int(vars.status or status)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.asset_log
+        asset = db(ltable.id == vars.id).select(ltable.asset_id,
+                                                limitby=(0, 1)).first()
+        if asset:
+            asset_id = asset.asset_id
+        else:
+            return
         current_log = asset_get_current_log(asset_id)
 
-        status = int(vars.status or request.vars.status)
-        request.get_vars.pop("status", None)
         type = request.get_vars.pop("type", None)
         vars.datetime = vars.datetime.replace(tzinfo=None)
 
@@ -592,6 +596,7 @@ $(document).ready(function() {
              current_log.datetime <= vars.datetime):
             # This is a current assignment
             atable = s3db.asset_asset
+            tracker = S3Tracker()
             asset_tracker = tracker(atable, asset_id)
 
             if status == ASSET_LOG_SET_BASE:
@@ -609,8 +614,9 @@ $(document).ready(function() {
                         asset_tracker.set_location(vars.person_id,
                                                    timestmp = vars.datetime)
                     # Update main record for component
-                    query = (atable.id == asset_id)
-                    db(query).update(assigned_to_id=vars.person_id)
+                    db(atable.id == asset_id).update(
+                                                assigned_to_id=vars.person_id
+                                            )
 
                 elif type == "site":
                     asset_tracker.check_in(s3db.org_site, vars.site_id,

@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 s3db.hrm_vars()
@@ -51,7 +51,7 @@ def human_resource():
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
-                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                   (settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
                    (T("Certificates"), "certificate"),
                    (T("Contract End Date"), "end_date"),
@@ -102,8 +102,8 @@ def human_resource():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
-                if "msg" in deployment_settings.modules:
+                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
@@ -141,7 +141,7 @@ def staff():
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
-                   (deployment_settings.get_ui_label_mobile_phone(), "phone"),
+                   (settings.get_ui_label_mobile_phone(), "phone"),
                    (T("Trainings"), "course"),
                    (T("Certificates"), "certificate"),
                    (T("Contract End Date"), "end_date"),
@@ -200,8 +200,8 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
-                if "msg" in deployment_settings.modules:
+                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                             "url": URL(f="compose",
@@ -266,7 +266,7 @@ def person():
         set_method("pr", resourcename, method="roles",
                    action=s3base.S3PersonRoleManager())
 
-    if deployment_settings.has_module("asset"):
+    if settings.has_module("asset"):
         # Assets as component of people
         s3mgr.model.add_component("asset_asset",
                                   pr_person="assigned_to_id")
@@ -312,7 +312,7 @@ def person():
         table.location_id.readable = True
         table.site_id.readable = True
 
-    if session.s3.hrm.mode is not None:
+    if mode is not None:
         list_fields=["id",
                      "organisation_id",
                      "type",
@@ -337,7 +337,7 @@ def person():
     # - hide fields
     tablename = "pr_person"
     table = s3db[tablename]
-    if deployment_settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_experience() == "programme":
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
     table.pe_label.readable = False
     table.pe_label.writable = False
@@ -348,8 +348,6 @@ def person():
     configure(tablename,
               deletable=False)
 
-    s3.crud_strings[tablename].update(
-        title_upload = T("Import Staff"))
     # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
     table.occupation.readable = False
     table.occupation.writable = False
@@ -369,7 +367,7 @@ def person():
     table.type.default = 1
     request.get_vars.update(xsltmode="staff")
 
-    if session.s3.hrm.mode is not None:
+    if mode is not None:
         # Configure for personal mode
         s3db.hrm_human_resource.organisation_id.readable = True
         s3.crud_strings[tablename].update(
@@ -408,16 +406,10 @@ def person():
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
-            title_upload = T("Import Staff & Volunteers"))
-        if group == "staff":
-            s3.crud_strings[tablename].update(
+                title_upload = T("Import Staff"),
                 title_display = T("Staff Member Details"),
-                title_update = T("Staff Member Details"))
-        elif group == "volunteer":
-            s3.crud_strings[tablename].update(
-                title_display = T("Volunteer Details"),
-                title_update = T("Volunteer Details"))
-
+                title_update = T("Staff Member Details")
+            )
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
@@ -543,12 +535,13 @@ def person_search():
         - limited to just search.json for use in Autocompletes
         - allows differential access permissions
     """
+
     s3mgr.configure("hrm_human_resource",
                     search_method = s3db.hrm_autocomplete_search,
                    )
     s3.prep = lambda r: r.representation == "json" and \
                         r.method == "search"
-    return s3_rest_controller(module, "human_resource")
+    return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
 # Teams
@@ -628,7 +621,7 @@ def group():
             if not r.component:
                 update_url = URL(args=["[id]", "group_membership"])
                 s3_action_buttons(r, deletable=False, update_url=update_url)
-                if "msg" in deployment_settings.modules:
+                if "msg" in settings.modules:
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),
