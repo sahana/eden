@@ -1537,21 +1537,18 @@ class AuthS3(Auth):
             @param person_id: the person record ID
         """
 
-        db = current.db
-        s3db = current.s3db
-        manager = current.manager
-
-        htable = s3db.table("hrm_human_resource")
+        htable = current.s3db.table("hrm_human_resource")
         if htable is None:
             # HR module disabled: skip
             return
-        rtable = self.settings.table_group
-        mtable = self.settings.table_membership
-        utable = self.settings.table_user
+        settings = self.settings
+        rtable = settings.table_group
+        mtable = settings.table_membership
+        utable = settings.table_user
 
         # User owns their own HRM records
         query = (htable.person_id == person_id)
-        db(query).update(owned_by_user=user_id)
+        current.db(query).update(owned_by_user=user_id)
 
     # -------------------------------------------------------------------------
     def s3_send_welcome_email(self, user):
@@ -1579,20 +1576,17 @@ class AuthS3(Auth):
         """
             S3 framework function
 
-            Designed to be used within tasks, which are run in a separate request
-            & hence don't have access to current.auth
+            Designed to be used within tasks, which are run in a separate
+            request & hence don't have access to current.auth
 
             @param user_id: auth.user.id or auth.user.email
         """
-
-        session = current.session
-        db = current.db
 
         table_user = self.settings.table_user
         query = None
         if not user_id:
             # Anonymous
-            self.user = None
+            user = None
         elif isinstance(user_id, basestring) and not user_id.isdigit():
             if self.settings.username_field:
                 query = (table_user.username == user_id)
@@ -1602,23 +1596,27 @@ class AuthS3(Auth):
             query = (table_user.id == user_id)
 
         if query is not None:
-            user = db(query).select(limitby=(0, 1)).first()
+            user = current.db(query).select(limitby=(0, 1)).first()
             if not user:
                 # Invalid user ID
                 raise ValueError("User not found")
             else:
-                self.user = Storage(table_user._filter_fields(user, id=True))
+                user = Storage(table_user._filter_fields(user, id=True))
 
-        session.auth = self
+        self.user = user
+        session = current.session
+        session.auth = Storage(user=user,
+                               last_visit=current.request.now,
+                               expiration=self.settings.expiration)
         self.s3_set_roles()
 
-        if self.user:
+        if user:
             # Set the language from the Profile
             language = user.language
             current.T.force(language)
-            current.session.s3.language = language
+            session.s3.language = language
 
-        return self.user
+        return user
 
     # -------------------------------------------------------------------------
     def s3_logged_in(self):
@@ -1648,31 +1646,30 @@ class AuthS3(Auth):
     def get_system_roles(self):
         """
             Get the IDs of the session roles by their UIDs, and store them
-            into the current session. To be run once per session, as these
-            IDs should never change.
+            in the current session, as these IDs should never change.
         """
 
-        session = current.session
-
+        s3 = current.session.s3
         try:
-            if session.s3.system_roles:
-                return session.s3.system_roles
+            system_roles = s3.system_roles
         except:
-            pass
+            s3 = Storage()
+        else:
+            if system_roles:
+                return system_roles
 
-        db = current.db
         gtable = self.settings.table_group
         if gtable is not None:
-            system_roles = self.S3_SYSTEM_ROLES
+            S3_SYSTEM_ROLES = self.S3_SYSTEM_ROLES
             query = (gtable.deleted != True) & \
-                     gtable.uuid.belongs(system_roles.values())
-            rows = db(query).select(gtable.id, gtable.uuid)
-            sr = Storage([(role.uuid, role.id) for role in rows])
+                     gtable.uuid.belongs(S3_SYSTEM_ROLES.values())
+            rows = current.db(query).select(gtable.id, gtable.uuid)
+            system_roles = Storage([(role.uuid, role.id) for role in rows])
         else:
-            sr = Storage([(uid, None) for uid in self.S3_SYSTEM_ROLES])
+            system_roles = Storage([(uid, None) for uid in S3_SYSTEM_ROLES])
 
-        session.s3.system_roles = sr
-        return sr
+        s3.system_roles = system_roles
+        return system_roles
 
     # -------------------------------------------------------------------------
     def s3_set_roles(self):
@@ -1980,8 +1977,6 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        s3db = current.s3db
-
         gtable = self.settings.table_group
         mtable = self.settings.table_membership
 
@@ -2059,8 +2054,6 @@ class AuthS3(Auth):
             return
 
         db = current.db
-        s3db = current.s3db
-
         gtable = self.settings.table_group
         mtable = self.settings.table_membership
 
@@ -2121,11 +2114,11 @@ class AuthS3(Auth):
             @param user_id: the user_id
             @param for_pe: the entity (pe_id) or list of entities
         """
-        mtable = self.settings.table_membership
 
         if not user_id:
             return []
 
+        mtable = self.settings.table_membership
         query = (mtable.deleted != True) & \
                 (mtable.user_id == user_id)
         if isinstance(for_pe, (list, tuple)):
@@ -2159,7 +2152,6 @@ class AuthS3(Auth):
             # All users have the anonymous role
             return True
 
-        db = current.db
         s3 = current.session.s3
 
         # Trigger HTTP basic auth
@@ -2188,7 +2180,8 @@ class AuthS3(Auth):
                 gtable = self.settings.table_group
                 query = (gtable.deleted != True) & \
                         (gtable.uuid == role)
-                row = db(query).select(gtable.id, limitby=(0, 1)).first()
+                row = current.db(query).select(gtable.id,
+                                               limitby=(0, 1)).first()
                 if row:
                     role = row.id
                 else:
@@ -2248,11 +2241,11 @@ class AuthS3(Auth):
                    the given role type)
         """
 
-        db = current.db
-        s3db = current.s3db
-
         if not self.permission.delegations:
             return False
+
+        db = current.db
+        s3db = current.s3db
         dtable = s3db.table("pr_delegation")
         rtable = s3db.table("pr_role")
         atable = s3db.table("pr_affiliation")
@@ -2377,11 +2370,11 @@ class AuthS3(Auth):
                    group_id will be removed for the entity
         """
 
-        db = current.db
-        s3db = current.s3db
-
         if not self.permission.delegations:
             return False
+
+        db = current.db
+        s3db = current.s3db
         dtable = s3db.table("pr_delegation")
         rtable = s3db.table("pr_role")
         atable = s3db.table("pr_affiliation")
@@ -2465,14 +2458,12 @@ class AuthS3(Auth):
                       a Storage {<rolename>: {entities:[pe_ids], groups:[group_ids]}}
         """
 
-        db = current.db
-        s3db = current.s3db
-
         if not entity or not self.permission.delegations:
             return None
-        dtable = s3db.table("pr_delegation")
-        rtable = s3db.table("pr_role")
-        atable = s3db.table("pr_affiliation")
+        s3db = current.s3db
+        dtable = s3db.pr_delegation
+        rtable = s3db.pr_role
+        atable = s3db.pr_affiliation
         if None in (dtable, rtable, atable):
             return None
 
@@ -2484,9 +2475,9 @@ class AuthS3(Auth):
                 (atable.role_id == rtable.id)
         if role_type is not None:
             query &= (rtable.role_type == role_type)
-        rows = db(query).select(atable.pe_id,
-                                rtable.role,
-                                dtable.group_id)
+        rows = current.db(query).select(atable.pe_id,
+                                        rtable.role,
+                                        dtable.group_id)
         delegations = Storage()
         for row in rows:
             receiver = row[atable.pe_id]
@@ -2525,24 +2516,23 @@ class AuthS3(Auth):
 
             @param person_id: the pr_person record ID
         """
-        db = current.db
-        s3db = current.s3db
 
         if isinstance(person_id, basestring) and not person_id.isdigit():
             utable = self.settings.table_user
             query = (utable.email == person_id)
-            user = db(query).select(utable.id,
-                                    limitby=(0, 1)).first()
+            user = current.db(query).select(utable.id,
+                                            limitby=(0, 1)).first()
             if user:
                 return user.id
         else:
-            ptable = s3db.table("pr_person")
-            ltable = s3db.table("pr_person_user")
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
             if ptable and ltable:
                 query = (ptable.id == person_id) & \
                         (ptable.pe_id == ltable.pe_id)
-                link = db(query).select(ltable.user_id,
-                                        limitby=(0, 1)).first()
+                link = current.db(query).select(ltable.user_id,
+                                                limitby=(0, 1)).first()
                 if link:
                     return link.user_id
         return None
@@ -2555,12 +2545,9 @@ class AuthS3(Auth):
             @param user_id: the user ID
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        ltable = s3db.pr_person_user
-        query = (ltable.user_id == user_id)
-        row = db(query).select(ltable.pe_id, limitby=(0, 1)).first()
+        table = current.s3db.pr_person_user
+        row = current.db(table.user_id == user_id).select(table.pe_id,
+                                                          limitby=(0, 1)).first()
         if row:
             return row.pe_id
         return None
@@ -2571,19 +2558,16 @@ class AuthS3(Auth):
             Get the person record ID for the current logged-in user
         """
 
-        db = current.db
-        s3db = current.s3db
-        ptable = s3db.pr_person
-
         if self.s3_logged_in():
+            ptable = current.s3db.pr_person
             try:
                 query = (ptable.pe_id == self.user.pe_id)
             except AttributeError:
                 # Prepop
                 pass
             else:
-                record = db(query).select(ptable.id,
-                                          limitby=(0, 1)).first()
+                record = current.db(query).select(ptable.id,
+                                                  limitby=(0, 1)).first()
                 if record:
                     return record.id
         return None
@@ -2594,12 +2578,11 @@ class AuthS3(Auth):
             Get the first HR record ID for the current logged-in user
         """
 
-        db = current.db
-        s3db = current.s3db
-        ptable = s3db.pr_person
-        htable = s3db.hrm_human_resource
-
         if self.s3_logged_in():
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            htable = s3db.hrm_human_resource
+
             try:
                 query = (htable.person_id == ptable.id) & \
                         (ptable.pe_id == self.user.pe_id)
@@ -2607,9 +2590,9 @@ class AuthS3(Auth):
                 # Prepop
                 pass
             else:
-                record = db(query).select(htable.id,
-                                          orderby =~htable.modified_on,
-                                          limitby=(0, 1)).first()
+                record = current.db(query).select(htable.id,
+                                                  orderby =~htable.modified_on,
+                                                  limitby=(0, 1)).first()
                 if record:
                     return record.id
         return None
@@ -2633,8 +2616,6 @@ class AuthS3(Auth):
 
         if self.override:
             return True
-
-        db = current.db
 
         sr = self.get_system_roles()
 
@@ -2670,8 +2651,8 @@ class AuthS3(Auth):
                 if not authorised and self.user and "owned_by_user" in table:
                     # Creator of Record is allowed to Edit
                     query = (table.id == record_id)
-                    record = db(query).select(table.owned_by_user,
-                                              limitby=(0, 1)).first()
+                    record = current.db(query).select(table.owned_by_user,
+                                                      limitby=(0, 1)).first()
                     if record and self.user.id == record.owned_by_user:
                         authorised = True
 
@@ -2717,10 +2698,6 @@ class AuthS3(Auth):
         if self.override:
             return table.id > 0
 
-        db = current.db
-        session = current.session
-        T = current.T
-
         sr = self.get_system_roles()
 
         if not hasattr(table, "_tablename"):
@@ -2753,15 +2730,14 @@ class AuthS3(Auth):
         if self.has_permission(method, table, 0, user_id):
             return table.id > 0
         # Filter Records to show only those to which the user has access
-        session.warning = T("Only showing accessible records!")
+        current.session.warning = current.T("Only showing accessible records!")
         membership = self.settings.table_membership
         permission = self.settings.table_permission
-        return table.id.belongs(db(membership.user_id == user_id)\
-                                  (membership.group_id == permission.group_id)\
-                                  (permission.name == method)\
-                                  (permission.table_name == table)\
-                                  ._select(permission.record_id))
-
+        query = (membership.user_id == user_id) & \
+                (membership.group_id == permission.group_id) & \
+                (permission.name == method) & \
+                (permission.table_name == table)
+        return table.id.belongs(current.db(query)._select(permission.record_id))
 
     # -------------------------------------------------------------------------
     # S3 Variants of web2py Authorization Methods
@@ -2885,7 +2861,7 @@ class AuthS3(Auth):
             table = table._tablename
         if record_id and not self.user:
             try:
-                records = current.session.owned_records.get(table, [])
+                records = session.owned_records.get(table, [])
             except:
                 records = []
             if str(record_id) in records:
@@ -2928,7 +2904,6 @@ class AuthS3(Auth):
             @param fields: dict of {ownership_field:value}
         """
 
-        db = current.db
         ownership_fields = ("owned_by_user",
                             "owned_by_group",
                             "owned_by_entity")
@@ -2942,7 +2917,7 @@ class AuthS3(Auth):
             if key in ownership_fields:
                 data[key] = fields[key]
         if data:
-            return db(table._id == record_id).update(**data)
+            return current.db(table._id == record_id).update(**data)
         else:
             return None
 
@@ -2960,7 +2935,6 @@ class AuthS3(Auth):
                                       pe_id from
         """
 
-        db = current.db
         s3db = current.s3db
         model = current.manager.model
 
@@ -3013,9 +2987,10 @@ class AuthS3(Auth):
         # Get all available fields for the record
         fields_missing = [f for f in fields_in_table if f not in record]
         if fields_missing:
-            fields_to_load = [table._id]+[table[f] for f in fields_in_table]
-            query = table._id == record_id
-            row = db(query).select(limitby=(0, 1), *fields_to_load).first()
+            fields_to_load = [table._id] + [table[f] for f in fields_in_table]
+            query = (table._id == record_id)
+            row = current.db(query).select(limitby=(0, 1),
+                                           *fields_to_load).first()
         else:
             row = record
         if not row:
@@ -3103,8 +3078,6 @@ class AuthS3(Auth):
                                   facilities (a tablename)
         """
 
-        db = current.db
-        s3db = current.s3db
         T = current.T
         ERROR = T("You do not have permission for any facility to perform this action.")
         HINT = T("Create a new facility or ensure that you have permissions for an existing facility.")
@@ -3112,6 +3085,7 @@ class AuthS3(Auth):
         if not error_msg:
             error_msg = ERROR
 
+        s3db = current.s3db
         site_ids = []
         if facility_type is None:
             site_types = self.org_site_types
@@ -3127,7 +3101,7 @@ class AuthS3(Auth):
                 query = self.s3_accessible_query("update", ftable)
                 if "deleted" in ftable:
                     query &= (ftable.deleted != True)
-                rows = db(query).select(ftable.site_id)
+                rows = current.db(query).select(ftable.site_id)
                 site_ids += [row.site_id for row in rows]
             except:
                 # Module disabled
@@ -3167,9 +3141,6 @@ class AuthS3(Auth):
             @param redirect_on_error: whether to redirect on error
         """
 
-        db = current.db
-        s3db = current.s3db
-        manager = current.manager
         T = current.T
         ERROR = T("You do not have permission for any organization to perform this action.")
         HINT = T("Create a new organization or ensure that you have permissions for an existing organization.")
@@ -3177,23 +3148,24 @@ class AuthS3(Auth):
         if not error_msg:
             error_msg = ERROR
 
+        s3db = current.s3db
         org_table = s3db.org_organisation
         query = self.s3_accessible_query("update", org_table)
         query &= (org_table.deleted == False)
-        rows = db(query).select(org_table.id)
+        rows = current.db(query).select(org_table.id)
         if rows:
             return [org.id for org in rows]
         request = current.request
         if "update" in request.args or "create" in request.args:
             if redirect_on_error:
-                manager.session.error = error_msg + " " + HINT
+                current.session.error = error_msg + " " + HINT
                 redirect(URL(c="default", f="index"))
         elif table is not None:
             if hasattr(table, "_tablename"):
                 tablename = table._tablename
             else:
                 tablename = table
-            manager.configure(tablename, insertable = False)
+            s3db.configure(tablename, insertable = False)
 
         return []
 
@@ -4416,11 +4388,10 @@ class S3Permission(object):
     def hidden_modules(self):
         """ List of modules to hide from the main menu """
 
-        sr = self.auth.get_system_roles()
-        modules = current.deployment_settings.modules
-
         hidden_modules = []
         if self.use_cacls:
+            sr = self.auth.get_system_roles()
+            modules = current.deployment_settings.modules
             restricted_modules = [m for m in modules
                                     if modules[m].restricted]
             roles = []
@@ -4711,26 +4682,24 @@ class S3RoleManager(S3Method):
             List roles/permissions
         """
 
-        output = dict()
-
-        request = self.request
-        response = current.response
-        resource = self.resource
-        manager = current.manager
-        auth = manager.auth
-
-        db = current.db
-        table = self.table
-
-        T = current.T
-
         if r.id:
             return self._edit(r, **attr)
 
-        # Show permission matrix?
-        show_matrix = request.get_vars.get("matrix", False) and True
+        output = dict()
 
         if r.interactive:
+
+            T = current.T
+            db = current.db
+            response = current.response
+            resource = self.resource
+            manager = current.manager
+            auth = manager.auth
+            vars = self.request.get_vars
+            table = self.table
+
+            # Show permission matrix?
+            show_matrix = vars.get("matrix", False) and True
 
             # Title and subtitle
             output.update(title = T("List of Roles"))
@@ -4813,7 +4782,7 @@ class S3RoleManager(S3Method):
 
                 edit_btn = A(T("Edit"),
                              _href=URL(c="admin", f="role",
-                                       args=[role_id], vars=request.get_vars),
+                                       args=[role_id], vars=vars),
                              _class="action-btn")
 
                 users_btn = A(T("Users"),
@@ -4830,7 +4799,7 @@ class S3RoleManager(S3Method):
                     delete_btn = A(T("Delete"),
                                 _href=URL(c="admin", f="role",
                                           args=[role_id, "delete"],
-                                          vars=request.get_vars),
+                                          vars=vars),
                                 _class="delete-btn")
                     tdata = [TD(edit_btn,
                                 XML("&nbsp;"),
@@ -4889,8 +4858,9 @@ class S3RoleManager(S3Method):
             output.update(add_btn=add_btn)
 
             response.view = "admin/role_list.html"
-            response.s3.actions = []
-            response.s3.no_sspag = True
+            s3 = response.s3
+            s3.actions = []
+            s3.no_sspag = True
 
         elif r.representation == "xls":
             # Not implemented yet
