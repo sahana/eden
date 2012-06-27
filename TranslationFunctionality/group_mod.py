@@ -23,7 +23,7 @@ def init():
       d["special"] = []   
 
       # Directories which are not required to be searched
-      rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git", "TranslationFunctionality"]
+      rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git", "TranslationFunctionality","private"]
       
       #Calls the function to group the files
       group_files("../",'',0)
@@ -74,7 +74,9 @@ def group_files(currentDir,curmod, vflag):
 		         group_files(curFile,os.path.basename(curFile),vflag)
 		  else:
                          group_files(curFile,curmod,vflag)
-	  else:
+
+	  elif (curFile.endswith("test.py") or curFile.endswith("tests.py")) == False:
+	         
 	          # If inside /eden/views, use parent directory name for categorization
 		  if vflag==1:          
 		     base = curmod
@@ -130,7 +132,8 @@ def get_strings_by_module(module):
 	tmpstr = []
 
 	for f in fileList:
-	     if f.endswith(".py") == True:
+	     
+	     if f.endswith(".py") == True :
 	          tmpstr = getStrings.findstr(f,"ALL",get_module_list())
 		  for s in tmpstr:
 		      strings.append( ( f+":"+str(s[0]) , s[1]) ) 
