@@ -53,10 +53,10 @@ class S3Config(Storage):
         self.L10n = Storage()
         self.aaa = Storage()
         self.mail = Storage()
+        self.msg = Storage()
         self.options = Storage()
         self.save_search = Storage()
         self.security = Storage()
-        self.twitter = Storage()
         self.ui = Storage()
         self.gis = Storage()
         self.hrm = Storage()
@@ -491,10 +491,19 @@ class S3Config(Storage):
         """ A daily limit to the number of messages which can be sent """
         return self.mail.get("limit", None)
 
-    # Twitter settings
-    def get_twitter_oauth_consumer_key(self):
+    # -------------------------------------------------------------------------
+    # Parser
+    def get_msg_parser(self):
+        """
+            Which template folder to use to load parser.py
+        """
+        return self.msg.get("parser", "default")
+
+    # -------------------------------------------------------------------------
+    # Twitter
+    def get_msg_twitter_oauth_consumer_key(self):
         return self.twitter.get("oauth_consumer_key", "")
-    def get_twitter_oauth_consumer_secret(self):
+    def get_msg_twitter_oauth_consumer_secret(self):
         return self.twitter.get("oauth_consumer_secret", "")
 
     # -------------------------------------------------------------------------
@@ -848,14 +857,6 @@ class S3Config(Storage):
             Enable the Saved Search widget
         """
         return self.save_search.get("widget", True)
-
-    # -------------------------------------------------------------------------
-    # Message Parser Settings
-    def get_msg_parser(self):
-        """
-            Which template folder to use to load parser.py
-        """
-        return self.msg.get("parser", "default")
 
     # -------------------------------------------------------------------------
     # Active modules list
