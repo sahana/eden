@@ -47,7 +47,7 @@ if settings.has_module("msg"):
     tasks["process_outbox"] = process_outbox
 
     # -------------------------------------------------------------------------
-    def process_inbound_email(username):
+    def process_inbound_email(username, user_id):
         """
             Poll an inbound email source.
 
@@ -61,12 +61,12 @@ if settings.has_module("msg"):
     tasks["process_inbound_email"] = process_inbound_email
 
     # -----------------------------------------------------------------------------
-    def parse_workflow(workflow):
+    def parse_workflow(workflow, source, user_id):
         """
         Processes the msg_log for unparsed messages.
         """
         # Run the Task
-        result = msg.parse_import(workflow)
+        result = msg.parse_import(workflow, source)
         return result
         
     tasks["parse_workflow"] = parse_workflow
