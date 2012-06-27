@@ -851,8 +851,8 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Message Parser Settings
-    def get_parser_enabled(self):
-            return self.parser.get("parser_enabled")
+    def get_parser_template(self):
+            return self.parser.get("template", "default")
 
 
     # -------------------------------------------------------------------------
