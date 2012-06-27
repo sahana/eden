@@ -5877,6 +5877,8 @@ class S3FieldSelector:
                       the value from the row otherwise
         """
 
+        if isinstance(field, basestring):
+            field = S3FieldSelector(field)
         if isinstance(field, Field):
             f = field
             colname = str(field)
@@ -5895,13 +5897,15 @@ class S3FieldSelector:
             colname = field.colname
         else:
             return field
-        if f is not None:
+        if f is not None and isinstance(row, Row):
             try:
                 return row[f]
             except KeyError:
                 raise KeyError("Field not found: %s" % colname)
         elif fname in row:
             value = row[fname]
+        elif colname in row:
+            value = row[colname]
         elif tname is not None and \
              tname in row and fname in row[tname]:
             value = row[tname][fname]

@@ -2176,6 +2176,8 @@ class S3ImportItem(object):
                         return True
                 fields = data.keys()
                 for f in fields:
+                    if f not in this:
+                        continue
                     if isinstance(this[f], datetime):
                         if xml.as_utc(data[f]) == xml.as_utc(this[f]):
                             del data[f]
