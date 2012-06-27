@@ -1,6 +1,11 @@
-""" Sahana Eden Module Automated Tests - HRM007 Add Staff To Warehouse
+# -*- coding: utf-8 -*-
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+"""
+    S3 Record Merger
+
+    @requires: U{B{I{gluon}} <http://web2py.com>}
+
+    @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -23,28 +28,29 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
 """
 
-from tests.web2unittest import SeleniumUnitTest
-from tests import *
-#import unittest, re, time
+__all__ = ["S3Merge"]
 
-class AddStaffToWarehouse(SeleniumUnitTest):
-    def test_hrm007_add_staff_to_warhouse(self):
+from s3method import S3Method
+
+# =============================================================================
+class S3Merge(S3Method):
+    """ Interactive Record Merger """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
         """
-            @case: HRM007
-            @description: Add a premade made staff to a Warehouse
-            
-            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
-            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
+            Apply Merge methods
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+
+            @returns: output object to send to the view
         """
-        self.login(account="admin", nexturl="inv/warehouse/9/human_resource")
-        self.browser.find_element_by_id("select_from_registry").click()
-        
-        self.create("hrm_human_resource", 
-                    [
-                     ( "person_id",
-                       "Quito Cromos",
-                       "autocomplete")
-                     ]
-                     )
+
+        # Not implemented yet
+        r.error(405, manager.ERROR.BAD_METHOD)
+
+# END =========================================================================

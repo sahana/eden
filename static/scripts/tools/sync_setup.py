@@ -49,6 +49,7 @@ try:
     resources = [ os.environ["sync_resources_1"] ]
 except KeyError:
     resources = [
+                # Include all non-component resources
                 "pr_person",
                 "org_organisation",
                 "org_office",

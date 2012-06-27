@@ -2,23 +2,11 @@
 <xsl:stylesheet
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
     <!-- **********************************************************************
-         survey-Response - CSV Import Stylesheet
+         Survey Response - CSV Import Stylesheet
 
          - Specialist transform file for the 24H rapid assessment form
 
          - use for import to survey/question_response resource
-
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be survey/complete/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
 
          CSV fields:
          Template..............survey_template.name

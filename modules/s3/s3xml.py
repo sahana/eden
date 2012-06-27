@@ -637,8 +637,12 @@ class S3XML(S3Codec):
             @param locations: locations dict
         """
 
-        gis = current.gis
+        if id not in record:
+            # e.g. Super-Entity
+            # - we only map entity instances
+            return
 
+        gis = current.gis
         if not gis:
             return
 

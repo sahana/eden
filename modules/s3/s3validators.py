@@ -380,10 +380,10 @@ class IS_ONE_OF_EMPTY(Validator):
         else:
             ks = [kfield]
             try:
-                table = self.dbset._db[ktable]
-            except:
                 table = current.s3db[ktable]
-            fields =[str(f) for f in table]
+                fields =[str(f) for f in table]
+            except RuntimeError:
+                fields = "all"
         self.fields = fields
         self.label = label
         self.ktable = ktable
@@ -438,7 +438,7 @@ class IS_ONE_OF_EMPTY(Validator):
             table = db[self.ktable]
 
             if self.fields == "all":
-                fields = [f for f in table if isinstance(f, Field)]
+                fields = [table[f] for f in table.fields]
             else:
                 fieldnames = [f.split(".")[1] if "." in f else f for f in self.fields]
                 fields = [table[k] for k in fieldnames if k in table.fields]

@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 s3db.hrm_vars()
@@ -68,7 +68,7 @@ def human_resource():
         append((T("Status"), "active"))
     append("location_id")
     append((T("Email"), "email"))
-    append((deployment_settings.get_ui_label_mobile_phone(), "phone"))
+    append((settings.get_ui_label_mobile_phone(), "phone"))
     append((T("Trainings"), "course"))
     append((T("Certificates"), "certificate"))
     if settings.get_hrm_experience() == "programme":
@@ -121,8 +121,8 @@ def human_resource():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
-                if "msg" in deployment_settings.modules:
+                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                         "url": URL(f="compose",
@@ -280,15 +280,15 @@ def volunteer():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                s3_action_buttons(r, deletable=deployment_settings.get_hrm_deletable())
-                if "msg" in deployment_settings.modules:
+                s3_action_buttons(r, deletable=settings.get_hrm_deletable())
+                if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append({
                             "url": URL(f="compose",
                                        vars = {"hrm_id": "[id]"}),
                             "_class": "action-btn",
                             "label": str(T("Send Message"))
-                       })
+                        })
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
@@ -346,7 +346,7 @@ def person():
         set_method("pr", resourcename, method="roles",
                    action=s3base.S3PersonRoleManager())
 
-    if deployment_settings.has_module("asset"):
+    if settings.has_module("asset"):
         # Assets as component of people
         s3mgr.model.add_component("asset_asset",
                                   pr_person="assigned_to_id")
@@ -380,11 +380,12 @@ def person():
         table.organisation_id.comment = None
         table.organisation_id.readable = False
         table.organisation_id.writable = False
-        table.site_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                    "org_site.%s" % super_key(db.org_site),
-                                    s3db.org_site_represent,
-                                    filterby="organisation_id",
-                                    filter_opts=[session.s3.hrm.org]))
+        table.site_id.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db,
+                                        "org_site.%s" % super_key(db.org_site),
+                                        s3db.org_site_represent,
+                                        filterby="organisation_id",
+                                        filter_opts=[session.s3.hrm.org]))
     if hr_id:
         table.job_role_id.label = T("Volunteer Role")
         table.code.writable = False
@@ -397,7 +398,7 @@ def person():
         table.location_id.readable = True
         table.location_id.label = T("Home Address")
 
-    if session.s3.hrm.mode is not None:
+    if mode is not None:
         list_fields=["id",
                      "organisation_id",
                      "job_role_id",
@@ -409,7 +410,7 @@ def person():
                      "location_id",
                      "site_id"]
 
-    if deployment_settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_experience() == "programme":
         list_fields.append((T("Programme?"), "programme"))
         list_fields.append((T("Active?"), "active"))
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
@@ -423,7 +424,7 @@ def person():
     # - hide fields
     tablename = "pr_person"
     table = s3db[tablename]
-    if deployment_settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_experience() == "programme":
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
     table.pe_label.readable = False
     table.pe_label.writable = False
@@ -434,15 +435,13 @@ def person():
     configure(tablename,
               deletable=False)
 
-    s3.crud_strings[tablename].update(
-        title_upload = T("Import Volunteers"))
     table.occupation.label = T("Previous Job")
     # Default type for HR
-    table = db.hrm_human_resource
+    table = s3db.hrm_human_resource
     table.type.default = 2
     request.get_vars.update(xsltmode="volunteer")
 
-    if session.s3.hrm.mode is not None:
+    if mode is not None:
         # Configure for personal mode
         s3db.hrm_human_resource.organisation_id.readable = True
         s3.crud_strings[tablename].update(
@@ -481,9 +480,9 @@ def person():
     else:
         # Configure for HR manager mode
         s3.crud_strings[tablename].update(
-            title_display = T("Volunteer Details"),
-            title_update = T("Volunteer Details"),
-            title_upload = T("Import Volunteers"),
+                title_display = T("Volunteer Details"),
+                title_update = T("Volunteer Details"),
+                title_upload = T("Import Volunteers"),
             )
 
     # Upload for configuration (add replace option)
@@ -697,7 +696,7 @@ def group():
             if not r.component:
                 update_url = URL(args=["[id]", "group_membership"])
                 s3_action_buttons(r, deletable=False, update_url=update_url)
-                if "msg" in deployment_settings.modules:
+                if "msg" in settings.modules:
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),

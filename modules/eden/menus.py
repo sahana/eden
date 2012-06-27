@@ -1535,8 +1535,8 @@ class S3OptionsMenu(object):
         """
 
         return [
-            M("Email Settings", c="msg", f="inbound_email_settings",
-                args=[1], m="update"),
+            M("Email Settings", c="msg", f="inbound_email_settings"),
+            M("Parsing Settings", c="msg", f="workflow"),                       
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
             M("Twitter Settings", c="msg", f="twitter_settings",

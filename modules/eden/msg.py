@@ -35,7 +35,7 @@ __all__ = ["S3MessagingModel",
            "S3TropoModel",
            "S3TwitterModel",
            "S3XFormsModel",
-           "S3ParsingModel"
+           "S3ParsingModel",
         ]
 
 from gluon import *
@@ -63,7 +63,8 @@ class S3MessagingModel(S3Model):
         db = current.db
         s3 = current.response.s3
         msg = current.msg
-
+        s3db = current.s3db
+        
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # Message priority
@@ -72,9 +73,13 @@ class S3MessagingModel(S3Model):
             2:T("Medium"),
             1:T("Low")
         }
-        source_task_id = S3ReusableField("source_task_id", db.scheduler_task,
-                                             requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
-                                             ondelete = "RESTRICT")
+        
+        mtable = s3db.msg_inbound_email_settings
+        source_opts = []
+        records = db(mtable.id>0).select(mtable.username)
+        for record in records:
+            source_opts += [record.username]
+        
         
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
@@ -106,7 +111,9 @@ class S3MessagingModel(S3Model):
                                         label = T("Parsing Status")),
                                   Field("reply", "text" ,
                                         label = T("Reply")),
-                                  source_task_id(label="Source ID"),                                                                         
+                                  Field("source_task_id",
+                                        requires = IS_IN_SET(source_opts,
+                                                             zero = None)),                                                                       
                                   *s3_meta_fields())
 
         self.configure(tablename,
@@ -724,8 +731,7 @@ class S3XFormsModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage()
     
-# ---------------------------------------------------------------------
-        
+# =============================================================================
 class S3ParsingModel(S3Model):
     """
         Message Parsing Model
@@ -735,28 +741,35 @@ class S3ParsingModel(S3Model):
 
     def model(self):
 
+        from s3 import s3parser
+        import inspect
+        
         T = current.T
-        s3 = current.response.s3
-        db = current.db
-        # Reusable Source Task ID
-        source_task_id = S3ReusableField("source_task_id", db.scheduler_task,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
-                                     ondelete = "RESTRICT")
-        # Reusable Workflow Task ID
-        workflow_task_id = S3ReusableField("workflow_task_id", db.scheduler_task,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "scheduler_task.id")),
-                                     ondelete = "RESTRICT")
+        mtable = self.msg_inbound_email_settings
+        # source_opts contain the available message sources.
+        source_opts = []
+        records = current.db(mtable.deleted == False).select(mtable.username)
+        for record in records:
+            source_opts += [record.username]
+
+        # Dynamic lookup of the parsing functions in S3Parsing class.
+        parsers = inspect.getmembers(s3parser.S3Parsing, predicate=inspect.isfunction)
+        parse_opts = []
+        for parser in parsers:
+            parse_opts += [parser[0]]
 
         tablename = "msg_workflow"
         table = self.define_table(tablename,
-                                source_task_id(),
-                                workflow_task_id(),
-                                *s3_meta_fields())
-        
+                                  Field("source_task_id",
+                                        label = T("Inbound Message Source"),
+                                        requires = IS_IN_SET(source_opts,
+                                                             zero = None)),
+                                  Field("workflow_task_id",
+                                        label = T("Workflow"),
+                                        requires = IS_IN_SET(parse_opts,
+                                                             zero=None)), 
+                                  *s3_meta_fields())
 
         return Storage()
- 
-
-
 
 # END =========================================================================
