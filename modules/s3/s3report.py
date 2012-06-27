@@ -1134,6 +1134,7 @@ class S3ContingencyTable(TABLE):
 
         cells = report.cell
         rvals = report.row
+
         for i in xrange(numrows):
 
             # Initialize row
@@ -1174,22 +1175,24 @@ class S3ContingencyTable(TABLE):
                         else:
                             add_value(unicode(value))
 
+                    # hold the references
                     layer_ids = []
+                    # get previous lookup values for this layer
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
                     if m == "count":
                         for id in cell.records:
-                            # records == [#, #, #]
-                            lf = lfields[f]
-                            if f in report.records[id]:
-                                # records[#] == {}
-                                fvalue = report.records[id][f]
+                            # cell.records == [#, #, #]
+                            field = lfields[f].field
+                            record = report.records[id]
+
+                            if field.tablename in record:
+                                fvalue = record[field.tablename][field.name]
                             else:
-                                # records[#] == {{}, {}}
-                                fvalue = report.records[id][lf.tname][lf.fname]
+                                fvalue = record[field.name]
 
                             if fvalue is not None:
-                                ftype = str(lf.field.type)
+                                ftype = str(field.type)
                                 if ftype[:9] == "reference" or ftype[:14] == "list:reference":
                                     if not isinstance(fvalue, list):
                                         fvalue = [fvalue]
@@ -1198,11 +1201,11 @@ class S3ContingencyTable(TABLE):
                                     for fk in fvalue:
                                         if fk not in layer_ids:
                                             layer_ids.append(fk)
-                                            layer_values[fk] = str(lf.field.represent(fk))
+                                            layer_values[fk] = unicode(field.represent(fk))
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)
-                                        layer_values[id] = str(represent(f, fvalue))
+                                        layer_values[id] = unicode(represent(f, fvalue))
 
 
                     cell_ids.append(layer_ids)

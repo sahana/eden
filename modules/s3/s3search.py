@@ -1181,6 +1181,7 @@ class S3Search(S3CRUD):
         T = current.T
         db = current.db
         request = self.request
+        s3 = current.response.s3
 
         user_id = current.session.auth.user.id
         now = request.utcnow.microsecond
