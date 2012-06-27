@@ -44,13 +44,12 @@ class CreateStaff(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
-        
-        browser = self.browser
+
         self.login(account="admin", nexturl="hrm/staff/create")
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
-                       "Romanian Food Assistance Association",
+                       "Acme Suppliers",
                        "autocomplete"),
                      ( "first_name",
                        "Robert",
@@ -61,25 +60,15 @@ class CreateStaff(SeleniumUnitTest):
                      ( "last_name",
                        "Lemon",
                        "pr_person"),
-                     # To Do: Make 4th arg for this to support option
-#                     ( "gender",
-#                       "male",
-#                       "option",
-#                       "pr_person"),
                      ( "email",
-                       "rjltestdonotusetest4@romanianfoodassistanceassociation.com",
+                       "rjltestdonotusetest99@romanian.com",
                        "pr_person"),
                      ( "job_role_id",
                        "Administrative Officer",
                        "option"),
-#                     ( "start_date",
-#                       today),
-#                     ( "end_date",
-#                       now_1_week),
                      ( "site_id",
-                       "Bucharest RFAAT Centre",
+                       "AP Zone",
                        "autocomplete"),
-
                      ]
                      )
 

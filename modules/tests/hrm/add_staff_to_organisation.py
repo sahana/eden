@@ -45,7 +45,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
         """
         
         self.login(account="admin", nexturl="org/organisation/41/human_resource")
-        self.browser.find_element_by_id("show-add-btn").click()
+
         
         self.create("hrm_human_resource", 
                     [( "first_name",
