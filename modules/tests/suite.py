@@ -7,6 +7,51 @@ import sys
 import re
 import time
 import unittest
+import argparse
+
+#from s3 import s3_debug
+
+# Set up the command line arguments
+desc = "Script to run the Sahana Eden test suite."
+parser = argparse.ArgumentParser(description = desc)
+parser.add_argument("-C", "--class", help = "Name of class to run")
+method_desc = """Name of method to run, this is used in conjunction with the
+class argument or with the name of the class followed by the name of the method
+separated with a period, class.period.
+"""
+parser.add_argument("-M", "--method", "--test", help = method_desc)
+parser.add_argument("-V", "--verbose",
+                    type = int,
+                    default = 1,
+                    help = "The level of verbose reporting")
+parser.add_argument("--nohtml", help = "Disable HTML reporting.")
+parser.add_argument("--html-path", help = "Path where the HTML report will be saved.")
+parser.add_argument("--html-name-date", help = "Include just the date in the name of the HTML report.")
+suite_desc = """This will execute a standard testing schedule. The valid values
+are, smoke, quick, complete and full. If a method or class options is selected
+the the suite will be ignored.
+
+The suite options can be described as follows:
+
+ smoke: This will run the broken link test
+ quick: This will run all the tests marked as essential
+ complete: This will run all tests except those marked as long
+ full: This will run all test
+"""
+parser.add_argument("--suite",
+                    help = suite_desc,
+                    choices = ["smoke", "quick", "complete", "full"],
+                    default = "quick")
+parser.add_argument("--link-depth",
+                    type = int,
+                    default = 3,
+                    help = "The recursive depth when looking for links")
+parser.add_argument("--keep-browser-open",
+                    help = "Keep the browser open once the tests have finished running",
+                    type = bool,
+                    default = False)
+argsObj = parser.parse_args()
+args = argsObj.__dict__
 
 # Selenium WebDriver
 from selenium import webdriver
@@ -35,44 +80,46 @@ config.timeout = 5 # seconds
 config.url = base_url
 
 base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
-test = None
-remote = None
-# Do we have any command-line arguments?
-args = sys.argv
-if args[1:]:
-    # The 1st argument is taken to be the test name:
-    test = args[1]
-    if args[2:]:
-        # The 2nd argument is taken to be a remote server:
-        # @ToDo:
-        #  Need to change this so can do remote for whole suite (normal case)
-        #  - convert to proper params
-        remote = args[2]
-
-if remote:
-    # @ToDo
-    browser = config.browser = webdriver.Remote()
-else:
-    fp = webdriver.FirefoxProfile()
-    fp.set_preference("network.proxy.type", 0)
-    browser = config.browser = webdriver.Firefox(firefox_profile=fp)
-
-browser.implicitly_wait(config.timeout)
 
 # Shortcut
 loadTests = unittest.TestLoader().loadTestsFromTestCase
+loadNamedTests = unittest.TestLoader().loadTestsFromName
 
-if test:
-    # Run specified Test after logging in
-    # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
-    # Maybe this could be bypassed for a test run within the suite by passing it an argument
-
-    print test
-    suite = loadTests(globals()[test])
+config.verbose = args["verbose"]
+browser_open = False
+# @todo test with invalid class and methods passed as CLA
+if args["method"]:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    if args["class"]:
+        name = "%s.%s" % (args["class"], args["method"])
+    else:
+        name = args["method"]
+    suite = loadNamedTests(args["method"], globals()[args["class"]])
+elif args["class"]:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    suite = loadTests(globals()[args["class"]])
+elif args["suite"] == "smoke":
+#    try:
+    from tests.smoke import *
+    broken_links = BrokenLinkTest()
+    broken_links.setDepth(args["link_depth"])
+    broken_links.run()
+#    except NameError as msg:
+#        s3_debug("%s, unable to run the smoke tests." % msg)
+#        pass
+    exit()
 
 else:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
     # Run all Tests
 
     # Create Organisation
@@ -114,11 +161,18 @@ else:
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
     # Delete a prepop organisation
-    addTests(loadTests(DeleteOrganisation))
+#    addTests(loadTests(DeleteOrganisation))
 
 try:
+    path = args["html_path"]
+    if args["html_name_date"]:
+        filename = "Sahana-Eden-Test-Result-%s.html" % current.request.now.date()
+    else:
+        filename = "Sahana-Eden-Test-Result-%s.html" % current.request.now
+    fullname = os.path.join(path,filename)
+    fp = file(fullname, "wb")
+
     import HTMLTestRunner
-    fp = file("Sahana-Eden-Test-Result.html", "wb")
     runner = HTMLTestRunner.HTMLTestRunner(
                                            stream=fp,
                                            title="Sahana Eden Test Result",
@@ -128,6 +182,7 @@ except:
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup
-browser.close()
+if browser_open and not args["keep_browser_open"]:
+    browser.close()
 
 # END =========================================================================
