@@ -79,7 +79,7 @@ class S3CRUD(S3Method):
 
         # Pre-populate create-form?
         self.data = None
-        if r.http == "GET" and not self.record:
+        if r.http == "GET" and not self.record_id:
             populate = attr.pop("populate", None)
             if callable(populate):
                 try:
@@ -365,7 +365,7 @@ class S3CRUD(S3Method):
             fields.insert(0, table[table.fields[0]])
 
         # Get the target record ID
-        record_id = self.record
+        record_id = self.record_id
 
         # Check authorization to read the record
         authorised = self._permitted()
@@ -521,7 +521,7 @@ class S3CRUD(S3Method):
                    _config("onaccept")
 
         # Get the target record ID
-        record_id = self.record
+        record_id = self.record_id
         if r.interactive and not record_id:
             r.error(404, resource.ERROR.BAD_RECORD)
 
@@ -679,7 +679,7 @@ class S3CRUD(S3Method):
         delete_next = self._config("delete_next", None)
 
         # Get the target record ID
-        record_id = self.record
+        record_id = self.record_id
 
         # Check if deletable
         if not deletable:
@@ -1008,6 +1008,7 @@ class S3CRUD(S3Method):
                 r.record = resource.records().first()
                 if r.record:
                     r.id = r.record.id
+                    self.record_id = self._record_id(r)
                     if "update" in request.get_vars and \
                        self._permitted(method="update"):
                          items = self.update(r, **attr).get("form", None)
@@ -1350,7 +1351,7 @@ class S3CRUD(S3Method):
 
         db = current.db
         table = self.table
-        record_id = self.record
+        record_id = self.record_id
 
         T = current.T
 

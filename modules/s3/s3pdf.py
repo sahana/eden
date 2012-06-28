@@ -455,7 +455,7 @@ class S3PDF(S3Method):
                             linkfield = link[1]
                             break
                     if linkfield != None:
-                        query = ctable[linkfield] == self.record
+                        query = ctable[linkfield] == self.record_id
                         records = db(query).select()
                         find_fields = []
                         for component in self.resource.components.values():
