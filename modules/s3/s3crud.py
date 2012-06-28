@@ -500,12 +500,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
-        manager = current.manager
-        session = current.session
-        request = self.request
         response = current.response
-        T = current.T
-
         resource = self.resource
         table = resource.table
         tablename = resource.tablename
@@ -526,16 +521,16 @@ class S3CRUD(S3Method):
                    _config("onaccept")
 
         # Get the target record ID
-        record_id = self.record
+        record_id = r.id
         if r.interactive and not record_id:
-            r.error(404, self.resource.ERROR.BAD_RECORD)
+            r.error(404, resource.ERROR.BAD_RECORD)
 
         # Check if editable
         if not editable:
             if r.interactive:
                 return self.read(r, **attr)
             else:
-                r.error(405, self.resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.BAD_METHOD)
 
         # Check permission for update
         authorised = self._permitted(method="update")
@@ -578,7 +573,7 @@ class S3CRUD(S3Method):
                     field.comment = None
                     field.default = value
                     field.update = value
-                    if r.http=="POST":
+                    if r.http == "POST":
                         r.post_vars.update({fkey: value})
                     field.readable = False
                     field.writable = False
@@ -602,13 +597,13 @@ class S3CRUD(S3Method):
 
             # Cancel button?
             if response.s3.cancel:
-                form[0][-1][0].append(A(T("Cancel"),
+                form[0][-1][0].append(A(current.T("Cancel"),
                                         _href=response.s3.cancel,
                                         _class="action-lnk"))
 
             # Navigate-away confirmation
             if self.settings.navigate_away_confirm:
-                form.append(SCRIPT("S3EnableNavigateAwayConfirm();"))
+                response.s3.jquery_ready.append("S3EnableNavigateAwayConfirm();")
 
             # Put form into output
             output["form"] = form
@@ -648,7 +643,7 @@ class S3CRUD(S3Method):
             return self.import_url(r)
 
         else:
-            r.error(501, manager.ERROR.BAD_FORMAT)
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1473,43 +1468,45 @@ class S3CRUD(S3Method):
 
         output = dict()
 
-        T = current.T
-
         tablename = self.tablename
         representation = r.representation
 
         record_id = attr.get("record_id", None)
 
         # Button labels
-        ADD = self.crud_string(tablename, "label_create_button")
-        EDIT = T("Edit")
-        DELETE = self.crud_string(tablename, "label_delete_button")
-        LIST = self.crud_string(tablename, "label_list_button")
+        crud_string = self.crud_string
+        ADD = crud_string(tablename, "label_create_button")
+        #EDIT = current.T("Edit")
+        EDIT = current.messages.UPDATE
+        DELETE = crud_string(tablename, "label_delete_button")
+        LIST = crud_string(tablename, "label_list_button")
 
         # Button URLs
-        href_add = r.url(method="create", representation=representation)
-        href_edit = r.url(method="update", representation=representation)
-        href_delete = r.url(method="delete", representation=representation)
-        href_list = r.url(method="")
+        url = r.url
+        href_add = url(method="create", representation=representation)
+        href_edit = url(method="update", representation=representation)
+        href_delete = url(method="delete", representation=representation)
+        href_list = url(method="")
 
         # Table CRUD configuration
-        insertable = self._config("insertable", True)
-        editable = self._config("editable", True)
-        deletable = self._config("deletable", True)
+        config = self._config
+        insertable = config("insertable", True)
+        editable = config("editable", True)
+        deletable = config("deletable", True)
 
         # Add button
         if "add" in buttons:
             authorised = self._permitted(method="create")
             if authorised and href_add and insertable:
                 add_btn = self.crud_button(ADD, _href=href_add, _id="add-btn")
-                output.update(add_btn=add_btn)
+                output["add_btn"] = add_btn
 
         # List button
         if "list" in buttons:
             if not r.component or r.multiple:
                 list_btn = self.crud_button(LIST,
                                             _href=href_list, _id="list-btn")
-                output.update(list_btn=list_btn)
+                output["list_btn"] = list_btn
 
         if not record_id:
             return output
@@ -1520,7 +1517,7 @@ class S3CRUD(S3Method):
             if authorised and href_edit and editable and r.method != "update":
                 edit_btn = self.crud_button(EDIT, _href=href_edit,
                                             _id="edit-btn")
-                output.update(edit_btn=edit_btn)
+                output["edit_btn"] = edit_btn
 
         # Delete button
         if "delete" in buttons:
@@ -1544,17 +1541,17 @@ class S3CRUD(S3Method):
             @param attr: attributes for the link (default: {"_class":"action-btn"})
         """
 
-        response = current.response
+        s3 = current.response.s3
 
         link = dict(attr)
         link.update(label=str(label), url=url)
         if "_class" not in link:
             link.update(_class="action-btn")
 
-        if response.s3.actions is None:
-            response.s3.actions = [link]
+        if s3.actions is None:
+            s3.actions = [link]
         else:
-            response.s3.actions.append(link)
+            s3.actions.append(link)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1588,7 +1585,6 @@ class S3CRUD(S3Method):
         s3crud = S3CRUD
         labels = current.manager.LABEL
 
-        db = current.db
         s3 = current.response.s3
         custom_actions = s3.actions
         s3.actions = None
@@ -1622,7 +1618,7 @@ class S3CRUD(S3Method):
             if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
-                rows = db(query).select(table._id)
+                rows = current.db(query).select(table._id)
                 restrict = []
                 for row in rows:
                     row_id = row.get("id", None)
@@ -1891,7 +1887,6 @@ class S3CRUD(S3Method):
         f = None
 
         manager = current.manager
-        response = current.response
 
         prefix, name, table, tablename = r.target()
         permit = current.auth.s3_has_permission

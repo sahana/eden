@@ -1045,17 +1045,130 @@ function addKMLLayer(layer) {
 
     // Pre-cache this image
     // Need unique names, but keep scope
+    // - don't we need an array of these!?
     S3.gis.image = new Image();
     S3.gis.image.onload = s3_gis_scaleImage;
     S3.gis.image.src = marker_url;
+    // Style Rule For Clusters
+    var cluster_style = {
+        label: '${label}',
+        labelAlign: 'cm',
+        pointRadius: '${radius}',
+        fillColor: '${fill}',
+        fillOpacity: opacity,
+        strokeColor: '${stroke}',
+        strokeWidth: 2,
+        strokeOpacity: opacity,
+        graphicWidth: '${graphicWidth}',
+        graphicHeight: '${graphicHeight}',
+        graphicXOffset: '${graphicXOffset}',
+        graphicYOffset: '${graphicYOffset}',
+        graphicOpacity: opacity,
+        graphicName: 'circle',
+        externalGraphic: '${externalGraphic}'
+    };
+    var cluster_options = {
+        context: {
+            graphicWidth: function(feature) {
+                if (feature.cluster) {
+                    // Clustered Point
+                    var pix = '';
+                } else {
+                    var pix = S3.gis.image.width;
+                }
+                return pix;
+            },
+            graphicHeight: function(feature) {
+                if (feature.cluster) {
+                    // Clustered Point
+                    var pix = '';
+                } else {
+                    var pix = S3.gis.image.height;
+                }
+                return pix;
+            },
+            graphicXOffset: function(feature) {
+                if (feature.cluster) {
+                    // Clustered Point
+                    var pix = '';
+                } else {
+                    var pix = -(S3.gis.image.width / 2);
+                }
+                return pix;
+            },
+            graphicYOffset: function(feature) {
+                if (feature.cluster) {
+                    // Clustered Point
+                    var pix = '';
+                } else {
+                    var pix = -S3.gis.image.height;
+                }
+                return pix;
+            },
+            externalGraphic: function(feature) {
+                if (feature.cluster) {
+                    // Clustered Point
+                    var url = '';
+                } else {
+                    var url = marker_url;
+                }
+                return url;
+            },
+            radius: function(feature) {
+                if (feature.cluster) {
+                    // Size for Clustered Point
+                    var pix = Math.min(feature.attributes.count/2, 8) + 10;
+                } else {
+                    // default Size for Unclustered Point
+                    var pix = 10;
+                }
+                return pix;
+            },
+            fill: function(feature) {
+                if (feature.cluster) {
+                    // default fillColor for Clustered Point
+                    var color = '#8087ff';
+                } else {
+                    // default fillColor for Unclustered Point
+                    var color = '#f5902e';
+                }
+                return color;
+            },
+            stroke: function(feature) {
+                if (feature.cluster) {
+                    // default strokeColor for Clustered Point
+                    var color = '#2b2f76';
+                } else {
+                    // default strokeColor for Unclustered Point
+                    var color = '#f5902e';
+                }
+                return color;
+            },
+            label: function(feature) {
+                // Label For Unclustered Point
+                var label = '';
+                // Label For Clustered Point
+                if (feature.cluster && feature.attributes.count > 1) {
+                    label = feature.attributes.count;
+                }
+                return label;
+            }
+        }
+    };
     // Needs to be uniquely instantiated
-    var style_marker = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
-    style_marker.graphicOpacity = opacity;
-    style_marker.graphicWidth = S3.gis.image.width;
-    style_marker.graphicHeight = S3.gis.image.height;
-    style_marker.graphicXOffset = -(S3.gis.image.width / 2);
-    style_marker.graphicYOffset = -S3.gis.image.height;
-    style_marker.externalGraphic = marker_url;
+    var style_cluster = new OpenLayers.Style(
+        cluster_style,
+        cluster_options
+    );
+    // Define StyleMap, Using 'style_cluster' rule for 'default' styling intent
+    var featureClusterStyleMap = new OpenLayers.StyleMap({
+        'default': style_cluster,
+        // @ToDo: Customise the Select Style too
+        'select': {
+            fillColor: '#ffdc33',
+            strokeColor: '#ff9933'
+        }
+    });
     var kmlLayer = new OpenLayers.Layer.Vector(
         name, {
             dir: dir,
@@ -1077,7 +1190,7 @@ function addKMLLayer(layer) {
             s3_layer_type: 'kml',
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,
-            style: style_marker,
+            styleMap: featureClusterStyleMap,
             protocol: new OpenLayers.Protocol.HTTP({
                 url: url,
                 format: S3.gis.format_kml
@@ -1839,37 +1952,64 @@ function onKmlFeatureSelect(event) {
     //S3.gis.selectedFeature = feature;
     var popup_id = S3.uid();
     var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-    var titleField = feature.layer.title;
-    var attributes = feature.attributes;
-    var type = typeof attributes[titleField];
-    if ('object' == type) {
-        var title = attributes[titleField].value;
-    } else {
-        var title = attributes[titleField];
-    }
-    var body = feature.layer.body.split(' ');
-    var content = '';
-    for (var i = 0; i < body.length; i++) {
-        type = typeof attributes[body[i]];
-        if ('object' == type) {
-            // Geocommons style
-            var displayName = attributes[body[i]].displayName;
-            if (displayName == '') {
-                displayName = body[i];
-            }
-            var value = attributes[body[i]].value;
-            var row = '<b>' + displayName + '</b>: ' + value + '<br />';
-        } else {
-            var row = attributes[body[i]] + '<br />';
+    if (feature.cluster) {
+        // Cluster
+        var name, uuid, url;
+        var contents = S3.i18n.gis_cluster_multiple + ':<ul>';
+        for (var i = 0; i < feature.cluster.length; i++) {
+            name = feature.cluster[i].attributes.name;
+            // @ToDo: Provide a way to load popups
+            contents += '<li>' + name + '</li>';
         }
-        content += row;
+        contents += '</ul>';
+        contents += "<div align='center'><a href='javascript:s3_gis_zoomToSelectedFeature(" + centerPoint.lon + "," + centerPoint.lat + ", 3)'>Zoom in</a></div>";
+    } else {
+        // Single Feature
+        var attributes = feature.attributes;
+        if (undefined != feature.style.balloonStyle) {
+            // Use the provided BalloonStyle
+            var balloonStyle = feature.style.balloonStyle;
+            // "<strong>{name}</strong><br /><br />{description}"
+            var contents = balloonStyle.replace(/{([^{}]*)}/g,
+                function (a, b) {
+                    var r = attributes[b];
+                    return typeof r === 'string' || typeof r === 'number' ? r : a;
+                }
+            );
+        } else {
+            // Build the Popup contents manually
+            var titleField = feature.layer.title;
+            var type = typeof attributes[titleField];
+            if ('object' == type) {
+                var title = attributes[titleField].value;
+            } else {
+                var title = attributes[titleField];
+            }
+            var body = feature.layer.body.split(' ');
+            var content = '';
+            for (var i = 0; i < body.length; i++) {
+                type = typeof attributes[body[i]];
+                var row = '';
+                if ('object' == type) {
+                    // Geocommons style
+                    var displayName = attributes[body[i]].displayName;
+                    if (displayName == '') {
+                        displayName = body[i];
+                    }
+                    var value = attributes[body[i]].value;
+                    row = '<b>' + displayName + '</b>: ' + value + '<br />';
+                } else if (undefined != attributes[body[i]]) {
+                    row = attributes[body[i]] + '<br />';
+                }
+                content += row;
+            }
+            var contents = '<h3>' + title + '</h3>' + content;
+        }
+        // Protect the content against JavaScript attacks
+        if (contents.search('<script') != -1) {
+            contents = 'Content contained Javascript! Escaped content below.<br />' + contents.replace(/</g, '<');
+        }
     }
-    // Protect the content against JavaScript attacks
-    if (content.search('<script') != -1) {
-        content = 'Content contained Javascript! Escaped content below.<br />' + content.replace(/</g, '<');
-    }
-    var contents = '<h3>' + title + '</h3>' + content;
-
     var popup = new OpenLayers.Popup.FramedCloud(
         popup_id,
         centerPoint,
