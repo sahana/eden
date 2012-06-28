@@ -829,7 +829,7 @@ class S3TrackingModel(S3Model):
                                    "reference org_site",
                                    label = T("From Facility"),
                                    ondelete = "SET NULL",
-                                   widget = S3SiteAutocompleteWidget(),
+                                   #widget = S3SiteAutocompleteWidget(),
                                    represent = org_site_represent
                                    ),
                              Field("eta", "date",
@@ -851,7 +851,7 @@ class S3TrackingModel(S3Model):
                                     readable = True,
                                     writable = True,
                                     notnull = True,
-                                    widget = S3SiteAutocompleteWidget(),
+                                    #widget = S3SiteAutocompleteWidget(),
                                     represent=org_site_represent),
                              Field("date", "date",
                                    label = T("Date Received"),
@@ -1340,8 +1340,8 @@ $(document).ready(function() {
                                                      supply_org_id = row.supply_org_id,
                                                      item_source_no = row.item_source_no,
                                                      item_pack_id = row.item_pack_id,
-                                                     item_status = row.status,
-                                                     status = TRACK_STATUS_PREPARING,
+                                                     status = row.status,
+                                                     #status = TRACK_STATUS_PREPARING,
                                                      )
                     # Construct form.vars for inv_track_item_onaccept
                     inv_item = Storage(vars = Storage())
@@ -1795,14 +1795,14 @@ $(document).ready(function() {
         # if the status is 3 unloading
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
-        if record and record.status == TRACK_STATUS_UNLOADING:
+        if record and record.status == TRACK_STATUS_UNLOADING and record.recv_quantity:
             recv_rec = rtable[record.recv_id]
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
                     (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
                     (inv_item_table.currency == record.currency) & \
-                    (inv_item_table.status == record.item_status) & \
+                    (inv_item_table.status == record.status) & \
                     (inv_item_table.pack_value == record.pack_value) & \
                     (inv_item_table.expiry_date == record.expiry_date) & \
                     (inv_item_table.bin == record.recv_bin) & \
@@ -1834,7 +1834,7 @@ $(document).ready(function() {
                                              quantity = record.recv_quantity,
                                              item_source_no = record.item_source_no,
                                              source_type = source_type,
-                                             status = record.item_status,
+                                             status = record.status,
                                             )
             # if this is linked to a request then update the quantity fulfil
             if record.req_item_id:
@@ -2150,7 +2150,10 @@ def inv_send_rheader(r):
 
             send_id = record.id
             site_id = record.site_id
-            org_id = s3db.org_site[site_id].organisation_id
+            if site_id:
+                org_id = s3db.org_site[site_id].organisation_id
+            else:
+                org_id = None
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(
                            TR(TD(T(settings.get_inv_send_form_name().upper()),
