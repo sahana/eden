@@ -2,9 +2,6 @@
 <div id='home'>
 {{=H2(module_name)}}
 <p>
-<strong><i>"{{=T("Who is doing what and where")}}"</i></strong>
-</p>
-<p>
 {{=T("The Organization Registry keeps track of all the relief organizations working in the area.")}}
 {{if deployment_settings.has_module("project"):}}
   {{=T("It captures not only the places where they are active, but also captures information on the range of projects they are providing in each area.")}}
@@ -12,24 +9,16 @@
 </p>
 <h3>{{=T("Organizations")}}:</h3>
 <ul>
-    <li><a href='{{=URL(f="organisation", args="search")}}'><b>{{=T("Search Organizations")}}</b></a></li>
-    <li><a href='{{=URL(f="organisation")}}'><b>{{=T("List Organizations")}}</b></a></li>
-    <li><a href='{{=URL(f="organisation", args="create")}}'><b>{{=T("Create new Organization")}}</b></a></li>
-    <li><a href='{{=URL(f="organisation", args="import")}}'><b>{{=T("Import Organizations")}}</b></a></li>
+    <li><a href='{{=URL(f="organisation", args="create")}}'><b>{{=T("Add Organization")}}</b></a></li>
+    <li><a href='{{=URL(f="organisation")}}'><b>{{=T("List All")}}</b></a></li>
+    <li><a href='{{=URL(f="organisation", args="search")}}'><b>{{=T("Search")}}</b></a></li>
+    <li><a href='{{=URL(f="organisation", args="import")}}'><b>{{=T("Import")}}</b></a></li>
 </ul>
 <h3>{{=T("Offices")}}:</h3>
 <ul>
-    <li><a href='{{=URL(f="office", args="search")}}'><b>{{=T("Search Offices")}}</b></a></li>
-    <li><a href='{{=URL(f="office")}}'><b>{{=T("List Offices")}}</b></a></li>
-    <li><a href='{{=URL(f="office", args="create")}}'><b>{{=T("Create new Office")}}</b></a></li>
-    <li><a href='{{=URL(f="office", args="import")}}'><b>{{=T("Import Offices")}}</b></a></li>
-</ul>
-{{if deployment_settings.has_module("project"):}}
-<h3>{{=T("Projects")}}:</h3>
-<ul>
-<li>{{=T("Capturing the projects each organization is providing and where")}}</li>
-<li>{{=T("Reporting on the projects in the region")}}</li>
-<li>{{=T("Importantly where there are no aid services being provided")}}</li>
-{{pass}}
+    <li><a href='{{=URL(f="office", args="create")}}'><b>{{=T("Add Office")}}</b></a></li>
+    <li><a href='{{=URL(f="office")}}'><b>{{=T("List All")}}</b></a></li>
+    <li><a href='{{=URL(f="office", args="search")}}'><b>{{=T("Search")}}</b></a></li>
+    <li><a href='{{=URL(f="office", args="import")}}'><b>{{=T("Import")}}</b></a></li>
 </ul>
 </div>
