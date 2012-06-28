@@ -38,6 +38,7 @@ __all__ = ["S3ProjectModel",
            "project_project_represent",
            "project_location_represent",
            "project_rheader",
+           "project_location_represent",
            "project_task_controller",
            ]
 
@@ -333,8 +334,8 @@ class S3ProjectModel(S3Model):
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
                              Field("objectives", "text",
-                                   readable = mode_drr,
-                                   writable = mode_drr,
+                                   readable = mode_3w,
+                                   writable = mode_3w,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              comments(comment=DIV(_class="tooltip",
@@ -1148,6 +1149,9 @@ class S3Project3WModel(S3Model):
 
         messages = current.messages
         NONE = messages.NONE
+        
+        s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         add_component = self.add_component
         comments = s3_comments
@@ -1521,6 +1525,18 @@ class S3Project3WModel(S3Model):
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("start_date", "date",
+                                   label = T("Start date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
                              comments(),
                              *meta_fields())
 
@@ -1552,6 +1568,7 @@ class S3Project3WModel(S3Model):
                       "project_location_id",
                       (T("Beneficiary Type"), "beneficiary_type_id"),
                       "project_id",
+                      (T("Year"), "year"),
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       "activity_id$multi_activity_type_id"
@@ -1559,6 +1576,31 @@ class S3Project3WModel(S3Model):
         lh = current.gis.get_location_hierarchy()
         lh = [(lh[opt], opt) for opt in lh]
         report_fields.extend(lh)
+        
+        def year_options():
+            """
+                returns a dict of the options for the year virtual field
+                used by the search widget
+            """
+            p_start_date_min = db.project_project.start_date.min()
+            pb_start_date_min = db.project_beneficiary.start_date.max()
+            start_year = min( db().select(p_start_date_min).first()[p_start_date_min],
+                              db().select(pb_start_date_min).first()[pb_start_date_min]
+                            ).year
+            
+            p_end_date_max = db.project_project.end_date.max()
+            pb_end_date_max = db.project_beneficiary.end_date.max()
+            end_year = max( db().select(p_end_date_max).first()[p_end_date_max],
+                            db().select(pb_end_date_max).first()[pb_end_date_max]
+                            ).year
+            
+            if not start_year or not end_year:
+                return {start_year:start_year} or {end_year:end_year}
+            years = {}
+            for year in xrange(start_year,end_year+1):
+                years[year] = year
+            return years
+        
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1573,6 +1615,13 @@ class S3Project3WModel(S3Model):
                             field="beneficiary_type_id",
                             name="beneficiary_type_id",
                             label=T("Beneficiary Type")
+                        ),
+                        # @ToDo: These do now work - no results are returned
+                        S3SearchOptionsWidget(
+                            field="year",
+                            name="year",
+                            label=T("Year"),
+                            options = year_options
                         ),
                         S3SearchLocationHierarchyWidget(
                             name="beneficiary_search_L1",
@@ -1928,7 +1977,16 @@ class S3Project3WModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+# =============================================================================
+def project_location_represent(id, row=None):
+    """
+    """
 
+    return current.s3db.gis_location_lx_represent( 
+               s3_get_db_field_value(tablename = "project_location",
+                                     fieldname = "location_id",
+                                     look_up_value = id)
+                )
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
     """
@@ -3701,7 +3759,10 @@ class S3ProjectLocationVirtualFields:
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_location_id"]
+    extra_fields = ["project_location_id",
+                    "project_id",
+                    "start_date",
+                    "end_date"]
 
     @staticmethod
     def _get_project_location(project_location_id):
@@ -3757,6 +3818,21 @@ class S3ProjectBeneficiaryVirtualFields:
             return parents["L3"]
         else:
             return current.messages.NONE
+
+    def year(self):
+        start_date = self.project_beneficiary.start_date
+        end_date = self.project_beneficiary.end_date
+        if not start_date or not end_date:
+            project = current.s3db.project_project[self.project_beneficiary.project_id]
+            if project:
+                if not start_date:
+                    start_date = project.start_date
+                if not end_date:
+                    end_date = project.end_date
+        if not start_date or not end_date:
+            return [start_date.year or end_date.year]
+        return [year for year in xrange(start_date.year,end_date.year+1)]
+        
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:

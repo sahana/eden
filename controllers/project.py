@@ -16,13 +16,11 @@ mode_task = deployment_settings.get_project_mode_task()
 def index():
     """ Module's Home Page """
 
-    # Bypass home page & go direct to searching for Projects
-    if deployment_settings.get_project_mode_drr():
-        redirect(URL(f="project", args="search"))
-    elif mode_task:
+    if mode_task:
         redirect(URL(f="project", vars={"tasks":1}))
-    else:
-        redirect(URL(f="project"))
+        
+    # Bypass home page & go direct to searching for Projects
+    redirect(URL(f="project", args="search"))
 
     #module_name = deployment_settings.modules[module].name_nice
     #response.title = module_name

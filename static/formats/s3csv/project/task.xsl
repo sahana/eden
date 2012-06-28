@@ -17,6 +17,9 @@
          Author...............string..........Task created_by
          Source...............string..........Task source
          Assigned.............string..........Person Initials
+         Date Due.............date............Task date_due
+         Milestone............string..........Milestone name
+         Time Estimated.......integer.........Task time_estimated 
          Priority.............string..........Task priority
          Status...............string..........Task status
          Comments.............string..........Task comment
@@ -34,6 +37,7 @@
     <xsl:key name="activity types" match="row" use="col[@field='Activity Type']"/>
     <xsl:key name="activities" match="row" use="col[@field='Activity']"/>
     <xsl:key name="assignees" match="row" use="col[@field='Assigned']"/>
+    <xsl:key name="milestones" match="row" use="col[@field='Milestone']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -67,6 +71,12 @@
                                                                    col[@field='Assigned'])[1])]">
                 <xsl:call-template name="Person"/>
             </xsl:for-each>
+            
+            <!-- Milestones -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('milestones',
+                                                                   col[@field='Milestone'])[1])]">
+                <xsl:call-template name="Milestone"/>
+            </xsl:for-each>
 
             <!-- Tasks -->
             <xsl:apply-templates select="./table/row"/>
@@ -80,6 +90,9 @@
         <xsl:variable name="Task" select="col[@field='Short Description']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
         <xsl:variable name="Author" select="col[@field='Raised By']/text()"/>
+        <xsl:variable name="DateDue" select="col[@field='Date Due']/text()"/>
+        <xsl:variable name="Milestone" select="col[@field='Milestone']/text()"/>
+        <xsl:variable name="TimeEstimated" select="col[@field='Time Estimated']/text()"/>
         <xsl:variable name="Assignee" select="col[@field='Assigned']/text()"/>
         <xsl:variable name="Priority" select="col[@field='Priority']/text()"/>
 
@@ -183,6 +196,14 @@
                     </xsl:choose>
                 </xsl:otherwise>
             </xsl:choose>
+            <!-- Date Due -->
+            <data field="date_due">
+                <xsl:value-of select="$DateDue"/>
+                </data>
+            <!-- Time Estimated -->
+            <data field="time_estimated">
+                <xsl:value-of select="$TimeEstimated"/>
+            </data>
             <!-- Comment -->
             <xsl:if test="col[@field='Comments']/text()!=''">
                 <resource name="project_comment">
@@ -214,6 +235,14 @@
                         </xsl:attribute>
                     </reference>
                 </resource>
+            </xsl:if>
+            <!-- Link to Milestone -->
+            <xsl:if test="$Milestone!=''">
+                <reference field="milestone_id" resource="project_milestone">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Milestone"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
         </resource>
 
@@ -334,6 +363,27 @@
 
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="Milestone">
+        <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
+        <xsl:variable name="Milestone" select="col[@field='Milestone']/text()"/>
+
+        <xsl:if test="$Milestone!=''">
+            <resource name="project_milestone">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Milestone"/>
+                </xsl:attribute>
+                <!-- Link to Project -->
+                <reference field="project_id" resource="project_project">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$ProjectName"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="name"><xsl:value-of select="$Milestone"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
     <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

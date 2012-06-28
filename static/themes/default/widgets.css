@@ -9,7 +9,7 @@ textarea.richtext {
 
 /* Used to diplay the list-add with the list-add-btn */
 #list-btn-add {
-	margin-bottom: 10px;
+    margin-bottom: 10px;
     float: left;
 }
 /*#list-btn-add + h3 {
@@ -57,8 +57,7 @@ div#table-container td.totals_header {
 
 #list_formats {
     float: right;
-    margin-bottom: 10px;
-    margin-right: 10px;
+    padding-top: 5px;
 }
 #list_formats a {
     padding: 1px;
@@ -809,4 +808,8 @@ table.report a.report-cell-zoom.opened {
 table.report td {
     white-space: nowrap;
     padding-right: 16px;
+}
+
+.ui-datepicker-trigger {
+	margin-left: 3px;
 }
