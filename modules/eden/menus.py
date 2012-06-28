@@ -422,16 +422,14 @@ class S3OptionsMenu(object):
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
-                        M("Report", m="report",
-                          vars=dict(rows="item_id$item_category_id",
-                                    cols="L1",
-                                    fact="number",
-                                    aggregate="count")),
                     ),
                     M("Items", f="item")(
                         M("New", m="create"),
                         M("List All"),
                     ),
+                    M("Reports")(
+                      M("Assets",  f="asset", m="report")
+                      )
                 )
 
     # -------------------------------------------------------------------------
@@ -839,7 +837,6 @@ class S3OptionsMenu(object):
                         M("Search", m="search"),
                         M("Search Training Participants", f="training",
                           m="search"),
-                        M("Training Report", f="training", m="report"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
@@ -983,22 +980,13 @@ class S3OptionsMenu(object):
                         M("Import", m="import", p="create"),
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
-                        M("Search Warehouse Stock", f="inv_item", m="search"),
+                        M("Search", f="inv_item", m="search"),
                         M("Search Shipped Items", f="track_item", m="search"),
                         M("Adjust Stock Levels", f="adj"),
-                        M("Report", f="inv_item", m="report",
-                          vars=Storage(rows="item_id",
-                                       cols="site_id",
-                                       fact="quantity",
-                                       aggregate="sum")),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
-                        M("Stock Report", f="inv_item",
-                          m="report", vars=Storage(rows="item_id",
-                                                   cols="site_id",
-                                                   fact="quantity",
-                                                   aggregate="sum")),
+                        M("Warehouse Stock", f="inv_item",m="report"),
                         M("Monetization", c="inv", f="inv_item",
                           m="search", vars=dict(report="mon")),
                         M("Summary of Releases", c="inv", f="track_item",
@@ -1013,7 +1001,7 @@ class S3OptionsMenu(object):
                     M(inv_recv_list, c="inv", f="recv")(
                         M("New", m="create"),
                         M("List All"),
-                        M(inv_recv_search, m="search"),
+                        M("Search", m="search"),
                     ),
                     M("Sent Shipments", c="inv", f="send")(
                         M("New", m="create"),
@@ -1037,13 +1025,13 @@ class S3OptionsMenu(object):
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
-                        M("New Item Category", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                     ),
                     M("Requests", c="req", f="req")(
                         M("New", m="create"),
                         M("List All"),
-                        M("List All Requested Items", f="req_item"),
+                        M("Requested Items", f="req_item"),
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(

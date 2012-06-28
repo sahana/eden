@@ -3780,7 +3780,7 @@ def hrm_rheader(r, tabs=[]):
             else:
                 address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
-                    (T("Identity"), "identity"),
+                    (T("ID"), "identity"),
                     (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),

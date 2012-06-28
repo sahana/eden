@@ -84,7 +84,6 @@ class S3MainMenu(default.S3MainMenu):
             homepage("project")(
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
-                MM("Reports", c="project", f="report"),
             ),
             #homepage("event", "irs")(
             #    MM("Events", c="event", f="event"),
@@ -258,16 +257,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M()(
                     M("Staff", c="hrm", f=("staff", "person"),
                       check=manager_mode)(
-                        M("New Staff Member", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
-                        M("Report", m="report",
-                          vars=Storage(rows="course",
-                                       cols="L1",
-                                       fact="person_id",
-                                       aggregate="count")),
-                        M("Report Expiring Contracts",
-                          vars=dict(expiring=1)),
                         M("Import", f="person", m="import",
                           vars=staff, p="create"),
                     ),
@@ -308,12 +300,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search", m="search"),
                         M("Search Training Participants", f="training",
                           m="search"),
-                        M("Training Report", f="training", m="report",
-                          vars=dict(rows="training_event_id$course_id",
-                                    cols="month",
-                                    fact="person_id",
-                                    aggregate="count")),
                         M("Import Participant List", f="training", m="import"),
+                    ),
+                    M("Reports", c="hrm", f="staff", m="report",
+                      check=manager_mode)(
+                        M("Staff Report", m="report"),
+                        M("Expiring Staff Contracts Report",
+                          vars=dict(expiring=1)),
+                        M("Training Report", f="training", m="report"),
                     ),
                     M("Training Course Catalog", c="hrm", f="course",
                       check=manager_mode)(
@@ -352,16 +346,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Open Incidents", vars={"open":1}),
                         M("Timeline", args="timeline"),
                         M("Search", m="search"),
-                        M("Report", m="report",
-                          vars=dict(rows="L1",
-                                    cols="category",
-                                    fact="datetime",
-                                    aggregate="count"))
                     ),
                     M("Incident Categories", c="irs", f="icategory",
                       check=current.auth.s3_has_role(ADMIN))(
                         M("New", m="create"),
                         M("List All"),
+                    ),
+                    M("Reports", c="irs", f="ireport",  m="report")(
+                        M("Incident Reports"),
                     ),
                 )
 
