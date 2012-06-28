@@ -189,38 +189,45 @@ class S3Msg(object):
         db.commit()
         return True
     
-    # -----------------------------------------------------------------------------
-    # Parser for inbound messages
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def parse_import(workflow):
+    def parse_import(workflow, source):
         """
-           Parsing Workflow Importer.
+           Parse Inbound Messages
         """
-        
-        from parser import S3Parsing
+
+        from s3parser import S3Parsing
+
         db = current.db
-        ltable = current.s3db.msg_log
-        wtable = current.s3db.msg_workflow
+        s3db = current.s3db
+        ltable = s3db.msg_log
+        wtable = s3db.msg_workflow
+        otable = s3db.msg_outbox
         
-        query = (wtable.workflow_task_id == workflow)
+        query = (wtable.workflow_task_id == workflow) & \
+                (wtable.source_task_id == source)
         records = db(query).select(wtable.source_task_id)
         reply = ""
         for record in records:
             query = (ltable.is_parsed == False) & \
-                (ltable.inbound == True) &\
-                (ltable.source_task_id == record.source_task_id)
+                    (ltable.inbound == True) & \
+                    (ltable.source_task_id == record.source_task_id)
             rows = db(query).select()
             
             for row in rows:
-                message = row .message 
+                message = row.message
                 reply = S3Parsing.parser(workflow, message)
-                db(ltable.id == row.id).update(reply = reply,is_parsed = True)
+                db(ltable.id == row.id).update(reply = reply,
+                                               is_parsed = True)
+                reply = ltable.insert(recipient = row.sender,
+                                      subject ="Parsed Reply",
+                                      message = reply)
+                otable.insert(message_id = reply.id,
+                              address = row.sender)
                 db.commit()
-                
-        return        
-                
-            
+
+        return    
+
     # =========================================================================
     # Outbound Messages
     # =========================================================================
@@ -1155,6 +1162,7 @@ class S3Msg(object):
         inbound_status_table = s3db.msg_inbound_email_status
         inbox_table = s3db.msg_email_inbox
         log_table = s3db.msg_log
+        source_task_id = username
 
         # Read-in configuration from Database
         settings = db(s3db.msg_inbound_email_settings.username == username).select(limitby=(0, 1)).first()

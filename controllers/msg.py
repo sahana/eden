@@ -86,7 +86,6 @@ def outbox():
     s3mgr.configure(tablename, listadd=False)
     return s3_rest_controller(module, resourcename, add_btn = add_btn)
 
-
 # =============================================================================
 def log():
     """
@@ -121,7 +120,6 @@ def log():
 
     s3mgr.configure(tablename, listadd=False)
     return s3_rest_controller()
-
 
 # =============================================================================
 def tropo():
@@ -185,7 +183,6 @@ def tropo():
         # GET request or some random POST
         pass
 
-
 # =============================================================================
 def twitter_search():
     """ Controller to modify Twitter search queries """
@@ -247,7 +244,7 @@ def setting():
                 s3mgr.configure(tablename,
                                 update_next = URL(args=[1, "update"]))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     s3mgr.configure(tablename,
                     deletable=False,
@@ -256,13 +253,15 @@ def setting():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
 def inbound_email_settings():
     """
         RESTful CRUD controller for email settings
             - appears in the administration menu
-        Only 1 of these ever in existence
     """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
 
     tablename = "msg_inbound_email_settings"
     table = s3db[tablename]
@@ -280,20 +279,413 @@ def inbound_email_settings():
     table.delete_from_server.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Delete"),
                               T("If this is set to True then mails will be deleted from the server after downloading."))))
-
-    if not auth.has_membership(auth.id_group("Administrator")):
-        session.error = UNAUTHORISED
-        redirect(URL(f="index"))
+    
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
         title_update = T("Edit Email Settings"),
+        label_create_button = T("Add Email Settings"),
         msg_record_modified = T("Email settings updated"),
     )
 
     #response.menu_options = admin_menu_options
-    s3mgr.configure(tablename, listadd=False, deletable=False)
+    s3mgr.configure(tablename, listadd=True, deletable=True)
+
+    def postp(r, output):
+        wtable = s3db.msg_workflow
+        stable = s3db.scheduler_task
+        mtable = r.table
+
+        s3_action_buttons(r)
+        query = (stable.enabled == False)
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "username" in record.vars:
+                r = record.vars.split("\"username\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(mtable.username == s).select(mtable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_e = [str(row.id) for row in rows]
+
+        query = (stable.enabled == True              )
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "username" in record.vars:
+                r = record.vars.split("\"username\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(mtable.username == s).select(mtable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_d = [str(row.id) for row in rows]
+
+        rows = []
+        records = db(stable.id > 0).select()
+        tasks = [record.vars for record in records]
+        sources = []
+        for task in tasks:
+            if "username" in task:
+                u = task.split("\"username\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                sources += [v]
+
+        msettings = db(mtable.deleted == False).select(mtable.ALL)
+        for msetting in msettings :
+            if msetting.username:
+                if (msetting.username not in sources):
+                    if msetting:
+                        rows += [msetting]
+
+        restrict_a = [str(row.id) for row in rows]
+
+        s3.actions = \
+        s3.actions + [
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_email",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                       ]
+        s3.actions.append(dict(label=str(T("Disable")),
+                               _class="action-btn",
+                               url = URL(f = "disable_email",
+                                         args = "[id]"),
+                               restrict = restrict_d)
+                          )
+        s3.actions.append(dict(label=str(T("Activate")),
+                               _class="action-btn",
+                               url = URL(f = "schedule_email",
+                                         args = "[id]"),
+                               restrict = restrict_a)
+                          )
+        return output
+    s3.postp = postp
+
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def workflow():
+    """
+        RESTful CRUD controller for workflows
+            - appears in the administration menu
+    """
+    
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    table = s3db.msg_workflow
+    table.source_task_id.label = T("Message Source")
+    table.source_task_id.comment = DIV(DIV(_class="tooltip",
+            _title="%s|%s" % (T("Message Source"),
+                              T("This is the name of the username for the Inbound Message Source."))))
+    table.workflow_task_id.label = T("Parsing Workflow")
+    table.workflow_task_id.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Parsing Workflow"),
+                                  T("This is the name of the parsing functionn used as a workflow."))))
+
+    # CRUD Strings
+    s3.crud_strings["msg_workflow"] = Storage(
+        title_update = T("Edit Message Parser Settings"),
+        label_create_button = T("Add Parser Settings"),
+        msg_record_modified = T("Message Parser settings updated"),
+    )
+ 
+    s3mgr.configure("msg_workflow", listadd=True, deletable=True)
+    
+    def postp(r, output):
+        
+        wtable = s3db.msg_workflow
+        stable = db["scheduler_task"]
+        
+        s3_action_buttons(r)
+        query = stable.enabled == False
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "workflow" and "source" in record.vars:
+                r = record.vars.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+        
+                u = record.vars.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                
+                record1 = db((wtable.workflow_task_id == s) &(wtable.source_task_id == v)).select(wtable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+                        
+        restrict_e = [str(row.id) for row in rows]
+                    
+        query = stable.enabled == True              
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "workflow" and "source" in record.vars:
+                r = record.vars.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                u = record.vars.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                
+                record1 = db((wtable.workflow_task_id == s) & (wtable.source_task_id == v)).select(wtable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+                    
+        restrict_d = [str(row.id) for row in rows]
+                    
+        rows = []
+        records = db(stable.id>0).select()
+        tasks = [record.vars for record in records]
+        parser1 = []
+        for task in tasks:
+            if "workflow" in task:
+                r = task.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+                
+                parser1 += [s]
+        parser2 = []
+        for task in tasks:
+            if "source" in task:
+                u = task.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]                        
+                parser2 += [v]
+    
+    
+        workflows = db(wtable.id>0).select(wtable.id , wtable.workflow_task_id, wtable.source_task_id)
+                    
+        for workflow in workflows :
+            if workflow.workflow_task_id and workflow.source_task_id:
+                if (workflow.workflow_task_id not in parser1) or (workflow.source_task_id not in parser2) :
+                    if workflow:
+                        rows += [workflow]
+                            
+        restrict_a = [str(row.id) for row in rows]
+                    
+        s3.actions = \
+        s3.actions + [
+                               dict(label=str(T("Enable")),
+                                    _class="action-btn",
+                                    url=URL(f="enable_parser",
+                                            args="[id]"),
+                                    restrict = restrict_e)
+                              ]
+
+        s3.actions.append(dict(label=str(T("Disable")),
+                                        _class="action-btn",
+                                        url = URL(f = "disable_parser",
+                                                  args = "[id]"),
+                                        restrict = restrict_d)
+                                   )
+        
+        s3.actions.append(dict(label=str(T("Activate")),
+                                        _class="action-btn",
+                                        url = URL(f = "schedule_parser",
+                                                  args = "[id]"),
+                                        restrict = restrict_a)
+                                   )
+                    
+        return output
+    s3.postp = postp
+        
+    return s3_rest_controller()            
+
+# -----------------------------------------------------------------------------
+def schedule_parser():
+    """
+        Schedules different parsing workflows.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Workflow not specified!")
+        redirect(URL(f="workflow"))
+
+    wtable = s3db.msg_workflow
+    record = db(wtable.id == id).select(wtable.workflow_task_id,
+                                        wtable.source_task_id,
+                                        limitby=(0, 1)).first()
+    workflow = record.workflow_task_id
+    source = record.source_task_id
+
+    s3task.schedule_task("parse_workflow",
+                         vars={"workflow": workflow, "source": source},
+                         period=300,  # seconds
+                         timeout=300, # seconds
+                         repeats=0    # unlimited
+                         )
+
+    redirect(URL(f="workflow"))
+
+# -----------------------------------------------------------------------------
+def schedule_email():
+    """
+        Schedules different Email Sources.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="inbound_email_settings"))
+
+    mtable = s3db.msg_inbound_email_settings
+    record = db(mtable.id == id).select(mtable.username,
+                                        limitby=(0, 1)).first()
+    username = record.username
+
+    s3task.schedule_task("process_inbound_email",
+                         vars={"username": username},
+                         period=300,  # seconds
+                         timeout=300, # seconds
+                         repeats=0    # unlimited
+                         )
+
+    redirect(URL(f="inbound_email_settings"))
+
+# -----------------------------------------------------------------------------
+def disable_parser():
+    """
+        Disables different parsing workflows.
+    """
+    
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Workflow not specified!")
+        redirect(URL(f="workflow"))
+
+    stable = s3db.scheduler_task
+    wtable = s3db.msg_workflow
+
+    records = db(stable.id > 0).select()
+    workflow = db(wtable.id == id).select(wtable.workflow_task_id,
+                                          wtable.source_task_id,
+                                          limitby=(0, 1)).first()
+    for record in records:
+        if "workflow" and "source" in record.vars:
+            r = record.vars.split("\"workflow\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+            
+            u = record.vars.split("\"source\":")[1]
+            v = u.split(",")[0]
+            v = v.split("\"")[1]           
+            
+            if (s == workflow.workflow_task_id) and (v == workflow.source_task_id) :
+                db(stable.id == record.id).update(enabled = False)
+
+    redirect(URL(f="workflow"))
+
+# -----------------------------------------------------------------------------
+def disable_email():
+    """
+        Disables different Email Sources.
+    """
+    
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="inbound_email_settings"))
+
+    stable = s3db.scheduler_task
+    mtable = s3db.msg_inbound_email_settings
+
+    records = db(stable.id > 0).select()
+    msettings = db(mtable.id == id).select(limitby=(0, 1)).first()
+    for record in records:
+        if "username" in record.vars:
+            r = record.vars.split("\"username\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+
+            if (s == msettings.username) :
+                db(stable.id == record.id).update(enabled = False)
+
+    redirect(URL(f="inbound_email_settings"))
+
+# -----------------------------------------------------------------------------
+def enable_email():
+    """
+        Enables different Email Sources.
+    """
+    
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="inbound_email_settings"))
+
+    stable = s3db.scheduler_task
+    mtable = s3db.msg_inbound_email_settings
+
+    records = db(stable.id > 0).select()
+    msettings = db(mtable.id == id).select(mtable.ALL).first()
+    for record in records:
+        if "username" in record.vars:
+            r = record.vars.split("\"username\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+            
+            if (s == msettings.username) :
+                db(stable.id == record.id).update(enabled = True)
+
+    redirect(URL(f="inbound_email_settings"))
+
+# -----------------------------------------------------------------------------
+def enable_parser():
+    """
+        Enables different parsing workflows.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Workflow not specified!")
+        redirect(URL(f="workflow"))
+
+    stable = s3db.scheduler_task
+    wtable = s3db.msg_workflow
+
+    records = db(stable.id > 0).select()
+    workflow = db(wtable.id == id).select(wtable.workflow_task_id,
+                                          wtable.source_task_id,
+                                          limitby=(0, 1)).first()
+
+    for record in records:
+        if "workflow" and "source" in record.vars:
+            r = record.vars.split("\"workflow\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+             
+            u = record.vars.split("\"source\":")[1]
+            v = u.split(",")[0]
+            v = v.split("\"")[1]
+            
+            if (s == workflow.workflow_task_id) and \
+               (v == workflow.source_task_id):
+                db(stable.id == record.id).update(enabled = True)
+
+    redirect(URL(f="workflow"))
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -311,7 +703,6 @@ def email_inbox():
 
     s3mgr.configure(tablename, listadd=False)
     return s3_rest_controller()
-
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -543,13 +934,13 @@ def twitter_settings():
             table.pin.label = T("PIN") # won't be seen
             table.pin.value = ""       # but let's be on the safe side
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-processor
     def user_postp(r, output):
         output["list_btn"] = ""
         return output
-    response.s3.postp = user_postp
+    s3.postp = user_postp
 
     #response.menu_options = admin_menu_options
     s3mgr.configure(tablename, listadd=False, deletable=False)
@@ -559,7 +950,6 @@ def twitter_settings():
 # The following functions hook into the pr functions:
 #
 def group():
-
     """ RESTful CRUD controller """
 
     if auth.is_logged_in() or auth.basic():
@@ -576,7 +966,7 @@ def group():
     table.description.readable = table.description.writable = False
 
     # Do not show system groups
-    response.s3.filter = (table.system == False)
+    s3.filter = (table.system == False)
 
     return s3_rest_controller(module, resourcename, rheader=s3db.pr_rheader)
 
@@ -591,28 +981,24 @@ def group_membership():
         redirect(URL(c="default", f="user", args="login",
         vars={"_next":URL(c="msg", f="group_membership")}))
 
-    module = "pr"
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
+    table = s3db.pr_group_membership
 
     # Hide unnecessary fields
     table.description.readable = table.description.writable = False
     table.comments.readable = table.comments.writable = False
     table.group_head.readable = table.group_head.writable = False
 
-    return s3_rest_controller(module, resourcename)
-
+    return s3_rest_controller("pr", resourcename)
 
 # -----------------------------------------------------------------------------
 def contact():
     """ Allows the user to add, update and delete their contacts """
 
-    module = "pr"
     table = s3db.pr.contact
     ptable = s3db.pr_person
 
     if auth.is_logged_in() or auth.basic():
-        response.s3.filter = (table.pe_id == auth.user.pe_id)
+        s3.filter = (table.pe_id == auth.user.pe_id)
     else:
         redirect(URL(c="default", f="user", args="login",
             vars={"_next":URL(c="msg", f="contact")}))
@@ -643,11 +1029,10 @@ def contact():
                 return dict(bypass = True, output = redirect(URL(r=request)))
         else:
             return True
-    response.s3.prep = msg_contact_restrict_access
+    s3.prep = msg_contact_restrict_access
 
     response.menu_options = []
-    return s3_rest_controller(module, resourcename)
-
+    return s3_rest_controller("pr", resourcename)
 
 # -----------------------------------------------------------------------------
 def search():
@@ -784,7 +1169,7 @@ def load_search(id):
                                       get_vars=Storage(var)
                                      )
     #redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
-    response.s3.no_sspag=True
+    s3.no_sspag=True
     output = r()
     #extract the updates
     return output

@@ -861,70 +861,109 @@ class S3PersonModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        # Ignore this processing if the id is set
-        if item.id:
+        ptable = s3db.pr_person
+        etable = s3db.pr_contact.with_alias("pr_email")
+        stable = s3db.pr_contact.with_alias("pr_sms")
+
+        left = [etable.on((etable.pe_id == ptable.pe_id) & \
+                          (etable.contact_method == "EMAIL")),
+                stable.on((stable.pe_id == ptable.pe_id) & \
+                          (stable.contact_method == "SMS"))]
+
+        data = item.data
+        fname = lname = None
+        if "first_name" in data:
+            fname = data["first_name"]
+        if "last_name" in data:
+            lname = data["last_name"]
+        initials = dob = None
+        if "initials" in data:
+            initials = data["initials"]
+        if "date_of_birth" in data:
+            dob = data["date_of_birth"]
+        email = sms = None
+        for citem in item.components:
+            if citem.tablename == "pr_contact":
+                data = citem.data
+                if "contact_method" in data and \
+                    data.contact_method == "EMAIL":
+                    email = data.value
+                elif "contact_method" in data and \
+                        data.contact_method == "SMS":
+                    sms = data.value
+
+        if fname and lname:
+            query = (ptable.first_name.lower() == fname.lower()) & \
+                    (ptable.last_name.lower() == lname.lower())
+        elif initials:
+            query = (ptable.initials.lower() == initials.lower())
+        else:
             return
-        if item.tablename == "pr_person":
-            ptable = s3db.pr_person
-            ctable = s3db.pr_contact
+        candidates = db(query).select(ptable._id,
+                                      ptable.first_name,
+                                      ptable.last_name,
+                                      ptable.initials,
+                                      ptable.date_of_birth,
+                                      etable.value,
+                                      stable.value,
+                                      left=left)
 
-            # Match by first name and last name, and if given, by email address
-            # and/or mobile phone number
-            fname = "first_name" in item.data and item.data.first_name
-            lname = "last_name" in item.data and item.data.last_name
-            if fname and lname:
-                # "LIKE" is inappropriate here:
-                # E.g. "Fran Boon" would overwrite "Frank Boones"
-                #query = (ptable.first_name.lower().like('%%%s%%' % fname.lower())) & \
-                        #(ptable.last_name.lower().like('%%%s%%' % lname.lower()))
+        duplicates = Storage()
+        for row in candidates:
+            row_fname = row[ptable.first_name]
+            row_lname = row[ptable.last_name]
+            row_initials = row[ptable.initials]
+            row_dob = row[ptable.date_of_birth]
+            row_email = row[etable.value]
+            row_sms = row[stable.value]
 
-                # But even an exact name match does not necessarily indicate a
-                # duplicate: depending on the scope of the deployment, you could
-                # have thousands of people with exactly the same names (or just
-                # two of them - and it can already go wrong).
-                # We take the email address as additional criterion, however, where
-                # person data do not usually contain email addresses you might need
-                # to add more/other criteria here
-                query = (ptable.first_name.lower() == fname.lower()) & \
-                        (ptable.last_name.lower() == lname.lower())
-                email = False
-                sms = False
-                for citem in item.components:
-                    if citem.tablename == "pr_contact":
-                        if "contact_method" in citem.data and \
-                           citem.data.contact_method == "EMAIL":
-                            email = citem.data.value
-                        elif "contact_method" in citem.data and \
-                             citem.data.contact_method == "SMS":
-                            sms = citem.data.value
-                if email != False:
-                    query = query & \
-                            (ctable.value.lower() == email.lower())
-                if sms != False:
-                    # @ToDo: Compare like current.msg.sanitise_phone(sms)
-                    query = query & \
-                            (ctable.value == sms)
-                if sms or email:
-                    query = query & \
-                            (ptable.pe_id == ctable.pe_id)
+            check = 0
+            if fname and row_fname:
+                if fname.lower() == row_fname.lower():
+                    check += 2
+                else:
+                    check -= 2
+            if lname and row_lname:
+                if lname.lower() == row_lname.lower():
+                    check += 2
+                else:
+                    check -= 2
+            if dob and row_dob:
+                if dob == row_dob:
+                    check += 2
+                else:
+                    check -= 2
+            if initials and row_initials:
+                if initials.lower() == row_initials.lower():
+                    check += 1
+                else:
+                    check -= 1
+            if email and row_email:
+                if email.lower() == row_email.lower():
+                    check += 1
+                else:
+                    check -= 1
+            if sms and row_sms:
+                if sms.lower() == row_sms.lower():
+                    check += 1
+                else:
+                    check -= 1
 
+            if check in duplicates:
+                continue
             else:
-                # Try Initials (this is a weak test but works well in small teams)
-                initials = "initials" in item.data and item.data.initials
-                if not initials:
-                    # Nothing we can do
-                    return
-                query = (ptable.initials.lower() == initials.lower())
+                duplicates[check] = row
 
-            # Look for details on the database
-            _duplicate = db(query).select(ptable.id,
-                                          limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+        duplicate = None
+        if len(duplicates):
+            best_match = max(duplicates.keys())
+            if best_match > 0:
+                duplicate = duplicates[best_match]
+                item.id = duplicate[ptable.id]
                 item.method = item.METHOD.UPDATE
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3GroupModel(S3Model):
@@ -3043,22 +3082,15 @@ def pr_rheader(r, tabs=[]):
         - used in PR, HRM, DVI, MPR, MSG, VOL
     """
 
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    gis = current.gis
-    s3 = current.response.s3
-
-    tablename, record = s3_rheader_resource(r)
-
     if r.representation == "html":
-        rheader_tabs = s3_rheader_tabs(r, tabs)
+        tablename, record = s3_rheader_resource(r)
+        if record:
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            T = current.T
+            db = current.db
+            s3db = current.s3db
 
-        if tablename == "pr_person":
-            person = record
-            if person:
-                s3 = current.response.s3
-                ptable = r.table
+            if tablename == "pr_person":
                 itable = s3db.pr_image
                 query = (itable.pe_id == record.pe_id) & \
                         (itable.profile == True)
@@ -3071,26 +3103,27 @@ def pr_rheader(r, tabs=[]):
                     image = ""
                 rheader = DIV(TABLE(
                     TR(TH("%s: " % T("Name")),
-                       s3_fullname(person),
+                       s3_fullname(record),
                        TH("%s: " % T("ID Tag Number")),
-                       "%(pe_label)s" % person,
+                       "%(pe_label)s" % record,
                        image),
                     TR(TH("%s: " % T("Date of Birth")),
-                       "%s" % (person.date_of_birth or T("unknown")),
+                       "%s" % (record.date_of_birth or T("unknown")),
                        TH("%s: " % T("Gender")),
-                       "%s" % s3.pr_gender_opts.get(person.gender, T("unknown"))),
+                       "%s" % s3db.pr_gender_opts.get(record.gender,
+                                                      T("unknown"))),
 
                     TR(TH("%s: " % T("Nationality")),
-                       "%s" % (gis.get_country(person.nationality, key_type="code") or T("unknown")),
+                       "%s" % (current.gis.get_country(record.nationality,
+                                                       key_type="code") or \
+                               T("unknown")),
                        TH("%s: " % T("Age Group")),
-                       "%s" % s3.pr_age_group_opts.get(person.age_group, T("unknown"))),
-
+                       "%s" % s3db.pr_age_group_opts.get(record.age_group,
+                                                         T("unknown"))),
                     ), rheader_tabs)
                 return rheader
 
-        elif tablename == "pr_group":
-            group = record
-            if group:
+            elif tablename == "pr_group":
                 table = s3db.pr_group_membership
                 query = (table.group_id == record.id) & \
                         (table.group_head == True)
@@ -3102,11 +3135,11 @@ def pr_rheader(r, tabs=[]):
                     leader = ""
                 rheader = DIV(TABLE(
                                 TR(TH("%s: " % T("Name")),
-                                   group.name,
+                                   record.name,
                                    TH("%s: " % T("Leader")) if leader else "",
                                    leader),
                                 TR(TH("%s: " % T("Description")),
-                                   group.description or "",
+                                   record.description or "",
                                    TH(""),
                                    "")
                                 ), rheader_tabs)

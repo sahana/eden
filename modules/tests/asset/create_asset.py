@@ -83,8 +83,6 @@ class CreateAsset(SeleniumUnitTest):
                        "Lori",
                        "option",
                        3),
-                     #( "room_id",
-                     #  "-"),
                      ( "cond",
                        "Good Condition",
                        "option"),

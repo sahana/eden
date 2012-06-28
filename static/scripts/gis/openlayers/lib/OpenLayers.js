@@ -433,4 +433,4 @@
 /**
  * Constant: VERSION_NUMBER
  */
-OpenLayers.VERSION_NUMBER="Release 2.12-rc7";
+OpenLayers.VERSION_NUMBER="Release 2.12";

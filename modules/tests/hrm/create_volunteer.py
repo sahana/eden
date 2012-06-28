@@ -45,15 +45,11 @@ class CreateVolunteer(SeleniumUnitTest):
         """
         print "\n"
 
-        import datetime
-        from dateutil.relativedelta import relativedelta
-
-        browser = self.browser
         self.login(account="admin", nexturl="vol/volunteer/create")
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
-                       "Romanian Food Assistance Association",
+                       "Acme Suppliers",
                        "autocomplete"),
                      ( "first_name",
                        "John",
@@ -61,33 +57,13 @@ class CreateVolunteer(SeleniumUnitTest):
                      ( "last_name",
                        "Thompson",
                        "pr_person"),
-                     ( "date_of_birth",
-                       "1980-10-14",
-                       "pr_person"),
-                     # To Do: Make 4th arg for this to support option
-#                     ( "gender",
-#                       "male",
-#                       "option",
-#                       "pr_person"),
                      ( "email",
-                       "test@notavalidemail.com",
+                       "test8@notavalidemail.com",
                        "pr_person"),
                      ( "job_role_id",
-                       "Child Care Worker, Part Time",
+                       "Security",
                        "option"),
-#                     ( "start_date",
-#                       today),
-#                     ( "end_date",
-#                       now_1_week),
-                     ( "L0",
-                       "Romania",
-                       "gis_location"),
-                     ( "street",
-                       "23 Petru St",
-                       "gis_location" ),
-                     ( "L3",
-                       "Bucharest",
-                       "gis_location" ),
                      ]
                      )
+
 

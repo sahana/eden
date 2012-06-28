@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/eden/pr.py
 #
 import unittest
+import datetime
 
 from gluon import current
 
@@ -110,6 +111,241 @@ class PRTests(unittest.TestCase):
             db.rollback()
 
 # =============================================================================
+class PersonDeduplicateTests(unittest.TestCase):
+    """ PR Tests """
+
+    def setUp(self):
+
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+
+        person1 = Storage(first_name = "Test",
+                          last_name = "UserDEDUP",
+                          initials = "TU",
+                          date_of_birth = datetime.date(1974, 4, 13))
+        person1_id = ptable.insert(**person1)
+        person1.update(id=person1_id)
+        s3mgr.model.update_super(ptable, person1)
+
+        self.person1_id = person1_id
+        self.pe1_id = s3db.pr_get_pe_id(ptable, person1_id)
+
+        person2 = Storage(first_name = "Test",
+                          last_name = "UserDEDUP",
+                          initials = "OU",
+                          date_of_birth = datetime.date(1974, 4, 23))
+        person2_id = ptable.insert(**person2)
+        person2.update(id=person2_id)
+        s3mgr.model.update_super(ptable, person2)
+
+        self.person2_id = person2_id
+        self.pe2_id = s3db.pr_get_pe_id(ptable, person2_id)
+
+    def testHook(self):
+
+        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        self.assertNotEqual(deduplicate, None)
+        self.assertTrue(callable(deduplicate))
+
+    def testMatchNames(self):
+
+        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+
+        # Test Match
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Mismatch
+        person = Storage(first_name = "Other",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+    def testMatchEmail(self):
+
+        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+
+        # Test without contact records in the DB
+
+        # Test Match
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="testuser@example.com")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Mismatch
+        person = Storage(first_name = "Other",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="testuser@example.com")
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+        # Insert contact records into the DB
+        ctable = s3db.pr_contact
+        email = Storage(pe_id = self.pe1_id,
+                        contact_method = "EMAIL",
+                        value = "testuser@example.com")
+        ctable.insert(**email)
+        email = Storage(pe_id = self.pe2_id,
+                        contact_method = "EMAIL",
+                        value = "otheruser@example.org")
+        ctable.insert(**email)
+
+        # Test with contact records in the DB
+
+        # Test Match - same names, same email
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="testuser@example.com")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same names, different email
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="otheremail@example.com")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same names, same email, but different record
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="otheruser@example.org")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person2_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Mismatch - First names different
+        person = Storage(first_name = "Other",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="testuser@example.com")
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+    def testMatchInitials(self):
+
+        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+
+        # Insert contact records into the DB
+        ctable = s3db.pr_contact
+        email = Storage(pe_id = self.pe1_id,
+                        contact_method = "EMAIL",
+                        value = "testuser@example.com")
+        ctable.insert(**email)
+        email = Storage(pe_id = self.pe2_id,
+                        contact_method = "EMAIL",
+                        value = "otheruser@example.org")
+        ctable.insert(**email)
+
+        # Test Match - same initials
+        person = Storage(initials="TU")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same names, different initials
+        person = Storage(first_name="Test",
+                         last_name="UserDEDUP",
+                         initials="OU")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertEqual(item.id, self.person2_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same names, different initials, and email
+        person = Storage(first_name="Test",
+                         last_name="UserDEDUP",
+                         initials="OU")
+        item = self.import_item(person, email="testuser@example.org")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person2_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same initials
+        person = Storage(initials="OU")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertEqual(item.id, self.person2_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+        # Test Match - same initials, same email
+        person = Storage(initials="TU")
+        item = self.import_item(person, email="testuser@example.com")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+
+    def testMatchDOB(self):
+
+        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+
+        # Insert contact records into the DB
+        ctable = s3db.pr_contact
+        email = Storage(pe_id = self.pe1_id,
+                        contact_method = "EMAIL",
+                        value = "testuser@example.com")
+        ctable.insert(**email)
+        email = Storage(pe_id = self.pe2_id,
+                        contact_method = "EMAIL",
+                        value = "otheruser@example.org")
+        ctable.insert(**email)
+
+        # Test Match - same initials, different email, same DOB
+        person = Storage(initials="TU",
+                         date_of_birth=datetime.date(1974, 4, 13))
+        item = self.import_item(person, email="otheremail@example.com")
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+
+        # Test MisMatch - same initials, different email, different DOB
+        person = Storage(initials="TU",
+                         date_of_birth=datetime.date(1975, 6, 17))
+        item = self.import_item(person, email="otheremail@example.com")
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+    def import_item(self, person, email=None, sms=None):
+        """ Construct a fake import item """
+
+        def item(tablename, data):
+            return Storage(id = None,
+                           method = None,
+                           tablename = tablename,
+                           data = data,
+                           components = [],
+                           METHOD = s3base.S3ImportItem.METHOD)
+        import_item = item("pr_person", person)
+        if email:
+            import_item.components.append(item("pr_contact",
+                                Storage(contact_method = "EMAIL",
+                                        value = email)))
+        if sms:
+            import_item.components.append(item("pr_contact",
+                                Storage(contact_method = "SMS",
+                                        value = sms)))
+        return import_item
+
+    def tearDown(self):
+
+        db.rollback()
+        self.pe_id = None
+        self.person_id = None
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -126,6 +362,7 @@ if __name__ == "__main__":
 
     run_suite(
         PRTests,
+        PersonDeduplicateTests,
     )
 
 # END ========================================================================

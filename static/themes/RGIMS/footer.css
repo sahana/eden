@@ -10,16 +10,6 @@
     text-align: center;
     border-top: #fff 1px solid;
 }
-#socialmedia_share {
-    float: left;
-    margin-top: 7px;
-    margin-left: 20px;
-    style: block;
-}
-.socialmedia_element {
-    float: left;
-    margin-right: 8px;
-}
 #poweredby {
     float: right;
     margin-right: 20px;
@@ -29,7 +19,8 @@
     text-decoration: none;
 
 }
-/* Twitter bugfix */
-#twttrHubFrame {
-    left: -9999em;
+#dswd {
+    color: #171C1C; 
+    font-family: Arial,Helvetica,Sans-Serif; 
+    font-size: 11px; 
 }

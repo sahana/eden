@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+.S3menulogo {
+    background: url(img/dswd.png) left top no-repeat;
+    text-shadow: none;
+    padding: none;
+    width: 41px;
+    height: 35px;
+    display: inline-block;
+    position: absolute;
+    top: 3px;
+    left: 2px;
+}
+.S3menuHome {
+    padding-left: 38px;
+}
