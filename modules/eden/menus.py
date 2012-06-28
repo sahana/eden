@@ -1056,7 +1056,7 @@ class S3OptionsMenu(object):
 
         return M(c="irs")(
                     M("Incident Reports", f="ireport")(
-                        M("Add Icident Report", m="create"),
+                        M("Add Incident Report", m="create"),
                         M("List All"),
                         M("Open Incidents", vars={"open":1}),
                         M("Map", m="map"),

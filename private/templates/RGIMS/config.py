@@ -37,7 +37,7 @@ settings.fin.currencies = {
 settings.fin.currency_default = "PHP"
 
 # Security Policy
-settings.security.policy = 5 # Table ACLs
+settings.security.policy = 6 # Warehouse-specific restrictions
 settings.security.map = True
 
 # Enable this for a UN-style deployment

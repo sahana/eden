@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Custom UI Widgets
+""" Custom UI Widgets
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -195,7 +194,7 @@ class S3DateTimeWidget(FormWidget):
             # default: "%Y-%m-%d %T"
             format = str(self.format)
         else:
-            format = current.deployment_settings.get_L10n_datetime_format()
+            format = str(current.deployment_settings.get_L10n_datetime_format())
         request = current.request
         s3 = current.response.s3
 

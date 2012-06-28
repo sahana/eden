@@ -174,16 +174,14 @@ class S3InventoryModel(S3Model):
                                   item_id, #Item Entity
                                   supply_item_id(ondelete = "RESTRICT"),
                                   item_pack_id(ondelete = "RESTRICT"),
-                                  Field("quantity",
-                                        "double",
+                                  Field("quantity", "double",
                                         label = T("Quantity"),
                                         notnull = True,
                                         represent=lambda v, row=None: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                                         requires = IS_FLOAT_IN_RANGE(0,None),
                                         writable = False),
-                                  Field("pack_value",
-                                        "double",
+                                  Field("pack_value", "double",
                                         label = T("Value per Pack"),
                                         represent=lambda v, row=None: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2)),
@@ -203,17 +201,12 @@ class S3InventoryModel(S3Model):
                                         represent = s3_date_represent,
                                         widget = S3DateWidget()
                                         ),
-                                  Field("bin",
-                                        "string",
-                                        length = 16,
+                                  Field("bin", "string", length=16,
                                         ),
-                                  Field("item_source_no",
-                                        "string",
-                                        length = 16,
+                                  Field("item_source_no", "string", length=16,
                                         label = itn_label,
                                         ),
-                                  Field("source_type",
-                                        "integer",
+                                  Field("source_type", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(inv_source_type)),
                                         represent = lambda opt: inv_source_type.get(opt, UNKNOWN_OPT),
                                         label = T("Type"),
@@ -471,7 +464,6 @@ $(document).ready(function() {
 
         if r.component:
 
-            db = current.db
             s3db = current.s3db
 
             if r.component.name == "inv_item":
@@ -479,7 +471,7 @@ $(document).ready(function() {
                 # Filter out items which are already in this inventory
                 query = (table.site_id == r.record.site_id) & \
                         (table.deleted == False)
-                inv_item_rows =  db(query).select(table.item_id)
+                inv_item_rows = current.db(query).select(table.item_id)
                 item_ids = [row.item_id for row in inv_item_rows]
 
                 # Ensure that the current item CAN be selected
@@ -502,28 +494,27 @@ $(document).ready(function() {
         """
         """
 
-        db = current.db
         s3db = current.s3db
-        
-        s3_string_represent = lambda str: str if str else ""
-
         itable = s3db.inv_inv_item
         stable = s3db.supply_item
         query = (itable.id == id) & \
                 (itable.item_id == stable.id)
-        record = db(query).select(stable.name,
-                                  stable.um,
-                                  itable.item_source_no,
-                                  itable.bin,
-                                  itable.expiry_date,
-                                  itable.owner_org_id,
-                                  limitby = (0, 1)).first()
+        record = current.db(query).select(stable.name,
+                                          stable.um,
+                                          itable.item_source_no,
+                                          itable.bin,
+                                          itable.expiry_date,
+                                          itable.owner_org_id,
+                                          limitby = (0, 1)).first()
         if record:
-            s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+            s3_string_represent = lambda str: str if str else ""
+            s3_date_represent = lambda dt: \
+                S3DateTime.date_represent(dt, utc=True)
             ctn = s3_string_represent(record.inv_inv_item.item_source_no)
             org = s3db.org_organisation_represent(record.inv_inv_item.owner_org_id)
             if record.inv_inv_item.expiry_date:
-                exp_date = "expires:%s" % s3_date_represent(record.inv_inv_item.expiry_date)
+                exp_date = "expires:%s" % \
+                    s3_date_represent(record.inv_inv_item.expiry_date)
             else:
                 exp_date = ""
             bin = s3_string_represent(record.inv_inv_item.bin)
@@ -537,6 +528,7 @@ $(document).ready(function() {
         else:
             return None
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_item_duplicate(job):
         """
@@ -552,6 +544,7 @@ $(document).ready(function() {
             validation would fail (it's a not null field). So if a duplicate
             is found then the quantity needs to be removed.
         """
+
         if job.tablename == "inv_inv_item":
             table = job.table
             data = job.data
@@ -1282,23 +1275,20 @@ $(document).ready(function() {
         """
 
         if id:
-
-            db = current.db
-            s3db = current.s3db
-
-            table = s3db.inv_send
-            send_row = db(table.id == id).select(table.date,
-                                                 table.site_id,
-                                                 limitby=(0, 1)).first()
+            table = current.s3db.inv_send
+            row = current.db(table.id == id).select(table.date,
+                                                         table.site_id,
+                                                         limitby=(0, 1)).first()
             if show_link:
-                return SPAN(table.site_id.represent(send_row.site_id),
+                return SPAN(table.site_id.represent(row.site_id),
                             " - ",
-                            table.date.represent(send_row.date)
+                            table.date.represent(row.date)
                             )
             else:
-                return "%s - %s" % (table.site_id.represent(send_row.site_id, show_link = False),
-                                    table.date.represent(send_row.date),
-                                   )
+                return "%s - %s" % (table.site_id.represent(row.site_id,
+                                                            show_link = False),
+                                    table.date.represent(row.date),
+                                    )
         else:
             return current.messages.NONE
 
@@ -1369,7 +1359,6 @@ $(document).ready(function() {
         """
 
         s3db = current.s3db
-
         table = s3db.inv_send
         tracktable = s3db.inv_track_item
         table.date.readable = True
@@ -1414,24 +1403,22 @@ $(document).ready(function() {
             for shipments between facilities within a single Org where
             'From Facility' could be more appropriate
         """
+
         if id:
-
-            db = current.db
-            s3db = current.s3db
-
-            table = s3db.inv_recv
-            inv_recv_row = db(table.id == id).select(table.date,
-                                                     table.site_id,
-                                                     limitby=(0, 1)).first()
+            table = current.s3db.inv_recv
+            row = current.db(table.id == id).select(table.date,
+                                                    table.site_id,
+                                                    limitby=(0, 1)).first()
             if show_link:
-                return SPAN(table.site_id.represent(inv_recv_row.site_id),
+                return SPAN(table.site_id.represent(row.site_id),
                             " - ",
-                            table.date.represent(inv_recv_row.date)
+                            table.date.represent(row.date)
                             )
             else:
-                return "%s - %s" % (table.site_id.represent(inv_recv_row.site_id, show_link = False),
-                                    table.date.represent(inv_recv_row.date),
-                                   )
+                return "%s - %s" % (table.site_id.represent(row.site_id,
+                                                            show_link = False),
+                                    table.date.represent(row.date),
+                                    )
         else:
             return current.messages.NONE
 
@@ -1552,13 +1539,13 @@ $(document).ready(function() {
                 s3db = current.s3db
     
                 table = s3db.inv_send
-                send_row = db(table.send_ref == value).select(table.id,
+                row = db(table.send_ref == value).select(table.id,
                                                               limitby=(0, 1)
                                                              ).first()
-                if send_row:
+                if row:
                     return A(value,
                              _href = URL(f = "send",
-                                         args = [send_row.id, "form"]
+                                         args = [row.id, "form"]
                                         ),
                             )
                 else:
@@ -1658,41 +1645,43 @@ $(document).ready(function() {
         """
 
         s3db = current.s3db
-        db = current.db
         stable = s3db.supply_item
-        ktable = s3db.supply_kit_item
-        siptable = s3db.supply_item_pack
-        invtable = s3db.inv_inv_item
 
         if stable.kit == True:
 
-           # Get food pack contents
-           query = (ktable.parent_item_id == form.vars.item_id)
-           rows = db(query).select()
+            db = current.db
+            ktable = s3db.supply_kit_item
+            siptable = s3db.supply_item_pack
+            invtable = s3db.inv_inv_item
 
-           # Get quantity of selected contents on the food pack (supply_kit_item)
-           kit_item ={}
-           # Loop through each supply item in the kit
-           for record in rows:
-               one_kit = record.quantity
-               # Check if the contents in supply kit item are in the inventory (inv_inv_item)
-               query2 = (record.item_id == invtable.id)
-               wh_items = db(query).select()
+            # Get food pack contents
+            query = (ktable.parent_item_id == form.vars.item_id)
+            rows = db(query).select()
 
-               # Select the pack id of the kit_item in the supply_item_pack table
-               total_amount = 0
-               for wh_item in wh_items:
-                   pack_item_id = wh_item.item_pack_id
-                   pack_quantity = siptable[pack_item_id].quantity
-                   wh_item_quantity = wh_item.quantity
+            # Get quantity of selected contents on the food pack (supply_kit_item)
+            kit_item = {}
 
-                   amount = pack_quantity * wh_item_quantity
-                   total_amount += amount
-               # Find out how many kits we can make & store in kit_item
-               kit_item[record.item_id] = total_amount / one_kit
-               max_kits = min(kit_item.values())
-               if max_kits < form.vars.quantity:
-                   form.errors.quantity = T("You can only make %d kit(s) with the available stock" % max_kits)
+            # Loop through each supply item in the kit
+            for record in rows:
+                one_kit = record.quantity
+                # Check if the contents in supply kit item are in the inventory (inv_inv_item)
+                query2 = (invtable.id == record.item_id)
+                wh_items = db(query).select()
+
+                # Select the pack id of the kit_item in the supply_item_pack table
+                total_amount = 0
+                for wh_item in wh_items:
+                    pack_item_id = wh_item.item_pack_id
+                    pack_quantity = siptable[pack_item_id].quantity
+                    wh_item_quantity = wh_item.quantity
+                    amount = pack_quantity * wh_item_quantity
+                    total_amount += amount
+
+                # Find out how many kits we can make & store in kit_item
+                kit_item[record.item_id] = total_amount / one_kit
+                max_kits = min(kit_item.values())
+                if max_kits < form.vars.quantity:
+                    form.errors.quantity = T("You can only make %d kit(s) with the available stock" % max_kits)
                     #record2.quantity
 #                   item_total[record.item_id] =
 #           for record in rows:
@@ -1703,15 +1692,14 @@ $(document).ready(function() {
                     # total_quantity = (ktable.quantity(ktable.item_pack_id)) # get the total quantity of each item
                     # x.total_quantity = total_quantity
                     # x++
-           return
+            return
 
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_get_shipping_code(type, site_id, field):
-        s3db = current.s3db
-        db = current.db
+
         if site_id:
-            ostable = s3db.org_site
+            ostable = current.s3db.org_site
             scode = ostable[site_id].code
             code = "%s-%s-" % (type, scode)
         else:
@@ -1719,9 +1707,9 @@ $(document).ready(function() {
         number = 0
         if field:
             query = (field.like("%s%%" % code))
-            ref_row = db(query).select(field,
-                                       limitby=(0, 1),
-                                       orderby=~field).first()
+            ref_row = current.db(query).select(field,
+                                               limitby=(0, 1),
+                                               orderby=~field).first()
             if ref_row:
                 ref = ref_row(field)
                 number = int(ref[-6:])
@@ -1734,8 +1722,9 @@ $(document).ready(function() {
            When a track item record is created and it is linked to an inv_item
            then the inv_item quantity will be reduced.
         """
-        s3db = current.s3db
+
         db = current.db
+        s3db = current.s3db
         tracktable = s3db.inv_track_item
         inv_item_table = s3db.inv_inv_item
         stable = s3db.inv_send
@@ -1900,8 +1889,9 @@ $(document).ready(function() {
            When a track item record is deleted and it is linked to an inv_item
            then the inv_item quantity will be reduced.
         """
-        s3db = current.s3db
+
         db = current.db
+        s3db = current.s3db
         tracktable = s3db.inv_track_item
         inv_item_table = s3db.inv_inv_item
         ritable = s3db.req_req_item
@@ -1944,13 +1934,11 @@ def inv_tabs(r):
     """
 
     T = current.T
-    s3db = current.s3db
-    auth = current.auth
-    session = current.session
+    s3 = current.session.s3
     settings = current.deployment_settings
 
     if settings.has_module("inv") and \
-        auth.s3_has_permission("read", "inv_inv_item"):
+        current.auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
         tablename, record = s3_rheader_resource(r)
         if collapse_tabs and not \
@@ -1965,11 +1953,11 @@ def inv_tabs(r):
             else:
                 show_inv = None
             if show_inv == True or show_inv == False:
-                if not session.s3.show_inv:
-                    session.s3.show_inv = Storage()
-                session.s3.show_inv["%s_%s" %  (r.name, r.id)] = show_inv
-            elif session.s3.show_inv:
-                show_inv = session.s3.show_inv.get("%s_%s" %  (r.name, r.id))
+                if not s3.show_inv:
+                    s3.show_inv = Storage()
+                s3.show_inv["%s_%s" %  (r.name, r.id)] = show_inv
+            elif s3.show_inv:
+                show_inv = s3.show_inv.get("%s_%s" %  (r.name, r.id))
             else:
                 show_inv = False
         else:
@@ -2001,21 +1989,22 @@ def inv_tabs(r):
 # =============================================================================
 def inv_warehouse_rheader(r):
     """ Resource Header for warehouse inv. item """
+
     if r.representation != "html" or r.method == "import":
         # RHeaders only used in interactive views
         return None
 
-    s3 = current.response.s3
+    s3db = current.s3db
     tablename, record = s3_rheader_resource(r)
     rheader = None
     if tablename == "org_organisation" or tablename == "org_office":
-        rheader = s3.org_rheader(r)
+        rheader = s3db.org_rheader(r)
     if tablename == "inv_inv_item" and record != None:
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
                ]
         rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
-        table = current.s3db[tablename]
+        table = s3db[tablename]
         rheader = DIV( TABLE(
                            TR( TH("%s: " % table.item_id.label),
                                table.item_id.represent(record.item_id),
@@ -2029,7 +2018,7 @@ def inv_warehouse_rheader(r):
                         rheader_tabs
                         )
     if tablename == "inv_track_item" and record != None:
-        table = current.s3db["inv_inv_item"]
+        table = s3db["inv_inv_item"]
         irecord = table[record.item_id]
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "inv_item/"),
@@ -2078,7 +2067,7 @@ def inv_warehouse_rheader(r):
                       # )
         # rfooter.append(ns_btn)
 
-    s3.rfooter = rfooter
+    current.response.s3.rfooter = rfooter
     return rheader
 
 # =============================================================================
@@ -2135,9 +2124,8 @@ def inv_send_rheader(r):
         record = r.record
         if record:
 
-            s3db = current.s3db
             auth = current.auth
-            s3 = current.response.s3
+            s3db = current.s3db
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "track_item"),
@@ -2300,7 +2288,7 @@ def inv_send_rheader(r):
                            )
                         )
 
-            s3.rfooter = rfooter
+            current.response.s3.rfooter = rfooter
             rheader = DIV (rData,
                            rheader_tabs,
                            rSubdata
@@ -2310,6 +2298,9 @@ def inv_send_rheader(r):
 
 # ---------------------------------------------------------------------
 def inv_send_pdf_footer(r):
+    """
+    """
+
     record = r.record
     if record:
         footer = DIV (TABLE (TR(TH(T("Commodities Loaded")),
@@ -2366,10 +2357,8 @@ def inv_recv_rheader(r):
         record = r.record
         if record:
 
-            s3db = current.s3db
             T = current.T
-            s3 = current.response.s3
-            auth = current.auth
+            s3db = current.s3db
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "track_item"),
@@ -2378,7 +2367,7 @@ def inv_recv_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-            tracktable = current.s3db.inv_track_item
+            tracktable = s3db.inv_track_item
 
             recv_id = record.id
             site_id = record.site_id
@@ -2429,10 +2418,9 @@ def inv_recv_rheader(r):
 
             if record.status == SHIP_STATUS_SENT or \
                record.status == SHIP_STATUS_IN_PROCESS:
-                if auth.s3_has_permission("update",
-                                          "inv_recv",
-
-                                          record_id=record.id):
+                if current.auth.s3_has_permission("update",
+                                                  "inv_recv",
+                                                  record_id=record.id):
                     if cnt > 0:
                         action.append( A( T("Receive Shipment"),
                                               _href = URL(c = "inv",
@@ -2478,14 +2466,18 @@ def inv_recv_rheader(r):
                            )
                         )
 
-            s3.rfooter = rfooter
+            current.response.s3.rfooter = rfooter
             rheader = DIV (rData,
                            rheader_tabs,
                           )
             return rheader
     return None
+
 # ---------------------------------------------------------------------
 def inv_recv_pdf_footer(r):
+    """
+    """
+
     record = r.record
     if record:
         footer = DIV (TABLE (TR(TH(T("Delivered By")),
@@ -2751,7 +2743,6 @@ class S3AdjustModel(S3Model):
         else:
             return B(value)
 
-
     # ---------------------------------------------------------------------
     @staticmethod
     def inv_adj_onaccept(form):
@@ -2760,23 +2751,24 @@ class S3AdjustModel(S3Model):
            then an adj_item record for each inv_inv_item in the site will be
            created. If needed, extra adj_item records can be created later.
         """
+
+        id = form.vars.id
         s3db = current.s3db
-        db = current.db
         inv_item_table = s3db.inv_inv_item
         adjitemtable = s3db.inv_adj_item
         adjtable = s3db.inv_adj
-        adj_rec = adjtable[form.vars.id]
+        adj_rec = adjtable[id]
         if adj_rec.category == 1:
             site_id = form.vars.site_id
             # Only get inv. item with a positive quantity
             query = (inv_item_table.site_id == site_id) & \
                     (inv_item_table.quantity > 0) & \
                     (inv_item_table.deleted == False)
-            inv_item_row = db(query).select()
-            for inv_item in inv_item_row:
+            row = current.db(query).select()
+            for inv_item in row:
                 # add an adjustment item record
                 adjitemtable.insert(reason = 0,
-                                    adj_id = form.vars.id,
+                                    adj_id = id,
                                     inv_item_id = inv_item.id, # original source inv_item
                                     item_id = inv_item.item_id, # the supply item
                                     item_pack_id = inv_item.item_pack_id,
@@ -2789,7 +2781,6 @@ class S3AdjustModel(S3Model):
                                     old_owner_org_id = inv_item.owner_org_id,
                                    )
 
-
     # ---------------------------------------------------------------------
     @staticmethod
     def inv_adj_represent(id, show_link=True):
@@ -2797,16 +2788,12 @@ class S3AdjustModel(S3Model):
         """
 
         if id:
-
-            db = current.db
-            s3db = current.s3db
-
-            table = s3db.inv_adj
-            send_row = db(table.id == id).select(table.adjustment_date,
-                                                 table.adjuster_id,
-                                                 limitby=(0, 1)).first()
-            repr = "%s - %s" % (table.adjuster_id.represent(send_row.adjuster_id),
-                                table.adjustment_date.represent(send_row.adjustment_date)
+            table = current.s3db.inv_adj
+            row = current.db(table.id == id).select(table.adjustment_date,
+                                                    table.adjuster_id,
+                                                    limitby=(0, 1)).first()
+            repr = "%s - %s" % (table.adjuster_id.represent(row.adjuster_id),
+                                table.adjustment_date.represent(row.adjustment_date)
                                 )
             if show_link:
                 return SPAN(repr)
@@ -2815,7 +2802,6 @@ class S3AdjustModel(S3Model):
         else:
             return current.messages.NONE
 
-
     # ---------------------------------------------------------------------
     @staticmethod
     def inv_adj_item_represent(id, show_link=True):
@@ -2823,21 +2809,17 @@ class S3AdjustModel(S3Model):
         """
 
         if id:
-
-            db = current.db
-            s3db = current.s3db
-
-            table = s3db.inv_adj_item
-            adj_row = db(table.id == id).select(table.item_id,
-                                                 table.old_quantity,
-                                                 table.new_quantity,
-                                                 table.item_pack_id,
-                                                 limitby=(0, 1)).first()
-            repr = "%s:%s %s" % (table.item_id.represent(adj_row.item_id,
-                                                           show_link = show_link),
-                                   (adj_row.new_quantity - adj_row.old_quantity),
-                                   table.item_pack_id.represent(adj_row.item_pack_id),
-                                )
+            table = current.s3db.inv_adj_item
+            row = current.db(table.id == id).select(table.item_id,
+                                                    table.old_quantity,
+                                                    table.new_quantity,
+                                                    table.item_pack_id,
+                                                    limitby=(0, 1)).first()
+            repr = "%s:%s %s" % (table.item_id.represent(row.item_id,
+                                                         show_link = show_link),
+                                 (row.new_quantity - row.old_quantity),
+                                 table.item_pack_id.represent(row.item_pack_id),
+                                 )
             if show_link:
                 return SPAN(repr)
             else:
@@ -2852,10 +2834,6 @@ def inv_adj_rheader(r):
     if r.representation == "html" and r.name == "adj":
         record = r.record
         if record:
-
-            s3db = current.s3db
-            auth = current.auth
-            s3 = current.response.s3
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "adj_item"),
@@ -2881,9 +2859,9 @@ def inv_adj_rheader(r):
 
             rfooter = TAG[""]()
             if record.status == 0: # In process
-                if auth.s3_has_permission("update",
-                                          "inv_adj",
-                                          record_id=record.id):
+                if current.auth.s3_has_permission("update",
+                                                  "inv_adj",
+                                                  record_id=record.id):
                     aitable = current.s3db.inv_adj_item
                     query = (aitable.adj_id == record.id) & \
                             (aitable.new_quantity == None)
@@ -2905,7 +2883,7 @@ def inv_adj_rheader(r):
                     else:
                         msg = T("You need to check all the revised quantities before you can close this adjustment")
                         rfooter.append(SPAN(msg))
-            s3.rfooter = rfooter
+            current.response.s3.rfooter = rfooter
             return rheader
     return None
 
