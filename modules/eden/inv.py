@@ -554,15 +554,16 @@ $(document).ready(function() {
         """
         if job.tablename == "inv_inv_item":
             table = job.table
+            data = job.data
             # @ToDo: Do this in a loop with a list of fields
-            site_id = "site_id" in job.data and job.data.site_id
-            item_id = "item_id" in job.data and job.data.item_id
-            pack_id = "item_pack_id" in job.data and job.data.item_pack_id
-            owner_org_id = "owner_org_id" in job.data and job.data.owner_org_id
-            supply_org_id = "supply_org_id" in job.data and job.data.supply_org_id
-            pack_value = "pack_value" in job.data and job.data.pack_value
-            currency = "currency" in job.data and job.data.currency
-            bin = "bin" in job.data and job.data.bin
+            site_id = "site_id" in data and data.site_id
+            item_id = "item_id" in data and data.item_id
+            pack_id = "item_pack_id" in data and data.item_pack_id
+            owner_org_id = "owner_org_id" in data and data.owner_org_id
+            supply_org_id = "supply_org_id" in data and data.supply_org_id
+            pack_value = "pack_value" in data and data.pack_value
+            currency = "currency" in data and data.currency
+            bin = "bin" in data and data.bin
             query = (table.site_id == site_id) & \
                     (table.item_id == item_id) & \
                     (table.item_pack_id == pack_id) & \
@@ -573,7 +574,7 @@ $(document).ready(function() {
                     (table.bin == bin)
             id = duplicator(job, query)
             if id:
-                if "quantity" in job.data and job.data.quantity == 0:
+                if "quantity" in data and data.quantity == 0:
                     job.data.quantity = table[id].quantity
 
 # =============================================================================
@@ -599,11 +600,9 @@ class S3TrackingModel(S3Model):
 
     def model(self):
 
-        current.manager.load("inv_adj_item")
         T = current.T
         db = current.db
         auth = current.auth
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -613,7 +612,7 @@ class S3TrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
-        adj_item_id = self.adj_item_id
+        adj_item_id = self.inv_adj_item_id
 
         item_pack_virtualfields = self.supply_item_pack_virtualfields
 
@@ -626,7 +625,7 @@ class S3TrackingModel(S3Model):
         add_component = self.add_component
         comments = s3_comments
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         meta_fields = s3_meta_fields
         set_method = self.set_method
@@ -756,15 +755,15 @@ class S3TrackingModel(S3Model):
             table.req_ref.writable = False
 
         # Reusable Field
-        send_id = S3ReusableField( "send_id", db.inv_send, sortby="date",
-                                   requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                   "inv_send.id",
-                                                                   self.inv_send_represent,
-                                                                   orderby="inv_send_id.date",
-                                                                   sort=True)),
-                                   represent = self.inv_send_represent,
-                                   label = T("Send Shipment"),
-                                   ondelete = "RESTRICT")
+        send_id = S3ReusableField("send_id", db.inv_send, sortby="date",
+                                  requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                  "inv_send.id",
+                                                                  self.inv_send_represent,
+                                                                  orderby="inv_send_id.date",
+                                                                  sort=True)),
+                                  represent = self.inv_send_represent,
+                                  label = T("Send Shipment"),
+                                  ondelete = "RESTRICT")
 
         # Components
         add_component("inv_track_item",
@@ -804,7 +803,8 @@ class S3TrackingModel(S3Model):
                   create_next = send_item_url,
                   update_next = send_item_url,
                   orderby=~table.date,
-                  sortby=[[5, "desc"], [1, "asc"]])
+                  sortby=[[5, "desc"], [1, "asc"]],
+                  )
 
         # ---------------------------------------------------------------------
         # Received (In/Receive / Donation / etc)
@@ -2527,9 +2527,8 @@ class S3AdjustModel(S3Model):
     """
 
     names = ["inv_adj",
-             "adj_id",
              "inv_adj_item",
-             "adj_item_id",
+             "inv_adj_item_id",
              ]
 
     def model(self):
@@ -2537,7 +2536,6 @@ class S3AdjustModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -2552,6 +2550,9 @@ class S3AdjustModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
@@ -2565,66 +2566,63 @@ class S3AdjustModel(S3Model):
                          1 : T("Complete"),
                         }
         tablename = "inv_adj"
-        table = self.define_table("inv_adj",
-                                  person_id(name = "adjuster_id",
-                                            label = T("Actioning officer"),
-                                            ondelete = "RESTRICT",
-                                            default = auth.s3_logged_in_person(),
-                                            comment = self.pr_person_comment(child="adjuster_id")),
-                                  self.super_link("site_id",
-                                                  "org_site",
-                                                  ondelete = "SET NULL",
-                                                  label = T("Warehouse"),
-                                                  default = auth.user.site_id if auth.is_logged_in() else None,
-                                                  readable = True,
-                                                  writable = True,
-                                                  empty = False,
-                                                  orderby = "org_site.name",
-                                                  sort = True,
-                                                  represent=org_site_represent),
-                                  Field("adjustment_date",
-                                        "date",
-                                        label = T("Date of adjustment"),
-                                        default = current.request.utcnow,
-                                        writable = False,
-                                        represent = s3_date_represent,
-                                        widget = S3DateWidget()
-                                        ),
-                                  Field("status",
-                                        "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(adjust_status)),
-                                        represent = lambda opt: adjust_status.get(opt, UNKNOWN_OPT),
-                                        default = 0,
-                                        label = T("Status of adjustment"),
-                                        writable = False,
-                                        ),
-                                  Field("category",
-                                        "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(adjust_type)),
-                                        represent = lambda opt: adjust_type.get(opt, UNKNOWN_OPT),
-                                        default = 1,
-                                        label = T("Type of adjustment"),
-                                        writable = False,
-                                        ),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table("inv_adj",
+                             person_id(name = "adjuster_id",
+                                       label = T("Actioning officer"),
+                                       ondelete = "RESTRICT",
+                                       default = auth.s3_logged_in_person(),
+                                       comment = self.pr_person_comment(child="adjuster_id")),
+                             self.super_link("site_id", "org_site",
+                                             ondelete = "SET NULL",
+                                             label = T("Warehouse"),
+                                             default = auth.user.site_id if auth.is_logged_in() else None,
+                                             readable = True,
+                                             writable = True,
+                                             empty = False,
+                                             orderby = "org_site.name",
+                                             sort = True,
+                                             represent=org_site_represent),
+                             Field("adjustment_date", "date",
+                                   label = T("Date of adjustment"),
+                                   default = current.request.utcnow,
+                                   writable = False,
+                                   represent = s3_date_represent,
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("status", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(adjust_status)),
+                                   represent = lambda opt: adjust_status.get(opt, UNKNOWN_OPT),
+                                   default = 0,
+                                   label = T("Status of adjustment"),
+                                   writable = False,
+                                   ),
+                             Field("category", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(adjust_type)),
+                                   represent = lambda opt: adjust_type.get(opt, UNKNOWN_OPT),
+                                   default = 1,
+                                   label = T("Type of adjustment"),
+                                   writable = False,
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
         self.configure("inv_adj",
                        onaccept = self.inv_adj_onaccept,
                        create_next = URL(args=["[id]", "adj_item"]),
                       )
 
         # Reusable Field
-        adj_id = S3ReusableField( "adj_id",
-                                  db.inv_adj,
-                                  sortby="date",
-                                  requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                  "inv_adj.id",
-                                                                  self.inv_adj_represent,
-                                                                  orderby="inv_adj.adjustment_date",
-                                                                  sort=True)),
-                                  represent = self.inv_adj_represent,
-                                  label = T("Inventory Adjustment"),
-                                  ondelete = "RESTRICT")
+        adj_id = S3ReusableField("adj_id", db.inv_adj,
+                                 sortby="date",
+                                 requires = IS_NULL_OR(
+                                                IS_ONE_OF(db,
+                                                          "inv_adj.id",
+                                                          self.inv_adj_represent,
+                                                          orderby="inv_adj.adjustment_date",
+                                                          sort=True)),
+                                 represent = self.inv_adj_represent,
+                                 label = T("Inventory Adjustment"),
+                                 ondelete = "RESTRICT")
 
         adjust_reason = {0 : T("Unknown"),
                          1 : T("None"),
@@ -2637,7 +2635,7 @@ class S3AdjustModel(S3Model):
 
         # CRUD strings
         ADJUST_STOCK = T("Add New Stock Adjustment")
-        s3.crud_strings["inv_adj"] = Storage(
+        crud_strings["inv_adj"] = Storage(
             title_create = ADJUST_STOCK,
             title_display = T("Stock Adjustment Details"),
             title_list = T("Stock Adjustments"),
@@ -2654,80 +2652,75 @@ class S3AdjustModel(S3Model):
 
         # @todo add the optional adj_id
         tablename = "inv_adj_item"
-        table = self.define_table("inv_adj_item",
-                                  item_id(ondelete = "RESTRICT"),      # supply item
-                                  Field("reason",
-                                        "integer",
-                                        requires = IS_IN_SET(adjust_reason),
-                                        default = 1,
-                                        represent = lambda opt: adjust_reason.get(opt, current.messages.UNKNOWN_OPT),
-                                        writable = False),
-                                  inv_item_id(ondelete = "RESTRICT",
-                                        writable = False),  # original inventory
-                                  item_pack_id(ondelete = "SET NULL"), # pack table
-                                  Field("old_quantity",
-                                        "double",
-                                        label = T("Original Quantity"),
-                                        default = 0,
-                                        notnull = True,
-                                        writable = False),
-                                  Field("new_quantity",
-                                        "double",
-                                        label = T("Revised Quantity"),
-                                        represent = self.qnty_adj_repr,
-                                        ),
-                                  s3_currency(),
-                                  Field("pack_value",
-                                        "double",
-                                        label = T("Value per Pack")),
-                                  Field("old_status", "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
-                                        represent = lambda opt: inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                                        label = T("Current Status"),
-                                        default = 0,
-                                        writable = False),
-                                  Field("new_status", "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
-                                        represent = lambda opt: inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                                        label = T("Revised Status"),
-                                        default = 0,),
-                                  Field("expiry_date",
-                                        "date",
-                                        label = T("Expiry Date"),
-                                        represent = s3_date_represent,
-                                        widget = S3DateWidget()
-                                        ),
-                                  Field("bin",
-                                        "string",
-                                        length = 16,
-                                        ),
-                                  org_id(name = "old_owner_org_id",
-                                         label = "Current owning Organization",
-                                         ondelete = "SET NULL",
-                                         writable = False), # which org owned this item
-                                  org_id(name = "new_owner_org_id",
-                                         label = "Transfer ownership to Organization",
-                                         ondelete = "SET NULL"), # which org owns this item
-                                  adj_id(),
-                                  s3_comments(),
-                                  *s3_meta_fields()
-                                  )
+        table = define_table("inv_adj_item",
+                             item_id(ondelete = "RESTRICT"),      # supply item
+                             Field("reason", "integer",
+                                   requires = IS_IN_SET(adjust_reason),
+                                   default = 1,
+                                   represent = lambda opt: \
+                                    adjust_reason.get(opt, current.messages.UNKNOWN_OPT),
+                                   writable = False),
+                             inv_item_id(ondelete = "RESTRICT",
+                                         writable = False),  # original inventory
+                             item_pack_id(ondelete = "SET NULL"), # pack table
+                             Field("old_quantity", "double", notnull = True,
+                                   label = T("Original Quantity"),
+                                   default = 0,
+                                   writable = False),
+                             Field("new_quantity", "double",
+                                   label = T("Revised Quantity"),
+                                   represent = self.qnty_adj_repr,
+                                   ),
+                             s3_currency(),
+                             Field("pack_value", "double",
+                                   label = T("Value per Pack")),
+                             Field("old_status", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                                   represent = lambda opt: \
+                                    inv_item_status_opts.get(opt, UNKNOWN_OPT),
+                                   label = T("Current Status"),
+                                   default = 0,
+                                   writable = False),
+                             Field("new_status", "integer",
+                                   requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                                   represent = lambda opt: \
+                                    inv_item_status_opts.get(opt, UNKNOWN_OPT),
+                                   label = T("Revised Status"),
+                                   default = 0,),
+                             Field("expiry_date", "date",
+                                   label = T("Expiry Date"),
+                                   represent = s3_date_represent,
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("bin", "string", length = 16,
+                                   ),
+                             org_id(name = "old_owner_org_id",
+                                    label = "Current owning Organization",
+                                    ondelete = "SET NULL",
+                                    writable = False), # which org owned this item
+                             org_id(name = "new_owner_org_id",
+                                    label = "Transfer ownership to Organization",
+                                    ondelete = "SET NULL"), # which org owns this item
+                             adj_id(),
+                             s3_comments(),
+                             *s3_meta_fields()
+                             )
         # Reusable Field
-        adj_item_id = S3ReusableField( "adj_item_id",
-                                       db.inv_adj_item,
-                                       sortby="item_id",
-                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                  "inv_adj_item.id",
-                                                                  self.inv_adj_item_represent,
-                                                                  orderby="inv_adj_item.item_id",
-                                                                  sort=True)),
-                                       represent = self.inv_adj_item_represent,
-                                       label = T("Inventory Adjustment Item"),
-                                       ondelete = "RESTRICT")
+        adj_item_id = S3ReusableField("adj_item_id", db.inv_adj_item,
+                                      sortby="item_id",
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "inv_adj_item.id",
+                                                              self.inv_adj_item_represent,
+                                                              orderby="inv_adj_item.item_id",
+                                                              sort=True)),
+                                      represent = self.inv_adj_item_represent,
+                                      label = T("Inventory Adjustment Item"),
+                                      ondelete = "RESTRICT")
 
         # CRUD strings
         ADJUST_STOCK = T("Add New Stock Items")
-        s3.crud_strings["inv_adj_item"] = Storage(
+        crud_strings["inv_adj_item"] = Storage(
             title_create = ADJUST_STOCK,
             title_display = T("Item Details"),
             title_list = T("Items in Stock"),
@@ -2747,8 +2740,7 @@ class S3AdjustModel(S3Model):
                            inv_adj="adj_id")
 
         return Storage(
-                    adj_item_id = adj_item_id,
-                    adj_id = adj_id,
+                    inv_adj_item_id = adj_item_id,
                 )
 
     # -------------------------------------------------------------------------

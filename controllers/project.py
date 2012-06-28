@@ -18,9 +18,13 @@ def index():
 
     if mode_task:
         redirect(URL(f="project", vars={"tasks":1}))
-        
-    # Bypass home page & go direct to searching for Projects
-    redirect(URL(f="project", args="search"))
+    elif settings.get_project_mode_drr():
+        # Bypass home page & go direct to searching for Projects
+        redirect(URL(f="project", args="search"))
+    else:
+        # Bypass home page & go direct to list of Projects
+        # - no good search options avaialble
+        redirect(URL(f="project"))
 
     #module_name = deployment_settings.modules[module].name_nice
     #response.title = module_name

@@ -334,8 +334,8 @@ class S3ProjectModel(S3Model):
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
                              Field("objectives", "text",
-                                   readable = mode_3w,
-                                   writable = mode_3w,
+                                   readable = mode_drr,
+                                   writable = mode_drr,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              comments(comment=DIV(_class="tooltip",
@@ -1577,27 +1577,35 @@ class S3Project3WModel(S3Model):
         lh = [(lh[opt], opt) for opt in lh]
         report_fields.extend(lh)
         
+        # ---------------------------------------------------------------------
         def year_options():
             """
                 returns a dict of the options for the year virtual field
                 used by the search widget
             """
-            p_start_date_min = db.project_project.start_date.min()
-            pb_start_date_min = db.project_beneficiary.start_date.max()
-            start_year = min( db().select(p_start_date_min).first()[p_start_date_min],
-                              db().select(pb_start_date_min).first()[pb_start_date_min]
-                            ).year
-            
-            p_end_date_max = db.project_project.end_date.max()
-            pb_end_date_max = db.project_beneficiary.end_date.max()
-            end_year = max( db().select(p_end_date_max).first()[p_end_date_max],
-                            db().select(pb_end_date_max).first()[pb_end_date_max]
-                            ).year
+
+            ptable = db.project_project
+            pbtable = db.project_beneficiary
+            pquery = (ptable.deleted == False)
+            pbquery = (pbtable.deleted == False)
+            p_start_date_min = db(pquery).select(ptable.start_date.min(),
+                                                 limitby=(0, 1)).first()
+            pb_start_date_min = db(pbquery).select(pbtable.start_date.min(),
+                                                   limitby=(0, 1)).first()
+            start_year = min(p_start_date_min.start_date,
+                             pb_start_date_min.start_date).year
+
+            p_end_date_max = db(pquery).select(ptable.end_date.max(),
+                                               limitby=(0, 1)).first()
+            pb_end_date_max = db(pbquery).select(pbtable.end_date.max(),
+                                                 limitby=(0, 1)).first()
+            end_year = max(p_end_date_max.end_date,
+                           pb_end_date_max.end_date).year
             
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}
-            for year in xrange(start_year,end_year+1):
+            for year in xrange(start_year, end_year + 1):
                 years[year] = year
             return years
         
@@ -1645,14 +1653,15 @@ class S3Project3WModel(S3Model):
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", db.project_beneficiary,
                                          sortby="name",
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                         "project_beneficiary.id",
-                                                                         "%(type)s",
-                                                                         sort=True)),
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "project_beneficiary.id",
+                                                                  "%(type)s",
+                                                                  sort=True)),
                                          represent = lambda id, row=None: \
-                                                     s3_get_db_field_value(tablename = "project_beneficiary",
-                                                                           fieldname = "type",
-                                                                           look_up_value = id),
+                                            s3_get_db_field_value(tablename = "project_beneficiary",
+                                                                  fieldname = "type",
+                                                                  look_up_value = id),
                                          label = T("Beneficiaries"),
                                          comment = S3AddResourceLink(c="project",
                                                                      f="beneficiary",
@@ -3572,6 +3581,7 @@ def task_notify(form):
 class S3ProjectOrganisationVirtualFields:
     """ Virtual fields for the project_project table when multi_orgs=True """
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3592,6 +3602,7 @@ class S3ProjectOrganisationVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def total_organisation_amount(self):
         """ Total of project_organisation amounts for project"""
 
@@ -3605,6 +3616,7 @@ class S3ProjectOrganisationVirtualFields:
 class S3ProjectBudgetVirtualFields:
     """ Virtual fields for the project_project table when multi_budgets=True """
 
+    # -------------------------------------------------------------------------
     def total_annual_budget(self):
         """ Total of all annual budgets for project"""
 
@@ -3620,6 +3632,7 @@ class S3ProjectActivityVirtualFields:
 
     extra_fields = ["project_id", "location_id"]
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3641,6 +3654,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L0(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3652,6 +3666,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L1(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3663,6 +3678,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L2(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3674,6 +3690,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L3(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3691,6 +3708,7 @@ class S3ProjectLocationVirtualFields:
 
     extra_fields = ["project_id", "location_id"]
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3711,6 +3729,7 @@ class S3ProjectLocationVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     # def themes(self):
         # """ Themes of the project """
 
@@ -3739,6 +3758,7 @@ class S3ProjectLocationVirtualFields:
         # else:
             # return None
 
+    # -------------------------------------------------------------------------
     def name(self):
         """
             Name for Map onHover popups
@@ -3764,6 +3784,7 @@ class S3ProjectBeneficiaryVirtualFields:
                     "start_date",
                     "end_date"]
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def _get_project_location(project_location_id):
         """
@@ -3786,6 +3807,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
         return parents
 
+    # -------------------------------------------------------------------------
     def L0(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3795,6 +3817,7 @@ class S3ProjectBeneficiaryVirtualFields:
             return current.messages.NONE
 
 
+    # -------------------------------------------------------------------------
     def L1(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3803,6 +3826,7 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def L2(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3811,6 +3835,7 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def L3(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3819,6 +3844,7 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def year(self):
         start_date = self.project_beneficiary.start_date
         end_date = self.project_beneficiary.end_date
@@ -3840,6 +3866,7 @@ class S3ProjectCommunityContactVirtualFields:
 
     extra_fields = ["person_id"]
 
+    # -------------------------------------------------------------------------
     def email(self):
 
         s3db = current.s3db
@@ -3854,6 +3881,7 @@ class S3ProjectCommunityContactVirtualFields:
         items = current.db(query).select(ctable.value)
         return ", ".join([item.value for item in items])
 
+    # -------------------------------------------------------------------------
     def sms(self):
 
         s3db = current.s3db
@@ -3874,6 +3902,7 @@ class S3ProjectThemeVirtualFields:
 
     extra_fields = []
 
+    # -------------------------------------------------------------------------
     def themes(self):
         """
             Themes associated with this Project
@@ -3914,6 +3943,7 @@ class S3ProjectTaskVirtualFields:
                     "project_task_project:project_id$name",
                     "project_task_activity:activity_id$name"]
 
+    # -------------------------------------------------------------------------
     def project(self):
         """
             Project associated with this task
@@ -3924,6 +3954,7 @@ class S3ProjectTaskVirtualFields:
         except AttributeError:
             return None
 
+    # -------------------------------------------------------------------------
     def activity(self):
         """
             Activity associated with this task
@@ -3934,6 +3965,7 @@ class S3ProjectTaskVirtualFields:
         except AttributeError:
             return None
 
+    # -------------------------------------------------------------------------
     def task_id(self):
 
         try:
@@ -3947,6 +3979,7 @@ class S3ProjectTimeVirtualFields:
 
     extra_fields = ["task_id", "person_id", "date"]
 
+    # -------------------------------------------------------------------------
     def project(self):
         """
             Project associated with this time entry
@@ -3966,6 +3999,7 @@ class S3ProjectTimeVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def day(self):
         """
             Day of the last Week this time entry relates to
