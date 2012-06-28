@@ -70,7 +70,7 @@ from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3
+from s3utils import SQLTABLES3, s3_is_foreign_key, s3_get_reference
 from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
@@ -2550,10 +2550,8 @@ class S3Resource(object):
                         record = table[row[pkey]]
                         fk = {}
                         for f in table.fields:
-                            ftype = str(table[f].type)
                             if record[f] is not None and \
-                                (ftype[:9] == "reference" or \
-                                 ftype[:14] == "list:reference"):
+                               s3_is_foreign_key(table[f]):
                                 fk[f] = record[f]
                                 fields[f] = None
                             else:
@@ -4134,14 +4132,10 @@ class S3Resource(object):
                     if lkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (lkey, lname))
                     lkey_field = ltable[lkey]
-                    ftype = str(lkey_field.type)
-                    if ftype[:9] == "reference":
-                        _tn = ftype[10:]
-                        if "." in _tn:
-                            _tn, pkey = _tn.split(".", 1)
-                        if _tn != tn:
-                            raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" % (lname, lkey, tn))
-                    else:
+                    _tn, pkey, multiple = s3_get_reference(lkey_field, m2m=False)
+                    if _tn and _tn != tn:
+                        raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" % (lname, lkey, tn))
+                    elif not _tn:
                         raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
                     search_lkey = False
 
@@ -4152,25 +4146,17 @@ class S3Resource(object):
                     if rkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (rkey, lname))
                     rkey_field = ltable[rkey]
-                    ftype = str(rkey_field.type)
-                    if ftype[:9] == "reference":
-                        ktablename = ftype[10:]
-                        if "." in ktablename:
-                            ktablename, fkey = ktablename.split(".", 1)
-                    else:
+                    ktablename, fkey, multiple = s3_get_reference(rkey_field, m2m=False)
+                    if not ktablename:
                         raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
                     search_rkey = False
 
                 # Key search
                 if search_lkey or search_rkey:
                     for fname in ltable.fields:
-                        ftype = str(ltable[fname].type)
-                        if ftype[:9] != "reference":
+                        ktn, key, multiple = s3_get_reference(ltable[fname], m2m=False)
+                        if not ktn:
                             continue
-                        ktn = ftype[10:]
-                        key = None
-                        if "." in ktn:
-                            ktn, key = ktn.split(".", 1)
                         if search_lkey and ktn == tn:
                             if lkey is not None:
                                 raise SyntaxError("Ambiguous link: please specify left key in %s" % tn)
@@ -4217,21 +4203,10 @@ class S3Resource(object):
                 # table -- f -- pkey --> ktable
 
                 # Find the referenced table
-                ftype = str(f.type)
-                if ftype[:9] == "reference":
-                    ktablename = ftype[10:]
-                    multiple = False
-                elif ftype[:14] == "list:reference":
-                    ktablename = ftype[15:]
-                    multiple = True
-                else:
+                ktablename, pkey, multiple = s3_get_reference(f)
+                if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 
-                # Find the primary key
-                if "." in ktablename:
-                    ktablename, pkey = ktablename.split(".", 1)
-                else:
-                    pkey = None
                 ktable = s3db.table(ktablename)
                 if ktable is None:
                     raise KeyError("Undefined table %s" % ktablename)
@@ -4307,10 +4282,7 @@ class S3Resource(object):
                    f in IGNORE_FIELDS:
                     if f != pkey or not manager.show_ids:
                         continue
-
-                ftype = str(table[f].type)
-                if (ftype[:9] == "reference" or \
-                    ftype[:14] == "list:reference") and \
+                if s3_is_foreign_key(table[f]) and \
                     f not in FIELDS_TO_ATTRIBUTES and \
                     (references is None or f in references):
                     rfields.append(f)
@@ -6635,22 +6607,13 @@ class S3RecordMerger(object):
 
             # Find the foreign key
             rfield = rtable[fn]
-            ftype = str(rfield.type)
-            if ftype[:9] == "reference":
-                multiple = False
-                key = ftype[10]
-            elif ftype[:14] == "list:reference":
-                multiple = True
-                key = ftype[15:]
-            elif ftype == "integer":
-                # Virtual reference
-                key = tablename
-            else:
-                continue
-            if "." in key:
-                key = key.split(".", 1)[1]
-            else:
-                key = table._id.name
+            ktablename, key, multiple = s3_get_reference(rfield)
+            if not ktablename:
+                if str(rfield.type) == "integer":
+                    # Virtual reference
+                    key = table._id.name
+                else:
+                    continue
 
             # Find the referencing records
             if multiple:

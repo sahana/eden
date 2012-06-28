@@ -67,7 +67,7 @@ from gluon.tools import callback
 from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
-from s3utils import s3_mark_required
+from s3utils import s3_mark_required, s3_is_foreign_key, s3_get_reference
 
 DEBUG = False
 if DEBUG:
@@ -2400,18 +2400,13 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            fieldtype = str(self.table[fkey].type)
-            multiple = False
-            if fieldtype[:9] == "reference":
-                ktablename = fieldtype[10:]
-            elif fieldtype[:14] == "list:reference":
-                ktablename = fieldtype[15:]
-                multiple = True
-            # Recognize organisation_id in auth_user as foreign key:
-            elif self.tablename == "auth_user" and fkey == "organisation_id":
-                ktablename = "org_organisation"
-            else:
-                continue
+            ktablename, key, multiple = s3_get_reference(self.table[fkey])
+            if not ktablename:
+                if self.tablename == "auth_user" and \
+                   fkey == "organisation_id":
+                    ktablename = "org_organisation"
+                else:
+                    continue
             if entry.tablename:
                 ktablename = entry.tablename
             try:
@@ -2513,9 +2508,7 @@ class S3ImportItem(object):
                 if f not in table.fields:
                     continue
                 fieldtype = str(self.table[f].type)
-                if fieldtype == "id" or \
-                   fieldtype[:9] == "reference" or \
-                   fieldtype[:14] == "list:reference":
+                if fieldtype == "id" or s3_is_foreign_key(self.table[f]):
                     continue
                 data.update({f:self.data[f]})
             data_str = cPickle.dumps(data)
@@ -2825,10 +2818,7 @@ class S3ImportJob():
             table = item.table
             tree = self.tree
             if tree is not None:
-                rfields = filter(lambda f:
-                                 str(table[f].type)[:9] == "reference" or
-                                 str(table[f].type)[:14] == "list:reference",
-                                 table.fields)
+                rfields = filter(s3_is_foreign_key, table.fields)
                 item.references = self.lookahead(element,
                                                  table=table,
                                                  fields=rfields,
