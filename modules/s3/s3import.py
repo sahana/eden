@@ -1028,6 +1028,7 @@ class S3Importer(S3CRUD):
                                       self.controller,
                                       xslt_filename)
 
+        print stylesheet
         if os.path.exists(stylesheet) is False:
             msg = self.messages.stylesheet_not_found % stylesheet
             self.error = msg

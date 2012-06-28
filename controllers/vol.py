@@ -43,7 +43,7 @@ def human_resource():
                            action=s3db.hrm_service_record
                           )
 
-    
+
     _type = table.type
     _type.default = 2
     s3.filter = (_type == 2)
@@ -600,7 +600,8 @@ def person():
                                 native=False,
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
-                                replace_option=T("Remove existing data before import"))
+                                replace_option=T("Remove existing data before import"),
+                                csv_stylesheet=("hrm", "person.xsl"))
     return output
 
 # -----------------------------------------------------------------------------
