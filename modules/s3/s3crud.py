@@ -365,7 +365,7 @@ class S3CRUD(S3Method):
             fields.insert(0, table[table.fields[0]])
 
         # Get the target record ID
-        record_id = self._record_id(r)
+        record_id = self.record
 
         # Check authorization to read the record
         authorised = self._permitted()
