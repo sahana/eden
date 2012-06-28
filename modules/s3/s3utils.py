@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Utilities
+""" Utilities
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 

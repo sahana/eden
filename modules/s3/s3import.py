@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Resource Import Tools
-
-    @author: Graeme Foster <graeme[at]acm.org>
-    @author: Dominic König <dominic[at]aidiq.com>
+""" Resource Import Tools
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -908,11 +904,10 @@ class S3Importer(S3CRUD):
                                                                 stylesheet
                                                                )
               )
-        request = self.request
-        response = current.response
-        resource = request.resource
 
         db = current.db
+        request = self.request
+        resource = request.resource
 
         # ---------------------------------------------------------------------
         # CSV
@@ -984,7 +979,7 @@ class S3Importer(S3CRUD):
             job_id = job.job_id
             errors = current.manager.xml.collect_errors(job)
             if errors:
-                response.s3.error_report = errors
+                current.response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
             result = db(query).update(job_id=job_id)
             # @todo: add check that result == 1, if not we are in error
@@ -1001,8 +996,6 @@ class S3Importer(S3CRUD):
 
             @param file_format: the import source file format
         """
-
-        request = self.request
 
         if file_format == "csv":
             xslt_path = os.path.join(self.xslt_path, "s3csv")
@@ -1028,7 +1021,6 @@ class S3Importer(S3CRUD):
                                       self.controller,
                                       xslt_filename)
 
-        print stylesheet
         if os.path.exists(stylesheet) is False:
             msg = self.messages.stylesheet_not_found % stylesheet
             self.error = msg
@@ -1048,11 +1040,9 @@ class S3Importer(S3CRUD):
         _debug("S3Importer._commit_import_job(%s, %s)" % (upload_id, items))
 
         db = current.db
-        request = self.request
-        response = current.response
-        resource = request.resource
+        resource = self.request.resource
 
-        # load the items from the s3_import_item table
+        # Load the items from the s3_import_item table
         self.importDetails = dict()
 
         table = self.upload_table
@@ -1064,7 +1054,7 @@ class S3Importer(S3CRUD):
             return False
         else:
             job_id = row.job_id
-            response.s3.import_replace = row.replace_option
+            current.response.s3.import_replace = row.replace_option
 
         itemTable = S3ImportJob.define_item_table()
 
@@ -2729,7 +2719,6 @@ class S3ImportJob():
         manager = current.manager
         model = manager.model
         xml = manager.xml
-        db = current.db
 
         if element in self.elements:
             # element has already been added to this job
@@ -2795,8 +2784,8 @@ class S3ImportJob():
                     if original is None and item.id:
                         query = (table.id == item.id) & \
                                 (table[pkey] == ctable[fkey])
-                        original = db(query).select(ctable.ALL,
-                                                    limitby=(0, 1)).first()
+                        original = current.db(query).select(ctable.ALL,
+                                                            limitby=(0, 1)).first()
                     if original:
                         cinfo.uid = uid = original.get(xml.UID, None)
                         celement.set(xml.UID, uid)
@@ -2818,7 +2807,8 @@ class S3ImportJob():
             table = item.table
             tree = self.tree
             if tree is not None:
-                rfields = filter(s3_is_foreign_key, table.fields)
+                fields = [table[f] for f in table.fields]
+                rfields = filter(s3_is_foreign_key, fields)
                 item.references = self.lookahead(element,
                                                  table=table,
                                                  fields=rfields,

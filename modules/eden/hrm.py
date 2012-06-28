@@ -2085,12 +2085,14 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_competency_rating":
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
             skill = False
             for cjob in job.components:
                 if cjob.tablename == "hrm_skill_type":
-                    if "name" in cjob.data:
-                        skill = cjob.data.name
+                    cdata = cjob.data
+                    if "name" in cdata:
+                        skill = cdata.name
             if skill == False:
                 return
 
@@ -2123,7 +2125,8 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_course":
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
 
             table = job.table
             query = (table.name.lower() == name.lower())
@@ -2151,7 +2154,8 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_skill":
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
 
             table = job.table
             query = (table.name.lower() == name.lower())
@@ -2179,7 +2183,8 @@ S3FilterFieldChange({
         """
 
         if job.tablename == "hrm_skill_type":
-            name = "name" in job.data and job.data.name
+            data = job.data
+            name = "name" in data and data.name
 
             table = job.table
             query = (table.name.lower() == name.lower())

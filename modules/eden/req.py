@@ -1684,15 +1684,13 @@ class S3CommitPersonModel(S3Model):
         db = current.db
         s3db = current.s3db
         s3mgr = current.manager
-        s3 = current.response.s3
-
         table = s3db.req_commit_person
         rstable = s3db.req_req_skill
 
         # Try to get req_skill_id from the form
         req_skill_id = 0
         if form:
-            req_skill_id = form.vars.get("req_skill_id")
+            req_skill_id = form.vars.get("req_skill_id", None)
         if not req_skill_id:
             commit_skill_id = s3mgr.get_session("req", "commit_skill")
             r_commit_skill = table[commit_skill_id]
@@ -1720,22 +1718,22 @@ def req_item_onaccept(form):
         Partial = some items have quantity > 0
         Complete = quantity_x = quantity(requested) for ALL items
     """
-    s3mgr = current.manager
 
-    if form and form.vars.req_id:
-        req_id = form.vars.req_id
-    else:
-        req_id = s3mgr.get_session("req", "req")
+    req_id = form.vars.get("req_id", None)
     if not req_id:
-        # @todo: should raise a proper HTTP status here
-        raise Exception("can not get req_id")
+        req_id = current.manager.get_session("req", "req")
+    if not req_id:
+        raise HTTP(500, "can not get req_id")
 
     req_update_status(req_id)
 
+# =============================================================================
 def req_update_status(req_id):
+    """
+    """
+
     db = current.db
     s3db = current.s3db
-
     table = s3db.req_req_item
     is_none = dict(commit = True,
                    transit = True,
@@ -1783,19 +1781,15 @@ def req_skill_onaccept(form):
         Create a Task for People to be assigned to
     """
 
-    db = current.db
-    s3db = current.s3db
-    s3mgr = current.manager
-    settings = current.deployment_settings
-
     if form and form.vars.req_id:
         req_id = form.vars.req_id
     else:
-        req_id = s3mgr.get_session("req", "req")
+        req_id = current.manager.get_session("req", "req")
     if not req_id:
-        # @ToDo: should raise a proper HTTP status here
-        raise Exception("can not get req_id")
+        raise HTTP(500, "can not get req_id")
 
+    db = current.db
+    s3db = current.s3db
     rtable = s3db.req_req
     query = (rtable.id == req_id)
     record = db(query).select(rtable.purpose,
@@ -1840,7 +1834,7 @@ def req_skill_onaccept(form):
     query = (rtable.id == req_id)
     db(query).update(**status_update)
 
-    if settings.has_module("project"):
+    if current.deployment_settings.has_module("project"):
         # Add a Task to which the People can be assigned
 
         # Get the request record
