@@ -50,7 +50,7 @@ from gluon.storage import Storage
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
-from s3utils import s3_truncate
+from s3utils import s3_truncate, s3_is_foreign_key
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
@@ -1189,8 +1189,7 @@ class S3ContingencyTable(TABLE):
                                 fvalue = report.records[id][lf.tname][lf.fname]
 
                             if fvalue is not None:
-                                ftype = str(lf.field.type)
-                                if ftype[:9] == "reference" or ftype[:14] == "list:reference":
+                                if s3_is_foreign_key(lf.field):
                                     if not isinstance(fvalue, list):
                                         fvalue = [fvalue]
 
