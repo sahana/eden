@@ -84,7 +84,7 @@ class S3Method(object):
         if r.component:
             component = r.component
             self.resource = component
-            self.record = self._record_id(r)
+            self.record_id = self._record_id(r)
             if not self.method:
                 if r.multiple and not r.component_id:
                     self.method = "list"
@@ -95,7 +95,7 @@ class S3Method(object):
                 if not actuate_link:
                     self.resource = component.link
         else:
-            self.record = r.id
+            self.record_id = r.id
             self.resource = r.resource
             if not self.method:
                 if r.id or r.method in ("read", "display"):
@@ -106,10 +106,10 @@ class S3Method(object):
             ## In interactive single-record CRUD, open the
             ## instance record instead of a super-entity record
             #if r.interactive and \
-               #self.record and \
+               #self.record_id and \
                #self.method in ("read", "update") and \
                #self.resource.table._id.name != "id":
-                #record = self.resource[self.record]
+                #record = self.resource[self.record_id]
                 #tablename = record.instance_type
                 #prefix, name = tablename.split("_", 1)
                 #resource = manager.define_resource(prefix, name,
@@ -117,7 +117,7 @@ class S3Method(object):
                 #resource.load()
                 #if resource.count() == 1:
                     #self.resource = resource
-                    #self.record = resource.records().first()[resource.table._id]
+                    #self.record_id = resource.records().first()[resource.table._id]
 
         self.prefix = self.resource.prefix
         self.name = self.resource.name
