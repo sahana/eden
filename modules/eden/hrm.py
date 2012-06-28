@@ -399,6 +399,10 @@ class S3HRModel(S3Model):
                         cols=report_fields,
                         facts=report_fields,
                         methods=["count", "list"],
+                        defaults=Storage(rows="organisation_id",
+                                         cols="course",
+                                         fact="person_id",
+                                         aggregate="count")
                     ),
                     create_next = hrm_url,
                     update_next = hrm_url,
@@ -1669,7 +1673,11 @@ class S3HRSkillModel(S3Model):
                       rows=report_fields,
                       cols=report_fields,
                       facts=report_fields,
-                      methods=["count", "list"]
+                      methods=["count", "list"],
+                      defaults=Storage(rows="training_event_id$course_id",
+                                      cols="month",
+                                      fact="person_id",
+                                      aggregate="count"),
                   ),
                   list_fields = [
                         "person_id",
@@ -3772,7 +3780,7 @@ def hrm_rheader(r, tabs=[]):
             else:
                 address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
-                    (T("Identity"), "identity"),
+                    (T("ID"), "identity"),
                     (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
@@ -3927,6 +3935,9 @@ def hrm_training_controller():
     T = current.T
     session = current.session
     s3 = session.s3
+    
+    system_roles = session.s3.system_roles
+    ADMIN = system_roles.ADMIN
 
     mode = s3.hrm.mode
     if mode is not None:

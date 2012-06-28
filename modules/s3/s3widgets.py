@@ -1043,8 +1043,7 @@ def S3GenericAutocompleteTemplate(
 
     real_input = str(field).replace(".", "_")
     dummy_input = "dummy_%s" % real_input
-
-    js_autocomplete = "".join(('''
+    js_autocomplete = "".join(("""
 var %(real_input)s_data = { val:$('#%(dummy_input)s').val(), accept:false };
 var get_name = %(name_getter)s;
 var get_id = %(id_getter)s;
@@ -1068,9 +1067,9 @@ $('#%(dummy_input)s').autocomplete({
         var item = ui.item
         $('#%(dummy_input)s').val(get_name(ui.item));
         $('#%(real_input)s').val(get_id(ui.item)).change();
-        ''' % locals(),
+        """ % locals(),
         post_process or "",
-        '''
+        """
         %(real_input)s_data.accept = true;
         return false;
     }
@@ -1092,7 +1091,7 @@ $('#%(dummy_input)s').blur(function() {
         %(real_input)s_data.val = $('#%(dummy_input)s').val();
     }
     %(real_input)s_data.accept = false;
-});''' % locals()))
+});""" % locals()))
 
     if value:
         # Provide the representation for the current/default Value
@@ -2949,6 +2948,7 @@ class S3EmbedComponentWidget(FormWidget):
         request = current.request
         appname = request.application
         s3 = current.response.s3
+        appname = current.request.application
 
         formstyle = s3.crud.formstyle
 

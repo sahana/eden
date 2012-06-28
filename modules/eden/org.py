@@ -995,7 +995,7 @@ class S3SiteModel(S3Model):
                                   #readable = True,
                                   label = T("Facility"),
                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                  represent = org_site_represent,
+                                  represent = lambda id: org_site_represent(id, show_link=True),
                                   orderby = "org_site.name",
                                   sort = True,
                                   # Comment these to use a Dropdown & not an Autocomplete
@@ -1792,6 +1792,7 @@ def org_site_represent(site_id, show_link=True):
     if isinstance(site_id, Row) and "instance_type" in site_id:
         # Do not repeat the lookup if already done by IS_ONE_OF
         site = site_id
+        site_id = site.site_id
     else:
         site = db(stable._id == site_id).select(stable.site_id,
                                                 stable.name,

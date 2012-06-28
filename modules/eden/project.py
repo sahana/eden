@@ -38,6 +38,7 @@ __all__ = ["S3ProjectModel",
            "project_project_represent",
            "project_location_represent",
            "project_rheader",
+           "project_location_represent",
            "project_task_controller",
            ]
 
@@ -1148,6 +1149,9 @@ class S3Project3WModel(S3Model):
 
         messages = current.messages
         NONE = messages.NONE
+        
+        s3_date_format = settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         add_component = self.add_component
         comments = s3_comments
@@ -1521,6 +1525,18 @@ class S3Project3WModel(S3Model):
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("start_date", "date",
+                                   label = T("Start date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End date"),
+                                   represent = s3_date_represent,
+                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   widget = S3DateWidget()
+                                   ),
                              comments(),
                              *meta_fields())
 
@@ -1552,6 +1568,7 @@ class S3Project3WModel(S3Model):
                       "project_location_id",
                       (T("Beneficiary Type"), "beneficiary_type_id"),
                       "project_id",
+                      (T("Year"), "year"),
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       "activity_id$multi_activity_type_id"
@@ -1559,6 +1576,39 @@ class S3Project3WModel(S3Model):
         lh = current.gis.get_location_hierarchy()
         lh = [(lh[opt], opt) for opt in lh]
         report_fields.extend(lh)
+        
+        # ---------------------------------------------------------------------
+        def year_options():
+            """
+                returns a dict of the options for the year virtual field
+                used by the search widget
+            """
+
+            ptable = db.project_project
+            pbtable = db.project_beneficiary
+            pquery = (ptable.deleted == False)
+            pbquery = (pbtable.deleted == False)
+            p_start_date_min = db(pquery).select(ptable.start_date.min(),
+                                                 limitby=(0, 1)).first()
+            pb_start_date_min = db(pbquery).select(pbtable.start_date.min(),
+                                                   limitby=(0, 1)).first()
+            start_year = min(p_start_date_min.start_date,
+                             pb_start_date_min.start_date).year
+
+            p_end_date_max = db(pquery).select(ptable.end_date.max(),
+                                               limitby=(0, 1)).first()
+            pb_end_date_max = db(pbquery).select(pbtable.end_date.max(),
+                                                 limitby=(0, 1)).first()
+            end_year = max(p_end_date_max.end_date,
+                           pb_end_date_max.end_date).year
+            
+            if not start_year or not end_year:
+                return {start_year:start_year} or {end_year:end_year}
+            years = {}
+            for year in xrange(start_year, end_year + 1):
+                years[year] = year
+            return years
+        
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1573,6 +1623,13 @@ class S3Project3WModel(S3Model):
                             field="beneficiary_type_id",
                             name="beneficiary_type_id",
                             label=T("Beneficiary Type")
+                        ),
+                        # @ToDo: These do now work - no results are returned
+                        S3SearchOptionsWidget(
+                            field="year",
+                            name="year",
+                            label=T("Year"),
+                            options = year_options
                         ),
                         S3SearchLocationHierarchyWidget(
                             name="beneficiary_search_L1",
@@ -1596,14 +1653,15 @@ class S3Project3WModel(S3Model):
         # Reusable Field
         beneficiary_id = S3ReusableField("beneficiary_id", db.project_beneficiary,
                                          sortby="name",
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                         "project_beneficiary.id",
-                                                                         "%(type)s",
-                                                                         sort=True)),
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "project_beneficiary.id",
+                                                                  "%(type)s",
+                                                                  sort=True)),
                                          represent = lambda id, row=None: \
-                                                     s3_get_db_field_value(tablename = "project_beneficiary",
-                                                                           fieldname = "type",
-                                                                           look_up_value = id),
+                                            s3_get_db_field_value(tablename = "project_beneficiary",
+                                                                  fieldname = "type",
+                                                                  look_up_value = id),
                                          label = T("Beneficiaries"),
                                          comment = S3AddResourceLink(c="project",
                                                                      f="beneficiary",
@@ -1928,7 +1986,16 @@ class S3Project3WModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+# =============================================================================
+def project_location_represent(id, row=None):
+    """
+    """
 
+    return current.s3db.gis_location_lx_represent( 
+               s3_get_db_field_value(tablename = "project_location",
+                                     fieldname = "location_id",
+                                     look_up_value = id)
+                )
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
     """
@@ -3514,6 +3581,7 @@ def task_notify(form):
 class S3ProjectOrganisationVirtualFields:
     """ Virtual fields for the project_project table when multi_orgs=True """
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3534,6 +3602,7 @@ class S3ProjectOrganisationVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def total_organisation_amount(self):
         """ Total of project_organisation amounts for project"""
 
@@ -3547,6 +3616,7 @@ class S3ProjectOrganisationVirtualFields:
 class S3ProjectBudgetVirtualFields:
     """ Virtual fields for the project_project table when multi_budgets=True """
 
+    # -------------------------------------------------------------------------
     def total_annual_budget(self):
         """ Total of all annual budgets for project"""
 
@@ -3562,6 +3632,7 @@ class S3ProjectActivityVirtualFields:
 
     extra_fields = ["project_id", "location_id"]
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3583,6 +3654,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L0(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3594,6 +3666,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L1(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3605,6 +3678,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L2(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3616,6 +3690,7 @@ class S3ProjectActivityVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def L3(self):
         parents = Storage()
         parents = current.gis.get_parent_per_level(parents,
@@ -3633,6 +3708,7 @@ class S3ProjectLocationVirtualFields:
 
     extra_fields = ["project_id", "location_id"]
 
+    # -------------------------------------------------------------------------
     def organisation(self):
         """ Name of the lead organisation of the project """
 
@@ -3653,6 +3729,7 @@ class S3ProjectLocationVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     # def themes(self):
         # """ Themes of the project """
 
@@ -3681,6 +3758,7 @@ class S3ProjectLocationVirtualFields:
         # else:
             # return None
 
+    # -------------------------------------------------------------------------
     def name(self):
         """
             Name for Map onHover popups
@@ -3701,8 +3779,12 @@ class S3ProjectLocationVirtualFields:
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_location_id"]
+    extra_fields = ["project_location_id",
+                    "project_id",
+                    "start_date",
+                    "end_date"]
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def _get_project_location(project_location_id):
         """
@@ -3725,6 +3807,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
         return parents
 
+    # -------------------------------------------------------------------------
     def L0(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3734,6 +3817,7 @@ class S3ProjectBeneficiaryVirtualFields:
             return current.messages.NONE
 
 
+    # -------------------------------------------------------------------------
     def L1(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3742,6 +3826,7 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def L2(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3750,6 +3835,7 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
     def L3(self):
         parents = self._get_project_location(self.project_beneficiary.project_location_id)
 
@@ -3758,12 +3844,29 @@ class S3ProjectBeneficiaryVirtualFields:
         else:
             return current.messages.NONE
 
+    # -------------------------------------------------------------------------
+    def year(self):
+        start_date = self.project_beneficiary.start_date
+        end_date = self.project_beneficiary.end_date
+        if not start_date or not end_date:
+            project = current.s3db.project_project[self.project_beneficiary.project_id]
+            if project:
+                if not start_date:
+                    start_date = project.start_date
+                if not end_date:
+                    end_date = project.end_date
+        if not start_date or not end_date:
+            return [start_date.year or end_date.year]
+        return [year for year in xrange(start_date.year,end_date.year+1)]
+        
+
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:
     """ Virtual fields for the project_community_contact table """
 
     extra_fields = ["person_id"]
 
+    # -------------------------------------------------------------------------
     def email(self):
 
         s3db = current.s3db
@@ -3778,6 +3881,7 @@ class S3ProjectCommunityContactVirtualFields:
         items = current.db(query).select(ctable.value)
         return ", ".join([item.value for item in items])
 
+    # -------------------------------------------------------------------------
     def sms(self):
 
         s3db = current.s3db
@@ -3798,6 +3902,7 @@ class S3ProjectThemeVirtualFields:
 
     extra_fields = []
 
+    # -------------------------------------------------------------------------
     def themes(self):
         """
             Themes associated with this Project
@@ -3838,6 +3943,7 @@ class S3ProjectTaskVirtualFields:
                     "project_task_project:project_id$name",
                     "project_task_activity:activity_id$name"]
 
+    # -------------------------------------------------------------------------
     def project(self):
         """
             Project associated with this task
@@ -3848,6 +3954,7 @@ class S3ProjectTaskVirtualFields:
         except AttributeError:
             return None
 
+    # -------------------------------------------------------------------------
     def activity(self):
         """
             Activity associated with this task
@@ -3858,6 +3965,7 @@ class S3ProjectTaskVirtualFields:
         except AttributeError:
             return None
 
+    # -------------------------------------------------------------------------
     def task_id(self):
 
         try:
@@ -3871,6 +3979,7 @@ class S3ProjectTimeVirtualFields:
 
     extra_fields = ["task_id", "person_id", "date"]
 
+    # -------------------------------------------------------------------------
     def project(self):
         """
             Project associated with this time entry
@@ -3890,6 +3999,7 @@ class S3ProjectTimeVirtualFields:
         else:
             return None
 
+    # -------------------------------------------------------------------------
     def day(self):
         """
             Day of the last Week this time entry relates to

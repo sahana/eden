@@ -619,8 +619,9 @@ def prepare_commit():
     """ RESTful CRUD controller """
 
     # Get the commit record
-    commit_id = request.args(0)
-    if not commit_id:
+    try:
+        commit_id = request.args[0]
+    except:
         redirect(URL(c="req",
                      f="commit"))
 
@@ -667,8 +668,9 @@ def prepare_commit():
 def send_process():
     """ Send a Shipment """
 
-    send_id = request.args(0)
-    if not send_id:
+    try:
+        send_id = request.args[0]
+    except:
         redirect(URL(c="inv",
                      f="send"))
 
@@ -1202,9 +1204,11 @@ def req_item_in_shipment( shipment_item,
 def recv_process():
     """ Receive a Shipment """
 
-    recv_id = request.args(0)
-    if not recv_id:
+    try:
+        recv_id = request.args[0]
+    except:
         redirect(URL(f="recv"))
+
     atable = s3db.inv_adj
     rtable = s3db.inv_recv
     stable = s3db.inv_send
@@ -1276,9 +1280,11 @@ def recv_cancel():
         @todo what to do if the quantity cancelled doesn't exist?
     """
 
-    recv_id = request.args(0)
-    if not recv_id:
+    try:
+        recv_id = request.args[0]
+    except:
         redirect(URL(f="recv"))
+
     rtable = s3db.inv_recv
     stable = s3db.inv_send
     tracktable = s3db.inv_track_item
@@ -1521,8 +1527,9 @@ def adj():
 def adj_close():
     """ RESTful CRUD controller """
 
-    adj_id = request.args(0)
-    if not adj_id:
+    try:
+        adj_id = request.args[0]
+    except:
         redirect(URL(f="adj"))
 
     atable = s3db.inv_adj
