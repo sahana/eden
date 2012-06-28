@@ -10,7 +10,7 @@ module = request.controller
 prefix = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % prefix)
 
 MISSING = str(T("Missing"))
@@ -24,7 +24,7 @@ def index():
     """ Home Page """
 
     try:
-        module_name = deployment_settings.modules[prefix].name_nice
+        module_name = settings.modules[prefix].name_nice
     except:
         module_name = T("Missing Persons Registry")
 
@@ -54,10 +54,10 @@ def index():
             else:
                redirect(URL(resourcename, args=request.args))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
-        response.s3.actions = []
+        s3.actions = []
         if not r.component:
             open_button_label = DETAILS
             if auth.s3_logged_in():
@@ -67,7 +67,7 @@ def index():
                 freport = URL(resourcename,
                               args=["[id]", "note", "create"],
                               vars=dict(status="found"))
-                response.s3.actions = [action(MISSING, mreport),
+                s3.actions = [action(MISSING, mreport),
                                        action(FOUND, freport)]
                 # Is the current user reported missing?
                 if isinstance(output, dict):
@@ -82,9 +82,9 @@ def index():
         #linkto = r.resource.crud._linkto(r, update=True)("[id]")
         linkto = URL(resourcename,
                      args=["[id]", "note"])
-        response.s3.actions.append(action(open_button_label, linkto))
+        s3.actions.append(action(open_button_label, linkto))
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller(prefix, resourcename,
                                 module_name=module_name)
@@ -164,7 +164,7 @@ def person():
                     ntable.status.default = 99
                     ntable.status.writable = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
@@ -175,25 +175,28 @@ def person():
             else:
                 label = UPDATE
                 linkto = r.resource.crud._linkto(r)("[id]")
-            response.s3.actions = [action(label, linkto)]
+            s3.actions = [action(label, linkto)]
             if not r.component:
                 label = FOUND
                 linkto = URL(f="person",
                              args=("[id]", "note", "create"),
                              vars=dict(status="found"))
-                response.s3.actions.append(action(label, linkto))
+                s3.actions.append(action(label, linkto))
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     ptable = db.pr_person
-    ptable.missing.default = True
-    ptable.missing.readable = False
-    ptable.missing.writable = False
+    field = ptable.missing
+    field.default = True
+    field.readable = False
+    field.writable = False
 
     ptable.pe_label.readable = False
     ptable.pe_label.writable = False
     ptable.occupation.readable = False
     ptable.occupation.writable = False
+    ptable.age_group.readable = True
+    ptable.age_group.writable = True
 
     mpr_tabs = [(T("Person Details"), None),
                 (T("Physical Description"), "physical_description"),

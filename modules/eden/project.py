@@ -61,13 +61,6 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from ..s3 import *
 from layouts import S3AddResourceLink
 
-try:
-    from lxml import etree, html
-except ImportError:
-    import sys
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
-
 # =============================================================================
 class S3ProjectModel(S3Model):
     """
@@ -785,7 +778,7 @@ class S3ProjectModel(S3Model):
                                 autodelete=False))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return dict(
             project_project_id = project_id,
@@ -1049,10 +1042,9 @@ class S3ProjectModel(S3Model):
     def hfa_opts_represent(opt, row=None):
         """ Option representation """
 
-        s3 = current.response.s3
         NONE = current.messages.NONE
 
-        project_hfa_opts = s3.project_hfa_opts
+        project_hfa_opts = current.response.s3.project_hfa_opts
 
         opts = opt
         if isinstance(opt, int):
@@ -1067,24 +1059,21 @@ class S3ProjectModel(S3Model):
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
 
-        db = current.db
-
-        if item.id:
-            return
         if item.tablename != "project_activity":
             return
         table = item.table
         duplicate = None
-        if "project_id" in item.data and "name" in item.data:
+        data = item.data
+        if "project_id" in data and "name" in data:
             # Match activity by project_id and name
-            project_id = item.data.project_id
-            name = item.data.name
-            location_id = item.data.location_id
+            project_id = data.project_id
+            name = data.name
+            location_id = data.location_id
             query = (table.project_id == project_id) & \
                     (table.name == name) & \
                     (table.location_id == location_id)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
@@ -1097,21 +1086,21 @@ class S3ProjectModel(S3Model):
             Prevent the same hrm_human_resource record being added more than
             once.
         """
+
         # The project human resource table
         hr = current.s3db.project_human_resource
 
         # Fetch the first row that has the same project and human resource ids
-        row = current.db(
-            (hr.human_resource_id == form.vars.human_resource_id) & \
-            (hr.project_id == form.request_vars.project_id)
-        ).select(hr.id, limitby=(0, 1)).first()
+        query = (hr.human_resource_id == form.vars.human_resource_id) & \
+                (hr.project_id == form.request_vars.project_id)
+        row = current.db(query).select(hr.id,
+                                       limitby=(0, 1)).first()
 
         # If we found a row we have a duplicate. Return an error to the user.
         if row:
             form.errors.human_resource_id = current.T("Record already exists")
 
         return
-
 
 # =============================================================================
 class S3Project3WModel(S3Model):
@@ -1736,7 +1725,7 @@ class S3Project3WModel(S3Model):
         # Components
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return dict(
             project_organisation_roles = project_organisation_roles,
@@ -2064,7 +2053,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
                             ]
                         )
 
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         return dict(
         )
 
@@ -2182,7 +2171,7 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Organizations found for this Framework")
         )
 
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         return dict(
         )
     # -------------------------------------------------------------------------
@@ -2277,7 +2266,7 @@ class S3ProjectThemeModel(S3Model):
                             ondelete = "SET NULL",
                             )
 
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         return dict(
             project_multi_theme_percentage_id = multi_theme_percentage_id,
         )
@@ -2870,7 +2859,7 @@ class S3ProjectTaskModel(S3Model):
                                ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return dict(
             project_task_id = task_id,
@@ -3260,7 +3249,7 @@ class S3ProjectTaskHRMModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return dict(
         )
@@ -3296,7 +3285,7 @@ class S3ProjectTaskIReportModel(S3Model):
                        onaccept=self.task_ireport_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return dict(
             )
@@ -4032,22 +4021,22 @@ def project_ckeditor():
     s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-    js = "".join(("""
-S3.i18n.reply = '""", str(current.T("Reply")), """';
+    js = "".join(('''
+S3.i18n.reply = "''', str(current.T("Reply")), '''";
 var img_path = S3.Ap.concat('/static/img/jCollapsible/');
 var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
 function comment_reply(id) {
-    $('#project_comment_task_id__row').hide();
-    $('#project_comment_task_id__row1').hide();
-    $('#comment-title').html(S3.i18n.reply);
-    var editor = $('#project_comment_body').ckeditorGet();
-    editor.destroy();
-    $('#project_comment_body').ckeditor(ck_config);
-    $('#comment-form').insertAfter($('#comment-' + id));
-    $('#project_comment_parent').val(id);
-    var task_id = $('#comment-' + id).attr('task_id');
-    $('#project_comment_task_id').val(task_id);
-}"""))
+ $('#project_comment_task_id__row').hide();
+ $('#project_comment_task_id__row1').hide();
+ $('#comment-title').html(S3.i18n.reply);
+ var editor = $('#project_comment_body').ckeditorGet();
+ editor.destroy();
+ $('#project_comment_body').ckeditor(ck_config);
+ $('#comment-form').insertAfter($('#comment-' + id));
+ $('#project_comment_parent').val(id);
+ var task_id = $('#comment-' + id).attr('task_id');
+ $('#project_comment_task_id').val(task_id);
+}'''))
 
     s3.js_global.append(js)
 
@@ -4284,33 +4273,6 @@ def project_rheader(r, tabs=[]):
         else:
             time_actual = ""
 
-        # Comments
-        # if r.method == "discuss":
-            # comments = ""
-        # else:
-            # ctable = s3db.project_comment
-            # query = (ctable.deleted == False) & \
-                    # (ctable.task_id == r.id)
-            # comments = db(query).select(ctable.body).last()
-            # if comments:
-                # try:
-                    # markup = etree.XML(comments.body)
-                    # text = markup.xpath(".//text()")
-                    # if text:
-                        # text = " ".join(text)
-                    # else:
-                        # text = ""
-                # except etree.XMLSyntaxError:
-                    # t = html.fromstring(comments.body)
-                    # text = t.text_content()
-                # comments = TR(
-                                # TH("%s: " % T("Latest Comment")),
-                                # A(text,
-                                  # _href=URL(args=[r.id, "discuss"]))
-                            # )
-            # else:
-                # comments = ""
-
         rheader = DIV(TABLE(
             project,
             activity,
@@ -4419,7 +4381,7 @@ def project_task_controller():
         s3mgr.configure(tablename,
                         report_options=Storage(
                             search=[
-                                s3base.S3SearchOptionsWidget(
+                                S3SearchOptionsWidget(
                                     field="project",
                                     name="project",
                                     label=T("Project")
@@ -4438,7 +4400,9 @@ def project_task_controller():
             if r.record:
                 # Put the Comments in the RFooter
                 project_ckeditor()
-                s3.rfooter = LOAD("project", "comments.load", args=["task", r.id], ajax=True)
+                s3.rfooter = LOAD("project", "comments.load",
+                                  args=["task", r.id],
+                                  ajax=True)
             if r.component:
                 if r.component_name == "req":
                     if deployment_settings.has_module("hrm"):
@@ -4509,7 +4473,7 @@ def project_task_controller():
                             output["form"][0].insert(0, activity[0])
                         except:
                             pass
-                        s3.scripts.append("/%s/static/scripts/%s/S3/s3.project.js" % \
+                        s3.scripts.append("/%s/static/scripts/S3/s3.project.js" % \
                             current.request.application)
                     if "project" in request.get_vars:
                         widget = INPUT(value=request.get_vars.project, _name="project_id")
