@@ -279,7 +279,7 @@ def inbound_email_settings():
     table.delete_from_server.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Delete"),
                               T("If this is set to True then mails will be deleted from the server after downloading."))))
-    
+
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
         title_update = T("Edit Email Settings"),
@@ -379,7 +379,7 @@ def workflow():
         RESTful CRUD controller for workflows
             - appears in the administration menu
     """
-    
+
     if not auth.s3_has_role(ADMIN):
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
@@ -400,36 +400,16 @@ def workflow():
         label_create_button = T("Add Parser Settings"),
         msg_record_modified = T("Message Parser settings updated"),
     )
- 
+
     s3mgr.configure("msg_workflow", listadd=True, deletable=True)
-    
+
     def postp(r, output):
-        
+
         wtable = s3db.msg_workflow
         stable = db["scheduler_task"]
-        
+
         s3_action_buttons(r)
         query = stable.enabled == False
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "workflow" and "source" in record.vars:
-                r = record.vars.split("\"workflow\":")[1]
-                s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-        
-                u = record.vars.split("\"source\":")[1]
-                v = u.split(",")[0]
-                v = v.split("\"")[1]
-                
-                record1 = db((wtable.workflow_task_id == s) &(wtable.source_task_id == v)).select(wtable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-                        
-        restrict_e = [str(row.id) for row in rows]
-                    
-        query = stable.enabled == True              
         records = db(query).select()
         rows = []
         for record in records:
@@ -441,14 +421,34 @@ def workflow():
                 u = record.vars.split("\"source\":")[1]
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
-                
+
+                record1 = db((wtable.workflow_task_id == s) &(wtable.source_task_id == v)).select(wtable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_e = [str(row.id) for row in rows]
+
+        query = stable.enabled == True
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "workflow" and "source" in record.vars:
+                r = record.vars.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                u = record.vars.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+
                 record1 = db((wtable.workflow_task_id == s) & (wtable.source_task_id == v)).select(wtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
-                    
+
         restrict_d = [str(row.id) for row in rows]
-                    
+
         rows = []
         records = db(stable.id>0).select()
         tasks = [record.vars for record in records]
@@ -458,27 +458,27 @@ def workflow():
                 r = task.split("\"workflow\":")[1]
                 s = r.split("}")[0]
                 s = s.split("\"")[1].split("\"")[0]
-                
+
                 parser1 += [s]
         parser2 = []
         for task in tasks:
             if "source" in task:
                 u = task.split("\"source\":")[1]
                 v = u.split(",")[0]
-                v = v.split("\"")[1]                        
+                v = v.split("\"")[1]
                 parser2 += [v]
-    
-    
+
+
         workflows = db(wtable.id>0).select(wtable.id , wtable.workflow_task_id, wtable.source_task_id)
-                    
+
         for workflow in workflows :
             if workflow.workflow_task_id and workflow.source_task_id:
                 if (workflow.workflow_task_id not in parser1) or (workflow.source_task_id not in parser2) :
                     if workflow:
                         rows += [workflow]
-                            
+
         restrict_a = [str(row.id) for row in rows]
-                    
+
         s3.actions = \
         s3.actions + [
                                dict(label=str(T("Enable")),
@@ -494,18 +494,18 @@ def workflow():
                                                   args = "[id]"),
                                         restrict = restrict_d)
                                    )
-        
+
         s3.actions.append(dict(label=str(T("Activate")),
                                         _class="action-btn",
                                         url = URL(f = "schedule_parser",
                                                   args = "[id]"),
                                         restrict = restrict_a)
                                    )
-                    
+
         return output
     s3.postp = postp
-        
-    return s3_rest_controller()            
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def schedule_parser():
@@ -566,7 +566,7 @@ def disable_parser():
     """
         Disables different parsing workflows.
     """
-    
+
     try:
         id = request.args[0]
     except:
@@ -585,11 +585,11 @@ def disable_parser():
             r = record.vars.split("\"workflow\":")[1]
             s = r.split("}")[0]
             s = s.split("\"")[1].split("\"")[0]
-            
+
             u = record.vars.split("\"source\":")[1]
             v = u.split(",")[0]
-            v = v.split("\"")[1]           
-            
+            v = v.split("\"")[1]
+
             if (s == workflow.workflow_task_id) and (v == workflow.source_task_id) :
                 db(stable.id == record.id).update(enabled = False)
 
@@ -600,7 +600,7 @@ def disable_email():
     """
         Disables different Email Sources.
     """
-    
+
     try:
         id = request.args[0]
     except:
@@ -628,7 +628,7 @@ def enable_email():
     """
         Enables different Email Sources.
     """
-    
+
     try:
         id = request.args[0]
     except:
@@ -645,7 +645,7 @@ def enable_email():
             r = record.vars.split("\"username\":")[1]
             s = r.split("}")[0]
             s = s.split("\"")[1].split("\"")[0]
-            
+
             if (s == msettings.username) :
                 db(stable.id == record.id).update(enabled = True)
 
@@ -676,11 +676,11 @@ def enable_parser():
             r = record.vars.split("\"workflow\":")[1]
             s = r.split("}")[0]
             s = s.split("\"")[1].split("\"")[0]
-             
+
             u = record.vars.split("\"source\":")[1]
             v = u.split(",")[0]
             v = v.split("\"")[1]
-            
+
             if (s == workflow.workflow_task_id) and \
                (v == workflow.source_task_id):
                 db(stable.id == record.id).update(enabled = True)
@@ -1185,7 +1185,7 @@ def check_updates(user_id):
     flag = 0
     table = s3db.pr_save_search
     rows = db(table.user_id == user_id).select()
-    search_vars_represent = s3base.search_vars_represent
+    search_vars_represent = s3base.s3_search_vars_represent
     for row in rows :
         if row.subscribed:
             records = load_search(row.id)

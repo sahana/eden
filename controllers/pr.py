@@ -492,7 +492,7 @@ def person_duplicates():
                                                           persons.comments)
 
         # Calculate the match percentage using Jaro wrinkler Algorithm
-        jaro_winkler_distance_row = s3base.jaro_winkler_distance_row
+        jaro_winkler_distance_row = s3base.s3_jaro_winkler_distance_row
         soundex = s3base.soundex
         count = 1
         i = 0

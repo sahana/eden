@@ -69,7 +69,7 @@ from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3, s3_is_foreign_key, s3_get_reference
+from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key
 from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
@@ -2550,7 +2550,7 @@ class S3Resource(object):
                         fk = {}
                         for f in table.fields:
                             if record[f] is not None and \
-                               s3_is_foreign_key(table[f]):
+                               s3_has_foreign_key(table[f]):
                                 fk[f] = record[f]
                                 fields[f] = None
                             else:
@@ -4131,7 +4131,7 @@ class S3Resource(object):
                     if lkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (lkey, lname))
                     lkey_field = ltable[lkey]
-                    _tn, pkey, multiple = s3_get_reference(lkey_field, m2m=False)
+                    _tn, pkey, multiple = s3_get_foreign_key(lkey_field, m2m=False)
                     if _tn and _tn != tn:
                         raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" % (lname, lkey, tn))
                     elif not _tn:
@@ -4145,7 +4145,7 @@ class S3Resource(object):
                     if rkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (rkey, lname))
                     rkey_field = ltable[rkey]
-                    ktablename, fkey, multiple = s3_get_reference(rkey_field, m2m=False)
+                    ktablename, fkey, multiple = s3_get_foreign_key(rkey_field, m2m=False)
                     if not ktablename:
                         raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
                     search_rkey = False
@@ -4153,7 +4153,7 @@ class S3Resource(object):
                 # Key search
                 if search_lkey or search_rkey:
                     for fname in ltable.fields:
-                        ktn, key, multiple = s3_get_reference(ltable[fname], m2m=False)
+                        ktn, key, multiple = s3_get_foreign_key(ltable[fname], m2m=False)
                         if not ktn:
                             continue
                         if search_lkey and ktn == tn:
@@ -4202,7 +4202,7 @@ class S3Resource(object):
                 # table -- f -- pkey --> ktable
 
                 # Find the referenced table
-                ktablename, pkey, multiple = s3_get_reference(f)
+                ktablename, pkey, multiple = s3_get_foreign_key(f)
                 if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 
@@ -4281,7 +4281,7 @@ class S3Resource(object):
                    f in IGNORE_FIELDS:
                     if f != pkey or not manager.show_ids:
                         continue
-                if s3_is_foreign_key(table[f]) and \
+                if s3_has_foreign_key(table[f]) and \
                     f not in FIELDS_TO_ATTRIBUTES and \
                     (references is None or f in references):
                     rfields.append(f)
@@ -6606,7 +6606,7 @@ class S3RecordMerger(object):
 
             # Find the foreign key
             rfield = rtable[fn]
-            ktablename, key, multiple = s3_get_reference(rfield)
+            ktablename, key, multiple = s3_get_foreign_key(rfield)
             if not ktablename:
                 if str(rfield.type) == "integer":
                     # Virtual reference

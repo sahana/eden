@@ -12,35 +12,35 @@ from s3.s3utils import *
 # =============================================================================
 class S3FKWrappersTests(unittest.TestCase):
 
-    def testIsForeignKey(self):
+    def testHasForeignKey(self):
 
         ptable = s3db.pr_person
-        self.assertFalse(s3_is_foreign_key(ptable.first_name))
-        self.assertTrue(s3_is_foreign_key(ptable.pe_id))
+        self.assertFalse(s3_has_foreign_key(ptable.first_name))
+        self.assertTrue(s3_has_foreign_key(ptable.pe_id))
 
         htable = s3db.hrm_human_resource
-        self.assertFalse(s3_is_foreign_key(htable.start_date))
-        self.assertTrue(s3_is_foreign_key(htable.person_id))
+        self.assertFalse(s3_has_foreign_key(htable.start_date))
+        self.assertTrue(s3_has_foreign_key(htable.person_id))
 
         otable = s3db.org_organisation
-        self.assertTrue(s3_is_foreign_key(otable.sector_id))
-        self.assertFalse(s3_is_foreign_key(otable.sector_id, m2m=False))
+        self.assertTrue(s3_has_foreign_key(otable.sector_id))
+        self.assertFalse(s3_has_foreign_key(otable.sector_id, m2m=False))
 
-    def testGetReference(self):
+    def testGetForeignKey(self):
 
         ptable = s3db.pr_person
-        ktablename, key, multiple = s3_get_reference(ptable.pe_id)
+        ktablename, key, multiple = s3_get_foreign_key(ptable.pe_id)
         self.assertEqual(ktablename, "pr_pentity")
         self.assertEqual(key, "pe_id")
         self.assertFalse(multiple)
 
         otable = s3db.org_organisation
-        ktablename, key, multiple = s3_get_reference(otable.sector_id)
+        ktablename, key, multiple = s3_get_foreign_key(otable.sector_id)
         self.assertEqual(ktablename, "org_sector")
         self.assertEqual(key, "id")
         self.assertTrue(multiple)
 
-        ktablename, key, multiple = s3_get_reference(otable.sector_id, m2m=False)
+        ktablename, key, multiple = s3_get_foreign_key(otable.sector_id, m2m=False)
         self.assertEqual(ktablename, None)
         self.assertEqual(key, None)
         self.assertEqual(multiple, None)
