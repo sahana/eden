@@ -275,13 +275,13 @@ class S3ProjectModel(S3Model):
                                    label = T("Description")),
                              # NB There is additional client-side validation for start/end date in the Controller
                              Field("start_date", "date",
-                                   label = T("Start date"),
+                                   label = T("Start Date"),
                                    represent = s3_date_represent,
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              Field("end_date", "date",
-                                   label = T("End date"),
+                                   label = T("End Date"),
                                    represent = s3_date_represent,
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    widget = S3DateWidget()
@@ -1526,13 +1526,13 @@ class S3Project3WModel(S3Model):
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              Field("start_date", "date",
-                                   label = T("Start date"),
+                                   label = T("Start Date"),
                                    represent = s3_date_represent,
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              Field("end_date", "date",
-                                   label = T("End date"),
+                                   label = T("End Date"),
                                    represent = s3_date_represent,
                                    requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
                                    widget = S3DateWidget()
