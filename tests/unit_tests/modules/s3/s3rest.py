@@ -937,19 +937,39 @@ class S3MergePersonsTests(unittest.TestCase):
 
         self.resource = s3mgr.define_resource("pr", "person")
 
-    def testMerge(self):
-        """ Test merge """
-
-        # Must raise exception if not authorized
+    def testPermissionError(self):
+        """ Check for exception if not authorized """
         auth.override = False
         auth.s3_impersonate(None)
         self.assertRaises(auth.permission.error,
                           self.resource.merge, self.id1, self.id2)
-
-        # Must raise exception for non-existent records
+        # Check for proper rollback
+        ptable = s3db.pr_person
+        query = ptable._id.belongs((self.id1, self.id2))
+        rows = db(query).select(ptable._id, limitby=(0, 2))
+        self.assertEqual(len(rows), 0)
         auth.override = True
+
+    def testOriginalNotFoundError(self):
+        """ Check for exception if record not found """
         self.assertRaises(KeyError, self.resource.merge, 0, self.id2)
+        # Check for proper rollback
+        ptable = s3db.pr_person
+        query = ptable._id.belongs((self.id1, self.id2))
+        rows = db(query).select(ptable._id, limitby=(0, 2))
+        self.assertEqual(len(rows), 0)
+
+    def testNotDuplicateFoundError(self):
+        """ Check for exception if record not found """
         self.assertRaises(KeyError, self.resource.merge, self.id1, 0)
+        # Check for proper rollback
+        ptable = s3db.pr_person
+        query = ptable._id.belongs((self.id1, self.id2))
+        rows = db(query).select(ptable._id, limitby=(0, 2))
+        self.assertEqual(len(rows), 0)
+
+    def testMerge(self):
+        """ Test merge """
 
         # Merge records
         success = self.resource.merge(self.id1, self.id2)
