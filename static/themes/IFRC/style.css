@@ -88,8 +88,7 @@ table tr.odd td{background:#f1e8cb;}
 table tr.even td{background:#fff;}
 table tr td.white-cell,table tr th.white-cell{background:#fff;border-right:0px #9C9C9C dashed;}
 table tr th.edit-delete-col{width:50px;background:url(img/edit_delete.png) no-repeat bottom; text-indent:-99999px;}
-table td .date{display:block;font-weight:bold;}
-table td .time{display:block;}
+table td .date{font-weight:bold;}
 table td input[type="text"],
 table td select {
     background: #fff;

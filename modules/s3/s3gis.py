@@ -75,7 +75,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname
+from s3utils import s3_debug, s3_fullname, s3_is_foreign_key
 
 DEBUG = False
 if DEBUG:
@@ -2021,7 +2021,7 @@ class GIS(object):
                             continue
                         if not value:
                             continue
-                        field_reps = represents[fieldname] 
+                        field_reps = represents[fieldname]
                         if field_reps:
                             try:
                                 represent = field_reps[value]
@@ -2186,7 +2186,7 @@ class GIS(object):
                 elif tablename == "org_office":
                     for value in values:
                         represents[value] = s3db.org_office_type_opts.get(value, "")
-            elif field.type[:9] == "reference":
+            elif s3_is_foreign_key(field, m2m=False):
                 tablename = field.type[10:]
                 if tablename == "pr_person":
                     represents = s3_fullname(values)
@@ -2235,7 +2235,7 @@ class GIS(object):
                     represent = cache.ram("office_type_%s" % value,
                                           lambda: s3db.org_office_type_opts.get(value, ""),
                                           time_expire=60)
-            elif field.type[:9] == "reference":
+            elif s3_is_foreign_key(field, m2m=False):
                     tablename = field.type[10:]
                     if tablename == "pr_person":
                         # Unlikely to be the same person in multiple popups so no value to caching
@@ -2391,7 +2391,7 @@ class GIS(object):
                 self.import_gadm2(ogr, "L2", countries=countries)
 
             s3_debug("All done!")
-        
+
         else:
             s3_debug("Only GADM is currently supported")
             return
@@ -2935,7 +2935,7 @@ class GIS(object):
         url = "http://gadm.org/data2/gadm_v2_shp.zip"
         zipfile = "gadm_v2_shp.zip"
         shapefile = "gadm2"
-        
+
         if level == "L0":
             codeField = "ISO2"   # This field is used to uniquely identify the L0 for updates
             code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
@@ -5602,11 +5602,11 @@ class OSMLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-        
+
             if Projection().epsg != 900913:
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
-            
+
             output = {
                     "id": self.layer_id,
                     "name": self.safe_name,

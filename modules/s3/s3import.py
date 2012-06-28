@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Resource Import Tools
-
-    @author: Graeme Foster <graeme[at]acm.org>
-    @author: Dominic König <dominic[at]aidiq.com>
+""" Resource Import Tools
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -67,7 +63,7 @@ from gluon.tools import callback
 from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
-from s3utils import s3_mark_required
+from s3utils import s3_mark_required, s3_is_foreign_key, s3_get_reference
 
 DEBUG = False
 if DEBUG:
@@ -908,11 +904,10 @@ class S3Importer(S3CRUD):
                                                                 stylesheet
                                                                )
               )
-        request = self.request
-        response = current.response
-        resource = request.resource
 
         db = current.db
+        request = self.request
+        resource = request.resource
 
         # ---------------------------------------------------------------------
         # CSV
@@ -984,7 +979,7 @@ class S3Importer(S3CRUD):
             job_id = job.job_id
             errors = current.manager.xml.collect_errors(job)
             if errors:
-                response.s3.error_report = errors
+                current.response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
             result = db(query).update(job_id=job_id)
             # @todo: add check that result == 1, if not we are in error
@@ -1001,8 +996,6 @@ class S3Importer(S3CRUD):
 
             @param file_format: the import source file format
         """
-
-        request = self.request
 
         if file_format == "csv":
             xslt_path = os.path.join(self.xslt_path, "s3csv")
@@ -1047,11 +1040,9 @@ class S3Importer(S3CRUD):
         _debug("S3Importer._commit_import_job(%s, %s)" % (upload_id, items))
 
         db = current.db
-        request = self.request
-        response = current.response
-        resource = request.resource
+        resource = self.request.resource
 
-        # load the items from the s3_import_item table
+        # Load the items from the s3_import_item table
         self.importDetails = dict()
 
         table = self.upload_table
@@ -1063,7 +1054,7 @@ class S3Importer(S3CRUD):
             return False
         else:
             job_id = row.job_id
-            response.s3.import_replace = row.replace_option
+            current.response.s3.import_replace = row.replace_option
 
         itemTable = S3ImportJob.define_item_table()
 
@@ -2399,18 +2390,13 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            fieldtype = str(self.table[fkey].type)
-            multiple = False
-            if fieldtype[:9] == "reference":
-                ktablename = fieldtype[10:]
-            elif fieldtype[:14] == "list:reference":
-                ktablename = fieldtype[15:]
-                multiple = True
-            # Recognize organisation_id in auth_user as foreign key:
-            elif self.tablename == "auth_user" and fkey == "organisation_id":
-                ktablename = "org_organisation"
-            else:
-                continue
+            ktablename, key, multiple = s3_get_reference(self.table[fkey])
+            if not ktablename:
+                if self.tablename == "auth_user" and \
+                   fkey == "organisation_id":
+                    ktablename = "org_organisation"
+                else:
+                    continue
             if entry.tablename:
                 ktablename = entry.tablename
             try:
@@ -2512,9 +2498,7 @@ class S3ImportItem(object):
                 if f not in table.fields:
                     continue
                 fieldtype = str(self.table[f].type)
-                if fieldtype == "id" or \
-                   fieldtype[:9] == "reference" or \
-                   fieldtype[:14] == "list:reference":
+                if fieldtype == "id" or s3_is_foreign_key(self.table[f]):
                     continue
                 data.update({f:self.data[f]})
             data_str = cPickle.dumps(data)
@@ -2735,7 +2719,6 @@ class S3ImportJob():
         manager = current.manager
         model = manager.model
         xml = manager.xml
-        db = current.db
 
         if element in self.elements:
             # element has already been added to this job
@@ -2801,8 +2784,8 @@ class S3ImportJob():
                     if original is None and item.id:
                         query = (table.id == item.id) & \
                                 (table[pkey] == ctable[fkey])
-                        original = db(query).select(ctable.ALL,
-                                                    limitby=(0, 1)).first()
+                        original = current.db(query).select(ctable.ALL,
+                                                            limitby=(0, 1)).first()
                     if original:
                         cinfo.uid = uid = original.get(xml.UID, None)
                         celement.set(xml.UID, uid)
@@ -2824,10 +2807,8 @@ class S3ImportJob():
             table = item.table
             tree = self.tree
             if tree is not None:
-                rfields = filter(lambda f:
-                                 str(table[f].type)[:9] == "reference" or
-                                 str(table[f].type)[:14] == "list:reference",
-                                 table.fields)
+                fields = [table[f] for f in table.fields]
+                rfields = filter(s3_is_foreign_key, fields)
                 item.references = self.lookahead(element,
                                                  table=table,
                                                  fields=rfields,

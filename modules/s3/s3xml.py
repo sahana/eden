@@ -55,6 +55,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3codec import S3Codec
+from s3utils import s3_get_reference
 
 try:
     from lxml import etree
@@ -501,19 +502,14 @@ class S3XML(S3Codec):
             val = ids = record[f]
             if type(ids) is not list:
                 ids = [ids]
-            multiple = False
-            fieldtype = str(table[f].type)
-            if fieldtype[:9] == "reference":
-                ktablename = fieldtype[10:]
-            elif fieldtype[:14] == "list:reference":
-                ktablename = fieldtype[15:]
-                multiple = True
-            else:
+            ktablename, pkey, multiple = s3_get_reference(table[f])
+            if not ktablename:
                 continue
             ktable = db[ktablename]
             ktable_fields = ktable.fields
             k_id = ktable._id
-            pkey = k_id.name
+            if pkey is None:
+                pkey = k_id.name
 
             if multiple:
                 query = k_id.belongs(ids)

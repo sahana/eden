@@ -47,7 +47,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug, S3DateTime
+from s3utils import s3_debug, S3DateTime, s3_get_reference
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
@@ -172,23 +172,17 @@ class S3SearchWidget(object):
                 rkey, f = f.split("$", 1)
                 if not rkey in ktable.fields:
                     continue
-                ftype = str(ktable[rkey].type)
-                if ftype[:9] == "reference":
-                    reference = ftype[10:]
-                elif ftype[:14] == "list:reference":
-                    reference = ftype[15:]
-                    multiple = True
-                else:
-                    continue
                 rtable = ktable
                 rtablename = ktablename
-                ktable = db[reference]
-                ktablename = reference
+                ktablename, key, multiple = s3_get_reference(ktable[rkey])
+                if not ktablename:
+                    continue
+                else:
+                    ktable = db[ktablename]
                 # Do not add queries for empty tables
                 if not db(ktable.id > 0).select(ktable.id,
                                                 limitby=(0, 1)).first():
                     continue
-
 
             # Master queries
             # @todo: update this for new QueryBuilder (S3ResourceFilter)

@@ -2700,15 +2700,30 @@ class S3EntityRoleManagerTests(unittest.TestCase):
         auth.s3_assign_role(self.user_id, "project_editor", for_pe=self.org_id)
 
     def testGetAssignedRoles(self):
-        self.assertEqual(self.rm.get_assigned_roles(entity_id=self.org_id),
-                         {self.user_id: ["staff_reader", "project_editor"]})
+        roles = self.rm.get_assigned_roles(entity_id=self.org_id)
+        self.assertTrue(self.user_id in roles)
+        assigned_roles = roles[self.user_id]
+        self.assertEqual(len(assigned_roles), 2)
+        self.assertTrue("staff_reader" in assigned_roles)
+        self.assertTrue("project_editor" in assigned_roles)
 
-        self.assertEqual(self.rm.get_assigned_roles(entity_id=self.org_id,
-                                                    user_id=self.user_id),
-                         {self.user_id: ["staff_reader", "project_editor"]})
+        roles = self.rm.get_assigned_roles(entity_id=self.org_id,
+                                           user_id=self.user_id)
+        self.assertTrue(self.user_id in roles)
+        assigned_roles = roles[self.user_id]
+        self.assertEqual(len(assigned_roles), 2)
+        self.assertTrue("staff_reader" in assigned_roles)
+        self.assertTrue("project_editor" in assigned_roles)
 
         self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
                          {self.org_id: ["staff_reader", "project_editor"]})
+
+        roles = self.rm.get_assigned_roles(user_id=self.user_id)
+        self.assertTrue(self.org_id in roles)
+        assigned_roles = roles[self.org_id]
+        self.assertEqual(len(assigned_roles), 2)
+        self.assertTrue("staff_reader" in assigned_roles)
+        self.assertTrue("project_editor" in assigned_roles)
 
         self.assertRaises(RuntimeError, self.rm.get_assigned_roles)
 

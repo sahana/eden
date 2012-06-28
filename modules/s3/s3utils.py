@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Utilities
+""" Utilities
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -48,6 +47,8 @@ __all__ = ["s3_debug",
            "s3_is_mobile_client",
            "s3_populate_browser_compatibility",
            "s3_register_validation",
+           "s3_is_foreign_key",
+           "s3_get_reference",
            "sort_dict_by_values",
            "jaro_winkler",
            "jaro_winkler_distance_row",
@@ -958,6 +959,52 @@ def s3_table_links(reference):
                 count += 1
 
     return tables
+
+# =============================================================================
+def s3_is_foreign_key(field, m2m=True):
+    """
+        Check whether a field contains a foreign key constraint
+
+        @param field: the field (Field instance)
+        @param m2m: also detect many-to-many links
+    """
+
+    ftype = str(field.type)
+    if ftype[:9] == "reference":
+        return True
+    if m2m and ftype[:14] == "list:reference":
+        return True
+    return False
+
+# =============================================================================
+def s3_get_reference(field, m2m=True):
+    """
+        Resolve a field type into the name of the referenced table,
+        the referenced key and the reference type (M:1 or M:N)
+
+        @param field: the field (Field instance)
+        @param m2m: also detect many-to-many link
+    """
+
+    ftype = str(field.type)
+    if ftype[:9] == "reference":
+        key = ftype[10:]
+        multiple = False
+    elif m2m and ftype[:14] == "list:reference":
+        key = ftype[15:]
+        multiple = True
+    else:
+        return (None, None, None)
+    if "." in key:
+        rtablename, key = key.split(".")
+    else:
+        rtablename = key
+        rtable = current.s3db.table(rtablename)
+        if rtable:
+            key = rtable._id.name
+        else:
+            key = None
+    return (rtablename, key, multiple)
 
 # =============================================================================
 def sort_dict_by_values(adict):

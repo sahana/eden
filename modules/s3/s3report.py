@@ -50,7 +50,7 @@ from gluon.storage import Storage
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
-from s3utils import s3_truncate
+from s3utils import s3_truncate, s3_is_foreign_key
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
@@ -1134,7 +1134,6 @@ class S3ContingencyTable(TABLE):
 
         cells = report.cell
         rvals = report.row
-
         for i in xrange(numrows):
 
             # Initialize row
@@ -1175,24 +1174,22 @@ class S3ContingencyTable(TABLE):
                         else:
                             add_value(unicode(value))
 
-                    # hold the references
                     layer_ids = []
-                    # get previous lookup values for this layer
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
                     if m == "count":
                         for id in cell.records:
-                            # cell.records == [#, #, #]
-                            field = lfields[f].field
-                            record = report.records[id]
-
-                            if field.tablename in record:
-                                fvalue = record[field.tablename][field.name]
+                            # records == [#, #, #]
+                            lf = lfields[f]
+                            if f in report.records[id]:
+                                # records[#] == {}
+                                fvalue = report.records[id][f]
                             else:
-                                fvalue = record[field.name]
+                                # records[#] == {{}, {}}
+                                fvalue = report.records[id][lf.tname][lf.fname]
 
                             if fvalue is not None:
-                                ftype = str(field.type)
+                                ftype = str(lf.field.type)
                                 if ftype[:9] == "reference" or ftype[:14] == "list:reference":
                                     if not isinstance(fvalue, list):
                                         fvalue = [fvalue]
@@ -1201,11 +1198,11 @@ class S3ContingencyTable(TABLE):
                                     for fk in fvalue:
                                         if fk not in layer_ids:
                                             layer_ids.append(fk)
-                                            layer_values[fk] = unicode(field.represent(fk))
+                                            layer_values[fk] = str(lf.field.represent(fk))
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)
-                                        layer_values[id] = unicode(represent(f, fvalue))
+                                        layer_values[id] = str(represent(f, fvalue))
 
 
                     cell_ids.append(layer_ids)

@@ -635,7 +635,7 @@ class S3PersonModel(S3Model):
                                    # http://eden.sahanafoundation.org/ticket/834
                                    requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
                                    comment =  DIV(_class="tooltip",
-                                                  _title="%s|%s" % (T("First name"),
+                                                  _title="%s|%s" % (T("First Name"),
                                                                     T("The first or only name of the person (mandatory)."))),
                                    label = T("First Name")),
                              Field("middle_name",
