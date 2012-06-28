@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-20 23:56+0200\n"
+"POT-Creation-Date: 2012-06-28 11:27+0200\n"
 "PO-Revision-Date: 2012-05-24 08:16+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -23,7 +23,7 @@ msgstr ""
 msgid "Appearance"
 msgstr "Aparencia"
 
-#: admin.py:69 templates/spaces/space_form.html:214
+#: admin.py:69 templates/spaces/space_form.html:233
 msgid "Modules"
 msgstr "Módulos"
 
@@ -36,7 +36,7 @@ msgstr "Manteña o tamaño do ficheiro por baixo de %s"
 msgid "Filetype not supported."
 msgstr "Tipo de ficheiro non soportado"
 
-#: models.py:50 models.py:102
+#: models.py:50 models.py:104
 msgid "Name"
 msgstr "Nome"
 
@@ -58,7 +58,7 @@ msgstr ""
 "e                                          suliñados. Esta será a URL "
 "accesible"
 
-#: models.py:59 models.py:183
+#: models.py:59 models.py:185
 msgid "Description"
 msgstr "Descrición"
 
@@ -92,126 +92,135 @@ msgid ""
 "necessary to participate."
 msgstr ""
 
-#: models.py:75
+#: models.py:73
+#, fuzzy
+msgid "Administrators"
+msgstr "Administración"
+
+#: models.py:74
+msgid "Please select the users that will be administrators of this space"
+msgstr ""
+
+#: models.py:77
 msgid "Debate"
 msgstr "Debate"
 
-#: models.py:76 templates/spaces/space_index.html:26
+#: models.py:78 templates/spaces/space_index.html:26
 #: templates/spaces/space_index.html:90
 msgid "Proposals"
 msgstr "Propostas"
 
-#: models.py:77 templates/spaces/space_index.html:20
+#: models.py:79 templates/spaces/space_index.html:20
 #: templates/spaces/space_index.html:68
 msgid "News"
 msgstr "Novas"
 
-#: models.py:78
+#: models.py:80
 msgid "Calendar"
 msgstr "Calendario"
 
-#: models.py:79 models.py:156 templates/spaces/space_index.html:29
+#: models.py:81 models.py:158 templates/spaces/space_index.html:29
 msgid "Documents"
 msgstr "Documentos"
 
-#: models.py:83
+#: models.py:85
 msgid "Space"
 msgstr "Espazo"
 
-#: models.py:84
+#: models.py:86
 msgid "Spaces"
 msgstr "Espazos"
 
-#: models.py:103
+#: models.py:105
 msgid "Website"
 msgstr "Páxina web"
 
-#: models.py:104
+#: models.py:106
 msgid "Logo"
 msgstr "Logo"
 
-#: models.py:110
+#: models.py:112
 msgid "Entity"
 msgstr "Entidade"
 
-#: models.py:111
+#: models.py:113
 msgid "Entities"
 msgstr "Entidades"
 
-#: models.py:123
+#: models.py:125
 msgid "Document title"
 msgstr "Título do documento"
 
-#: models.py:124
+#: models.py:126
 #, fuzzy
 msgid "Max: 100 characters"
 msgstr "Max: 250 caracteres"
 
-#: models.py:126
+#: models.py:128
 msgid "Change the space to whom belongs this document"
 msgstr ""
 
-#: models.py:127
+#: models.py:129
 msgid "File"
 msgstr "Ficheiro"
 
-#: models.py:131
+#: models.py:133
 msgid ""
 "Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP, "
 "PDF,                     RST, TXT."
 msgstr ""
 
-#: models.py:136
+#: models.py:138
 msgid "Author"
 msgstr "Autor/a"
 
-#: models.py:137
+#: models.py:139
 msgid ""
 "Change the user that                                 will figure as the "
 "author"
 msgstr ""
 
-#: models.py:155
+#: models.py:157
 msgid "Document"
 msgstr "Documento"
 
-#: models.py:171
+#: models.py:173
 msgid "Event name"
 msgstr "Nome do evento"
 
-#: models.py:174
+#: models.py:176
 msgid "Users"
 msgstr "Usuarios/as"
 
-#: models.py:175
+#: models.py:177
 msgid "List of the users that will assist or assisted to the event."
 msgstr ""
 
-#: models.py:177
+#: models.py:179
 msgid "Created by"
 msgstr "Creado por"
 
-#: models.py:180
+#: models.py:182
 msgid "Select the user that will be designated as author."
 msgstr ""
 
-#: models.py:181
+#: models.py:183
 msgid "Event date"
 msgstr "Data do evento"
 
-#: models.py:182
+#: models.py:184
 msgid "Select the date where the event is celebrated."
 msgstr ""
 
-#: models.py:184
+#: models.py:186
 msgid "Location"
 msgstr "Localización"
 
-#: models.py:188
+#: models.py:190
 msgid "Event"
 msgstr "Evento"
 
-#: models.py:189 templates/spaces/space_index.html:32
+#: models.py:191 templates/spaces/space_index.html:32
 #: templates/spaces/space_index.html:101
 msgid "Events"
 msgstr "Eventos"
@@ -356,7 +365,8 @@ msgid "The user has been authorized to participate in space \"%s\"."
 msgstr "Autorizouse ao/á usuario/a a participar no espazo \"%s\""
 
 #: views.py:153
-msgid "Autorization succesful"
+#, fuzzy
+msgid "Authorization successful"
 msgstr "Autorización correcta"
 
 #: views.py:236
@@ -372,7 +382,7 @@ msgstr ""
 "pero debe <a href=\"/accounts/register\">rexistrarse</a> ou <a href=\"/"
 "accounts/login\">autenticarse</a> para participar"
 
-#: views.py:243
+#: views.py:245
 msgid ""
 "You're an anonymous user.                           You must <a href=\"/"
 "accounts/register\">register</a>                           or <a href=\"/"
@@ -382,11 +392,11 @@ msgstr ""
 "\">rexistrarse</a> ou <a href=\"/accounts/login\">autenticarse</a> para "
 "acceder aquí"
 
-#: views.py:253
+#: views.py:255
 msgid "You're not registered to this space."
 msgstr "Non está rexistrado neste espazo"
 
-#: views.py:313
+#: views.py:315
 msgid "Space edited successfully"
 msgstr ""
 
@@ -496,11 +506,11 @@ msgstr "Editar o evento"
 msgid "Create a new event"
 msgstr "Crear un evento novo"
 
-#: templates/spaces/event_form.html:142 templates/spaces/space_form.html:281
+#: templates/spaces/event_form.html:142 templates/spaces/space_form.html:300
 msgid "Cancel"
 msgstr "Anular"
 
-#: templates/spaces/event_form.html:143 templates/spaces/space_form.html:282
+#: templates/spaces/event_form.html:143 templates/spaces/space_form.html:301
 msgid "Create"
 msgstr "Crear"
 
@@ -537,7 +547,7 @@ msgstr "Editar o espazo"
 msgid "Create a new space"
 msgstr "Crear un espazo novo"
 
-#: templates/spaces/space_form.html:226
+#: templates/spaces/space_form.html:245
 msgid "Entities participating"
 msgstr "Entidades colaboradoras"
 

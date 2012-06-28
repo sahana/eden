@@ -148,9 +148,7 @@ THIRDPARTY_APPS = (
     # system-wide dependencies.
     'apps.thirdparty.smart_selects',
     'apps.thirdparty.userprofile',
-    'apps.thirdparty.userroles',
     'apps.thirdparty.tagging',
-    'django_extensions',
 )
 
 ECIDADANIA_MODULES = (

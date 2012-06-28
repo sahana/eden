@@ -6,7 +6,7 @@
 {% block logo %}{% endblock %}
 {% block banner %}{% endblock %}
 {% block space %}
-    <a class="brand" href="/">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
+    <a class="brand" href="{% url 'site-index' %}">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
 {% endblock %}
 
 {% block content %}

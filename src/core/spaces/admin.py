@@ -69,7 +69,8 @@ class SpaceAdmin(admin.ModelAdmin):
         (_('Modules'), {'fields':
             ('mod_cal', 'mod_docs', 'mod_news', 'mod_proposals',
             'mod_debate')}),
-
+        (_('Staff'), {'fields':
+            [('admins', 'mods','users')]}),
     ]
     
     inlines = [
@@ -80,7 +81,7 @@ class SpaceAdmin(admin.ModelAdmin):
         if not change:
             obj.author = request.user
         obj.save()
-        request.user.profile.spaces.add(obj.id)
+        obj.users.add(request.user)
         
     def send_email(self, request, queryset):
         user_emails = queryset.objects.values('email')

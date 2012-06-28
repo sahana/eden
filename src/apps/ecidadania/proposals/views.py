@@ -39,8 +39,6 @@ from django.http import HttpResponse
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
      ProposalSetForm
-from apps.thirdparty.userroles.decorators import role_required
-from apps.thirdparty.userroles import roles
 from core.spaces.models import Space
 
 

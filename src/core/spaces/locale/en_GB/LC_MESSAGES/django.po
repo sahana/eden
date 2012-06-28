@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-20 23:56+0200\n"
+"POT-Creation-Date: 2012-06-28 11:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-#: admin.py:69 templates/spaces/space_form.html:214
+#: admin.py:69 templates/spaces/space_form.html:233
 msgid "Modules"
 msgstr ""
 
@@ -35,7 +35,7 @@ msgstr ""
 msgid "Filetype not supported."
 msgstr ""
 
-#: models.py:50 models.py:102
+#: models.py:50 models.py:104
 msgid "Name"
 msgstr ""
 
@@ -54,7 +54,7 @@ msgid ""
 "accesible URL"
 msgstr ""
 
-#: models.py:59 models.py:183
+#: models.py:59 models.py:185
 msgid "Description"
 msgstr ""
 
@@ -88,125 +88,133 @@ msgid ""
 "necessary to participate."
 msgstr ""
 
-#: models.py:75
+#: models.py:73
+msgid "Administrators"
+msgstr ""
+
+#: models.py:74
+msgid "Please select the users that will be administrators of this space"
+msgstr ""
+
+#: models.py:77
 msgid "Debate"
 msgstr ""
 
-#: models.py:76 templates/spaces/space_index.html:26
+#: models.py:78 templates/spaces/space_index.html:26
 #: templates/spaces/space_index.html:90
 msgid "Proposals"
 msgstr ""
 
-#: models.py:77 templates/spaces/space_index.html:20
+#: models.py:79 templates/spaces/space_index.html:20
 #: templates/spaces/space_index.html:68
 msgid "News"
 msgstr ""
 
-#: models.py:78
+#: models.py:80
 msgid "Calendar"
 msgstr ""
 
-#: models.py:79 models.py:156 templates/spaces/space_index.html:29
+#: models.py:81 models.py:158 templates/spaces/space_index.html:29
 msgid "Documents"
 msgstr ""
 
-#: models.py:83
+#: models.py:85
 msgid "Space"
 msgstr ""
 
-#: models.py:84
+#: models.py:86
 msgid "Spaces"
 msgstr ""
 
-#: models.py:103
+#: models.py:105
 msgid "Website"
 msgstr ""
 
-#: models.py:104
+#: models.py:106
 msgid "Logo"
 msgstr ""
 
-#: models.py:110
+#: models.py:112
 msgid "Entity"
 msgstr ""
 
-#: models.py:111
+#: models.py:113
 msgid "Entities"
 msgstr ""
 
-#: models.py:123
+#: models.py:125
 msgid "Document title"
 msgstr ""
 
-#: models.py:124
+#: models.py:126
 msgid "Max: 100 characters"
 msgstr ""
 
-#: models.py:126
+#: models.py:128
 msgid "Change the space to whom belongs this document"
 msgstr ""
 
-#: models.py:127
+#: models.py:129
 msgid "File"
 msgstr ""
 
-#: models.py:131
+#: models.py:133
 msgid ""
 "Permitted file types: DOC, DOCX, PPT, ODT, ODF, ODP, "
 "PDF,                     RST, TXT."
 msgstr ""
 
-#: models.py:136
+#: models.py:138
 msgid "Author"
 msgstr ""
 
-#: models.py:137
+#: models.py:139
 msgid ""
 "Change the user that                                 will figure as the "
 "author"
 msgstr ""
 
-#: models.py:155
+#: models.py:157
 msgid "Document"
 msgstr ""
 
-#: models.py:171
+#: models.py:173
 msgid "Event name"
 msgstr ""
 
-#: models.py:174
+#: models.py:176
 msgid "Users"
 msgstr ""
 
-#: models.py:175
+#: models.py:177
 msgid "List of the users that will assist or assisted to the event."
 msgstr ""
 
-#: models.py:177
+#: models.py:179
 msgid "Created by"
 msgstr ""
 
-#: models.py:180
+#: models.py:182
 msgid "Select the user that will be designated as author."
 msgstr ""
 
-#: models.py:181
+#: models.py:183
 msgid "Event date"
 msgstr ""
 
-#: models.py:182
+#: models.py:184
 msgid "Select the date where the event is celebrated."
 msgstr ""
 
-#: models.py:184
+#: models.py:186
 msgid "Location"
 msgstr ""
 
-#: models.py:188
+#: models.py:190
 msgid "Event"
 msgstr ""
 
-#: models.py:189 templates/spaces/space_index.html:32
+#: models.py:191 templates/spaces/space_index.html:32
 #: templates/spaces/space_index.html:101
 msgid "Events"
 msgstr ""
@@ -330,7 +338,7 @@ msgid "The user has been authorized to participate in space \"%s\"."
 msgstr ""
 
 #: views.py:153
-msgid "Autorization succesful"
+msgid "Authorization successful"
 msgstr ""
 
 #: views.py:236
@@ -343,18 +351,18 @@ msgid ""
 "\">login</a> to participate."
 msgstr ""
 
-#: views.py:243
+#: views.py:245
 msgid ""
 "You're an anonymous user.                           You must <a href=\"/"
 "accounts/register\">register</a>                           or <a href=\"/"
 "accounts/login\">login</a> to access here."
 msgstr ""
 
-#: views.py:253
+#: views.py:255
 msgid "You're not registered to this space."
 msgstr ""
 
-#: views.py:313
+#: views.py:315
 msgid "Space edited successfully"
 msgstr ""
 
@@ -460,11 +468,11 @@ msgstr ""
 msgid "Create a new event"
 msgstr ""
 
-#: templates/spaces/event_form.html:142 templates/spaces/space_form.html:281
+#: templates/spaces/event_form.html:142 templates/spaces/space_form.html:300
 msgid "Cancel"
 msgstr ""
 
-#: templates/spaces/event_form.html:143 templates/spaces/space_form.html:282
+#: templates/spaces/event_form.html:143 templates/spaces/space_form.html:301
 msgid "Create"
 msgstr ""
 
@@ -500,7 +508,7 @@ msgstr ""
 msgid "Create a new space"
 msgstr ""
 
-#: templates/spaces/space_form.html:226
+#: templates/spaces/space_form.html:245
 msgid "Entities participating"
 msgstr ""
 

@@ -125,7 +125,7 @@ def add_intent(request, space_url):
          intent.save()
          subject = _("New participation request")
          body = _("User {0} wants to participate in space {1}.\n \
-                  Plese click on the link below to approve.\n {2}"\
+                  Please click on the link below to approve.\n {2}"\
                   .format(request.user.username, space.name, intent.get_approve_url()))
          heading = _("Your request is being processed.")
          send_mail(subject=subject, message=body,
@@ -148,7 +148,7 @@ class ValidateIntent(DetailView):
 
         if self.request.user.is_staff:
             intent = get_object_or_404(Intent, token=self.kwargs['token'])
-            intent.user.profile.spaces.add(space_object)
+            intent.space.users.add(self.request.user)
             self.heading = _("The user has been authorized to participate in space \"%s\"." % space_object.name)
             messages.info(self.request, _("Authorization successful"))
             self.template_name = 'validate_intent.html'
@@ -184,32 +184,31 @@ def create_space(request):
     entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
                                  queryset=Entity.objects.none())
     
-    if request.user.is_staff:    
-        if request.method == 'POST':
-            if space_form.is_valid() and entity_forms.is_valid():
-                space_form_uncommited = space_form.save(commit=False)
-                space_form_uncommited.author = request.user
+    if request.method == 'POST':
+        if space_form.is_valid() and entity_forms.is_valid():
+            space_form_uncommited = space_form.save(commit=False)
+            space_form_uncommited.author = request.user
                 
-                new_space = space_form_uncommited.save()
-                space = get_object_or_404(Space, name=space_form_uncommited.name)
+            new_space = space_form_uncommited.save()
+            space = get_object_or_404(Space, name=space_form_uncommited.name)
+
+            ef_uncommited = entity_forms.save(commit=False)
+            for ef in ef_uncommited:
+                ef.space = space
+                ef.save()
+            # We add the created spaces to the user allowed spaces
     
-                ef_uncommited = entity_forms.save(commit=False)
-                for ef in ef_uncommited:
-                    ef.space = space
-                    ef.save()
-                # We add the created spaces to the user allowed spaces
+            space.admins.add(request.user)
+            #messages.success(request, _('Space %s created successfully.') % space.name)
+            return redirect('/spaces/' + space.url)
     
-                request.user.profile.spaces.add(space)
-                #messages.success(request, _('Space %s created successfully.') % space.name)
-                return redirect('/spaces/' + space.url)
-    
-        return render_to_response('spaces/space_form.html',
+    return render_to_response('spaces/space_form.html',
                               {'form': space_form,
                                'entityformset': entity_forms},
                               context_instance=RequestContext(request))
-    else:
-        return render_to_response('not_allowed.html',
-                                  context_instance=RequestContext(request))
+#    else:
+#        return render_to_response('not_allowed.html',
+#                                  context_instance=RequestContext(request))
                                   
 
 class ViewSpaceIndex(DetailView):
@@ -231,15 +230,14 @@ class ViewSpaceIndex(DetailView):
         space_object = get_object_or_404(Space, url=space_url)
 
         
-        if space_object.public == True or self.request.user.is_staff:
+        if space_object.public == True or self.request.user.is_staff or \
+        self.request.user.is_superuser:
             if self.request.user.is_anonymous():
                 messages.info(self.request, _("Hello anonymous user. Remember \
                                               that this space is public to view, but \
                                               you must <a href=\"/accounts/register\">register</a> \
                                               or <a href=\"/accounts/login\">login</a> to participate."))
             return space_object
-        
-        
 
         if self.request.user.is_anonymous():
             messages.info(self.request, _("You're an anonymous user. \
@@ -248,10 +246,21 @@ class ViewSpaceIndex(DetailView):
             self.template_name = 'not_allowed.html'
             return space_object
 
-        for i in self.request.user.profile.spaces.all():
-            if i.url == space_url:
+        # Check if the user is in the admitted users of the space
+        for u in space_object.users.all():
+            if self.request.user == u:
                 return space_object
-        
+
+        # Check if the user is an admin
+        for u in space_object.admins.all():
+            if self.request.user == u:
+                return space_object
+
+        # Check if the user is a moderator
+        for u in space_object.mods.all():
+            if self.request.user == u:
+                return space_object
+
         messages.warning(self.request, _("You're not registered to this space."))
         self.template_name = 'not_allowed.html'
         return space_object
@@ -295,32 +304,30 @@ def edit_space(request, space_url):
     """
     place = get_object_or_404(Space, url=space_url)
 
-    form = SpaceForm(request.POST or None, request.FILES or None, instance=place)
-    entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
+    if request.user in place.admins.all():
+        form = SpaceForm(request.POST or None, request.FILES or None, instance=place)
+        entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
                                  queryset=Entity.objects.all().filter(space=place))
 
-    if request.method == 'POST':        
-        if form.is_valid() and entity_forms.is_valid():
-            form_uncommited = form.save(commit=False)
-            form_uncommited.author = request.user
+        if request.method == 'POST':
+            if form.is_valid() and entity_forms.is_valid():
+                form_uncommited = form.save(commit=False)
+                form_uncommited.author = request.user
             
-            new_space = form_uncommited.save()
-            space = get_object_or_404(Space, name=form_uncommited.name)
+                new_space = form_uncommited.save()
+                space = get_object_or_404(Space, name=form_uncommited.name)
             
-            ef_uncommited = entity_forms.save(commit=False)
-            for ef in ef_uncommited:
-                ef.space = space
-                ef.save()
+                ef_uncommited = entity_forms.save(commit=False)
+                for ef in ef_uncommited:
+                    ef.space = space
+                    ef.save()
             
-            messages.success(request, _('Space edited successfully'))
-            return redirect('/spaces/' + space.url + '/')
+                messages.success(request, _('Space edited successfully'))
+                return redirect('/spaces/' + space.url + '/')
 
-    for i in request.user.profile.spaces.all():
-        if i.url == space_url or request.user.is_staff:
-            return render_to_response('spaces/space_form.html',
-                              {'form': form, 'get_place': place,
-                              'entityformset': entity_forms},
-                              context_instance=RequestContext(request))
+        return render_to_response('spaces/space_form.html', {'form': form,
+                    'get_place': place, 'entityformset': entity_forms},
+                    context_instance=RequestContext(request))
             
     return render_to_response('not_allowed.html', context_instance=RequestContext(request))
 
@@ -342,7 +349,12 @@ class DeleteSpace(DeleteView):
         return super(DeleteSpace, self).dispatch(*args, **kwargs)
 
     def get_object(self):
-        return get_object_or_404(Space, url = self.kwargs['space_url'])
+        space = get_object_or_404(Space, url = self.kwargs['space_url'])
+        if self.request.user in space.admins.all():
+            return space
+        else:
+            self.template_name = 'not_allowed.html'
+            return space
       
 
 class GoToSpace(RedirectView):

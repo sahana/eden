@@ -221,17 +221,17 @@ def update_position(request, space_url):
     position_form = UpdateNotePosition(request.POST or None, instance=note)
 
     if request.method == "POST" and request.is_ajax:
-        if position_form.is_valid():
-            position_form_uncommited = position_form.save(commit=False)
-            position_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
-            position_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
-
-            position_form_uncommited.save()
-            msg = "The note has been updated."
+        if request.user == note.author or request.user.is_staff:
+            if position_form.is_valid():
+                position_form_uncommited = position_form.save(commit=False)
+                position_form_uncommited.column = get_object_or_404(Column, pk=request.POST['column'])
+                position_form_uncommited.row = get_object_or_404(Row, pk=request.POST['row'])
+                position_form_uncommited.save()
+                msg = "The note has been updated."
+            else:
+                msg = "There has been an error validating the form."
         else:
-            msg = "There has been an error validating the form."
-    else:
-        msg = "There was some error in the petition."
+            msg = "There was some error in the petition."
 
     return HttpResponse(msg)
 
