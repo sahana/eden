@@ -521,7 +521,7 @@ class S3CRUD(S3Method):
                    _config("onaccept")
 
         # Get the target record ID
-        record_id = r.id
+        record_id = self.record
         if r.interactive and not record_id:
             r.error(404, resource.ERROR.BAD_RECORD)
 
