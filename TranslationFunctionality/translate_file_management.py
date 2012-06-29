@@ -39,7 +39,7 @@ class TranslateGetFiles:
            """ Returns a list of modules using files in /eden/controllers/ as point of reference """	
 
            mod = []
-	   base_path = os.path.abspath("../../")
+	   base_path = os.path.abspath("../")
 
            cont_dir = os.path.join(base_path,"controllers")
            mod_files = os.listdir(cont_dir)
@@ -113,7 +113,7 @@ class TranslateAPI:
 
         def __init__(self):
            
-	   base_path = os.path.abspath("../../")
+	   base_path = os.path.abspath("../")
            self.grp = TranslateGetFiles()
            self.grp.group_files(base_path,'',0)
             

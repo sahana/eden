@@ -60,7 +60,7 @@ class TestTranslateFunctions(unittest.TestCase):
                                        'xforms'
                                      ]
 	   
-	   base_dir = os.path.abspath('../../')
+	   base_dir = os.path.abspath('../')
 
            # Add all the expected files for a given module to this dictionary
 
