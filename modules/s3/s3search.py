@@ -45,7 +45,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug, S3DateTime, s3_get_reference
+from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
@@ -172,7 +172,7 @@ class S3SearchWidget(object):
                     continue
                 rtable = ktable
                 rtablename = ktablename
-                ktablename, key, multiple = s3_get_reference(ktable[rkey])
+                ktablename, key, multiple = s3_get_foreign_key(ktable[rkey])
                 if not ktablename:
                     continue
                 else:

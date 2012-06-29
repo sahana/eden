@@ -2059,7 +2059,7 @@ class S3SavedSearch(S3Model):
                                         default = auth.user_id),
                                   Field("search_vars","text",
                                         label = T("Search Criteria"),
-                                        represent=lambda id:search_vars_represent(id)),
+                                        represent=lambda id:s3_search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),

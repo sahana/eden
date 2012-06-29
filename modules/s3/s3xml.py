@@ -51,7 +51,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3codec import S3Codec
-from s3utils import s3_get_reference
+from s3utils import s3_get_foreign_key
 
 try:
     from lxml import etree
@@ -498,7 +498,7 @@ class S3XML(S3Codec):
             val = ids = record[f]
             if type(ids) is not list:
                 ids = [ids]
-            ktablename, pkey, multiple = s3_get_reference(table[f])
+            ktablename, pkey, multiple = s3_get_foreign_key(table[f])
             if not ktablename:
                 continue
             ktable = db[ktablename]

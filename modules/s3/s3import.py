@@ -63,7 +63,7 @@ from gluon.tools import callback
 from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
-from s3utils import s3_mark_required, s3_is_foreign_key, s3_get_reference
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key
 
 DEBUG = False
 if DEBUG:
@@ -2390,7 +2390,7 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            ktablename, key, multiple = s3_get_reference(self.table[fkey])
+            ktablename, key, multiple = s3_get_foreign_key(self.table[fkey])
             if not ktablename:
                 if self.tablename == "auth_user" and \
                    fkey == "organisation_id":
@@ -2498,7 +2498,7 @@ class S3ImportItem(object):
                 if f not in table.fields:
                     continue
                 fieldtype = str(self.table[f].type)
-                if fieldtype == "id" or s3_is_foreign_key(self.table[f]):
+                if fieldtype == "id" or s3_has_foreign_key(self.table[f]):
                     continue
                 data.update({f:self.data[f]})
             data_str = cPickle.dumps(data)
@@ -2808,7 +2808,7 @@ class S3ImportJob():
             tree = self.tree
             if tree is not None:
                 fields = [table[f] for f in table.fields]
-                rfields = filter(s3_is_foreign_key, fields)
+                rfields = filter(s3_has_foreign_key, fields)
                 item.references = self.lookahead(element,
                                                  table=table,
                                                  fields=rfields,
