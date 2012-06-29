@@ -589,11 +589,11 @@ class S3Sync(S3Method):
 
         if result == self.log.SUCCESS:
             output = xml.json_message(message=message,
-                                      sender='"%s"' % config.uuid)
+                                      sender="%s" % config.uuid)
         else:
             output = xml.json_message(False, 400,
                                       message=message,
-                                      sender='"%s"' % config.uuid)
+                                      sender="%s" % config.uuid)
 
         # Set content type header
         headers = current.response.headers

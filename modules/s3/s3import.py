@@ -2645,7 +2645,10 @@ class S3ImportJob():
         self.job_table = None
         self.item_table = None
 
-        self.count = 0 # number of records imported
+        self.count = 0 # total number of records imported
+        self.created = [] # IDs of created records
+        self.updated = [] # IDs of updated records
+        self.deleted = [] # IDs of deleted records
 
         # Import strategy
         self.strategy = strategy
@@ -3049,6 +3052,9 @@ class S3ImportJob():
         # Commit the items
         items = self.items
         count = 0
+        created = []
+        updated = []
+        deleted = []
         tablename = self.table._tablename
         for item_id in import_list:
             item = items[item_id]
@@ -3066,7 +3072,17 @@ class S3ImportJob():
                     return False
             elif item.tablename == tablename:
                 count += 1
+                if item.id:
+                    if item.method == item.METHOD.CREATE:
+                        created.append(item.id)
+                    elif item.method == item.METHOD.UPDATE:
+                        updated.append(item.id)
+                    elif item.method == item.METHOD.DELETE:
+                        deleted.append(item.id)
         self.count = count
+        self.created = created
+        self.updated = updated
+        self.deleted = deleted
         return True
 
     # -------------------------------------------------------------------------

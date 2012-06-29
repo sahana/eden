@@ -2029,6 +2029,9 @@ class S3Resource(object):
         self.error = None
         self.error_tree = None
         self.import_count = 0
+        self.import_created = []
+        self.import_updated = []
+        self.import_deleted = []
 
         # Search
         self.search = model.get_config(self.tablename, "search_method", None)
@@ -3497,11 +3500,23 @@ class S3Resource(object):
             tree = xml.tree2json(self.error_tree)
         else:
             tree = None
+
+        import_info = {"records":self.import_count}
+        created=self.import_created
+        if created:
+            import_info["created"] = created
+        updated=self.import_updated
+        if updated:
+            import_info["updated"] = updated
+        deleted=self.import_deleted
+        if deleted:
+            import_info["deleted"] = deleted
+
         if success is True:
-            return xml.json_message(message=self.error, tree=tree)
+            return xml.json_message(message=self.error, tree=tree, **import_info)
         elif success and hasattr(success, "job_id"):
             self.job = success
-            return xml.json_message(message=self.error, tree=tree)
+            return xml.json_message(message=self.error, tree=tree, **import_info)
         else:
             return xml.json_message(False, 400,
                                     message=self.error, tree=tree)
@@ -3678,6 +3693,9 @@ class S3Resource(object):
         import_job.commit(ignore_errors=ignore_errors)
         self.error = import_job.error
         self.import_count += import_job.count
+        self.import_created += import_job.created
+        self.import_updated += import_job.updated
+        self.import_deleted += import_job.deleted
         if self.error:
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error
