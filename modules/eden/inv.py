@@ -1058,7 +1058,6 @@ class S3TrackingModel(S3Model):
                                     writable = True,
                                     widget = S3SiteAutocompleteWidget(),
                                     represent=org_site_represent),
-                             req_ref(writable = True),
                              item_id(label = T("Kit"),
                                      requires = IS_ONE_OF(db, "supply_item.id",
                                                           self.supply_item_represent,
@@ -1066,7 +1065,7 @@ class S3TrackingModel(S3Model):
                                                           filter_opts=(True,),
                                                           sort=True),
                                      widget = S3AutocompleteWidget("supply", "item",
-                                                                   filter="item.kit=true"),
+                                                                   filter="item.kit=1"),
                                      # Needs better workflow as no way to add the Kit Items
                                      comment = None,
                                      #comment = S3AddResourceLink(
@@ -1092,6 +1091,7 @@ class S3TrackingModel(S3Model):
                                          T("Will be filled automatically when the Item has been Repacked"))
                                                  )
                                    ),
+                             req_ref(writable = True),
                              person_id(name = "repacked_id",
                                        label = T("Repacked By"),
                                        ondelete = "SET NULL",
@@ -1127,6 +1127,7 @@ class S3TrackingModel(S3Model):
                                  "date",
                                  "repacked_id"],
                   onvalidation = self.inv_kit_onvalidate,
+                  onaccept = self.inv_kit_onaccept,
                   )
 
         # ---------------------------------------------------------------------
@@ -1689,7 +1690,6 @@ $(document).ready(function(){
 
         db = current.db
         s3db = current.s3db
-        itable = s3db.supply_item
         ktable = s3db.supply_kit_item
         ptable = s3db.supply_item_pack
         invtable = s3db.inv_inv_item
@@ -1699,9 +1699,14 @@ $(document).ready(function(){
 
         # Get contents of this kit
         query = (ktable.parent_item_id == vars.item_id)
-        rows = db(query).select()
+        rows = db(query).select(ktable.item_id,
+                                ktable.quantity,
+                                ktable.item_pack_id)
 
+        quantity = vars.quantity
         max_kits = 0
+        # @ToDo: Save the results for the onaccept
+        #items = {}
 
         # Loop through each supply_item in the kit
         for record in rows:
@@ -1711,7 +1716,8 @@ $(document).ready(function(){
             # How much of this supply_item do we have in stock?
             stock_amount = 0
             query = squery & (invtable.item_id == record.item_id)
-            wh_items = db(query).select()
+            wh_items = db(query).select(invtable.quantity,
+                                        invtable.item_pack_id)
             for wh_item in wh_items:
                 amount = wh_item.quantity * ptable[wh_item.item_pack_id].quantity
                 stock_amount += amount
@@ -1721,9 +1727,24 @@ $(document).ready(function(){
             if kits > max_kits:
                 max_kits = kits
 
-        if max_kits < vars.quantity:
+            # @ToDo: Save the results for the onaccept
+
+        if max_kits < quantity:
             form.errors.quantity = T("You can only make %d kit(s) with the available stock" % int(max_kits))
-            vars.quantity = max_kits
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_kit_onaccept(form):
+        """
+            Reduce the Inventory stocks by the amounts used to make the kits
+            - pick items which have an earlier expiry_date where they have them
+            - provide a pick list to ensure that the right stock items are used
+              to build the kits: inv_kit_item
+        """
+
+        # @ToDo
 
         return
 

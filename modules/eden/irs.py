@@ -1059,9 +1059,9 @@ class S3IRSResponseModel(S3Model):
                                         represent = lambda response: \
                                                 (T("No"),
                                                  T("Yes"))[response == True]),
-                                  comments(label = T("Reply Message"),
-                                           writable = settings.has_module("msg"),
-                                           readable = settings.has_module("msg")),
+                                  s3_comments(label = T("Reply Message"),
+                                              writable = settings.has_module("msg"),
+                                              readable = settings.has_module("msg")),
                                   *s3_meta_fields())
 
         if not settings.has_module("vehicle"):
