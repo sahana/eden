@@ -4457,6 +4457,7 @@ class S3Resource(object):
                  as_rows=False,
                  as_page=False,
                  as_list=False,
+                 as_json=False,
                  format=None):
         """
             DRY helper function for SQLTABLEs in REST and CRUD
@@ -4649,6 +4650,9 @@ class S3Resource(object):
         elif as_list:
             # ...Python list
             items = rows.as_list()
+        elif as_json:
+            # ...simple flat JSON (with prefixed field names)
+            items = self.convert_json(rows, lfields)
         else:
             # ...SQLTABLE
             items = SQLTABLES3(rows,
@@ -4658,6 +4662,28 @@ class S3Resource(object):
                                _id="list",
                                _class="dataTable display")
         return items
+
+    # -------------------------------------------------------------------------
+    def convert_json(self, rows, lfields):
+        """
+            Convert rows into JSON, used in sqltable
+
+            @param rows: the rows
+            @param lfields: the (resolved) list fields
+        """
+
+        fields = [lf.selector for lf in lfields]
+
+        if rows is None:
+            return "[]"
+        records = []
+        for row in rows:
+            record = Storage()
+            for lfield in lfields:
+                record[lfield.colname] = S3FieldSelector.extract(self,
+                                                    row, lfield.selector)
+            records.append(record)
+        return json.dumps(records)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5761,7 +5787,7 @@ class S3ResourceQuery:
         """
 
         if op == self.CONTAINS:
-            q = l.contains(r)
+            q = l.contains(r, all=True)
         elif op == self.BELONGS:
             if type(r) is list and None in r:
                 _r = [item for item in r if item is not None]
