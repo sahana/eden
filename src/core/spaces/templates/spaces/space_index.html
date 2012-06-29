@@ -44,6 +44,9 @@
                             <li><a href="{% url 'edit-space' get_place.url %}">
                                 <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>{% trans 'Edit space' %}
                             </a></li>
+                            <li><a href="{% url 'edit-roles' get_place.url %}">
+                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit user roles' %}" title="{% trans 'Edit user roles' %}"/>{% trans 'Edit user roles' %}
+                            </a></li>
                         {% endif %}
                         {% if perms.spaces.delete_space %}
                             <li><a href="{% url 'delete-space' get_place.url %}">

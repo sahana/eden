@@ -343,7 +343,6 @@ def register(request):
             newuser = User.objects.create_user(username=username, email='', password=password)
             newuser.email = form.cleaned_data.get('email')
             EmailValidation.objects.add(user=newuser, email=newuser.email)
-            set_user_role(newuser, roles.user)
             newuser.save()
             return HttpResponseRedirect('%scomplete/' % request.path_info)
     else:
