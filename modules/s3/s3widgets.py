@@ -155,18 +155,15 @@ class S3DateWidget(FormWidget):
 
         selector = str(field).replace(".", "_")
 
-        current.response.s3.jquery_ready.append('''
-$('#%s').datepicker('option','minDate','-%sm')
-$('#%s').datepicker('option','maxDate','+%sm')
-$('#%s').datepicker('option','yearRange','c-100:c+100')
-$('#%s').datepicker('option','dateFormat','%s')
-''' % (selector,
-       self.past,
-       selector,
-       self.future,
-       selector,
-       selector,
-       format))
+        current.response.s3.jquery_ready.append(
+'''$('#%(selector)s').datepicker('option','minDate','-%(past)sm')
+ .datepicker('option','maxDate','+%(future)sm')
+ .datepicker('option','yearRange','c-100:c+100')
+ .datepicker('option','dateFormat','%(format)s')''' % \
+        dict(selector = selector,
+             past = self.past,
+             future = self.future,
+             format = format))
 
         return TAG[""](
                         INPUT(**attr),
@@ -675,89 +672,75 @@ class S3PersonAutocompleteWidget(FormWidget):
         dummy_input = "dummy_%s" % real_input
         url = URL(c=self.c,
                   f=self.f,
-                  args="search.json",
-                  vars={"filter":"~"})
+                  args="search.json")
 
-        js_autocomplete = "".join(('''
-var data={val:$('#%s').val(),accept:false}
-$('#%s').autocomplete({
- source:'%s',
- delay:%d,
- minLength:%d,
+        js_autocomplete = "".join((
+'''var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+$('#%(dummy_input)s').autocomplete({
+ source:'%(url)s',
+ delay:%(delay)d,
+ minLength:%(min_length)d,
  search:function(event,ui){
-  $('#%s_throbber').removeClass('hide').show()
+  $('#%(dummy_input)s_throbber').removeClass('hide').show()
   return true
  },
  response:function(event,ui,content){
-  $('#%s_throbber').hide()
+  $('#%(dummy_input)s_throbber').hide()
   return content
  },
  focus:function(event,ui){
-  var name=''
-  if(ui.item.first_name!=''){
-   name+=ui.item.first_name
+  var name=ui.item.first
+  if(ui.item.middle){
+   name+=' '+ui.item.middle
   }
-  if(ui.item.middle_name!=''){
-   name+=' '+ui.item.middle_name
+  if(ui.item.last){
+   name+=' '+ui.item.last
   }
-  if(ui.item.last_name!=''){
-   name+=' '+ui.item.last_name
-  }
-  $('#%s').val(name)
+  $('#%(dummy_input)s').val(name)
   return false
  },
  select:function(event,ui){
-  var name=''
-  if(ui.item.first_name!=''){
-   name+=ui.item.first_name
+  var name=ui.item.first
+  if(ui.item.middle){
+   name+=' '+ui.item.middle
   }
-  if(ui.item.middle_name!=''){
-   name+=' '+ui.item.middle_name
+  if(ui.item.last){
+   name+=' '+ui.item.last
   }
-  if(ui.item.last_name!=''){
-   name+=' '+ui.item.last_name
-  }
-  $('#%s').val(name)
-  $('#%s').val(ui.item.id)
-          .change()
-  ''' % (dummy_input,
-         dummy_input,
-         url,
-         self.delay,
-         self.min_length,
-         dummy_input,
-         dummy_input,
-         dummy_input,
-         dummy_input,
-         real_input), self.post_process, '''
-  data.accept = true
+  $('#%(dummy_input)s').val(name)
+  $('#%(real_input)s').val(ui.item.id).change()''' % \
+        dict(dummy_input = dummy_input,
+             url = url,
+             delay = self.delay,
+             min_length = self.min_length,
+             real_input = real_input),
+        self.post_process, '''
+  %(real_input)s.accept=true
   return false
  }
 }).data('autocomplete')._renderItem=function(ul,item){
- var name=''
- if(item.first_name!=''){
-  name+=item.first_name
+ var name=item.first
+ if(item.middle){
+  name+=' '+item.middle
  }
- if(item.middle_name!=''){
-  name+=' '+item.middle_name
- }
- if(item.last_name!=''){
-  name+=' '+item.last_name
+ if(item.last){
+  name+=' '+item.last
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
-};
-$('#%s').blur(function(){
- if(!$('#%s').val()){
-  $('#%s').val('').change()
-  data.accept=true
+}
+$('#%(dummy_input)s').blur(function(){
+ if(!$('#%(dummy_input)s').val()){
+  $('#%(real_input)s').val('').change()
+  %(real_input)s.accept=true
  }
- if(!data.accept){
-  $('#%s').val(data.val)
+ if(!%(real_input)s.accept){
+  $('#%(dummy_input)s').val(%(real_input)s.val)
  }else{
-  data.val=$('#%s').val()
+  %(real_input)s.val=$('#%(dummy_input)s').val()
  }
- data.accept=false
-});''' % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
+ %(real_input)s.accept=false
+})''' % dict(dummy_input = dummy_input,
+              real_input = real_input)))
 
         if value:
             # Provide the representation for the current/default Value
@@ -831,98 +814,90 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         url = URL(c="hrm",
                   # This searches HRMs using S3HRSearch
                   f="person_search",
-                  args="search.json",
-                  vars={"filter":"~"})
+                  args="search.json")
 
-        js_autocomplete = "".join(('''
-var data={val:$('#%s').val(),accept:false}
-$('#%s').autocomplete({
- source:'%s',
- delay:%d,
- minLength:%d,
+        js_autocomplete = "".join((
+'''var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+$('#%(dummy_input)s').autocomplete({
+ source:'%(url)s',
+ delay:%(delay)d,
+ minLength:%(min_length)d,
  search:function(event,ui){
-  $('#%s_throbber').removeClass('hide').show()
+  $('#%(dummy_input)s_throbber').removeClass('hide').show()
   return true
  },
  response:function(event,ui,content){
-  $('#%s_throbber').hide()
+  $('#%(dummy_input)s_throbber').hide()
   return content
  },
  focus:function(event,ui){
-  var name=''
-  if(ui.item.first_name!=''){
-   name+=ui.item.first_name
+  var name=ui.item.first
+  if(ui.item.middle){
+   name+=' '+ui.item.middle
   }
-  if(ui.item.middle_name!=''){
-   name+=' '+ui.item.middle_name
+  if(ui.item.last){
+   name+=' '+ui.item.last
   }
-  if(ui.item.last_name!=''){
-   name+=' '+ui.item.last_name
+  name+=' ('
+  if(ui.item.job){
+   name+=ui.item.job+', '
   }
-  if(ui.item.name!=''){
-   name+=' ('+ui.item.name+')'
-  }
-  $('#%s').val(name)
+  name+=ui.item.org+')'
+  $('#%(dummy_input)s').val(name)
   return false
  },
  select:function(event,ui){
-  var name=''
-  if(ui.item.first_name!=''){
-   name+=ui.item.first_name
+  var name=ui.item.first
+  if(ui.item.middle){
+   name+=' '+ui.item.middle
   }
-  if(ui.item.middle_name!=''){
-   name+=' '+ui.item.middle_name
+  if(ui.item.last){
+   name+=' '+ui.item.last
   }
-  if(ui.item.last_name!=''){
-   name+=' '+ui.item.last_name
+  name+=' ('
+  if(ui.item.job){
+   name+=ui.item.job+', '
   }
-  if(ui.item.name!=''){
-   name+=' ('+ui.item.name+')'
-  }
-  $('#%s').val(name)
-  $('#%s').val(ui.item.id)
-          .change()
-  ''' % (dummy_input,
-         dummy_input,
-         url,
-         self.delay,
-         self.min_length,
-         dummy_input,
-         dummy_input,
-         dummy_input,
-         dummy_input,
-         real_input), self.post_process, '''
-  data.accept = true
+  name+=ui.item.org+')'
+  $('#%(dummy_input)s').val(name)
+  $('#%(real_input)s').val(ui.item.id).change()''' % \
+        dict(dummy_input = dummy_input,
+             url = url,
+             delay = self.delay,
+             min_length = self.min_length,
+             real_input = real_input),
+        self.post_process, '''
+  %(real_input)s.accept=true
   return false
  }
 }).data('autocomplete')._renderItem=function(ul,item){
- var name=''
- if(item.first_name!=''){
-  name+=item.first_name
+ var name=item.first
+ if(item.middle){
+  name+=' '+item.middle
  }
- if(item.middle_name!=''){
-  name+=' '+item.middle_name
+ if(item.last){
+  name+=' '+item.last
  }
- if(item.last_name!=''){
-  name+=' '+item.last_name
+ name+=' ('
+ if(item.job){
+  name+=item.job+', '
  }
- if(item.name!=''){
-  name+=' ('+item.name+')'
- }
+ name+=item.org+')'
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
-};
-$('#%s').blur(function(){
- if(!$('#%s').val()){
-  $('#%s').val('').change()
-  data.accept=true
+}
+$('#%(dummy_input)s').blur(function(){
+ if(!$('#%(dummy_input)s').val()){
+  $('#%(real_input)s').val('').change()
+  %(real_input)s.accept=true
  }
- if(!data.accept){
-  $('#%s').val(data.val)
+ if(!%(real_input)s.accept){
+  $('#%(dummy_input)s').val(%(real_input)s.val)
  }else{
-  data.val=$('#%s').val()
+  %(real_input)s.val=$('#%(dummy_input)s').val()
  }
- data.accept=false
-});''' % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
+ %(real_input)s.accept=false
+})''' % dict(dummy_input = dummy_input,
+              real_input = real_input)))
 
         if value:
             # Provide the representation for the current/default Value

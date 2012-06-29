@@ -64,13 +64,19 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
+# Here are dependencies listed for reference
+#from gluon.dal import Field
+#from gluon.globals import current
+#from gluon.html import A, DIV, URL
+#from gluon.http import HTTP, redirect
+#from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
+from gluon.dal import Row, Rows
 from gluon.languages import lazyT
-from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key
-from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+from s3validators import IS_ONE_OF
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
 from s3export import S3Exporter
@@ -232,7 +238,7 @@ class S3RequestManager(object):
         """
 
         self.error = None
-        headers={"Content-Type":"application/json"}
+        headers = {"Content-Type":"application/json"}
         try:
             r = S3Request(self, *args, **vars)
         except SyntaxError:
@@ -381,8 +387,7 @@ class S3RequestManager(object):
             @param extended_comments: Typically the comments are abbreviated
         """
 
-        xml = self.xml
-        xml_encode = xml.xml_encode
+        xml_encode = self.xml.xml_encode
 
         NONE = str(current.T("None")).decode("utf-8")
         cache = current.cache
@@ -5688,7 +5693,7 @@ class S3ResourceQuery:
         if op in (self.AND, self.OR):
             lf = l.fields()
             rf = r.fields()
-            return lf+rf
+            return lf + rf
         elif op == self.NOT:
             return l.fields()
         elif isinstance(l, S3FieldSelector):
