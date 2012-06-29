@@ -1052,9 +1052,19 @@ class S3IRSResponseModel(S3Model):
                                         represent = lambda incident_commander: \
                                                 (T("No"),
                                                  T("Yes"))[incident_commander == True]),
-                                 *s3_meta_fields())
+                                  Field("response", "boolean",
+                                        label = T("Able to Respond?"),
+                                        writable = settings.has_module("msg"),
+                                        readable = settings.has_module("msg"),
+                                        represent = lambda response: \
+                                                (T("No"),
+                                                 T("Yes"))[response == True]),
+                                  s3_comments(label = T("Reply Message"),
+                                              writable = settings.has_module("msg"),
+                                              readable = settings.has_module("msg")),
+                                  *s3_meta_fields())
 
-        if not current.deployment_settings.has_module("vehicle"):
+        if not settings.has_module("vehicle"):
             return None
 
         # ---------------------------------------------------------------------

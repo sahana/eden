@@ -392,8 +392,7 @@ class S3SupplyModel(S3Model):
                                          sort=True),
                     represent = self.supply_item_represent,
                     label = T("Item"),
-                    widget = S3AutocompleteWidget("supply",
-                                         "item"),
+                    widget = S3AutocompleteWidget("supply", "item"),
                     #widget = S3SearchAutocompleteWidget(
                     #                get_fieldname = "item_id",
                     #                tablename = "supply_catalog_item",
@@ -471,12 +470,12 @@ class S3SupplyModel(S3Model):
         add_component("req_req_item", supply_item="item_id")
 
         # Supply Kit Items as component of Items
-        add_component("supply_kit_item",  supply_item = "parent_item_id")
-        #add_component("supply_item",  supply_item = dict(joinby="parent_item_id",
-        #                                                  alias="kit_item",
-        #                                                 link="supply_kit_item",
-        #                                                      actuate="hide",
-        #                                                     key="item_id"))
+        add_component("supply_kit_item", supply_item="parent_item_id")
+        #add_component("supply_item", supply_item = dict(joinby="parent_item_id",
+        #                                                alias="kit_item",
+        #                                                link="supply_kit_item",
+        #                                                actuate="hide",
+        #                                                key="item_id"))
 
         # =====================================================================
         # Catalog Item
@@ -484,15 +483,15 @@ class S3SupplyModel(S3Model):
         # This resource is used to link Items with Catalogs (n-to-n)
         # Item Categories will also be catalog specific
         #
-        script = SCRIPT("""
-$(document).ready(function() {
-    S3FilterFieldChange({
-        'FilterField':   'catalog_id',
-        'Field':         'item_category_id',
-        'FieldPrefix':   'supply',
-        'FieldResource': 'item_category',
-    });
-});""")
+        script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'catalog_id',
+  'Field':'item_category_id',
+  'FieldPrefix':'supply',
+  'FieldResource':'item_category',
+ })
+})''')
         tablename = "supply_catalog_item"
         table = define_table(tablename,
                              catalog_id(),
@@ -656,17 +655,16 @@ $(document).ready(function() {
                     #                          label=ADD_ITEM_PACK,
                     #                          title=T("Item Packs"),
                     #                          tooltip=T("The way in which an item is normally distributed")),
-                    script = SCRIPT(
-"""
+                    script = SCRIPT('''
 S3FilterFieldChange({
-    'FilterField':    'item_id',
-    'Field':        'item_pack_id',
-    'FieldResource':'item_pack',
-    'FieldPrefix':    'supply',
-    'msgNoRecords':    S3.i18n.no_packs,
-    'fncPrep':        fncPrepItem,
-    'fncRepresent':    fncRepresentItem
-});"""),
+ 'FilterField':'item_id',
+ 'Field':'item_pack_id',
+ 'FieldResource':'item_pack',
+ 'FieldPrefix':'supply',
+ 'msgNoRecords':S3.i18n.no_packs,
+ 'fncPrep':fncPrepItem,
+ 'fncRepresent':fncRepresentItem
+})'''),
                     ondelete = "RESTRICT")
 
         #def record_pack_quantity(r):
@@ -694,7 +692,8 @@ S3FilterFieldChange({
                              supply_item_id("parent_item_id",
                                             label = T("Parent Item"),
                                             comment = None),
-                             supply_item_id("item_id", label = T("Kit Item")),
+                             supply_item_id("item_id",
+                                            label = T("Kit Item")),
                              Field("quantity", "double",
                                    label = T("Quantity"),
                                    represent = lambda v, row=None: \
@@ -905,6 +904,7 @@ S3FilterFieldChange({
 
             Used by controllers/inv.py
         """
+
         if pack_quantity_1 == pack_quantity_2:
             # Faster calculation
             quantity = quantity_1 + quantity_2
@@ -1243,13 +1243,14 @@ def resource_duplicate(tablename, job, fields=None):
 
     if job.tablename == tablename:
         table = job.table
+        data = job.data
         query = None
         db = current.db
         if not fields:
             fields = [field.name for field in db[tablename]
                       if field.writable and field.name != "id"]
         for field in fields:
-            value = field in job.data and job.data[field] or None
+            value = field in data and data[field] or None
             # Hack to get prepop working for Sahana Camp LA
             if value:
                 try:
@@ -1652,6 +1653,14 @@ def supply_item_controller():
                                                filter_opts = [r.record.id],
                                                )
             s3db.inv_inv_item.item_pack_id.requires = inv_item_pack_requires
+        # Needs better workflow as no way to add the Kit Items
+        # else:
+            # caller = current.request.get_vars.get("caller", None)
+            # if caller == "inv_kit_item_id":
+                # field = r.table.kit
+                # field.default = True
+                # field.readable = field.writable = False
+
         return True
     current.response.s3.prep = prep
 
@@ -1826,73 +1835,73 @@ def supply_item_entity_controller():
             # @ToDo: Hide options which are no longer relevant because
             #        of the other filters applied
             #
-            s3.jquery_ready.append("""
-function filterColumns() {
-    var oTable = $('#list').dataTable();
-    var values = '';
-    $('#category_dropdown option:selected').each(function () {
-        values += $(this).text() + '|';
-    });
-    var regex = (values == '' ?  '': '^' + values.slice(0, -1) + '$');
-    oTable.fnFilter('', 1, false);
-    oTable.fnFilter( regex, 1, true, false );
-    values = '';
-    $('#status_dropdown option:selected').each(function () {
-        if ($(this).text() == '""" + T("On Order") + """') {
-            values += $(this).text() + '|' + '""" + T("Order") + """.*' + '|';
-        } else if ($(this).text() == '""" + T("Planned Procurement") + """') {
-            values += '""" + T("Planned") + """.*' + '|';
-        } else {
-            values += $(this).text() + '|' + '""" + T("Stock") + """.*' + '|';
-        }
-    });
-    var regex = (values == '' ?  '': '^' + values.slice(0, -1) + '$');
-    oTable.fnFilter('', 5, false);
-    oTable.fnFilter( regex, 5, true, false );
-    values = '';
-    $('#country_dropdown option:selected').each(function () {
-        values += $(this).text() + '|';
-    });
-    var regex = (values == '' ?  '': '^' + values.slice(0, -1) + '$');
-    oTable.fnFilter('', 6, false);
-    oTable.fnFilter( regex, 6, true, false );
-    values = '';
-    $('#organisation_dropdown option:selected').each(function () {
-        values += $(this).text() + '|';
-    });
-    var regex = (values == '' ?  '': '^' + values.slice(0, -1) + '$');
-    oTable.fnFilter('', 7, false);
-    oTable.fnFilter( regex, 7, true, false );
+            s3.jquery_ready.append('''
+function filterColumns(){
+ var oTable=$('#list').dataTable()
+ var values=''
+ $('#category_dropdown option:selected').each(function(){
+  values+=$(this).text()+'|'
+ })
+ var regex=(values==''?'':'^'+values.slice(0, -1)+'$')
+ oTable.fnFilter('',1,false)
+ oTable.fnFilter(regex,1,true,false)
+ values=''
+ $('#status_dropdown option:selected').each(function(){
+  if($(this).text()=="''' + T("On Order") + '''"){
+   values+=$(this).text()+'|'+"''' + T("Order") + '''.*"+'|'
+  }else if($(this).text()=="''' + T("Planned Procurement") + '''"){
+   values+="''' + T("Planned") + '''.*"+'|'
+  }else{
+   values+=$(this).text()+'|'+"''' + T("Stock") + '''.*"+'|'
+  }
+ })
+ var regex=(values==''?'':'^'+values.slice(0,-1)+'$')
+ oTable.fnFilter('',5,false)
+ oTable.fnFilter(regex,5,true,false)
+ values=''
+ $('#country_dropdown option:selected').each(function(){
+  values+=$(this).text()+'|'
+ })
+ var regex=(values==''?'':'^'+values.slice(0,-1)+'$')
+ oTable.fnFilter('',6,false)
+ oTable.fnFilter(regex,6,true,false)
+ values=''
+ $('#organisation_dropdown option:selected').each(function(){
+  values+=$(this).text()+'|'
+ })
+ var regex=(values==''? '':'^'+values.slice(0,-1)+'$')
+ oTable.fnFilter('',7,false)
+ oTable.fnFilter(regex,7,true,false)
 }
-$('#category_dropdown').change(function () {
-    filterColumns();
-    var values = [];
-    $('#category_dropdown option:selected').each(function () {
-        values.push( $(this).attr('name') );
-    });
-    if ( values.length ) {
-        $('#list_formats a').attr('href', function() {
-            var href = this.href.split('?')[0] + '?item_entity.item_id$item_category_id=' + values[0];
-            for ( i = 1; i <= (values.length - 1); i++ ) {
-                href = href + ',' + values[i]
-            }
-            return href;
-        });
-    } else {
-        $('#list_formats a').attr('href', function() {
-            return this.href.split('?')[0];
-        });
-    }
-});
-$('#status_dropdown').change(function () {
-    filterColumns();
-});
-$('#country_dropdown').change(function () {
-    filterColumns();
-});
-$('#organisation_dropdown').change(function () {
-    filterColumns();
-});""")
+$('#category_dropdown').change(function(){
+ filterColumns()
+ var values=[]
+ $('#category_dropdown option:selected').each(function(){
+  values.push($(this).attr('name'))
+ })
+ if(values.length){
+  $('#list_formats a').attr('href',function(){
+   var href=this.href.split('?')[0]+'?item_entity.item_id$item_category_id='+values[0]
+   for(i=1;i<=(values.length-1);i++){
+    href=href+','+values[i]
+   }
+   return href
+   })
+ }else{
+  $('#list_formats a').attr('href',function(){
+   return this.href.split('?')[0]
+  })
+ }
+})
+$('#status_dropdown').change(function(){
+ filterColumns()
+})
+$('#country_dropdown').change(function(){
+ filterColumns()
+})
+$('#organisation_dropdown').change(function(){
+ filterColumns()
+})''')
 
         return output
     s3.postp = postp

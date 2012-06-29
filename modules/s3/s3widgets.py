@@ -118,8 +118,6 @@ class S3HiddenWidget(StringWidget):
 class S3DateWidget(FormWidget):
     """
         Standard Date widget, but with a modified yearRange to support Birth dates
-
-        @ToDo: Fix for US-style date formats
     """
 
     def __init__(self,
@@ -384,6 +382,8 @@ class S3AutocompleteWidget(FormWidget):
                  module,
                  resourcename,
                  fieldname = "name",
+                 # REST filter
+                 filter = "",
                  link_filter = "",
                  post_process = "",
                  delay = 450,     # milliseconds
@@ -392,6 +392,7 @@ class S3AutocompleteWidget(FormWidget):
         self.module = module
         self.resourcename = resourcename
         self.fieldname = fieldname
+        self.filter = filter
         self.link_filter = link_filter
         self.post_process = post_process
         self.delay = delay
@@ -415,8 +416,8 @@ class S3AutocompleteWidget(FormWidget):
         dummy_input = "dummy_%s" % real_input
 
         # Script defined in static/scripts/S3/S3.js
-        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s',\"%s\",%s,%s)\n''' % \
-            (self.fieldname, self.module, self.resourcename, real_input,
+        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)\n''' % \
+            (self.fieldname, self.module, self.resourcename, real_input, self.filter,
              self.link_filter, self.post_process, self.delay, self.min_length)
 
         if value:
