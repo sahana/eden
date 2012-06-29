@@ -6207,10 +6207,15 @@ class S3TypeConverter:
         if isinstance(b, bool):
             return b
         if isinstance(b, basestring):
-            if b.lower() == "true":
+            if b.lower() in ("true", "1"):
                 return True
-            elif b.lower() == "false":
+            elif b.lower() in ("false", "0"):
                 return False
+        if isinstance(b, (int, long)):
+            if b == 0:
+                return False
+            else:
+                return True
         raise TypeError
 
     # -------------------------------------------------------------------------
