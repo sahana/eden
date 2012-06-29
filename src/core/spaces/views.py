@@ -61,7 +61,7 @@ from django.views.generic.create_update import delete_object
 from core.spaces.models import Space, Entity, Document, Event, Intent
 from apps.ecidadania.news.models import Post
 from core.spaces.forms import SpaceForm, DocForm, EventForm, \
-     EntityFormSet
+     EntityFormSet, RoleForm
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
@@ -391,7 +391,38 @@ class ListSpaces(ListView):
             return public_spaces | user_spaces
             
         return public_spaces
- 
+
+
+class EditRole(UpdateView):
+
+    """
+    This view allows the administrator to edit the roles for every user in the
+    platform.
+
+    .. versionadded: 0.1.5
+    """
+
+    form_class = RoleForm
+    model = Space
+    template_name = 'spaces/user_groups.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return '/spaces/' + self.space.name
+
+    def get_object(self):
+        cur_space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return cur_space
+
+    def get_context_data(self, **kwargs):
+        context = super(EditRole, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
+
+    @method_decorator(permission_required('spaces.edit_space'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditRole, self).dispatch(*args, **kwargs)
+
 
 #
 # DOCUMENTS VIEWS
@@ -482,6 +513,11 @@ class DeleteDocument(DeleteView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
+    @method_decorator(permission_required('spaces.delete_document'))
+    def dispatch(self, *args, **kwargs):
+        return super(DeleteDocument, self).dispatch(*args, **kwargs)
+
+
 
 class ListDocs(ListView):
 
@@ -497,18 +533,17 @@ class ListDocs(ListView):
     def get_queryset(self):
         place = get_object_or_404(Space, url=self.kwargs['space_url'])
         objects = Document.objects.all().filter(space=place.id).order_by('pub_date')
-        
-        if self.request.user.is_staff:
+
+        cur_user = self.request.user
+        if cur_user in place.admins or \
+           cur_user in place.mods or \
+           cur_user in place.users:
             return objects
         
         if self.request.user.is_anonymous():
             self.template_name = 'not_allowed.html'
             return objects
-        
-        for i in self.request.user.profile.spaces.all():
-            if i.url == place:
-                return objects
-        
+
         self.template_name = 'not_allowed.html'
         return objects
 
@@ -551,6 +586,10 @@ class AddEvent(FormView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
+    @method_decorator(permission_required('spaces.add_event'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddEvent, self).dispatch(*args, **kwargs)
+
 
 class ViewEvent(DetailView):
     
@@ -576,6 +615,10 @@ class ViewEvent(DetailView):
         context = super(ViewEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
+
+    @method_decorator(permission_required('spaces.view_event'))
+    def dispatch(self, *args, **kwargs):
+        return super(ViewEvent, self).dispatch(*args, **kwargs)
 
 
 class EditEvent(UpdateView):
@@ -627,8 +670,13 @@ class DeleteEvent(DeleteView):
         context = super(DeleteEvent, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
-        
-          
+
+    @method_decorator(permission_required('spaces.delete_event'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddEvent, self).dispatch(*args, **kwargs)
+
+
+
 class ListEvents(ListView):
 
     """
@@ -673,8 +721,6 @@ class ListPosts(ListView):
         
         if settings.DEBUG:
             messages.set_level(self.request, messages.DEBUG)
-            messages.debug(self.request, "Succesful query.")
-       
         return Post.objects.all().filter(space=place).order_by('-pub_date')
     
     def get_context_data(self, **kwargs):
