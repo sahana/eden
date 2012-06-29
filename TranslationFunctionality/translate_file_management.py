@@ -1,12 +1,203 @@
 #!/usr/bin/python
 
-import sys
 import os
+import sys
 import parser
 import symbol
 import token
+import csv
 
-class ParseFiles:
+class TranslateGetFiles:
+
+        def __init__(self):
+
+            """ Set up dictionary containing files on a module by module basis """    
+
+            self.d = {}
+	    self.rest_dirs = []
+            self.modlist = self.get_module_list()
+
+            for m in self.modlist:
+                self.d[m] = []
+			     
+            # List of files belonging to 'core' module           
+            self.d["core"] = []  
+
+            # List of 'special' files which contains strings from more than one module
+            self.d["special"] = []   
+
+            # Directories which are not required to be searched
+            self.rest_dirs = ["languages","deployment-templates","docs","tests","test", ".git", "TranslationFunctionality","private"]
+					       
+            
+        
+
+        #------------------------------------------------------------------------------------------------------------------------
+
+        def get_module_list(self):
+
+           """ Returns a list of modules using files in /eden/controllers/ as point of reference """	
+
+           mod = []
+	   base_path = os.path.abspath("../../")
+
+           cont_dir = os.path.join(base_path,"controllers")
+           mod_files = os.listdir(cont_dir)
+
+           for f in mod_files:
+               cur_file = os.path.join(cont_dir,f)
+               mod.append(f[:-3])
+
+           return mod
+        
+
+        #------------------------------------------------------------------------------------------------------------------------
+
+        def group_files(self,currentDir,curmod, vflag):
+
+           """ Recursive function to group the Eden files into respective modules """
+ 
+           currentDir = os.path.abspath(currentDir)
+           base_dir = os.path.basename(currentDir)
+
+           if base_dir in self.rest_dirs:    
+                return
+
+           # If current directory is '/eden/views', set vflag
+           if base_dir == "views":            
+              vflag=1
+      
+           files = os.listdir(currentDir)
+      
+           for f in files:
+               curFile = os.path.join(currentDir,f)
+               if os.path.isdir(curFile):
+
+                     # If the current directory is /eden/views, categorize files based on the directory name
+                     if base_dir=="views":
+                            self.group_files(curFile,os.path.basename(curFile),vflag)
+                     else:
+                            self.group_files(curFile,curmod,vflag)
+
+               elif (curFile.endswith("test.py") or curFile.endswith("tests.py")) == False:
+	         
+                     # If inside /eden/views, use parent directory name for categorization
+                     if vflag==1:          
+                        base = curmod
+
+                     # Categorize file as "special" as it contains strings belonging to various modules
+                     elif curFile.endswith("/eden/modules/eden/menus.py") or curFile.endswith("/eden/modules/s3cfg.py") or curFile.endswith("/eden/models/000_config.py"):
+                        base = "special"
+		     else:
+                        # Removing '.py'
+                        base = os.path.splitext(f)[0]   
+     
+                        # If file is inside /eden/modules/s3 directory and it contains "s3" as a prefix, remove that prefix to get the module name
+                        if base_dir == "s3" and "s3" in base:
+                           base = base[2:]
+
+                        # If file is inside /eden/models and file is of the type var_module.py, remove the "var_" prefix
+                        elif base_dir == "models" and "_" in base:
+                           base = base.split('_')[1]
+                  
+                     # If base refers to a module, append to corresponding list
+                     if base in self.d.keys():               
+		         self.d[base].append(curFile)
+                     # else append it to "core" files list
+		     else:
+		         self.d["core"].append(curFile)       
+     
+#==========================================================================================================================
+
+class TranslateAPI:
+
+        def __init__(self):
+           
+	   base_path = os.path.abspath("../../")
+           self.grp = TranslateGetFiles()
+           self.grp.group_files(base_path,'',0)
+            
+        #------------------------------------------------------------------
+
+        def get_modules(self):
+		return self.grp.modlist
+
+        #------------------------------------------------------------------
+
+        def get_files_by_module(self,module):
+
+            """ Return a list of files corresponding to an input module """
+        
+	    if module in self.grp.d.keys():
+                 return self.grp.d[module]
+	    else:
+                 print "Module '%s' doesn't exist!" %module
+	         return []
+        #--------------------------------------------------------------------
+
+        def get_strings_by_module(self,module):
+ 
+            """ Return a list of strings corresponding to an input module """
+         
+            if module in self.grp.d.keys():
+	        fileList = self.grp.d[module]
+	    else:
+                print "Module '%s' doesn't exist!" %module
+	        return []
+
+            strings = []
+	    tmpstr = []
+           
+            R = TranslateReadFiles()          
+ 
+	    for f in fileList:
+	     
+	         if f.endswith(".py") == True :
+                      
+	              tmpstr = R.findstr(f,"ALL",self.grp.modlist)
+		      for s in tmpstr:
+		          strings.append( ( f+":"+str(s[0]) , s[1]) ) 
+		      
+
+	
+            # Handling "special" files separately
+	    fileList = self.grp.d["special"]	  
+            for f in fileList:
+	         if f.endswith(".py") == True:
+                      
+                      tmpstr = R.findstr(f,module,self.grp.modlist) 
+	              for s in tmpstr:
+		          strings.append( (f+":"+str(s[0]), s[1]) )
+
+	    return strings
+
+        #----------------------------------------------------------------------------
+
+        def get_strings_by_file(self,filename):
+
+	    """ Return a list of strings in a given file """
+	
+	    if os.path.isfile(filename):
+	           filename = os.path.abspath(filename)
+	    else:
+	           print  "'%s' is not a valid file path!"%filename
+                   return []
+ 
+            R = TranslateReadFiles()
+            
+	    if filename.endswith(".py") == True:
+                    strings = []
+                    tmpstr = R.findstr(filename, "ALL", self.grp.modlist)
+                    for s in tmpstr:
+                       strings.append( (filename+":"+str(s[0]), s[1]) )
+                    return strings
+	    else:
+	            print "Please enter a '.py' file path"
+		    return []
+
+#==================================================================================================================
+
+class TranslateParseFiles:
 
 	""" Class to extract strings from files depending on the module and file """
 
@@ -26,7 +217,23 @@ class ParseFiles:
             self.mod_name = ''   # Denotes the module to which the string/data may belong
             self.findent = -1    # Denotes the indentation level of module specific functions in menus.py
         
-        #--------------------------------------------------------------------------------------------------------------------------    
+        #-------------------------------------------------------------------------------------------------------------------------- 
+        
+        def parseList(self,entry,tmpstr):
+        
+	  """ Recursive function to extract strings from a parse tree """
+
+          if isinstance(entry,list):
+              id = entry[0]
+              value = entry[1]
+              if isinstance(value,list):
+                   for element in entry:
+                        self.parseList(element,tmpstr)
+              else:
+                    if token.tok_name[id] == "STRING":
+                        tmpstr.append(value)
+
+        #--------------------------------------------------------------------------------------------------------------------------   
 
         def parseConfig(self,spmod,strings,entry,modlist):   
              
@@ -302,63 +509,108 @@ class ParseFiles:
 	                  elif token.tok_name[id] == "EQUAL" or token.tok_name[id] == "RPAR":
 	                      self.mflag = 0
 
-	       
-#===============================================================================================			      
-
-def findstr(fileName,spmod,modlist):
-
-    """
-      Using the Parse Tree to extract the strings to be translated based on 
-      fileName -> the file to be used for extraction
-      spmod -> the required module
-      modlist -> a list of all modules in Eden
-    """
-
-    try:
-        file = open(fileName)
-    except:
-        path = os.path.split(__file__)[0]
-        fileName = os.path.join(path,fileName)
-        try:
-            file = open(fileName)
-        except:
-            return
-    # Read all contents of file	    
-    fileContent = file.read()  
-    # Remove CL-RF and NOEOL characters
-    fileContent = fileContent.replace("\r","") + '\n'
-
-   
-    st = parser.suite(fileContent)
-    # Create a parse tree list for traversal	
-    stList = parser.st2list(st,line_info=1)  
     
-    # List which holds the extracted strings	
-    strings = []                            
 
-    P = ParseFiles()
+#============================================================================================================
+
+class TranslateReadFiles:
+
+        def findstr(self,fileName,spmod,modlist):
+
+            """
+            Using the Parse Tree to extract the strings to be translated based on 
+            fileName -> the file to be used for extraction
+            spmod -> the required module
+            modlist -> a list of all modules in Eden
+            """
+
+            try:
+                file = open(fileName)
+            except:
+                path = os.path.split(__file__)[0]
+                fileName = os.path.join(path,fileName)
+                try:
+                    file = open(fileName)
+                except:
+                    return
+            # Read all contents of file	    
+            fileContent = file.read()  
+            # Remove CL-RF and NOEOL characters
+            fileContent = fileContent.replace("\r","") + '\n'
+ 
+            P = TranslateParseFiles()
+               
+            st = parser.suite(fileContent)
+            # Create a parse tree list for traversal	
+            stList = parser.st2list(st,line_info=1)  
+    
+            # List which holds the extracted strings	
+            strings = []                            
       
-    if spmod == "ALL" :                    
-       # If all strings are to be extracted from the file, call ParseAll()
-       for element in stList:
-          P.parseAll(strings,element)
-    else:
+            if spmod == "ALL" :                    
+               # If all strings are to be extracted from the file, call ParseAll()
+               for element in stList:
+                  P.parseAll(strings,element)
+            else:
 
-      # Handling cases for special files which contain strings belonging to different modules
+              # Handling cases for special files which contain strings belonging to different modules
 
-      if fileName.endswith("/eden/modules/eden/menus.py") == True :     
-         for element in stList:
-            P.parseMenu(spmod,strings,element,0)
+              if fileName.endswith("/eden/modules/eden/menus.py") == True :     
+                 for element in stList:
+                    P.parseMenu(spmod,strings,element,0)
 
-      elif fileName.endswith("/eden/modules/s3cfg.py") == True:
-         for element in stList:
-            P.parseS3cfg(spmod,strings,element,modlist)
+              elif fileName.endswith("/eden/modules/s3cfg.py") == True:
+                 for element in stList:
+                    P.parseS3cfg(spmod,strings,element,modlist)
 
-      elif fileName.endswith("/eden/models/000_config.py") == True:
-         for element in stList:
-            P.parseConfig(spmod,strings,element,modlist)
+              elif fileName.endswith("/eden/models/000_config.py") == True:
+                 for element in stList:
+                    P.parseConfig(spmod,strings,element,modlist)
 
-    return strings   
+            return strings   
+
+        #-------------------------------------------------------------------------------------------
+        
+        def read_w2pfile(self,fileName):
+             
+	        """ Function to read a web2py language file and return a list of translation string pairs """
+	      
+                file = open(fileName)
+                fileContent = file.read()
+                fileContent = fileContent.replace("\r",'') + '\n'
+                tmpstr=[]
+
+                # Creating a parse tree list
+                st = parser.suite(fileContent)
+                stList = parser.st2list(st,line_info=1)
+
+                P = TranslateParseFiles()
+
+                for element in stList:
+	           P.parseList(element,tmpstr)
+
+	        strings = []
+                # Storing the strings as a (original string, translated string) tuple
+                for i in range(0,len(tmpstr)):
+                   if i%2 == 0:
+                     strings.append( (tmpstr[i],tmpstr[i+1]) )
+                return strings 
+
+        #---------------------------------------------------------------------------------------------  
+
+        def read_csvfile(self,fileName):
+       
+	        """ Function to read a csv file and return a list of rows """
+
+                data = []	
+                transReader = csv.reader(open(fileName, 'rb'))
+	        for row in transReader:
+	            data.append(row)
+	        return data
+
+        #-------------------------------------------------------------------------------------------------
+
+ 
+#END==========================================================================================================================      
 
 
-# END ==================================================================================

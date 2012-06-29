@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import unittest
-import group_mod
+import translate_file_management
 
 
 class TestTranslateFunctions(unittest.TestCase):
@@ -15,8 +15,6 @@ class TestTranslateFunctions(unittest.TestCase):
         def setUp(self):
 
 	   """ Add all expected results here """
-
-           group_mod.init() 
 
            # If a new module is added, it needs to appended to this list for the test to pass 
            self.expectedModuleList = [ 'admin',
@@ -62,7 +60,7 @@ class TestTranslateFunctions(unittest.TestCase):
                                        'xforms'
                                      ]
 	   
-	   base_dir = os.path.abspath('..')
+	   base_dir = os.path.abspath('../../')
 
            # Add all the expected files for a given module to this dictionary
 
@@ -137,7 +135,6 @@ class TestTranslateFunctions(unittest.TestCase):
 	                                                                         '"Great British Pounds"',
 	                                                                         '"Swiss Francs"',
 	                                                                         '"Sahana Eden Humanitarian Management Platform"',
-	                                                                         '"English"',
 	                                                                         '"none"',
 	                                                                         '"Christian"',
 	                                                                         '"Muslim"',
@@ -201,8 +198,8 @@ class TestTranslateFunctions(unittest.TestCase):
         def testGetModules(self):
 
 		""" Single test method to test the get_module_list() function """
-
-		mod = group_mod.get_module_list()
+                A = translate_file_management.TranslateAPI()
+		mod = A.get_modules()
 	        mod.sort()
 	        self.assertEqual(mod,self.expectedModuleList)
 
@@ -212,9 +209,9 @@ class TestTranslateFunctions(unittest.TestCase):
 
 	      """ Test method to test the get_files_by_module() function 
 	          for each module added to the dictionary in setUp method """
-
+              A = translate_file_management.TranslateAPI()
               for k in self.expectedFileList.keys(): 
-		files = group_mod.get_files_by_module(k)
+		files = A.get_files_by_module(k)
 		files.sort()
 		self.assertEqual(files,self.expectedFileList[k])
 
@@ -224,9 +221,9 @@ class TestTranslateFunctions(unittest.TestCase):
 
 	        """ Test method to test the get_strings_by_file() function 
 	          for each file added to the dictionary in setUp method """
-
+                A = translate_file_management.TranslateAPI()
 		for k in self.expectedStringList.keys():
-		    string_tuple = group_mod.get_strings_by_file(k)
+		    string_tuple = A.get_strings_by_file(k)
 		    strings=[]
                     for s in string_tuple:
 	                  strings.append(s[1])
