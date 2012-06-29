@@ -735,29 +735,48 @@ ul.x-tree-root-ct {
 }
 
 /* Search Form */
-.search_select_letter_label {
+.search_select_letter_label,
+.s3-grouped-checkboxes-widget-label {
     margin: 10px 0 0 7px;
     padding-left: 20px;
     background: url(../../img/icon_blue_plus15px.png) no-repeat;
     cursor: pointer;
 }
-.search_select_letter_label.expanded {
+.search_select_letter_label.expanded,
+.s3-grouped-checkboxes-widget-label.expanded {
     background: url(../../img/icon_blue_minus15px.png) no-repeat;
 }
-.search_select_letter_widget {
+
+.search_select_letter_widget,
+.s3-grouped-checkboxes-widget .s3-checkboxes-widget {
     margin-left: 2em;
 }
-.search_select_letter_widget label {
+
+.search_select_letter_widget label,
+.s3-checkboxes-widget label {
     white-space: nowrap;
 }
+/* Checkboxes with title attributes */
+/*
+.checkbox-tooltip {
+    border-bottom: 1px dotted black;
+}
+.checkbox-tooltip:after {
+    content: " ?";
+}
+*/
 /* when S3SearchOptionsWidget has nothing to show */
 .no-options-available {
     color: #aaa;
     font-style: italic;
 }
 
-.checkboxes-widget-s3 input {
+.checkboxes-widget-s3 input,
+.s3-checkboxes-widget input {
     float: left;
+}
+.s3-checkboxes-widget-filter input {
+    vertical-align: middle;
 }
 
 .widget-org-hierarchy-menu {

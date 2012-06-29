@@ -179,11 +179,12 @@ class S3ProjectModel(S3Model):
                                                                          sort=True,
                                                                          multiple=True)),
                                          represent = lambda opt, row=None: \
-                                            multiref_represent(opt, "project_theme"),
+                                             multiref_represent(opt, "project_theme"),
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
-                                            CheckboxesWidgetS3.widget(f, v,
-                                                                      cols=3)
+                                             s3_grouped_checkboxes_widget(f, v,
+                                                                          cols=3,
+                                                                          help_field="comments")
                                         )
 
         # Projects
@@ -222,11 +223,12 @@ class S3ProjectModel(S3Model):
                                                                           sort=True,
                                                                           multiple=True)),
                                           represent = lambda opt, row=None: \
-                                            multiref_represent(opt, "project_hazard"),
+                                              multiref_represent(opt, "project_hazard"),
                                           ondelete = "RESTRICT",
-                                          widget = lambda f, v: \
-                                            CheckboxesWidgetS3.widget(f, v,
-                                                                      cols=3)
+                                          widget=lambda f, v: \
+                                              s3_grouped_checkboxes_widget(f, v,
+                                                                           cols=3,
+                                                                           help_field="comments")
                                           )
 
         # ---------------------------------------------------------------------
@@ -392,6 +394,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_hazard",
                         label = T("Hazard"),
                         field = "multi_hazard_id",
+                        help_field="comments",
                         cols = 4
                     ))
         if not theme_percentages:
@@ -399,6 +402,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_theme",
                         label = T("Theme"),
                         field = "multi_theme_id",
+                        help_field="comments",
                         cols = 4
                     ))
         if mode_drr:
@@ -1138,7 +1142,7 @@ class S3Project3WModel(S3Model):
 
         messages = current.messages
         NONE = messages.NONE
-        
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
@@ -1565,7 +1569,7 @@ class S3Project3WModel(S3Model):
         lh = current.gis.get_location_hierarchy()
         lh = [(lh[opt], opt) for opt in lh]
         report_fields.extend(lh)
-        
+
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1590,14 +1594,14 @@ class S3Project3WModel(S3Model):
                                                  limitby=(0, 1)).first()
             end_year = max(p_end_date_max.end_date,
                            pb_end_date_max.end_date).year
-            
+
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}
             for year in xrange(start_year, end_year + 1):
                 years[year] = year
             return years
-        
+
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1980,7 +1984,7 @@ def project_location_represent(id, row=None):
     """
     """
 
-    return current.s3db.gis_location_lx_represent( 
+    return current.s3db.gis_location_lx_represent(
                s3_get_db_field_value(tablename = "project_location",
                                      fieldname = "location_id",
                                      look_up_value = id)
@@ -3847,7 +3851,7 @@ class S3ProjectBeneficiaryVirtualFields:
         if not start_date or not end_date:
             return [start_date.year or end_date.year]
         return [year for year in xrange(start_date.year,end_date.year+1)]
-        
+
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:
