@@ -613,6 +613,7 @@ def person_search():
     """
 
     s3mgr.configure("hrm_human_resource",
+                    # S3HRSearch
                     search_method = s3db.hrm_autocomplete_search,
                    )
     s3.prep = lambda r: r.representation == "json" and \

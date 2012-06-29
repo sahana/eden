@@ -376,7 +376,7 @@ $(document).ready(function() {
                       )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     inv_item_id = inv_item_id,
@@ -1261,7 +1261,7 @@ $(document).ready(function() {
                   )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(inv_track_item_deleting = self.inv_track_item_deleting,
                        inv_get_shipping_code = self.inv_get_shipping_code,

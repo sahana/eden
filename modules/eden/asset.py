@@ -492,7 +492,7 @@ $(document).ready(function() {
                    )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     asset_asset_id = asset_id,

@@ -120,7 +120,7 @@ class S3DVRModel(S3Model):
                     )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

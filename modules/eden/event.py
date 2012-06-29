@@ -283,7 +283,7 @@ class S3EventModel(S3Model):
 
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 event_event_id = event_id,
@@ -565,7 +565,7 @@ class S3EventAssetModel(S3Model):
             msg_list_empty = T("No Assets currently registered in this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -614,7 +614,7 @@ class S3EventHRModel(S3Model):
             msg_list_empty = T("No Human Resources currently assigned to this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -663,7 +663,7 @@ class S3EventIReportModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered in this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -709,7 +709,7 @@ class S3EventMapModel(S3Model):
             msg_list_empty = T("No Map Configurations currently registered in this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -758,7 +758,7 @@ class S3EventSiteModel(S3Model):
             msg_list_empty = T("No Facilities currently registered in this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -812,7 +812,7 @@ class S3EventTaskModel(S3Model):
             msg_list_empty = T("No Tasks currently registered in this event"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

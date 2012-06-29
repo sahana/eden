@@ -150,7 +150,7 @@ class S3FloodModel(S3Model):
         #                           ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

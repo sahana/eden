@@ -14,14 +14,14 @@ s3db.hrm_vars()
 
 # =============================================================================
 def index():
-    """ Dashboard """
+    """ Module Home Page """
 
     mode = session.s3.hrm.mode
     if mode is not None:
         # Go to Personal Profile
         redirect(URL(f="person"))
     else:
-        # Bypass home page & go direct to searchable list of Volunteers
+        # Bypass home page & go direct to searchable list of Staff
         redirect(URL(f="staff", args="search"))
 
 # =============================================================================
@@ -537,6 +537,7 @@ def person_search():
     """
 
     s3mgr.configure("hrm_human_resource",
+                    # S3HRSearch
                     search_method = s3db.hrm_autocomplete_search,
                    )
     s3.prep = lambda r: r.representation == "json" and \
