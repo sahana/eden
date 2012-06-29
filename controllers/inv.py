@@ -10,7 +10,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -20,8 +20,8 @@ def index():
         - custom View
     """
 
-    # Load models
-    s3mgr.load("cr_shelter") # Need CRUD String
+    # Need CRUD String
+    table = s3db.table("cr_shelter", None)
 
     module_name = deployment_settings.modules[module].name_nice
     response.title = module_name
@@ -616,7 +616,8 @@ def send():
 
 # ==============================================================================
 def prepare_commit():
-    """ RESTful CRUD controller """
+    """
+    """
 
     # Get the commit record
     try:
@@ -797,7 +798,9 @@ def send_returns():
                  args = [send_id, "track_item"]))
 # -----------------------------------------------------------------------------
 def return_process():
-    """ Return some stock from a shipment back into the warehouse """
+    """
+        Return some stock from a shipment back into the warehouse
+    """
 
     send_id = request.args[0]
     invtable = s3db.inv_inv_item
@@ -1049,7 +1052,7 @@ def recv():
                             deletable=False,
                            )
         if r.component:
-            # if we have a component then set the track_item attributes
+            # Set the track_item attributes
             # Can only create or delete track items for a recv record if the status is preparing
             if r.method == "create" or r.method == "delete":
                 if record.status != SHIP_STATUS_IN_PROCESS:
@@ -1059,19 +1062,22 @@ def recv():
                 set_track_attr(track_record.status)
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
-
+                tracktable.status.readable = False
 
             if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
                 s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
         else:
-            # else set the recv attributes
+            # Set the recv attributes
             if r.id:
                 record = recvtable[r.id]
                 set_recv_attr(record.status)
             else:
                 set_recv_attr(SHIP_STATUS_IN_PROCESS)
                 recvtable.recv_ref.readable = False
+                if r.method and r.method != "read":
+                    # Don't want to see in Create forms
+                    recvtable.status.readable = False
         return True
     s3.prep = prep
 
@@ -1490,6 +1496,7 @@ def adj():
                     record = aitable[r.component_id]
                     if record.inv_item_id:
                         aitable.item_id.writable = False
+                        aitable.item_id.comment = None
                         aitable.item_pack_id.writable = False
             else:
                 # if an adjustment has been selected and it has been completed
@@ -1555,8 +1562,8 @@ def adj_close():
             (aitable.deleted == False)
     adj_items = db(query).select()
     for adj_item in adj_items:
-        # if we don't have a stock item then create it
         if adj_item.inv_item_id == None:
+            # Create a new stock item
             inv_item_id = inv_item_table.insert(site_id = adj_rec.site_id,
                                                 item_id = adj_item.item_id,
                                                 item_pack_id = adj_item.item_pack_id,
@@ -1567,10 +1574,10 @@ def adj_close():
                                                 quantity = adj_item.new_quantity,
                                                 owner_org_id = adj_item.old_owner_org_id,
                                                )
-            # and add the inventory item id to the adjustment record
+            # Add the inventory item id to the adjustment record
             db(aitable.id == adj_item.id).update(inv_item_id = inv_item_id)
-        # otherwise copy the details to the stock item
-        else:
+        elif adj_item.new_quantity is not None:
+            # Update the existing stock item
             db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
                                                                  bin = adj_item.bin,
                                                                  pack_value = adj_item.pack_value,
@@ -1584,16 +1591,17 @@ def adj_close():
     # Go to the Inventory of the Site which has adjusted these items
     (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
                                                           adj_rec.site_id)
-    query = (otable.id == id)
-    otype = db(query).select(otable.type, limitby = (0, 1)).first()
-    if otype and otype.type == 5:
-        url = URL(c = "inv",
-                 f = "warehouse",
-                 args = [id, "inv_item"])
-    else:
-        url = URL(c = "org",
-                 f = "office",
-                 args = [id, "inv_item"])
+    if resourcename == "office":
+        query = (otable.id == id)
+        otype = db(query).select(otable.type, limitby=(0, 1)).first()
+        if otype and otype.type == 5:
+            prefix = "inv"
+            resourcename = "warehouse"
+
+    url = URL(c = prefix,
+              f = resourcename,
+              args = [id, "inv_item"])
+
     redirect(url)
 
 # =============================================================================

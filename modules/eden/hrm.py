@@ -3808,7 +3808,7 @@ def hrm_rheader(r, tabs=[]):
                 address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    (T("Identity"), "identity"),
+                    (T("ID"), "identity"),
                     (T("Education"), "education"),
                     (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
@@ -3880,8 +3880,6 @@ def hrm_rheader(r, tabs=[]):
         rheader = DIV(TABLE(
                             TR(TH("%s: " % table.name.label),
                                record.name),
-                            TR(TH("%s: " % table.code.label),
-                               record.code),
                             ),
                       rheader_tabs)
 

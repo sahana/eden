@@ -1736,23 +1736,9 @@ $('#%s').live('click',function(){
             @param attr: request attributes
         """
 
-        db = current.db
-        s3db = current.s3db
-        manager = current.manager
-        xml = manager.xml
-
-        request = self.request
-        response = current.response
-
-        resource = self.resource
-        table = self.table
-        tablename = self.tablename
-
-        _vars = request.vars
-
-        limit = int(_vars.limit or 0)
-
         output = None
+
+        _vars = self.request.vars
 
         # JQueryUI Autocomplete uses "term" instead of "value"
         # (old JQuery Autocomplete uses "q" instead of "value")
@@ -1763,12 +1749,18 @@ $('#%s').live('click',function(){
         value = value.lower().strip()
 
         if _vars.field and _vars.filter and value:
+            s3db = current.s3db
+            resource = self.resource
+            table = self.table
+
+            limit = int(_vars.limit or 0)
+
             fieldname = str.lower(_vars.field)
             field = table[fieldname]
 
             # Default fields to return
             fields = [table.id, field]
-            if tablename == "org_site":
+            if self.tablename == "org_site":
                 # Simpler to provide an exception case than write a whole new class
                 table = s3db.org_site
                 fields.append(table.instance_type)
@@ -1794,9 +1786,10 @@ $('#%s').live('click',function(){
                 query = (field > value)
 
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~, =, <, >")
+                output = current.manager.xml.json_message(
+                            False,
+                            400,
+                            "Unsupported filter! Supported filters: ~, =, <, >")
                 raise HTTP(400, body=output)
 
             # Exclude records which are already linked:
@@ -1808,7 +1801,7 @@ $('#%s').live('click',function(){
                     linktable = s3db[link]
                     fq = (linktable[rkey] == table[fkey]) & \
                          (linktable[lkey] == _id)
-                    linked = db(fq).select(table._id)
+                    linked = current.db(fq).select(table._id)
                     exclude = (~(table._id.belongs([r[table._id.name]
                                                     for r in linked])))
                 except Exception, e:
@@ -1849,7 +1842,8 @@ $('#%s').live('click',function(){
             resource.add_filter(query)
 
             if filter == "~":
-                if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+                if (not limit or limit > MAX_SEARCH_RESULTS) and \
+                   resource.count() > MAX_SEARCH_RESULTS:
                     output = jsons([dict(id="",
                                          name="Search results are over %d. Please input more characters." \
                                          % MAX_SEARCH_RESULTS)])
@@ -1860,12 +1854,13 @@ $('#%s').live('click',function(){
                                                 limit=limit,
                                                 fields=fields,
                                                 orderby=field)
-            response.headers["Content-Type"] = "application/json"
+            current.response.headers["Content-Type"] = "application/json"
 
         else:
-            output = xml.json_message(False,
-                                      400,
-                                      "Missing options! Require: field, filter & value")
+            output = current.manager.xml.json_message(
+                        False,
+                        400,
+                        "Missing options! Require: field, filter & value")
             raise HTTP(400, body=output)
 
         return output
@@ -2566,11 +2561,11 @@ class S3HRSearch(S3Search):
                              (field3.lower().like(value2 + "%"))))
                 else:
                     value = value.strip()
-                    query = (table.organisation_id == otable.id) & \
-                            (table.person_id == ptable.id) & \
-                            ((field.lower().like(value + "%")) | \
-                             (field2.lower().like(value + "%")) | \
-                             (field3.lower().like(value + "%")))
+                    query = (S3FieldSelector("organisation.id") == S3FieldSelector("human_resource.organisation_id")) & \
+                            (S3FieldSelector("person.id") == S3FieldSelector("human_resource.person_id")) & \
+                            ((S3FieldSelector("person.first_name").lower().like(value + "%")) | \
+                             (S3FieldSelector("person.middle_name").lower().like(value + "%")) | \
+                             (S3FieldSelector("person.last_name").lower().like(value + "%")))
 
             else:
                 output = current.manager.xml.json_message(

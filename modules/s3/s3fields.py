@@ -77,8 +77,6 @@ class FieldS3(Field):
 
         If Server Side Pagination is on, the proper CAST is needed to
         match the lookup table id
-
-        @author: sunneach
     """
 
     def __init__(self, fieldname,
@@ -142,8 +140,6 @@ class QueryS3(Query):
 
         If Server Side Pagination is on, the proper CAST is needed to match
         the string-typed id to lookup table id
-
-        @author: sunneach
     """
 
     def __init__(self, left, op=None, right=None):
@@ -161,8 +157,6 @@ class S3ReusableField(object):
         This creates neither a Table nor a Field, but just
         an argument store. The field is created with the __call__
         method, which is faster than copying an existing field.
-
-        @author: Dominic König
     """
 
     def __init__(self, name, type="string", **attr):
@@ -750,13 +744,14 @@ def s3_comments(name="comments", **attr):
 
     T = current.T
     if "label" not in attr:
-        label = T("Comments")
+        attr["label"] = T("Comments")
     if "widget" not in attr:
-        widget = s3_comments_widget
+        attr["widget"] = s3_comments_widget
     if "comment" not in attr:
-        comment = DIV(_class="tooltip",
-                      _title="%s|%s" % (T("Comments"),
-                                        T("Please use this field to record any additional information, including a history of the record if it is updated.")))
+        attr["comment"] = DIV(_class="tooltip",
+                              _title="%s|%s" % \
+            (T("Comments"),
+             T("Please use this field to record any additional information, including a history of the record if it is updated.")))
 
     f = S3ReusableField(name, "text",
                         **attr)
@@ -776,17 +771,17 @@ def s3_currency(name="currency", **attr):
     settings = current.deployment_settings
 
     if "label" not in attr:
-        label = current.T("Currency")
+        attr["label"] = current.T("Currency")
     if "default" not in attr:
-        default = settings.get_fin_currency_default()
+        attr["default"] = settings.get_fin_currency_default()
     if "requires" not in attr:
         currency_opts = settings.get_fin_currencies()
-        requires = IS_IN_SET(currency_opts.keys(),
-                             zero=None)
+        attr["requires"] = IS_IN_SET(currency_opts.keys(),
+                                     zero=None)
     if "writable" not in attr:
-         writable = settings.get_fin_currency_writable()
+         attr["writable"] = settings.get_fin_currency_writable()
 
-    f = S3ReusableField(name, length = 3,
+    f = S3ReusableField(name, length=3,
                         **attr)
     return f()
 
