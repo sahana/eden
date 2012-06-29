@@ -3286,7 +3286,7 @@ def s3_richtext_widget(field, value):
 
 # =============================================================================
 def s3_grouped_checkboxes_widget(field,
-                                 value,
+                                 field_value,
                                  size=20,
                                  **attributes):
     """
@@ -3383,7 +3383,7 @@ def s3_grouped_checkboxes_widget(field,
                                                  multiple=True)
 
                 letter_widget = s3_checkboxes_widget(group_field,
-                                                     value,
+                                                     field_value,
                                                      start_at_id=input_index,
                                                      **attributes)
 
@@ -3399,7 +3399,7 @@ def s3_grouped_checkboxes_widget(field,
         # not enough options to form groups
 
         try:
-            widget = s3_checkboxes_widget(field, value, **attributes)
+            widget = s3_checkboxes_widget(field, field_value, **attributes)
         except:
             # some versions of gluon/sqlhtml.py don't support non-integer keys
             if s3_debug:
@@ -3489,7 +3489,7 @@ def s3_checkboxes_widget(field,
 
 
     options = [(k, v) for k, v in options if k != ""]
-    options = sorted(options, key=lambda option: unicode(option[1]).lower())
+    options = sorted(options, key=lambda option: str(option[1]).lower())
 
     input_index = start_at_id
     rows = []

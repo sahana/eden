@@ -45,13 +45,14 @@ except ImportError:
 
 from gluon import current
 from gluon.html import *
+from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate, s3_is_foreign_key
-from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
+from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER, IS_IN_SET
 
 
 # =============================================================================
@@ -170,11 +171,9 @@ class S3Cube(S3CRUD):
                 form.accepts(form_values,
                              session,
                              formname="report",
-                             keepvalues=True,
                              onvalidation=self._process_report_options) or \
                 form.accepts(form_values,
                              formname="report",
-                             keepvalues=True,
                              onvalidation=self._process_report_options):
 
                 # The form is valid so save the form values into the session
@@ -357,11 +356,17 @@ class S3Cube(S3CRUD):
         report_fact = report_options.get("facts", list_fields)
 
         _select_field = self._select_field
-        select_rows = _select_field(report_rows, _id="report-rows", _name="rows",
+        select_rows = _select_field(report_rows,
+                                    _id="report-rows",
+                                    _name="rows",
                                     form_values=form_values)
-        select_cols = _select_field(report_cols, _id="report-cols", _name="cols",
+        select_cols = _select_field(report_cols,
+                                    _id="report-cols",
+                                    _name="cols",
                                     form_values=form_values)
-        select_fact = _select_field(report_fact, _id="report-fact", _name="fact",
+        select_fact = _select_field(report_fact,
+                                    _id="report-fact",
+                                    _name="fact",
                                     form_values=form_values)
 
         # totals are "on" or True by default
@@ -514,25 +519,25 @@ class S3Cube(S3CRUD):
         """
 
         resolve = self.resource.resolve_selectors
-        value = None
-        if current.request.env.request_method == "GET":
-            if "_name" in attr:
-                name = attr["_name"]
-                if form_values and name in form_values:
-                    value = form_values[name]
+
+        name = attr["_name"]
+        if form_values:
+            value = form_values.get(name, "")
+        else:
+            value = ""
+
         table = self.table
         lfields, joins, left, distinct = resolve(list_fields)
-        options = [OPTION(f.label,
-                          _value=f.selector,
-                          _selected= value == f.selector and "selected" or None)
-                   for f in lfields
-                    if (f.field is None or f.field.name != table._id.name) and f.show]
-        if len(options) and len(options) < 2:
-            options[0].update(_selected="selected")
-        else:
-            options.insert(0, OPTION("", _value=None))
-        select = SELECT(options, **attr)
-        return select
+
+        options = []
+        for f in lfields:
+            if (f.field is None or f.field.name != table._id.name) and f.show:
+                options.append((f.selector, f.label))
+
+        dummy_field = Storage(name=name,
+                              requires=IS_IN_SET(options))
+
+        return OptionsWidget.widget(dummy_field, value, **attr)
 
     # -------------------------------------------------------------------------
     def _select_method(self, methods, form_values=None, **attr):
@@ -550,20 +555,22 @@ class S3Cube(S3CRUD):
                        if m in supported_methods]
         else:
             methods = supported_methods.items()
+
+        name = attr["_name"]
+
         if form_values:
-            selected = form_values["aggregate"]
+            value = form_values[name]
         else:
-            selected = None
-        options = [OPTION(m[1],
-                          _value=m[0],
-                          _selected= m[0] == selected and "selected" or None)
-                   for m in methods]
-        if len(options) < 2:
-            options[0].update(_selected="selected")
-        else:
-            options.insert(0, OPTION("", _value=None))
-        select = SELECT(options, **attr)
-        return select
+            value = None
+
+        options = []
+        for method, label in methods:
+            options.append((method, label))
+
+        dummy_field = Storage(name=name,
+                              requires=IS_IN_SET(options))
+
+        return OptionsWidget.widget(dummy_field, value, **attr)
 
     # -------------------------------------------------------------------------
     @staticmethod

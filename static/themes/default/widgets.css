@@ -775,6 +775,9 @@ ul.x-tree-root-ct {
 .s3-checkboxes-widget input {
     float: left;
 }
+.s3-checkboxes-widget-filter input {
+    vertical-align: middle;
+}
 
 .widget-org-hierarchy-menu {
     overflow:auto;

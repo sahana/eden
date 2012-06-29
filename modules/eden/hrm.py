@@ -92,7 +92,7 @@ class S3HRModel(S3Model):
 
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
-        
+
         crud_strings = s3.crud_strings
 
         # =========================================================================
@@ -362,7 +362,7 @@ class S3HRModel(S3Model):
         else:
             # Being added as a component to Org, Site or Project
             hrm_url = None
-        
+
         self.configure(tablename,
                     super_entity = "sit_trackable",
                     deletable = settings.get_hrm_deletable(),
@@ -660,7 +660,7 @@ class S3HRJobModel(S3Model):
         else:
             label_create = T("Add New Job Role")
             tooltip = T("Add a new job role to the catalog.")
-        
+
         s3.crud_strings[tablename] = Storage(
             title_create = T("Add Job Role"),
             title_display = T("Job Role Details"),
@@ -3940,7 +3940,7 @@ def hrm_training_controller():
     T = current.T
     session = current.session
     s3 = session.s3
-    
+
     system_roles = session.s3.system_roles
     ADMIN = system_roles.ADMIN
 

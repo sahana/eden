@@ -588,7 +588,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                                 in rows
                                                 if row[field_name] != None]
 
-            if opt_values == []:
+            if len(opt_values) < 2:
                 msg = self.attr.get("_no_opts", T("No options available"))
                 return SPAN(msg, _class="no-options-available")
 
@@ -633,14 +633,40 @@ class S3SearchOptionsWidget(S3SearchWidget):
             options = dict(opt_list)
 
         # Dummy field
-        opt_field = Storage(name=self.name,
-                            type=field_type,
-                            requires=IS_IN_SET(options,
-                                               multiple=True))
+        dummy_field = Storage(name=self.name,
+                              type=field_type,
+                              requires=IS_IN_SET(options,
+                                                 multiple=True))
 
-        return s3_grouped_checkboxes_widget(opt_field,
-                                            value,
-                                            **self.attr)
+        # on many-to-many fields the user can search for records containing
+        # all the options or any of the options.
+        if len(options) > 1 and field_type[:4] == "list":
+            self.filter_type = vars.get("%s_filter" % self.name, "any")
+            any_all = DIV(
+                T("Filter type "),
+                INPUT(_name="%s_filter" % self.name,
+                      _id="%s_filter_all" % self.name,
+                      _type="radio",
+                      _value="all",
+                      value=self.filter_type),
+                LABEL(T("All"),
+                      _for="%s_filter_all" % self.name),
+                INPUT(_name="%s_filter" % self.name,
+                      _id="%s_filter_any" % self.name,
+                      _type="radio",
+                      _value="any",
+                      value=self.filter_type),
+                LABEL(T("Any"),
+                      _for="%s_filter_any" % self.name),
+                _class="s3-checkboxes-widget-filter"
+            )
+        else:
+            any_all = ""
+
+        return TAG[""](any_all,
+                       s3_grouped_checkboxes_widget(dummy_field,
+                                                    value,
+                                                    **self.attr))
 
     # -------------------------------------------------------------------------
     def query(self, resource, value):
@@ -663,7 +689,18 @@ class S3SearchOptionsWidget(S3SearchWidget):
             # What do we do if we need to search within a virtual field
             # that is a list:* ?
             if table_field and str(table_field.type).startswith("list"):
-                query = S3FieldSelector(self.field).contains(value)
+                query = None
+
+                if self.filter_type == "all":
+                    for v in value:
+                        q = S3FieldSelector(self.field).contains(v)
+
+                        if query:
+                            query &= q
+                        else:
+                            query = q
+                else:
+                    query = S3FieldSelector(self.field).contains(value)
             else:
                 query = S3FieldSelector(self.field).belongs(value)
 
@@ -1483,8 +1520,7 @@ $('#%s').live('click',function(){
         simple = simple_form is not None
         if simple_form is not None:
             if simple_form.accepts(form_values,
-                                   formname="search_simple",
-                                   keepvalues=True):
+                                   formname="search_simple"):
                 for name, widget in self.simple:
                     query, errors = self._build_widget_query(self.resource,
                                                              name,
@@ -1505,8 +1541,7 @@ $('#%s').live('click',function(){
         # Process the advanced search form:
         if advanced_form is not None:
             if advanced_form.accepts(form_values,
-                                     formname="search_advanced",
-                                     keepvalues=True):
+                                     formname="search_advanced"):
                 simple = False
                 for name, widget in self.advanced:
                     query, errors = self._build_widget_query(self.resource,
