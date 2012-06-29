@@ -5481,6 +5481,10 @@ class S3FieldSelector:
         return S3ResourceQuery(S3ResourceQuery.CONTAINS, self, value)
 
     # -------------------------------------------------------------------------
+    def anyof(self, value):
+        return S3ResourceQuery(S3ResourceQuery.ANYOF, self, value)
+
+    # -------------------------------------------------------------------------
     def lower(self):
         self.op = self.LOWER
         return self
@@ -5595,8 +5599,11 @@ class S3ResourceQuery:
     LIKE = "like"
     BELONGS = "belongs"
     CONTAINS = "contains"
+    ANYOF = "anyof"
 
-    OPERATORS = [NOT, AND, OR, LT, LE, EQ, NE, GE, GT, LIKE, BELONGS, CONTAINS]
+    OPERATORS = [NOT, AND, OR,
+                 LT, LE, EQ, NE, GE, GT,
+                 LIKE, BELONGS, CONTAINS, ANYOF]
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
@@ -5788,6 +5795,8 @@ class S3ResourceQuery:
 
         if op == self.CONTAINS:
             q = l.contains(r, all=True)
+        elif op == self.ANYOF:
+            q = l.contains(r, all=False)
         elif op == self.BELONGS:
             if type(r) is list and None in r:
                 _r = [item for item in r if item is not None]
@@ -5930,6 +5939,16 @@ class S3ResourceQuery:
         if op == self.CONTAINS:
             r = convert(l, r)
             result = contains(l, r)
+        elif op == self.ANYOF:
+            if not isinstance(r, (list, tuple)):
+                r = [r]
+            for v in r:
+                if isinstance(l, (list, tuple, basestring)):
+                    if contains(l, r):
+                        return True
+                elif l == r:
+                    return True
+            return False
         elif op == self.BELONGS:
             r = convert(l, r)
             result = contains(r, l)
