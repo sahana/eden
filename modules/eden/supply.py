@@ -858,7 +858,7 @@ S3FilterFieldChange({
                   search_method = item_entity_search)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 supply_item_id = supply_item_id,

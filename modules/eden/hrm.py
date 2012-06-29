@@ -250,7 +250,7 @@ class S3HRModel(S3Model):
                                             represent = hrm_human_resource_represent,
                                             label = T("Human Resource"),
                                             comment = T("Enter some characters to bring up a list of possible matches"),
-                                            widget = S3PersonAutocompleteWidget("hrm"),
+                                            widget = S3HumanResourceAutocompleteWidget(),
                                             ondelete = "RESTRICT"
                                             )
 

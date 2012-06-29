@@ -461,7 +461,7 @@ $(function() {
                       req_req="req_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 req_req_id = req_id,
@@ -1030,7 +1030,7 @@ $(document).ready(function() {
                                     ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 req_item_id = req_item_id,
@@ -1283,7 +1283,7 @@ class S3RequestSkillModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 
@@ -1423,7 +1423,7 @@ class S3CommitModel(S3Model):
                            req_commit="commit_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     req_commit_id = commit_id,
@@ -1572,7 +1572,7 @@ class S3CommitItemModel(S3Model):
                        onaccept = self.commit_item_onaccept )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 # Used by commit_req() controller
@@ -1670,7 +1670,7 @@ class S3CommitPersonModel(S3Model):
         #                onaccept = self.commit_person_onaccept)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

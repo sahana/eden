@@ -201,7 +201,7 @@ class S3SecurityModel(S3Model):
             msg_list_empty = T("No Security-Related Staff currently registered"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

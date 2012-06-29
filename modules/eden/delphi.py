@@ -335,7 +335,7 @@ class S3DelphiModel(S3Model):
                                     "modified_on"])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         return Storage(
                         delphi_solution_represent = self.solution_represent
                     )

@@ -325,7 +325,7 @@ class S3CampDataModel(S3Model):
                                      "person_id",
                                     ])
 
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         return Storage( ADD_SHELTER = ADD_SHELTER,
                         SHELTER_LABEL = SHELTER_LABEL
                         )

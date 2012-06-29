@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    RESTful Search Methods
+""" RESTful Search Methods
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
@@ -31,7 +30,6 @@
 """
 
 import re
-import cPickle
 
 try:
     import json # try stdlib (Python 2.6)
@@ -1099,6 +1097,7 @@ class S3Search(S3CRUD):
         if len(db(table.user_id == user_id).select(table.id,
                                                    limitby=(0, 1))):
             rows = db(table.user_id == user_id).select(table.ALL)
+            import cPickle
             for row in rows:
                 pat = "_"
                 s_v = cPickle.loads(row.search_vars)
@@ -1140,19 +1139,19 @@ class S3Search(S3CRUD):
                    args=["search"], vars=s_var)
         save_search_script = '''
 $('#%s').live('click',function(){
- $('#%s').show();
- $('#%s').hide();
+ $('#%s').show()
+ $('#%s').hide()
  $.ajax({
-  url: '%s',
-  data: '%s',
-  success: function(data) {
-   $('#%s').show();
-   $('#%s').hide();
+  url:'%s',
+  data:'%s',
+  success:function(data){
+   $('#%s').show()
+   $('#%s').hide()
   },
-  type: 'POST'
- });
- return false;
-});
+  type:'POST'
+ })
+ return false
+})
 ''' % (save_search_btn_id,
        save_search_processing_id,
        save_search_btn_id,
@@ -1191,7 +1190,6 @@ $('#%s').live('click',function(){
         db = current.db
         s3db = current.s3db
         gis = current.gis
-        manager = current.manager
         table = self.table
         tablename = self.tablename
 
@@ -1238,13 +1236,15 @@ $('#%s').live('click',function(){
         if "load" in r.get_vars:
             search_id = r.get_vars.get("load", None)
             if not search_id:
-                r.error(400, manager.ERROR.BAD_RECORD)
+                r.error(400, current.manager.ERROR.BAD_RECORD)
             r.post_vars = r.vars
             search_table = s3db.pr_save_search
             _query = (search_table.id == search_id)
-            record = db(_query).select(limitby=(0, 1)).first()
+            record = db(_query).select(record.search_vars,
+                                       limitby=(0, 1)).first()
             if not record:
-                r.error(400, manager.ERROR.BAD_RECORD)
+                r.error(400, current.manager.ERROR.BAD_RECORD)
+            import cPickle
             s_vars = cPickle.loads(record.search_vars)
             r.post_vars = Storage(s_vars["criteria"])
             r.http = "POST"
@@ -1471,7 +1471,6 @@ $('#%s').live('click',function(){
         """
 
         s3 = current.session.s3
-        response = current.response
 
         query = None
         errors = None
@@ -1526,7 +1525,7 @@ $('#%s').live('click',function(){
             elif advanced_form.errors:
                 simple = False
 
-        response.s3.simple_search = simple
+        current.response.s3.simple_search = simple
 
         return (query, errors)
 
@@ -1790,11 +1789,9 @@ $('#%s').live('click',function(){
         """
 
         # Get environment
-        request = self.request
-        resource = self.resource
         T = current.T
-
-        vars = request.get_vars
+        resource = self.resource
+        vars = self.request.get_vars
 
         resource.clear_query()
 
@@ -1925,7 +1922,7 @@ $('#%s').live('click',function(){
         if self.simple and request.vars.simple_form:
             for name, widget in self.simple:
                 # Pass request instead of form - it contains the vars
-                query, errors = self._build_widget_query(self.resource,
+                query, errors = self._build_widget_query(resource,
                                                          name,
                                                          widget,
                                                          request,
@@ -1936,7 +1933,7 @@ $('#%s').live('click',function(){
         elif self.advanced:
             for name, widget in self.advanced:
                 # Pass request instead of form - it contains the vars
-                query, errors = self._build_widget_query(self.resource,
+                query, errors = self._build_widget_query(resource,
                                                          name,
                                                          widget,
                                                          request,
@@ -1964,13 +1961,6 @@ $('#%s').live('click',function(){
         else:
             represent = field.represent
 
-        #output = resource.exporter.json(resource,
-        #                                start=0,
-        #                                limit=10,
-        #                                fields = [field],
-        #                                orderby = field)
-
-
         attributes = dict(orderby=field,
                           limitby=resource.limitby(start=0, limit=11),
                           distinct=True)
@@ -1991,19 +1981,10 @@ $('#%s').live('click',function(){
     @staticmethod
     def save_search(r, **attr):
         """
-            @todo: docstring
+            Save a Search Filter in the user's profile
+            - db.pr_save_search
         """
 
-        # r contains the resource name:
-        tablename = r.tablename
-        component = r.component_name
-        s3mgr = current.manager
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-        auth = current.auth
-
-        user_id = auth.user.id
         search_vars = json.load(r.body)
         s_vars = {}
 
@@ -2018,11 +1999,13 @@ $('#%s').live('click',function(){
             else:
                 key = str(i)
                 s_vars[key] = str(search_vars[i])
+
+        import cPickle
         search_str = cPickle.dumps(s_vars)
-        table = s3db.pr_save_search
-        query = (table.user_id == user_id) & \
+        table = current.s3db.pr_save_search
+        query = (table.user_id == current.auth.user_id) & \
                 (table.search_vars == search_str)
-        if len (db(query).select(table.id)) == 0:
+        if len(current.db(query).select(table.id)) == 0:
             new_search = {}
             new_search["search_vars"] = search_str
             _id = table.insert(**new_search)
@@ -2043,11 +2026,7 @@ class S3LocationSearch(S3Search):
             @param attr: request attributes
         """
 
-        xml = current.manager.xml
-        gis = current.manager.gis
-
         output = None
-        request = self.request
         response = current.response
         resource = self.resource
         table = self.table
@@ -2056,7 +2035,7 @@ class S3LocationSearch(S3Search):
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
 
-        _vars = request.vars
+        _vars = self.request.vars
 
         limit = int(_vars.limit or 0)
 
@@ -2136,7 +2115,7 @@ class S3LocationSearch(S3Search):
             if filter == "~":
                 if children:
                     # New LocationSelector
-                    children = gis.get_children(children, level=level)
+                    children = current.gis.get_children(children, level=level)
                     children = children.find(lambda row: \
                                              row.name and value in str.lower(row.name))
                     output = children.json()
@@ -2203,15 +2182,18 @@ class S3LocationSearch(S3Search):
                           table.addr_street,
                           table.addr_postcode]
             else:
-                output = xml.json_message(False,
-                                          400,
-                                          "Unsupported filter! Supported filters: ~, =")
+                output = current.manager.xml.json_message(
+                                False,
+                                400,
+                                "Unsupported filter! Supported filters: ~, ="
+                            )
                 raise HTTP(400, body=output)
 
 
         if not fields:
+            append = fields.append
             for field in table.fields:
-                fields.append(table[field])
+                append(table[field])
 
         resource.add_filter(query)
 
@@ -2250,7 +2232,6 @@ class S3OrganisationSearch(S3Search):
             @param attr: request attributes
         """
 
-        output = None
         response = current.response
         resource = self.resource
         table = self.table
@@ -2298,13 +2279,11 @@ class S3OrganisationSearch(S3Search):
 
         resource.add_filter(query)
 
-        if filter == "~":
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
-                                     % MAX_SEARCH_RESULTS)])
-
-        if output is None:
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
             attributes = dict(orderby=field)
             limitby = resource.limitby(start=0, limit=limit)
             if limitby is not None:
@@ -2352,10 +2331,8 @@ class S3PersonSearch(S3Search):
             @param attr: request attributes
         """
 
-        output = None
         response = current.response
         resource = self.resource
-        table = self.table
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -2375,7 +2352,7 @@ class S3PersonSearch(S3Search):
         limit = int(_vars.limit or 0)
 
         if filter and value:
-
+            table = self.table
             field = table.first_name
             field2 = table.middle_name
             field3 = table.last_name
@@ -2407,13 +2384,11 @@ class S3PersonSearch(S3Search):
 
         resource.add_filter(query)
 
-        if filter == "~":
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
                                      % MAX_SEARCH_RESULTS)])
-
-        if output is None:
+        else:
             output = resource.exporter.json(resource,
                                             start=0,
                                             limit=limit,
@@ -2426,7 +2401,9 @@ class S3PersonSearch(S3Search):
 # =============================================================================
 class S3HRSearch(S3Search):
     """
-        Search method with specifics for HRM records (full name search)
+        Search method with specifics for HRM records
+            - full name search
+            - include Organisation & Job Role in the output
     """
 
     def search_json(self, r, **attr):
@@ -2437,10 +2414,8 @@ class S3HRSearch(S3Search):
             @param attr: request attributes
         """
 
-        output = None
         response = current.response
         resource = self.resource
-        table = self.table
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -2460,29 +2435,42 @@ class S3HRSearch(S3Search):
         limit = int(_vars.limit or 0)
 
         if filter and value:
-            pr_table = current.s3db.pr_person
-            field = pr_table.first_name
-            field2 = pr_table.middle_name
-            field3 = pr_table.last_name
+            table = self.table
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            field = ptable.first_name
+            field2 = ptable.middle_name
+            field3 = ptable.last_name
+            otable = s3db.org_organisation
+            #jtable = s3db.hrm_job_role
 
             # Fields to return
-            fields = [table.id, field, field2, field3]
+            fields = [table.id,
+                      otable.name,
+                      #jtable.name,
+                      field,
+                      field2,
+                      field3
+                      ]
 
             if filter == "~":
-                # pr_person Autocomplete
+                # Autocomplete
+                #left = jtable.on(table.job_role_id == jtable.id)
                 if " " in value:
                     value1, value2 = value.split(" ", 1)
                     value2 = value2.strip()
-                    query = (pr_table.id == table.person_id) & \
+                    query = (table.organisation_id == otable.id) & \
+                            (table.person_id == ptable.id) & \
                             ((field.lower().like(value1 + "%")) & \
                             ((field2.lower().like(value2 + "%")) | \
                              (field3.lower().like(value2 + "%"))))
                 else:
                     value = value.strip()
-                    query = (pr_table.id == table.person_id) & \
+                    query = (table.organisation_id == otable.id) & \
+                            (table.person_id == ptable.id) & \
                             ((field.lower().like(value + "%")) | \
-                            (field2.lower().like(value + "%")) | \
-                            (field3.lower().like(value + "%")))
+                             (field2.lower().like(value + "%")) | \
+                             (field3.lower().like(value + "%")))
 
             else:
                 output = current.manager.xml.json_message(
@@ -2494,13 +2482,11 @@ class S3HRSearch(S3Search):
 
         resource.add_filter(query)
 
-        if filter == "~":
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
-                                     % MAX_SEARCH_RESULTS)])
-
-        if output is None:
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
             output = resource.exporter.json(resource,
                                             start=0,
                                             limit=limit,
@@ -2524,7 +2510,6 @@ class S3PentitySearch(S3Search):
             @param attr: request attributes
         """
 
-        output = None
         response = current.response
         resource = self.resource
         table = self.table
@@ -2637,7 +2622,6 @@ class S3TrainingSearch(S3Search):
             @param attr: request attributes
         """
 
-        output = None
         response = current.response
         resource = self.resource
         table = self.table
@@ -2699,13 +2683,12 @@ class S3TrainingSearch(S3Search):
 
         resource.add_filter(query)
 
-        if filter == "~":
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
-                                     % MAX_SEARCH_RESULTS)])
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
 
-        if output is None:
+        else:
             attributes = dict(orderby=field)
             limitby = resource.limitby(start=0, limit=limit)
             if limitby is not None:

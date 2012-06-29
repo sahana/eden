@@ -408,7 +408,7 @@ class S3ClimateModel(S3Model):
                   listadd = False)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

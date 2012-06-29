@@ -74,8 +74,6 @@ class S3OrganisationModel(S3Model):
 
     def model(self):
 
-        import copy
-
         T = current.T
         db = current.db
         gis = current.gis
@@ -613,7 +611,7 @@ class S3OrganisationModel(S3Model):
                              *meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     org_sector_id = sector_id,
@@ -929,7 +927,7 @@ class S3OrganisationTypeTagModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 )
@@ -1040,7 +1038,7 @@ class S3SiteModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     org_site_id = site_id
@@ -1249,7 +1247,7 @@ class S3FacilityModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 )
@@ -1361,7 +1359,7 @@ class S3RoomModel(S3Model):
                                   ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     org_room_id = room_id,
@@ -1545,7 +1543,7 @@ class S3OfficeModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     org_office_type_opts = org_office_type_opts,

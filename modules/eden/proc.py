@@ -259,7 +259,7 @@ class S3ProcurementModel(S3Model):
                        report_hide_comments = True)
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
             )
@@ -370,7 +370,7 @@ class S3SupplierModel(S3Model):
                            proc_supplier="supplier_id")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 proc_supplier_id = supplier_id
