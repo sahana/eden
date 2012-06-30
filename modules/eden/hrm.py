@@ -92,12 +92,11 @@ class S3HRModel(S3Model):
 
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
-        
+
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
 
-        root_org = auth.user and \
-                   self.org_root_organisation(organisation_id=auth.user.organisation_id)[0] or \
-                   None
+        root_org = auth.root_org()
 
         # =========================================================================
         # Human Resource
@@ -262,10 +261,10 @@ class S3HRModel(S3Model):
 
         def hrm_course_opts():
             """
-                Provide the options for the HRM programme search filter
+                Provide the options for the HRM course search filter
             """
             ctable = self.hrm_course
-            if org:
+            if root_org:
                 query = (ctable.deleted == False) & \
                         ((ctable.organisation_id == root_org) | \
                          (ctable.organisation_id == None))
@@ -368,14 +367,14 @@ class S3HRModel(S3Model):
             # Being added as a component to Org, Site or Project
             hrm_url = None
         
-        self.configure(tablename,
-                    super_entity = "sit_trackable",
-                    deletable = settings.get_hrm_deletable(),
-                    search_method = human_resource_search,
-                    onaccept = self.hrm_human_resource_onaccept,
-                    ondelete = self.hrm_human_resource_ondelete,
-                    deduplicate=self.hrm_human_resource_deduplicate,
-                    report_options = Storage(
+        configure(tablename,
+                  super_entity = "sit_trackable",
+                  deletable = settings.get_hrm_deletable(),
+                  search_method = human_resource_search,
+                  onaccept = self.hrm_human_resource_onaccept,
+                  ondelete = self.hrm_human_resource_ondelete,
+                  deduplicate=self.hrm_human_resource_duplicate,
+                  report_options = Storage(
                         search=[
                               S3SearchOptionsWidget(
                                 name="human_resource_search_org",
@@ -409,8 +408,8 @@ class S3HRModel(S3Model):
                                          fact="person_id",
                                          aggregate="count")
                     ),
-                    create_next = hrm_url,
-                    update_next = hrm_url,
+                  create_next = hrm_url,
+                  update_next = hrm_url,
                 )
 
         # ---------------------------------------------------------------------
@@ -436,7 +435,6 @@ class S3HRModel(S3Model):
                     field = ["person_id$first_name",
                              "person_id$middle_name",
                              "person_id$last_name",
-                             #"person_id$occupation",
                              "job_role_id$name",
                             ]
                   )
@@ -470,15 +468,6 @@ class S3HRModel(S3Model):
     def hrm_human_resource_onaccept(form):
         """ On-accept for HR records """
 
-        db = current.db
-        s3db = current.s3db
-        auth = current.auth
-
-        utable = auth.settings.table_user
-        ptable = s3db.pr_person
-        ltable = s3db.pr_person_user
-        htable = s3db.hrm_human_resource
-
         if "vars" in form:
             # e.g. coming from staff/create
             vars = form.vars
@@ -494,20 +483,27 @@ class S3HRModel(S3Model):
 
         # Get the full record
         id = vars.id
-        if id:
-            query = (htable.id == id)
-            record = db(query).select(htable.id,
-                                      htable.type,
-                                      htable.person_id,
-                                      htable.site_id,
-                                      htable.organisation_id,
-                                      htable.status,
-                                      htable.deleted,
-                                      htable.deleted_fk,
-                                      limitby=(0, 1)).first()
-        else:
+        if not id:
             return
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        utable = auth.settings.table_user
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        htable = s3db.hrm_human_resource
 
+        query = (htable.id == id)
+        record = db(query).select(htable.id,
+                                  htable.type,
+                                  htable.person_id,
+                                  htable.organisation_id,
+                                  htable.location_id,
+                                  htable.site_id,
+                                  htable.status,
+                                  htable.deleted,
+                                  htable.deleted_fk,
+                                  limitby=(0, 1)).first()
         data = Storage()
 
         # Affiliation and record ownership
@@ -524,7 +520,7 @@ class S3HRModel(S3Model):
             if site:
                 data.location_id = site.location_id
         elif record.type == 2:
-            # Volunteer: update the location ID from the Home Address
+            # Volunteer: synchronise the location ID with the Home Address
             atable = s3db.pr_address
             query = (atable.pe_id == ptable.pe_id) & \
                     (ptable.id == record.person_id) & \
@@ -533,7 +529,17 @@ class S3HRModel(S3Model):
             address = db(query).select(atable.location_id,
                                        limitby=(0, 1)).first()
             if address:
+                # Use Address to update HRM
                 data.location_id = address.location_id
+            elif "location_id" in record and record.location_id:
+                # Create Address from newly-created HRM
+                query = (ptable.id == record.person_id)
+                pe_id = db(query).select(ptable.pe_id,
+                                         limitby=(0, 1)).first().pe_id
+                record_id = atable.insert(type = 1,
+                                          pe_id = pe_id,
+                                          location_id = record.location_id)
+                s3_address_update(atable, record_id)
 
         # Add record owner (user)
         query = (ptable.id == record.person_id) & \
@@ -579,7 +585,7 @@ class S3HRModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_human_resource_deduplicate(item):
+    def hrm_human_resource_duplicate(item):
         """
             HR record duplicate detection, used for the deduplicate hook
 
@@ -630,10 +636,7 @@ class S3HRJobModel(S3Model):
         NONE = messages.NONE
 
         crud_strings = current.response.s3.crud_strings
-
-        root_org = auth.user and \
-                   self.org_root_organisation(organisation_id=auth.user.organisation_id)[0] or \
-                   None
+        root_org = auth.root_org()
 
         # =========================================================================
         # Job Roles (Mayon: StaffResourceType)
@@ -953,9 +956,7 @@ class S3HRSkillModel(S3Model):
         s3_has_role = auth.s3_has_role
         super_link = self.super_link
 
-        root_org = auth.user and \
-                   self.org_root_organisation(organisation_id=auth.user.organisation_id)[0] or \
-                   None
+        root_org = auth.root_org()
 
         # ---------------------------------------------------------------------
         # Skill Types
@@ -2507,9 +2508,7 @@ class S3HRProgrammeModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
-        root_org = auth.user and \
-                   self.org_root_organisation(organisation_id=auth.user.organisation_id)[0] or \
-                   None
+        root_org = auth.root_org()
 
         # =========================================================================
         # Progammes
@@ -3914,32 +3913,34 @@ def hrm_training_event_controller():
         redirect(URL(f="index"))
 
     def prep(r):
-        if r.interactive:
-            if r.component:
-                # Use appropriate CRUD strings
-                s3.crud_strings["hrm_training"] = Storage(
-                    title_create = T("Add Participant"),
-                    title_display = T("Participant Details"),
-                    title_list = T("Participants"),
-                    title_update = T("Edit Participant"),
-                    title_search = T("Search Participants"),
-                    title_upload = T("Import Participant Participants"),
-                    subtitle_create = T("Add Participant"),
-                    label_list_button = T("List Participants"),
-                    label_create_button = T("Add New Participant"),
-                    label_delete_button = T("Delete Participant"),
-                    msg_record_created = T("Participant added"),
-                    msg_record_modified = T("Participant updated"),
-                    msg_record_deleted = T("Participant deleted"),
-                    msg_no_match = T("No entries found"),
-                    msg_list_empty = T("Currently no Participants registered"))
-            else:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
-
+        if r.interactive and r.component:
+            # Use appropriate CRUD strings
+            s3.crud_strings["hrm_training"] = Storage(
+                title_create = T("Add Participant"),
+                title_display = T("Participant Details"),
+                title_list = T("Participants"),
+                title_update = T("Edit Participant"),
+                title_search = T("Search Participants"),
+                title_upload = T("Import Participant Participants"),
+                subtitle_create = T("Add Participant"),
+                label_list_button = T("List Participants"),
+                label_create_button = T("Add New Participant"),
+                label_delete_button = T("Delete Participant"),
+                msg_record_created = T("Participant added"),
+                msg_record_modified = T("Participant updated"),
+                msg_record_deleted = T("Participant deleted"),
+                msg_no_match = T("No entries found"),
+                msg_list_empty = T("Currently no Participants registered"))
         return True
     s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and not r.component:
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
+        return output
+    s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
                                      rheader=hrm_rheader)

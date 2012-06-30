@@ -66,9 +66,7 @@ class S3MembersModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
-        root_org = auth.user and \
-                   self.org_root_organisation(organisation_id=auth.user.organisation_id)[0] or \
-                   None
+        root_org = auth.root_org()
 
         # ---------------------------------------------------------------------
         # Membership Types

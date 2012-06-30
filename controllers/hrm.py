@@ -38,34 +38,7 @@ def human_resource():
 
     # Default to Staff
     _type = table.type
-    _type.default = 1
     s3.filter = (_type == 1)
-    _type.readable = False
-    _type.writable = False
-    table.site_id.writable = True
-    table.site_id.readable = True
-    list_fields = ["id",
-                   "person_id",
-                   "job_role_id",
-                   "organisation_id",
-                   "site_id",
-                   #"site_contact",
-                   (T("Email"), "email"),
-                   (settings.get_ui_label_mobile_phone(), "phone"),
-                   (T("Trainings"), "course"),
-                   (T("Certificates"), "certificate"),
-                   (T("Contract End Date"), "end_date"),
-                   "status",
-                  ]
-    s3mgr.configure(tablename,
-                    list_fields = list_fields)
-    if "expiring" in request.get_vars:
-        s3.filter = s3.filter & \
-            (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
-        s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
-        # Remove the big Add button
-        s3mgr.configure(tablename,
-                        insertable=False)
 
     def prep(r):
         if r.method == "form":
@@ -76,15 +49,18 @@ def human_resource():
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
+                _type.default = 1
+                _type.readable = False
+                _type.writable = False
                 table = r.table
-                table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (T("Facility"),
-                                                                     T("The site where this position is based."),
-                                                                     T("Enter some characters to bring up a list of possible matches."))))
+                field = table.site_id
+                field.comment = DIV(DIV(_class="tooltip",
+                                        _title="%s|%s|%s" % \
+                    (T("Facility"),
+                     T("The site where this position is based."),
+                     T("Enter some characters to bring up a list of possible matches."))))
+                field.writable = True
+                field.readable = True
                 table.status.writable = False
                 table.status.readable = False
 
@@ -105,6 +81,10 @@ def human_resource():
     def postp(r, output):
         if r.interactive:
             if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
@@ -173,10 +153,6 @@ def staff():
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
 
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
                 table = r.table
                 table.site_id.comment = DIV(DIV(_class="tooltip",
                                                 _title="%s|%s|%s" % (T("Facility"),
@@ -202,6 +178,10 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
@@ -260,56 +240,17 @@ def person():
     if not str(hr_id).isdigit():
         hr_id = None
 
-    mode = session.s3.hrm.mode
-
     # Configure human resource table
     tablename = "hrm_human_resource"
     table = s3db[tablename]
-    if hr_id and str(hr_id).isdigit():
+    table.type.default = 1
+    request.get_vars.update(xsltmode="staff")
+    if hr_id:
         hr = table[hr_id]
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
             request.get_vars["group"] = group
-
-    org = session.s3.hrm.org
-    if org is not None:
-        table.organisation_id.default = org
-        table.organisation_id.comment = None
-        table.organisation_id.readable = False
-        table.organisation_id.writable = False
-        table.site_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                    "org_site.%s" % super_key(db.org_site),
-                                    s3db.org_site_represent,
-                                    filterby="organisation_id",
-                                    filter_opts=[session.s3.hrm.org]))
-    if hr_id:
-        table.site_id.writable = True
-        table.site_id.readable = True
-    else:
-        table.location_id.readable = True
-        table.site_id.readable = True
-
-    if mode is not None:
-        list_fields=["id",
-                     "organisation_id",
-                     "type",
-                     "job_role_id",
-                     "location_id",
-                     "site_id",
-                     "status"
-                     ]
-    else:
-        list_fields=["id",
-                     "type",
-                     "job_role_id",
-                     "location_id",
-                     "site_id",
-                     "status"
-                     ]
-
-    configure(tablename,
-              list_fields=list_fields)
 
     # Configure person table
     tablename = "pr_person"
@@ -317,38 +258,12 @@ def person():
     if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
        (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
-    # Hide fields
-    table.pe_label.readable = False
-    table.pe_label.writable = False
-    table.missing.readable = False
-    table.missing.writable = False
-    table.age_group.readable = False
-    table.age_group.writable = False
     configure(tablename,
               deletable=False)
 
-    # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
-    table.occupation.readable = False
-    table.occupation.writable = False
-    # Just have a Home Address
-    table = s3db.pr_address
-    #table.type.default = 1
-    #table.type.readable = False
-    #table.type.writable = False
-    _crud = s3.crud_strings.pr_address
-    _crud.title_create = T("Add Home Address")
-    _crud.title_update = T("Edit Home Address")
-    #s3mgr.model.add_component("pr_address",
-    #                          pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
-    #                                          multiple=False))
-    # Default type for HR
-    table = s3db.hrm_human_resource
-    table.type.default = 1
-    request.get_vars.update(xsltmode="staff")
-
+    mode = session.s3.hrm.mode
     if mode is not None:
         # Configure for personal mode
-        s3db.hrm_human_resource.organisation_id.readable = True
         s3.crud_strings[tablename].update(
             title_display = T("Personal Profile"),
             title_update = T("Personal Profile"))
@@ -356,8 +271,7 @@ def person():
         configure("hrm_human_resource",
                   insertable = False,
                   editable = False,
-                  deletable = False
-                  )
+                  deletable = False)
         configure("hrm_certification",
                   insertable = True,
                   editable = True,
@@ -441,40 +355,62 @@ def person():
             s3mgr.show_ids = True
         elif r.interactive and r.method != "import":
             if r.component:
-                if r.component_name == "asset":
+                if r.component_name == "human-resource":
+                    table = r.component.table
+                    table.site_id.writable = True
+                    table.site_id.readable = True
+                    org = session.s3.hrm.org
+                    if org is not None:
+                        table.organisation_id.default = org
+                        table.organisation_id.comment = None
+                        table.organisation_id.readable = False
+                        table.organisation_id.writable = False
+                        table.site_id.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db,
+                                      "org_site.%s" % super_key(db.org_site),
+                                      s3db.org_site_represent,
+                                      filterby="organisation_id",
+                                      filter_opts=[session.s3.hrm.org]))
+                elif r.component_name == "address":
+                    _crud = s3.crud_strings.pr_address
+                    _crud.title_create = T("Add Home Address")
+                    _crud.title_update = T("Edit Home Address")
+                elif r.component_name == "physical_description":
+                    # Hide all but those details that we want
+                    # Lock all the fields
+                    table = r.component.table
+                    for field in table.fields:
+                        table[field].writable = False
+                        table[field].readable = False
+                    # Now enable those that we want
+                    table.ethnicity.writable = True
+                    table.ethnicity.readable = True
+                    table.blood_type.writable = True
+                    table.blood_type.readable = True
+                    table.medical_conditions.writable = True
+                    table.medical_conditions.readable = True
+                    table.other_details.writable = True
+                    table.other_details.readable = True
+                elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
                     configure("asset_asset",
                               insertable = False,
                               editable = False,
                               deletable = False)
-                elif r.component_name == "human_resource":
-                    # Set the minimum end_date to the same as the start_date
-                    s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-                 elif r.component_name == "experience":
-                    # Set the minimum end_date to the same as the start_date
-                    s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-                elif r.component_name == "physical_description":
-                    # Hide all but those details that we want
-                    # Lock all the fields
-                    pr_desc_table = s3db.pr_physical_description
-                    for field in pr_desc_table.fields:
-                        pr_desc_table[field].writable = False
-                        pr_desc_table[field].readable = False
-                    # Now enable those that we want
-                    pr_desc_table.ethnicity.writable = True
-                    pr_desc_table.ethnicity.readable = True
-                    pr_desc_table.blood_type.writable = True
-                    pr_desc_table.blood_type.readable = True
-                    pr_desc_table.medical_conditions.writable = True
-                    pr_desc_table.medical_conditions.readable = True
-                    pr_desc_table.other_details.writable = True
-                    pr_desc_table.other_details.readable = True
             else:
+                table = r.table
+                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
+                table.occupation.readable = False
+                table.occupation.writable = False
+                table.pe_label.readable = False
+                table.pe_label.writable = False
+                table.missing.readable = False
+                table.missing.writable = False
+                table.age_group.readable = False
+                table.age_group.writable = False
                 # Assume volunteers only between 12-81
-                r.table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
             resource = r.resource
             if mode is not None:
@@ -484,7 +420,7 @@ def person():
                     # pre-action redirect => must retain prior errors
                     if response.error:
                         session.error = response.error
-                    redirect(URL(r=r, f="human_resource"))
+                    redirect(URL(r=r, f="staff"))
             if resource.count() == 1:
                 resource.load()
                 r.record = resource.records().first()
@@ -492,8 +428,8 @@ def person():
                     r.id = r.record.id
             if not r.record:
                 session.error = T("Record not found")
-                redirect(URL(f="human_resource",
-                             args=["search"], vars={"group":group}))
+                redirect(URL(f="staff",
+                             args=["search"]))
             if hr_id and r.component_name == "human_resource":
                 r.component_id = hr_id
             configure("hrm_human_resource",
@@ -505,13 +441,22 @@ def person():
 
     # CRUD post-process
     def postp(r, output):
-        if r.interactive and r.component and r.component_name == "asset":
-            # Provide a link to assign a new Asset
-            # @ToDo: Proper Widget to do this inline
-            output["add_btn"] = A(T("Assign Asset"),
-                                  _href=URL(c="asset", f="asset"),
-                                  _id="add-btn",
-                                  _class="action-btn")
+        if r.interactive and r.component:
+            if r.component_name == "human_resource":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+            if r.component_name == "experience":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+            elif r.component_name == "asset":
+                # Provide a link to assign a new Asset
+                # @ToDo: Proper Widget to do this inline
+                output["add_btn"] = A(T("Assign Asset"),
+                                      _href=URL(c="asset", f="asset"),
+                                      _id="add-btn",
+                                      _class="action-btn")
         return output
     s3.postp = postp
 

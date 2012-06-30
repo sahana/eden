@@ -3156,6 +3156,22 @@ class AuthS3(Auth):
 
         return []
 
+    # -------------------------------------------------------------------------
+    def root_org(self):
+        """
+            Return the current user's root organisation or None
+        """
+
+        if not self.user:
+            return None
+        org_id = self.user.organisation_id
+        return current.cache.ram(
+                    # Common key for all users of this org
+                    "root_org_%s" % org_id,
+                    current.s3db.org_root_organisation(organisation_id=org_id)[0],
+                    time_expire=120
+                )
+
 # =============================================================================
 class S3PermissionError(StandardError):
     """ Custom exception class for low-level permission checks """

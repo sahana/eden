@@ -7,10 +7,10 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
-mode_task = deployment_settings.get_project_mode_task()
+mode_task = settings.get_project_mode_task()
 
 # =============================================================================
 def index():
@@ -26,7 +26,7 @@ def index():
         # - no good search options available
         redirect(URL(f="project"))
 
-    #module_name = deployment_settings.modules[module].name_nice
+    #module_name = settings.modules[module].name_nice
     #response.title = module_name
     #return dict(module_name=module_name)
 
@@ -83,11 +83,6 @@ def project():
                     r.method = "search"
                     # If just a few Projects, then a List is sufficient
                     #r.method = "list"
-
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('project_project_start_date','project_project_end_date')''')
-
             else:
                 if r.component_name == "organisation":
                     if r.method != "update":
@@ -125,9 +120,6 @@ def project():
                         filter = (r.component.table.status.belongs(statuses))
                         r.resource.add_component_filter("task", filter)
                 elif r.component_name == "beneficiary":
-                    # Set the minimum end_date to the same as the start_date
-                    s3.jquery_ready.append(
-'''S3.start_end_date('project_beneficiary_start_date','project_beneficiary_end_date')''')
                     db.project_beneficiary.project_location_id.requires = IS_NULL_OR(
                         IS_ONE_OF(db,
                                   "project_location.id",
@@ -180,14 +172,21 @@ def project():
 
     # Post-process
     def postp(r, output):
-        if r.interactive and \
-           mode_task and \
-           not r.component:
-            read_url = URL(args=["[id]", "task"])
-            update_url = URL(args=["[id]", "task"])
-            s3mgr.crud.action_buttons(r,
-                                      read_url=read_url,
-                                      update_url=update_url)
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+    '''S3.start_end_date('project_project_start_date','project_project_end_date')''')
+                if mode_task:
+                    read_url = URL(args=["[id]", "task"])
+                    update_url = URL(args=["[id]", "task"])
+                    s3mgr.crud.action_buttons(r,
+                                              read_url=read_url,
+                                              update_url=update_url)
+            elif r.component_name == "beneficiary":
+                    # Set the minimum end_date to the same as the start_date
+                    s3.jquery_ready.append(
+'''S3.start_end_date('project_beneficiary_start_date','project_beneficiary_end_date')''')
         return output
     s3.postp = postp
 
@@ -219,7 +218,7 @@ def framework():
 def organisation():
     """ RESTful CRUD controller """
 
-    if deployment_settings.get_project_multiple_organsiations():
+    if settings.get_project_multiple_organisations():
         s3mgr.configure("project_organisation",
                         insertable=False,
                         editable=False,

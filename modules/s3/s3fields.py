@@ -688,7 +688,7 @@ def s3_address_onvalidation(form):
 def s3_address_update(table, record_id):
     """
         Write the Address fields from the Location
-        - used by asset_asset
+        - used by asset_asset & hrm_human_resource
 
         @ToDo: Allow the reverse operation.
         If these fields are populated then create/update the location

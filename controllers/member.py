@@ -79,12 +79,17 @@ def membership():
             else:
                 # Assume members under 120
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and r.component is None:
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
+        return output
+    s3.postp = postp
+        
     output = s3_rest_controller(rheader=s3db.member_rheader)
     return output
 
@@ -152,10 +157,6 @@ def person():
             if not r.component:
                 # Assume members under 120
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
-            elif r.component_name == "membership":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
             resource = r.resource
             if resource.count() == 1:
                 resource.load()
@@ -175,6 +176,14 @@ def person():
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and r.component and r.component_name == "membership":
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
+        return output
+    s3.postp = postp
+        
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.member_rheader,

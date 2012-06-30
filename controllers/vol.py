@@ -33,58 +33,15 @@ def human_resource():
         - combined (unused, except for Imports)
     """
 
-    tablename = "hrm_human_resource"
-    table = s3db[tablename]
+    table = s3db.hrm_human_resource
+    _type = table.type
+    s3.filter = (_type == 2)
 
-    # Generate Service Record
-    s3mgr.model.set_method("hrm",
-                           "human_resource",
+    # Custom method for Service Record
+    s3mgr.model.set_method("hrm", "human_resource",
                            method="form",
                            action=s3db.hrm_service_record
-                          )
-
-
-    _type = table.type
-    _type.default = 2
-    s3.filter = (_type == 2)
-    _type.readable = False
-    _type.writable = False
-    _location = table.location_id
-    _location.writable = True
-    _location.readable = True
-    _location.label = T("Home Address")
-    table.site_contact.writable = False
-    table.site_contact.readable = False
-    list_fields = ["id",
-                   "person_id",
-                   "job_role_id",
-                   "organisation_id",
-                  ]
-    append = list_fields.append
-    if settings.get_hrm_vol_experience() == "programme":
-        # Add Programme Virtual Fields
-        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
-        # Add VF to List Fields
-        append((T("Status"), "active"))
-    append("location_id")
-    append((T("Email"), "email"))
-    append((settings.get_ui_label_mobile_phone(), "phone"))
-    append((T("Trainings"), "course"))
-    append((T("Certificates"), "certificate"))
-    if settings.get_hrm_vol_experience() == "programme":
-        append((T("Programme"), "programme"))
-    else:
-        append("status")
-    s3mgr.configure(tablename,
-                    list_fields = list_fields)
-    table.job_role_id.label = T("Volunteer Role")
-    # Remove inappropriate filters from the Search widget
-    human_resource_search = s3mgr.model.get_config(tablename,
-                                                   "search_method")
-    # Facility
-    human_resource_search.advanced.pop(5)
-    s3mgr.configure(tablename,
-                    search_method = human_resource_search)
+                           )
 
     def prep(r):
         if r.method == "form":
@@ -100,12 +57,18 @@ def human_resource():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
                 table = r.table
-                table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (T("Facility"),
-                                                                     T("The site where this position is based."),
-                                                                     T("Enter some characters to bring up a list of possible matches."))))
+                _type.default = 2
+                _type.readable = False
+                _type.writable = False
+                _location = table.location_id
+                _location.label = T("Home Address")
+                _location.writable = True
+                _location.readable = True
                 table.status.writable = False
                 table.status.readable = False
+                table.site_contact.writable = False
+                table.site_contact.readable = False
+                table.job_role_id.label = T("Volunteer Role")
 
             elif r.method == "delete":
                 # Don't redirect
@@ -147,24 +110,14 @@ def volunteer():
     """
         Volunteer Controller
     """
+
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
     _type = table.type
-    _type.default = 2
     s3.filter = (_type == 2)
     _location = table.location_id
-    _location.writable = True
-    _location.readable = True
     _location.label = T("Home Address")
-    table.site_contact.writable = False
-    table.site_contact.readable = False
-    table.code.writable = False
-    table.code.readable = False
-    table.department.writable = False
-    table.department.readable = False
-    table.essential.writable = False
-    table.essential.readable = False
     table.job_role_id.label = T("Volunteer Role")
     list_fields = ["id",
                    "person_id",
@@ -213,23 +166,27 @@ def volunteer():
                           ),
         search_widget = ("human_resource_search_active", widget[0])
         human_resource_search.advanced.insert(1, search_widget)
+
         def hrm_programme_opts():
             """
                 Provide the options for the HRM programme search filter
-
-                @ToDo: S3resource-based version to use accessible_realm-based
-                       filtering rather than crude 'this user's org'
             """
             ptable = s3db.hrm_programme
-            organisation_id = auth.user.organisation_id
-            query = (ptable.deleted == False) & \
-                    ((ptable.organisation_id == organisation_id) | \
-                      (ptable.organisation_id == None))
-            opts = db(query).select(ptable.name)
+            root_org = auth.root_org()
+            if root_org:
+                query = (ptable.deleted == False) & \
+                        ((ptable.organisation_id == root_org) | \
+                         (ptable.organisation_id == None))
+            else:
+                query = (ptable.deleted == False) & \
+                        (ptable.organisation_id == None)
+            opts = db(query).select(ptable.id,
+                                    ptable.name)
             _dict = {}
             for opt in opts:
-                _dict[opt.name] = opt.name
+                _dict[opt.id] = opt.name
             return _dict
+
         widget = s3base.S3SearchOptionsWidget(
                             name="human_resource_search_programme",
                             label=T("Programme"),
@@ -254,11 +211,18 @@ def volunteer():
                 # Assume staff only between 12-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
+                _type.default = 2
+                _location.writable = True
+                _location.readable = True
                 table = r.table
+                table.code.writable = False
+                table.code.readable = False
+                table.department.writable = False
+                table.department.readable = False
+                table.essential.writable = False
+                table.essential.readable = False
+                table.site_contact.writable = False
+                table.site_contact.readable = False
                 table.status.writable = False
                 table.status.readable = False
 
@@ -279,6 +243,10 @@ def volunteer():
     def postp(r, output):
         if r.interactive:
             if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules:
                     # @ToDo: Remove this now that we have it in Events?
@@ -337,83 +305,26 @@ def person():
     if not str(hr_id).isdigit():
         hr_id = None
 
-    mode = session.s3.hrm.mode
-
     # Configure human resource table
-    tablename = "hrm_human_resource"
-    table = s3db[tablename]
-    table.site_id.writable = False
-    table.site_id.readable = False
-    table.site_contact.writable = False
-    table.site_contact.readable = False
-    if hr_id and str(hr_id).isdigit():
+    table = s3db.hrm_human_resource
+    table.type.default = 2
+    request.get_vars.update(xsltmode="volunteer")
+    if hr_id:
         hr = table[hr_id]
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
             request.get_vars["group"] = group
 
-    org = session.s3.hrm.org
-    if org is not None:
-        table.organisation_id.default = org
-        table.organisation_id.comment = None
-        table.organisation_id.readable = False
-        table.organisation_id.writable = False
-    if hr_id:
-        table.job_role_id.label = T("Volunteer Role")
-        table.code.writable = False
-        table.code.readable = False
-        table.department.writable = False
-        table.department.readable = False
-        table.essential.writable = False
-        table.essential.readable = False
-        table.location_id.writable = True
-        table.location_id.readable = True
-        table.location_id.label = T("Home Address")
-
-    if mode is not None:
-        list_fields=["id",
-                     "organisation_id",
-                     "job_role_id",
-                     "location_id"
-                     ]
-    else:
-        list_fields=["id",
-                     "job_role_id",
-                     "location_id"
-                     ]
-
-    if settings.get_hrm_vol_experience() == "programme":
-        list_fields.append((T("Programme?"), "programme"))
-        list_fields.append((T("Active?"), "active"))
-        table.virtualfields.append(s3db.hrm_programme_virtual_fields())
-    else:
-        list_fields.append("status")
-
-    configure(tablename,
-              list_fields=list_fields)
-
     # Configure person table
     tablename = "pr_person"
     table = s3db[tablename]
     if settings.get_hrm_vol_experience() == "programme":
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
-    # Hide fields
-    table.pe_label.readable = False
-    table.pe_label.writable = False
-    table.missing.readable = False
-    table.missing.writable = False
-    table.age_group.readable = False
-    table.age_group.writable = False
     configure(tablename,
               deletable=False)
 
-    table.occupation.label = T("Normal Job")
-    # Default type for HR
-    table = s3db.hrm_human_resource
-    table.type.default = 2
-    request.get_vars.update(xsltmode="volunteer")
-
+    mode = session.s3.hrm.mode
     if mode is not None:
         # Configure for personal mode
         s3db.hrm_human_resource.organisation_id.readable = True
@@ -424,8 +335,7 @@ def person():
         configure("hrm_human_resource",
                   insertable = False,
                   editable = False,
-                  deletable = False
-                  )
+                  deletable = False)
         configure("hrm_certification",
                   insertable = True,
                   editable = True,
@@ -501,7 +411,6 @@ def person():
                         resource = s3mgr.define_resource("hrm", "human_resource", filter=query)
                         ondelete = s3mgr.model.get_config("hrm_human_resource", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
-
     s3mgr.import_prep = import_prep
 
     # CRUD pre-process
@@ -510,40 +419,61 @@ def person():
             s3mgr.show_ids = True
         elif r.interactive and r.method != "import":
             if r.component:
-                if r.component_name == "asset":
+                if r.component_name == "human_resource":
+                    table = r.component.table
+                    table.job_role_id.label = T("Volunteer Role")
+                    table.code.writable = False
+                    table.code.readable = False
+                    table.department.writable = False
+                    table.department.readable = False
+                    table.essential.writable = False
+                    table.essential.readable = False
+                    #table.location_id.readable = True
+                    #table.location_id.writable = True
+                    table.site_id.writable = False
+                    table.site_id.readable = False
+                    table.site_contact.writable = False
+                    table.site_contact.readable = False
+                    org = session.s3.hrm.org
+                    if org is not None:
+                        table.organisation_id.default = org
+                        table.organisation_id.comment = None
+                        table.organisation_id.readable = False
+                        table.organisation_id.writable = False
+                elif r.component_name == "physical_description":
+                    # Hide all but those details that we want
+                    # Lock all the fields
+                    table = r.component.table
+                    for field in table.fields:
+                        table[field].writable = False
+                        table[field].readable = False
+                    # Now enable those that we want
+                    table.ethnicity.writable = True
+                    table.ethnicity.readable = True
+                    table.blood_type.writable = True
+                    table.blood_type.readable = True
+                    table.medical_conditions.writable = True
+                    table.medical_conditions.readable = True
+                    table.other_details.writable = True
+                    table.other_details.readable = True
+                elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
                     configure("asset_asset",
                               insertable = False,
                               editable = False,
                               deletable = False)
-                elif r.component_name == "human_resource":
-                    # Set the minimum end_date to the same as the start_date
-                    s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-                 elif r.component_name == "experience":
-                    # Set the minimum end_date to the same as the start_date
-                    s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-                elif r.component_name == "physical_description":
-                    # Hide all but those details that we want
-                    # Lock all the fields
-                    pr_desc_table = s3db.pr_physical_description
-                    for field in pr_desc_table.fields:
-                        pr_desc_table[field].writable = False
-                        pr_desc_table[field].readable = False
-                    # Now enable those that we want
-                    pr_desc_table.ethnicity.writable = True
-                    pr_desc_table.ethnicity.readable = True
-                    pr_desc_table.blood_type.writable = True
-                    pr_desc_table.blood_type.readable = True
-                    pr_desc_table.medical_conditions.writable = True
-                    pr_desc_table.medical_conditions.readable = True
-                    pr_desc_table.other_details.writable = True
-                    pr_desc_table.other_details.readable = True
             else:
+                table = r.table
                 # Assume volunteers only between 12-81
-                r.table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                table.occupation.label = T("Normal Job")
+                table.pe_label.readable = False
+                table.pe_label.writable = False
+                table.missing.readable = False
+                table.missing.writable = False
+                table.age_group.readable = False
+                table.age_group.writable = False
 
             resource = r.resource
             if mode is not None:
@@ -553,7 +483,7 @@ def person():
                     # pre-action redirect => must retain prior errors
                     if response.error:
                         session.error = response.error
-                    redirect(URL(r=r, f="human_resource"))
+                    redirect(URL(r=r, f="volunteer"))
             if resource.count() == 1:
                 resource.load()
                 r.record = resource.records().first()
@@ -561,8 +491,8 @@ def person():
                     r.id = r.record.id
             if not r.record:
                 session.error = T("Record not found")
-                redirect(URL(f="human_resource",
-                             args=["search"], vars={"group":group}))
+                redirect(URL(f="volunteer",
+                             args=["search"]))
             if hr_id and r.component_name == "human_resource":
                 r.component_id = hr_id
             configure("hrm_human_resource",
@@ -574,13 +504,22 @@ def person():
 
     # CRUD post-process
     def postp(r, output):
-        if r.interactive and r.component and r.component_name == "asset":
-            # Provide a link to assign a new Asset
-            # @ToDo: Proper Widget to do this inline
-            output["add_btn"] = A(T("Assign Asset"),
-                                  _href=URL(c="asset", f="asset"),
-                                  _id="add-btn",
-                                  _class="action-btn")
+        if r.interactive and r.component:
+            if r.component_name == "human_resource":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+            elif r.component_name == "experience":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+            elif r.component_name == "asset":
+                # Provide a link to assign a new Asset
+                # @ToDo: Proper Widget to do this inline
+                output["add_btn"] = A(T("Assign Asset"),
+                                      _href=URL(c="asset", f="asset"),
+                                      _id="add-btn",
+                                      _class="action-btn")
         return output
     s3.postp = postp
 
