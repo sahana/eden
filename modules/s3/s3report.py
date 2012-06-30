@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Reporting Framework
+""" S3 Reporting Framework
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT

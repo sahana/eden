@@ -76,10 +76,16 @@ settings.org.site_code_len = 3
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
-# Uncomment to use an alternate table for HR experience
-settings.hrm.experience = "programme"
-# Uncomment to show the Organisation name in HRM represents
+# Uncomment to show the Organisation name in HR represents
 settings.hrm.show_organisation = True
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to disable the use of HR Credentials
+settings.hrm.use_credentials = False
+# Uncomment to enable the use of HR Education
+settings.hrm.use_education = True
+# Uncomment to disable the use of HR Teams
+settings.hrm.use_teams = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

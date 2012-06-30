@@ -76,6 +76,12 @@ def membership():
                 # Redirect to person controller
                 vars = {"membership.id": r.id}
                 redirect(URL(f="person", vars=vars))
+            else:
+                # Assume members under 120
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return True
     s3.prep = prep
 
@@ -112,12 +118,10 @@ def person():
             before processing a new data import, used for the import_prep
             hook in s3mgr
         """
-
         resource, tree = data
         xml = s3mgr.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
-
         if s3.import_replace:
             if tree is not None:
                 root = tree.getroot()
@@ -145,6 +149,13 @@ def person():
     # CRUD pre-process
     def prep(r):
         if r.interactive and r.method != "import":
+            if not r.component:
+                # Assume members under 120
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+            elif r.component_name == "membership":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
             resource = r.resource
             if resource.count() == 1:
                 resource.load()

@@ -808,10 +808,11 @@ class S3OptionsMenu(object):
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
+        use_teams = lambda i: current.deployment_settings.get_hrm_use_teams()
 
         return M(c="hrm")(
                     M("Staff", f="staff",
-                      check=[manager_mode])(
+                      check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
@@ -819,7 +820,7 @@ class S3OptionsMenu(object):
                           vars={"group":"staff"}, p="create"),
                     ),
                     M("Teams", f="group",
-                      check=manager_mode)(
+                      check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -887,9 +888,10 @@ class S3OptionsMenu(object):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        show_programmes = lambda i: settings.get_hrm_experience() == "programme"
+        show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
+        use_teams = lambda i: settings.get_hrm_use_teams()
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -901,7 +903,7 @@ class S3OptionsMenu(object):
                           vars={"group":"volunteer"}, p="create"),
                     ),
                     M("Teams", f="group",
-                      check=manager_mode)(
+                      check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),

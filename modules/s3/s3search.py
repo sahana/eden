@@ -2565,9 +2565,12 @@ class S3HRSearch(S3Search):
                       "person_id$first_name",
                       "person_id$middle_name",
                       "person_id$last_name",
-                      "organisation_id$name",
                       "job_role_id$name",
                       ]
+            show_orgs = current.deployment_settings.get_hrm_show_organisation()
+            if show_orgs:
+                fields.append("organisation_id$name")
+
             rows = resource.sqltable(fields=fields,
                                      start=0,
                                      limit=limit,
@@ -2580,7 +2583,7 @@ class S3HRSearch(S3Search):
                             "first"  : row["pr_person"].first_name,
                             "middle" : row["pr_person"].middle_name or "",
                             "last"   : row["pr_person"].last_name or "",
-                            "org"    : row["org_organisation"].name,
+                            "org"    : row["org_organisation"].name if show_orgs else "",
                             "job"    : row["hrm_job_role"].name or "",
                         } for row in rows ]
             else:
@@ -2703,8 +2706,8 @@ class S3PentitySearch(S3Search):
 # =============================================================================
 class S3TrainingSearch(S3Search):
     """
-        Search method with specifics for Trainign Event records
-        - search coursed_id & site_id & return represents to the calling JS
+        Search method with specifics for Training Event records
+        - search course_id & site_id & return represents to the calling JS
 
         @ToDo: Allow searching by Date
     """
@@ -2712,9 +2715,6 @@ class S3TrainingSearch(S3Search):
     def search_json(self, r, **attr):
         """
             JSON search method for S3TrainingAutocompleteWidget
-
-            @param r: the S3Request
-            @param attr: request attributes
         """
 
         response = current.response
@@ -2731,49 +2731,44 @@ class S3TrainingSearch(S3Search):
         # what uses "value"?
         value = _vars.term or _vars.value or _vars.q or None
 
-        filter = _vars.filter
-        if filter and value:
+        if not value:
+            output = current.manager.xml.json_message(
+                            False,
+                            400,
+                            "No value provided!"
+                        )
+            raise HTTP(400, body=output)
 
-            # We want to do case-insensitive searches
-            # (default anyway on MySQL/SQLite, but not PostgreSQL)
-            value = value.lower()
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower()
 
-            table = self.table
-            s3db = current.s3db
-            ctable = s3db.hrm_course
-            field = ctable.name
-            stable = s3db.org_site
-            field2 = stable.name
-            field3 = table.start_date
+        table = self.table
+        s3db = current.s3db
+        ctable = s3db.hrm_course
+        field = ctable.name
+        stable = s3db.org_site
+        field2 = stable.name
+        field3 = table.start_date
 
-            # Fields to return
-            fields = [table.id, field, field2, field3]
+        # Fields to return
+        fields = [table.id, field, field2, field3]
 
-            if filter == "~":
-                # hrm_training_event Autocomplete
-                if " " in value:
-                    value1, value2 = value.split(" ", 1)
-                    value2 = value2.strip()
-                    query = ((field.lower().like("%" + value1 + "%")) & \
-                             (field2.lower().like(value2 + "%"))) | \
-                            ((field.lower().like("%" + value2 + "%")) & \
-                             (field2.lower().like(value1 + "%")))
-                else:
-                    value = value.strip()
-                    query = ((field.lower().like("%" + value + "%")) | \
-                             (field2.lower().like(value + "%")))
+        if " " in value:
+            value1, value2 = value.split(" ", 1)
+            value2 = value2.strip()
+            query = ((field.lower().like("%" + value1 + "%")) & \
+                     (field2.lower().like(value2 + "%"))) | \
+                    ((field.lower().like("%" + value2 + "%")) & \
+                     (field2.lower().like(value1 + "%")))
+        else:
+            value = value.strip()
+            query = ((field.lower().like("%" + value + "%")) | \
+                     (field2.lower().like(value + "%")))
 
-                #left = table.on(table.site_id == stable.id)
-                query = query & (table.course_id == ctable.id) & \
-                                (table.site_id == stable.id)
-
-            else:
-                output = current.manager.xml.json_message(
-                                False,
-                                400,
-                                "Unsupported filter! Supported filters: ~"
-                            )
-                raise HTTP(400, body=output)
+        #left = table.on(table.site_id == stable.id)
+        query = query & (table.course_id == ctable.id) & \
+                        (table.site_id == stable.id)
 
         resource.add_filter(query)
 

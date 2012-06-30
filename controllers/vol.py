@@ -61,7 +61,7 @@ def human_resource():
                    "organisation_id",
                   ]
     append = list_fields.append
-    if settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_vol_experience() == "programme":
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
@@ -71,7 +71,7 @@ def human_resource():
     append((settings.get_ui_label_mobile_phone(), "phone"))
     append((T("Trainings"), "course"))
     append((T("Certificates"), "certificate"))
-    if settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_vol_experience() == "programme":
         append((T("Programme"), "programme"))
     else:
         append("status")
@@ -90,22 +90,25 @@ def human_resource():
         if r.method == "form":
             return True
         if r.interactive:
-            # Assume volunteers only between 12-81
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+            if r.method == "create" and not r.component:
+                # Don't redirect
+                # Assume volunteers only between 12-81
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
 
-            table = r.table
-            table.site_id.comment = DIV(DIV(_class="tooltip",
-                                            _title="%s|%s|%s" % (T("Facility"),
-                                                                 T("The site where this position is based."),
-                                                                 T("Enter some characters to bring up a list of possible matches."))))
-            if r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                field = table.status
-                field.writable = False
-                field.readable = False
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
-            if r.method == "create" and r.component is None:
+                table = r.table
+                table.site_id.comment = DIV(DIV(_class="tooltip",
+                                                _title="%s|%s|%s" % (T("Facility"),
+                                                                     T("The site where this position is based."),
+                                                                     T("Enter some characters to bring up a list of possible matches."))))
+                table.status.writable = False
+                table.status.readable = False
+
+            elif r.method == "delete":
+                # Don't redirect
                 pass
             elif r.id:
                 # Redirect to person controller
@@ -180,7 +183,7 @@ def volunteer():
                                                    "search_method")
     # Remove Facility
     human_resource_search.advanced.pop(5)
-    if settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_vol_experience() == "programme":
         # Add Programme Virtual Fields
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
         # Add VF to List Fields
@@ -246,23 +249,19 @@ def volunteer():
 
     def prep(r):
         if r.interactive:
-            # Assume volunteers only between 12-81
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-            table = r.table
-            table.site_id.comment = DIV(DIV(_class="tooltip",
-                                            _title="%s|%s|%s" % (T("Facility"),
-                                                                T("The site where this position is based."),
-                                                                T("Enter some characters to bring up a list of possible matches."))))
-            if r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                field = table.status
-                field.writable = False
-                field.readable = False
-
-            if r.method == "create" and r.component is None:
+            if r.method == "create" and not r.component:
                 # Don't redirect
-                pass
+                # Assume staff only between 12-81
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
+                table = r.table
+                table.status.writable = False
+                table.status.readable = False
+
             elif r.method == "delete":
                 # Don't redirect
                 pass
@@ -315,30 +314,6 @@ def person():
     set_method("pr", resourcename,
                method="contacts",
                action=s3db.pr_contacts)
-    # Custom Method for Identity
-    set_method("pr", resourcename,
-               method="identity")
-    # Custom Method for Education
-    set_method("pr", resourcename,
-               method="education")
-    # Custom Method for Description
-    set_method("pr", resourcename,
-               method="physical_description")
-    # Hide all but those details that we want
-    # Lock all the fields
-    pr_desc_table = s3db.pr_physical_description
-    for field in pr_desc_table.fields:
-        pr_desc_table[field].writable = False
-        pr_desc_table[field].readable = False
-    # Now enable those that we want
-    pr_desc_table.ethnicity.writable = True
-    pr_desc_table.ethnicity.readable = True
-    pr_desc_table.blood_type.writable = True
-    pr_desc_table.blood_type.readable = True
-    pr_desc_table.medical_conditions.writable = True
-    pr_desc_table.medical_conditions.readable = True
-    pr_desc_table.other_details.writable = True
-    pr_desc_table.other_details.readable = True
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
@@ -367,6 +342,10 @@ def person():
     # Configure human resource table
     tablename = "hrm_human_resource"
     table = s3db[tablename]
+    table.site_id.writable = False
+    table.site_id.readable = False
+    table.site_contact.writable = False
+    table.site_contact.readable = False
     if hr_id and str(hr_id).isdigit():
         hr = table[hr_id]
         if hr:
@@ -380,12 +359,6 @@ def person():
         table.organisation_id.comment = None
         table.organisation_id.readable = False
         table.organisation_id.writable = False
-        table.site_id.requires = IS_EMPTY_OR(
-                                    IS_ONE_OF(db,
-                                        "org_site.%s" % super_key(db.org_site),
-                                        s3db.org_site_represent,
-                                        filterby="organisation_id",
-                                        filter_opts=[session.s3.hrm.org]))
     if hr_id:
         table.job_role_id.label = T("Volunteer Role")
         table.code.writable = False
@@ -402,15 +375,15 @@ def person():
         list_fields=["id",
                      "organisation_id",
                      "job_role_id",
-                     "location_id",
-                     "site_id"]
+                     "location_id"
+                     ]
     else:
         list_fields=["id",
                      "job_role_id",
-                     "location_id",
-                     "site_id"]
+                     "location_id"
+                     ]
 
-    if settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_vol_experience() == "programme":
         list_fields.append((T("Programme?"), "programme"))
         list_fields.append((T("Active?"), "active"))
         table.virtualfields.append(s3db.hrm_programme_virtual_fields())
@@ -421,11 +394,11 @@ def person():
               list_fields=list_fields)
 
     # Configure person table
-    # - hide fields
     tablename = "pr_person"
     table = s3db[tablename]
-    if settings.get_hrm_experience() == "programme":
+    if settings.get_hrm_vol_experience() == "programme":
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
+    # Hide fields
     table.pe_label.readable = False
     table.pe_label.writable = False
     table.missing.readable = False
@@ -435,7 +408,7 @@ def person():
     configure(tablename,
               deletable=False)
 
-    table.occupation.label = T("Previous Job")
+    table.occupation.label = T("Normal Job")
     # Default type for HR
     table = s3db.hrm_human_resource
     table.type.default = 2
@@ -495,13 +468,10 @@ def person():
             before processing a new data import, used for the import_prep
             hook in s3mgr
         """
-        request = current.request
-
         resource, tree = data
         xml = s3mgr.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
-
         if s3.import_replace:
             if tree is not None:
                 if group == "staff":
@@ -547,6 +517,30 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
+                elif r.component_name == "human_resource":
+                    # Set the minimum end_date to the same as the start_date
+                    s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+                 elif r.component_name == "experience":
+                    # Set the minimum end_date to the same as the start_date
+                    s3.jquery_ready.append(
+'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+                elif r.component_name == "physical_description":
+                    # Hide all but those details that we want
+                    # Lock all the fields
+                    pr_desc_table = s3db.pr_physical_description
+                    for field in pr_desc_table.fields:
+                        pr_desc_table[field].writable = False
+                        pr_desc_table[field].readable = False
+                    # Now enable those that we want
+                    pr_desc_table.ethnicity.writable = True
+                    pr_desc_table.ethnicity.readable = True
+                    pr_desc_table.blood_type.writable = True
+                    pr_desc_table.blood_type.readable = True
+                    pr_desc_table.medical_conditions.writable = True
+                    pr_desc_table.medical_conditions.readable = True
+                    pr_desc_table.other_details.writable = True
+                    pr_desc_table.other_details.readable = True
             else:
                 # Assume volunteers only between 12-81
                 r.table.date_of_birth.widget = S3DateWidget(past=972, future=-144)

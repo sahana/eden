@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Record Merger
+""" S3 Record Merger
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 

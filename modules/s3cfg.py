@@ -302,7 +302,8 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Finance settings
-    # @ToDo: Make these customisable per User/Facility
+    # @ToDo: Make these customisable per Organisation
+    # => Move to a Table like hrm_course
     def get_fin_currencies(self):
         T = current.T
         currencies = {
@@ -470,44 +471,6 @@ class S3Config(Storage):
         return self.L10n.get("thousands_separator", False)
 
     # -------------------------------------------------------------------------
-    # Messaging
-    # -------------------------------------------------------------------------
-    # Mail settings
-    def get_mail_server(self):
-        return self.mail.get("server", "127.0.0.1:25")
-    def get_mail_server_login(self):
-        return self.mail.get("login", False)
-    def get_mail_server_tls(self):
-        """
-            Does the Mail Server use TLS?
-             - default Debian is False
-             - GMail is True
-        """
-        return self.mail.get("tls", False)
-    def get_mail_sender(self):
-        return self.mail.get("sender", "sahana@your.org")
-    def get_mail_approver(self):
-        return self.mail.get("approver", "useradmin@your.org")
-    def get_mail_limit(self):
-        """ A daily limit to the number of messages which can be sent """
-        return self.mail.get("limit", None)
-
-    # -------------------------------------------------------------------------
-    # Parser
-    def get_msg_parser(self):
-        """
-            Which template folder to use to load parser.py
-        """
-        return self.msg.get("parser", "default")
-
-    # -------------------------------------------------------------------------
-    # Twitter
-    def get_msg_twitter_oauth_consumer_key(self):
-        return self.twitter.get("oauth_consumer_key", "")
-    def get_msg_twitter_oauth_consumer_secret(self):
-        return self.twitter.get("oauth_consumer_secret", "")
-
-    # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
@@ -536,7 +499,7 @@ class S3Config(Storage):
         return self.options.get("terms_of_service", False)
 
     # -------------------------------------------------------------------------
-    # UI/Workflow Settings
+    # UI Settings
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)
     def get_ui_confirm(self):
@@ -546,6 +509,7 @@ class S3Config(Storage):
                 http://code.google.com/p/selenium/issues/detail?id=1604
         """
         return self.ui.get("confirm", True)
+
     def get_ui_autocomplete(self):
         """ Currently Unused """
         return self.ui.get("autocomplete", False)
@@ -591,50 +555,126 @@ class S3Config(Storage):
         """ Display social media Buttons in the footer? """
         return self.ui.get("social_buttons", False)
 
+    # =========================================================================
+    # Messaging
     # -------------------------------------------------------------------------
-    # Modules
-    # -------------------------------------------------------------------------
-    # Request Settings
-    def get_req_type_inv_label(self):
-        return self.req.get("type_inv_label", current.T("Warehouse Stock"))
-    def get_req_type_hrm_label(self):
-        return self.req.get("type_hrm_label", current.T("People"))
+    # Mail settings
+    def get_mail_server(self):
+        return self.mail.get("server", "127.0.0.1:25")
+    def get_mail_server_login(self):
+        return self.mail.get("login", False)
+    def get_mail_server_tls(self):
+        """
+            Does the Mail Server use TLS?
+             - default Debian is False
+             - GMail is True
+        """
+        return self.mail.get("tls", False)
+    def get_mail_sender(self):
+        return self.mail.get("sender", "sahana@your.org")
+    def get_mail_approver(self):
+        return self.mail.get("approver", "useradmin@your.org")
+    def get_mail_limit(self):
+        """ A daily limit to the number of messages which can be sent """
+        return self.mail.get("limit", None)
 
-    def get_req_status_writable(self):
-        """ Whether Request Status should be manually editable """
-        return self.req.get("status_writable", True)
-    def get_req_quantities_writable(self):
-        """ Whether Item Quantities should be manually editable """
-        return self.req.get("quantities_writable", False)
-    def get_req_skill_quantities_writable(self):
-        """ Whether People Quantities should be manually editable """
-        return self.req.get("skill_quantities_writable", False)
-    def get_req_multiple_req_items(self):
-        return self.req.get("multiple_req_items", True)
-    def get_req_show_quantity_transit(self):
-        return self.req.get("show_quantity_transit", True)
-    def get_req_use_commit(self):
-        return self.req.get("use_commit", True)
-    def get_req_req_crud_strings(self, type = None):
-        return self.req.get("req_crud_strings") and \
-               self.req.req_crud_strings.get(type, None)
-    def get_supply_use_alt_name(self):
-        return self.supply.get("use_alt_name", True)
-    def get_req_use_req_number(self):
-        return self.req.get("use_req_number", True)
-    def get_req_generate_req_number(self):
-        return self.req.get("generate_req_number", True)
-    def get_req_req_type(self):
-        return self.req.get("req_type", ["Stock", "People", "Other"])
-    def get_req_form_name(self):
-        return self.req.get("req_form_name", "Requisition Form")
-    def get_req_shortname(self):
-        return self.req.get("req_shortname", "REQ")
+    # -------------------------------------------------------------------------
+    # Parser
+    def get_msg_parser(self):
+        """
+            Which template folder to use to load parser.py
+        """
+        return self.msg.get("parser", "default")
+
+    # -------------------------------------------------------------------------
+    # Twitter
+    def get_msg_twitter_oauth_consumer_key(self):
+        return self.twitter.get("oauth_consumer_key", "")
+    def get_msg_twitter_oauth_consumer_secret(self):
+        return self.twitter.get("oauth_consumer_secret", "")
+
+    # -------------------------------------------------------------------------
+    # Save Search and Subscription
+    def get_save_search_widget(self):
+        """
+            Enable the Saved Search widget
+        """
+        return self.save_search.get("widget", True)
+
+    # =========================================================================
+    # Modules
+
+    # -------------------------------------------------------------------------
+    # Human Resource Management
+    def get_hrm_email_required(self):
+        """
+            If set to True then Staff & Volunteers require an email address
+        """
+        return self.hrm.get("email_required", True)
+
+    def get_hrm_deletable(self):
+        """
+            If set to True then HRM records are deletable rather than just being able to be marked as obsolete
+        """
+        return self.hrm.get("deletable", False)
+
+    def get_hrm_show_staff(self):
+        """
+            If set to True then show 'Staff' options when HRM enabled
+            - needs a separate setting as vol requires hrm, but we may only wish to show Volunteers
+        """
+        return self.hrm.get("show_staff", True)
+
+    def get_hrm_skill_types(self):
+        """
+            If set to True then Skill Types are exposed to the UI
+            - each skill_type needs it's own set of competency levels
+            If set to False then Skill Types are hidden from the UI
+            - all skills use the same skill_type & hence the same set of competency levels
+        """
+        return self.hrm.get("skill_types", False)
+
+    def get_hrm_staff_experience(self):
+        """
+            Whether to use Experience for Staff &, if so, which table to use
+            - options are: False, "experience"
+        """
+        return self.hrm.get("staff_experience", "experience")
+
+    def get_hrm_vol_experience(self):
+        """
+            Whether to use Experience for Volunteers &, if so, which table to use
+            - options are: False, "experience" or "programme"
+        """
+        return self.hrm.get("vol_experience", "programme")
+
+    def get_hrm_show_organisation(self):
+        """
+            Whether Human Resource representations should include the Organisation
+        """
+        return self.hrm.get("show_organisation", False)
+
+    def get_hrm_use_teams(self):
+        """
+            Whether Human Resources should use Teams
+        """
+        return self.hrm.get("use_teams", True)
+
+    def get_hrm_use_credentials(self):
+        """
+            Whether Human Resources should use Credentials
+        """
+        return self.hrm.get("use_credentials", True)
+
+    def get_hrm_use_education(self):
+        """
+            Whether Human Resources should show Education
+        """
+        return self.hrm.get("use_education", False)
 
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #
-
     def get_inv_collapse_tabs(self):
         return self.inv.get("collapse_tabs", True)
 
@@ -701,16 +741,12 @@ class S3Config(Storage):
         return self.inv.get("recv_shortname", "GRN")
 
     # -------------------------------------------------------------------------
-    # Proc
-    def get_proc_form_name(self):
-        return self.proc.get("form_name", "Purchase Order")
-    def get_proc_shortname(self):
-        return self.proc.get("form_name", "PO")
-
-    # -------------------------------------------------------------------------
-    # Supply
-    def get_supply_catalog_default(self):
-        return self.inv.get("catalog_default", "Other Items")
+    # IRS
+    def get_irs_vehicle(self):
+        """
+            Use Vehicles to respond to Incident Reports
+        """
+        return self.irs.get("vehicle", False)
 
     # -------------------------------------------------------------------------
     # Organisation
@@ -718,52 +754,14 @@ class S3Config(Storage):
         return self.org.get("site_code_len", 10)
 
     # -------------------------------------------------------------------------
-    # Human Resource Management
-    def get_hrm_email_required(self):
-        """
-            If set to True then Staff & Volunteers require an email address
-        """
-        return self.hrm.get("email_required", True)
-
-    def get_hrm_deletable(self):
-        """
-            If set to True then HRM records are deletable rather than just being able to be marked as obsolete
-        """
-        return self.hrm.get("deletable", False)
-
-    def get_hrm_show_staff(self):
-        """
-            If set to True then show 'Staff' options when HRM enabled
-            - needs a separate setting as vol requires hrm, but we may only wish to show Volunteers
-        """
-        return self.hrm.get("show_staff", True)
-
-    def get_hrm_skill_types(self):
-        """
-            If set to True then Skill Types are exposed to the UI
-            - each skill_type needs it's own set of competency levels
-            If set to False then Skill Types are hidden from the UI
-            - all skills use the same skill_type & hence the same set of competency levels
-        """
-        return self.hrm.get("skill_types", False)
-
-    def get_hrm_experience(self):
-        """
-            Which table to use for showing the experience of HRs
-            - currently supported options are:
-                * experience (default)
-                * programme (used by IFRC for Volunteers)
-        """
-        return self.hrm.get("experience", "experience")
-
-    def get_hrm_show_organisation(self):
-        """
-            Whether Human Resource representations should include the Organisation
-        """
-        return self.hrm.get("show_organisation", False)
+    # Proc
+    def get_proc_form_name(self):
+        return self.proc.get("form_name", "Purchase Order")
+    def get_proc_shortname(self):
+        return self.proc.get("form_name", "PO")
 
     # -------------------------------------------------------------------------
-    # Project Tracking
+    # Projects
     def get_project_mode_3w(self):
         """
             Enable 3W mode in the projects module
@@ -844,20 +842,47 @@ class S3Config(Storage):
         return self.project.get("organisation_lead_role", 1)
 
     # -------------------------------------------------------------------------
-    # IRS
-    def get_irs_vehicle(self):
-        """
-            Use Vehicles to respond to Incident Reports
-        """
-        return self.irs.get("vehicle", False)
+    # Request Settings
+    def get_req_type_inv_label(self):
+        return self.req.get("type_inv_label", current.T("Warehouse Stock"))
+    def get_req_type_hrm_label(self):
+        return self.req.get("type_hrm_label", current.T("People"))
+
+    def get_req_status_writable(self):
+        """ Whether Request Status should be manually editable """
+        return self.req.get("status_writable", True)
+    def get_req_quantities_writable(self):
+        """ Whether Item Quantities should be manually editable """
+        return self.req.get("quantities_writable", False)
+    def get_req_skill_quantities_writable(self):
+        """ Whether People Quantities should be manually editable """
+        return self.req.get("skill_quantities_writable", False)
+    def get_req_multiple_req_items(self):
+        return self.req.get("multiple_req_items", True)
+    def get_req_show_quantity_transit(self):
+        return self.req.get("show_quantity_transit", True)
+    def get_req_use_commit(self):
+        return self.req.get("use_commit", True)
+    def get_req_req_crud_strings(self, type = None):
+        return self.req.get("req_crud_strings") and \
+               self.req.req_crud_strings.get(type, None)
+    def get_supply_use_alt_name(self):
+        return self.supply.get("use_alt_name", True)
+    def get_req_use_req_number(self):
+        return self.req.get("use_req_number", True)
+    def get_req_generate_req_number(self):
+        return self.req.get("generate_req_number", True)
+    def get_req_req_type(self):
+        return self.req.get("req_type", ["Stock", "People", "Other"])
+    def get_req_form_name(self):
+        return self.req.get("req_form_name", "Requisition Form")
+    def get_req_shortname(self):
+        return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
-    # Save Search and Subscription
-    def get_save_search_widget(self):
-        """
-            Enable the Saved Search widget
-        """
-        return self.save_search.get("widget", True)
+    # Supply
+    def get_supply_catalog_default(self):
+        return self.inv.get("catalog_default", "Other Items")
 
     # -------------------------------------------------------------------------
     # Active modules list

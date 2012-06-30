@@ -111,12 +111,6 @@ $(document).ready(function() {
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
-    // Use S3DateTimeWidget
-    //try { $('input.datetime').focus( function() {
-    //    Calendar.setup({
-    //        inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-    //    });
-    //}); } catch(e) {};
 
     // T2 Layer
     //try { $('.zoom').fancyZoom( {
@@ -138,23 +132,6 @@ $(document).ready(function() {
             }
         });
     }
-
-    // Datepicker
-    $('input.date').datepicker({
-        changeMonth: true, changeYear: true,
-        //showOtherMonths: true, selectOtherMonths: true,
-        showOn: 'both',
-        buttonImage: S3.Ap.concat('/static/img/jquery-ui/calendar.gif'),
-        buttonImageOnly: true,
-        dateFormat: 'yy-mm-dd',
-        isRTL: S3.rtl
-     });
-
-    $('input.time').timepicker({
-        hourText: S3.i18n.hour,
-        minuteText: S3.i18n.minute,
-        defaultTime: ''
-    });
 
     // accept comma as thousands separator
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});

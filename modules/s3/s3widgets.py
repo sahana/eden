@@ -78,13 +78,15 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current
-from gluon.dal import Field
-from gluon.html import *
-from gluon.http import HTTP
-from gluon.storage import Storage
+from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.dal import Field
+#from gluon.html import *
+#from gluon.http import HTTP
+#from gluon.validators import *
 from gluon.sqlhtml import *
-from gluon.validators import *
+from gluon.storage import Storage
 
 from s3utils import *
 from s3validators import *
@@ -156,10 +158,11 @@ class S3DateWidget(FormWidget):
         selector = str(field).replace(".", "_")
 
         current.response.s3.jquery_ready.append(
-'''$('#%(selector)s').datepicker('option','minDate','-%(past)sm')
- .datepicker('option','maxDate','+%(future)sm')
- .datepicker('option','yearRange','c-100:c+100')
- .datepicker('option','dateFormat','%(format)s')''' % \
+'''$('#%(selector)s').datepicker('option',{
+ minDate:'-%(past)sm',
+ maxDate:'+%(future)sm',
+ yearRange:'c-100:c+100',
+ dateFormat:'%(format)s'})''' % \
         dict(selector = selector,
              past = self.past,
              future = self.future,
@@ -232,21 +235,22 @@ class S3DateTimeWidget(FormWidget):
             s3.scripts.append("%s/anytimec.js" % script_dir)
             s3.stylesheets.append("plugins/anytimec.css")
 
-        s3.jquery_ready.append('''
-$('#{0}').AnyTime_picker({{
+        s3.jquery_ready.append(
+'''$('#%(selector)s').AnyTime_picker({{
  askSecond:false,
  firstDOW:1,
- earliest:'{1}',
- latest:'{2}',
- format:'{3}',
+ earliest:'%(earliest)s',
+ latest:'%(latest)s',
+ format:'%(format)s',
 }})
 clear_button=$('<input type="button" value="clear"/>').click(function(e){{
- $('#{0}').val('')
+ $('#%(selector)s').val('')
 }})
-$('#{0}').after(clear_button)'''.format(selector,
-                                         earliest,
-                                         latest,
-                                         format.replace("%M", "%i")))
+$('#%(selector)s').after(clear_button)''' % \
+        dict(selector=selector,
+             earliest=earliest,
+             latest=latest,
+             format=format.replace("%M", "%i")))
 
         return TAG[""](
                         INPUT(**attr),
@@ -708,12 +712,12 @@ $('#%(dummy_input)s').autocomplete({
    name+=' '+ui.item.last
   }
   $('#%(dummy_input)s').val(name)
-  $('#%(real_input)s').val(ui.item.id).change()''' % \
-        dict(dummy_input = dummy_input,
-             url = url,
-             delay = self.delay,
-             min_length = self.min_length,
-             real_input = real_input),
+  $('#%(real_input)s').val(ui.item.id).change()
+''' % dict(dummy_input = dummy_input,
+           url = url,
+           delay = self.delay,
+           min_length = self.min_length,
+           real_input = real_input),
         self.post_process, '''
   %(real_input)s.accept=true
   return false
@@ -838,11 +842,19 @@ $('#%(dummy_input)s').autocomplete({
   if(ui.item.last){
    name+=' '+ui.item.last
   }
-  name+=' ('
-  if(ui.item.job){
-   name+=ui.item.job+', '
+  var org=ui.item.org
+  var job=ui.item.job
+  if(org||job){
+   if(job){
+    name+=' ('+job
+    if(org){
+     name+=', '+org
+    }
+    name+=')'
+   }else{
+    name+=' ('+org+')'
+   }
   }
-  name+=ui.item.org+')'
   $('#%(dummy_input)s').val(name)
   return false
  },
@@ -854,18 +866,26 @@ $('#%(dummy_input)s').autocomplete({
   if(ui.item.last){
    name+=' '+ui.item.last
   }
-  name+=' ('
-  if(ui.item.job){
-   name+=ui.item.job+', '
+  var org=ui.item.org
+  var job=ui.item.job
+  if(org||job){
+   if(job){
+    name+=' ('+job
+    if(org){
+     name+=', '+org
+    }
+    name+=')'
+   }else{
+    name+=' ('+org+')'
+   }
   }
-  name+=ui.item.org+')'
   $('#%(dummy_input)s').val(name)
-  $('#%(real_input)s').val(ui.item.id).change()''' % \
-        dict(dummy_input = dummy_input,
-             url = url,
-             delay = self.delay,
-             min_length = self.min_length,
-             real_input = real_input),
+  $('#%(real_input)s').val(ui.item.id).change()
+''' % dict(dummy_input = dummy_input,
+           url = url,
+           delay = self.delay,
+           min_length = self.min_length,
+           real_input = real_input),
         self.post_process, '''
   %(real_input)s.accept=true
   return false
@@ -878,11 +898,19 @@ $('#%(dummy_input)s').autocomplete({
  if(item.last){
   name+=' '+item.last
  }
- name+=' ('
- if(item.job){
-  name+=item.job+', '
+ var org=item.org
+ var job=item.job
+ if(org||job){
+  if(job){
+   name+=' ('+job
+   if(org){
+    name+=', '+org
+   }
+   name+=')'
+  }else{
+   name+=' ('+org+')'
+  }
  }
- name+=item.org+')'
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
 }
 $('#%(dummy_input)s').blur(function(){
@@ -973,29 +1001,26 @@ class S3SiteAutocompleteWidget(FormWidget):
         org_site_types = current.auth.org_site_types
         for instance_type in org_site_types.keys():
             case = case + 1
-            cases += '''
-  case '%s':
+            cases += '''case '%s':
    return '%s'
   ''' % (instance_type,
          org_site_types[instance_type])
 
-        js_autocomplete = "".join(('''
-function s3_site_lookup(instance_type){
+        js_autocomplete = "".join(('''function s3_site_lookup(instance_type){
  switch(instance_type){
-  %s
- }
+  %s}
 }''' % cases, '''
-var data = { val:$('#%s').val(), accept:false };
-$('#%s').autocomplete({
- source:'%s',
- delay:%d,
- minLength:%d,
+var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
+$('#%(dummy_input)s').autocomplete({
+ source:'%(url)s',
+ delay:%(delay)d,
+ minLength:%(min_length)d,
  search:function(event,ui){
-  $('#%s_throbber').removeClass('hide').show()
+  $('#%(dummy_input)s_throbber').removeClass('hide').show()
   return true
  },
  response:function(event,ui,content){
-  $('#%s_throbber').hide()
+  $('#%(dummy_input)s_throbber').hide()
   return content
  },
  focus:function(event,ui){
@@ -1006,7 +1031,7 @@ $('#%s').autocomplete({
   if(ui.item.instance_type!=''){
    name+=' ('+s3_site_lookup(ui.item.instance_type)+')'
   }
-  $('#%s').val(name)
+  $('#%(dummy_input)s').val(name)
    return false
   },
   select:function(event,ui){
@@ -1017,19 +1042,15 @@ $('#%s').autocomplete({
    if(ui.item.instance_type!=''){
     name+=' ('+s3_site_lookup(ui.item.instance_type)+')'
    }
-   $('#%s').val(name)
-   $('#%s').val(ui.item.site_id).change()
-   ''' % (dummy_input,
-               dummy_input,
-               url,
-               self.delay,
-               self.min_length,
-               dummy_input,
-               dummy_input,
-               dummy_input,
-               dummy_input,
-               real_input), self.post_process, '''
-   data.accept = true
+   $('#%(dummy_input)s').val(name)
+   $('#%(real_input)s').val(ui.item.site_id).change()
+''' % dict(dummy_input=dummy_input,
+           real_input=real_input,
+           url=url,
+           delay=self.delay,
+           min_length=self.min_length),
+        self.post_process, '''
+   %(real_input)s.accept=true
    return false
   }
 }).data('autocomplete')._renderItem=function(ul,item){
@@ -1037,23 +1058,24 @@ $('#%s').autocomplete({
  if(item.name!=null){
   name+=item.name
  }
- if(item.instance_type!='') {
+ if(item.instance_type!=''){
   name+=' ('+s3_site_lookup(item.instance_type)+')'
  }
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+name+'</a>').appendTo(ul)
 }
-$('#%s').blur(function(){
- if(!$('#%s').val()){
-  $('#%s').val('').change()
-  data.accept=true
+$('#%(dummy_input)s').blur(function(){
+ if(!$('#%(dummy_input)s').val()){
+  $('#%(real_input)s').val('').change()
+  %(real_input)s.accept=true
  }
- if(!data.accept){
-  $('#%s').val(data.val)
+ if(!%(real_input)s.accept){
+  $('#%(dummy_input)s').val(%(real_input)s.val)
  }else{
-  data.val=$('#%s').val()
+  %(real_input)s.val=$('#%(dummy_input)s').val()
  }
- data.accept=false
-})''' % (dummy_input, dummy_input, real_input, dummy_input, dummy_input)))
+ %(real_input)s.accept=false
+})''' % dict(dummy_input=dummy_input,
+             real_input=real_input)))
 
         if value:
             # Provide the representation for the current/default Value
@@ -1117,8 +1139,7 @@ class S3TrainingAutocompleteWidget(FormWidget):
             attributes,
             source = repr(
                 URL(c="hrm", f="training_event",
-                    args="search.json",
-                    vars={"filter":"~"})
+                    args="search.json")
             ),
             name_getter = '''function(item){
  var name=''
@@ -1165,7 +1186,7 @@ def S3GenericAutocompleteTemplate(post_process,
     real_input = str(field).replace(".", "_")
     dummy_input = "dummy_%s" % real_input
     js_autocomplete = "".join(('''
-var %(real_input)s_data={val:$('#%(dummy_input)s').val(),accept:false}
+var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
 var get_name=%(name_getter)s
 var get_id=%(id_getter)s
 $('#%(dummy_input)s').autocomplete({
@@ -1191,7 +1212,7 @@ $('#%(dummy_input)s').autocomplete({
   ''' % locals(),
     post_process or "",
   '''
-  %(real_input)s_data.accept=true
+  %(real_input)s.accept=true
   return false
  }
 }).data('autocomplete')._renderItem=function(ul,item){
@@ -1200,14 +1221,14 @@ $('#%(dummy_input)s').autocomplete({
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()
-  %(real_input)s_data.accept=true
+  %(real_input)s.accept=true
  }
- if(!%(real_input)s_data.accept){
-  $('#%(dummy_input)s').val(%(real_input)s_data.val)
+ if(!%(real_input)s.accept){
+  $('#%(dummy_input)s').val(%(real_input)s.val)
  }else{
-  %(real_input)s_data.val=$('#%(dummy_input)s').val()
+  %(real_input)s.val=$('#%(dummy_input)s').val()
  }
- %(real_input)s_data.accept=false
+ %(real_input)s.accept=false
 })''' % locals()))
 
     if value:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Data Model Extensions
+""" S3 Data Model Extensions
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT

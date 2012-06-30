@@ -2322,7 +2322,7 @@ S3FilterFieldChange({
         else:
             person_id = data["person_id"]
 
-        if current.deployment_settings.get_hrm_experience() == "programme":
+        if current.deployment_settings.get_hrm_vol_experience() == "programme":
             # Check if this person is a volunteer
             hrtable = s3db.hrm_human_resource
             query = (hrtable.person_id == person_id) & \
@@ -2480,7 +2480,6 @@ class S3HRProgrammeModel(S3Model):
     """
         Record Volunteer Hours on Programmes
         - initially at least this doesn't link to the Project module
-        - this is the IFRC replacement for hrm_experience
     """
 
     names = ["hrm_programme",
@@ -2519,7 +2518,7 @@ class S3HRProgrammeModel(S3Model):
 
         tablename = "hrm_programme"
         table = define_table(tablename,
-                             Field("name", notnull=True, unique=True,
+                             Field("name", notnull=True,
                                    length=64,
                                    label=T("Name")),
                              # Only included in order to be able to set owned_by_entity to filter appropriately
@@ -3685,6 +3684,7 @@ def hrm_rheader(r, tabs=[]):
     resourcename = r.name
 
     if resourcename == "person":
+        settings = current.deployment_settings
         vars = current.request.get_vars
         hr = vars.get("human_resource.id", None)
         if hr:
@@ -3692,86 +3692,104 @@ def hrm_rheader(r, tabs=[]):
         else:
             name = s3_fullname(record)
         group = vars.get("group", "staff")
-        if group == "volunteer" and \
-           current.deployment_settings.get_hrm_experience() == "programme":
-            experience_tab = (T("Hours"), "hours")
-            # Show all Hours spent on both Programmes & Trainings
-            # - last month & last year
-            now = current.request.utcnow
-            last_year = now - datetime.timedelta(days=365)
-            db = current.db
-            s3db = current.s3db
-            ptable = s3db.hrm_programme_hours
-            query = (ptable.date > last_year.date()) & \
-                    (ptable.deleted == False) & \
-                    (ptable.person_id == r.id)
-            rows = db(query).select(ptable.date,
-                                    ptable.hours,
-                                    ptable.training)
-            programme_hours_year = 0
-            programme_hours_month = 0
-            training_hours_year = 0
-            training_hours_month = 0
-            last_month = now - datetime.timedelta(days=30)
-            last_month = last_month.date()
-            for row in rows:
-                hours = row.hours
-                training = row.training
-                if training:
-                    training_hours_year += hours
-                    if row.date > last_month:
-                        training_hours_month += hours
-                else:
-                    programme_hours_year += hours
-                    if row.date > last_month:
-                        programme_hours_month += hours
+        experience_tab = None
+        service_record = ""
+        tbl = TABLE(TR(TH(name,
+                          _style="padding-top:15px;")
+                       ))
+        if group == "volunteer":
+            if settings.get_hrm_vol_experience() == "programme":
+                experience_tab = (T("Hours"), "hours")
+                # Show all Hours spent on both Programmes & Trainings
+                # - last month & last year
+                now = current.request.utcnow
+                last_year = now - datetime.timedelta(days=365)
+                db = current.db
+                s3db = current.s3db
+                ptable = s3db.hrm_programme_hours
+                query = (ptable.date > last_year.date()) & \
+                        (ptable.deleted == False) & \
+                        (ptable.person_id == r.id)
+                rows = db(query).select(ptable.date,
+                                        ptable.hours,
+                                        ptable.training)
+                programme_hours_year = 0
+                programme_hours_month = 0
+                training_hours_year = 0
+                training_hours_month = 0
+                last_month = now - datetime.timedelta(days=30)
+                last_month = last_month.date()
+                for row in rows:
+                    hours = row.hours
+                    training = row.training
+                    if training:
+                        training_hours_year += hours
+                        if row.date > last_month:
+                            training_hours_month += hours
+                    else:
+                        programme_hours_year += hours
+                        if row.date > last_month:
+                            programme_hours_month += hours
 
-            active = record.active
-            if active:
-                _active = TD(T("Yes"),
-                             _style="color:green;")
-            else:
-                _active = TD(T("No"),
-                             _style="color:red;")
-            row1 = TR(TH("%s:" % T("Programme")),
-                      record.programme,
-                      TH("%s:" % T("Active?")),
-                      _active
-                      )
-            row2 = TR(TH("%s:" % T("Programme Hours (Month)")),
-                      str(programme_hours_month),
-                      TH("%s:" % T("Training Hours (Month)")),
-                      str(training_hours_month)
-                      )
-            row3 = TR(TH("%s:" % T("Programme Hours (Year)")),
-                      str(programme_hours_year),
-                      TH("%s:" % T("Training Hours (Year)")),
-                      str(training_hours_year)
-                      )
-            tbl = TABLE(TR(TH(name,
-                              _colspan=4)
-                           ),
-                        row1,
-                        row2,
-                        row3,
-                        )
-            service_record = DIV(A(T("Service Record"),
-                                   _href = URL(c = "vol",
-                                               f = "human_resource",
-                                               args = [hr, "form"]
-                                               ),
-                                   _id = "service_record",
-                                   _class = "action-btn"
-                                  ),
-                                _style="margin-bottom:10px;"
-                                )
-        else:
+                active = record.active
+                if active:
+                    _active = TD(T("Yes"),
+                                 _style="color:green;")
+                else:
+                    _active = TD(T("No"),
+                                 _style="color:red;")
+                row1 = TR(TH("%s:" % T("Programme")),
+                          record.programme,
+                          TH("%s:" % T("Active?")),
+                          _active
+                          )
+                row2 = TR(TH("%s:" % T("Programme Hours (Month)")),
+                          str(programme_hours_month),
+                          TH("%s:" % T("Training Hours (Month)")),
+                          str(training_hours_month)
+                          )
+                row3 = TR(TH("%s:" % T("Programme Hours (Year)")),
+                          str(programme_hours_year),
+                          TH("%s:" % T("Training Hours (Year)")),
+                          str(training_hours_year)
+                          )
+                tbl = TABLE(TR(TH(name,
+                                  _colspan=4)
+                               ),
+                            row1,
+                            row2,
+                            row3,
+                            )
+                service_record = DIV(A(T("Service Record"),
+                                       _href = URL(c = "vol",
+                                                   f = "human_resource",
+                                                   args = [hr, "form"]
+                                                   ),
+                                       _id = "service_record",
+                                       _class = "action-btn"
+                                      ),
+                                    _style="margin-bottom:10px;"
+                                    )
+            elif settings.get_hrm_vol_experience() == "experience":
+                experience_tab = (T("Experience"), "experience")
+        elif settings.get_hrm_staff_experience() == "experience":
             experience_tab = (T("Experience"), "experience")
-            tbl = TABLE(TR(TH(name,
-                              _style="padding-top:15px;")
-                           ))
-            service_record = ""
+
+        if settings.get_hrm_use_credentials():
+            credentials_tab = (T("Credentials"), "credential")
+        else:
+            credentials_tab = None
+
+        if settings.get_hrm_use_education():
+            education_tab = (T("Education"), "education")
+        else:
+            education_tab = None
+
         # Tabs
+        if settings.get_hrm_use_teams():
+            teams_tab = (T("Teams"), "group_membership")
+        else:
+            teams_tab = None
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
             if group == "staff":
@@ -3786,10 +3804,10 @@ def hrm_rheader(r, tabs=[]):
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
-                    #(T("Credentials"), "credential"),
-                    #experience_tab,
+                    credentials_tab,
+                    experience_tab,
                     (T("Positions"), "human_resource"),
-                    (T("Teams"), "group_membership"),
+                    teams_tab,
                     (T("Assets"), "asset"),
                    ]
         else:
@@ -3803,16 +3821,16 @@ def hrm_rheader(r, tabs=[]):
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
                     (T("ID"), "identity"),
-                    (T("Education"), "education"),
+                    education_tab,
                     (T("Description"), "physical_description"),
                     (address_tab_name, "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
                     (T("Skills"), "competency"),
-                    (T("Credentials"), "credential"),
+                    credentials_tab,
                     experience_tab,
-                    (T("Teams"), "group_membership"),
+                    teams_tab,
                     (T("Assets"), "asset"),
                     (T("Roles"), "roles"),
                    ]
@@ -3896,24 +3914,29 @@ def hrm_training_event_controller():
         redirect(URL(f="index"))
 
     def prep(r):
-        if r.interactive and r.component:
-            # Use appropriate CRUD strings
-            s3.crud_strings["hrm_training"] = Storage(
-                title_create = T("Add Participant"),
-                title_display = T("Participant Details"),
-                title_list = T("Participants"),
-                title_update = T("Edit Participant"),
-                title_search = T("Search Participants"),
-                title_upload = T("Import Participant Participants"),
-                subtitle_create = T("Add Participant"),
-                label_list_button = T("List Participants"),
-                label_create_button = T("Add New Participant"),
-                label_delete_button = T("Delete Participant"),
-                msg_record_created = T("Participant added"),
-                msg_record_modified = T("Participant updated"),
-                msg_record_deleted = T("Participant deleted"),
-                msg_no_match = T("No entries found"),
-                msg_list_empty = T("Currently no Participants registered"))
+        if r.interactive:
+            if r.component:
+                # Use appropriate CRUD strings
+                s3.crud_strings["hrm_training"] = Storage(
+                    title_create = T("Add Participant"),
+                    title_display = T("Participant Details"),
+                    title_list = T("Participants"),
+                    title_update = T("Edit Participant"),
+                    title_search = T("Search Participants"),
+                    title_upload = T("Import Participant Participants"),
+                    subtitle_create = T("Add Participant"),
+                    label_list_button = T("List Participants"),
+                    label_create_button = T("Add New Participant"),
+                    label_delete_button = T("Delete Participant"),
+                    msg_record_created = T("Participant added"),
+                    msg_record_modified = T("Participant updated"),
+                    msg_record_deleted = T("Participant deleted"),
+                    msg_no_match = T("No entries found"),
+                    msg_list_empty = T("Currently no Participants registered"))
+            else:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
 
         return True
     s3.prep = prep

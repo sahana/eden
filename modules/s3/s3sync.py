@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Synchronization
+""" S3 Synchronization
 
     @author: Dominic König <dominic[at]aidiq[dot]com>
 

@@ -102,6 +102,7 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Membership Type deleted"),
             msg_list_empty = T("No membership types currently registered"))
 
+        label_create = crud_strings[tablename].label_create_button
         if root_org:
             filter_opts = (root_org, None)
         else:
@@ -119,8 +120,8 @@ class S3MembersModel(S3Model):
             represent = lambda id: \
                 (id and [db.member_membership_type[id].name] or [NONE])[0],
             comment=S3AddResourceLink(f="membership_type",
-                                      label=T("Membership Type"),
-                                      title=T("Membership Type"),
+                                      label=label_create,
+                                      title=label_create,
                                       tooltip=T("Add a new membership type to the catalog.")),
             ondelete = "SET NULL")
 

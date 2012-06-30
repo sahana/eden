@@ -1,5 +1,10 @@
 ﻿# -*- coding: utf-8 -*-
 
+"""
+    This file is unused
+    - current tests are in modules/tests
+"""
+
 __all__ = ["WSGI_Test"]
 
 import wsgi_intercept.webtest_intercept
