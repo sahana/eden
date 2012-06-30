@@ -60,10 +60,12 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current
+from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.html import *
+#from gluon.http import HTTP, redirect
 from gluon.dal import Rows
-from gluon.html import *
-from gluon.http import HTTP
 from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 

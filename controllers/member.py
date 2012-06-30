@@ -7,18 +7,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
 def index():
     """ Dashboard """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,
@@ -42,7 +42,9 @@ def index():
                          _class="action-btn"))
 
     if not item:
-        item = H2(module_name)
+        #item = H2(module_name)
+        # Just redirect to the list of Members
+        redirect(URL(f="membership"))
 
     # tbc
     report = ""
@@ -51,7 +53,14 @@ def index():
     return dict(item=item, report=report)
 
 # =============================================================================
-# People
+def membership_type():
+    """
+        REST Controller
+    """
+
+    output = s3_rest_controller()
+    return output
+
 # =============================================================================
 def membership():
     """
@@ -68,12 +77,12 @@ def membership():
                 vars = {"membership.id": r.id}
                 redirect(URL(f="person", vars=vars))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller(rheader=s3db.member_rheader)
     return output
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def person():
     """
         Person Controller
@@ -93,7 +102,8 @@ def person():
                            action=s3db.pr_contacts)
 
     # Upload for configuration (add replace option)
-    response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+    s3.importerPrep = lambda: \
+        dict(ReplaceOption=T("Remove existing data before import"))
 
     # Import pre-process
     def import_prep(data):
@@ -103,14 +113,12 @@ def person():
             hook in s3mgr
         """
 
-        request = current.request
-
         resource, tree = data
         xml = s3mgr.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
 
-        if response.s3.import_replace:
+        if s3.import_replace:
             if tree is not None:
                 root = tree.getroot()
                 expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
@@ -154,7 +162,7 @@ def person():
             s3mgr.configure("member_membership",
                             insertable = False)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller("pr", resourcename,
                                 native=False,

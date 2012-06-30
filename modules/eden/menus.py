@@ -366,10 +366,6 @@ class S3OptionsMenu(object):
                         #M("Membership", f="membership"),
                     ),
                     M("Database", c="appadmin", f="index")(
-                        M("Import", c="admin", f="import_file"),
-                        #M("Import", c="admin", f="import_data"),
-                        #M("Export", c="admin", f="export_data"),
-                        #M("Import Jobs", c="admin", f="import_job"),
                         M("Raw Database access", c="appadmin", f="index")
                     ),
                     M("Synchronization", c="sync", f="index")(
@@ -1198,6 +1194,12 @@ class S3OptionsMenu(object):
         return M(c="member")(
                     M("Members", f="membership")(
                         M("Add Member", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", f="person", m="import"),
+                    ),
+                    M("Membership Types", f="membership_type")(
+                        M("Add Membership Type", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", f="person", m="import"),

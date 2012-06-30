@@ -18,6 +18,12 @@ settings.base.system_name_short = T("Resource Management System")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "IFRC"
+settings.gis.map_height = 600
+settings.gis.map_width = 854
+
+# Security Policy
+settings.security.policy = 8 # Delegations
+settings.security.map = True
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
@@ -49,14 +55,6 @@ settings.fin.currencies = {
     "CHF" : T("Swiss Francs"),
     "USD" : T("United States Dollars"),
 }
-
-# Security Policy
-settings.security.policy = 8 # Delegations
-settings.security.map = True
-
-# Theme
-settings.gis.map_height = 600
-settings.gis.map_width = 854
 
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?

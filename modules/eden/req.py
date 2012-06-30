@@ -168,7 +168,7 @@ class S3RequestModel(S3Model):
                                                         maximum=request.utcnow.date(),
                                                         error_message="%s %%(max)s!" %
                                                             T("Enter a valid past date"),
-                                                        format = s3_date_format))],
+                                                        format=s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
                                         #                          future=0),
@@ -202,7 +202,7 @@ class S3RequestModel(S3Model):
                                                       minimum=request.utcnow.date() - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
                                                             T("Enter a valid past date"),
-                                                        format = s3_date_format))],
+                                                        format=s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=0,
                                         #                          future=8760), # Hours, so 1 year
@@ -1360,14 +1360,14 @@ class S3CommitModel(S3Model):
                                         writable=False),
                                   Field("date",
                                         "date",
-                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                         widget = S3DateWidget(),
                                         default = request.utcnow,
                                         label = T("Date"),
                                         represent = s3_date_represent),
                                   Field("date_available",
                                         "date",
-                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                         widget = S3DateWidget(),
                                         label = T("Date Available"),
                                         represent = s3_date_represent),

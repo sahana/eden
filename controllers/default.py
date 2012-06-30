@@ -640,7 +640,8 @@ def facebook():
     if not auth.settings.facebook:
         redirect(URL(f="user", args=request.args, vars=request.vars))
 
-    auth.settings.login_form = s3base.FaceBookAccount()
+    from s3oauth import FaceBookAccount
+    auth.settings.login_form = FaceBookAccount()
     form = auth()
 
     return dict(form=form)
@@ -652,7 +653,8 @@ def google():
     if not auth.settings.google:
         redirect(URL(f="user", args=request.args, vars=request.vars))
 
-    auth.settings.login_form = s3base.GooglePlusAccount()
+    from s3oauth import GooglePlusAccount
+    auth.settings.login_form = GooglePlusAccount()
     form = auth()
 
     return dict(form=form)

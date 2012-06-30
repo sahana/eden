@@ -137,7 +137,6 @@ _settings.lock_keys = False
 _settings.password_min_length = 4
 _settings.expiration = 28800  # seconds
 
-# Authentication options
 _settings.facebook = settings.get_auth_facebook()
 _settings.google = settings.get_auth_google()
 

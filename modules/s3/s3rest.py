@@ -64,7 +64,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-# Here are dependencies listed for reference
+# Here are dependencies listed for reference:
 #from gluon.dal import Field
 #from gluon.globals import current
 #from gluon.html import A, DIV, URL

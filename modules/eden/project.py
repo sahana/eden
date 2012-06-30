@@ -270,13 +270,13 @@ class S3ProjectModel(S3Model):
                              Field("start_date", "date",
                                    label = T("Start Date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              Field("end_date", "date",
                                    label = T("End Date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              Field("calendar",
@@ -1517,13 +1517,13 @@ class S3Project3WModel(S3Model):
                              Field("start_date", "date",
                                    label = T("Start Date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              Field("end_date", "date",
                                    label = T("End Date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              comments(),
@@ -2365,7 +2365,7 @@ class S3ProjectTaskModel(S3Model):
                              Field("date", "date",
                                    label = T("Date"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format))),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format))),
                              comments(),
                              format="%(name)s",
                              *meta_fields())

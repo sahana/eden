@@ -62,19 +62,22 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="orgs"
-             match="row"
+    <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
 
     <xsl:key name="branches" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
+
+    <xsl:key name="types" match="row"
+             use="col[@field='Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
             <!-- Top-level Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs',
+                                                                       col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName">
                         <xsl:value-of select="col[@field='Organisation']/text()"/>
@@ -84,13 +87,21 @@
             </xsl:for-each>
 
             <!-- Branches -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches', concat(col[@field='Organisation'], '/', col[@field='Branch']))[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches',
+                                                                       concat(col[@field='Organisation'], '/',
+                                                                              col[@field='Branch']))[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName"></xsl:with-param>
                     <xsl:with-param name="BranchName">
                         <xsl:value-of select="col[@field='Branch']/text()"/>
                     </xsl:with-param>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('types',
+                                                                       col[@field='Type'])[1])]">
+                <xsl:call-template name="Type"/>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -197,29 +208,24 @@
 
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
-
-        <xsl:variable name="type">
-            <xsl:choose>
-                <xsl:when test="col[@field='Type']='normal' or
-                                col[@field='Type']='Normal'">1</xsl:when>
-                <xsl:when test="col[@field='Type']='life' or
-                                col[@field='Type']='Life'">2</xsl:when>
-                <xsl:when test="col[@field='Type']='honorary' or
-                                col[@field='Type']='Honorary'">3</xsl:when>
-                <!-- Default to Normal -->
-                <xsl:otherwise>1</xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
+        <xsl:variable name="TypeName" select="col[@field='Type']/text()"/>
 
         <resource name="member_membership">
 
             <!-- Membership data -->
             <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
-            <data field="type"><xsl:value-of select="$type"/></data>
             <data field="membership_fee"><xsl:value-of select="col[@field='Membership Fee']"/></data>
             <data field="membership_paid">
                 <xsl:value-of select="col[@field='Date Paid']"/>
             </data>
+
+            <xsl:if test="$TypeName!=''">
+                <reference field="membership_type_id" resource="member_membership_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$TypeName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
@@ -597,6 +603,28 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Type">
+
+        <xsl:variable name="TypeName" select="col[@field='Type']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="member_membership_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$TypeName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$TypeName"/></data>
+
+            <!-- Link to Top-Level Org -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OrgName"/>
+                </xsl:attribute>
+            </reference>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
@@ -626,4 +654,5 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+
 </xsl:stylesheet>

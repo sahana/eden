@@ -34,6 +34,7 @@ __all__ = ["S3Config"]
 
 from gluon import current
 from gluon.storage import Storage
+
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 class S3Config(Storage):

@@ -177,7 +177,7 @@ class S3AssetModel(S3Model):
                                    label = T("Supplier")),
                              Field("purchase_date", "date",
                                    label = T("Purchase Date"),
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
                              Field("purchase_price", "double",

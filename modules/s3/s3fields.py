@@ -54,13 +54,16 @@ __all__ = [
            ]
 
 from datetime import datetime
-import uuid
+from uuid import uuid4
 
-from gluon import current
-from gluon.dal import Query, Field, SQLCustomType
+from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.dal import Field
+#from gluon.html import *
+#from gluon.validators import *
+from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
-from gluon.html import *
-from gluon.validators import *
 
 from s3utils import s3_auth_user_represent, s3_auth_group_represent
 
@@ -206,7 +209,7 @@ class S3ReusableField(object):
 # Use URNs according to http://tools.ietf.org/html/rfc4122
 s3uuid = SQLCustomType(type = "string",
                        native = "VARCHAR(128)",
-                       encoder = lambda x: "%s" % (uuid.uuid4().urn
+                       encoder = lambda x: "%s" % (uuid4().urn
                                     if x == ""
                                     else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
@@ -215,7 +218,7 @@ if db and current.db._adapter.represent("X", s3uuid) != "'X'":
     # Old web2py DAL, must add quotes in encoder
     s3uuid = SQLCustomType(type = "string",
                            native = "VARCHAR(128)",
-                           encoder = (lambda x: "'%s'" % (uuid.uuid4().urn
+                           encoder = (lambda x: "'%s'" % (uuid4().urn
                                         if x == ""
                                         else str(x.encode("utf-8")).replace("'", "''"))),
                            decoder = (lambda x: x))
@@ -304,7 +307,7 @@ def s3_ownerstamp():
                                                         else None,
                                             represent=lambda id: \
                                                 id and s3_auth_user_represent(id) or \
-                                                       UNKNOWN_OPT,
+                                                       current.messages.UNKNOWN_OPT,
                                             ondelete="RESTRICT")
 
     # Role of users who collectively own the record

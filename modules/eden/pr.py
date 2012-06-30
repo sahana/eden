@@ -670,7 +670,7 @@ class S3PersonModel(S3Model):
                                    label = T("Date of Birth"),
                                    represent = s3_date_represent,
                                    requires = [IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                                                format = s3_date_format,
+                                                format=s3_date_format,
                                                 maximum=request.utcnow.date(),
                                                 error_message="%s %%(max)s!" %
                                                               T("Enter a valid date before")))],
