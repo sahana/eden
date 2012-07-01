@@ -38,7 +38,6 @@ __all__ = ["S3ProjectModel",
            "project_project_represent",
            "project_location_represent",
            "project_rheader",
-           "project_location_represent",
            "project_task_controller",
            ]
 

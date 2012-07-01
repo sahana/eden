@@ -29,14 +29,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
-import os
-import csv
 import datetime
-import hashlib
+import os
 import re
+import sys
 import urllib
-import uuid
 
 try:
     import json # try stdlib (Python 2.6)
@@ -91,6 +88,7 @@ def s3_dev_toolbar():
         Developer Toolbar - ported from gluon.Response.toolbar()
         Shows useful stuff at the bottom of the page in Debug mode
     """
+
     from gluon.dal import thread
     from gluon.utils import web2py_uuid
 
@@ -475,6 +473,7 @@ def s3_comments_represent(text, showlink=True):
     elif not showlink:
         return "%s..." % text[:76]
     else:
+        import uuid
         unique =  uuid.uuid4()
         represent = DIV(
                         DIV(text,
@@ -561,6 +560,7 @@ def s3_avatar_represent(id, tablename="auth_user", _class="avatar"):
                   args=image)
     elif email:
         # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
+        import hashlib
         hash = hashlib.md5(email).hexdigest()
         url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
     else:
@@ -1514,8 +1514,10 @@ class S3BulkImporter(object):
     def __init__(self):
         """ Constructor """
 
+        import csv
         from xml.sax.saxutils import unescape
 
+        self.csv = csv
         self.unescape = unescape
         self.importTasks = []
         self.specialTasks = []
@@ -1546,8 +1548,9 @@ class S3BulkImporter(object):
             The file consists of a comma separated list of:
             application, resource name, csv filename, xsl filename.
         """
+
         source = open(os.path.join(path, "tasks.cfg"), "r")
-        values = csv.reader(source)
+        values = self.csv.reader(source)
         for details in values:
             if details == []:
                 continue
@@ -1771,8 +1774,7 @@ class S3BulkImporter(object):
                 s3_debug(msg)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def import_role(filename):
+    def import_role(self, filename):
         """ Import Roles from CSV """
 
         # Check if the source file is accessible
@@ -1801,7 +1803,7 @@ class S3BulkImporter(object):
                     aclValue = aclValue | acl.ALL
             return aclValue
 
-        reader = csv.DictReader(openFile)
+        reader = self.csv.DictReader(openFile)
         roles = {}
         acls = {}
         args = {}

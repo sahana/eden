@@ -586,6 +586,12 @@ settings.modules = OrderedDict([
     #       module_type = 10,
     #   )),
     # These are specialist modules
+    #("cap", Storage(
+    #        name_nice = T("CAP"),
+    #        #description = "Create & broadcast CAP alerts",
+    #        restricted = True,
+    #        module_type = 10,
+    #)),
     # Requires RPy2 & PostgreSQL
     #("climate", Storage(
     #        name_nice = T("Climate"),
