@@ -1,29 +1,5 @@
 @charset "UTF-8";
 
-/* To have a centered pane with a side colour
-body {
-    background: none repeat scroll 0 0 #63594D;
-    /*min-width: 1024px;*/
-    /*overflow:auto;  /* annoying always visible scrollbar in chrome */
-}
-
-/* Unused in default Sahana THeme
-#container {
-    background: none repeat scroll 0 0 #FFFFFF;
-    margin: 0 auto;
-    width: 1280px;
-}
-#banner {
-    background: url(../../img/BANNER.jpg) 0 0 no-repeat;
-    padding: none;
-    width: 1280px;
-    height: 255px;
-    display: block;
-    position: absolute;
-    top: 0;
-}
-*/
-
 /* Width of page */
 .swidth {
 	width: 640px;

@@ -39,15 +39,19 @@
 #modulenav ul {
     list-style: none;
 }
-#modulenav li div a {
-    color: #fff;
-}
 #modulenav a {
     text-decoration: none;
 }
 #modulenav a:hover {
     color: #fff;
     background: none;
+}
+#modulenav li {
+    float: left;
+    position: relative;
+    text-align: left;
+    cursor: default;
+    border-width: 1px 0;
 }
 #modulenav li li a {
     display: block;
@@ -57,13 +61,6 @@
 #modulenav li li a:hover {
     background: #414a59;
     color: #fff;
-}
-#modulenav li {
-    float: left;
-    position: relative;
-    text-align: left;
-    cursor: default;
-    border-width: 1px 0;
 }
 
 .submenu {
@@ -77,7 +74,8 @@
     text-shadow: 0 1px 1px #58606c;
 }
 #modulenav li div a{
-    display:inline-block;
+    color: #fff;
+    display: inline-block;
     padding: 8px 10px 5px 15px;
 }
 #modulenav li div.hovered,

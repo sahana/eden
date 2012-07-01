@@ -113,9 +113,9 @@ class index():
                                             ),
                                         _id = "manage_facility_box",
                                         _class = "menu_box fleft")
-                    s3.jquery_ready.append('''
-$('#manage_facility_select').change(function(){
- $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()));
+                    s3.jquery_ready.append(
+'''$('#manage_facility_select').change(function(){
+ $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
 })''')
                 else:
                     manage_facility_box = DIV()
@@ -155,23 +155,23 @@ $('#manage_facility_select').change(function(){
                 else:
                     s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
                 if request.env.request_method == "POST":
-                    post_script = '''
-$('#register_form').removeClass('hide');
-$('#login_form').addClass('hide');'''
+                    post_script = \
+'''$('#register_form').removeClass('hide')
+$('#login_form').addClass('hide')'''
                 else:
                     post_script = ""
-                register_script = '''
-$('#register-btn').attr('href','#register');
-$('#login-btn').attr('href','#login');
+                register_script = \
+'''$('#register-btn').attr('href','#register')
+$('#login-btn').attr('href','#login')
 %s
-$('#register-btn').click(function() {
- $('#register_form').removeClass('hide');
- $('#login_form').addClass('hide');
-});
-$('#login-btn').click(function() {
- $('#register_form').addClass('hide');
- $('#login_form').removeClass('hide');
-});''' % post_script
+$('#register-btn').click(function(){
+ $('#register_form').removeClass('hide')
+ $('#login_form').addClass('hide')
+})
+$('#login-btn').click(function(){
+ $('#register_form').addClass('hide')
+ $('#login_form').removeClass('hide')
+})''' % post_script
                 s3.jquery_ready.append(register_script)
 
             # Provide a login box on front page
