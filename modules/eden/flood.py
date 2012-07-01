@@ -46,17 +46,14 @@ class S3FloodModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
         location_id = self.gis_location_id
 
         # Shortcuts
         #add_component = self.add_component
-        comments = s3_comments
         #configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
 
         # -----------------------------------------------------------------------------
         # Gauges
@@ -91,8 +88,8 @@ class S3FloodModel(S3Model):
                                    represent = lambda opt: \
                                     flowstatus_opts.get(opt, opt),
                                    label = T("Flow Status")),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         ADD_GAUGE = T("Add Gauge")
         crud_strings[tablename] = Storage(
@@ -119,8 +116,8 @@ class S3FloodModel(S3Model):
                              Field("name",
                                    label=T("Name"),
                                    requires = IS_NOT_EMPTY()),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_RIVER = T("Add River")

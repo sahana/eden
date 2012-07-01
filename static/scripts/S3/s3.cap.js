@@ -1,8 +1,8 @@
-(function ($) {
+(function($) {
     // Logic for forms
     function init_cap_form($form) {
         // On change in scope
-        $form.find('[name=scope]').change(function () {
+        $form.find('[name=scope]').change(function() {
             var scope = $(this).val(),
                 $restriction = $form.find('[name=restriction]'),
                 $recipients  = $form.find('[name=addresses]'),
@@ -33,9 +33,9 @@
         });
     }
 
-    $("form").each(function () {
+    $('form').each(function() {
         var _formname = $(this).find('[name=_formname]').val(),
-            alert_form = "cap_alert";
+            alert_form = 'cap_alert';
             console.log(_formname);
         if (_formname.substring(0, alert_form.length) == alert_form) {
             init_cap_form($(this));

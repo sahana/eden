@@ -620,11 +620,9 @@ class S3TrackingModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_component = self.add_component
-        comments = s3_comments
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         set_method = self.set_method
 
         s3_date_format = settings.get_L10n_date_format()
@@ -727,8 +725,8 @@ class S3TrackingModel(S3Model):
                                    label = T("Time Out"),
                                    represent = s3_string_represent,
                                    ),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_SEND = T("Add New Shipment")
@@ -902,8 +900,8 @@ class S3TrackingModel(S3Model):
                                                   _title="%s|%s" % (T("Certificate Status"),
                                                                     T("Has the Certificate for receipt of the shipment been given to the sender?"))),
                                    ),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
         inv_recv_crud_strings()
@@ -1098,8 +1096,8 @@ class S3TrackingModel(S3Model):
                                        default = auth.s3_logged_in_person(),
                                        #comment = self.pr_person_comment(child="repacked_id")),
                                       ),
-                             comments(),
-                             *meta_fields()
+                             s3_comments(),
+                             *s3_meta_fields()
                             )
 
         # CRUD strings
@@ -1226,8 +1224,8 @@ $(document).ready(function(){
                              recv_id(),
                              req_item_id(readable=False,
                                          writable=False),
-                             comments(),
-                             *meta_fields()
+                             s3_comments(),
+                             *s3_meta_fields()
                              )
 
         # pack_quantity virtual field

@@ -77,7 +77,6 @@ class S3HRModel(S3Model):
 
         T = current.T
         db = current.db
-        auth = current.auth
         settings = current.deployment_settings
         controller = current.request.controller
 
@@ -96,7 +95,7 @@ class S3HRModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
 
-        root_org = auth.root_org()
+        root_org = current.auth.root_org()
 
         # =========================================================================
         # Human Resource

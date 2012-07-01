@@ -3165,10 +3165,12 @@ class AuthS3(Auth):
         if not self.user:
             return None
         org_id = self.user.organisation_id
+        if not org_id:
+            return None
         return current.cache.ram(
                     # Common key for all users of this org
                     "root_org_%s" % org_id,
-                    current.s3db.org_root_organisation(organisation_id=org_id)[0],
+                    lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120
                 )
 

@@ -52,7 +52,8 @@ __all__ = ["single_phone_number_pattern",
            "IS_ADD_PERSON_WIDGET",
            "IS_ACL",
            "QUANTITY_INV_ITEM",
-           "IS_IN_SET_LAZY"]
+           "IS_IN_SET_LAZY"
+           ]
 
 import re
 import time
@@ -1834,6 +1835,8 @@ class IS_IN_SET_LAZY(Validator):
                         self.labels = [represent(item) for item in theset]
             else:
                 self.theset = theset
+        else:
+            self.theset = []
 
     def options(self):
         if not self.theset:

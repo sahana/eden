@@ -85,7 +85,6 @@ class S3SupplyModel(S3Model):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         organisation_id = self.org_organisation_id
@@ -95,11 +94,9 @@ class S3SupplyModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3_comments
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # =====================================================================
@@ -111,8 +108,8 @@ class S3SupplyModel(S3Model):
                                    notnull=True,
                                    unique=True,
                                    label = T("Name")),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_BRAND = T("Add Brand")
@@ -155,8 +152,8 @@ class S3SupplyModel(S3Model):
                                    unique=True,
                                    label = T("Name")),
                              organisation_id(),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_CATALOG = T("Add Catalog")
@@ -231,8 +228,8 @@ class S3SupplyModel(S3Model):
                                    readable=vehicle,
                                    writable=vehicle,
                                    label=T("Items in Category are Vehicles")),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ITEM_CATEGORY = T("Add Item Category")
@@ -355,8 +352,8 @@ class S3SupplyModel(S3Model):
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              # These comments do *not* pull through to an Inventory's Items or a Request's Items
-                             comments(),
-                             *meta_fields()
+                             s3_comments(),
+                             *s3_meta_fields()
                             )
 
         # Categories in Progress
@@ -483,8 +480,8 @@ class S3SupplyModel(S3Model):
         # This resource is used to link Items with Catalogs (n-to-n)
         # Item Categories will also be catalog specific
         #
-        script = SCRIPT('''
-$(document).ready(function(){
+        script = SCRIPT(
+'''$(document).ready(function(){
  S3FilterFieldChange({
   'FilterField':'catalog_id',
   'Field':'item_category_id',
@@ -501,8 +498,8 @@ $(document).ready(function(){
                                               script = script,
                                             ),
                              supply_item_id(script = None), # No Item Pack Filter
-                             comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
-                             *meta_fields())
+                             s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ITEM = T("Add Catalog Item")
@@ -611,8 +608,8 @@ $(document).ready(function(){
                                    label = T("Quantity"),
                                    represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
 
 
@@ -700,8 +697,8 @@ S3FilterFieldChange({
                                     IS_FLOAT_AMOUNT.represent(v, precision=2)
                                    ),
                              item_pack_id(),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # =====================================================================
         # Alternative Items
@@ -726,8 +723,8 @@ S3FilterFieldChange({
                                    represent = lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              supply_item_id("alt_item_id",
                                             notnull=True),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ALT_ITEM = T("Add Alternative Item")
