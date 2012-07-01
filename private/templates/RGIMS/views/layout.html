@@ -56,13 +56,9 @@
 {{pass}}
 //]]></script>
 {{try:}}
- {{if r.representation == "popup":}}
-  {{representation = "popup"}}
- {{elif r.representation == "iframe":}}
-  {{representation = "iframe"}}
- {{else:}}
-  {{representation = ""}}
- {{pass}}
+ {{if r.representation == "popup":}}{{representation = "popup"}}
+ {{elif r.representation == "iframe":}}{{representation = "iframe"}}
+ {{else:}}{{representation = ""}}{{pass}}
 {{except:}}
  {{representation = ""}}
 {{pass}}

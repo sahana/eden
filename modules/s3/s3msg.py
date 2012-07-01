@@ -42,17 +42,15 @@ __all__ = ["S3Msg",
            "S3Compose"]
 
 import datetime
-import difflib
 import string
 import urllib
 from urllib2 import urlopen
 
-from gluon import current
+from gluon import current, redirect
 from gluon.html import *
-from gluon.http import redirect
 
 from s3crud import S3CRUD
-from s3utils import s3_debug,soundex
+from s3utils import s3_debug
 from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")

@@ -33,7 +33,7 @@ def index():
                                        vars={"module":module}),
                              _class="action-btn"))
             else:
-                item = _item.body
+                item = XML(_item.body)
         elif s3_has_role(ADMIN):
             item = DIV(H2(module_name),
                        A(T("Edit"),

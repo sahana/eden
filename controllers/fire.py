@@ -3,7 +3,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -12,7 +12,7 @@ def index():
 
     # @todo: have a link to the fire station the current user works at
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     # Note that this requires setting the Porto Incident Types in modules/eden.irs.py
@@ -64,7 +64,7 @@ def station():
 def station_vehicle():
     """ Vehicles of Fire Stations """
 
-    response.s3.prep = lambda r: r.method == "import"
+    s3.prep = lambda r: r.method == "import"
 
     return s3_rest_controller()
 

@@ -23,7 +23,7 @@ def index():
     # Need CRUD String
     table = s3db.table("cr_shelter", None)
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 

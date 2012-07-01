@@ -6,14 +6,14 @@
 
 module = request.controller
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
 def index():
     "Module's Home Page"
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -28,7 +28,7 @@ def person():
         else:
             s3mgr.show_ids = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller("pr", "person")
 
@@ -85,14 +85,14 @@ def patient():
             s3mgr.configure("patient_relative",
                             create_next = URL(args=[str(r.id), "home"]))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
         # No Delete-button in list view
         s3_action_buttons(r, deletable=False)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     tabs = [(T("Basic Details"), None),
             (T("Accompanying Relative"), "relative"),

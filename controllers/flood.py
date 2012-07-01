@@ -7,18 +7,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,
@@ -33,7 +33,7 @@ def index():
                                        vars={"module":module}),
                              _class="action-btn"))
             else:
-                item = _item.body
+                item = XML(_item.body)
         elif s3_has_role(ADMIN):
             item = DIV(H2(module_name),
                        A(T("Edit"),

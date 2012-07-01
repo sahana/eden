@@ -9,18 +9,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not _settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # Vehicle Module depends on Assets
-if not deployment_settings.has_module("asset"):
+if not settings.has_module("asset"):
     raise HTTP(404, body="Module disabled: %s" % "asset")
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     return dict(module_name=module_name)

@@ -35,7 +35,7 @@ def index():
                                        vars={"module":module}),
                              _class="action-btn"))
             else:
-                item = _item.body
+                item = XML(_item.body)
         elif s3_has_role(ADMIN):
             item = DIV(H2(module_name),
                        A(T("Edit"),
@@ -126,6 +126,19 @@ def post():
         s3mgr.configure(tablename,
                         create_next = url,
                         update_next = url)
+    else:
+        page = request.get_vars.get("page", None)
+        if page:
+            table.module.readable = table.module.writable = False
+            table.name.default = page
+            table.name.readable = table.name.writable = False
+            _crud = s3.crud_strings[tablename]
+            _crud.title_create = T("New Page")
+            _crud.title_update = T("Edit Page")
+            url = URL(c="default", f="index", vars={"page":page})
+            s3mgr.configure(tablename,
+                            create_next = url,
+                            update_next = url)
 
     # Custom Method to add Comments
     s3mgr.model.set_method(module, resourcename,
@@ -151,6 +164,7 @@ def page():
     def postp(r, output):
         if r.record:
             output = {"item": r.record.body}
+            current.menu.options = None
             response.view = "cms/page.html"
             if r.record.replies:
                 ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
@@ -168,12 +182,11 @@ function comment_reply(id){
  $('#cms_comment_post_id__row').hide()
  $('#cms_comment_post_id__row1').hide()
  $('#comment-title').html(S3.i18n.reply)
- var ed=$('#cms_comment_body').ckeditorGet()
- ed.destroy()
+ $('#cms_comment_body').ckeditorGet().destroy()
  $('#cms_comment_body').ckeditor(ck_config)
- $('#comment-form').insertAfter($('#comment-' + id))
+ $('#comment-form').insertAfter($('#comment-'+id))
  $('#cms_comment_parent').val(id)
- var post_id = $('#comment-' + id).attr('post_id')
+ var post_id = $('#comment-'+id).attr('post_id')
  $('#cms_comment_post_id').val(post_id)
 }'''))
 
@@ -210,12 +223,11 @@ function comment_reply(id){
  $('#cms_comment_post_id__row').hide()
  $('#cms_comment_post_id__row1').hide()
  $('#comment-title').html(S3.i18n.reply)
- var ed=$('#cms_comment_body').ckeditorGet()
- ed.destroy()
+ $('#cms_comment_body').ckeditorGet().destroy()
  $('#cms_comment_body').ckeditor(ck_config)
- $('#comment-form').insertAfter($('#comment-' + id))
+ $('#comment-form').insertAfter($('#comment-'+id))
  $('#cms_comment_parent').val(id)
- var post_id=$('#comment-' + id).attr('post_id')
+ var post_id=$('#comment-'+id).attr('post_id')
  $('#cms_comment_post_id').val(post_id)
 }'''))
 
@@ -332,7 +344,11 @@ def comments():
 $('#cms_comment_parent__row1').hide()
 $('#cms_comment_parent__row').hide()
 $('#cms_comment_body').ckeditor(ck_config)
-$('#submit_record__row input').click(function(){$('#comment-form').hide();$('#cms_comment_body').ckeditorGet().destroy();return true;})'''
+$('#submit_record__row input').click(function(){
+ $('#comment-form').hide()
+ $('#cms_comment_body').ckeditorGet().destroy()
+ return true
+})'''
 
     # No layout in this output!
     #s3.jquery_ready.append(script)

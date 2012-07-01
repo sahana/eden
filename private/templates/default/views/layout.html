@@ -56,16 +56,11 @@
 {{pass}}
 //]]></script>
 {{try:}}
- {{if r.representation == "popup":}}
-  {{representation = "popup"}}
- {{elif r.representation == "iframe":}}
-  {{representation = "iframe"}}
- {{else:}}
-  {{representation = ""}}
+ {{if r.representation == "popup":}}{{representation = "popup"}}
+ {{elif r.representation == "iframe":}}{{representation = "iframe"}}
+ {{else:}}{{representation = ""}}
  {{pass}}
-{{except:}}
- {{representation = ""}}
-{{pass}}
+{{except:}}{{representation = ""}}{{pass}}
 {{if representation == "popup":}}
  {{include "layout_popup.html"}}
  {{if response.flash or response.confirmation:}}
