@@ -59,6 +59,7 @@ class S3Config(Storage):
         self.save_search = Storage()
         self.security = Storage()
         self.ui = Storage()
+        self.cap = Storage()
         self.gis = Storage()
         self.hrm = Storage()
         self.inv = Storage()
@@ -603,6 +604,33 @@ class S3Config(Storage):
 
     # =========================================================================
     # Modules
+
+    # -------------------------------------------------------------------------
+    # Alert
+    def get_cap_identifier_prefix(self):
+        return self.cap.get("identifier_prefix", "")
+
+    def get_cap_identifier_suffix(self):
+        return self.cap.get("identifier_suffix", "")
+
+    def get_cap_languages(self):
+        """
+            Languages for cap info. This gets filled in the drop-down for
+            selecting languages. These values should conform to RFC 3066.
+
+            For a full list of languages and their codes, see:
+                http://www.i18nguy.com/unicode/language-identifiers.html 
+        """
+
+        return self.cap.get("languages",
+                             OrderedDict([
+                                ("ar", "العربية"),
+                                ("en", "English"),
+                                ("fr", "Français"),
+                                ("pt", "Português"),
+                                ("ru", "русский"),
+                                ("es", "Español")
+                            ]))
 
     # -------------------------------------------------------------------------
     # Human Resource Management
