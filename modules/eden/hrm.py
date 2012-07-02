@@ -3205,8 +3205,7 @@ def hrm_service_record (r, **attr):
             size = s3db.pr_image_size(image, size)
             url = URL(c="default",
                       f="download",
-                      args=image
-                     )
+                      args=image)
             avatar = IMG(_src=url,
                          _width=size[0],
                          _height=size[1],
@@ -3305,20 +3304,22 @@ def hrm_service_record (r, **attr):
 
         # Training Hours
         ttable = s3db.hrm_training
-        tetable = s3db.hrm_training_event
+        ctable = s3db.hrm_course
         query = (ttable.person_id == person_id) & \
-                (ttable.deleted == False) & \
-                (ttable.training_event_id == tetable.id)
-        rows = db(query).select(tetable.course_id,
-                                tetable.start_date,
-                                tetable.hours,
-                                orderby = ~tetable.start_date)
+                (ttable.deleted == False)
+        rows = db(query).select(ctable.name,
+                                ttable.date,
+                                ttable.hours,
+                                left=ctable.on(ttable.course_id == ctable.id),
+                                orderby = ~ttable.date)
+        NONE = current.messages.NONE
         for row in rows:
-            hours[row.start_date.date()] = dict(
+            _row = row["hrm_training"]
+            hours[_row.date.date()] = dict(
                                 programme = "",
-                                course = tetable.course_id.represent(row.course_id),
-                                date = tetable.start_date.represent(row.start_date),
-                                hours = row.hours,
+                                course = row["hrm_course"].name or NONE,
+                                date = ttable.date.represent(_row.date),
+                                hours = _row.hours,
                             )
 
         # Combined Hours
@@ -3349,16 +3350,14 @@ def hrm_service_record (r, **attr):
 
     if r.record.type == 2:
         # Volunteer
-        T = current.T
-        list_fields = ["person_id$first_name",
-                      ]
+        list_fields = ["person_id$first_name"]
         name = s3_fullname(r.record.person_id)
         exporter = r.resource.exporter.pdf
         return exporter(r,
                         method = "list",
                         #pdf_componentname = "inv_track_item",
-                        pdf_title = "%s - %s" % (name,
-                                                 T("Volunteer Service Record")),
+                        pdf_title = "%s - %s" % \
+                            (name, current.T("Volunteer Service Record")),
                         #pdf_filename = send_ref,
                         #list_fields = list_fields,
                         pdf_hide_comments = True,
