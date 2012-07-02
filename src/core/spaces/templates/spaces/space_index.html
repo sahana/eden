@@ -31,7 +31,7 @@
                 {% if get_place.mod_cal %}
                 <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
                 {% endif %}
-                {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Administration" %} <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -40,7 +40,7 @@
                                 <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans 'Add new post' %}
                             </a></li>
                         {% endif %}
-                        {% if perms.spaces.edit_space %}
+                        {% if perms.spaces.change_space %}
                             <li><a href="{% url 'edit-space' get_place.url %}">
                                 <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>{% trans 'Edit space' %}
                             </a></li>
@@ -133,8 +133,8 @@
                         <div class="span8">
                             {% for news in publication %}
                                 <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a>
-                                    {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
-                                        {% if perms.news.edit_post %}
+                                    {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                                        {% if perms.news.change_post %}
                                             <a href="{% url 'edit-post' get_place.url news.id %}">
                                                 <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                             </a>
@@ -157,7 +157,7 @@
                             {% endfor %}
                         </div>
                         <div class="span4 space-sidebar">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 {% if perms.news.add_post %}
                                     <h4>{% trans "Administration" %}</h4>
                                     <ul class="unstyled">
@@ -204,7 +204,7 @@
                             </ul>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.debate.add_debate %}
@@ -213,7 +213,7 @@
                                         </a></li>
                                     {% endif %}
                                     {% comment %}
-                                    {% if perms.debate.edit_debate %}
+                                    {% if perms.debate.change_debate %}
                                         <li><a href="{% url 'edit-debate' get_place.url debate.id %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                         </a></li>
@@ -261,7 +261,7 @@
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.proposalsets.add_proposalset %}
@@ -298,7 +298,7 @@
                             <ul class="unstyled">
                                 {% for doc in documents %}
                                     <li><a href="{{ doc.docfile.url }}">{{ doc.title }} ({{ doc.get_file_ext }}, {{ doc.get_file_size }})</a>
-                                    {% if perms.spaces.edit_document %}
+                                    {% if perms.spaces.change_document %}
                                         <a href="{% url 'edit-document' get_place.url doc.id %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
                                         </a>
@@ -315,7 +315,7 @@
                             </ul>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_document %}
@@ -379,7 +379,7 @@
                             <div id="datepicker"></div>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_event %}

@@ -97,7 +97,7 @@ class EditPost(UpdateView):
         cur_post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         return cur_post
         
-    @method_decorator(permission_required('news.edit_post'))
+    @method_decorator(permission_required('news.change_post'))
     def dispatch(self, *args, **kwargs):
         return super(EditPost, self).dispatch(*args, **kwargs)
 

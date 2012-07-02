@@ -281,17 +281,17 @@ class ViewSpaceIndex(DetailView):
         return context
         
 
-# Please take in mind that the edit_space view can't be replaced by a CBV
+# Please take in mind that the change_space view can't be replaced by a CBV
 # (class-based view) since it manipulates two forms at the same time. Apparently
 # that creates some trouble in the django API. See this ticket:
 # https://code.djangoproject.com/ticket/16256
-@permission_required('spaces.edit_space')
+@permission_required('spaces.change_space')
 def edit_space(request, space_url):
 
     """
     Returns a form filled with the current space data to edit. Access to
     this view is restricted only to site and space administrators. The filter
-    for space administrators is given by the edit_space permission and their
+    for space administrators is given by the change_space permission and their
     belonging to that space.
     
     :attributes: - place: current space intance.
@@ -384,11 +384,20 @@ class ListSpaces(ListView):
     paginate_by = 10
     
     def get_queryset(self):
+        current_user = self.request.user
         public_spaces = Space.objects.all().filter(public=True)
+        all_spaces = Space.objects.all()
         
-        if not self.request.user.is_anonymous():
-            user_spaces = self.request.user.profile.spaces.all()
-            return public_spaces | user_spaces
+        if not current_user.is_anonymous():
+            user_spaces = []
+            for space in all_spaces:
+                if current_user in space.users.all() \
+                    or current_user in space.admins.all() \
+                    or current_user in space.mods.all():
+                    user_spaces.append(space)
+                    public_spaces._result_cache(space)
+                    
+            return public_spaces
             
         return public_spaces
 
@@ -419,7 +428,7 @@ class EditRole(UpdateView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
-    @method_decorator(permission_required('spaces.edit_space'))
+    @method_decorator(permission_required('spaces.change_space'))
     def dispatch(self, *args, **kwargs):
         return super(EditRole, self).dispatch(*args, **kwargs)
 
@@ -487,7 +496,7 @@ class EditDocument(UpdateView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
-    @method_decorator(permission_required('spaces.edit_document'))
+    @method_decorator(permission_required('spaces.change_document'))
     def dispatch(self, *args, **kwargs):
         return super(EditDocument, self).dispatch(*args, **kwargs)
         
@@ -645,7 +654,7 @@ class EditEvent(UpdateView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
-    @method_decorator(permission_required('spaces.edit_event'))
+    @method_decorator(permission_required('spaces.change_event'))
     def dispatch(self, *args, **kwargs):
         return super(EditEvent, self).dispatch(*args, **kwargs)
         

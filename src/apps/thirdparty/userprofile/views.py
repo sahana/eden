@@ -38,7 +38,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.utils import simplejson
 from django.db import models
-from django.contrib.auth.models import User, SiteProfileNotAvailable
+from django.contrib.auth.models import User, SiteProfileNotAvailable, Group
 from django.template import RequestContext
 from django.conf import settings
 from django.db.models import Q
@@ -344,7 +344,11 @@ def register(request):
             newuser.email = form.cleaned_data.get('email')
             EmailValidation.objects.add(user=newuser, email=newuser.email)
             newuser.save()
-            return HttpResponseRedirect('%scomplete/' % request.path_info)
+
+            # Add the user to the space administrators group
+            u_group = Group.objects.get(name='Space administrators')
+            u_group.user_set.add(newuser)
+        return HttpResponseRedirect('%scomplete/' % request.path_info)
     else:
         form = RegistrationForm()
 

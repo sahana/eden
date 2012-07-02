@@ -16,7 +16,7 @@
             <h3>{% trans "View event" %}</h3>
 
             {% if request.user in get_place.admins.all or request.user in get_place.mods.all %}
-                {% if perms.spaces.edit_event %}
+                {% if perms.spaces.change_event %}
                     <div id="tools">
                         <a href="{% url 'edit-event' get_place.url event.id %}">Edit</a> |
                         {% if perms.spaces.delete_event %}
