@@ -1673,7 +1673,7 @@ class S3BulkImporter(object):
 
             try:
                 resource = manager.define_resource(prefix, name)
-            except KeyError:
+            except AttributeError:
                 # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
                 return
