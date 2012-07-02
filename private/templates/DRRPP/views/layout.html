@@ -1,18 +1,18 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="{{=T.accepted_language or "en"}}">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 <meta name="application-name" content="{{=appname}}" />
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
 {{if "MSIE" in request.wsgi.environ.get("HTTP_USER_AGENT",[]):}}
 <link href="/{{=appname}}/static/themes/DRRPP/font_ie.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{else:}}
 <link href="/{{=appname}}/static/themes/DRRPP/font_other.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-<link rel="shortcut icon" href="/{{=appname}}/static/themes/DRRPP/favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/DRRPP/favicon.ico" type="image/x-icon" />
 <style type="text/css">
 {{if s3.rtl:}}
  div{direction:rtl;}
@@ -46,9 +46,7 @@
  {{if r.representation == "popup":}}{{representation = "popup"}}
  {{elif r.representation == "iframe":}}{{representation = "iframe"}}
  {{else:}}{{representation = ""}}{{pass}}
-{{except:}}
- {{representation = ""}}
-{{pass}}
+{{except:}}{{representation = ""}}{{pass}}
 {{if representation == "popup":}}
  {{include "layout_popup.html"}}
  {{if response.flash or response.confirmation:}}

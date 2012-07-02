@@ -453,8 +453,16 @@ class IS_ONE_OF_EMPTY(Validator):
                 if "deleted" in table:
                     query = ((table["deleted"] == False) & query)
                 if self.filterby and self.filterby in table:
-                    if self.filter_opts:
-                        query = query & (table[self.filterby].belongs(self.filter_opts))
+                    filter_opts = self.filter_opts
+                    if filter_opts:
+                        if None in filter_opts:
+                            # Needs special handling (doesn't show up in 'belongs')
+                            query = query & (table[self.filterby]== None)
+                            filter_opts = [f for f in filter_opts if f is not None]
+                            if filter_opts:
+                                query = query & (table[self.filterby].belongs(self.filter_opts))
+                        else:
+                            query = query & (table[self.filterby].belongs(self.filter_opts))
                     if not self.orderby:
                         dd.update(orderby=table[self.filterby])
                 if self.not_filterby and self.not_filterby in table and self.not_filter_opts:

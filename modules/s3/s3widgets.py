@@ -42,7 +42,6 @@ __all__ = ["S3HiddenWidget",
            "S3PersonAutocompleteWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3SiteAutocompleteWidget",
-           "S3TrainingAutocompleteWidget",
            "S3LocationSelectorWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
@@ -1109,53 +1108,6 @@ $('#%(dummy_input)s').blur(function(){
                         INPUT(**attr),
                         requires = field.requires
                       )
-
-# =============================================================================
-class S3TrainingAutocompleteWidget(FormWidget):
-    """
-        Renders an hrm_training_event SELECT as an INPUT field with AJAX Autocomplete.
-        Differs from the S3AutocompleteWidget in that it uses course, site and date fields
-        for the represent (S3TrainingSearch also uses the first 2 for the actual search).
-
-        @ToDo: S3Search-style Filters instead of pure AC
-    """
-
-    def __init__(self,
-                 post_process = "",
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
-
-        self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
-
-    def __call__(self, field, value, **attributes):
-
-        return S3GenericAutocompleteTemplate(
-            self.post_process,
-            self.delay,
-            self.min_length,
-            field,
-            value,
-            attributes,
-            source = repr(
-                URL(c="hrm", f="training_event",
-                    args="search.json")
-            ),
-            name_getter = '''function(item){
- var name=''
- if(item.course!=null){
-  name+=item.course
- }
- if(item.site!=''){
-  name+=' ('+item.site+')'
- }
- if(item.date!=''){
-  name+=' ['+item.date+']'
- }
- return name
-}''',
-        )
 
 # -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(post_process,
