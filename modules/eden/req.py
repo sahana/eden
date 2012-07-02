@@ -80,10 +80,8 @@ class S3RequestModel(S3Model):
         auth = current.auth
         request = current.request
         session = current.session
-        s3 = current.response.s3
         settings = current.deployment_settings
 
-        org_site_represent = self.org_site_represent
         human_resource_id = self.hrm_human_resource_id
         event_id = self.event_event_id
 
@@ -92,6 +90,7 @@ class S3RequestModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         add_component = self.add_component
+        crud_strings = current.response.s3.crud_strings
         set_method = self.set_method
 
         s3_date_format = settings.get_L10n_date_format()
@@ -246,6 +245,8 @@ class S3RequestModel(S3Model):
                                                     writable = False,
                                                     #default = auth.s3_logged_in_human_resource()
                                                     ),
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
                                   self.super_link("site_id", "org_site",
                                                   label = T("Requested For Facility"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
@@ -257,7 +258,7 @@ class S3RequestModel(S3Model):
                                                   #comment = DIV(_class="tooltip",
                                                   #              _title="%s|%s" % (T("Requested By Facility"),
                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                  represent = org_site_represent),
+                                                  represent = self.org_site_represent),
                                   #Field("location",
                                   #      label = T("Neighborhood")),
                                   Field("transport_req",
@@ -319,7 +320,7 @@ class S3RequestModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST = T("Make Request")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
             title_list = T("Requests"),
@@ -995,19 +996,19 @@ class S3RequestItemModel(S3Model):
                                                     _title="%s|%s" % (T("Request Item"),
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
-                                      script = SCRIPT("""
-$(document).ready(function() {
-    S3FilterFieldChange({
-        'FilterField':    'req_item_id',
-        'Field':        'item_pack_id',
-        'FieldResource':'item_pack',
-        'FieldPrefix':    'supply',
-        'url':             S3.Ap.concat('/req/req_item_packs/'),
-        'msgNoRecords':    S3.i18n.no_packs,
-        'fncPrep':        fncPrepItem,
-        'fncRepresent':    fncRepresentItem
-    });
-});"""),
+                                      script = SCRIPT('''
+$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'req_item_id',
+  'Field':'item_pack_id',
+  'FieldResource':'item_pack',
+  'FieldPrefix':'supply',
+  'url':S3.Ap.concat('/req/req_item_packs/'),
+  'msgNoRecords':S3.i18n.no_packs,
+  'fncPrep':fncPrepItem,
+  'fncRepresent':fncRepresentItem
+ });
+})'''),
                                         )
 
 
@@ -1483,14 +1484,9 @@ class S3CommitModel(S3Model):
         """
         """
 
+        vars = form.vars
         db = current.db
         s3db = current.s3db
-
-        table = s3db.req_commit
-
-        vars = form.vars
-
-        rtable = s3db.req_req
         if vars.type == 3: # People
             # If no organisation_id, then this is a single person commitment, so create the commit_person record automatically
             table = s3db.req_commit_person
@@ -1500,6 +1496,8 @@ class S3CommitModel(S3Model):
             # @ToDo: Mark Person's allocation status as 'Committed'
         elif vars.type == 9:
             # Non-Item requests should have commitment status updated if a commitment is made
+            table = s3db.req_commit
+            rtable = s3db.req_req
             query = (table.id == vars.id) & \
                     (rtable.id == table.req_id)
             req_record = db(query).select(rtable.id,

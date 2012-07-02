@@ -1036,6 +1036,11 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
+                    M("Sites", c="inv", f="facility")(
+                        M("Add Site", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
                     M("Requests", c="req", f="req")(
                         M("Request Items", m="create"),
                         M("List All"),

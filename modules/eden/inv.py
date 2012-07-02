@@ -138,8 +138,6 @@ class S3InventoryModel(S3Model):
         supply_item_id = self.supply_item_id
         item_pack_id = self.supply_item_pack_id
 
-        org_site_represent = self.org_site_represent
-
         item_pack_virtualfields = self.supply_item_pack_virtualfields
         messages = current.messages
         NONE = messages.NONE
@@ -160,6 +158,8 @@ class S3InventoryModel(S3Model):
 
         tablename = "inv_inv_item"
         table = self.define_table(tablename,
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
                                   self.super_link("site_id", "org_site",
                                                   label = T("Warehouse"),
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
@@ -170,9 +170,9 @@ class S3InventoryModel(S3Model):
                                                   # Comment these to use a Dropdown & not an Autocomplete
                                                   #widget = S3SiteAutocompleteWidget(),
                                                   #comment = DIV(_class="tooltip",
-                                                  #              _title="%s|%s" % (T("Inventory"),
+                                                  #              _title="%s|%s" % (T("Warehouse"),
                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                  represent=org_site_represent),
+                                                  represent=self.org_site_represent),
                                   item_id, #Item Entity
                                   supply_item_id(ondelete = "RESTRICT"),
                                   item_pack_id(ondelete = "RESTRICT"),
@@ -658,19 +658,16 @@ class S3TrackingModel(S3Model):
                                        default = auth.s3_logged_in_person(),
                                        ondelete = "SET NULL",
                                        comment = self.pr_person_comment(child="sender_id")),
-                             Field("site_id", self.org_site,
-                                   label = T("From Facility"),
-                                   requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
-                                                        sort=True,
-                                                        ),
-                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                   readable = True,
-                                   writable = True,
-                                   represent = org_site_represent,
-                                   ondelete = "SET NULL"
-                                   ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             self.super_link("site_id", "org_site",
+                                             label = T("From Facility"),
+                                             default = auth.user.site_id if auth.is_logged_in() else None,
+                                             readable = True,
+                                             writable = True,
+                                             represent = org_site_represent,
+                                             #widget = S3SiteAutocompleteWidget(),
+                                             ),
                              Field("date", "date",
                                    label = T("Date Sent"),
                                    writable = False,
@@ -688,6 +685,7 @@ class S3TrackingModel(S3Model):
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()
                                    ),
+                             # This is a reference, not a super-link, so we can override
                              Field("to_site_id", self.org_site,
                                    label = T("To Facility"),
                                    requires = IS_ONE_OF(db, "org_site.site_id",
@@ -1065,12 +1063,11 @@ class S3TrackingModel(S3Model):
         table = define_table(tablename,
                              Field("site_id", "reference org_site",
                                     label = T("By Facility"),
-                                    ondelete = "SET NULL",
                                     default = auth.user.site_id if auth.is_logged_in() else None,
                                     readable = True,
                                     writable = True,
                                     widget = S3SiteAutocompleteWidget(),
-                                    represent=org_site_represent),
+                                    represent = org_site_represent),
                              item_id(label = T("Kit"),
                                      requires = IS_ONE_OF(db, "supply_item.id",
                                                           self.supply_item_represent,
@@ -2612,15 +2609,12 @@ class S3AdjustModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        settings = current.deployment_settings
 
         person_id = self.pr_person_id
         org_id = self.org_organisation_id
         item_id = self.supply_item_id
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
-
-        org_site_represent = self.org_site_represent
 
         messages = current.messages
         NONE = messages.NONE
@@ -2629,7 +2623,7 @@ class S3AdjustModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
-        s3_date_format = settings.get_L10n_date_format()
+        s3_date_format = current.deployment_settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # ---------------------------------------------------------------------
@@ -2649,16 +2643,17 @@ class S3AdjustModel(S3Model):
                                        ondelete = "RESTRICT",
                                        default = auth.s3_logged_in_person(),
                                        comment = self.pr_person_comment(child="adjuster_id")),
-                             self.super_link("site_id", "org_site",
-                                             ondelete = "SET NULL",
-                                             label = T("Warehouse"),
-                                             default = auth.user.site_id if auth.is_logged_in() else None,
-                                             readable = True,
-                                             writable = True,
-                                             empty = False,
-                                             orderby = "org_site.name",
-                                             sort = True,
-                                             represent=org_site_represent),
+                             # This is a reference, not a super-link, so we can override
+                             Field("site_id", self.org_site,
+                                   label = T("Warehouse"),
+                                   ondelete = "SET NULL",
+                                   default = auth.user.site_id if auth.is_logged_in() else None,
+                                   requires = IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                        sort=True,
+                                                        ),
+                                   represent=self.org_site_represent),
                              Field("adjustment_date", "date",
                                    label = T("Date of adjustment"),
                                    default = current.request.utcnow,
