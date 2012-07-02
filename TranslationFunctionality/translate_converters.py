@@ -9,6 +9,51 @@ from subprocess import call
 
 class StringsToExcel:
 
+	"""Class to convert strings to .xls format"""
+
+        def remove_quotes(self,Strings):
+
+	   """ Function to remove single or double quotes surrounding the strings """
+
+	   l = []
+
+	   for (d1,d2) in Strings:
+               if d1[0] == '"' and d1[-1] == '"' or d1[0] == "'" and d1[-1] == "'":
+	               d1 = d1[1:-1]
+               if d2[0] == '"' and d2[-1] == '"' or d2[0] == "'" and d2[-1] == "'":
+	               d2 = d2[1:-1]
+               l.append( (d1,d2) )
+
+           return l
+
+        #----------------------------------------------------------------------------
+ 
+        def remove_duplicates(self,Strings):
+
+           """ Function to club all the duplicate strings into one row with ';' separated locations """
+     
+           uniq = {}
+
+           for (loc,data) in Strings:
+                uniq[data] = ''
+
+           for (loc,data) in Strings:
+
+                if uniq[data] != '':
+                   uniq[data] = uniq[data] + ';' + loc
+                else:
+	           uniq[data] = loc
+    
+           l=[]
+
+           for data in uniq.keys():
+               l.append( (uniq[data],data) )
+
+    
+           return l
+
+        #---------------------------------------------------------------------------------
+
         def create_spreadsheet(self,Strings):
 
 	    """ Function to create a spreadsheet (.xls file) of strings with
@@ -55,7 +100,6 @@ class StringsToExcel:
 	    NewStrings = []
             A = translate_file_management.TranslateAPI()
             R = translate_file_management.TranslateReadFiles()
-            F = FormatStrings()
 
             # Retrieve strings for a module
 	    for mod in modlist:
@@ -65,13 +109,13 @@ class StringsToExcel:
 	    for f in filelist:
 	         NewStrings += A.get_strings_by_file(f)
         
-            NewStrings = F.remove_quotes(NewStrings)
-            NewStrings = F.remove_duplicates(NewStrings)
+            NewStrings = self.remove_quotes(NewStrings)
+            NewStrings = self.remove_duplicates(NewStrings)
             NewStrings.sort( key=lambda tup: tup[1] )
 
             # Retrive strings from existing w2p language file
 	    OldStrings = R.read_w2pfile(langfile)
-            OldStrings = F.remove_quotes(OldStrings)
+            OldStrings = self.remove_quotes(OldStrings)
 	    OldStrings.sort( key=lambda tup: tup[0] )
 
 
@@ -99,6 +143,8 @@ class StringsToExcel:
 
 
 class CsvToWeb2py:
+
+	""" Class to convert a group of csv files to a web2py language file"""
 
         def write_csvfile(self,fileName, data):
 
@@ -162,53 +208,6 @@ class CsvToWeb2py:
 	   os.unlink(csvfilename)   
       
         #----------------------------------------------------------------------------- 
-
-
-#=====================================================================================================
-
-class FormatStrings:
-
-        def remove_quotes(self,Strings):
-
-	   """ Function to remove single or double quotes surrounding the strings """
-
-	   l = []
-
-	   for (d1,d2) in Strings:
-               if d1[0] == '"' and d1[-1] == '"' or d1[0] == "'" and d1[-1] == "'":
-	               d1 = d1[1:-1]
-               if d2[0] == '"' and d2[-1] == '"' or d2[0] == "'" and d2[-1] == "'":
-	               d2 = d2[1:-1]
-               l.append( (d1,d2) )
-
-           return l
-
-        #----------------------------------------------------------------------------
- 
-        def remove_duplicates(self,Strings):
-
-           """ Function to club all the duplicate strings into one row with ';' separated locations """
-     
-           uniq = {}
-
-           for (loc,data) in Strings:
-                uniq[data] = ''
-
-           for (loc,data) in Strings:
-
-                if uniq[data] != '':
-                   uniq[data] = uniq[data] + ';' + loc
-                else:
-	           uniq[data] = loc
-    
-           l=[]
-
-           for data in uniq.keys():
-               l.append( (uniq[data],data) )
-
-    
-           return l
-        #---------------------------------------------------------------------------------
 
 #END=================================================================================================
 

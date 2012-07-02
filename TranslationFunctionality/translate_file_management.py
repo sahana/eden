@@ -9,12 +9,15 @@ import csv
 
 class TranslateGetFiles:
 
+	"""Class to group files by modules"""
+
         def __init__(self):
 
             """ Set up dictionary containing files on a module by module basis """    
 
             self.d = {}
 	    self.rest_dirs = []
+            # Retrieve a list of eden modules
             self.modlist = self.get_module_list()
 
             for m in self.modlist:
@@ -110,6 +113,8 @@ class TranslateGetFiles:
 #==========================================================================================================================
 
 class TranslateAPI:
+
+	""" API class for the Translation module to get files,modules and strings individually """
 
         def __init__(self):
            
@@ -518,7 +523,7 @@ class TranslateReadFiles:
         def findstr(self,fileName,spmod,modlist):
 
             """
-            Using the Parse Tree to extract the strings to be translated based on 
+            Using the methods in TranslateParseFiles to extract the strings to be translated based on 
             fileName -> the file to be used for extraction
             spmod -> the required module
             modlist -> a list of all modules in Eden
