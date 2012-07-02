@@ -49,7 +49,20 @@ def loadAllTests():
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
     # Delete a prepop organisation
-#    addTests(loadTests(DeleteOrganisation))
+    #addTests(loadTests(DeleteOrganisation))
+
+    # Create a Warehouse
+    addTests(loadTests(CreateWarehouse))
+    
+    # Create an Item
+    addTests(loadTests(CreateItem))
+    
+    # Create a Catalog
+    addTests(loadTests(CreateCatalog))
+    
+    # Create a Category
+    addTests(loadTests(CreateCategory))
+    
     return suite
 
 # Set up the command line arguments
