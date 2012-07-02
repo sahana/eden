@@ -236,16 +236,16 @@ class S3DateTimeWidget(FormWidget):
             s3.stylesheets.append("plugins/anytimec.css")
 
         s3.jquery_ready.append(
-'''$('#%(selector)s').AnyTime_picker({{
+'''$('#%(selector)s').AnyTime_picker({
  askSecond:false,
  firstDOW:1,
  earliest:'%(earliest)s',
  latest:'%(latest)s',
  format:'%(format)s',
-}})
-clear_button=$('<input type="button" value="clear"/>').click(function(e){{
+})
+clear_button=$('<input type="button" value="clear"/>').click(function(e){
  $('#%(selector)s').val('')
-}})
+})
 $('#%(selector)s').after(clear_button)''' % \
         dict(selector=selector,
              earliest=earliest,

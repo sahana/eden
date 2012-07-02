@@ -144,7 +144,11 @@ class S3Config(Storage):
             return False
 
     def get_auth_openid(self):
+        """ Use OpenID for Authentication """
         return self.auth.get("openid", False)
+    def get_auth_login_next(self):
+        """ Which page to go to after login """
+        return self.auth.get("login_next", None)
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):

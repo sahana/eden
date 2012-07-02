@@ -806,28 +806,25 @@ def s3_register_validation():
     settings = current.deployment_settings
 
     if request.cookies.has_key("registered"):
-        password_position = "last"
+        password_position = '''last'''
     else:
-        password_position = "first"
+        password_position = '''first'''
 
     if settings.get_auth_registration_mobile_phone_mandatory():
-        mobile = """
-mobile: {
-    required: true
-},
-"""
+        mobile = '''
+  mobile:{
+   required:true
+  },'''
     else:
         mobile = ""
 
     if settings.get_auth_registration_organisation_mandatory():
-        org1 = """
-organisation_id: {
-    required: true
-},
-"""
-        org2 = "".join(( """,
-organisation_id: '""", str(T("Enter your organization")), """',
-""" ))
+        org1 = '''
+  organisation_id:{
+   required: true
+  },'''
+        org2 = "".join((''',
+  organisation_id:"''', str(T("Enter your organization")), '''"'''))
     else:
         org1 = ""
         org2 = ""
@@ -844,72 +841,71 @@ organisation_id: '""", str(T("Enter your organization")), """',
         whitelists = db(query).select(table.organisation_id,
                                       table.domain)
         if whitelists:
-            domains = """$('#auth_user_organisation_id__row').hide();
-S3.whitelists = {
-"""
+            domains = '''$('#auth_user_organisation_id__row').hide()
+S3.whitelists={
+'''
             count = 0
             for whitelist in whitelists:
                 count += 1
-                domains += "'%s': %s" % (whitelist.domain,
+                domains += "'%s':%s" % (whitelist.domain,
                                          whitelist.organisation_id)
                 if count < len(whitelists):
                     domains += ",\n"
                 else:
                     domains += "\n"
-            domains += """};
-$('#regform #auth_user_email').blur( function() {
-    var email = $('#regform #auth_user_email').val();
-    var domain = email.split('@')[1];
-    if (undefined != S3.whitelists[domain]) {
-        $('#auth_user_organisation_id').val(S3.whitelists[domain]);
-    } else {
-        $('#auth_user_organisation_id__row').show();
-    }
-});
-"""
+            domains += '''}
+$('#regform #auth_user_email').blur(function(){
+ var email=$('#regform #auth_user_email').val()
+ var domain=email.split('@')[1]
+ if(undefined!=S3.whitelists[domain]){
+  $('#auth_user_organisation_id').val(S3.whitelists[domain])
+ }else{
+  $('#auth_user_organisation_id__row').show()
+ }
+})'''
 
     # validate signup form on keyup and submit
-    # @ToDo: //remote: 'emailsurl'
-    script = "".join(( domains, """
+    # @ToDo: //remote:'emailsurl'
+    script = "".join(( domains, '''
 $('#regform').validate({
-    errorClass: 'req',
-    rules: {
-        first_name: {
-            required: true
-        },""", mobile, """
-        email: {
-            required: true,
-            email: true
-        },""", org1, """
-        password: {
-            required: true
-        },
-        password_two: {
-            required: true,
-            equalTo: '.password:""", password_position, """'
-        }
-    },
-    messages: {
-        firstname: '""", str(T("Enter your firstname")), """',
-        password: {
-            required: '""", str(T("Provide a password")), """'
-        },
-        password_two: {
-            required: '""", str(T("Repeat your password")), """',
-            equalTo: '""", str(T("Enter the same password as above")), """'
-        },
-        email: {
-            required: '""", str(T("Please enter a valid email address")), """',
-            minlength: '""", str(T("Please enter a valid email address")), """'
-        }""", org2, """
-    },
-    errorPlacement: function(error, element) {
-        error.appendTo( element.parent().next() );
-    },
-    submitHandler: function(form) {
-        form.submit();
-    }
-});""" ))
+ errorClass:'req',
+ rules:{
+  first_name:{
+   required:true
+  },''', mobile, '''
+  email: {
+   required:true,
+   email:true
+  },''', org1, '''
+  password:{
+   required:true
+  },
+  password_two:{
+   required:true,
+   equalTo:".password:''', password_position, '''"
+  }
+ },
+ messages:{
+  firstname:"''', str(T("Enter your firstname")), '''",
+  password:{
+   required:"''', str(T("Provide a password")), '''"
+  },
+  password_two:{
+   required:"''', str(T("Repeat your password")), '''",
+   equalTo:"''', str(T("Enter the same password as above")), '''"
+  },
+  email:{
+   required:"''', str(T("Please enter a valid email address")), '''",
+   email:"''', str(T("Please enter a valid email address")), '''"
+  }''', org2, '''
+ },
+ errorPlacement:function(error,element){
+  error.appendTo(element.parent().next())
+ },
+ submitHandler:function(form){
+  form.submit()
+ }
+})''' ))
     current.response.s3.jquery_ready.append(script)
 
 # =============================================================================
