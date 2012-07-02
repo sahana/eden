@@ -461,6 +461,7 @@ def send():
             tracktable.currency.readable = False
             tracktable.pack_value.readable = False
             tracktable.item_source_no.readable = False
+            tracktable.inv_item_status.readable = False
         elif status == TRACK_STATUS_ARRIVED:
             # Shipment arrived display some extra fields at the destination
             tracktable.item_source_no.readable = True
@@ -615,7 +616,7 @@ def send():
     return output
 
 # ==============================================================================
-def prepare_commit():
+def send_commit():
     """
     """
 
@@ -1003,12 +1004,13 @@ def recv():
             tracktable.recv_bin.writable = True
             tracktable.owner_org_id.writable = True
             tracktable.supply_org_id.writable = True
+            tracktable.inv_item_status.writable = True
             tracktable.comments.writable = True
             tracktable.recv_quantity.readable = False
             # hide some fields
             tracktable.send_inv_item_id.readable = False
-            # change some labels
-            tracktable.quantity.label = T("Quantity Delivered")
+            # change some labels - NO - use consistent labels
+            #tracktable.quantity.label = T("Quantity Delivered")
             tracktable.recv_bin.label = T("Bin")
         elif status == TRACK_STATUS_TRANSIT:
             # Hide the values that will be copied from the inv_inv_item record
@@ -1021,8 +1023,8 @@ def recv():
             tracktable.recv_bin.readable = True
             tracktable.recv_bin.writable = True
             tracktable.comments.writable = True
-            # This is a received purchase so change the label to reflect this
-            tracktable.quantity.label =  T("Quantity Delivered")
+            # This is a received purchase so change the label to reflect this - NO - use consistent labels
+            #tracktable.quantity.label =  T("Quantity Delivered")
         elif status == TRACK_STATUS_ARRIVED:
             tracktable.item_source_no.readable = True
             tracktable.item_source_no.writable = False
@@ -1666,5 +1668,9 @@ def send_item_json():
 #==============================================================================
 def kit():
     return s3_rest_controller()
+
+#==============================================================================
+def facility():
+    return s3_rest_controller("org")
 
 # END =========================================================================

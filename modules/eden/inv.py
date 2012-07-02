@@ -184,6 +184,7 @@ class S3InventoryModel(S3Model):
                                         writable = False),
                                   Field("bin", "string", length=16,
                                         label = T("Bin"),
+                                        represent = lambda bin: bin or NONE
                                         ),
                                   # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                                   Field("status", "integer",
@@ -522,12 +523,13 @@ $(document).ready(function(){
             else:
                 exp_date = ""
             bin = s3_string_represent(record.inv_inv_item.bin)
+            NONE = current.messages.NONE
             rep_strings = [str for str in [record.supply_item.name,
                                            exp_date,
                                            ctn,
                                            org,
                                            bin
-                                           ] if str]
+                                           ] if str and str != NONE]
             return " - ".join(rep_strings)
         else:
             return None
@@ -656,15 +658,19 @@ class S3TrackingModel(S3Model):
                                        default = auth.s3_logged_in_person(),
                                        ondelete = "SET NULL",
                                        comment = self.pr_person_comment(child="sender_id")),
-                             self.super_link("site_id",
-                                             "org_site",
-                                             label = T("From Facility"),
-                                             default = auth.user.site_id if auth.is_logged_in() else None,
-                                             readable = True,
-                                             writable = True,
-                                             represent=org_site_represent,
-                                             ondelete = "SET NULL"
-                                             ),
+                             Field("site_id", self.org_site,
+                                   label = T("From Facility"),
+                                   requires = IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                        sort=True,
+                                                        ),
+                                   default = auth.user.site_id if auth.is_logged_in() else None,
+                                   readable = True,
+                                   writable = True,
+                                   represent = org_site_represent,
+                                   ondelete = "SET NULL"
+                                   ),
                              Field("date", "date",
                                    label = T("Date Sent"),
                                    writable = False,
@@ -684,9 +690,9 @@ class S3TrackingModel(S3Model):
                                    ),
                              Field("to_site_id", self.org_site,
                                    label = T("To Facility"),
-                                   requires = IS_ONE_OF(db,
-                                                        "org_site.site_id",
-                                                        lambda id: org_site_represent(id, show_link = False),
+                                   requires = IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
                                                         sort=True,
                                                         ),
                                    ondelete = "SET NULL",
@@ -729,7 +735,7 @@ class S3TrackingModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD strings
-        ADD_SEND = T("Add New Shipment")
+        ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
             title_create = ADD_SEND,
             title_display = T("Sent Shipment Details"),
@@ -752,8 +758,7 @@ class S3TrackingModel(S3Model):
         # Reusable Field
         send_id = S3ReusableField("send_id", db.inv_send, sortby="date",
                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db,
-                                                          "inv_send.id",
+                                                IS_ONE_OF(db, "inv_send.id",
                                                           self.inv_send_represent,
                                                           orderby="inv_send_id.date",
                                                           sort=True)),
@@ -819,7 +824,12 @@ class S3TrackingModel(S3Model):
                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                    readable = True,
                                    writable = True,
-                                   widget = S3SiteAutocompleteWidget(),
+                                   #widget = S3SiteAutocompleteWidget(),
+                                   requires = IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                        sort=True,
+                                                        ),
                                    represent=org_site_represent
                                    ),
                              Field("type", "integer",
@@ -849,7 +859,12 @@ class S3TrackingModel(S3Model):
                              Field("from_site_id", "reference org_site",
                                    label = T("From Facility"),
                                    ondelete = "SET NULL",
-                                   widget = S3SiteAutocompleteWidget(),
+                                   #widget = S3SiteAutocompleteWidget(),
+                                   requires = IS_ONE_OF(db, "org_site.site_id",
+                                                        lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                        sort=True,
+                                                        ),
                                    represent = org_site_represent
                                    ),
                              send_ref(),
@@ -1190,7 +1205,7 @@ $(document).ready(function(){
                                          ondelete = "RESTRICT"),
                              # The bin at destination
                              Field("recv_bin", length=16,
-                                   label = T("Loading Bin"),
+                                   label = T("Add to Bin"),
                                    readable = False,
                                    writable = False,
                                    represent = s3_string_represent,
@@ -1211,7 +1226,14 @@ $(document).ready(function(){
                              org_id(name = "owner_org_id",
                                     label = T("Organization/Department"),
                                     ondelete = "SET NULL"),
-                             Field("status", "integer",
+                             Field("inv_item_status", "integer",
+                                   label = T("Item Status"),
+                                   requires = IS_NULL_OR(IS_IN_SET(inv_item_status_opts)),
+                                   represent = lambda opt: \
+                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
+                                   default = 0,),
+                              Field("status", "integer",
+                                   label = T("Item Tracking Status"),
                                    required = True,
                                    requires = IS_IN_SET(tracking_status),
                                    default = 1,
@@ -1377,7 +1399,7 @@ $(document).ready(function(){
                                                      supply_org_id = row.supply_org_id,
                                                      item_source_no = row.item_source_no,
                                                      item_pack_id = row.item_pack_id,
-                                                     status = row.status,
+                                                     inv_item_status = row.status,
                                                      #status = TRACK_STATUS_PREPARING,
                                                      )
                     # Construct form.vars for inv_track_item_onaccept
@@ -1416,7 +1438,8 @@ $(document).ready(function(){
         tracktable.send_inv_item_id.readable = False
         tracktable.recv_inv_item_id.readable = False
 
-        list_fields = ["item_id",
+        list_fields = [(T("Item Code"), "item_code"),
+                       "item_id",
                        (T("Weight (kg)"), "item_id$weight"),
                        (T("Volume (m3)"), "item_id$volume"),
                        "item_source_no",
@@ -1652,6 +1675,7 @@ $(document).ready(function(){
             vars.supply_org_id = record.supply_org_id
             vars.pack_value = record.pack_value
             vars.currency = record.currency
+            vars.inv_item_status = record.status
 
             # Save the organisation from where this tracking originates
             stable = s3db.org_site
@@ -1660,10 +1684,13 @@ $(document).ready(function(){
                                       limitby=(0, 1)).first()
             vars.track_org_id = record.organisation_id
 
-        elif not vars.recv_quantity:
+        if not vars.recv_quantity:
             # If we have no send_id and no recv_quantity then
             # copy the quantity sent directly into the received field
             # This is for when there is no related send record
+            # The Quantity received ALWAYS defaults to the quantity sent
+            # (Please do not change this unless there is a specific user requirement)
+            #db.inv_track_item.recv_quantity.default = form.vars.quantity
             vars.recv_quantity = vars.quantity
 
         recv_bin = vars.recv_bin
@@ -1837,6 +1864,7 @@ $(document).ready(function(){
         # Move all the items into the site, update any request & make any adjustments
         # Finally change the status to 4 arrived
         if record and record.status == TRACK_STATUS_UNLOADING and record.recv_quantity:
+            # Look for the item in the site already
             recv_rec = rtable[record.recv_id]
             recv_site_id = recv_rec.site_id
             query = (inv_item_table.site_id == recv_site_id) & \
@@ -1848,13 +1876,17 @@ $(document).ready(function(){
                     (inv_item_table.expiry_date == record.expiry_date) & \
                     (inv_item_table.bin == record.recv_bin) & \
                     (inv_item_table.owner_org_id == record.owner_org_id) & \
+                    (inv_item_table.item_source_no == record.item_source_no) & \
+                    (inv_item_table.status == record.inv_item_status) & \
                     (inv_item_table.supply_org_id == record.supply_org_id)
             inv_item_row = db(query).select(inv_item_table.id,
                                             limitby=(0, 1)).first()
             if inv_item_row:
+                # Update the existing item
                 inv_item_id = inv_item_row.id
                 db(inv_item_table.id == inv_item_id).update(quantity = inv_item_table.quantity + record.recv_quantity)
             else:
+                # Add a new item
                 source_type = 0
                 if form.vars.send_inv_item_id:
                     source_type = inv_item_table[form.vars.send_inv_item_id].source_type
@@ -1875,7 +1907,7 @@ $(document).ready(function(){
                                              quantity = record.recv_quantity,
                                              item_source_no = record.item_source_no,
                                              source_type = source_type,
-                                             status = record.status,
+                                             status = record.inv_item_status,
                                             )
             # if this is linked to a request then update the quantity fulfil
             if record.req_item_id:
@@ -2149,7 +2181,7 @@ def inv_recv_crud_strings():
         )
     else:
         recv_id_label = T("Receive Shipment")
-        ADD_RECV = T("Add New Received Shipment")
+        ADD_RECV = T("Receive New Shipment")
         current.response.s3.crud_strings["inv_recv"] = Storage(
             title_create = ADD_RECV,
             title_display = T("Received Shipment Details"),
@@ -2509,9 +2541,9 @@ def inv_recv_rheader(r):
                         rfooter.append(cancel_btn_confirm)
             msg = ""
             if cnt == 1:
-                msg = T("One item is attached to this shipment")
+                msg = T("This shipment contains one item")
             elif cnt > 1:
-                msg = T("%s items are attached to this shipment") % cnt
+                msg = T("This shipment contains %s items") % cnt
             rData.append(
                          TR( TH(action, _colspan=2),
                              TD(msg)
@@ -2662,8 +2694,7 @@ class S3AdjustModel(S3Model):
         adj_id = S3ReusableField("adj_id", db.inv_adj,
                                  sortby="date",
                                  requires = IS_NULL_OR(
-                                                IS_ONE_OF(db,
-                                                          "inv_adj.id",
+                                                IS_ONE_OF(db, "inv_adj.id",
                                                           self.inv_adj_represent,
                                                           orderby="inv_adj.adjustment_date",
                                                           sort=True)),
@@ -2681,14 +2712,14 @@ class S3AdjustModel(S3Model):
                         }
 
         # CRUD strings
-        ADJUST_STOCK = T("Add New Stock Adjustment")
+        ADJUST_STOCK = T("New Stock Adjustment")
         crud_strings["inv_adj"] = Storage(
             title_create = ADJUST_STOCK,
             title_display = T("Stock Adjustment Details"),
             title_list = T("Stock Adjustments"),
             title_update = T("Edit Adjustment"),
             title_search = T("Search Stock Adjustments"),
-            subtitle_create = T("Add New Stock Adjustment"),
+            subtitle_create = T("New Stock Adjustment"),
             label_list_button = T("List Stock Adjustments"),
             label_create_button = ADJUST_STOCK,
             label_delete_button = T("Delete Stock Adjustment"),

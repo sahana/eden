@@ -712,6 +712,7 @@ class S3Config(Storage):
         """
         T = current.T
         return self.inv.get("item_status", {
+                0: current.messages.NONE,
                 1: T("Dump"),
                 2: T("Sale"),
                 3: T("Reject"),

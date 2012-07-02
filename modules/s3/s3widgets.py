@@ -3003,7 +3003,9 @@ class S3InvBinWidget(FormWidget):
                           )
 
         record = tracktable[id]
-        query = (stocktable.item_id == record.item_id) & \
+        site_id = s3db.inv_recv[record.recv_id].site_id
+        query = (stocktable.site_id == site_id) & \
+                (stocktable.item_id == record.item_id) & \
                 (stocktable.item_source_no == record.item_source_no) & \
                 (stocktable.item_pack_id == record.item_pack_id) & \
                 (stocktable.currency == record.currency) & \

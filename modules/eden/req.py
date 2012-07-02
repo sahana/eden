@@ -527,14 +527,17 @@ $(function() {
             table = s3db.req_req
             query = (table.id == id)
             req = db(query).select(table.date,
-                                   #table.type,
+                                   table.req_ref,
                                    table.site_id,
                                    limitby=(0, 1)).first()
             if not req:
                 return NONE
-            req = "%s - %s" % (table.site_id.represent(req.site_id,
-                                                       show_link = False),
-                               table.date.represent(req.date))
+            if table.req_ref:
+                req = req.req_ref
+            else:
+                req = "%s - %s" % (table.site_id.represent(req.site_id,
+                                                           show_link=False),
+                                   table.date.represent(req.date))
             if link:
                 return A(req,
                          _href = URL(c = "req",
@@ -1613,8 +1616,8 @@ class S3CommitItemModel(S3Model):
 
         # Update status_commit of the req record
         s3mgr.store_session("req", "req_item", r_req_item.id)
-        req_item_onaccept(None)
-
+        dummy_form = Storage(vars = Storage(req_id = r_req_item.req_id))
+        req_item_onaccept(dummy_form)
 
 # =============================================================================
 class S3CommitPersonModel(S3Model):
