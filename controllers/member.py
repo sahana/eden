@@ -7,18 +7,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
 def index():
     """ Dashboard """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,
@@ -42,7 +42,9 @@ def index():
                          _class="action-btn"))
 
     if not item:
-        item = H2(module_name)
+        #item = H2(module_name)
+        # Just redirect to the list of Members
+        redirect(URL(f="membership"))
 
     # tbc
     report = ""
@@ -51,7 +53,14 @@ def index():
     return dict(item=item, report=report)
 
 # =============================================================================
-# People
+def membership_type():
+    """
+        REST Controller
+    """
+
+    output = s3_rest_controller()
+    return output
+
 # =============================================================================
 def membership():
     """
@@ -67,13 +76,24 @@ def membership():
                 # Redirect to person controller
                 vars = {"membership.id": r.id}
                 redirect(URL(f="person", vars=vars))
+            else:
+                # Assume members under 120
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and r.component is None:
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
+        return output
+    s3.postp = postp
+        
     output = s3_rest_controller(rheader=s3db.member_rheader)
     return output
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def person():
     """
         Person Controller
@@ -93,7 +113,8 @@ def person():
                            action=s3db.pr_contacts)
 
     # Upload for configuration (add replace option)
-    response.s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+    s3.importerPrep = lambda: \
+        dict(ReplaceOption=T("Remove existing data before import"))
 
     # Import pre-process
     def import_prep(data):
@@ -102,15 +123,11 @@ def person():
             before processing a new data import, used for the import_prep
             hook in s3mgr
         """
-
-        request = current.request
-
         resource, tree = data
         xml = s3mgr.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
-
-        if response.s3.import_replace:
+        if s3.import_replace:
             if tree is not None:
                 root = tree.getroot()
                 expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
@@ -137,6 +154,9 @@ def person():
     # CRUD pre-process
     def prep(r):
         if r.interactive and r.method != "import":
+            if not r.component:
+                # Assume members under 120
+                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
             resource = r.resource
             if resource.count() == 1:
                 resource.load()
@@ -154,8 +174,16 @@ def person():
             s3mgr.configure("member_membership",
                             insertable = False)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and r.component and r.component_name == "membership":
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
+        return output
+    s3.postp = postp
+        
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.member_rheader,

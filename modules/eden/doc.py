@@ -47,7 +47,6 @@ class S3DocumentLibrary(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
         s3 = current.response.s3
 
         person_comment = self.pr_person_comment
@@ -64,11 +63,9 @@ class S3DocumentLibrary(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3_comments
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -108,18 +105,18 @@ class S3DocumentLibrary(S3Model):
                              person_id(label=T("Author"),
                                        comment=person_comment(T("Author"),
                                                               T("The Author of this Document (optional)"))),
-                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                              Field("date", "date",
                                    label = T("Date Published"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
                              location_id(),
-                             comments(),
+                             s3_comments(),
                              #Field("entered", "boolean", label=T("Entered")),
                              Field("checksum", readable=False, writable=False),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.file.represent = lambda file, table=table: \
@@ -176,7 +173,7 @@ class S3DocumentLibrary(S3Model):
                              Field("file", "upload", autodelete=True,
                                    requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
                                    # upload folder needs to be visible to the download() function as well as the upload
-                                   uploadfolder = os.path.join(request.folder,
+                                   uploadfolder = os.path.join(current.request.folder,
                                                                "uploads",
                                                                "images")),
                              Field("name", length=128,
@@ -192,17 +189,17 @@ class S3DocumentLibrary(S3Model):
                                    label = T("Image Type"),
                                    represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
                              person_id(label=T("Author")),
-                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                              location_id(),
                              Field("date", "date",
                                    label = T("Date Taken"),
                                    represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    widget = S3DateWidget()
                                    ),
-                             comments(),
+                             s3_comments(),
                              Field("checksum", readable=False, writable=False),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.file.represent = doc_image_represent

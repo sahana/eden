@@ -55,10 +55,8 @@ class S3IRSModel(S3Model):
 
     def model(self):
 
-        db = current.db
         T = current.T
-        request = current.request
-        s3 = current.response.s3
+        db = current.db
         settings = current.deployment_settings
 
         location_id = self.gis_location_id
@@ -68,8 +66,8 @@ class S3IRSModel(S3Model):
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         set_method = self.set_method
         super_link = self.super_link
 
@@ -218,7 +216,7 @@ class S3IRSModel(S3Model):
                                         sort_dict_by_values(irs_incident_type_opts)),
                                    represent = lambda opt: \
                                         irs_incident_type_opts.get(opt, opt)),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         configure(tablename,
                   onvalidation=self.irs_icategory_onvalidation,
@@ -274,7 +272,7 @@ class S3IRSModel(S3Model):
                                    writable = False,
                                    label = T("Contact Details")),
                              Field("datetime", "datetime",
-                                   default = request.utcnow,
+                                   default = current.request.utcnow,
                                    label = T("Date/Time of Alert"),
                                    widget = S3DateTimeWidget(future=0),
                                    represent = lambda val: datetime_represent(val, utc=True),
@@ -337,10 +335,10 @@ class S3IRSModel(S3Model):
                                          (T("No"),
                                           T("Yes"))[closed == True]),
                              s3_comments(),
-                             *(s3_lx_fields() + meta_fields()))
+                             *(s3_lx_fields() + s3_meta_fields()))
         # CRUD strings
         ADD_INC_REPORT = T("Add Incident Report")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_INC_REPORT,
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
@@ -1052,9 +1050,19 @@ class S3IRSResponseModel(S3Model):
                                         represent = lambda incident_commander: \
                                                 (T("No"),
                                                  T("Yes"))[incident_commander == True]),
-                                 *s3_meta_fields())
+                                  Field("response", "boolean",
+                                        label = T("Able to Respond?"),
+                                        writable = settings.has_module("msg"),
+                                        readable = settings.has_module("msg"),
+                                        represent = lambda response: \
+                                                (T("No"),
+                                                 T("Yes"))[response == True]),
+                                  s3_comments(label = T("Reply Message"),
+                                              writable = settings.has_module("msg"),
+                                              readable = settings.has_module("msg")),
+                                  *s3_meta_fields())
 
-        if not current.deployment_settings.has_module("vehicle"):
+        if not settings.has_module("vehicle"):
             return None
 
         # ---------------------------------------------------------------------

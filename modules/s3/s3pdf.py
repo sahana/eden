@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Resource PDF Tools
+""" Resource PDF Tools
 
     @see: U{B{I{S3XRC}} <http://eden.sahanafoundation.org/wiki/S3XRC>}
 

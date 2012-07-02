@@ -60,17 +60,19 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current
+from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.html import *
+#from gluon.http import HTTP, redirect
 from gluon.dal import Rows
-from gluon.html import *
-from gluon.http import HTTP
 from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname, s3_is_foreign_key
+from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
 
 DEBUG = False
 if DEBUG:
@@ -2188,7 +2190,7 @@ class GIS(object):
                 elif tablename == "org_office":
                     for value in values:
                         represents[value] = s3db.org_office_type_opts.get(value, "")
-            elif s3_is_foreign_key(field, m2m=False):
+            elif s3_has_foreign_key(field, m2m=False):
                 tablename = field.type[10:]
                 if tablename == "pr_person":
                     represents = s3_fullname(values)
@@ -2237,7 +2239,7 @@ class GIS(object):
                     represent = cache.ram("office_type_%s" % value,
                                           lambda: s3db.org_office_type_opts.get(value, ""),
                                           time_expire=60)
-            elif s3_is_foreign_key(field, m2m=False):
+            elif s3_has_foreign_key(field, m2m=False):
                     tablename = field.type[10:]
                     if tablename == "pr_person":
                         # Unlikely to be the same person in multiple popups so no value to caching

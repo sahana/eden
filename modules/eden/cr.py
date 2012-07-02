@@ -215,7 +215,7 @@ class S3CampDataModel(S3Model):
                                       length=64,            # Mayon compatibility
                                       requires = IS_NOT_EMPTY(),
                                       label = T("Shelter Name")),
-                                organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                                organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                                 shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
                                 shelter_service_id(),       # e.g. medical, housing, food, ...
                                 location_id(),

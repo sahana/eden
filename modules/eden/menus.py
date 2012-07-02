@@ -366,10 +366,6 @@ class S3OptionsMenu(object):
                         #M("Membership", f="membership"),
                     ),
                     M("Database", c="appadmin", f="index")(
-                        M("Import", c="admin", f="import_file"),
-                        #M("Import", c="admin", f="import_data"),
-                        #M("Export", c="admin", f="export_data"),
-                        #M("Import Jobs", c="admin", f="import_job"),
                         M("Raw Database access", c="appadmin", f="index")
                     ),
                     M("Synchronization", c="sync", f="index")(
@@ -812,10 +808,11 @@ class S3OptionsMenu(object):
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
+        use_teams = lambda i: current.deployment_settings.get_hrm_use_teams()
 
         return M(c="hrm")(
                     M("Staff", f="staff",
-                      check=[manager_mode])(
+                      check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
@@ -823,7 +820,7 @@ class S3OptionsMenu(object):
                           vars={"group":"staff"}, p="create"),
                     ),
                     M("Teams", f="group",
-                      check=manager_mode)(
+                      check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -891,9 +888,10 @@ class S3OptionsMenu(object):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        show_programmes = lambda i: settings.get_hrm_experience() == "programme"
+        show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
+        use_teams = lambda i: settings.get_hrm_use_teams()
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -905,7 +903,7 @@ class S3OptionsMenu(object):
                           vars={"group":"volunteer"}, p="create"),
                     ),
                     M("Teams", f="group",
-                      check=manager_mode)(
+                      check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -991,20 +989,21 @@ class S3OptionsMenu(object):
                         M("Search", f="inv_item", m="search"),
                         M("Search Shipped Items", f="track_item", m="search"),
                         M("Adjust Stock Levels", f="adj"),
+                        M("Kitting", f="kit"),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
                         M("Warehouse Stock", f="inv_item",m="report"),
-                        M("Monetization", c="inv", f="inv_item",
-                          m="search", vars=dict(report="mon")),
-                        M("Summary of Releases", c="inv", f="track_item",
-                          m="search", vars=dict(report="rel")),
-                        M("Summary of Incoming Supplies", c="inv", f="track_item",
-                          m="search", vars=dict(report="inc")),
-                        M("Utilization Report", c="inv", f="track_item",
-                          m="search", vars=dict(report="util")),
                         M("Expiration Report", c="inv", f="track_item",
                           m="search", vars=dict(report="exp")),
+                        M("Monetization Report", c="inv", f="inv_item",
+                          m="search", vars=dict(report="mon")),
+                        M("Utilization Report", c="inv", f="track_item",
+                          m="search", vars=dict(report="util")),
+                        M("Summary of Incoming Supplies", c="inv", f="track_item",
+                          m="search", vars=dict(report="inc")),
+                        M("Summary of Releases", c="inv", f="track_item",
+                          m="search", vars=dict(report="rel")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("Add Received/Incoming Shipment", m="create"),
@@ -1075,6 +1074,24 @@ class S3OptionsMenu(object):
                     ),
                     M("Ushahidi Import", f="ireport", restrict=[ADMIN],
                       args="ushahidi")
+                )
+
+    # -------------------------------------------------------------------------
+    def cap(self):
+        """ CAP menu """
+
+        T = current.T
+
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+
+        return M(c="cap")(
+                    M("List All Alerts", f="alert")(
+                        M("Create Alert", f="alert", m="create"),
+                        M("Create CAP Profile", f="profile", m="create"),
+                        M("Create CAP Template", f="template", m="template"),
+                        M("Search", m="search"),
+                    )
                 )
 
     # -------------------------------------------------------------------------
@@ -1197,6 +1214,12 @@ class S3OptionsMenu(object):
         return M(c="member")(
                     M("Members", f="membership")(
                         M("Add Member", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", f="person", m="import"),
+                    ),
+                    M("Membership Types", f="membership_type")(
+                        M("Add Membership Type", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", f="person", m="import"),

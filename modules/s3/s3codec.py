@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Encoder/Decoder Base Class
+""" S3 Encoder/Decoder Base Class
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -39,6 +38,14 @@ except ImportError:
     import sys
     print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
     raise
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from xml.sax.saxutils import escape, unescape
 
@@ -203,71 +210,38 @@ class S3Codec(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def json_message(success=True,
-                     status_code="200",
+                     statuscode=None,
                      message=None,
-                     tree=None,
-                     sender=None):
+                     **kwargs):
         """
             Provide a nicely-formatted JSON Message
 
             @param success: action succeeded or failed
             @param status_code: the HTTP status code
             @param message: the message text
-            @param tree: result tree to enclose (as JSON)
+            @param kwargs: other elements for the message
+
+            @keyword tree: error tree to include as JSON object (rather
+                           than as string) for easy decoding
         """
 
-        if success:
-            status='"status": "success"'
-        else:
-            status='"status": "failed"'
+        if statuscode is None:
+            statuscode = success and 200 or 404
 
-        code = '"statuscode": "%s"' % status_code
+        status = success and "success" or "failed"
+        code = str(statuscode)
 
-        output = "{%s, %s" % (status, code)
+        output = {"status": status, "statuscode": str(code)}
 
+        tree = kwargs.get("tree", None)
         if message:
-            output = '%s, "message": "%s"' % (output, message)
-
-        if message and tree is not None:
-            output = '%s, "tree": %s' % (output, tree)
-
-        if message and sender is not None:
-            output = '%s, "sender": %s' % (output, sender)
-
-        return "%s}" % output
-
-    # New variant below
-
-    #@staticmethod
-    #def json_message(success=True,
-                     #statuscode="200",
-                     #message=None,
-                     #**kwargs):
-        #"""
-            #Provide a nicely-formatted JSON Message
-
-            #@param success: action succeeded or failed
-            #@param status_code: the HTTP status code
-            #@param message: the message text
-            #@param kwargs: other elements for the message
-
-            #@keyword tree: result tree to enclose (as JSON)
-        #"""
-
-        #status = success and "success" or "failed"
-        #code = str(statuscode)
-
-        #output = {"status": status, "statuscode": code}
-
-        #tree = kwargs.get("tree", None)
-        #if message:
-            #output["message"] = message
-        #for k, v in kwargs.items():
-            #if k != "tree":
-                #output[k] = unicode(v)
-        #output = json.dumps(output)
-        #if message and tree:
-            #output = output[:-1] + '"tree"; %s}' % tree
-        #return output
+            output["message"] = message
+        for k, v in kwargs.items():
+            if k != "tree":
+                output[k] = v
+        output = json.dumps(output)
+        if message and tree:
+            output = output[:-1] + ', "tree": %s}' % tree
+        return output
 
 # End =========================================================================

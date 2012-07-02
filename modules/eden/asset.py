@@ -98,7 +98,6 @@ class S3AssetModel(S3Model):
         db = current.db
         auth = current.auth
         request = current.request
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -121,11 +120,9 @@ class S3AssetModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3_comments
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         #--------------------------------------------------------------------------
@@ -177,7 +174,7 @@ class S3AssetModel(S3Model):
                                    label = T("Supplier")),
                              Field("purchase_date", "date",
                                    label = T("Purchase Date"),
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
                              Field("purchase_price", "double",
@@ -192,8 +189,8 @@ class S3AssetModel(S3Model):
                                        readable=False,
                                        writable=False,
                                        comment=self.pr_person_comment(child="assigned_to_id")),
-                             comments(),
-                             *(s3_address_fields() + meta_fields()))
+                             s3_comments(),
+                             *(s3_address_fields() + s3_meta_fields()))
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
@@ -429,8 +426,8 @@ class S3AssetModel(S3Model):
                                        default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
                                        comment = self.pr_person_comment(child="by_person_id"),
                                       ),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         table.site_id.label = T("Facility/Site")
         table.site_id.readable = True
@@ -442,18 +439,17 @@ class S3AssetModel(S3Model):
                                                        T("Enter some characters to bring up a list of possible matches")),
 
                                      ),
-                                 SCRIPT("""
-$(document).ready(function() {
-    S3FilterFieldChange({
-        'FilterField':   'organisation_id',
-        'Field':         'site_id',
-        'FieldPrefix':   'org',
-        'FieldResource': 'site',
-        'FieldID'      : 'site_id',
-    });
-});""")
+                                 SCRIPT(
+'''$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'organisation_id',
+  'Field':'site_id',
+  'FieldPrefix':'org',
+  'FieldResource':'site',
+  'FieldID':'site_id',
+ })
+})''')
                                  )
-
 
         # CRUD strings
         ADD_ASSIGN = T("New Entry in Asset Log")

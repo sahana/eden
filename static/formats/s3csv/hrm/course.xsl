@@ -5,20 +5,10 @@
     <!-- **********************************************************************
          Courses - CSV Import Stylesheet
 
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be hrm/skill/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Code............................hrm_course.code
          Name............................hrm_course.name
+         Organisation....................hrm_course.organisation_id
          Certificate.....................hrm_course_certificate.certificate_id
 
     *********************************************************************** -->
@@ -32,6 +22,10 @@
              match="row"
              use="col[@field='Certificate']"/>
 
+    <xsl:key name="orgs"
+             match="row"
+             use="col[@field='Organisation']"/>
+
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
@@ -43,6 +37,14 @@
                 <xsl:call-template name="Certificate"/>
             </xsl:for-each>
 
+            <!-- Orgs -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('orgs',
+                                                        col[@field='Organisation'])[1])]">
+                <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Courses -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
@@ -50,14 +52,13 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="CourseCode" select="col[@field='Code']"/>
-        <xsl:variable name="CourseName" select="col[@field='Name']"/>
         <xsl:variable name="CertName" select="col[@field='Certificate']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <!-- HRM Course -->
         <resource name="hrm_course">
-            <data field="name"><xsl:value-of select="$CourseName"/></data>
-            <data field="code"><xsl:value-of select="$CourseCode"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <xsl:if test="$CertName!=''">
                 <resource name="hrm_course_certificate">
                     <reference field="certificate_id" resource="hrm_certificate">
@@ -67,6 +68,13 @@
                     </reference>
                 </resource>
             </xsl:if>
+            <xsl:if test="$OrgName!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
         </resource>
 
     </xsl:template>
@@ -75,12 +83,34 @@
     <xsl:template name="Certificate">
 
         <xsl:variable name="CertName" select="col[@field='Certificate']/text()"/>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <resource name="hrm_certificate">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($CertPrefix, $CertName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$CertName"/></data>
+            <xsl:if test="$OrgName!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$OrgName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
         </resource>
 
     </xsl:template>

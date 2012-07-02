@@ -120,13 +120,11 @@ class S3PersonEntity(S3Model):
 
         db = current.db
         T = current.T
-        s3 = current.response.s3
 
         add_component = self.add_component
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields= s3_meta_fields
         super_entity = self.super_entity
         super_key = self.super_key
         super_link = self.super_link
@@ -217,7 +215,7 @@ class S3PersonEntity(S3Model):
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
                              Field("user_id", utable),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Role (Affiliates Group)
@@ -254,7 +252,7 @@ class S3PersonEntity(S3Model):
                              Field("sub_type", "integer",
                                    readable = False,
                                    writable = False),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -301,7 +299,7 @@ class S3PersonEntity(S3Model):
                                         label=T("Entity"),
                                         readable=True,
                                         writable=True),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                          pr_pentity_represent, sort=True)
@@ -329,7 +327,7 @@ class S3PersonEntity(S3Model):
                   ondelete=self.pr_affiliation_ondelete)
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
             pr_pe_types=pe_types,
@@ -496,7 +494,6 @@ class S3OrgAuthModel(S3Model):
 
         define_table = self.define_table
         super_link = self.super_link
-        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Delegation: Role <-> Auth Group Link
@@ -509,7 +506,7 @@ class S3OrgAuthModel(S3Model):
                              role_id(),
                              Field("group_id", gtable,
                                    ondelete="CASCADE"),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -670,7 +667,7 @@ class S3PersonModel(S3Model):
                                    label = T("Date of Birth"),
                                    represent = s3_date_represent,
                                    requires = [IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                                                format = s3_date_format,
+                                                format=s3_date_format,
                                                 maximum=request.utcnow.date(),
                                                 error_message="%s %%(max)s!" %
                                                               T("Enter a valid date before")))],
@@ -813,7 +810,7 @@ class S3PersonModel(S3Model):
         add_component("asset_asset", pr_person="assigned_to_id")
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
             pr_gender = pr_gender,
@@ -982,7 +979,6 @@ class S3GroupModel(S3Model):
         T = current.T
         db = current.db
         request = current.request
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
 
@@ -990,11 +986,9 @@ class S3GroupModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        comments = s3_comments
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
 
         # ---------------------------------------------------------------------
         # Group
@@ -1024,14 +1018,13 @@ class S3GroupModel(S3Model):
                                    label=T("Group Name"),
                                    requires = IS_NOT_EMPTY()),
                              Field("description",
-                                   label=T("Group Description")),
-                             comments(),
-                             *meta_fields())
-
-        # Field configuration
-        table.description.comment = DIV(DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Group description"),
-                                                              T("A brief description of the group (optional)"))))
+                                   label=T("Group Description"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Group description"),
+                                                                   T("A brief description of the group (optional)")))
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
         ADD_GROUP = T("Add Group")
@@ -1085,7 +1078,7 @@ class S3GroupModel(S3Model):
                                    represent = group_represent,
                                    comment=S3AddResourceLink(c="pr",
                                                              f="group",
-                                                             label=s3.crud_strings.pr_group.label_create_button,
+                                                             label=crud_strings.pr_group.label_create_button,
                                                              title=T("Create Group Entry"),
                                                              tooltip=T("Create a group entry in the registry.")),
                                    ondelete = "RESTRICT")
@@ -1096,7 +1089,6 @@ class S3GroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Group membership
         #
-        resourcename = "group_membership"
         tablename = "pr_group_membership"
         table = define_table(tablename,
                              group_id(label = T("Group"),
@@ -1105,15 +1097,13 @@ class S3GroupModel(S3Model):
                                        ondelete="CASCADE"),
                              Field("group_head", "boolean",
                                    label = T("Group Head"),
-                                   default=False),
+                                   default=False,
+                                   represent = lambda group_head: \
+                                    (group_head and [T("yes")] or [""])[0]),
                              Field("description",
                                    label = T("Description")),
-                             comments(),
-                             *meta_fields())
-
-        # Field configuration
-        table.group_head.represent = lambda group_head: \
-                                        (group_head and [T("yes")] or [""])[0]
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         request = current.request
@@ -1161,7 +1151,7 @@ class S3GroupModel(S3Model):
                               ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
             pr_group_id = group_id,
@@ -1240,15 +1230,11 @@ class S3ContactModel(S3Model):
 
         T = current.T
         db = current.db
-        msg = current.msg
-        request = current.request
-        s3 = current.response.s3
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        comments = s3_comments
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
@@ -1258,7 +1244,7 @@ class S3ContactModel(S3Model):
         #        the relevant ones for that deployment/context collected on that same
         #        form
         #
-        contact_methods = msg.CONTACT_OPTS
+        contact_methods = current.msg.CONTACT_OPTS
 
         tablename = "pr_contact"
         table = define_table(tablename,
@@ -1281,8 +1267,8 @@ class S3ContactModel(S3Model):
                                                  _title="%s|%s" % (T("Priority"),
                                                                    T("What order to be contacted in."))),
                                    requires = IS_IN_SET(range(1, 10), zero=None)),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -1292,7 +1278,7 @@ class S3ContactModel(S3Model):
                                          filter_opts=("pr_person", "pr_group"))
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Contact Information"),
             title_display = T("Contact Details"),
             title_list = T("Contact Information"),
@@ -1330,11 +1316,11 @@ class S3ContactModel(S3Model):
                              Field("phone",
                                    label = T("Phone"),
                                    requires = IS_NULL_OR(s3_phone_requires)),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
         )
@@ -1389,12 +1375,12 @@ class S3PersonAddressModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
-        s3 = current.response.s3
 
         location_id = self.gis_location_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Address
@@ -1433,7 +1419,7 @@ class S3PersonAddressModel(S3Model):
 
         # CRUD Strings
         ADD_ADDRESS = T("Add Address")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ADDRESS,
             title_display = T("Address Details"),
             title_list = T("Addresses"),
@@ -1464,7 +1450,7 @@ class S3PersonAddressModel(S3Model):
                                     ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
                 pr_address_type_opts = pr_address_type_opts
@@ -1571,10 +1557,10 @@ class S3PersonImageModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
-        s3 = current.response.s3
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Image
@@ -1620,7 +1606,7 @@ class S3PersonImageModel(S3Model):
                                   *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Image"),
             title_display = T("Image Details"),
             title_list = T("Images"),
@@ -1651,7 +1637,7 @@ class S3PersonImageModel(S3Model):
                                    ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage()
 
@@ -1781,12 +1767,10 @@ class S3ImageLibraryModel(S3Model):
 
     def model(self):
 
-        db = current.db
-        T = current.T
-        s3 = current.response.s3
+        #T = current.T
+        #db = current.db
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-
+        # ---------------------------------------------------------------------
         tablename = "pr_image_library"
         table = self.define_table(tablename,
                                   # Original image file name
@@ -1815,7 +1799,7 @@ class S3ImageLibraryModel(S3Model):
                                 )
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage(
             pr_image_size = self.pr_image_size,
@@ -1862,13 +1846,12 @@ class S3PersonIdentityModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-        request = current.request
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Identity
@@ -1917,7 +1900,7 @@ class S3PersonIdentityModel(S3Model):
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Identity")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_IDENTITY,
             title_display = T("Identity Details"),
             title_list = T("Identities"),
@@ -1942,7 +1925,7 @@ class S3PersonIdentityModel(S3Model):
                                    ])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage()
 
@@ -1982,8 +1965,10 @@ class S3PersonEducationModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
+        crud_strings = current.response.s3.crud_strings
+
+        # ---------------------------------------------------------------------
         tablename = "pr_education"
         table = self.define_table("pr_education",
                                   self.pr_person_id(label = T("Person"),
@@ -1999,7 +1984,7 @@ class S3PersonEducationModel(S3Model):
 
         # CRUD Strings
         ADD_IDENTITY = T("Add Educational Achievements")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_IDENTITY,
             title_display = T("Education Details"),
             title_list = T("Education Details"),
@@ -2040,13 +2025,11 @@ class S3SavedSearch(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
         auth = current.auth
-        request = current.request
-        s3 = current.response.s3
 
-        pr_person = self.table("pr_person")
-        person_id = s3.pr_person_id
+        person_id = self.pr_person_id
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Saved Searches
@@ -2059,7 +2042,7 @@ class S3SavedSearch(S3Model):
                                         default = auth.user_id),
                                   Field("search_vars","text",
                                         label = T("Search Criteria"),
-                                        represent=lambda id:search_vars_represent(id)),
+                                        represent=lambda id:s3_search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   person_id(label = T("Person"),
@@ -2069,7 +2052,7 @@ class S3SavedSearch(S3Model):
 
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Save Search"),
             title_display = T("Saved Search Details"),
             title_list = T("Saved Searches"),
@@ -2093,7 +2076,7 @@ class S3SavedSearch(S3Model):
                        list_fields=["search_vars"])
 
         # ---------------------------------------------------------------------
-        # Return model-global names to response.s3
+        # Return model-global names to s3db.*
         #
         return Storage()
 
@@ -2117,10 +2100,7 @@ class S3PersonPresence(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
         auth = current.auth
-        request = current.request
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
@@ -2129,6 +2109,8 @@ class S3PersonPresence(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         datetime_represent = S3DateTime.datetime_represent
+
+        crud_strings = current.response.s3.crud_strings
 
         # Trackable types
         pr_trackable_types = {
@@ -2160,26 +2142,25 @@ class S3PersonPresence(S3Model):
         opts = pr_presence_opts
         pr_presence_conditions = Storage({
             # Transitional presence conditions:
-            opts.SEEN: current.T("Seen"),           # seen (formerly "found") at location
-            opts.TRANSIT: current.T("Transit"),     # seen at location, between two transfers
-            opts.PROCEDURE: current.T("Procedure"), # seen at location, undergoing procedure ("Checkpoint")
+            opts.SEEN: T("Seen"),           # seen (formerly "found") at location
+            opts.TRANSIT: T("Transit"),     # seen at location, between two transfers
+            opts.PROCEDURE: T("Procedure"), # seen at location, undergoing procedure ("Checkpoint")
 
             # Persistant presence conditions:
-            opts.CHECK_IN: current.T("Check-In"),   # arrived at location for accomodation/storage
-            opts.CONFIRMED: current.T("Confirmed"), # confirmation of stay/storage at location
-            opts.DECEASED: current.T("Deceased"),   # deceased
-            opts.LOST: current.T("Lost"),           # destroyed/disposed at location
+            opts.CHECK_IN: T("Check-In"),   # arrived at location for accomodation/storage
+            opts.CONFIRMED: T("Confirmed"), # confirmation of stay/storage at location
+            opts.DECEASED: T("Deceased"),   # deceased
+            opts.LOST: T("Lost"),           # destroyed/disposed at location
 
             # Absence conditions:
-            opts.TRANSFER: current.T("Transfer"),   # Send to another location
-            opts.CHECK_OUT: current.T("Check-Out"), # Left location for unknown destination
+            opts.TRANSFER: T("Transfer"),   # Send to another location
+            opts.CHECK_OUT: T("Check-Out"), # Left location for unknown destination
 
             # Missing condition:
-            opts.MISSING: current.T("Missing"),     # Missing (from a "last-seen"-location)
+            opts.MISSING: T("Missing"),     # Missing (from a "last-seen"-location)
         })
         pr_default_presence = 1
 
-        resourcename = "presence"
         tablename = "pr_presence"
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
@@ -2205,7 +2186,7 @@ class S3PersonPresence(S3Model):
                                                                         T("Specific Area (e.g. Building/Room) within the Location that this Person/Group is seen.")))),
                                   Field("datetime", "datetime",
                                         label = T("Date/Time"),
-                                        default = request.utcnow,
+                                        default = current.request.utcnow,
                                         requires = IS_UTC_DATETIME(allow_future=False),
                                         widget = S3DateTimeWidget(future=0),
                                         represent = lambda val: datetime_represent(val, utc=True)),
@@ -2250,7 +2231,7 @@ class S3PersonPresence(S3Model):
 
         # CRUD Strings
         ADD_LOG_ENTRY = T("Add Log Entry")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_LOG_ENTRY,
             title_display = T("Log Entry Details"),
             title_list = T("Presence Log"),
@@ -2299,10 +2280,8 @@ class S3PersonPresence(S3Model):
 
         db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
-
         table = s3db.pr_presence
-        popts = s3.pr_presence_opts
+        popts = s3db.pr_presence_opts
         shelter_table = s3db.cr_shelter
 
         location = form.vars.location_id
@@ -2365,10 +2344,8 @@ class S3PersonPresence(S3Model):
 
         db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
-
         table = s3db.pr_presence
-        popts = s3.pr_presence_opts
+        popts = s3db.pr_presence_opts
 
         if isinstance(form, (int, long, str)):
             id = form
@@ -2461,17 +2438,13 @@ class S3PersonDescription(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-        auth = current.auth
-        request = current.request
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        #if deployment_settings.has_module("dvi") or \
-           #deployment_settings.has_module("mpr"):
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Note
@@ -2483,7 +2456,6 @@ class S3PersonDescription(S3Model):
             9: T("none")
         }
 
-        resourcename = "note"
         tablename = "pr_note"
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
@@ -2508,7 +2480,7 @@ class S3PersonDescription(S3Model):
                                         label=T("Date/Time"),
                                         requires=[IS_EMPTY_OR(IS_UTC_DATETIME_IN_RANGE())],
                                         widget = S3DateTimeWidget(),
-                                        default=request.utcnow),
+                                        default=current.request.utcnow),
                                   Field("note_text", "text",
                                         label=T("Text")),
                                   Field("note_contact", "text",
@@ -2520,7 +2492,7 @@ class S3PersonDescription(S3Model):
 
         # CRUD strings
         ADD_NOTE = T("New Entry")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_NOTE,
             title_display = T("Journal Entry Details"),
             title_list = T("Journal"),
@@ -2649,7 +2621,6 @@ class S3PersonDescription(S3Model):
             "White"
         ]
 
-        resourcename = "physical_description"
         tablename = "pr_physical_description"
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
@@ -2782,7 +2753,6 @@ class S3PersonDescription(S3Model):
 
         db = current.db
         s3db = current.s3db
-
         pe_table = s3db.pr_pentity
         ntable = s3db.pr_note
         ptable = s3db.pr_person
@@ -2859,11 +2829,10 @@ def pr_get_entities(pe_ids=None,
         @param default_label: the default label
     """
 
-    T = current.T
     db = current.db
     s3db = current.s3db
 
-    DEFAULT = T("None (no such record)")
+    DEFAULT = current.T("None (no such record)")
 
     pe_table = s3db.pr_pentity
 
@@ -2981,14 +2950,13 @@ def pr_get_entities(pe_ids=None,
 def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
 
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-
     if not id:
         return current.messages.NONE
 
-    pe_str = T("None (no such record)")
+    db = current.db
+    s3db = current.s3db
+
+    pe_str = current.T("None (no such record)")
 
     pe_table = s3db.pr_pentity
     if isinstance(id, Row):

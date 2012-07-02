@@ -711,6 +711,19 @@ class S3ResourceFilterTests(unittest.TestCase):
         self.assertEqual(parse_value('"NONE",1'), ["NONE", "1"])
         self.assertEqual(parse_value('"NONE,1"'), "NONE,1")
 
+    def testAnyOf(self):
+
+        resource = s3mgr.define_resource("org", "organisation")
+        FS = s3base.S3FieldSelector
+        q = FS("sector_id").contains([1, 2])
+        query = q.query(resource)
+        self.assertEqual(str(query), "((org_organisation.sector_id LIKE '%|1|%') AND "
+                                     "(org_organisation.sector_id LIKE '%|2|%'))")
+        q = FS("sector_id").anyof([1, 2])
+        query = q.query(resource)
+        self.assertEqual(str(query), "((org_organisation.sector_id LIKE '%|1|%') OR "
+                                     "(org_organisation.sector_id LIKE '%|2|%'))")
+
     def tearDown(self):
         auth.s3_impersonate(None)
 
@@ -1216,6 +1229,92 @@ class S3MergeLocationsTests(unittest.TestCase):
         auth.override = False
 
 # =============================================================================
+class S3JSONTests(unittest.TestCase):
+
+    def setUp(self):
+
+        ptable = s3db.pr_person
+        otable = s3db.org_organisation
+        htable = s3db.hrm_human_resource
+        jtable = s3db.hrm_job_role
+
+        job_role = Storage(name="TestJSONJobRole")
+        job_role_id = jtable.insert(**job_role)
+        job_role.update(id=job_role_id)
+        s3mgr.onaccept(jtable, Storage(vars=job_role))
+
+        organisation = Storage(name="TestJSONOrganisation")
+        organisation_id = otable.insert(**organisation)
+        organisation.update(id=organisation_id)
+        s3mgr.model.update_super(otable, organisation)
+        s3mgr.onaccept(otable, Storage(vars=organisation))
+
+        person = Storage(first_name="TestJSON1",
+                         last_name="Person")
+        person_id = ptable.insert(**person)
+        person.update(id=person_id)
+        s3mgr.model.update_super(ptable, person)
+        s3mgr.onaccept(ptable, Storage(vars=person))
+
+        hr_record = Storage(person_id=person_id,
+                            organisation_id=organisation_id,
+                            job_role_id=job_role_id)
+        hr_record_id = htable.insert(**hr_record)
+        hr_record.update(id=hr_record_id)
+        s3mgr.onaccept(htable, Storage(vars=hr_record))
+
+        person = Storage(first_name="TestJSON2",
+                         last_name="Person")
+        person_id = ptable.insert(**person)
+        person.update(id=person_id)
+        s3mgr.model.update_super(ptable, person)
+        s3mgr.onaccept(ptable, Storage(vars=person))
+
+        hr_record = Storage(person_id=person_id,
+                            organisation_id=organisation_id)
+        hr_record_id = htable.insert(**hr_record)
+        hr_record.update(id=hr_record_id)
+        s3mgr.onaccept(htable, Storage(vars=hr_record))
+
+    def testJSONExport(self):
+
+        auth.override = True
+        resource = s3mgr.define_resource("hrm", "human_resource")
+        fields = ["id",
+                  "person_id$first_name",
+                  "person_id$middle_name",
+                  "person_id$last_name",
+                  "organisation_id$name",
+                  "job_role_id$name"]
+
+        FS = s3base.S3FieldSelector
+        query = FS("person_id$first_name").like("TestJSON%")
+
+        resource.add_filter(query)
+
+        result = resource.sqltable(fields=fields,
+                                   start=0,
+                                   limit=None,
+                                   as_json=True)
+
+        self.assertNotEqual(result, "[]")
+        from gluon.contrib import simplejson as json
+        data = json.loads(result)
+        self.assertEqual(len(data), 2)
+        for record in data:
+            self.assertTrue("hrm_job_role.name" in record)
+            if record["pr_person.first_name"] == "TestJSON1":
+                self.assertEqual(record["hrm_job_role.name"], "TestJSONJobRole")
+            else:
+                self.assertEqual(record["hrm_job_role.name"], None)
+
+        auth.override = True
+
+    def tearDown(self):
+
+        db.rollback()
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -1236,6 +1335,7 @@ if __name__ == "__main__":
         S3MergeOrganisationsTests,
         S3MergePersonsTests,
         S3MergeLocationsTests,
+        S3JSONTests,
     )
 
 # END ========================================================================

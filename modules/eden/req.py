@@ -168,7 +168,7 @@ class S3RequestModel(S3Model):
                                                         maximum=request.utcnow.date(),
                                                         error_message="%s %%(max)s!" %
                                                             T("Enter a valid past date"),
-                                                        format = s3_date_format))],
+                                                        format=s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
                                         #                          future=0),
@@ -202,7 +202,7 @@ class S3RequestModel(S3Model):
                                                       minimum=request.utcnow.date() - datetime.timedelta(days=1),
                                                       error_message="%s %%(min)s!" %
                                                             T("Enter a valid past date"),
-                                                        format = s3_date_format))],
+                                                        format=s3_date_format))],
                                         # @ToDo: deployment_setting
                                         #widget = S3DateTimeWidget(past=0,
                                         #                          future=8760), # Hours, so 1 year
@@ -1174,7 +1174,6 @@ class S3RequestSkillModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         site_id = self.org_site_id
@@ -1185,8 +1184,8 @@ class S3RequestSkillModel(S3Model):
         quantities_writable = settings.get_req_quantities_writable()
         use_commit = settings.get_req_use_commit()
 
+        crud_strings = s3 = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3_meta_fields
 
         # -----------------------------------------------------------------
         # Request Skills
@@ -1231,7 +1230,7 @@ class S3RequestSkillModel(S3Model):
                                          comment = DIV(_class="tooltip",
                                                        _title="%s|%s" % (T("Task Details"),
                                                                         T("Include any special requirements such as equipment which they need to bring.")))),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         table.site_id.label = T("Requested From")
 
@@ -1240,7 +1239,7 @@ class S3RequestSkillModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST_SKILL = T("Add Skill to Request")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST_SKILL,
             title_display = T("Requested Skill Details"),
             title_list = T("Requested Skills"),
@@ -1264,7 +1263,7 @@ class S3RequestSkillModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              req_id(),
-                             *meta_fields())
+                             *s3_meta_fields())
 
         self.configure("req_req_skill",
                        onaccept=req_skill_onaccept,
@@ -1289,19 +1288,17 @@ class S3RequestSkillModel(S3Model):
 
     # -----------------------------------------------------------------
     @staticmethod
-    def req_skill_represent (id):
+    def req_skill_represent(id):
         """
         """
 
-        db = current.db
         s3db = current.s3db
-
         rstable = s3db.req_req_skill
         hstable = s3db.hrm_skill
         query = (rstable.id == id) & \
                 (rstable.skill_id == hstable.id)
-        record = db(query).select(hstable.name,
-                                  limitby = (0, 1)).first()
+        record = current.db(query).select(hstable.name,
+                                          limitby = (0, 1)).first()
         if record:
             return record.name
         else:
@@ -1322,7 +1319,6 @@ class S3CommitModel(S3Model):
         db = current.db
         auth = current.auth
         request = current.request
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -1332,6 +1328,8 @@ class S3CommitModel(S3Model):
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Commitments (Pledges)
@@ -1360,14 +1358,14 @@ class S3CommitModel(S3Model):
                                         writable=False),
                                   Field("date",
                                         "date",
-                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                         widget = S3DateWidget(),
                                         default = request.utcnow,
                                         label = T("Date"),
                                         represent = s3_date_represent),
                                   Field("date_available",
                                         "date",
-                                        requires = IS_EMPTY_OR(IS_DATE(format = s3_date_format)),
+                                        requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
                                         widget = S3DateWidget(),
                                         label = T("Date Available"),
                                         represent = s3_date_represent),
@@ -1380,7 +1378,7 @@ class S3CommitModel(S3Model):
 
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_COMMIT,
             title_display = T("Commitment Details"),
             title_list = T("Commitments"),

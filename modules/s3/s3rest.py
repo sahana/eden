@@ -64,13 +64,19 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
+# Here are dependencies listed for reference:
+#from gluon.dal import Field
+#from gluon.globals import current
+#from gluon.html import A, DIV, URL
+#from gluon.http import HTTP, redirect
+#from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
+from gluon.dal import Row, Rows
 from gluon.languages import lazyT
-from gluon.sql import Row, Rows
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3, s3_is_foreign_key, s3_get_reference
-from s3validators import IS_ONE_OF, IS_INT_AMOUNT, IS_FLOAT_AMOUNT
+from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key
+from s3validators import IS_ONE_OF
 from s3xml import S3XML
 from s3model import S3Model, S3ModelExtensions
 from s3export import S3Exporter
@@ -232,7 +238,7 @@ class S3RequestManager(object):
         """
 
         self.error = None
-        headers={"Content-Type":"application/json"}
+        headers = {"Content-Type":"application/json"}
         try:
             r = S3Request(self, *args, **vars)
         except SyntaxError:
@@ -381,8 +387,7 @@ class S3RequestManager(object):
             @param extended_comments: Typically the comments are abbreviated
         """
 
-        xml = self.xml
-        xml_encode = xml.xml_encode
+        xml_encode = self.xml.xml_encode
 
         NONE = str(current.T("None")).decode("utf-8")
         cache = current.cache
@@ -2029,6 +2034,9 @@ class S3Resource(object):
         self.error = None
         self.error_tree = None
         self.import_count = 0
+        self.import_created = []
+        self.import_updated = []
+        self.import_deleted = []
 
         # Search
         self.search = model.get_config(self.tablename, "search_method", None)
@@ -2503,7 +2511,7 @@ class S3Resource(object):
                         fk = {}
                         for f in table.fields:
                             if record[f] is not None and \
-                               s3_is_foreign_key(table[f]):
+                               s3_has_foreign_key(table[f]):
                                 fk[f] = record[f]
                                 fields[f] = None
                             else:
@@ -3497,11 +3505,23 @@ class S3Resource(object):
             tree = xml.tree2json(self.error_tree)
         else:
             tree = None
+
+        import_info = {"records":self.import_count}
+        created=self.import_created
+        if created:
+            import_info["created"] = created
+        updated=self.import_updated
+        if updated:
+            import_info["updated"] = updated
+        deleted=self.import_deleted
+        if deleted:
+            import_info["deleted"] = deleted
+
         if success is True:
-            return xml.json_message(message=self.error, tree=tree)
+            return xml.json_message(message=self.error, tree=tree, **import_info)
         elif success and hasattr(success, "job_id"):
             self.job = success
-            return xml.json_message(message=self.error, tree=tree)
+            return xml.json_message(message=self.error, tree=tree, **import_info)
         else:
             return xml.json_message(False, 400,
                                     message=self.error, tree=tree)
@@ -3678,6 +3698,9 @@ class S3Resource(object):
         import_job.commit(ignore_errors=ignore_errors)
         self.error = import_job.error
         self.import_count += import_job.count
+        self.import_created += import_job.created
+        self.import_updated += import_job.updated
+        self.import_deleted += import_job.deleted
         if self.error:
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error
@@ -4072,7 +4095,7 @@ class S3Resource(object):
                     if lkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (lkey, lname))
                     lkey_field = ltable[lkey]
-                    _tn, pkey, multiple = s3_get_reference(lkey_field, m2m=False)
+                    _tn, pkey, multiple = s3_get_foreign_key(lkey_field, m2m=False)
                     if _tn and _tn != tn:
                         raise SyntaxError("Invalid link: %s.%s is not a foreign key for %s" % (lname, lkey, tn))
                     elif not _tn:
@@ -4086,7 +4109,7 @@ class S3Resource(object):
                     if rkey not in ltable.fields:
                         raise KeyError("No field %s in %s" % (rkey, lname))
                     rkey_field = ltable[rkey]
-                    ktablename, fkey, multiple = s3_get_reference(rkey_field, m2m=False)
+                    ktablename, fkey, multiple = s3_get_foreign_key(rkey_field, m2m=False)
                     if not ktablename:
                         raise SyntaxError("%s.%s is not a foreign key" % (lname, lkey))
                     search_rkey = False
@@ -4094,7 +4117,7 @@ class S3Resource(object):
                 # Key search
                 if search_lkey or search_rkey:
                     for fname in ltable.fields:
-                        ktn, key, multiple = s3_get_reference(ltable[fname], m2m=False)
+                        ktn, key, multiple = s3_get_foreign_key(ltable[fname], m2m=False)
                         if not ktn:
                             continue
                         if search_lkey and ktn == tn:
@@ -4144,7 +4167,7 @@ class S3Resource(object):
                 # table -- f -- pkey --> ktable
 
                 # Find the referenced table
-                ktablename, pkey, multiple = s3_get_reference(f)
+                ktablename, pkey, multiple = s3_get_foreign_key(f)
                 if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 
@@ -4223,7 +4246,7 @@ class S3Resource(object):
                    f in IGNORE_FIELDS:
                     if f != pkey or not manager.show_ids:
                         continue
-                if s3_is_foreign_key(table[f]) and \
+                if s3_has_foreign_key(table[f]) and \
                     f not in FIELDS_TO_ATTRIBUTES and \
                     (references is None or f in references):
                     rfields.append(f)
@@ -4457,6 +4480,7 @@ class S3Resource(object):
                  as_rows=False,
                  as_page=False,
                  as_list=False,
+                 as_json=False,
                  format=None):
         """
             DRY helper function for SQLTABLEs in REST and CRUD
@@ -4649,6 +4673,9 @@ class S3Resource(object):
         elif as_list:
             # ...Python list
             items = rows.as_list()
+        elif as_json:
+            # ...simple flat JSON (with prefixed field names)
+            items = self.convert_json(rows, lfields)
         else:
             # ...SQLTABLE
             items = SQLTABLES3(rows,
@@ -4658,6 +4685,28 @@ class S3Resource(object):
                                _id="list",
                                _class="dataTable display")
         return items
+
+    # -------------------------------------------------------------------------
+    def convert_json(self, rows, lfields):
+        """
+            Convert rows into JSON, used in sqltable
+
+            @param rows: the rows
+            @param lfields: the (resolved) list fields
+        """
+
+        fields = [lf.selector for lf in lfields]
+
+        if rows is None:
+            return "[]"
+        records = []
+        for row in rows:
+            record = Storage()
+            for lfield in lfields:
+                record[lfield.colname] = S3FieldSelector.extract(self,
+                                                    row, lfield.selector)
+            records.append(record)
+        return json.dumps(records)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5455,6 +5504,10 @@ class S3FieldSelector:
         return S3ResourceQuery(S3ResourceQuery.CONTAINS, self, value)
 
     # -------------------------------------------------------------------------
+    def anyof(self, value):
+        return S3ResourceQuery(S3ResourceQuery.ANYOF, self, value)
+
+    # -------------------------------------------------------------------------
     def lower(self):
         self.op = self.LOWER
         return self
@@ -5569,8 +5622,11 @@ class S3ResourceQuery:
     LIKE = "like"
     BELONGS = "belongs"
     CONTAINS = "contains"
+    ANYOF = "anyof"
 
-    OPERATORS = [NOT, AND, OR, LT, LE, EQ, NE, GE, GT, LIKE, BELONGS, CONTAINS]
+    OPERATORS = [NOT, AND, OR,
+                 LT, LE, EQ, NE, GE, GT,
+                 LIKE, BELONGS, CONTAINS, ANYOF]
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
@@ -5655,7 +5711,7 @@ class S3ResourceQuery:
         if op in (self.AND, self.OR):
             lf = l.fields()
             rf = r.fields()
-            return lf+rf
+            return lf + rf
         elif op == self.NOT:
             return l.fields()
         elif isinstance(l, S3FieldSelector):
@@ -5761,7 +5817,9 @@ class S3ResourceQuery:
         """
 
         if op == self.CONTAINS:
-            q = l.contains(r)
+            q = l.contains(r, all=True)
+        elif op == self.ANYOF:
+            q = l.contains(r, all=False)
         elif op == self.BELONGS:
             if type(r) is list and None in r:
                 _r = [item for item in r if item is not None]
@@ -5904,6 +5962,16 @@ class S3ResourceQuery:
         if op == self.CONTAINS:
             r = convert(l, r)
             result = contains(l, r)
+        elif op == self.ANYOF:
+            if not isinstance(r, (list, tuple)):
+                r = [r]
+            for v in r:
+                if isinstance(l, (list, tuple, basestring)):
+                    if contains(l, r):
+                        return True
+                elif l == r:
+                    return True
+            return False
         elif op == self.BELONGS:
             r = convert(l, r)
             result = contains(r, l)
@@ -6181,10 +6249,15 @@ class S3TypeConverter:
         if isinstance(b, bool):
             return b
         if isinstance(b, basestring):
-            if b.lower() == "true":
+            if b.lower() in ("true", "1"):
                 return True
-            elif b.lower() == "false":
+            elif b.lower() in ("false", "0"):
                 return False
+        if isinstance(b, (int, long)):
+            if b == 0:
+                return False
+            else:
+                return True
         raise TypeError
 
     # -------------------------------------------------------------------------
@@ -6532,7 +6605,7 @@ class S3RecordMerger(object):
 
             # Find the foreign key
             rfield = rtable[fn]
-            ktablename, key, multiple = s3_get_reference(rfield)
+            ktablename, key, multiple = s3_get_foreign_key(rfield)
             if not ktablename:
                 if str(rfield.type) == "integer":
                     # Virtual reference

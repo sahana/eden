@@ -84,7 +84,7 @@ def assess_tables():
                                   default = request.utcnow),
                             location_id(widget = S3LocationAutocompleteWidget(),
                                         requires = IS_LOCATION()),
-                            organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile = True)),
+                            organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
                             person_id("assessor_person_id",
                                       label = T("Assessor"),
                                       default = s3_logged_in_person()),

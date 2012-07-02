@@ -112,12 +112,6 @@ $(document).ready(function() {
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
-    // Use S3DateTimeWidget
-    //try { $('input.datetime').focus( function() {
-    //    Calendar.setup({
-    //        inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-    //    });
-    //}); } catch(e) {};
 
     // T2 Layer
     //try { $('.zoom').fancyZoom( {
@@ -139,23 +133,6 @@ $(document).ready(function() {
             }
         });
     }
-
-    // Datepicker
-    $('input.date').datepicker({
-        changeMonth: true, changeYear: true,
-        //showOtherMonths: true, selectOtherMonths: true,
-        showOn: 'both',
-        buttonImage: S3.Ap.concat('/static/img/jquery-ui/calendar.gif'),
-        buttonImageOnly: true,
-        dateFormat: 'yy-mm-dd',
-        isRTL: S3.rtl
-     });
-
-    $('input.time').timepicker({
-        hourText: S3.i18n.hour,
-        minuteText: S3.i18n.minute,
-        defaultTime: ''
-    });
 
     // accept comma as thousands separator
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
@@ -701,7 +678,7 @@ function S3FilterFieldChange (setting) {
  * Add an Autocomplete to a field - used by S3AutocompleteWidget
  */
 
-S3.autocomplete = function(fieldname, module, resourcename, input, link, postprocess, delay, min_length) {
+S3.autocomplete = function(fieldname, module, resourcename, input, filter, link, postprocess, delay, min_length) {
     var real_input = '#' + input;
     var dummy = 'dummy_' + input;
     var dummy_input = '#' + dummy;
@@ -711,6 +688,9 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, postpro
     }
 
     var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
+    if (filter != 'undefined') {
+        url += '&' + filter;
+    }
     if (link != 'undefined') {
         url += '&link=' + link;
     }

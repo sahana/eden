@@ -298,9 +298,9 @@ def index():
                                         ),
                                     _id = "manage_facility_box",
                                     _class = "menu_box fleft")
-                s3.jquery_ready.append('''
-$('#manage_facility_select').change(function(){
- $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()));
+                s3.jquery_ready.append(
+'''$('#manage_facility_select').change(function(){
+ $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
 })''')
             else:
                 manage_facility_box = DIV()
@@ -353,23 +353,23 @@ $('#manage_facility_select').change(function(){
             else:
                 s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
             if request.env.request_method == "POST":
-                post_script = '''
-$('#register_form').removeClass('hide');
-$('#login_form').addClass('hide');'''
+                post_script = \
+'''$('#register_form').removeClass('hide')
+$('#login_form').addClass('hide')'''
             else:
                 post_script = ""
-            register_script = '''
-$('#register-btn').attr('href','#register');
-$('#login-btn').attr('href','#login');
+            register_script = \
+'''$('#register-btn').attr('href','#register')
+$('#login-btn').attr('href','#login')
 %s
-$('#register-btn').click(function() {
- $('#register_form').removeClass('hide');
- $('#login_form').addClass('hide');
-});
-$('#login-btn').click(function() {
- $('#register_form').addClass('hide');
- $('#login_form').removeClass('hide');
-});''' % post_script
+$('#register-btn').click(function(){
+ $('#register_form').removeClass('hide')
+ $('#login_form').addClass('hide')
+})
+$('#login-btn').click(function(){
+ $('#register_form').addClass('hide')
+ $('#login_form').removeClass('hide')
+})''' % post_script
             s3.jquery_ready.append(register_script)
 
         # Provide a login box on front page
@@ -389,30 +389,29 @@ $('#login-btn').click(function() {
         for feed in settings.frontpage.rss:
             counter += 1
             feeds = "".join((feeds,
-                             "{title: '%s',\n" % feed["title"],
-                             "url: '%s'}" % feed["url"]))
+                             "{title:'%s',\n" % feed["title"],
+                             "url:'%s'}" % feed["url"]))
             # Don't add a trailing comma for old IEs
             if counter != len(settings.frontpage.rss):
                 feeds += ",\n"
-        feed_control = "".join(("""
-function LoadDynamicFeedControl() {
-  var feeds = [
-    """, feeds, """
-  ];
-  var options = {
-    // milliseconds before feed is reloaded (5 minutes)
-    feedCycleTime : 300000,
-    numResults : 5,
-    stacked : true,
-    horizontal : false,
-    title : '""", str(T("News")), """'
-  };
-  new GFdynamicFeedControl(feeds, 'feed-control', options);
+        # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
+        feed_control = "".join(('''
+function LoadDynamicFeedControl(){
+ var feeds=[
+  ''', feeds, '''
+ ]
+ var options={
+  feedCycleTime:300000,
+  numResults:5,
+  stacked:true,
+  horizontal:false,
+  title:"''', str(T("News")), '''"
+ }
+ new GFdynamicFeedControl(feeds,'feed-control',options)
 }
-// Load the feeds API and set the onload callback.
-google.load('feeds', '1');
-google.setOnLoadCallback(LoadDynamicFeedControl);"""))
-        s3.js_global.append( feed_control )
+google.load('feeds','1')
+google.setOnLoadCallback(LoadDynamicFeedControl)'''))
+        s3.js_global.append(feed_control)
 
     return dict(title = title,
                 item = item,
@@ -640,7 +639,8 @@ def facebook():
     if not auth.settings.facebook:
         redirect(URL(f="user", args=request.args, vars=request.vars))
 
-    auth.settings.login_form = s3base.FaceBookAccount()
+    from s3oauth import FaceBookAccount
+    auth.settings.login_form = FaceBookAccount()
     form = auth()
 
     return dict(form=form)
@@ -652,7 +652,8 @@ def google():
     if not auth.settings.google:
         redirect(URL(f="user", args=request.args, vars=request.vars))
 
-    auth.settings.login_form = s3base.GooglePlusAccount()
+    from s3oauth import GooglePlusAccount
+    auth.settings.login_form = GooglePlusAccount()
     form = auth()
 
     return dict(form=form)

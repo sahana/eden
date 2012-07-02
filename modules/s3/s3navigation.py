@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    S3 Navigation Module
+""" S3 Navigation Module
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -1217,7 +1216,7 @@ class S3ComponentTabs:
 
     def __init__(self, tabs=[]):
 
-        self.tabs = [S3ComponentTab(t) for t in tabs]
+        self.tabs = [S3ComponentTab(t) for t in tabs if t]
 
     # -------------------------------------------------------------------------
     def render(self, r):

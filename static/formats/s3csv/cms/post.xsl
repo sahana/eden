@@ -5,21 +5,10 @@
     <!-- **********************************************************************
          CMS Post - CSV Import Stylesheet
 
-         - use for import to delphi/problem resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be delphi/problem/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Series...................Series Name (optional)
-         Name.....................Post Name
+         Name.....................Post Name (for menu links)
+         Name.....................Post Title (for use in the browser-bar)
          Body.....................Post Body (HTML)
          Module...................Post Module
          Roles....................Post Roles (not yet implemented)
@@ -60,6 +49,7 @@
                 <data field="module"><xsl:value-of select="$Module"/></data>
             </xsl:if>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="title"><xsl:value-of select="col[@field='Title']"/></data>
             <data field="body"><xsl:value-of select="col[@field='Body']"/></data>
         </resource>
 

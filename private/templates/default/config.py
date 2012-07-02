@@ -304,10 +304,18 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
-# Uncomment to use an alternate table for HR experience
-#settings.hrm.experience = "programme"
-# Uncomment to show the Organisation name in HRM represents
+# Uncomment to disable Staff experience
+#settings.hrm.staff_experience = False
+# Uncomment to disable Volunteer experience
+#settings.hrm.vol_experience = False
+# Uncomment to show the Organisation name in HR represents
 #settings.hrm.show_organisation = True
+# Uncomment to disable the use of HR Credentials
+#settings.hrm.use_credentials = False
+# Uncomment to enable the use of HR Education
+#settings.hrm.use_education = True
+# Uncomment to disable the use of HR Teams
+#settings.hrm.use_teams = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -578,6 +586,12 @@ settings.modules = OrderedDict([
     #       module_type = 10,
     #   )),
     # These are specialist modules
+    #("cap", Storage(
+    #        name_nice = T("CAP"),
+    #        #description = "Create & broadcast CAP alerts",
+    #        restricted = True,
+    #        module_type = 10,
+    #)),
     # Requires RPy2 & PostgreSQL
     #("climate", Storage(
     #        name_nice = T("Climate"),

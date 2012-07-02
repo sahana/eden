@@ -238,7 +238,7 @@ settings.modules = OrderedDict([
             restricted = False,
             module_type = 10
         )),
-    `#("member", Storage(
+    #("member", Storage(
     #       name_nice = T("Members"),
     #       #description = "Membership Management System",
     #       restricted = True,

@@ -196,8 +196,6 @@ $(document).ready(function() {
         div.toggleClass('expanded');
     });
 
-
-
     /* Search AutoComplete */
 
     // Events to capture autocomplete input

@@ -6,7 +6,7 @@
 #container {
     background: #fff;
     width: 1024px;
-    margin:0 auto;
+    margin: 0 auto;
 }
 #header {
     position: relative;
@@ -21,11 +21,11 @@
 #single-col,
 #right-col,
 #left-col{
-    background:#fff;
+    background: #fff;
 }
 #single-col{
-    position:relative;
-    clear:both;
+    position: relative;
+    clear: both;
 }
 #right-col{
     /*width: 788px;
@@ -53,12 +53,32 @@
 }
 
 /*** Header ***/
-#header > div {float:left;}
-#header #society-icon{width:60px;}
-#header #logo{width:600px;height:90px;border:1px solid #9c9c9c; border-width:0 1px 0 1px; }
-#header #personal-menu{width:359px}
-#header #logo h1{float:left;}
-#header #logo a{display:block;margin:20px 0 0 15px;background:url(img/logo.png) no-repeat;width:425px;height:64px;text-indent:-99999px;}
+#header > div {
+    float :left;
+}
+#header #society-icon{
+    width: 60px;
+}
+#header #logo {
+    width: 600px;
+    height: 90px;
+    border: 1px solid #9c9c9c;
+    border-width: 0 1px 0 1px;
+}
+#header #personal-menu {
+    width: 359px;
+}
+#header #logo h1 {
+    float: left;
+}
+#header #logo a {
+    display: block;
+    margin: 20px 0 0 15px;
+    background: url(img/logo.png) no-repeat;
+    width: 425px;
+    height: 64px;
+    text-indent: -99999px;
+}
 #header #logo #region{float:left;margin:34px 0 0 10px;font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;color:#891735;}
 #header #logo #region.big{font-size:1.7em;line-height:1.20em;}
 #header #logo #region.small{font-size:1.25em;}
@@ -71,6 +91,7 @@
 #header #personal-menu a:hover {color:#891735;}
 #header #personal-menu p {clear:both;color:#891735;margin:0px;padding:0px 15px;}
 #header #personal-menu .username {color:#891735;padding:0px 25px 3px 15px;}
+
 #header:after {
     position: absolute;
     top: 132px;
