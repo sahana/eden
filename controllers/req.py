@@ -97,7 +97,7 @@ def req():
                 req_table.type.readable = False
                 req_table.type.writable = False
 
-                crud_strings = deployment_settings.get_req_req_crud_strings(type)
+                crud_strings = settings.get_req_req_crud_strings(type)
                 if crud_strings:
                     s3.crud_strings["req_req"] = crud_strings
 
@@ -477,7 +477,7 @@ def commit():
 
         if r.component:
             req_id = r.record.req_id
-            if r.component.name == "item":
+            if r.component.name == "commit_item":
                 # Limit commit items to items from the request
                 s3db.req_commit_item.req_item_id.requires = \
                     IS_ONE_OF(db,
@@ -542,12 +542,12 @@ def commit_rheader(r):
                                           ),
                                          ),
                                         )
-                prepare_btn = A( T("Prepare Commitment"),
+                prepare_btn = A( T("Send Commitment"),
                               _href = URL(c = "inv",
-                                          f = "prepare_commit",
+                                          f = "send_commit",
                                           args = [record.id]
                                           ),
-                              _id = "prepare_commit",
+                              _id = "send_commit",
                               _class = "action-btn"
                               )
 

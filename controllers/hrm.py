@@ -709,7 +709,7 @@ def certificate_skill():
 
 # -----------------------------------------------------------------------------
 def training():
-    """ Training Controller """
+    """ Training Controller - used for Searching for Participants """
 
     return s3db.hrm_training_controller()
 

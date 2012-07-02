@@ -227,6 +227,7 @@ _settings.allow_basic_login = True
 
 _settings.logout_onlogout = s3_auth_on_logout
 _settings.login_onaccept = s3_auth_on_login
+_settings.login_next = settings.get_auth_login_next()
 if settings.get_auth_registration_volunteer() and \
    settings.has_module("vol"):
     _settings.register_next = URL(c="vol", f="person")

@@ -283,7 +283,8 @@ class S3CAPModel(S3Model):
                                    represent=self.alert_reference_represent),
                              Field("incidents",
                                    requires=IS_IN_SET(cap_incident_type_opts,
-                                                      multiple=True)),
+                                                      multiple=True),
+                                   represent = self.list_string_represent),
                              *s3_meta_fields())
 
         ADD_ALERT = T("Create Alert")
@@ -456,12 +457,13 @@ class S3CAPModel(S3Model):
                                    represent=self.list_string_represent,
                                    requires=IS_IN_SET(cap_info_category_opts,
                                                       multiple=True),
-                                   required=True),# 0 or more allowed
+                                   required=True),# 1 or more allowed
                              Field("event", required=True),
                              Field("response_type",
                                    #widget = S3MultiSelectWidget(),
                                    requires=IS_IN_SET(cap_info_responseType_opts,
-                                                      multiple=True)), # 0 or more allowed
+                                                      multiple=True),
+                                   represent=self.list_string_represent), # 0 or more allowed
                              Field("urgency", notnull=True,
                                    requires=IS_IN_SET(cap_info_urgency_opts)),
                              Field("severity", notnull=True,
