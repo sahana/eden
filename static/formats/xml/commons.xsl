@@ -173,6 +173,7 @@
                         <xsl:call-template name="resource">
                             <xsl:with-param name="item" select="normalize-space($list)"/>
                             <xsl:with-param name="arg" select="$arg"/>
+                            <xsl:with-param name="last">true</xsl:with-param>
                         </xsl:call-template>
                     </xsl:if>
                 </xsl:otherwise>
