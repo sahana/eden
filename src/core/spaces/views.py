@@ -26,42 +26,33 @@ import itertools
 import hashlib
 
 # Generic class-based views
-from django.views.generic.base import TemplateView, RedirectView
+from django.views.generic.base import RedirectView
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
 
 # Decorators. the first is a wrapper to convert function-based decorators
 # to method decorators that can be put in subclass methods.
 from django.utils.decorators import method_decorator
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, permission_required
 from django.conf import settings
 
 # Response types
-from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 
 # Some extras
-from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.template import RequestContext
-from django.contrib.syndication.views import Feed, FeedDoesNotExist
+from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
-from django.db import connection
 from django.core.mail import send_mail
-
-# Function-based views
-from django.views.generic.list_detail import object_list, object_detail
-from django.views.generic.create_update import create_object, update_object
-from django.views.generic.create_update import delete_object
 
 # e-cidadania data models
 from core.spaces.models import Space, Entity, Document, Event, Intent
 from apps.ecidadania.news.models import Post
-from core.spaces.forms import SpaceForm, DocForm, EventForm, \
-     EntityFormSet, RoleForm
+from core.spaces.forms import SpaceForm, DocForm, EventForm, EntityFormSet, \
+    RoleForm
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
@@ -138,7 +129,16 @@ def add_intent(request, space_url):
                                context_instance=RequestContext(request))
 
 
-class ValidateIntent(DetailView):
+class  ValidateIntent(DetailView):
+
+    """
+    Validate the user petition to join a space. This will add the user to the
+    users list in the space, allowing him participation. This function checks if
+    the user visiting the token url is admin of the space. If he or she is an
+    admin proceeds with the validation.
+
+    .. versionadded: 0.1.5
+    """
     context_object_name = 'space_name'
     template_name = 'spaces/validate_intent.html'
     heading = _("The requested intent does not exist!")
@@ -146,15 +146,22 @@ class ValidateIntent(DetailView):
     def get_object(self):
         space_object = get_object_or_404(Space, url=self.kwargs['space_url'])
 
-        if self.request.user.is_staff:
-            intent = get_object_or_404(Intent, token=self.kwargs['token'])
-            intent.space.users.add(self.request.user)
-            self.heading = _("The user has been authorized to participate in space \"%s\"." % space_object.name)
-            messages.info(self.request, _("Authorization successful"))
-            self.template_name = 'validate_intent.html'
-        return space_object
+        if self.request.user in space_object.admins.all() \
+        or self.request.user in space_object.mods.all() \
+        or self.request.user.is_staff or self.request.user.is_superuser:
+            try:
+                intent = Intent.objects.get(token=self.kwargs['token'])
+                intent.space.users.add(intent.user)
+                self.heading = _("The user has been authorized to participate \
+                in space \"%s\"." % space_object.name)
+                messages.info(self.request, _("Authorization successful"))
 
-    def get_context_data(self, **kwargs):
+            except Intent.DoesNotExist:
+                self.heading  = _("The requested intent does not exist!")
+
+            return space_object
+
+def get_context_data(self, **kwargs):
         context = super(ValidateIntent, self).get_context_data(**kwargs)
         context['heading'] = self.heading
         return context
