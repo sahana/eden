@@ -57,7 +57,7 @@ class CreateOrganisation(SeleniumUnitTest):
     [
         # 1st field used to check whether record already exists
         # & for organisation_id lookups
-        ("name", "Romanian Food Assistance Association (Test2)"),
+        ("name", "Romanian Food Assistance Association (Test)"),
         ("acronym", "RFAAT"),
         ("organisation_type_id", "Government", "option"),
         ("region", "Europe"),
