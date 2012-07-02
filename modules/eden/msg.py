@@ -119,6 +119,7 @@ class S3MessagingModel(S3Model):
                        list_fields=["id",
                                     "inbound",
                                     "pe_id",
+                                    "sender",
                                     "fromaddress",
                                     "recipient",
                                     "subject",
@@ -659,10 +660,20 @@ class S3ParsingModel(S3Model):
 
     def model(self):
 
-        from s3 import s3parser
         import inspect
-        
+        import sys
         T = current.T
+        settings = current.deployment_settings
+        request = current.request
+        
+        parser = settings.get_msg_parser()
+        application = request.application
+        module_name = 'applications.%s.private.templates.%s.parser'% \
+            (application, parser)
+        __import__(module_name)
+        mymodule = sys.modules[module_name]
+        S3Parsing = mymodule.S3Parsing()
+        
         mtable = self.msg_inbound_email_settings
         # source_opts contain the available message sources.
         source_opts = []
@@ -671,7 +682,7 @@ class S3ParsingModel(S3Model):
             source_opts += [record.username]
 
         # Dynamic lookup of the parsing functions in S3Parsing class.
-        parsers = inspect.getmembers(s3parser.S3Parsing, predicate=inspect.isfunction)
+        parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
         parse_opts = []
         for parser in parsers:
             parse_opts += [parser[0]]
@@ -681,7 +692,10 @@ class S3ParsingModel(S3Model):
                                   Field("source_task_id",
                                         label = T("Inbound Message Source"),
                                         requires = IS_IN_SET(source_opts,
-                                                             zero = None)),
+                                                             zero = None),
+                                        represent = lambda id: \
+                                        self.source_represent(id, 
+                                                              show_link=True)),
                                   Field("workflow_task_id",
                                         label = T("Workflow"),
                                         requires = IS_IN_SET(parse_opts,
@@ -689,5 +703,27 @@ class S3ParsingModel(S3Model):
                                   *s3_meta_fields())
 
         return Storage()
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def source_represent(id, show_link = True):
+        """ Represent a Message Source in the Workflow Table """
+    
+        s3db = current.s3db
+        db = current.db
+        
+        stable = s3db.msg_inbound_email_settings
+        wtable = s3db.msg_workflow
+        source = db(wtable.source_task_id == id).select(wtable.source_task_id,
+                                                        limitby = (0,1)).first()
+        setting = db(stable.username == source.source_task_id).select(stable.id,
+                                                        limitby = (0,1)).first()
+        repr = source.source_task_id
+        if setting:
+            id = setting.id
+            repr = A(repr, _href = URL(f="inbound_email_settings",
+                            args=['update',id]))
+            return repr
+        else:
+            return repr
 
 # END =========================================================================

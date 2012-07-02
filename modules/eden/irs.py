@@ -764,7 +764,7 @@ class S3IRSModel(S3Model):
                     # Provide an Autocomplete the select the person to send the notice to
                     opts["recipient_type"] = "pr_person"
             output = msg.compose(**opts)
-
+            
             # Maintain RHeader for consistency
             if "rheader" in attr:
                 rheader = attr["rheader"](r)
