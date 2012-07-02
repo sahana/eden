@@ -108,10 +108,10 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Manage Volunteer Data", f="volunteer"),
                     DB("Manage Teams Data", f="group"),
                 ),
-                DB("CATALOGUES",
+                DB("CATALOGS",
                     c="hrm",
                     image="graphic_catalogue.png",
-                    title="Catalogues")(
+                    title="Catalogs")(
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
@@ -133,10 +133,10 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Manage Offices Data", f="office"),
                     DB("Manage Organisations Data", f="organisation"),
                 ),
-                DB("CATALOGUES",
+                DB("CATALOGS",
                     c="hrm",
                     image="graphic_catalogue.png",
-                    title="Catalogues")(
+                    title="Catalogs")(
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
