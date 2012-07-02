@@ -396,9 +396,17 @@ def workflow():
 
     # CRUD Strings
     s3.crud_strings["msg_workflow"] = Storage(
-        title_update = T("Edit Message Parser Settings"),
+        title_display = T("Setting Details"),
+        title_list = T("Parser Settings"),
+        title_create = T("Add Parser Settings"),
+        title_update = T("Edit Parser Settings"),
+        title_search = T("Search Parser Settings"),
+        label_list_button = T("View Settings"),
         label_create_button = T("Add Parser Settings"),
-        msg_record_modified = T("Message Parser settings updated"),
+        msg_record_created = T("Setting added"),
+        msg_record_deleted = T("Parser Setting deleted"),
+        msg_list_empty = T("No Settings currently defined"),
+        msg_record_modified = T("Message Parser settings updated")
     )
 
     s3mgr.configure("msg_workflow", listadd=True, deletable=True)

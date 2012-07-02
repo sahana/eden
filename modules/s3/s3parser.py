@@ -31,6 +31,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from gluon import current
+
 class S3Parsing(object):
     """
        Message Parsing Framework.
