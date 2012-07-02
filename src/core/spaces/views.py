@@ -396,7 +396,7 @@ class ListSpaces(ListView):
                     or current_user in space.mods.all():
                     user_spaces.append(space)
                     public_spaces._result_cache(space)
-                    
+
             return public_spaces
             
         return public_spaces

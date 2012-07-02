@@ -68,7 +68,7 @@ def add_new_debate(request, space_url):
     """
     place = get_object_or_404(Space, url=space_url)
 
-    if request.user in place.admins:
+    if request.user in place.admins.all() or request.user.is_staff or request.user.is_superuser:
 
         # Define FormSets
         # This class is used to make empty formset forms required
