@@ -11,6 +11,7 @@ except ImportError:
     raise NameError("Twill not installed")
 try:
     from mechanize import BrowserStateError
+    from mechanize import ControlNotFoundError
 except ImportError:
     raise NameError("Mechanize not installed")
 
@@ -21,19 +22,14 @@ class BrokenLinkTest(Web2UnitTest):
         self.b = get_browser()
         self.b_data = StringIO()
         set_output(self.b_data)
-
-        # list of links that return a http_code other than 200
-        # with the key being the URL and the value the http code
-        self.brokenLinks = dict()
-        # List of links visited (key) with the depth
-        self.urlList = dict()
-        # List of urls for each model
-        self.model_url = dict()
+        self.clearRecord()
         # This string must exist in the URL for it to be followed
         # Useful to avoid going to linked sites
         self.homeURL = self.url
+        # Link used to identify a URL to a ticket
+        self.url_ticket = "/admin/default/ticket/"
         # Tuple of strings that if in the URL will be ignored
-        # Useful to avoid dynamic URLs that trigger the same functionality 
+        # Useful to avoid dynamic URLs that trigger the same functionality
         self.include_ignore = ("_language=",
                                "/admin/default/",
                               )
@@ -42,11 +38,56 @@ class BrokenLinkTest(Web2UnitTest):
         self.strip_url = ("?_next=",
                           )
         self.maxDepth = 2 # sanity check
+        self.setUser("test@example.com/eden")
+
+    def clearRecord(self):
+        # list of links that return a http_code other than 200
+        # with the key being the URL and the value the http code
+        self.brokenLinks = dict()
+        # List of links visited (key) with the depth
+        self.urlList = dict()
+        # List of urls for each model
+        self.model_url = dict()
 
     def setDepth(self, depth):
         self.maxDepth = depth
 
+    def setUser(self, user):
+        self.credentials = user.split(",")
+
+    def login(self, credentials):
+        if credentials == "UNAUTHENTICATED":
+            url = "%s/default/user/logout" % self.homeURL
+            self.b.go(url)
+            return True
+        try:
+            (self.user, self.password) = credentials.split("/",1)
+        except:
+            msg = "Unable to split %s into a user name and password" % user
+            self.reporter(msg)
+            return False
+        url = "%s/default/user/login" % self.homeURL
+        self.b.go(url)
+        forms = self.b.get_all_forms()
+        for form in forms:
+            try:
+                if form["_formname"] == "login":
+                    self.b._browser.form = form
+                    form["email"] = self.user
+                    form["password"] = self.password
+                    self.b.submit("Login")
+                    return True
+            except:
+                pass
+        return False
+
     def runTest(self):
+        for user in self.credentials:
+            self.clearRecord()
+            if self.login(user):
+                self.visitLinks()
+
+    def visitLinks(self):
         url = self.homeURL
         to_visit = [url]
         start = time()
@@ -77,6 +118,7 @@ class BrokenLinkTest(Web2UnitTest):
     def visit(self, url_list, depth):
         to_visit = []
         for visited_url in url_list:
+            index_url = visited_url[len(self.homeURL):]
             try:
                 self.b.go(visited_url)
             except Exception as e:
@@ -88,17 +130,27 @@ class BrokenLinkTest(Web2UnitTest):
                 except Exception as e:
                     import traceback
                     print traceback.format_exc()
-                    self.brokenLinks[visited_url] = "Exception raised"
+                    self.brokenLinks[index_url] = ("-","Exception raised")
                     continue
             http_code = self.b.get_code()
             if http_code != 200:
-                self.brokenLinks[visited_url] = http_code
+                url = "<a href=%s target=\"_blank\">URL</a>" % (visited_url)
+                self.brokenLinks[index_url] = (http_code,url)
             try:
                 links = self.b._browser.links()
             except BrowserStateError:
                 continue # not html so unable to extract links
             for link in (links):
                 url = link.absolute_url
+                if url.find(self.url_ticket) != -1:
+                    # A ticket was raised so...
+                    # capture the details and add to brokenLinks
+                    if current.test_config.html:
+                        ticket = "<a href=%s target=\"_blank\">Ticket</a> at <a href=%s target=\"_blank\">URL</a>" % (url,visited_url)
+                    else:
+                        ticket = "Ticket: %s" % url
+                    self.brokenLinks[index_url] = (http_code,ticket)
+                    break # no need to check any other links on this page
                 if url.find(self.homeURL) == -1:
                     continue
                 ignore_link = False
@@ -128,8 +180,12 @@ class BrokenLinkTest(Web2UnitTest):
     
         self.reporter("Broken Links")
         n = 1
-        for (url, http_code) in self.brokenLinks.items():
-            self.reporter("%d. (%s) %s" % (n, http_code, url,))
+        for (url, result) in self.brokenLinks.items():
+            http_code = result[0]
+            if len(result) == 1:
+                self.reporter("%3d. (%s) %s" % (n, http_code, url,))
+            else:
+                self.reporter("%3d. (%s-%s) %s" % (n, http_code, result[1], url))
             n += 1
     
     def report_model_url(self):

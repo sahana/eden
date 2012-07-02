@@ -1,4 +1,4 @@
-""" Sahana Eden Automated Test - ORG001 Create Organisation
+""" Sahana Eden Automated Test - INV004 Create Warehouse
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -34,36 +34,31 @@ from gluon import current
 from s3 import s3_debug
 from tests.web2unittest import SeleniumUnitTest
 
-class CreateOrganisation(SeleniumUnitTest):
+class CreateWarehouse(SeleniumUnitTest):
 
     # -------------------------------------------------------------------------
-    def test_org001_create_organisation(self, items=[0]):
+    def test_inv004_create_warehouse(self, items=[0]):
         """
-            Create an Organisation
+            Create a Warehouse
 
-            @param items: Organisation(s) to create from the data
-
-            @ToDo: currently optimised for a single record
+            @param items: Warehouse(s) to create from the data
 
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
 
         # Configuration
-        tablename = "org_organisation"
-        url = "org/organisation/create"
+        tablename = "org_office"
+        url = "inv/warehouse/create"
         account = "admin"
         data = [
     [
         # 1st field used to check whether record already exists
-        # & for organisation_id lookups
-        ("name", "Romanian Food Assistance Association (Test)"),
-        ("acronym", "RFAAT"),
-        ("organisation_type_id", "Government", "option"),
+        ("name", "Bucharest RFAAT Central Warehouse (Test)"),
+        ("code", "12345679"),
+        ("organisation_id", "Romanian Food Assistance Association", "autocomplete"),
         ("region", "Europe"),
-        # Whilst the short form is accepted by the DB, our validation routine needs the full form
-        ("website", "http://www.rfaat.com"),
-        ("comments", "This is a Test Organization"),
+        ("comments", "This is a Test Warehouse"),
     ],
 ]
 
@@ -79,7 +74,7 @@ class CreateOrganisation(SeleniumUnitTest):
             record = db(query).select(table.id,
                                       limitby=(0, 1)).first()
             if record:
-                print "org_create_organisation skipped as %s already exists in the db\n" % value
+                print "inv004_create_warehouse skipped as %s already exists in the db\n" % value
                 return False
 
             # Login, if not-already done so
