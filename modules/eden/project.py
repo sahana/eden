@@ -1558,6 +1558,8 @@ class S3Project3WModel(S3Model):
             """
                 returns a dict of the options for the year virtual field
                 used by the search widget
+
+                orderby needed for postgres
             """
 
             ptable = db.project_project
@@ -1567,8 +1569,10 @@ class S3Project3WModel(S3Model):
             pmin = ptable.start_date.min()
             pbmin = pbtable.start_date.min()
             p_start_date_min = db(pquery).select(pmin,
+                                                 orderby=pmin,
                                                  limitby=(0, 1)).first()[pmin]
             pb_start_date_min = db(pbquery).select(pbmin,
+                                                   orderby=pbmin,
                                                    limitby=(0, 1)).first()[pbmin]
             if p_start_date_min and pb_start_date_min:
                 start_year = min(p_start_date_min,
@@ -1580,8 +1584,10 @@ class S3Project3WModel(S3Model):
             pmax = ptable.end_date.max()
             pbmax = pbtable.end_date.max()
             p_end_date_max = db(pquery).select(pmax,
+                                               orderby=pmax,
                                                limitby=(0, 1)).first()[pmax]
             pb_end_date_max = db(pbquery).select(pbmax,
+                                                 orderby=pbmax,
                                                  limitby=(0, 1)).first()[pbmax]
             if p_end_date_max and pb_end_date_max:
                 end_year = max(p_end_date_max,

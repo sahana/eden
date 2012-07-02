@@ -980,7 +980,7 @@ class S3OptionsMenu(object):
         return M()(
                     #M("Home", f="index"),
                     M("Warehouses", c="inv", f="warehouse")(
-                        M("Add Warehouse", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
@@ -1006,17 +1006,17 @@ class S3OptionsMenu(object):
                           m="search", vars=dict(report="rel")),
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
-                        M("Add Received/Incoming Shipment", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                     ),
                     M("Sent Shipments", c="inv", f="send")(
-                        M("Add Sent Shipment", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search Shipped Items", f="track_item", m="search"),
                     ),
                     M("Items", c="supply", f="item")(
-                        M("Add Item", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", f="catalog_item", m="search"),
                     ),
@@ -1027,7 +1027,7 @@ class S3OptionsMenu(object):
                        #M("Search", m="search"),
                     #),
                     M("Catalogs", c="supply", f="catalog")(
-                        M("Add Catalog", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         #M("Search", m="search"),
                     ),
@@ -1036,13 +1036,13 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Sites", c="inv", f="facility")(
-                        M("Add Site", m="create"),
+                    M("Facilities", c="inv", f="facility")(
+                        M("New", m="create"),
                         M("List All"),
                         #M("Search", m="search"),
                     ),
                     M("Requests", c="req", f="req")(
-                        M("Request Items", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Requested Items", f="req_item"),
                         #M("Search Requested Items", f="req_item", m="search"),

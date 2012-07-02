@@ -356,12 +356,9 @@ class S3HRModel(S3Model):
                         ]
 
         # Redirect to the Details tabs after creation
-        if controller == "vol":
-            function = "volunteer"
-            hrm_url = URL(c=controller, f=function, args=["[id]", "update"])
-        elif controller == "hrm":
-            function = "staff"
-            hrm_url = URL(c=controller, f=function, args=["[id]", "update"])
+        if controller == "vol" or \
+           controller == "hrm":
+            hrm_url = URL(c=controller, f="person", vars={"human_resource.id":"[id]"})
         else:
             # Being added as a component to Org, Site or Project
             hrm_url = None

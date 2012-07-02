@@ -2612,6 +2612,7 @@ class S3AdjustModel(S3Model):
 
         person_id = self.pr_person_id
         org_id = self.org_organisation_id
+        org_site_represent = self.org_site_represent
         item_id = self.supply_item_id
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
@@ -2653,7 +2654,7 @@ class S3AdjustModel(S3Model):
                                                             org_site_represent(id, show_link = False),
                                                         sort=True,
                                                         ),
-                                   represent=self.org_site_represent),
+                                   represent=org_site_represent),
                              Field("adjustment_date", "date",
                                    label = T("Date of adjustment"),
                                    default = current.request.utcnow,
