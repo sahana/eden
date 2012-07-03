@@ -717,9 +717,12 @@ class S3ParsingModel(S3Model):
         setting = db(stable.username == source.source_task_id).select(stable.id,
                                                         limitby = (0,1)).first()
         repr = source.source_task_id
-        id = setting.id
-        repr = A(repr, _href = URL(f="inbound_email_settings",
+        if setting:
+            id = setting.id
+            repr = A(repr, _href = URL(f="inbound_email_settings",
                             args=['update',id]))
-        return repr
+            return repr
+        else:
+            return repr
 
 # END =========================================================================

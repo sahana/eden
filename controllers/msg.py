@@ -282,10 +282,18 @@ def inbound_email_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Email Settings"),
-        label_create_button = T("Add Email Settings"),
-        msg_record_modified = T("Email settings updated"),
-    )
+    title_display = T("Email Setting Details"),
+    title_list = T("Email Settings"),
+    title_create = T("Add Email Settings"),
+    title_update = T("Edit Email Settings"),
+    title_search = T("Search Email Settings"),
+    label_list_button = T("View Email Settings"),
+    label_create_button = T("Add Email Settings"),
+    msg_record_created = T("Setting added"),
+    msg_record_deleted = T("Email Setting deleted"),
+    msg_list_empty = T("No Settings currently defined"),
+    msg_record_modified = T("Email settings updated")
+        )
 
     #response.menu_options = admin_menu_options
     s3mgr.configure(tablename, listadd=True, deletable=True)
