@@ -131,6 +131,8 @@ class S3SearchWidget(object):
 
         db = current.db
         table = resource.table
+        components = resource.components
+        accessible_query = resource.accessible_query
 
         master_query = Storage()
         search_field = Storage()
@@ -149,10 +151,10 @@ class S3SearchWidget(object):
 
             if f.find(".") != -1: # Component
                 cname, f = f.split(".", 1)
-                if cname not in resource.components:
+                if cname not in components:
                     continue
                 else:
-                    component = resource.components[cname]
+                    component = components[cname]
                 ktable = component.table
                 ktablename = component.tablename
                 pkey = component.pkey
@@ -184,13 +186,13 @@ class S3SearchWidget(object):
             # Master queries
             # @todo: update this for new QueryBuilder (S3ResourceFilter)
             if ktable and ktablename not in master_query:
-                query = (resource.accessible_query("read", ktable))
+                query = (accessible_query("read", ktable))
                 if "deleted" in ktable.fields:
                     query = (query & (ktable.deleted == "False"))
                 join = None
                 if reference:
                     if ktablename != rtablename:
-                        q = (resource.accessible_query("read", rtable))
+                        q = (accessible_query("read", rtable))
                         if "deleted" in rtable.fields:
                             q = (q & (rtable.deleted == "False"))
                     else:
@@ -206,7 +208,7 @@ class S3SearchWidget(object):
                 j = None
                 if component:
                     if reference:
-                        q = (resource.accessible_query("read", table))
+                        q = (accessible_query("read", table))
                         if "deleted" in table.fields:
                             q = (q & (table.deleted == "False"))
                         j = (q & (table[pkey] == rtable[fkey]))
@@ -249,27 +251,28 @@ class S3SearchSimpleWidget(S3SearchWidget):
             @param vars: the URL GET variables as dict
         """
 
+        attr = self.attr
         # SearchAutocomplete must set name depending on the field
         if name:
-            self.attr.update(_name=name)
+            attr.update(_name=name)
 
-        if "_size" not in self.attr:
-            self.attr.update(_size="40")
-        if "_name" not in self.attr:
-            self.attr.update(_name="%s_search_simple" % resource.name)
-        if "_id" not in self.attr:
-            self.attr.update(_id="%s_search_simple" % resource.name)
+        if "_size" not in attr:
+            attr.update(_size="40")
+        if "_name" not in attr:
+            attr.update(_name="%s_search_simple" % resource.name)
+        if "_id" not in attr:
+            attr.update(_id="%s_search_simple" % resource.name)
         if autocomplete:
-            self.attr.update(_autocomplete=autocomplete)
-        self.attr.update(_type="text")
+            attr.update(_autocomplete=autocomplete)
+        attr.update(_type="text")
 
-        self.name = self.attr._name
+        self.name = attr._name
 
 
         # Search Autocomplete - Display current value
-        self.attr["_value"] = value
+        attr["_value"] = value
 
-        return INPUT(**self.attr)
+        return INPUT(**attr)
 
     # -------------------------------------------------------------------------
     def query(self, resource, value):
@@ -330,7 +333,8 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         settings = current.deployment_settings
 
         self.names = []
-        self.method = self.attr.get("method", "range")
+        attr = self.attr
+        self.method = attr.get("method", "range")
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
@@ -349,31 +353,31 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         if ftype == "integer":
             requires = IS_EMPTY_OR(IS_INT_IN_RANGE())
         elif ftype == "date":
-            self.attr.update(_class="date")
+            attr.update(_class="date")
             requires = IS_EMPTY_OR(IS_DATE(format=settings.get_L10n_date_format()))
         elif ftype == "time":
-            self.attr.update(_class="time")
+            attr.update(_class="time")
             requires = IS_EMPTY_OR(IS_TIME())
         elif ftype == "datetime":
-            self.attr.update(_class="datetime")
+            attr.update(_class="datetime")
             requires = IS_EMPTY_OR(IS_DATETIME(format=settings.get_L10n_datetime_format()))
         else:
             raise SyntaxError("Unsupported search field type")
 
-        self.attr.update(_type="text")
+        attr.update(_type="text")
         trl = TR(_class="sublabels")
         tri = TR()
 
         # dictionaries for storing details of the input elements
-        name = self.attr["_name"]
+        name = attr["_name"]
         self.widmin = dict(name="%s_min" % name,
                            label=T("min"),
                            requires=requires,
-                           attributes=self.attr)
+                           attributes=attr)
         self.widmax = dict(name="%s_max" % name,
                            label=T("max"),
                            requires=requires,
-                           attributes=self.attr)
+                           attributes=attr)
 
         if select_min:
             min_label = self.widget_label(self.widmin)
@@ -490,7 +494,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                      displayed in
     """
 
-    def __init__(self, field=None, name=None, options=None, **attr):
+    def __init__(self, field=None, name=None, options=None, null=False, **attr):
         """
             Configures the search option
 
@@ -498,12 +502,15 @@ class S3SearchOptionsWidget(S3SearchWidget):
             @param name: used to build the HTML ID of the widget
             @param options: either a value:label dictionary to populate the
                             search widget or a callable to create this
+            @param null: False if no null value to be included in the options,
+                         otherwise a LazyT for the label
 
             @keyword label: a label for the search widget
             @keyword comment: a comment for the search widget
         """
         super(S3SearchOptionsWidget, self).__init__(field, name, **attr)
         self.options = options
+        self.null = null
 
     # -------------------------------------------------------------------------
     def _get_reference_resource(self, resource):
@@ -625,6 +632,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                         opt_list.append([opt_key, opt_represent])
             else:
                 opt_list = [(opt_key, "%s" % opt_key) for opt_key in opt_keys if opt_key]
+
+            if self.null:
+                # Add null value
+                opt_list.append((None, self.null))
 
             # Alphabetise (this will not work as it is converted to a dict),
             # look at IS_IN_SET validator or CheckboxesWidget to ensure
@@ -761,10 +772,14 @@ class S3SearchOptionsWidget(S3SearchWidget):
             except:
                 table_field = None
 
-            # What do we do if we need to search within a virtual field
-            # that is a list:* ?
             if table_field and str(table_field.type).startswith("list"):
                 query = S3FieldSelector(self.field).contains(value)
+            elif "None" in value:
+                # Needs special handling (doesn't show up in 'belongs')
+                query = S3FieldSelector(self.field) == None
+                opts = [v for v in value if v != "None"]
+                if opts:
+                    query = query | S3FieldSelector(self.field).belongs(opts)
             else:
                 query = S3FieldSelector(self.field).belongs(value)
 
@@ -911,12 +926,11 @@ class S3SearchLocationWidget(S3SearchWidget):
         """
 
         if value:
-            # @ToDo: Turn this into a Resource filter
-            #features = gis.get_features_in_polygon(value,
-            #                                       tablename=resource.tablename)
-
-            # @ToDo: A PostGIS routine, where-available
-            #        - requires a Spatial DAL?
+            # @ToDo:
+            # if current.deployment_settings.get_gis_spatialdb():
+            #     # Use PostGIS-optimised routine
+            #     query = (S3FieldSelector("location_id$the_geom").st_intersects(value))
+            # else:
             from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(value)
@@ -957,10 +971,10 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     @staticmethod
     def query(resource, value):
         if value:
-            db = current.db
-            htable = db.hrm_human_resource
-            ptable = db.pr_person
-            ctable = db.hrm_credential
+            s3db = current.s3db
+            htable = s3db.hrm_human_resource
+            ptable = s3db.pr_person
+            ctable = s3db.hrm_credential
             query = (htable.person_id == ptable.id) & \
                     (htable.deleted != True) & \
                     (ctable.person_id == ptable.id) & \
@@ -1193,9 +1207,8 @@ class S3Search(S3CRUD):
         search_vars["function"] = r.function
 
         table = current.s3db.pr_save_search
-        if len(db(table.user_id == user_id).select(table.id,
-                                                   limitby=(0, 1))):
-            rows = db(table.user_id == user_id).select(table.ALL)
+        rows = db(table.user_id == user_id).select(table.ALL)
+        if rows:
             import cPickle
             for row in rows:
                 pat = "_"
@@ -1262,11 +1275,11 @@ $('#%s').live('click',function(){
         current.response.s3.jquery_ready.append(save_search_script)
 
         widget = DIV(save_search_processing,
-                    save_search_a,
-                    save_search_btn,
-                    _style="font-size:12px; padding:5px 0px 5px 90px;",
-                    _id="save_search"
-                    )
+                     save_search_a,
+                     save_search_btn,
+                     _style="font-size:12px; padding:5px 0px 5px 90px;",
+                     _id="save_search"
+                     )
         return widget
 
     # -------------------------------------------------------------------------
