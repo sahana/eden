@@ -1104,7 +1104,7 @@ class S3Project3WModel(S3Model):
     names = ["project_beneficiary_type",
              "project_beneficiary",
              "project_location",
-             "project_location_contact",
+             "project_community_contact",
              "project_organisation",
              "project_organisation_roles",
              "project_organisation_lead_role",
@@ -1558,26 +1558,44 @@ class S3Project3WModel(S3Model):
             """
                 returns a dict of the options for the year virtual field
                 used by the search widget
+
+                orderby needed for postgres
             """
 
             ptable = db.project_project
             pbtable = db.project_beneficiary
             pquery = (ptable.deleted == False)
             pbquery = (pbtable.deleted == False)
-            p_start_date_min = db(pquery).select(ptable.start_date.min(),
-                                                 limitby=(0, 1)).first()
-            pb_start_date_min = db(pbquery).select(pbtable.start_date.min(),
-                                                   limitby=(0, 1)).first()
-            start_year = min(p_start_date_min.start_date,
-                             pb_start_date_min.start_date).year
+            pmin = ptable.start_date.min()
+            pbmin = pbtable.start_date.min()
+            p_start_date_min = db(pquery).select(pmin,
+                                                 orderby=pmin,
+                                                 limitby=(0, 1)).first()[pmin]
+            pb_start_date_min = db(pbquery).select(pbmin,
+                                                   orderby=pbmin,
+                                                   limitby=(0, 1)).first()[pbmin]
+            if p_start_date_min and pb_start_date_min:
+                start_year = min(p_start_date_min,
+                                 pb_start_date_min).year
+            else:
+                start_year = (p_start_date_min and p_start_date_min.year) or \
+                             (pb_start_date_min and pb_start_date_min.year)
 
-            p_end_date_max = db(pquery).select(ptable.end_date.max(),
-                                               limitby=(0, 1)).first()
-            pb_end_date_max = db(pbquery).select(pbtable.end_date.max(),
-                                                 limitby=(0, 1)).first()
-            end_year = max(p_end_date_max.end_date,
-                           pb_end_date_max.end_date).year
-            
+            pmax = ptable.end_date.max()
+            pbmax = pbtable.end_date.max()
+            p_end_date_max = db(pquery).select(pmax,
+                                               orderby=pmax,
+                                               limitby=(0, 1)).first()[pmax]
+            pb_end_date_max = db(pbquery).select(pbmax,
+                                                 orderby=pbmax,
+                                                 limitby=(0, 1)).first()[pbmax]
+            if p_end_date_max and pb_end_date_max:
+                end_year = max(p_end_date_max,
+                               pb_end_date_max).year
+            else:
+                end_year = (p_end_date_max and p_end_date_max.year) or \
+                           (pb_end_date_max and pb_end_date_max.year)
+
             if not start_year or not end_year:
                 return {start_year:start_year} or {end_year:end_year}
             years = {}

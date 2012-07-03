@@ -42,7 +42,6 @@ __all__ = ["S3HiddenWidget",
            "S3PersonAutocompleteWidget",
            "S3HumanResourceAutocompleteWidget",
            "S3SiteAutocompleteWidget",
-           "S3TrainingAutocompleteWidget",
            "S3LocationSelectorWidget",
            "S3LocationDropdownWidget",
            #"S3CheckboxesWidget",
@@ -237,16 +236,16 @@ class S3DateTimeWidget(FormWidget):
             s3.stylesheets.append("plugins/anytimec.css")
 
         s3.jquery_ready.append(
-'''$('#%(selector)s').AnyTime_picker({{
+'''$('#%(selector)s').AnyTime_picker({
  askSecond:false,
  firstDOW:1,
  earliest:'%(earliest)s',
  latest:'%(latest)s',
  format:'%(format)s',
-}})
-clear_button=$('<input type="button" value="clear"/>').click(function(e){{
+})
+clear_button=$('<input type="button" value="clear"/>').click(function(e){
  $('#%(selector)s').val('')
-}})
+})
 $('#%(selector)s').after(clear_button)''' % \
         dict(selector=selector,
              earliest=earliest,
@@ -1109,53 +1108,6 @@ $('#%(dummy_input)s').blur(function(){
                         INPUT(**attr),
                         requires = field.requires
                       )
-
-# =============================================================================
-class S3TrainingAutocompleteWidget(FormWidget):
-    """
-        Renders an hrm_training_event SELECT as an INPUT field with AJAX Autocomplete.
-        Differs from the S3AutocompleteWidget in that it uses course, site and date fields
-        for the represent (S3TrainingSearch also uses the first 2 for the actual search).
-
-        @ToDo: S3Search-style Filters instead of pure AC
-    """
-
-    def __init__(self,
-                 post_process = "",
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
-
-        self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
-
-    def __call__(self, field, value, **attributes):
-
-        return S3GenericAutocompleteTemplate(
-            self.post_process,
-            self.delay,
-            self.min_length,
-            field,
-            value,
-            attributes,
-            source = repr(
-                URL(c="hrm", f="training_event",
-                    args="search.json")
-            ),
-            name_getter = '''function(item){
- var name=''
- if(item.course!=null){
-  name+=item.course
- }
- if(item.site!=''){
-  name+=' ('+item.site+')'
- }
- if(item.date!=''){
-  name+=' ['+item.date+']'
- }
- return name
-}''',
-        )
 
 # -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(post_process,
@@ -3003,7 +2955,9 @@ class S3InvBinWidget(FormWidget):
                           )
 
         record = tracktable[id]
-        query = (stocktable.item_id == record.item_id) & \
+        site_id = s3db.inv_recv[record.recv_id].site_id
+        query = (stocktable.site_id == site_id) & \
+                (stocktable.item_id == record.item_id) & \
                 (stocktable.item_source_no == record.item_source_no) & \
                 (stocktable.item_pack_id == record.item_pack_id) & \
                 (stocktable.currency == record.currency) & \

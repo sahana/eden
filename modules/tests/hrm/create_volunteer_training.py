@@ -46,7 +46,7 @@ class CreateVolunteerTraining(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
             
             @ToDo: 
-            * Add Staff Participants
+            * Add Volunteer Participants
         """
         
         browser = self.browser

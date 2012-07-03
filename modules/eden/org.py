@@ -698,7 +698,6 @@ class S3OrganisationModel(S3Model):
         if item.id:
             return
         if item.tablename in ("org_sector", "org_subsector"):
-            db = current.db
             table = item.table
             abrv = item.data.get("abrv", None)
             name = item.data.get("name", None)
@@ -708,8 +707,8 @@ class S3OrganisationModel(S3Model):
                 query = (table.name.lower() == name.lower())
             else:
                 return
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -733,21 +732,19 @@ class S3OrganisationModel(S3Model):
     def org_subsector_requires_represent(record):
         """ Used to generate text for the Select """
 
-        db = current.db
-        table = db.org_sector
-        NONE = current.messages.NONE
-
         if record:
+            db = current.db
+            table = db.org_sector
             query = (table.id == record.sector_id)
             sector_record = db(query).select(table.abrv,
                                               limitby=(0, 1)).first()
             if sector_record:
                 sector = sector_record.abrv
             else:
-                sector = NONE
+                sector = current.messages.NONE
             return "%s:%s" % (sector, record.abrv)
         else:
-            return NONE
+            return current.messages.NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -784,17 +781,14 @@ class S3OrganisationModel(S3Model):
             @param item: the S3ImportItem instance
         """
 
-        if item.id:
-            return
         if item.tablename == "org_organisation":
-            db = current.db
             table = item.table
             name = "name" in item.data and item.data.name
             if name:
                 query = (table.name.lower() == name.lower())
-                duplicate = db(query).select(table.id,
-                                             table.name,
-                                             limitby=(0, 1)).first()
+                duplicate = current.db(query).select(table.id,
+                                                     table.name,
+                                                     limitby=(0, 1)).first()
                 if duplicate:
                     item.id = duplicate.id
                     # Retain the correct spelling of the name
@@ -811,8 +805,6 @@ class S3OrganisationModel(S3Model):
 
         db = current.db
         table = db.org_organisation
-        NONE = current.messages.NONE
-
         query = (table.deleted == False)
         set = db(query).select(table.id,
                                table.name).as_dict()
@@ -824,7 +816,7 @@ class S3OrganisationModel(S3Model):
             opts = [opt]
             vals = str(set.get(opt)["name"])
         else:
-            return NONE
+            return current.messages.NONE
 
         if len(opts) > 1:
             vals = ", ".join(vals)
@@ -839,10 +831,9 @@ class S3OrganisationModel(S3Model):
 
         db = current.db
         table = db.org_organisation
-        NONE = current.messages.NONE
 
         if not donor_ids:
-            return NONE
+            return current.messages.NONE
         elif isinstance(donor_ids, (list, tuple)):
             query = (table.id.belongs(donor_ids))
             donors = db(query).select(table.name)
@@ -851,7 +842,7 @@ class S3OrganisationModel(S3Model):
             query = (table.id == donor_ids)
             donor = db(query).select(table.name,
                                      limitby=(0, 1)).first()
-            return donor and donor.name or NONE
+            return donor and donor.name or current.messages.NONE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -862,7 +853,6 @@ class S3OrganisationModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-
         ltable = s3db.org_organisation_branch
 
         if hasattr(form, "vars"):
@@ -903,7 +893,6 @@ class S3OrganisationTypeTagModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -943,9 +932,7 @@ class S3SiteModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
         auth = current.auth
-        s3 = current.response.s3
 
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -955,9 +942,7 @@ class S3SiteModel(S3Model):
         super_key = self.super_key
 
         # =====================================================================
-        # Site
-        #
-        # @ToDo: Rename as Facilities (ICS terminology)
+        # Site / Facility (ICS terminology)
         #
         # Site is a generic type for any facility (office, hospital, shelter,
         # warehouse, project site etc.) and serves the same purpose as pentity does for person

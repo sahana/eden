@@ -10,49 +10,41 @@
 {{except:}}{{pass}}
 {{=facility_box}}
 {{if AUTHENTICATED not in session.s3.roles:}}
-	<div id='login_box' class='menu_box'>
-	    {{if not self_registration or registered:}}
-	        <div id='login_form'>
-	            {{=login_div}}
-	            {{include "auth/_login.html"}}
-	        </div>
-	    {{pass}}
-	    {{if self_registration:}}
-	        <div id='register_form' {{if registered:}}class='hide'{{pass}}>
-	            {{=register_div}}
-	            {{include "auth/_register.html"}}
-	        </div>
-	    {{pass}}
-	    {{if self_registration and not registered:}}
-	      <div id='login_form' class='hide'>
-	        {{=login_div}}
-	        {{include "auth/_login.html"}}
-	      </div>
-	    {{pass}}
-	</div>
+ <div id='login_box' class='menu_box'>
+  {{if not self_registration or registered:}}
+    <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+ </div>
 {{pass}}
 {{=manage_facility_box}}
 {{=org_box}}
 </div>
 </div>
 <div id='about'>
-    <!--
-    <p>
-    {{=T("Contact")}}: Name of Public Information person
-    <br/>{{=T("Email")}}: Public Information email address
-    <br/>{{=T("Telephone")}}: Public Information telephone number
-    </p>
-    -->
-    <p>
-    {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
-    <br/>{{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
-    </p>
+ <p>
+ {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
+ <br/>{{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
+ </p>
 </div>
 {{if settings.frontpage.rss:}}
-<div id="feed-control">
-    <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+<div id='feed-control'>
+ <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
 </div>
 {{pass}}
 {{if org_box:}}
-{{include "dataTables.html"}}
-{{pass}}
+{{include "dataTables.html"}}{{pass}}

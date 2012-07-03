@@ -235,7 +235,7 @@ class S3Codec(object):
 
         tree = kwargs.get("tree", None)
         if message:
-            output["message"] = message
+            output["message"] = unicode(message)
         for k, v in kwargs.items():
             if k != "tree":
                 output[k] = v

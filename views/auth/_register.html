@@ -15,13 +15,7 @@
 <span>{{=T("Login with Google")}}</span>
 </a>{{pass}}
 </div>
-{{if s3.debug:}}
- {{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)}}
-{{else:}}
- {{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)}}
-{{pass}}
-{{if request.cookies.has_key("registered"):}}
- {{s3.jquery_ready.append("$('.password:last').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
-{{else:}}
- {{s3.jquery_ready.append("$('.password:first').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
-{{pass}}
+{{if s3.debug:}}{{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)}}
+{{else:}}{{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)}}{{pass}}
+{{if request.cookies.has_key("registered"):}}{{s3.jquery_ready.append("$('.password:last').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}
+{{else:}}{{s3.jquery_ready.append("$('.password:first').pstrength({minchar: %i, minchar_label: '%s'});\n" % (auth.settings.password_min_length, T("The minimum number of characters is ")))}}{{pass}}

@@ -580,8 +580,9 @@ def comment_parse(comment, comments, task_id=None):
 def comments():
     """ Function accessed by AJAX from discuss() to handle Comments """
 
-    resourcename = request.args(0)
-    if not resourcename:
+    try:
+        resourcename = request.args[0]
+    except:
         raise HTTP(400)
 
     try:
@@ -626,13 +627,16 @@ def comments():
             output.append(thread)
 
     # Also see the outer discuss()
-    script = "".join(("""
-$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false});
-$('#project_comment_parent__row1').hide();
-$('#project_comment_parent__row').hide();
-$('#project_comment_body').ckeditor(ck_config);
-$('#submit_record__row input').click(function(){$('#comment-form').hide();$('#project_comment_body').ckeditorGet().destroy();return true;});
-"""))
+    script = "".join((
+'''$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false})
+$('#project_comment_parent__row1').hide()
+$('#project_comment_parent__row').hide()
+$('#project_comment_body').ckeditor(ck_config)
+$('#submit_record__row input').click(function(){
+ $('#comment-form').hide()
+ $('#project_comment_body').ckeditorGet().destroy()
+ return true
+})'''))
 
     # No layout in this output!
     #s3.jquery_ready.append(script)

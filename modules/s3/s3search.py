@@ -65,7 +65,6 @@ __all__ = ["S3SearchWidget",
            "S3PersonSearch",
            "S3HRSearch",
            "S3PentitySearch",
-           "S3TrainingSearch",
            ]
 
 MAX_RESULTS = 1000
@@ -2700,102 +2699,6 @@ class S3PentitySearch(S3Search):
                                                        show_label=False) }
                   for item in items ]
         output = json.dumps(items)
-        response.headers["Content-Type"] = "application/json"
-        return output
-
-# =============================================================================
-class S3TrainingSearch(S3Search):
-    """
-        Search method with specifics for Training Event records
-        - search course_id & site_id & return represents to the calling JS
-
-        @ToDo: Allow searching by Date
-    """
-
-    def search_json(self, r, **attr):
-        """
-            JSON search method for S3TrainingAutocompleteWidget
-        """
-
-        response = current.response
-        resource = self.resource
-
-        # Query comes in pre-filtered to accessible & deletion_status
-        # Respect response.s3.filter
-        resource.add_filter(response.s3.filter)
-
-        _vars = self.request.vars # should be request.get_vars?
-
-        # JQueryUI Autocomplete uses "term"
-        # old JQuery Autocomplete uses "q"
-        # what uses "value"?
-        value = _vars.term or _vars.value or _vars.q or None
-
-        if not value:
-            output = current.manager.xml.json_message(
-                            False,
-                            400,
-                            "No value provided!"
-                        )
-            raise HTTP(400, body=output)
-
-        # We want to do case-insensitive searches
-        # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower()
-
-        table = self.table
-        s3db = current.s3db
-        ctable = s3db.hrm_course
-        field = ctable.name
-        stable = s3db.org_site
-        field2 = stable.name
-        field3 = table.start_date
-
-        # Fields to return
-        fields = [table.id, field, field2, field3]
-
-        if " " in value:
-            value1, value2 = value.split(" ", 1)
-            value2 = value2.strip()
-            query = ((field.lower().like("%" + value1 + "%")) & \
-                     (field2.lower().like(value2 + "%"))) | \
-                    ((field.lower().like("%" + value2 + "%")) & \
-                     (field2.lower().like(value1 + "%")))
-        else:
-            value = value.strip()
-            query = ((field.lower().like("%" + value + "%")) | \
-                     (field2.lower().like(value + "%")))
-
-        #left = table.on(table.site_id == stable.id)
-        query = query & (table.course_id == ctable.id) & \
-                        (table.site_id == stable.id)
-
-        resource.add_filter(query)
-
-        limit = int(_vars.limit or 0)
-        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                 % MAX_SEARCH_RESULTS)])
-
-        else:
-            attributes = dict(orderby=field)
-            limitby = resource.limitby(start=0, limit=limit)
-            if limitby is not None:
-                attributes["limitby"] = limitby
-            rows = resource.select(*fields, **attributes)
-            output = []
-            append = output.append
-            for row in rows:
-                record = dict(
-                    id = row[table].id,
-                    course = row[ctable].name,
-                    site = row[stable].name,
-                    date = S3DateTime.date_represent(row[table].start_date),
-                    )
-                append(record)
-            output = jsons(output)
-
         response.headers["Content-Type"] = "application/json"
         return output
 
