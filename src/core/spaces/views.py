@@ -129,7 +129,7 @@ def add_intent(request, space_url):
                                context_instance=RequestContext(request))
 
 
-class  ValidateIntent(DetailView):
+class ValidateIntent(DetailView):
 
     """
     Validate the user petition to join a space. This will add the user to the
@@ -139,9 +139,9 @@ class  ValidateIntent(DetailView):
 
     .. versionadded: 0.1.5
     """
-    context_object_name = 'space_name'
+    context_object_name = 'get_place'
     template_name = 'spaces/validate_intent.html'
-    heading = _("The requested intent does not exist!")
+    status = _("The requested intent does not exist!")
 
     def get_object(self):
         space_object = get_object_or_404(Space, url=self.kwargs['space_url'])
@@ -152,18 +152,19 @@ class  ValidateIntent(DetailView):
             try:
                 intent = Intent.objects.get(token=self.kwargs['token'])
                 intent.space.users.add(intent.user)
-                self.heading = _("The user has been authorized to participate \
+                self.status = _("The user has been authorized to participate \
                 in space \"%s\"." % space_object.name)
-                messages.info(self.request, _("Authorization successful"))
+                messages.success(self.request, _("Authorization successful"))
 
             except Intent.DoesNotExist:
-                self.heading  = _("The requested intent does not exist!")
+                self.status  = _("The requested intent does not exist!")
 
             return space_object
 
-def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):
         context = super(ValidateIntent, self).get_context_data(**kwargs)
-        context['heading'] = self.heading
+        context['status'] = self.status
+        context['request_user'] = Intent.objects.get(token=self.kwargs['token']).user
         return context
 
 
