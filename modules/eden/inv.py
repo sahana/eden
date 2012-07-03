@@ -1229,7 +1229,7 @@ $(document).ready(function(){
                                    represent = lambda opt: \
                                         inv_item_status_opts.get(opt, UNKNOWN_OPT),
                                    default = 0,),
-                              Field("status", "integer",
+                             Field("status", "integer",
                                    label = T("Item Tracking Status"),
                                    required = True,
                                    requires = IS_IN_SET(tracking_status),
