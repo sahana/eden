@@ -83,7 +83,10 @@
 'Add New Location Hierarchy': 'Add New Location Hierarchy',
 'Add New Map Configuration': 'Add New Map Configuration',
 'Add New Marker': 'Add New Marker',
+<<<<<<< HEAD
 'Add New Office': 'Add New Office',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Add New Organization': 'Add New Organisation',
 'Add New Organization Domain': 'Add New Organisation Domain',
 'Add New Organization Type': 'Add New Organization Type',
@@ -106,10 +109,13 @@
 'Add Organization': 'Add Organisation',
 'Add Organization Domain': 'Add Organisation Domain',
 'Add Organization Type': 'Add Organization Type',
+<<<<<<< HEAD
 'Add New Organization Type': 'Add New Organisation Type',
 'Add Organization': 'Add Organisation',
 'Add Organization Domain': 'Add Organisation Domain',
 'Add Organization Type': 'Add Organisation Type',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Add Organization to Project': 'Add Organisation to Project',
 'Add Person': 'Add Person',
 'Add Photo': 'Add Photo',
@@ -392,6 +398,9 @@
 'Delete Organization': 'Delete Organisation',
 'Delete Organization Domain': 'Delete Organisation Domain',
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Delete Organization Type': 'Delete Organization Type',
 'Delete Person': 'Delete Person',
 'Delete Photo': 'Delete Photo',
@@ -448,9 +457,12 @@
 'Edit Beneficiaries': 'Edit Beneficiaries',
 'Edit Beneficiary Type': 'Edit Beneficiary Type',
 'Edit Branch Organization': 'Edit Branch Organization',
+<<<<<<< HEAD
 =======
 'Delete Organization Type': 'Delete Organisation Type',
 >>>>>>> ee0b01b2fddc840621e154f2b41701302b9d721f
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Edit Catalog': 'Edit Catalogue',
 'Edit Catalog Item': 'Edit Catalogue Item',
 'Edit Cluster': 'Edit Cluster',
@@ -479,8 +491,11 @@
 'Edit Role': 'Edit Role',
 'Edit Staff Member Details': 'Edit Staff Member Details',
 'Edit Symbology': 'Edit Symbology',
+<<<<<<< HEAD
 'Edit Organization Type': 'Edit Organisation Type',
 'Edit Organization': 'Edit Organisation',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Edit Synchronization Settings': 'Edit Synchronisation Settings',
 'Edit Theme': 'Edit Theme',
 'Edit Volunteer Details': 'Edit Volunteer Details',
@@ -607,7 +622,10 @@
 'Help': 'Help',
 'Hierarchy': 'Hierarchy',
 'High Water': 'High Water',
+<<<<<<< HEAD
 'Home Address': 'Home Address',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Home Country': 'Home Country',
 'Home Crime': 'Home Crime',
 'Hospital': 'Hospital',
@@ -768,7 +786,10 @@
 'List Offices': 'List Offices',
 'List Organization Domains': 'List Organisation Domains',
 'List Organization Types': 'List Organization Types',
+<<<<<<< HEAD
 'List Organization Types': 'List Organisation Types',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'List Organizations': 'List Organisations',
 'List Persons': 'List Persons',
 'List Photos': 'List Photos',
@@ -924,7 +945,10 @@
 'No Matching Records': 'No Matching Records',
 'No Organization Domains currently registered': 'No Organisation Domains currently registered',
 'No Organization Types currently registered': 'No Organization Types currently registered',
+<<<<<<< HEAD
 'No Organization Types currently registered': 'No Organisation Types currently registered',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'No Organizations currently registered': 'No Organisations currently registered',
 'No Organizations for this Project': 'No Organisations for this Project',
 'No Packs for Item': 'No Packs for Item',
@@ -960,8 +984,11 @@
 'Obsolete': 'Obsolete',
 'Office': 'Office',
 'Office Details': 'Office Details',
+<<<<<<< HEAD
 'Office added': 'Office added',
 'Office deleted': 'Office deleted',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Offices': 'Offices',
 'On by default?': 'On by default?',
 'One item is attached to this shipment': 'One item is attached to this shipment',
@@ -993,12 +1020,15 @@
 'Organization Type deleted': 'Organization Type deleted',
 'Organization Type updated': 'Organization Type updated',
 'Organization Types': 'Organization Types',
+<<<<<<< HEAD
 'Organization Type': 'Organisation Type',
 'Organization Type Details': 'Organisation Type Details',
 'Organization Type added': 'Organisation Type added',
 'Organization Type deleted': 'Organisation Type deleted',
 'Organization Type updated': 'Organisation Type updated',
 'Organization Types': 'Organisation Types',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Organization Units': 'Organisation Units',
 'Organization added': 'Organisation added',
 'Organization added to Project': 'Organisation added to Project',
@@ -1240,7 +1270,10 @@
 'Search Markers': 'Search Markers',
 'Search Organization Domains': 'Search Organisation Domains',
 'Search Organization Types': 'Search Organization Types',
+<<<<<<< HEAD
 'Search Organization Types': 'Search Organisation Types',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Search Organizations': 'Search Organisations',
 'Search Persons': 'Search Persons',
 'Search Photos': 'Search Photos',
@@ -1511,7 +1544,10 @@
 'Volunteer Details updated': 'Volunteer Details updated',
 'Volunteer Report': 'Volunteer Report',
 'Volunteer Request': 'Volunteer Request',
+<<<<<<< HEAD
 'Volunteer Role': 'Volunteer Role',
+=======
+>>>>>>> e7e2fe19ef6c51d29671cfeae2c87e63a85e5d95
 'Volunteer added': 'Volunteer added',
 'Volunteer deleted': 'Volunteer deleted',
 'Volunteers': 'Volunteers',
