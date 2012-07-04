@@ -202,7 +202,7 @@ class S3Config(Storage):
         return self.auth.get("always_notify_approver", True)
     def get_auth_record_approval(self):
         """ Use record approval (False by default) """
-        return self.auth.get("record_approcal", False)
+        return self.auth.get("record_approval", False)
     def get_auth_record_approver_role(self):
         """ UID of the record approver role """
         return self.auth.get("record_approver_role", "APPROVER")
