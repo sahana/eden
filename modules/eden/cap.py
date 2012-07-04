@@ -31,7 +31,8 @@ __all__ = ["S3CAPModel",
            "cap_alert_rheader",
            "cap_alert_controller",
            "cap_info_rheader",
-           "cap_info_controller"]
+           "cap_info_controller"
+           ]
 
 import time
 
@@ -52,7 +53,8 @@ class S3CAPModel(S3Model):
              "cap_info_resource",
              "cap_info_area",
              "cap_info",
-             "cap_alert"]
+             "cap_alert"
+             ]
 
     def model(self):
 
@@ -63,7 +65,7 @@ class S3CAPModel(S3Model):
         location_id = self.gis_location_id
         message_id = self.msg_message_id
 
-        add_component = self.add_component
+        add_component = current.manager.model.add_component
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -304,7 +306,7 @@ class S3CAPModel(S3Model):
             msg_record_deleted = T("Alert deleted"),
             msg_list_empty = T("No alerts to show"))
 
-        alert_id = S3ReusableField("alert_id", db.cap_alert,
+        alert_id = S3ReusableField("alert_id", table,
                                    sortby = "identifier",
                                    requires = IS_NULL_OR(
                                     IS_ONE_OF(db, "cap_alert.id",
@@ -517,7 +519,7 @@ class S3CAPModel(S3Model):
             msg_record_deleted = T("Alert information deleted"),
             msg_list_empty = T("No alert information to show"))
 
-        info_id = S3ReusableField("info_id", db.cap_info,
+        info_id = S3ReusableField("info_id", table,
                                   sortby="identifier",
                                   requires=IS_NULL_OR(
                                     IS_ONE_OF(db, "cap_info.id",
@@ -814,10 +816,11 @@ class S3CAPModel(S3Model):
             Generate an identifier for a new form
         """
 
-        table = current.s3db.cap_alert
-        r = current.db().select(table.id,
-                                limitby=(0, 1),
-                                orderby=~table.id).first()
+        db = current.db
+        table = db.cap_alert
+        r = db().select(table.id,
+                        limitby=(0, 1),
+                        orderby=~table.id).first()
 
         _time = time.strftime("%Y%m%dT%H:%M:%S%z")
         if r:
@@ -853,14 +856,15 @@ class S3CAPModel(S3Model):
         if not id:
             return current.messages.NONE
 
-        table = current.s3db.cap_alert
-        query = (table.id == id)
-        r = current.db(query).select(table.msg_type,
-                                     table.sent,
-                                     table.created_on,
-                                     table.sender,
-                                     # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                     limitby=(0, 1)).first()
+        db = current.db
+        table = db.cap_alert
+        r = db(table.id == id).select(table.msg_type,
+                                      table.sent,
+                                      table.created_on,
+                                      table.sender,
+                                      # Doesn't work
+                                      # left = table.on(table.id == table.parent_item_category_id),
+                                      limitby=(0, 1)).first()
 
         #XXX: Should get headline from "info"?
         if r.msg_type:
@@ -878,7 +882,7 @@ class S3CAPModel(S3Model):
             else:
                 return ", ".join([fmt(i) for i in string[1:-1].split("|")])
         except IndexError:
-            return current.messages.NONE
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -899,12 +903,12 @@ class S3CAPModel(S3Model):
         if not id:
             return current.messages.NONE
 
-        table = current.s3db.cap_info
-        query = (table.id == id)
-        r = current.db(query).select(table.headline,
-                                     table.alert_id,
-                                     table.language,
-                                     limitby=(0, 1)).first()
+        db = current.db
+        table = db.cap_info
+        r = db(table.id == id).select(table.headline,
+                                      table.alert_id,
+                                      table.language,
+                                      limitby=(0, 1)).first()
 
         #XXX: Should get headline from "info"?
         return "%s - %s" % (r.language, r.headline)

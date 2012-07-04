@@ -62,11 +62,12 @@ class S3DocumentLibrary(S3Model):
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Shortcuts
-        add_component = self.add_component
-        configure = self.configure
+        model = current.manager.model
+        add_component = model.add_component
+        configure = model.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        super_link = self.super_link
+        super_link = model.super_link
 
         # ---------------------------------------------------------------------
         # Document-referencing entities
@@ -258,12 +259,16 @@ class S3DocumentLibrary(S3Model):
         if not id:
             return current.messages.NONE
 
-        represent = s3_get_db_field_value(tablename = "doc_document",
-                                          fieldname = "name",
-                                          look_up_value = id)
-        return A(represent,
-                 _href = URL(c="doc", f="document", args=[id], extension=""),
-                 _target = "blank")
+        db = current.db
+        table = db.doc_document
+        record = db(table.id == id).select(table.name,
+                                           limitby=(0, 1)).first()
+        try:
+            return A(record.name,
+                     _href = URL(c="doc", f="document", args=[id], extension=""),
+                     _target = "blank")
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -274,8 +279,6 @@ class S3DocumentLibrary(S3Model):
 
         T = current.T
         db = current.db
-        s3db = current.s3db
-        request = current.request
         vars = form.vars
 
         if document:
@@ -285,12 +288,12 @@ class S3DocumentLibrary(S3Model):
             tablename = "doc_image"
             msg = T("Either file upload or image URL required.")
 
-        table = s3db[tablename]
+        table = db[tablename]
 
         doc = vars.file
         url = vars.url
         if not hasattr(doc, "file"):
-            id = request.post_vars.id
+            id = current.request.post_vars.id
             if id:
                 record = db(table.id == id).select(table.file,
                                                    limitby=(0, 1)).first()

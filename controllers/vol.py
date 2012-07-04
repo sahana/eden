@@ -545,6 +545,8 @@ def person_search():
         - allows differential access permissions
     """
 
+    s3.filter = (s3db.hrm_human_resource.type == 2)
+
     s3mgr.configure("hrm_human_resource",
                     # S3HRSearch
                     search_method = s3db.hrm_autocomplete_search,

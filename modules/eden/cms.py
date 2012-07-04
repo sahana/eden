@@ -51,9 +51,9 @@ class S3ContentModel(S3Model):
 
         T = current.T
         db = current.db
-
-        add_component = self.add_component
-        configure = self.configure
+        model = current.manager.model
+        add_component = model.add_component
+        configure = model.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -98,7 +98,7 @@ class S3ContentModel(S3Model):
             msg_list_empty = T("No series currently defined"))
 
         # Reusable field
-        series_id = S3ReusableField("series_id", db.cms_series,
+        series_id = S3ReusableField("series_id", table,
                                     readable=False,
                                     writable=False,
                                     requires = IS_NULL_OR(
@@ -180,7 +180,7 @@ class S3ContentModel(S3Model):
             msg_list_empty = T("No posts currently defined"))
 
         # Reusable field
-        post_id = S3ReusableField("post_id", db.cms_post,
+        post_id = S3ReusableField("post_id", table,
                                   label = T("Post"),
                                   sortby="name",
                                   requires = IS_NULL_OR(
@@ -245,12 +245,13 @@ class S3ContentModel(S3Model):
 
         vars = form.vars
 
-        table = current.s3db.cms_post
+        db = current.db
+        table = db.cms_post
         query = (table.series_id == vars.id)
-        current.db(query).update(avatar = vars.avatar,
-                                 replies = vars.replies,
-                                 roles_permitted = vars.roles_permitted,
-                                 )
+        db(query).update(avatar = vars.avatar,
+                         replies = vars.replies,
+                         roles_permitted = vars.roles_permitted,
+                         )
 
         return
 
@@ -265,10 +266,11 @@ class S3ContentModel(S3Model):
         module = vars.get("module", None)
         if module:
             # Ensure that no other record is set as the one for this module
-            table = current.s3db.cms_post
+            db = current.db
+            table = db.cms_post
             query = (table.module == module) & \
                     (table.id != vars.id)
-            current.db(query).update(module=None)
+            db(query).update(module=None)
 
         return
 

@@ -29,9 +29,11 @@
 
 __all__ = ["S3Model", "S3ModelExtensions", "S3MultiPath"]
 
-from gluon import current
-from gluon.dal import Field
-from gluon.validators import IS_EMPTY_OR
+from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.dal import Field
+#from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 
 from s3validators import IS_ONE_OF
@@ -64,7 +66,7 @@ class S3Model(object):
         if "s3" not in response:
             response.s3 = Storage()
         self.prefix = module
-        self.settings = current.deployment_settings
+        settings = current.deployment_settings
 
         mandatory_models = ("auth",
                             "sync",
@@ -78,7 +80,7 @@ class S3Model(object):
                 return
             self.__lock()
             mandatory = module in mandatory_models
-            if mandatory or self.settings.has_module(module):
+            if mandatory or settings.has_module(module):
                 env = self.model()
             else:
                 env = self.defaults()
@@ -296,8 +298,7 @@ class S3Model(object):
         models = current.models
 
         # Backward compatibility: load conventional models first
-        manager = current.manager
-        manager.model.load_all_models()
+        current.manager.model.load_all_models()
 
         if models is not None:
             for name in models.__dict__:
@@ -331,9 +332,8 @@ class S3Model(object):
         if tablename in db:
             table = db[tablename]
         else:
-            manager = current.manager
-            model = manager.model
-            table = model.super_entity(tablename, key, types, *fields, **args)
+            table = current.manager.model.super_entity(tablename, key, types,
+                                                       *fields, **args)
         return table
 
     # -------------------------------------------------------------------------
@@ -343,9 +343,7 @@ class S3Model(object):
             Shortcut for current.manager.model.super_link
         """
 
-        manager = current.manager
-        model = manager.model
-        return model.super_link(name, tablename, **args)
+        return current.manager.model.super_link(name, tablename, **args)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -354,9 +352,7 @@ class S3Model(object):
             Shortcut for current.manager.model.super_key
         """
 
-        manager = current.manager
-        model = manager.model
-        return model.super_key(supertable, default=default)
+        return current.manager.model.super_key(supertable, default=default)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -365,9 +361,7 @@ class S3Model(object):
             Shortcut for current.manager.model.configure
         """
 
-        manager = current.manager
-        model = manager.model
-        return model.configure(tablename, **args)
+        return current.manager.model.configure(tablename, **args)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -376,9 +370,7 @@ class S3Model(object):
             Shortcut for current.manager.model.add_component
         """
 
-        manager = current.manager
-        model = manager.model
-        return model.add_component(tablename, **args)
+        return current.manager.model.add_component(tablename, **args)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -388,13 +380,9 @@ class S3Model(object):
         """
 
         module, resourcename = tablename.split("_", 1)
-
-        manager = current.manager
-        model = manager.model
-        return model.set_method(module, resourcename, **args)
+        return current.manager.model.set_method(module, resourcename, **args)
 
 # =============================================================================
-
 class S3ModelExtensions(object):
     """
         S3 Model extensions
