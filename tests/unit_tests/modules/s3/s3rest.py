@@ -1315,6 +1315,56 @@ class S3JSONTests(unittest.TestCase):
         db.rollback()
 
 # =============================================================================
+class S3ImportXMLTests(unittest.TestCase):
+
+    def setUp(self):
+
+        xmlstr = """
+<s3xml>
+
+    <resource name="pr_person">
+
+        <data field="first_name">Jason</data>
+        <data field="last_name">Test</data>
+        <data field="initials">JT</data>
+        <data field="date_of_birth" value="1922-03-15"/>
+
+        <resource name="pr_contact">
+            <data field="contact_method">EMAIL</data>
+            <data field="value">json@example.com</data>
+        </resource>
+
+        <resource name="pr_contact">
+            <data field="contact_method">SMS</data>
+            <data field="value">123456789</data>
+        </resource>
+
+    </resource>
+
+</s3xml>"""
+
+        from lxml import etree
+        self.tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+    def testImportXML(self):
+        """ Test JSON message after XML import """
+
+        auth.override = True
+        resource = s3mgr.define_resource("pr", "person")
+        msg = resource.import_xml(self.tree)
+        from gluon.contrib import simplejson as json
+        msg = json.loads(msg)
+        self.assertEqual(msg["status"], "success")
+        self.assertEqual(msg["statuscode"], "200")
+        self.assertEqual(msg["records"], 1)
+        self.assertTrue("created" in msg)
+        self.assertTrue(isinstance(msg["created"], list))
+        self.assertTrue(len(msg["created"]) == 1)
+
+    def tearDown(self):
+        db.rollback()
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -1336,6 +1386,7 @@ if __name__ == "__main__":
         S3MergePersonsTests,
         S3MergeLocationsTests,
         S3JSONTests,
+        S3ImportXMLTests,
     )
 
 # END ========================================================================
