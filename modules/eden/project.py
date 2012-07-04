@@ -2297,7 +2297,7 @@ class S3ProjectTaskModel(S3Model):
     """
         Project Task Model
 
-        This class holds the tables used for a smaller Organisation to manage
+        This class holds the tables used for an Organisation to manage
         their Tasks in detail.
     """
 
@@ -2590,6 +2590,7 @@ class S3ProjectTaskModel(S3Model):
                         name = "task_search_assignee",
                         label = T("Assigned To"),
                         field = "pe_id",
+                        null = T("Unassigned"),
                         cols = 4
                     ),
                     S3SearchMinMaxWidget(
