@@ -162,9 +162,8 @@ def assess_tables():
         else:
             return None
 
-    baseline_type_id = S3ReusableField(
-       "baseline_type_id",
-       db.assess_baseline_type, sortby="name",
+    baseline_type_id = S3ReusableField("baseline_type_id", table,
+       sortby="name",
        requires = IS_NULL_OR(IS_ONE_OF(db,
                                        "assess_baseline_type.id",
                                        "%(name)s",
@@ -406,7 +405,6 @@ def rat_tables():
     # Main Resource -----------------------------------------------------------
     # contains Section 1: Identification Information
     #
-    resourcename = "rat"
     tablename = "assess_rat"
     table = db.define_table(
         tablename,
@@ -1791,11 +1789,12 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
-                              assess_rat=dict(joinby="assessment_id",
-                                              multiple=False))
+    model = s3mgr.model
+    model.add_component(table,
+                        assess_rat=dict(joinby="assessment_id",
+                                        multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    model.configure(tablename, deletable=False)
 
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
@@ -1814,9 +1813,9 @@ def rat_tables():
             raise HTTP(501, body=BADMETHOD)
 
 
-    s3mgr.model.set_method(module, "rat",
-                           method="summary",
-                           action=assess_rat_summary)
+    model.set_method("assess", "rat",
+                     method="summary",
+                     action=assess_rat_summary)
 
     # Pass variables back to global scope (response.s3.*)
 
@@ -1914,7 +1913,7 @@ def impact_tables():
         else:
             return None
 
-    impact_type_id = S3ReusableField("impact_type_id", db.impact_type,
+    impact_type_id = S3ReusableField("impact_type_id", table,
                                      sortby="name",
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "impact_type.id","%(name)s", sort=True)),
                                      represent = lambda id: s3_get_db_field_value(tablename = "impact_type",

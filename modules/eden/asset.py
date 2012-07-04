@@ -119,11 +119,12 @@ class S3AssetModel(S3Model):
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Shortcuts
-        add_component = self.add_component
-        configure = self.configure
+        model = current.manager.model
+        add_component = model.add_component
+        configure = model.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = self.super_link
+        super_link = model.super_link
 
         #--------------------------------------------------------------------------
         # Assets
@@ -211,7 +212,7 @@ class S3AssetModel(S3Model):
             msg_list_empty = T("No Assets currently registered"))
 
         # Reusable Field
-        asset_id = S3ReusableField("asset_id", db.asset_asset,
+        asset_id = S3ReusableField("asset_id", table,
                                    sortby="number",
                                    requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                    "asset_asset.id",
@@ -513,15 +514,13 @@ class S3AssetModel(S3Model):
         """
         """
 
+        if not id:
+            return current.messages.NONE
+
         db = current.db
-        s3db = current.s3db
-
-        messages = current.messages
-        NONE = messages.NONE
-
-        table = s3db.asset_asset
-        itable = s3db.supply_item
-        btable = s3db.supply_brand
+        table = db.asset_asset
+        itable = db.supply_item
+        btable = db.supply_brand
         query = (table.id == id) & \
                 (itable.id == table.item_id)
         r = db(query).select(table.number,
@@ -529,7 +528,7 @@ class S3AssetModel(S3Model):
                              btable.name,
                              left = btable.on(itable.brand_id == btable.id),
                              limitby=(0, 1)).first()
-        if r:
+        try:
             represent = "%s (%s" % (r.asset_asset.number,
                                     r.supply_item.name)
             if r.supply_brand.name:
@@ -537,8 +536,8 @@ class S3AssetModel(S3Model):
                                          r.supply_brand.name)
             else:
                 represent = "%s)" % represent
-        else:
-            represent = NONE
+        except:
+            represent = current.messages.UNKNOWN_OPT
         return represent
 
     # -------------------------------------------------------------------------
@@ -548,7 +547,6 @@ class S3AssetModel(S3Model):
         """
 
         request = current.request
-        s3 = current.response.s3
 
         status = int(request.post_vars.get("status", 0))
         type = request.get_vars.get("type", None)
@@ -641,11 +639,9 @@ class S3AssetModel(S3Model):
 
         T = current.T
         db = current.db
-        s3db = current.s3db
         request = current.request
-        s3 = current.response.s3
 
-        table = s3db.asset_log
+        table = db.asset_log
 
         if r.record:
             asset = Storage(r.record)
@@ -681,7 +677,7 @@ class S3AssetModel(S3Model):
                                                filterby = "organisation_id",
                                                filter_opts = [current_log.organisation_id])
 
-        crud_strings = s3.crud_strings.asset_log
+        crud_strings = current.response.s3.crud_strings.asset_log
         if status == ASSET_LOG_SET_BASE:
             crud_strings.subtitle_create = T("Set Base Facility/Site")
             crud_strings.msg_record_created = T("Base Facility/Site Set")
@@ -766,24 +762,21 @@ def asset_get_current_log(asset_id):
     """
     """
 
-    db = current.db
-    s3db = current.s3db
-
-    table = s3db.asset_log
+    table = current.s3db.asset_log
     query = ( table.asset_id == asset_id ) & \
             ( table.cancel == False ) & \
             ( table.deleted == False )
     # Get the log with the maximum time
-    asset_log = db(query).select(table.id,
-                                 table.status,
-                                 table.datetime,
-                                 table.cond,
-                                 table.person_id,
-                                 table.organisation_id,
-                                 table.site_id,
-                                 #table.location_id,
-                                 orderby = ~table.datetime,
-                                 limitby=(0, 1)).first()
+    asset_log = current.db(query).select(table.id,
+                                         table.status,
+                                         table.datetime,
+                                         table.cond,
+                                         table.person_id,
+                                         table.organisation_id,
+                                         table.site_id,
+                                         #table.location_id,
+                                         orderby = ~table.datetime,
+                                         limitby=(0, 1)).first()
     if asset_log:
         return Storage(datetime = asset_log.datetime,
                        person_id = asset_log.person_id,

@@ -23,22 +23,22 @@ def index():
                      maximizable=False)
 
     # Code to go fullscreen
-    s3.jquery_ready.append("""
-$('#gis_fullscreen_map-btn').click( function(evt) {
-    if (navigator.appVersion.indexOf("MSIE") != -1) {
-        // IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
-    } else {
-        // Remove components from embedded Map's containers without destroying their contents
-        S3.gis.mapWestPanelContainer.removeAll(false);
-        S3.gis.mapPanelContainer.removeAll(false);
-        S3.gis.mapWin.items.items = [];
-        S3.gis.mapWin.doLayout();
-        S3.gis.mapWin.destroy();
-        // Add a full-screen window which will inherit these components
-        addMapWindow();
-        evt.preventDefault();
-    }
-});""")
+    # IE (even 9) doesn't like the dynamic full-screen, so simply do a page refresh for now
+    # Remove components from embedded Map's containers without destroying their contents
+    # Add a full-screen window which will inherit these components
+    s3.jquery_ready.append(
+'''$('#gis_fullscreen_map-btn').click(function(evt){
+ if (navigator.appVersion.indexOf("MSIE")!=-1){
+ }else{
+ S3.gis.mapWestPanelContainer.removeAll(false)
+ S3.gis.mapPanelContainer.removeAll(false)
+ S3.gis.mapWin.items.items=[]
+ S3.gis.mapWin.doLayout()
+ S3.gis.mapWin.destroy()
+ addMapWindow()
+ evt.preventDefault()
+ }
+})''')
                      
     return dict(map=map)
 
@@ -110,7 +110,7 @@ def define_map(window=False, toolbar=False, closable=True, maximizable=True, con
 def location():
     """ RESTful CRUD controller for Locations """
 
-    tablename = "%s_%s" % (module, resourcename)
+    tablename = "gis_location"
     table = s3db[tablename]
 
     # Location Search Method
@@ -398,8 +398,7 @@ def s3_gis_location_parents(r, **attr):
         Return a list of Parents for a Location
     """
 
-    resource = r.resource
-    table = resource.table
+    table = r.resource.table
 
     # Check permission
     if not s3_has_permission("read", table):
@@ -721,14 +720,15 @@ def config():
     """ RESTful CRUD controller """
 
     # Custom Methods to enable/disable layers
-    s3mgr.model.set_method(module, resourcename,
-                           component_name="layer_entity",
-                           method="enable",
-                           action=enable_layer)
-    s3mgr.model.set_method(module, resourcename,
-                           component_name="layer_entity",
-                           method="disable",
-                           action=disable_layer)
+    set_method = s3mgr.model.set_method
+    set_method(module, resourcename,
+               component_name="layer_entity",
+               method="enable",
+               action=enable_layer)
+    set_method(module, resourcename,
+               component_name="layer_entity",
+               method="disable",
+               action=disable_layer)
 
     # Pre-process
     def prep(r):

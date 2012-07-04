@@ -39,8 +39,8 @@ def role():
     name = "group"
 
     # ACLs as component of roles
-    s3mgr.model.add_component(auth.permission.table,
-                              auth_group="group_id")
+    s3db.add_component(auth.permission.table,
+                       auth_group="group_id")
 
     def prep(r):
         if r.representation != "html":
@@ -59,9 +59,9 @@ def role():
         r.set_handler("update", handler)
         r.set_handler("delete", handler)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
-    response.s3.stylesheets.append( "S3/role.css" )
+    s3.stylesheets.append( "S3/role.css" )
     output = s3_rest_controller(module, name)
     return output
 
@@ -75,10 +75,10 @@ def user():
     tablename = "auth_user"
     table = db[tablename]
 
-    s3mgr.configure(tablename,
-                    main="first_name",
-                    # Add users to Person Registry & 'Authenticated' role:
-                    create_onaccept = auth.s3_register)
+    s3db.configure(tablename,
+                   main="first_name",
+                   # Add users to Person Registry & 'Authenticated' role:
+                   create_onaccept = auth.s3_register)
 
     def disable_user(r):
         if not r.id:
@@ -116,14 +116,14 @@ def user():
 
     # Custom Methods
     role_manager = s3base.S3RoleManager()
-    set_method = s3mgr.model.set_method
-    set_method(module, resourcename, method="roles",
+    set_method = s3mg.model.set_method
+    set_method("auth", "user", method="roles",
                action=role_manager)
 
-    set_method(module, resourcename, method="disable",
+    set_method("auth", "user", method="disable",
                action=disable_user)
 
-    set_method(module, resourcename, method="approve",
+    set_method("auth", "user", method="approve",
                action=approve_user)
 
     # CRUD Strings
@@ -210,7 +210,7 @@ def user():
         if r.http == "GET" and not r.method:
             session.s3.cancel = r.url()
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         # Only show the disable button if the user is not currently disabled
@@ -218,36 +218,35 @@ def user():
                 (r.table.registration_key != "pending")
         rows = db(query).select(r.table.id)
         restrict = [str(row.id) for row in rows]
-        response.s3.actions = [
-                                dict(label=str(UPDATE), _class="action-btn",
-                                     url=URL(c="admin", f="user",
-                                             args=["[id]", "update"])),
-                                dict(label=str(T("Roles")), _class="action-btn",
-                                     url=URL(c="admin", f="user",
-                                             args=["[id]", "roles"])),
-                                dict(label=str(T("Disable")), _class="action-btn",
-                                     url=URL(c="admin", f="user",
-                                             args=["[id]", "disable"]),
-                                     restrict = restrict)
-                              ]
+        s3.actions = [
+                        dict(label=str(UPDATE), _class="action-btn",
+                             url=URL(c="admin", f="user",
+                                     args=["[id]", "update"])),
+                        dict(label=str(T("Roles")), _class="action-btn",
+                             url=URL(c="admin", f="user",
+                                     args=["[id]", "roles"])),
+                        dict(label=str(T("Disable")), _class="action-btn",
+                             url=URL(c="admin", f="user",
+                                     args=["[id]", "disable"]),
+                             restrict = restrict)
+                      ]
         # Only show the approve button if the user is currently pending
         query = (r.table.registration_key == "pending")
         rows = db(query).select(r.table.id)
         restrict = [str(row.id) for row in rows]
-        response.s3.actions.append(
+        s3.actions.append(
                 dict(label=str(T("Approve")), _class="action-btn",
                      url=URL(c="admin", f="user",
                              args=["[id]", "approve"]),
                      restrict = restrict)
             )
         # Add some highlighting to the rows
-        query = (r.table.registration_key == "disabled")
-        rows = db(query).select(r.table.id)
-        response.s3.dataTableStyleDisabled = [str(row.id) for row in rows]
-        response.s3.dataTableStyleWarning = [str(row.id) for row in rows]
-        query = (r.table.registration_key == "pending")
-        rows = db(query).select(r.table.id)
-        response.s3.dataTableStyleAlert = [str(row.id) for row in rows]
+        rtable = r.table
+        query = (rtable.registration_key.belongs(["disabled", "pending"]))
+        rows = db(query).select(rtable.id,
+                                rtable.registration_key)
+        s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
+        s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
         # Translate the status values
         values = [dict(col=7, key="", display=str(T("Active"))),
@@ -255,13 +254,13 @@ def user():
                   dict(col=7, key="pending", display=str(T("Pending"))),
                   dict(col=7, key="disabled", display=str(T("Disabled")))
                  ]
-        response.s3.dataTableDisplay = values
+        s3.dataTableDisplay = values
 
         # Add client-side validation
         s3base.s3_register_validation()
 
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller(module, resourcename)
     return output

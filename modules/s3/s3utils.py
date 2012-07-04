@@ -281,9 +281,6 @@ def s3_filter_staff(r):
     db = current.db
     try:
         hrtable = db.hrm_human_resource
-    except:
-        return
-    try:
         site_id = r.record.site_id
         person_id_field = r.target()[2].person_id
     except:

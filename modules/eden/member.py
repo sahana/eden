@@ -62,7 +62,7 @@ class S3MembersModel(S3Model):
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
 
-        configure = self.configure
+        configure = current.manager.model.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -105,8 +105,7 @@ class S3MembersModel(S3Model):
             filter_opts = (root_org, None)
         else:
             filter_opts = (None,)
-        membership_type_id = S3ReusableField("membership_type_id",
-            db.member_membership_type,
+        membership_type_id = S3ReusableField("membership_type_id", table,
             sortby = "name",
             label = T("Type"),
             requires = IS_NULL_OR(
@@ -307,7 +306,7 @@ class S3MembersModel(S3Model):
         utable = current.auth.settings.table_user
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
-        mtable = s3db.member_membership
+        mtable = db.member_membership
 
         # Get the full record
         id = form.vars.id
