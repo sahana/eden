@@ -48,7 +48,11 @@ class CreateVolunteerTraining(SeleniumUnitTest):
             @ToDo: 
             * Add Volunteer Participants
         """
-        
+        import datetime
+        from dateutil.relativedelta import relativedelta
+
+        #@ToDo: Move these into we2unittest
+        today = datetime.date.today().strftime("%Y-%m-%d")
         browser = self.browser
         self.login(account="admin", nexturl="vol/course/create")
 
@@ -73,5 +77,7 @@ class CreateVolunteerTraining(SeleniumUnitTest):
                        "2012-04-12"),
                      ( "comments",
                        "Testing comments"),
+                     ( "hours",
+                       "10"),
                      ]
                      )

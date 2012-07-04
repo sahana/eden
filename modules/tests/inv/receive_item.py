@@ -57,10 +57,10 @@ class ReceiveItem(InvTestFunctions):
                      ),
                      ("site_id",
                       "Same Warehouse",
-                      "autocomplete",
+                      "option",
                      ),
                      ("type",
-                      "Other Warehouse",
+                      "Other Warehouse (Warehouse)",
                       "option",
                      )
                     ]

@@ -56,7 +56,7 @@ class CreateAsset(SeleniumUnitTest):
                        "Blankets",
                        "autocomplete"),
                      ( "sn",
-                       "WPU-4536-9381"),
+                       "WPU_4536_9381"),
                      ( "supplier",
                        "Breville"),
                      ( "purchase_date",
