@@ -1664,6 +1664,7 @@ class AuthS3(Auth):
         """ Update pe_id, roles and realms for the current user """
 
         session = current.session
+        settings = current.deployment_settings
 
         if "permissions" in current.response.s3:
             del current.response.s3["permissions"]
@@ -1680,6 +1681,22 @@ class AuthS3(Auth):
             s3db = current.s3db
 
             user_id = self.user.id
+
+            # Lookup approver role and store in session
+            if settings.get_auth_record_approval():
+                approver_role = session["approver_role"]
+                if approver_role is None:
+                    approver_role = system_roles.ADMIN
+                    role_uuid = settings.get_auth_record_approver_role()
+                    if role_uuid:
+                        gtable = self.settings.table_group
+                        query = (gtable.uuid == role_uuid) & \
+                                (gtable.deleted != True)
+                        row = db(query).select(gtable.id,
+                                               limitby=(0, 1)).first()
+                        if row:
+                            approver_role = row.id
+                session["approver_role"] = approver_role
 
             # Set pe_id for current user
             ltable = s3db.table("pr_person_user")
@@ -3212,6 +3229,7 @@ class S3Permission(object):
         "report": READ,
         "search": READ,
         "update": UPDATE,
+        "approve": UPDATE,
         "delete": DELETE})
 
     # Lambda expressions for ACL handling
@@ -3732,6 +3750,56 @@ class S3Permission(object):
         return None
 
     # -------------------------------------------------------------------------
+    # Record approval
+    # -------------------------------------------------------------------------
+    def approved(self, table, record, approved=True):
+        """
+            Check whether a record has been approved or not
+
+            @param table: the table
+            @param record: the record or record ID
+            @param approved: True = check if approved,
+                             False = check if unapproved
+        """
+
+        db = current.db
+
+        if "approved_by" not in table.fields:
+            return True
+
+        if isinstance(record, (Row, dict)):
+            if "approved_by" not in record:
+                record_id = record[table._id]
+                record = None
+        else:
+            record_id = record
+            record = None
+
+        if record is None and record_id:
+            query = table._id == record_id
+            record = db(query).select(table.approved_by, limitby=(0, 1)).first()
+            if not record:
+                return False
+
+        if approved and record["approved_by"] is not None:
+            return True
+        elif not approved and record["approved_by"] is None:
+            return True
+        else:
+            return False
+
+    # -------------------------------------------------------------------------
+    def unapproved(self, table, record):
+        """
+            Check whether a record has not been approved yet
+
+            @param table: the table
+            @param record: the record or record ID
+        """
+
+        return self.approved(table, record, approved=False)
+
+    # -------------------------------------------------------------------------
     # Authorization
     # -------------------------------------------------------------------------
     def has_permission(self, method, c=None, f=None, t=None, record=None):
@@ -3868,13 +3936,36 @@ class S3Permission(object):
 
         if permitted is None:
             raise self.error("Cannot determine permission.")
-        elif permitted:
+
+        elif permitted and \
+             current.deployment_settings.get_auth_record_approval() and \
+             t is not None and record is not None:
+
+            # Check approval
+            if not hasattr(t, "_tablename"):
+                table = current.s3db.table(t)
+                if not table:
+                    raise AttributeError("undefined table %s" % tablename)
+            else:
+                table = t
+            approver_role = None
+            if "approved_by" in table.fields:
+                approver_role = current.session["approver_role"]
+            if approver_role is None:
+                approver_role = sr.ADMIN
+            if approver_role not in realms or "approve" not in method:
+                permitted = self.approved(table, record) #or is_owner
+                if not permitted:
+                    _debug("==> Record not approved")
+            else:
+                permitted = True
+
+        if permitted:
             _debug("*** GRANTED ***")
         else:
             _debug("*** DENIED ***")
 
         response.s3.permissions[key] = permitted
-
         return permitted
 
     # -------------------------------------------------------------------------
@@ -3930,6 +4021,21 @@ class S3Permission(object):
             _debug("==> user is ADMIN")
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
+
+        approve = current.deployment_settings.get_auth_record_approval()
+        if approve and "approved_by" in table.fields:
+            approver_role = current.session["approver_role"]
+            if approver_role is None:
+                approver_role = sr.ADMIN
+            if approver_role not in realms or "approve" not in method:
+                base_filter = (table.approved_by != None)
+                approve = False
+            else:
+                base_filter = (table.approved_by == None)
+                approve = True
+            ALL_RECORDS = base_filter
+        else:
+            base_filter = None
 
         if not self.use_cacls:
             _debug("==> simple authorization")
@@ -4011,6 +4117,9 @@ class S3Permission(object):
             elif use_realm:
                 _debug("==> permitted for any records owned by entities %s" % str(uacls+oacls))
                 query = self.realm_query(table, uacls+oacls)
+
+            if query is not None and approve:
+                query = base_filter & query
 
         # Fallback
         if query is None:

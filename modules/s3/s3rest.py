@@ -2582,6 +2582,47 @@ class S3Resource(object):
         return numrows
 
     # -------------------------------------------------------------------------
+    def approve(self, components=[], approve=True):
+        """
+            Approve all records in this resource
+
+            @param components: list of component aliases to include, None
+                               for no components, empty list for all components
+            @param approve: set to approved (False for reset to unapproved)
+        """
+
+        auth = current.auth
+
+        if auth.s3_logged_in():
+            user_id = approve and auth.user.id or None
+        else:
+            return False
+
+        self.load()
+        for record in self._rows:
+
+            table = self.table
+            record_id = record[table._id]
+
+            if "approved_by" in table.fields:
+                query = (table._id == record_id)
+                success = current.db(query).update(approved_by=user_id)
+                if not success:
+                    db.rollback()
+                    return False
+            if components is None:
+                continue
+            for alias in self.components:
+                if components and alias not in components:
+                    continue
+                component = self.components[alias]
+                success = component.approve(components=None, approve=approve)
+                if not success:
+                    db.rollback()
+                    return False
+        return True
+
+    # -------------------------------------------------------------------------
     def merge(self,
               original_id,
               duplicate_id,

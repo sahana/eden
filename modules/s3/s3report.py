@@ -49,7 +49,7 @@ from gluon.storage import Storage
 from s3rest import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
-from s3utils import s3_truncate, s3_has_foreign_key
+from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
@@ -1200,7 +1200,7 @@ class S3ContingencyTable(TABLE):
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)
-                                        layer_values[id] = str(represent(f, fvalue))
+                                        layer_values[id] = s3_unicode(represent(f, fvalue))
 
 
                     cell_ids.append(layer_ids)

@@ -338,6 +338,9 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
+        self.widmin = Storage()
+        self.widmax = Storage()
+
         if not self.search_field:
             self.build_master_query(resource)
 
