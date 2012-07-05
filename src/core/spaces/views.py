@@ -283,7 +283,13 @@ class ViewSpaceIndex(DetailView):
     # Get extra context data
     def get_context_data(self, **kwargs):
         context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
-        place = get_object_or_404(Space, url=self.kwargs['space_url'])
+	# Makes sure the space ins't already in the cache before hitting the databass
+	place_url = self.kwargs['space_url']
+	place = get_or_insert_object_in_cache(
+					    Space,
+					    place_url,
+					    url=place_url)
+
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
