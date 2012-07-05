@@ -221,10 +221,10 @@ class S3Msg(object):
                 reply = ltable.insert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
-                try:
-                    email = row.sender.split("<")[1].split(">")[0]
-                except:
-                    raise ValueError("Email address not defined!")
+                #try:
+                email = row.sender.split("<")[1].split(">")[0]
+                #except:
+                    #raise ValueError("Email address not defined!")
                 
                 query = (ctable.contact_method == "Email") & \
                     (ctable.value == email)
@@ -233,7 +233,7 @@ class S3Msg(object):
                     for id in pe_id:
                         otable.insert(message_id = reply.id,
                                       address = row.sender, pe_id = id)
-                        db.commit()
+                db.commit()
 
         return    
 
