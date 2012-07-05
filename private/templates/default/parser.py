@@ -316,6 +316,8 @@ class S3Parsing(object):
 	message = ""
 	reponse = ""
 	ireport = False
+	reply = ""
+	
 	for word in words:
 	    if "SI" and "#" in word:
 		report = word.split("#")[1]
@@ -330,8 +332,10 @@ class S3Parsing(object):
 	
 	if ireport:	
 	    db(rtable.ireport_id == report).update(comments=message, response = response)
-			
+	    reply = "Response Logged in the Report"
+	else:
+	    reply = "Please provide the keyword SI# followed by the Inciden Report ID."
 	db.commit()
-	return "Response Logged in the Report"
+	return 
     
 # END =========================================================================
