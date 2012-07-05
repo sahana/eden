@@ -61,6 +61,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status
 from s3method import S3Method
 from s3utils import s3_mark_required
+from s3error import S3PermissionError
 
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
@@ -3188,12 +3189,6 @@ class AuthS3(Auth):
                     lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120
                 )
-
-# =============================================================================
-class S3PermissionError(StandardError):
-    """ Custom exception class for low-level permission checks """
-
-    pass
 
 # =============================================================================
 class S3Permission(object):

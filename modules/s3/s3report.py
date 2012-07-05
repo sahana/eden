@@ -46,7 +46,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3rest import S3TypeConverter
+from s3resource import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
 from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode

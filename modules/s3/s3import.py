@@ -977,7 +977,7 @@ class S3Importer(S3CRUD):
         else:
             # Job created
             job_id = job.job_id
-            errors = current.manager.xml.collect_errors(job)
+            errors = current.xml.collect_errors(job)
             if errors:
                 current.response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
@@ -1418,7 +1418,7 @@ class S3Importer(S3CRUD):
         if rows:
             details.append(TBODY(rows))
         # Add error messages, if present
-        errors = current.manager.xml.collect_errors(element)
+        errors = current.xml.collect_errors(element)
         if errors:
             details.append(TFOOT(TR(TH("%s:" % T("Errors")),
                                    TD(UL([LI(e) for e in errors])))))
@@ -1861,7 +1861,7 @@ class S3ImportItem(object):
 
         manager = current.manager
         db = current.db
-        xml = manager.xml
+        xml = current.xml
         validate = manager.validate
         s3db = current.s3db
 
@@ -1920,7 +1920,7 @@ class S3ImportItem(object):
 
         s3db = current.s3db
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
         table = self.table
 
         if table is None:
@@ -1998,7 +1998,7 @@ class S3ImportItem(object):
 
         s3db = current.s3db
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         if self.accepted is not None:
             return self.accepted
@@ -2050,7 +2050,7 @@ class S3ImportItem(object):
         s3db = current.s3db
         manager = current.manager
         db = current.db
-        xml = manager.xml
+        xml = current.xml
         table = self.table
 
         # Check if already committed
@@ -2471,7 +2471,7 @@ class S3ImportItem(object):
 
         manager = current.manager
         db = current.db
-        xml = manager.xml
+        xml = current.xml
 
         _debug("Storing item %s" % self)
         if item_table is None:
@@ -2543,7 +2543,7 @@ class S3ImportItem(object):
         """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
         db = current.db
         s3db = current.s3db
 
@@ -2628,7 +2628,7 @@ class S3ImportJob():
         db = current.db
         s3db = current.s3db
 
-        xml = manager.xml
+        xml = current.xml
 
         self.error = None # the last error
         self.error_tree = etree.Element(xml.TAG.root)
@@ -2720,8 +2720,7 @@ class S3ImportJob():
         """
 
         s3db = current.s3db
-        manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         if element in self.elements:
             # element has already been added to this job
@@ -2855,7 +2854,7 @@ class S3ImportJob():
         manager = current.manager
         db = current.db
         s3db = current.s3db
-        xml = manager.xml
+        xml = current.xml
         reference_list = []
 
         root = None
@@ -3041,7 +3040,7 @@ class S3ImportJob():
         """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         # Resolve references
         import_list = []
@@ -3176,7 +3175,7 @@ class S3ImportJob():
         """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         if self.tree is not None:
             return tree
@@ -3215,7 +3214,7 @@ class S3ImportJob():
         """
 
         db = current.db
-        xml = manager.xml
+        xml = current.xml
 
         for item in self.items.values():
             for citem_id in item.load_components:

@@ -49,7 +49,7 @@ from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
-from s3rest import S3FieldSelector
+from s3resource import S3FieldSelector
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
@@ -1799,7 +1799,7 @@ $('#%s').live('click',function(){
                 query = (field > value)
 
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                             False,
                             400,
                             "Unsupported filter! Supported filters: ~, =, <, >")
@@ -1870,7 +1870,7 @@ $('#%s').live('click',function(){
             current.response.headers["Content-Type"] = "application/json"
 
         else:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                         False,
                         400,
                         "Missing options! Require: field, filter & value")
@@ -2291,7 +2291,7 @@ class S3LocationSearch(S3Search):
                           table.addr_street,
                           table.addr_postcode]
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~, ="
@@ -2371,7 +2371,7 @@ class S3OrganisationSearch(S3Search):
                         (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
 
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~"
@@ -2454,7 +2454,7 @@ class S3PersonSearch(S3Search):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                             False,
                             400,
                             "No value provided!"
@@ -2539,7 +2539,7 @@ class S3HRSearch(S3Search):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                             False,
                             400,
                             "No value provided!"
@@ -2665,7 +2665,7 @@ class S3PentitySearch(S3Search):
                             (field3.lower().like(value + "%")))
                 resource.add_filter(query)
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~"

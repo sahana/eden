@@ -716,7 +716,7 @@ class S3CRUD(S3Method):
                                            "msg_record_deleted")
             else:
                 r.error(404, current.manager.error, next=r.url(method=""))
-            item = current.manager.xml.json_message(message=message)
+            item = current.xml.json_message(message=message)
             current.response.view = "xml.html"
             output.update(item=item)
 
@@ -1639,7 +1639,7 @@ class S3CRUD(S3Method):
         """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         prefix, name, table, tablename = r.target()
 
