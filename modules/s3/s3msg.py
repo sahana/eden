@@ -233,7 +233,7 @@ class S3Msg(object):
                     for id in pe_id:
                         otable.insert(message_id = reply.id,
                                       address = row.sender, pe_id = id)
-                db.commit()
+                        db.commit()
 
         return    
 
