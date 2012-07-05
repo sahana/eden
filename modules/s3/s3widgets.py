@@ -3026,9 +3026,9 @@ class S3EmbedComponentWidget(FormWidget):
         self.select_existing = select_existing
         self.link_filter = link_filter
 
-        self.post_process = current.manager.model.get_config(link,
-                                                             "post_process",
-                                                             None)
+        self.post_process = current.s3db.get_config(link,
+                                                    "post_process",
+                                                    None)
 
     def __call__(self, field, value, **attributes):
 

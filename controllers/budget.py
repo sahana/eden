@@ -141,7 +141,7 @@ def item_cascade(form):
             # Update Budgets containing this Bundle (tbc)
     return
 
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 onaccept=item_cascade)
 
 # Kits
@@ -191,7 +191,7 @@ def kit_total(form):
         kit = form.vars.id
     kit_totals(kit)
 
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 onaccept=kit_total)
 
 # Kit<>Item Many2Many
@@ -267,7 +267,7 @@ def bundle_total(form):
         bundle = form.vars.id
     bundle_totals(bundle)
 
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 onaccept=bundle_total)
 
 # Bundle<>Kit Many2Many
@@ -556,7 +556,7 @@ def parameter():
         title_update = T("Edit Parameters"),
         title_display = T("Parameters"))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
     return s3_rest_controller()
 
 def item():
@@ -586,7 +586,7 @@ def item():
 
     response.s3.formats.pdf = URL(f="item_export_pdf")
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     main="code",
                     extra="description",
                     orderby=db.budget_item.category_type)
@@ -721,7 +721,7 @@ def kit():
     response.s3.formats.pdf = URL(f="kit_export_pdf")
     response.s3.formats.xls = URL(f="kit_export_xls")
     if len(request.args) == 2:
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
             update_next=URL(f="kit_item", args=request.args[1]))
 
     return s3_rest_controller(main="code")
@@ -1162,7 +1162,7 @@ def bundle():
         msg_list_empty = T("No Bundles currently registered"))
 
     if len(request.args) == 2:
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
             update_next=URL(f="bundle_kit_item", args=request.args[1]))
 
     return s3_rest_controller()

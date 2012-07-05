@@ -966,8 +966,7 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
 
     def widget(self, resource, vars):
-        manager = current.manager
-        c = manager.define_resource("hrm", "credential")
+        c = current.manager.define_resource("hrm", "credential")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -1001,8 +1000,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
 
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
-        manager = current.manager
-        c = manager.define_resource("hrm", "competency")
+        c = current.manager.define_resource("hrm", "competency")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------

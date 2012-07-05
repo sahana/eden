@@ -75,8 +75,7 @@ class S3LocationModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -252,7 +251,7 @@ class S3LocationModel(S3Model):
                                        represent = self.countries_represent,
                                        ondelete = "RESTRICT")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         onvalidation=self.gis_location_onvalidation,
                         onaccept=self.gis_location_onaccept,
                         deduplicate=self.gis_location_deduplicate,
@@ -984,12 +983,11 @@ class S3GISConfigModel(S3Model):
         NONE = current.messages.NONE
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # =====================================================================
         # GIS Markers (Icons)
@@ -1853,8 +1851,7 @@ class S3LayerEntityModel(S3Model):
         NONE = current.messages.NONE
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -1905,7 +1902,7 @@ class S3LayerEntityModel(S3Model):
                     msg_record_deleted = T("Layer deleted"),
                     msg_list_empty=T("No Layers currently defined"))
 
-        layer_id = model.super_link("layer_id", "gis_layer_entity",
+        layer_id = self.super_link("layer_id", "gis_layer_entity",
                                     label = T("Layer"),
                                     # SuperLinks don't support requires
                                     #requires = IS_ONE_OF(db,
@@ -2001,7 +1998,7 @@ class S3LayerEntityModel(S3Model):
                     msg_record_deleted = T("Profile Configuration removed"),
                     msg_list_empty = T("No Profiles currently have Configurations for this Layer"))
 
-        model.configure(tablename,
+        self.configure(tablename,
                         onvalidation=self.layer_config_onvalidation,
                         onaccept=self.layer_config_onaccept)
 
@@ -2104,8 +2101,7 @@ class S3FeatureLayerModel(S3Model):
         T = current.T
         db = current.db
 
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
 
         # =====================================================================
@@ -2113,7 +2109,7 @@ class S3FeatureLayerModel(S3Model):
 
         tablename = "gis_layer_feature"
         table = self.define_table(tablename,
-                                  model.super_link("layer_id", "gis_layer_entity"),
+                                  self.super_link("layer_id", "gis_layer_entity"),
                                   name_field()(),
                                   Field("description", label=T("Description")),
                                   # Kept for backwards-compatibility
@@ -2197,7 +2193,7 @@ class S3FeatureLayerModel(S3Model):
             msg_record_deleted = T("Feature Layer deleted"),
             msg_list_empty = T("No Feature Layers currently defined"))
 
-        model.configure(tablename,
+        self.configure(tablename,
                         onaccept=gis_layer_onaccept,
                         super_entity="gis_layer_entity",
                         deduplicate=self.gis_layer_feature_deduplicate,
@@ -2310,12 +2306,11 @@ class S3MapModel(S3Model):
         projection_id = self.gis_projection_id
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         define_table = self.define_table
 
-        layer_id = model.super_link("layer_id", "gis_layer_entity")
+        layer_id = self.super_link("layer_id", "gis_layer_entity")
 
         # ---------------------------------------------------------------------
         # GIS Feature Queries
@@ -3259,11 +3254,10 @@ class S3GISThemeModel(S3Model):
         #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         define_table = self.define_table
-        layer_id = model.super_link("layer_id", "gis_layer_entity")
+        layer_id = self.super_link("layer_id", "gis_layer_entity")
 
         # =====================================================================
         # Theme Layer

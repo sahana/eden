@@ -71,12 +71,10 @@ except KeyError:
 # End of configuration options ================================================
 
 # Load models
-s3mgr.load("sync_config")
-
 if site_type == "active":
 
     # Settings
-    sync_config = db.sync_config
+    sync_config = s3db.sync_config
     config = Storage(proxy=proxy_url)
     record = db(sync_config.id!=None).select(sync_config.id, limitby=(0, 1)).first()
     if record:

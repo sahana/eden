@@ -83,9 +83,8 @@ class S3OrganisationModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -206,7 +205,7 @@ class S3OrganisationModel(S3Model):
                 # msg_record_deleted = T("Subsector deleted"),
                 # msg_list_empty = T("No Subsectors currently registered"))
 
-        # subsector_id = S3ReusableField("subsector_id", table, 
+        # subsector_id = S3ReusableField("subsector_id", table,
                                        # sortby="abrv",
                                        # requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                        # "org_subsector.id",
@@ -952,8 +951,7 @@ class S3SiteModel(S3Model):
         auth = current.auth
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
 
         # =====================================================================
         # Site / Facility (ICS terminology)
@@ -985,20 +983,21 @@ class S3SiteModel(S3Model):
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------
-        site_id = model.super_link("site_id", "org_site",
-                                   #writable = True,
-                                   #readable = True,
-                                   label = T("Facility"),
-                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                   represent = lambda id: org_site_represent(id, show_link=True),
-                                   orderby = "org_site.name",
-                                   sort = True,
-                                   # Comment these to use a Dropdown & not an Autocomplete
-                                   widget = S3SiteAutocompleteWidget(),
-                                   comment = DIV(_class="tooltip",
+        site_id = self.super_link("site_id", "org_site",
+                                  #writable = True,
+                                  #readable = True,
+                                  label = T("Facility"),
+                                  default = auth.user.site_id if auth.is_logged_in() else None,
+                                  represent = lambda id: \
+                                    org_site_represent(id, show_link=True),
+                                  orderby = "org_site.name",
+                                  sort = True,
+                                  # Comment these to use a Dropdown & not an Autocomplete
+                                  widget = S3SiteAutocompleteWidget(),
+                                  comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Facility"),
                                                                   T("Enter some characters to bring up a list of possible matches")))
-                                   )
+                                  )
 
         # Components
 
@@ -1010,7 +1009,6 @@ class S3SiteModel(S3Model):
         add_component("hrm_human_resource_site",
                       org_site="site_id")
 
-        
         # Documents
         add_component("doc_document",
                       org_site="site_id")
@@ -1035,9 +1033,9 @@ class S3SiteModel(S3Model):
         add_component("req_commit",
                       org_site="site_id")
 
-        model.configure(tablename,
-                        onaccept = self.org_site_onaccept,
-                        )
+        self.configure(tablename,
+                       onaccept = self.org_site_onaccept,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -1155,7 +1153,6 @@ class S3FacilityModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Facility Types (generic)
@@ -1191,7 +1188,7 @@ class S3FacilityModel(S3Model):
         #
         tablename = "org_facility"
         table = define_table(tablename,
-                             model.super_link("site_id", "org_site"),
+                             self.super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64,           # Mayon Compatibility
                                    label = T("Name")),
@@ -1241,9 +1238,9 @@ class S3FacilityModel(S3Model):
             msg_record_deleted = T("Facility deleted"),
             msg_list_empty = T("No Facilities currently registered"))
 
-        model.configure(tablename,
-                        super_entity="org_site"
-                        )
+        self.configure(tablename,
+                       super_entity="org_site"
+                       )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -1416,9 +1413,8 @@ class S3OfficeModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
         crud_strings = current.response.s3.crud_strings
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Offices
@@ -1534,24 +1530,24 @@ class S3OfficeModel(S3Model):
         )
 
         # Offices as component of Organisations
-        model.add_component(table,
-                            org_organisation="organisation_id")
+        self.add_component(table,
+                           org_organisation="organisation_id")
 
-        model.configure(tablename,
-                        super_entity=("pr_pentity", "org_site"),
-                        onvalidation=s3_address_onvalidation,
-                        deduplicate=self.org_office_deduplicate,
-                        list_fields=["id",
-                                     "name",
-                                     "organisation_id",   # Filtered in Component views
-                                     "type",
-                                     "L0",
-                                     "L1",
-                                     "L2",
-                                     "L3",
-                                     #"L4",
-                                     "phone1",
-                                     "email"
+        self.configure(tablename,
+                       super_entity=("pr_pentity", "org_site"),
+                       onvalidation=s3_address_onvalidation,
+                       deduplicate=self.org_office_deduplicate,
+                       list_fields=["id",
+                                    "name",
+                                    "organisation_id",   # Filtered in Component views
+                                    "type",
+                                    "L0",
+                                    "L1",
+                                    "L2",
+                                    "L3",
+                                    #"L4",
+                                    "phone1",
+                                    "email"
                                     ])
 
         # ---------------------------------------------------------------------
@@ -1776,13 +1772,18 @@ def org_site_represent(id, row=None, show_link=True):
     if row:
         db = current.db
         s3db = current.s3db
+        table = s3db.org_site
         id = row.site_id
     elif id:
         db = current.db
         s3db = current.s3db
         table = s3db.org_site
-        row = db(table._id == id).select(table.instance_type,
-                                         limitby=(0, 1)).first()
+        if isinstance(id, Row):
+            row = id
+            id = row.site_id
+        else:
+            row = db(table._id == id).select(table.instance_type,
+                                             limitby=(0, 1)).first()
     else:
         return current.messages.NONE
 
@@ -1965,8 +1966,8 @@ def org_organisation_controller():
     def prep(r):
         if r.representation == "json":
             r.table.pe_id.readable = True
-            list_fields = current.manager.model.get_config(r.tablename,
-                                                           "list_fields") or []
+            list_fields = s3db.get_config(r.tablename,
+                                          "list_fields") or []
             s3db.configure(r.tablename, list_fields = list_fields + ["pe_id"])
         elif r.interactive:
             r.table.country.default = current.gis.get_default_country("code")
@@ -1978,9 +1979,9 @@ def org_organisation_controller():
                 realms = auth.user.realms or Storage()
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
-                    current.manager.model.set_method(r.prefix, r.name,
-                                                     method="roles",
-                                                     action=S3OrgRoleManager())
+                    s3db.set_method(r.prefix, r.name,
+                                    method="roles",
+                                    action=S3OrgRoleManager())
 
             if not r.component and r.method not in ["read", "update", "delete"]:
                 # Filter out branches
@@ -2058,14 +2059,14 @@ def org_office_controller():
                     comment=T("Search for office by text."),
                     field=["name", "comments", "email"]
                   ),
-                  #~ S3SearchOptionsWidget(
-                    #~ name="office_search_org",
-                    #~ label=T("Organization"),
-                    #~ comment=T("Search for office by organization."),
-                    #~ field="organisation_id",
-                    #~ represent = %(name)s,
-                    #~ cols = 3
-                  #~ ),
+                  # S3SearchOptionsWidget(
+                    # name="office_search_org",
+                    # label=T("Organization"),
+                    # comment=T("Search for office by organization."),
+                    # field="organisation_id",
+                    # represent = %(name)s,
+                    # cols = 3
+                  # ),
                   S3SearchOrgHierarchyWidget(
                     name="office_search_org",
                     label=T("Organization"),
@@ -2116,9 +2117,9 @@ def org_office_controller():
                 realms = auth.user.realms or Storage()
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
-                    current.manager.model.set_method(r.prefix, r.name,
-                                                     method="roles",
-                                                     action=S3OrgRoleManager())
+                    s3db.set_method(r.prefix, r.name,
+                                    method="roles",
+                                    action=S3OrgRoleManager())
 
             if settings.has_module("inv"):
                 # Don't include Warehouses in the type dropdown

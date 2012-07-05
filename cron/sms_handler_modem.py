@@ -69,7 +69,7 @@ class ModemThread( threading.Thread ):
             time.sleep(5)
 		#self.modem.send_sms("9935648569", "Hey!")
 
-s3mgr.load("msg_modem_settings")
+s3db.table("msg_modem_settings")
 modem_configs = db(db.msg_modem_settings.enabled == True).select()
 
 # PyGSM GsmModem class instances
@@ -77,7 +77,7 @@ modems = []
 
 for modem in modem_configs:
     # mode is set to text as PDU mode is flaky
-    modems.append(pygsm.GsmModem(port=modem.modem_port, baudrate=modem.modem_baud, mode="text")) 
+    modems.append(pygsm.GsmModem(port=modem.modem_port, baudrate=modem.modem_baud, mode="text"))
 
 if len(modems) == 0:
     # If no modem is found try autoconfiguring - We shouldn't do this anymore

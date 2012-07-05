@@ -53,9 +53,8 @@ def site_org_json():
 def facility():
     """ RESTful CRUD controller """
 
-    manager = current.manager
     # remove CRUD generated buttons in the tabs
-    manager.configure("inv_inv_item",
+    s3db.configure("inv_inv_item",
                     create=False,
                     listadd=False,
                     editable=False,
@@ -146,7 +145,7 @@ def mailing_list():
     s3.crud_strings[tablename] = s3.pr_mailing_list_crud_strings
 
     # define the list_fields
-    list_fields = s3mgr.model.configure(tablename,
+    list_fields = s3db.configure(tablename,
                                         list_fields = ["id",
                                                        "name",
                                                        "description",
@@ -164,7 +163,7 @@ def mailing_list():
             table = s3db[tablename]
             _rheader = s3db.org_rheader
             _tabs = []
-    s3mgr.model.add_component("pr_group_membership", pr_group="group_id")
+    s3db.add_component("pr_group_membership", pr_group="group_id")
 
     rheader = lambda r: _rheader(r, tabs = _tabs)
     return s3_rest_controller("pr",
@@ -206,7 +205,7 @@ def donor():
         msg_record_deleted = T("Donor deleted"),
         msg_list_empty = T("No Donors currently registered"))
 
-    s3mgr.configure(tablename, listadd=False)
+    s3db.configure(tablename, listadd=False)
     output = s3_rest_controller()
 
     return output

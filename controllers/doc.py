@@ -160,14 +160,14 @@ def upload_bulk():
     vars._formname = "%s_create" % tablename
 
     # onvalidation callback
-    onvalidation = s3mgr.model.get_config(tablename, "create_onvalidation",
-                   s3mgr.model.get_config(tablename, "onvalidation"))
+    onvalidation = s3db.get_config(tablename, "create_onvalidation",
+                   s3db.get_config(tablename, "onvalidation"))
 
     if form.accepts(vars, onvalidation=onvalidation):
         msg = Storage(success = True)
         # onaccept callback
-        onaccept = s3mgr.model.get_config(tablename, "create_onaccept",
-                   s3mgr.model.get_config(tablename, "onaccept"))
+        onaccept = s3db.get_config(tablename, "create_onaccept",
+                   s3db.get_config(tablename, "onaccept"))
         from gluon.tools import callback
         callback(onaccept, form, tablename=tablename)
     else:

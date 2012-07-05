@@ -58,10 +58,10 @@ def hospital():
 
     # Load Models to add tabs
     if deployment_settings.has_module("inv"):
-        s3mgr.load("inv_inv_item")
+        s3db.table("inv_inv_item")
     elif deployment_settings.has_module("req"):
         # (gets loaded by Inv if available)
-        s3mgr.load("req_req")
+        s3db.table("req_req")
 
     # Pre-processor
     def prep(r):

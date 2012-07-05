@@ -1918,8 +1918,8 @@ class S3ImportItem(object):
         if self.id:
             return
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
         xml = manager.xml
         table = self.table
 
@@ -1938,7 +1938,7 @@ class S3ImportItem(object):
                 self.data.update({xml.UID:self.uid})
             self.method = self.METHOD.UPDATE
         else:
-            resolve = model.get_config(self.tablename, RESOLVER)
+            resolve = s3db.get_config(self.tablename, RESOLVER)
             if self.data and resolve:
                 resolve(self)
 
@@ -1996,8 +1996,8 @@ class S3ImportItem(object):
             Validate this item (=record onvalidation), sets self.accepted
         """
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
         xml = manager.xml
 
         if self.accepted is not None:
@@ -2014,8 +2014,8 @@ class S3ImportItem(object):
         form.errors = Storage()
         tablename = self.tablename
         key = "%s_onvalidation" % self.method
-        onvalidation = model.get_config(tablename, key,
-                       model.get_config(tablename, "onvalidation"))
+        onvalidation = s3db.get_config(tablename, key,
+                       s3db.get_config(tablename, "onvalidation"))
         if onvalidation:
             try:
                 callback(onvalidation, form, tablename=tablename)
@@ -2047,10 +2047,10 @@ class S3ImportItem(object):
                                   (still reports errors)
         """
 
+        s3db = current.s3db
         manager = current.manager
         db = current.db
         xml = manager.xml
-        model = manager.model
         table = self.table
 
         # Check if already committed
@@ -2283,7 +2283,7 @@ class S3ImportItem(object):
                 prefix, name = self.tablename.split("_", 1)
                 resource = manager.define_resource(prefix, name, id=self.id)
 
-                ondelete = model.get_config(self.tablename, "ondelete")
+                ondelete = s3db.get_config(self.tablename, "ondelete")
                 success = resource.delete(ondelete=ondelete,
                                           cascade=True)
                 if resource.error:
@@ -2310,12 +2310,12 @@ class S3ImportItem(object):
                               form=form,
                               record=self.id,
                               representation="xml")
-            model.update_super(table, form.vars)
+            s3db.update_super(table, form.vars)
             if self.method == self.METHOD.CREATE:
                 manager.auth.s3_set_record_owner(table, self.id)
             key = "%s_onaccept" % self.method
-            onaccept = model.get_config(tablename, key,
-                       model.get_config(tablename, "onaccept"))
+            onaccept = s3db.get_config(tablename, key,
+                       s3db.get_config(tablename, "onaccept"))
             if onaccept:
                 callback(onaccept, form, tablename=self.tablename)
 
@@ -2719,8 +2719,8 @@ class S3ImportJob():
                       including error attributes.
         """
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
         xml = manager.xml
 
         if element in self.elements:
@@ -2748,7 +2748,7 @@ class S3ImportJob():
             # Now parse the components
             table = item.table
 
-            components = model.get_components(table, names=components)
+            components = s3db.get_components(table, names=components)
             cinfos = Storage()
 
             for alias in components:
@@ -3215,7 +3215,6 @@ class S3ImportJob():
         """
 
         db = current.db
-        manager = current.manager
         xml = manager.xml
 
         for item in self.items.values():
@@ -3241,9 +3240,8 @@ class S3ImportJob():
                     uid = ritem.get("uid", None)
                     tablename = ritem.get("tablename", None)
                     if tablename and uid:
-                        manager.load(tablename)
                         try:
-                            table = db[tablename]
+                            table = current.s3db[tablename]
                         except:
                             continue
                         if xml.UID not in table.fields:

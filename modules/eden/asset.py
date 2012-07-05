@@ -119,12 +119,11 @@ class S3AssetModel(S3Model):
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         #--------------------------------------------------------------------------
         # Assets
@@ -962,7 +961,7 @@ def asset_controller():
                 #table.returned.readable = table.returned.writable = False
                 #table.returned_status.readable = table.returned_status.writable = False
                 # Process Base Site
-                #s3mgr.configure(table._tablename,
+                #s3db.configure(table._tablename,
                 #                onaccept=asset_transfer_onaccept)
         #else:
             # @ToDo: Add Virtual Fields to the List view for 'Currently assigned to' & 'Current Location'

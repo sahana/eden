@@ -57,9 +57,8 @@ class S3DelphiModel(S3Model):
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -552,7 +551,7 @@ class S3DelphiUser:
         # All but Guests can add Solutions & Discuss
         self.can_add_item = status != 1
         self.can_post = status != 1
-        
+
         self.membership = membership
         self.status = status
         self.user_id = user_id

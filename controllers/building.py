@@ -244,7 +244,7 @@ building_nzseel1_search = s3base.S3Search(
         field=["ticket_id"])
 
 # Set as default search method
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 search_method=building_nzseel1_search)
 # -------------------------------------------------------------------------
 
@@ -460,7 +460,7 @@ building_nzseel2_search = s3base.S3Search(
         field=["ticket_id"])
 
 # Set as default search method
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 search_method=building_nzseel2_search)
 
 
@@ -490,7 +490,7 @@ def nzseel1():
     table.person_id.default = s3_logged_in_person()
 
     # Subheadings in forms:
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
         subheadings = {
@@ -565,7 +565,7 @@ def nzseel2():
     table.person_id.default = s3_logged_in_person()
 
     # Subheadings in forms:
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
         subheadings = {

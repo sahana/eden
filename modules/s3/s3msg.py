@@ -1343,11 +1343,10 @@ class S3Compose(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        manager = current.manager
         if r.http in ("GET", "POST"):
             output = self.compose(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -1361,10 +1360,6 @@ class S3Compose(S3CRUD):
 
         T = current.T
         auth = current.auth
-        manager = current.manager
-        response = current.response
-        session = current.session
-        settings = current.deployment_settings
 
         url = r.url()
         self.url = url
@@ -1376,8 +1371,8 @@ class S3Compose(S3CRUD):
             redirect(URL(c="default", f="user", args="login",
                          vars={"_next" : url}))
 
-        if not settings.has_module("msg"):
-            session.error = T("Cannot send messages if Messaging module disabled")
+        if not current.deployment_settings.has_module("msg"):
+            current.session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
 
         #_vars = r.get_vars
@@ -1385,7 +1380,7 @@ class S3Compose(S3CRUD):
         self.recipients = None
         form = self._compose_form()
         # @ToDo: A 2nd Filter form
-        # if form.accepts(r.post_vars, session,
+        # if form.accepts(r.post_vars, current.session,
                         # formname="compose",
                         # keepvalues=True):
             # query, errors = self._process_filter_options(form)
@@ -1401,7 +1396,7 @@ class S3Compose(S3CRUD):
             #output = dict(items=items)
             output = dict(form=form)
         else:
-            r.error(501, manager.ERROR.BAD_METHOD)
+            r.error(501, current.manager.ERROR.BAD_METHOD)
 
         # Complete the page
         if representation == "html":
@@ -1422,8 +1417,8 @@ class S3Compose(S3CRUD):
             output["title"] = title
             #output["subtitle"] = subtitle
             #output["form"] = form
-            #response.view = self._view(r, "list_create.html")
-            response.view = self._view(r, "create.html")
+            #current.response.view = self._view(r, "list_create.html")
+            current.response.view = self._view(r, "create.html")
 
         return output
 

@@ -443,7 +443,7 @@ def organisation():
     s3.dataTable_sDom = "rtip" #"frtip" - filter broken
     s3.dataTable_iDisplayLength = 25
 
-    s3mgr.configure("org_organisation",
+    s3db.configure("org_organisation",
                     listadd = False,
                     addbtn = True,
                     super_entity = db.pr_pentity,
@@ -457,7 +457,7 @@ def site():
     """
         @todo: Avoid redirect
     """
-    s3mgr.load("org_site")
+    s3db.table("org_site")
     if len(request.args):
         site_id = request.args[0]
         site_r = db.org_site[site_id]

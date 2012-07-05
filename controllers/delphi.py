@@ -101,13 +101,13 @@ def group():
         if r.interactive:
             if r.component:
                 tablename = r.component.tablename
-                list_fields = s3mgr.model.get_config(tablename,
-                                                     "list_fields")
+                list_fields = s3db.get_config(tablename,
+                                              "list_fields")
                 try:
                     list_fields.remove("group_id")
                 except:
                     pass
-                s3mgr.configure(tablename,
+                s3db.configure(tablename,
                                 list_fields=list_fields)
         return True
     s3.prep = prep
@@ -190,7 +190,7 @@ def problem():
     table = s3db[tablename]
 
     # Custom Methods
-    set_method = s3mgr.model.set_method
+    set_method = s3db.set_method
     set_method(module, resourcename,
                method="discuss",
                action=discuss)
@@ -215,7 +215,7 @@ def problem():
     # @ToDo: Check for Group Moderators too
     #if not s3_has_role("DelphiAdmin"):
         # Remove ability to create new Problems
-        #s3mgr.configure(tablename,
+        #s3db.configure(tablename,
         #                insertable=False)
 
     def prep(r):

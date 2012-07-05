@@ -70,12 +70,11 @@ class HospitalDataModel(S3Model):
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Hospitals

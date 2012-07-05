@@ -88,12 +88,11 @@ class S3SupplyModel(S3Model):
         settings = current.deployment_settings
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # =====================================================================
         # Brand
@@ -977,7 +976,7 @@ S3FilterFieldChange({
                 instance_type = item.instance_type
             except:
                 return current.messages.UNKNOWN_OPT
-        
+
         T = current.T
         if instance_type == "inv_inv_item":
             item_str = T("In Stock")
@@ -1160,10 +1159,10 @@ S3FilterFieldChange({
         if vars.kit:
             # Go to that tab afterwards
             url = URL(args=["[id]", "kit_item"])
-            current.manager.model.configure("supply_item",
-                                            create_next=url,
-                                            update_next=url,
-                                            )
+            current.s3db.configure("supply_item",
+                                   create_next=url,
+                                   update_next=url,
+                                  )
 
 # =============================================================================
 def item_um_from_name(name, um):

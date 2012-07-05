@@ -88,10 +88,9 @@ class S3RequestModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
-        set_method = model.set_method
+        set_method = self.set_method
 
         settings = current.deployment_settings
         s3_date_format = settings.get_L10n_date_format()
@@ -243,7 +242,7 @@ class S3RequestModel(S3Model):
                                                     ),
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
-                                  model.super_link("site_id", "org_site",
+                                  self.super_link("site_id", "org_site",
                                                    label = T("Requested For Facility"),
                                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                                    readable = True,
@@ -354,11 +353,11 @@ class S3RequestModel(S3Model):
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
         list_fields.append("date_required")
-        model.configure(tablename,
-                        onaccept = self.req_onaccept,
-                        deduplicate = self.req_req_duplicate,
-                        list_fields = list_fields
-                        )
+        self.configure(tablename,
+                       onaccept = self.req_onaccept,
+                       deduplicate = self.req_req_duplicate,
+                       list_fields = list_fields
+                       )
 
         # Script to inject into Pages which include Request create forms
         req_help_msg = ""
@@ -540,7 +539,7 @@ $(function() {
     @staticmethod
     def req_ref_represent(value, show_link=True):
         """
-            Represent for the Request Reference 
+            Represent for the Request Reference
             if show_link is True then it will generate a link to the pdf
         """
         if value:
@@ -596,7 +595,7 @@ $(function() {
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         **attr
-                       )        
+                       )
     # -------------------------------------------------------------------------
     @staticmethod
     def req_priority_represent(id):
@@ -1280,14 +1279,13 @@ class S3CommitModel(S3Model):
         db = current.db
         auth = current.auth
 
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Commitments (Pledges)
         tablename = "req_commit"
         table = self.define_table(tablename,
-                                  model.super_link("site_id", "org_site",
+                                  self.super_link("site_id", "org_site",
                                                    label = T("From Facility"),
                                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                                    # Non-Item Requests make False in the prep
@@ -1348,7 +1346,7 @@ class S3CommitModel(S3Model):
                                     label = T("Commitment"),
                                     ondelete = "CASCADE")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         # Commitments should only be made to a specific request
                         listadd = False,
                         onvalidation = self.commit_onvalidation,
@@ -1685,7 +1683,7 @@ def req_update_status(req_id):
 
     rtable = s3db.req_req
     db(rtable.id == req_id).update(**status_update)
-    
+
 # =============================================================================
 def req_skill_onaccept(form):
     """
@@ -2004,7 +2002,7 @@ def req_match():
         rheader = None
 
     s3.filter = (s3db.req_req.site_id != site_id)
-    current.manager.configure("req_req", insertable=False)
+    s3db.configure("req_req", insertable=False)
     output = current.rest_controller("req", "req", rheader = rheader)
 
     if tablename == "org_office" and isinstance(output, dict):

@@ -51,9 +51,8 @@ class S3ContentModel(S3Model):
 
         T = current.T
         db = current.db
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 

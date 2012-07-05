@@ -59,8 +59,7 @@ class S3ScenarioModel(S3Model):
         T = current.T
         db = current.db
 
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Scenarios
@@ -76,7 +75,7 @@ class S3ScenarioModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
-        model.configure(tablename,
+        self.configure(tablename,
                        # Open Map Config to set the default Location
                        create_next=URL(args=["[id]", "config"]),
                        deduplicate=self.scenario_scenario_duplicate,
@@ -272,7 +271,7 @@ class S3ScenarioHRModel(S3Model):
     """
 
     names = ["scenario_human_resource"]
- 
+
     def model(self):
 
         T = current.T
@@ -314,7 +313,7 @@ class S3ScenarioMapModel(S3Model):
     """
 
     names = ["scenario_config"]
- 
+
     def model(self):
 
         T = current.T
@@ -357,7 +356,7 @@ class S3ScenarioSiteModel(S3Model):
     """
 
     names = ["scenario_site"]
- 
+
     def model(self):
 
         T = current.T

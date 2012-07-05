@@ -23,7 +23,7 @@ secs = time.mktime(time.localtime())
 auth.override = True
 session.s3.roles.append(ADMIN)
 
-s3mgr.load("supply_item")
+s3db.table("supply_item")
 
 stylesheet_dir = os.path.join(request.folder, "static", "formats", "s3csv", "supply")
 import_dir = os.path.join(request.folder, "private", "templates", "Standard")

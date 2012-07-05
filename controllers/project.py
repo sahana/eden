@@ -46,9 +46,9 @@ def project():
         #s3.crud_strings["project_project"].sub_title_list = T("Select Project")
         s3mgr.LABEL.READ = "Select"
         s3mgr.LABEL.UPDATE = "Select"
-        s3mgr.configure("project_project",
-                        deletable=False,
-                        listadd=False)
+        s3db.configure("project_project",
+                       deletable=False,
+                       listadd=False)
         # Post-process
         def postp(r, output):
             if r.interactive:
@@ -219,10 +219,10 @@ def organisation():
     """ RESTful CRUD controller """
 
     if settings.get_project_multiple_organisations():
-        s3mgr.configure("project_organisation",
-                        insertable=False,
-                        editable=False,
-                        deletable=False)
+        s3db.configure("project_organisation",
+                       insertable=False,
+                       editable=False,
+                       deletable=False)
 
         list_btn = A(T("Funding Report"),
                      _href=URL(c="project", f="organisation",
@@ -253,10 +253,10 @@ def beneficiary():
 
     tablename = "project_beneficiary"
 
-    s3mgr.configure("project_beneficiary",
-                    insertable=False,
-                    editable=False,
-                    deletable=False)
+    s3db.configure("project_beneficiary",
+                   insertable=False,
+                   editable=False,
+                   deletable=False)
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
@@ -406,7 +406,7 @@ def location():
                         title = title,
                         details_btn = details_btn,
                     )
-            
+
         return output
     s3.postp = postp
 
@@ -482,19 +482,18 @@ def time():
     table = s3db[tablename]
     if "mine" in request.get_vars:
         # Show the Logged Time for this User
-        s3mgr.load("project_time")
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
-        s3mgr.configure("project_time",
-                        listadd=False)
+        s3db.configure("project_time",
+                       listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
             s3.filter = (table.person_id == person_id)
         try:
-            list_fields = s3mgr.model.get_config(tablename,
-                                                 "list_fields")
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
             list_fields.remove("person_id")
-            s3mgr.configure(tablename,
-                            list_fields=list_fields)
+            s3db.configure(tablename,
+                           list_fields=list_fields)
         except:
             pass
 
