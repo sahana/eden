@@ -117,31 +117,31 @@ class S3MessagingModel(S3Model):
                              *s3_meta_fields())
 
         configure(tablename,
-                       list_fields=["id",
-                                    "inbound",
-                                    "pe_id",
-                                    "fromaddress",
-                                    "recipient",
-                                    "subject",
-                                    "message",
-                                    "verified",
-                                    #"verified_comments",
-                                    "actionable",
-                                    "actioned",
-                                    #"actioned_comments",
-                                    #"priority",
-                                    "is_parsed",
-                                    "reply",
-                                    "source_task_id"
-                                    ])
+                  list_fields=["id",
+                               "inbound",
+                               "pe_id",
+                               "fromaddress",
+                               "recipient",
+                               "subject",
+                               "message",
+                               "verified",
+                               #"verified_comments",
+                               "actionable",
+                               "actioned",
+                               #"actioned_comments",
+                               #"priority",
+                               "is_parsed",
+                               "reply",
+                               "source_task_id"
+                               ])
 
         # Components
         self.add_component("msg_outbox", msg_log="message_id")
 
         # Reusable Message ID
         message_id = S3ReusableField("message_id", table,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "msg_log.id")),
-                                     # FIXME: Subject works for Email but not SMS
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF_EMPTY(db, "msg_log.id")),
                                      represent = self.message_represent,
                                      ondelete = "RESTRICT")
 

@@ -698,11 +698,7 @@ class IS_LOCATION_SELECTOR(Validator):
                  error_message = None,
                 ):
         T = current.T
-        self.error_message = error_message or T("Invalid Location!")
-        self.no_parent = T("Need to have all levels filled out in mode strict!")
-        self.invalid_lat = T("Latitude is Invalid!")
-        self.invalid_lon = T("Longitude is Invalid!")
-        self.no_permission = current.auth.messages.access_denied
+        self.error_message = error_message or current.T("Invalid Location!")
         self.errors = Storage()
 
     def __call__(self, value):
@@ -716,7 +712,7 @@ class IS_LOCATION_SELECTOR(Validator):
             value = int(value)
             # Yes: This must be an Update form
             if not auth.s3_has_permission("update", table, record_id=value):
-                return (value, self.no_permission)
+                return (value, auth.messages.access_denied)
             # Check that this is a valid location_id
             query = (table.id == value) & \
                     (table.deleted == False) & \
@@ -756,7 +752,7 @@ class IS_LOCATION_SELECTOR(Validator):
         except:
             # Create form
             if not auth.s3_has_permission("create", table):
-                return (None, self.no_permission)
+                return (None, auth.messages.access_denied)
             location = self._process_values()
             if self.errors:
                 errors = self.errors
@@ -799,12 +795,9 @@ class IS_LOCATION_SELECTOR(Validator):
             Note: This is also used by IS_SITE_SELECTOR()
         """
 
+        T = current.T
         db = current.db
         s3db = current.s3db
-        auth = current.auth
-        response = current.response
-        session = current.session
-
         table = s3db.gis_location
 
         vars = current.request.vars
@@ -817,21 +810,22 @@ class IS_LOCATION_SELECTOR(Validator):
             try:
                 lat = float(lat)
             except ValueError:
-                self.errors["lat"] = self.invalid_lat
+                self.errors["lat"] = T("Latitude is Invalid!")
         if lon:
             try:
                 lon = float(lon)
             except ValueError:
-                self.errors["lon"] = self.invalid_lon
+                self.errors["lon"] = T("Longitude is Invalid!")
         if self.errors:
             return None
 
         # Are we allowed to create Locations?
+        auth = current.auth
         if not auth.s3_has_permission("create", table):
-            self.errors["location_id"] = self.no_permission
+            self.errors["location_id"] = auth.messages.access_denied
             return None
         # What level of hierarchy are we allowed to edit?
-        if auth.s3_has_role(session.s3.system_roles.MAP_ADMIN):
+        if auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN):
             # 'MapAdmin' always has permission to edit hierarchy locations
             L1_allowed = True
             L2_allowed = True
@@ -1145,11 +1139,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
                  site_type = "project_site",
                  error_message = None,
                 ):
-        T = current.T
-        self.error_message = error_message or T("Invalid Site!")
-        self.no_parent = T("Need to have all levels filled out in mode strict!")
-        auth = current.auth
-        self.no_permission = auth.messages.access_denied
+        self.error_message = error_message or current.T("Invalid Site!")
         self.errors = Storage()
         self.site_type = site_type
 
@@ -1165,7 +1155,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             value = int(value)
             # Yes: This must be an Update form
             if not auth.s3_has_permission("update", stable, record_id=value):
-                return (value, self.no_permission)
+                return (value, auth.messages.access_denied)
             # Check that this is a valid site_id
             query = (stable.id == value) & \
                     (stable.deleted == False)
@@ -1200,7 +1190,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
         except:
             # Create form
             if not auth.s3_has_permission("create", stable):
-                return (None, self.no_permission)
+                return (None, auth.messages.access_denied)
             location = self._process_values()
             if self.errors:
                 errors = self.errors

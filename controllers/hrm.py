@@ -148,7 +148,8 @@ def staff():
 
     def prep(r):
         if r.interactive:
-            if r.method == "create" and not r.component:
+            if not r.component and \
+               r.method not in ["read", "import", "update", "delete"]:
                 # Don't redirect
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)

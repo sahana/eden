@@ -726,7 +726,8 @@ class S3IRSModel(S3Model):
                     # @ToDo: deployment_setting
                     subject = T("Deployment Request"),
                     message = message,
-                    url = url
+                    url = url,
+                    formid = r.id
                 )
             # Pre-populate the recipients list if we can
             # @ToDo: Check that we have valid contact details
@@ -1038,8 +1039,8 @@ class S3IRSResponseModel(S3Model):
                                   # @ToDo: Limit Staff to those which are not already assigned to an Incident
                                   human_resource_id(label = hrm_label,
                                                     # Simple dropdown is faster for a small team
-                                                    widget=None,
-                                                    comment=None,
+                                                    #widget=None,
+                                                    #comment=None,
                                                     ),
                                   Field("incident_commander", "boolean",
                                         default = False,
