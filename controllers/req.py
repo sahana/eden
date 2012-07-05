@@ -494,7 +494,7 @@ def commit():
                 #db.req_commit_skill.req_skill_id.requires = \
                 #    IS_ONE_OF(db,
                 #              "req_req_skill.id",
-                #              s3.req_skill_represent,
+                #              s3db.req_skill_represent,
                 #              orderby = "req_req_skill.id",
                 #              filterby = "req_id",
                 #              filter_opts = [req_id],

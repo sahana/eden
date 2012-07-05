@@ -32,7 +32,7 @@
 $(function() {
     var plot;
     render_pie_chart = function(src, title, layer) {
-        plot = jQuery.jqplot ('chart', [src],
+        plot = jQuery.jqplot('chart', [src],
             {
                 seriesDefaults: {
                     renderer: $.jqplot.PieRenderer,
@@ -99,34 +99,35 @@ $(function() {
                         forceTickAt0: true
                     },
 //                     min: minzero,
-                    autoscale: true
+//                     autoscale: autoscale
+                    padMax: 1.2
                 }
             },
             title: layer + ' ' + title
         });
     };
     $('#pie_chart_rows').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_pie_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#pie_chart_cols').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_pie_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#vbar_chart_rows').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_vbar_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#vbar_chart_cols').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_vbar_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#hide-chart').click(function(){
-        $('#chart-container').hide();
+        $('#chart-container').addClass('hide');
     });
 
     // Toggle the report options

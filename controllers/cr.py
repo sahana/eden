@@ -163,9 +163,12 @@ def cr_shelter_prep(r):
             elif r.component.name == "human_resource":
                 # Filter out people which are already staff for this warehouse
                 s3base.s3_filter_staff(r)
+                # Make it clear that this is for adding new staff, not assigning existing
+                s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
                 # Cascade the organisation_id from the hospital to the staff
-                s3db.hrm_human_resource.organisation_id.default = r.record.organisation_id
-                s3db.hrm_human_resource.organisation_id.writable = False
+                field = s3db.hrm_human_resource.organisation_id
+                field.default = r.record.organisation_id
+                field.writable = False
 
             elif r.component.name == "rat":
                 # Hide the Implied fields

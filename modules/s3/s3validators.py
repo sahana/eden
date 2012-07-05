@@ -59,10 +59,12 @@ import re
 import time
 from datetime import datetime, timedelta
 
-from gluon import current
-from gluon.dal import Field
+from gluon import *
+#from gluon import current
+#from gluon.dal import Field
+#from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.languages import lazyT
-from gluon.validators import Validator, IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+from gluon.validators import Validator
 from gluon.storage import Storage
 
 def translate(text):

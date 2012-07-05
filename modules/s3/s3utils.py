@@ -281,9 +281,6 @@ def s3_filter_staff(r):
     db = current.db
     try:
         hrtable = db.hrm_human_resource
-    except:
-        return
-    try:
         site_id = r.record.site_id
         person_id_field = r.target()[2].person_id
     except:
@@ -1011,6 +1008,38 @@ def s3_get_foreign_key(field, m2m=True):
         else:
             key = None
     return (rtablename, key, multiple)
+
+# =============================================================================
+def s3_unicode(s, encoding='utf-8'):
+    """
+        Convert an object into an unicode instance, to be used instead of
+        unicode(s) (Note: user data should never be converted into str).
+
+        @param s: the object
+        @param encoding: the character encoding
+    """
+
+    if isinstance(s, unicode):
+        return s
+    try:
+        if not isinstance(s, basestring):
+            if hasattr(s, '__unicode__'):
+                s = unicode(s)
+            else:
+                try:
+                    s = unicode(str(s), encoding, 'strict')
+                except UnicodeEncodeError:
+                    if not isinstance(s, Exception):
+                        raise
+                    s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+        else:
+            s = s.decode(encoding)
+    except UnicodeDecodeError:
+        if not isinstance(s, Exception):
+            raise
+        else:
+            s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+    return s
 
 # =============================================================================
 def search_vars_represent(search_vars):

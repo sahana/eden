@@ -32,7 +32,7 @@
 
 __all__ = ["S3Config"]
 
-from gluon import current
+from gluon import current, URL
 from gluon.storage import Storage
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
@@ -148,7 +148,7 @@ class S3Config(Storage):
         return self.auth.get("openid", False)
     def get_auth_login_next(self):
         """ Which page to go to after login """
-        return self.auth.get("login_next", None)
+        return self.auth.get("login_next", URL(c="default", f="index"))
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
@@ -202,7 +202,7 @@ class S3Config(Storage):
         return self.auth.get("always_notify_approver", True)
     def get_auth_record_approval(self):
         """ Use record approval (False by default) """
-        return self.auth.get("record_approcal", False)
+        return self.auth.get("record_approval", False)
     def get_auth_record_approver_role(self):
         """ UID of the record approver role """
         return self.auth.get("record_approver_role", "APPROVER")
@@ -623,7 +623,7 @@ class S3Config(Storage):
             selecting languages. These values should conform to RFC 3066.
 
             For a full list of languages and their codes, see:
-                http://www.i18nguy.com/unicode/language-identifiers.html 
+                http://www.i18nguy.com/unicode/language-identifiers.html
         """
 
         return self.cap.get("languages",
