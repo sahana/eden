@@ -226,7 +226,7 @@ class S3Msg(object):
                 #except:
                     #raise ValueError("Email address not defined!")
                 
-                query = (ctable.contact_method == "Email") & \
+                query = (ctable.contact_method == "EMAIL") & \
                     (ctable.value == email)
                 pe_id = db(query).select(ctable.pe_id)
                 if pe_id:
