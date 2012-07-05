@@ -56,6 +56,7 @@ from core.spaces.forms import SpaceForm, DocForm, EventForm, EntityFormSet, \
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
+from helpers import get_or_insert_object_in_cache
 
 #
 # RSS FEED
@@ -144,7 +145,8 @@ class ValidateIntent(DetailView):
     status = _("The requested intent does not exist!")
 
     def get_object(self):
-        space_object = get_object_or_404(Space, url=self.kwargs['space_url'])
+	space_url = self.kwargs['space_url']
+        space_object = get_or_insert_object_in_cache(Space, space_url, url=space_url)
 
         if self.request.user in space_object.admins.all() \
         or self.request.user in space_object.mods.all() \
@@ -235,8 +237,10 @@ class ViewSpaceIndex(DetailView):
     
     def get_object(self):
         space_url = self.kwargs['space_url']
-        space_object = get_object_or_404(Space, url=space_url)
-
+	space_object = get_or_insert_object_in_cache(
+			    Space, 
+			    space_url, 
+			    url=space_key)
         
         if space_object.public == True or self.request.user.is_staff or \
         self.request.user.is_superuser:
