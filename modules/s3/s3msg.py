@@ -201,6 +201,7 @@ class S3Msg(object):
         ltable = s3db.msg_log
         wtable = s3db.msg_workflow
         otable = s3db.msg_outbox
+        ctable = s3db.pr_contact
         
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
@@ -220,8 +221,18 @@ class S3Msg(object):
                 reply = ltable.insert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
-                otable.insert(message_id = reply.id,
-                              address = row.sender)
+                try:
+                    email = row.sender.split("<")[1].split(">")[0]
+                except:
+                    raise ValueError("Email address not defined!")
+                
+                query = (ctable.contact_method == "Email") & \
+                    (ctable.value == email)
+                pe_id = db(query).select(ctable.pe_id)
+                if pe_id:
+                    for id in pe_id:
+                        otable.insert(message_id = reply.id,
+                                      address = row.sender, pe_id = id)
                 db.commit()
 
         return    
