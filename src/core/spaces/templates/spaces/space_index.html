@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block content %}
+{% with request.user as request_user %}
 
     <div class="row">
         <div class="span12">
@@ -31,7 +32,7 @@
                 {% if get_place.mod_cal %}
                 <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
                 {% endif %}
-                {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                {% if request_user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Administration" %} <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -204,7 +205,7 @@
                             </ul>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                            {% if request_user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.debate.add_debate %}
@@ -379,7 +380,7 @@
                             <div id="datepicker"></div>
                         </div>
                         <div class="span4">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                            {% if request_user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_event %}
@@ -455,6 +456,7 @@
     </div>
     {% endcomment %}
 
+{% endwith %}
 {% endblock %}
 
 {% block footerimg %}
