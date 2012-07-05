@@ -315,18 +315,21 @@ class S3Parsing(object):
 	words = string.split(message)
 	message = ""
 	reponse = ""
+	ireport = False
 	for word in words:
 	    if "SI" and "#" in word:
 		report = word.split("#")[1]
 		report = int(report)
+		ireport = True
 	    elif soundex(word) == soundex("Yes"):
 		response = "Yes"
 	    elif soundex(word) == soundex("No"):
 		response = "No"
 	    else :
 		message+= word + " "
-		
-	db(rtable.ireport_id == report).update(comments=message, response = response)
+	
+	if ireport:	
+	    db(rtable.ireport_id == report).update(comments=message, response = response)
 			
 	db.commit()
 	return "Response Logged in the Report"
