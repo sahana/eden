@@ -205,7 +205,7 @@
                             </ul>
                         </div>
                         <div class="span4">
-                            {% if request_user in get_place.admins.all or request_user in get_place.mods.all or request_user.is_staff or request_user.is_superuser %}
+                            {% if user_is_admin %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.debate.add_debate %}
@@ -262,7 +262,7 @@
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
                         <div class="span4">
-                            {% if request_user in get_place.admins.all or request_user in get_place.mods.all or request_user.is_staff or request_user.is_superuser %}
+                            {% if user_is_admin %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.proposalsets.add_proposalset %}
@@ -316,7 +316,7 @@
                             </ul>
                         </div>
                         <div class="span4">
-                            {% if request_user in get_place.admins.all or request_user in get_place.mods.all or request_user.is_staff or request_user.is_superuser %}
+                            {% if user_is_admin %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_document %}
@@ -380,7 +380,7 @@
                             <div id="datepicker"></div>
                         </div>
                         <div class="span4">
-                            {% if request_user in get_place.admins.all or request_user in get_place.mods.all or request_user.is_staff or request_user.is_superuser %}
+                            {% if user_is_admin %}
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_event %}
