@@ -319,7 +319,7 @@ class S3Parsing(object):
 	reply = ""
 	
 	for word in words:
-	    if "SI" and "#" in word:
+	    if "SI#" in word:
 		report = word.split("#")[1]
 		report = int(report)
 		ireport = True
