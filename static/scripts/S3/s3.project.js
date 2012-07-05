@@ -13,32 +13,37 @@ S3.project_task_update_fields = function () {
     var url = S3.Ap.concat('/project/task_activity/options.s3json?field=activity_id');
     $.getJSONS3(url, function (data) {
         var selector = $('#project_task_activity_activity_id');
+        var initial_value = selector.val();
         var options = $('#project_task_activity_activity_id' + ' >option')
         var append = [];
-        var value, represent;
+        var value, represent, selected;
         $.each(data['option'], function() {
             value = this['@value'];
             represent = this['$'];
             if (typeof represent === 'undefined') {
                 represent = '';
             }
+            
             append.push(["<option value='", value, "'>", represent, "</option>"].join(''));
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
-            numeric_value = (+value)
-            if (numeric_value > value_high) {
-                value_high = numeric_value;
-                represent_high = represent;
-            }
+            //numeric_value = (+value)
+            //if (numeric_value > value_high) {
+            //    value_high = numeric_value;
+            //    represent_high = represent;
+            //}
         });
         // Clean up the caller
         options.remove();
         selector.append(append.join('')).change();
 
         // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html
-        //setTimeout( function() {
-                // Set the newly-created value (one with highest value)
-        //        selector.val(value_high).change();
-        //    }, 1);
+        setTimeout( function() {
+            // Set the newly-created value (one with highest value)
+            //selector.val(value_high).change();
+            if (initial_value) {
+                selector.val(initial_value).change();
+            }
+        }, 1);
 
         // Don't hassle users about unsaved data just for these dropdown settings
         S3ClearNavigateAwayConfirm();
@@ -47,6 +52,7 @@ S3.project_task_update_fields = function () {
     var url = S3.Ap.concat('/project/task/options.s3json?field=milestone_id');
     $.getJSONS3(url, function (data) {
         var selector = $('#project_task_milestone_id');
+        var initial_value = selector.val();
         var options = $('#project_task_milestone_id' + ' >option')
         var append = [];
         var value, represent;
@@ -58,21 +64,24 @@ S3.project_task_update_fields = function () {
             }
             append.push(["<option value='", value, "'>", represent, "</option>"].join(''));
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
-            numeric_value = (+value)
-            if (numeric_value > value_high) {
-                value_high = numeric_value;
-                represent_high = represent;
-            }
+            //numeric_value = (+value)
+            //if (numeric_value > value_high) {
+            //    value_high = numeric_value;
+            //    represent_high = represent;
+            //}
         });
         // Clean up the caller
         options.remove();
         selector.append(append.join('')).change();
 
         // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html
-        //setTimeout( function() {
-                // Set the newly-created value (one with highest value)
-        //        selector.val(value_high).change();
-        //    }, 1);
+        setTimeout( function() {
+            // Set the newly-created value (one with highest value)
+            //selector.val(value_high).change();
+            if (initial_value) {
+                selector.val(initial_value).change();
+            }
+        }, 1);
 
         // Don't hassle users about unsaved data just for these dropdown settings
         S3ClearNavigateAwayConfirm();

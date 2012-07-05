@@ -730,9 +730,8 @@ class S3HRJobModel(S3Model):
                                 sortby = "name",
                                 label = T("Job Role"),
                                 requires = IS_NULL_OR(
-                                            IS_ONE_OF(db,
-                                                      "hrm_job_role.id",
-                                                      "%(name)s",
+                                            IS_ONE_OF(db, "hrm_job_role.id",
+                                                      hrm_job_role_represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
                                 represent = hrm_job_role_represent,
@@ -747,9 +746,8 @@ class S3HRJobModel(S3Model):
                                 sortby = "name",
                                 label = T("Job Role"),
                                 requires = IS_NULL_OR(
-                                            IS_ONE_OF(db,
-                                                      "hrm_job_role.id",
-                                                      hrm_job_role_multirepresent,
+                                            IS_ONE_OF(db, "hrm_job_role.id",
+                                                      hrm_job_role_represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts,
                                                       sort=True,
@@ -1026,11 +1024,11 @@ class S3HRSkillModel(S3Model):
                             default=self.skill_type_default,
                             readable=skill_types,
                             writable=skill_types,
-                            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                        "hrm_skill_type.id",
-                                                        "%(name)s")),
-                            represent = lambda id: \
-                              (id and [db.hrm_skill_type[id].name] or [NONE])[0],
+                            requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "hrm_skill_type.id",
+                                                  self.hrm_skill_type_represent
+                                                  )),
+                            represent = self.hrm_skill_type_represent,
                             comment=S3AddResourceLink(f="skill_type",
                                                       label=label_create,
                                                       title=label_create,
@@ -1086,12 +1084,12 @@ class S3HRSkillModel(S3Model):
         skill_id = S3ReusableField("skill_id", table,
                         sortby = "name",
                         label = T("Skill"),
-                        requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                        "hrm_skill.id",
-                                                        "%(name)s",
-                                                        sort=True)),
-                        represent = lambda id: \
-                            (id and [db.hrm_skill[id].name] or [T("None")])[0],
+                        requires = IS_NULL_OR(
+                                    IS_ONE_OF(db, "hrm_skill.id",
+                                              self.hrm_skill_represent,
+                                              sort=True
+                                              )),
+                        represent = self.hrm_skill_represent,
                         comment = skill_help,
                         ondelete = "SET NULL",
                         widget = widget
@@ -1100,11 +1098,12 @@ class S3HRSkillModel(S3Model):
         multi_skill_id = S3ReusableField("skill_id", "list:reference hrm_skill",
                                          sortby = "name",
                                          label = T("Skills"),
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                "hrm_skill.id",
-                                                                "%(name)s",
-                                                                sort=True,
-                                                                multiple=True)),
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "hrm_skill.id",
+                                                                  self.hrm_skill_represent,
+                                                                  sort=True,
+                                                                  multiple=True
+                                                                  )),
                                          represent = hrm_skill_multirepresent,
                                          #comment = skill_help,
                                          ondelete = "SET NULL",
@@ -1165,11 +1164,10 @@ class S3HRSkillModel(S3Model):
                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "hrm_competency_rating.id",
-                                                              "%(name)s",
+                                                              self.hrm_competency_rating_represent,
                                                               orderby="~hrm_competency_rating.priority",
                                                               sort=True)),
-                                        represent = lambda id: \
-                                            (id and [db.hrm_competency_rating[id].name] or [NONE])[0],
+                                        represent = self.hrm_competency_rating_represent,
                                         comment = self.competency_rating_comment(),
                                         ondelete = "RESTRICT")
 
@@ -1267,9 +1265,8 @@ class S3HRSkillModel(S3Model):
         #                           label = T("Skill Provision"),
         #                           requires = IS_NULL_OR(IS_ONE_OF(db,
         #                                                           "hrm_skill_provision.id",
-        #                                                           "%(name)s")),
-        #                           represent = lambda id: \
-        #                            (id and [db.hrm_skill_provision[id].name] or [NONE])[0],
+        #                                                           self.hrm_skill_provision_represent)),
+        #                           represent = self.hrm_skill_provision_represent,
         #                           comment = DIV(A(label_create,
         #                                           _class="colorbox",
         #                                           _href=URL(f="skill_provision",
@@ -1411,11 +1408,10 @@ class S3HRSkillModel(S3Model):
                                     label = T("Course"),
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
-                                                          "%(name)s",
+                                                          self.hrm_course_represent,
                                                           filterby="organisation_id",
                                                           filter_opts=filter_opts)),
-                                    represent = lambda id: \
-                                        (id and [db.hrm_course[id].name] or [NONE])[0],
+                                    represent = self.hrm_course_represent,
                                     comment = course_help,
                                     ondelete = "RESTRICT",
                                     # Comment this to use a Dropdown & not an Autocomplete
@@ -1654,7 +1650,7 @@ class S3HRSkillModel(S3Model):
                         name="training_search_site",
                         label=T("Training Facility"),
                         field="training_event_id$site_id",
-                        represent ="%(name)s",
+                        represent = self.org_site_represent,
                         cols = 2
                       ),
                     S3SearchMinMaxWidget(
@@ -1763,10 +1759,11 @@ class S3HRSkillModel(S3Model):
         certificate_id = S3ReusableField("certificate_id", table,
                                          sortby = "name",
                                          label = T("Certificate"),
-                                         requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                         "hrm_certificate.id",
-                                                                         hrm_certificate_represent)),
-                                         represent = hrm_certificate_represent,
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "hrm_certificate.id",
+                                                                  self.hrm_certificate_represent)),
+                                         represent = self.hrm_certificate_represent,
                                          comment=S3AddResourceLink(f="certificate",
                                                                    label=label_create,
                                                                    title=label_create,
@@ -2022,6 +2019,25 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def hrm_certificate_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_certificate
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hrm_certification_onaccept(record):
         """
             Ensure that Skills are Populated from Certifications
@@ -2130,6 +2146,25 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def hrm_competency_rating_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_competency_rating
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hrm_course_duplicate(job):
         """
           This callback will be called when importing records
@@ -2156,6 +2191,25 @@ class S3HRSkillModel(S3Model):
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_course_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_course
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2188,6 +2242,25 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def hrm_skill_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_skill
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hrm_skill_type_duplicate(job):
         """
           This callback will be called when importing records
@@ -2214,6 +2287,25 @@ class S3HRSkillModel(S3Model):
                 job.id = _duplicate.id
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_skill_type_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_skill_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2417,9 +2509,6 @@ class S3HRExperienceModel(S3Model):
 
         T = current.T
 
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = current.deployment_settings.get_L10n_date_format()
-
         # =====================================================================
         # Professional Experience (Mission Record)
         #
@@ -2439,18 +2528,12 @@ class S3HRExperienceModel(S3Model):
                                                 default_from_profile=True)
                                     ),
                                   Field("job_title", label=T("Job Title")),
-                                  Field("start_date", "date",
-                                        label=T("Start Date"),
-                                        requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                        represent = s3_date_represent,
-                                        widget = S3DateWidget(),
-                                    ),
-                                  Field("end_date", "date",
-                                       label=T("End Date"),
-                                       requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                       represent = s3_date_represent,
-                                       widget = S3DateWidget(),
-                                    ),
+                                  s3_date("start_date",
+                                          label=T("Start Date"),
+                                          ),
+                                  s3_date("end_date",
+                                          label=T("End Date"),
+                                          ),
                                   Field("hours", "double",
                                         label=T("Hours")),
                                   Field("place",              # We could make this an event_id?
@@ -2497,11 +2580,6 @@ class S3HRProgrammeModel(S3Model):
 
         T = current.T
         db = current.db
-
-        NONE = current.messages.NONE
-
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = current.deployment_settings.get_L10n_date_format()
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2551,13 +2629,11 @@ class S3HRProgrammeModel(S3Model):
                                 sortby = "name",
                                 label = T("Programme"),
                                 requires = IS_NULL_OR(
-                                            IS_ONE_OF(db,
-                                                      "hrm_programme.id",
-                                                      "%(name)s",
+                                            IS_ONE_OF(db, "hrm_programme.id",
+                                                      self.hrm_programme_represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
-                                represent = lambda id: \
-                                    (id and [db.hrm_programme[id].name] or [NONE])[0],
+                                represent = self.hrm_programme_represent,
                                 comment=S3AddResourceLink(f="programme",
                                                           label=label_create,
                                                           title=label_create,
@@ -2579,12 +2655,7 @@ class S3HRProgrammeModel(S3Model):
                                    self.pr_person_represent(id, showlink=True)
                                ),
                              programme_id(),
-                             Field("date", "date",
-                                   label=T("Date"),
-                                   requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget(future=0)
-                                   ),
+                             s3_date(future=0),
                              Field("hours", "double",
                                    label=T("Hours")),
                              # Training records are auto-populated
@@ -2630,6 +2701,25 @@ class S3HRProgrammeModel(S3Model):
                     hrm_programme_virtual_fields = HRMProgrammeVirtualFields,
                     hrm_programme_person_virtual_fields = HRMProgrammePersonVirtualFields,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_programme_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hrm_programme
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def hrm_vars():
@@ -2749,18 +2839,22 @@ def hrm_human_resource_represent(id, show_link=False):
     return repr
 
 # =============================================================================
-def hrm_job_role_represent(id):
-    """ Represent a Job Role """
+def hrm_job_role_represent(id, row=None):
+    """ FK representation """
 
-    s3db = current.s3db
-    table = s3db.hrm_job_role
-    query = (table.id == id)
-    job = current.db(query).select(table.name,
-                                   limitby = (0, 1)).first()
-    try:
-        return job.name
-    except:
+    if row:
+        return row.name
+    elif not id:
         return current.messages.NONE
+
+    db = current.db
+    table = db.hrm_job_role
+    r = db(table.id == id).select(table.name,
+                                  limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # -----------------------------------------------------------------------------
 def hrm_job_role_multirepresent(opt):
@@ -2827,22 +2921,7 @@ def hrm_skill_multirepresent(opt):
     return vals
 
 # =============================================================================
-def hrm_certificate_represent(id):
-    """ Represent a Certificate """
-
-    if not id:
-        return current.messages.NONE
-
-    table = current.s3db.hrm_certificate
-    cert = current.db(table.id == id).select(table.name,
-                                             limitby = (0, 1)).first()
-    try:
-        return cert.name
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def hrm_training_event_represent(id):
+def hrm_training_event_represent(id, row=None):
     """ Represent a Training Event """
 
     if not id:

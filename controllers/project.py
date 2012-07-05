@@ -176,7 +176,7 @@ def project():
             if not r.component:
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
-    '''S3.start_end_date('project_project_start_date','project_project_end_date')''')
+'''S3.start_end_date('project_project_start_date','project_project_end_date')''')
                 if mode_task:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
@@ -540,8 +540,8 @@ def comment_parse(comment, comments, task_id=None):
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not task_id and comment.task_id:
-        s3mgr.load("project_task")
-        task = "re: %s" % db.project_task[comment.task_id].name
+        table = s3db.project_task
+        task = "re: %s" % table[comment.task_id].name
         header = DIV(author, " ", task)
         task_id = comment.task_id
     else:
@@ -578,46 +578,27 @@ def comment_parse(comment, comments, task_id=None):
 
 # -----------------------------------------------------------------------------
 def comments():
-    """ Function accessed by AJAX from discuss() to handle Comments """
+    """ Function accessed by AJAX from rfooter to handle Comments """
 
     try:
-        resourcename = request.args[0]
+        task_id = request.args[0]
     except:
-        raise HTTP(400)
-
-    try:
-        id = request.args[1]
-    except:
-        raise HTTP(400)
-
-    if resourcename == "task":
-        task_id = id
-    else:
         raise HTTP(400)
 
     table = s3db.project_comment
-    if task_id:
-        table.task_id.default = task_id
-        table.task_id.writable = table.task_id.readable = False
-    else:
-        table.task_id.label = T("Related to Task (optional)")
-        table.task_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                       "project_task.id",
-                                                       "%(name)s"
-                                                      ))
+    field = table.task_id
+    field.default = task_id
+    field.writable = field.readable = False
 
     # Form to add a new Comment
-    form = crud.create(table)
+    form = crud.create(table, formname="project_comment/%s" % task_id)
 
     # List of existing Comments
-    if task_id:
-        comments = db(table.task_id == task_id).select(table.id,
-                                                       table.parent,
-                                                       table.body,
-                                                       table.created_by,
-                                                       table.created_on)
-    else:
-        comments = ""
+    comments = db(field == task_id).select(table.id,
+                                           table.parent,
+                                           table.body,
+                                           table.created_by,
+                                           table.created_on)
 
     output = UL(_id="comments")
     for comment in comments:
@@ -626,7 +607,6 @@ def comments():
             thread = comment_parse(comment, comments, task_id=task_id)
             output.append(thread)
 
-    # Also see the outer discuss()
     script = "".join((
 '''$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false})
 $('#project_comment_parent__row1').hide()

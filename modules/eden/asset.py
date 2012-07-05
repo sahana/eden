@@ -583,50 +583,50 @@ class S3AssetModel(S3Model):
         current_log = asset_get_current_log(asset_id)
 
         type = request.get_vars.pop("type", None)
-        vars.datetime = vars.datetime.replace(tzinfo=None)
 
-        if vars.datetime and \
-            (not current_log.datetime or \
-             current_log.datetime <= vars.datetime):
-            # This is a current assignment
-            atable = s3db.asset_asset
-            tracker = S3Tracker()
-            asset_tracker = tracker(atable, asset_id)
+        thistime = vars.get("datetime", None)
+        if thistime and not current_log.datetime:
+            thistime = thistime.replace(tzinfo=None)
+            if current_log.datetime <= thistime:
+                # This is a current assignment
+                atable = s3db.asset_asset
+                tracker = S3Tracker()
+                asset_tracker = tracker(atable, asset_id)
 
-            if status == ASSET_LOG_SET_BASE:
-                # Set Base Location
-                asset_tracker.set_base_location(tracker(s3db.org_site,
-                                                        vars.site_id))
-                # Populate the address fields
-                s3_address_update(atable, asset_id)
-            if status == ASSET_LOG_ASSIGN:
-                if type == "person":#
-                    if vars.check_in_to_person:
-                        asset_tracker.check_in(s3db.pr_person, vars.person_id,
-                                               timestmp = vars.datetime)
-                    else:
-                        asset_tracker.set_location(vars.person_id,
-                                                   timestmp = vars.datetime)
-                    # Update main record for component
-                    db(atable.id == asset_id).update(
-                                                assigned_to_id=vars.person_id
-                                            )
+                if status == ASSET_LOG_SET_BASE:
+                    # Set Base Location
+                    asset_tracker.set_base_location(tracker(s3db.org_site,
+                                                            vars.site_id))
+                    # Populate the address fields
+                    s3_address_update(atable, asset_id)
+                elif status == ASSET_LOG_ASSIGN:
+                    if type == "person":#
+                        if vars.check_in_to_person:
+                            asset_tracker.check_in(s3db.pr_person, vars.person_id,
+                                                   timestmp = thistime)
+                        else:
+                            asset_tracker.set_location(vars.person_id,
+                                                       timestmp = thistime)
+                        # Update main record for component
+                        db(atable.id == asset_id).update(
+                                                    assigned_to_id=vars.person_id
+                                                )
 
-                elif type == "site":
-                    asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = vars.datetime)
-                elif type == "organisation":
-                    #if vars.site_or_location == SITE:
-                    asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = vars.datetime)
-                    #if vars.site_or_location == LOCATION:
-                    #    asset_tracker.set_location(vars.location_id,
-                    #                               timestmp = vars.datetime)
+                    elif type == "site":
+                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                               timestmp = thistime)
+                    elif type == "organisation":
+                        #if vars.site_or_location == SITE:
+                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                               timestmp = thistime)
+                        #if vars.site_or_location == LOCATION:
+                        #    asset_tracker.set_location(vars.location_id,
+                        #                               timestmp = thistime)
 
-            if status == ASSET_LOG_RETURN:
-                # Set location to base location
-                asset_tracker.set_location(asset_tracker,
-                                           timestmp = vars.datetime)
+                elif status == ASSET_LOG_RETURN:
+                    # Set location to base location
+                    asset_tracker.set_location(asset_tracker,
+                                               timestmp = thistime)
         return
 
 

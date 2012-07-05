@@ -146,12 +146,12 @@ class S3OrganisationModel(S3Model):
 
         sector_id = S3ReusableField("sector_id", "list:reference org_sector",
                                     sortby="abrv",
-                                    requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                    "org_sector.id",
-                                                                    "%(abrv)s",
-                                                                    sort=True,
-                                                                    multiple=True)),
-                                    represent = self.org_sector_represent,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_sector.id",
+                                                          self.org_sector_represent,
+                                                          sort=True,
+                                                          multiple=True)),
+                                    represent = self.org_sector_multirepresent,
                                     comment = S3AddResourceLink(c="org",
                                                 f="sector",
                                                 label=ADD_SECTOR,
@@ -249,10 +249,11 @@ class S3OrganisationModel(S3Model):
 
         organisation_type_id = S3ReusableField("organisation_type_id", table,
                                 sortby="name",
-                                requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                "org_organisation_type.id",
-                                                                 "%(name)s",
-                                                                 sort=True)),
+                                requires = IS_NULL_OR(
+                                            IS_ONE_OF(db, "org_organisation_type.id",
+                                                      self.org_organisation_type_represent,
+                                                      sort=True
+                                                      )),
                                 represent = self.org_organisation_type_represent,
                                 label = T("Organization Type"),
                                 comment = S3AddResourceLink(c="org",
@@ -393,10 +394,11 @@ class S3OrganisationModel(S3Model):
 
         organisation_id = S3ReusableField("organisation_id", table,
                                           sortby="name",
-                                          requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                                                          org_organisation_represent,
-                                                                          orderby="org_organisation.name",
-                                                                          sort=True)),
+                                          requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "org_organisation.id",
+                                                                  org_organisation_represent,
+                                                                  orderby="org_organisation.name",
+                                                                  sort=True)),
                                           represent = org_organisation_represent,
                                           label = T("Organization"),
                                           comment = organisation_comment,
@@ -407,13 +409,14 @@ class S3OrganisationModel(S3Model):
         organisations_id = S3ReusableField("organisations_id",
                                            "list:reference org_organisation",
                                            sortby="name",
-                                           requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                                                           "%(name)s",
-                                                                           multiple=True,
-                                                                           #filterby="acronym",
-                                                                           #filter_opts=vol_orgs,
-                                                                           orderby="org_organisation.name",
-                                                                           sort=True)),
+                                           requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "org_organisation.id",
+                                                                  org_organisation_represent,
+                                                                  multiple=True,
+                                                                  #filterby="acronym",
+                                                                  #filter_opts=vol_orgs,
+                                                                  orderby="org_organisation.name",
+                                                                  sort=True)),
                                            represent = self.organisation_multi_represent,
                                            label = T("Organizations"),
                                            ondelete = "SET NULL")
@@ -550,7 +553,7 @@ class S3OrganisationModel(S3Model):
         # donor_id = S3ReusableField("donor_id", "list:reference org_organisation",
                                    # sortby="name",
                                    # requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                                                   # "%(name)s",
+                                                                   # org_organisation_represent,
                                                                    # multiple=True,
                                                                    # filterby="type",
                                                                    # filter_opts=[4])),
@@ -653,7 +656,26 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_sector_represent(opt):
+    def org_sector_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.abrv
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.org_sector
+        r = db(table.id == id).select(table.abrv,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.abrv
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_sector_multirepresent(opt):
         """ Sector/Cluster representation for multiple=True options """
 
         db = current.db
@@ -742,22 +764,20 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_organisation_type_represent(id):
-        """ Organisation Type representation """
+    def org_organisation_type_represent(id, row=None):
+        """ FK representation """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
-        if isinstance(id, Row):
-            record = id
-        else:
-            db = current.db
-            table = db.org_organisation_type
-            query = (table.id == id)
-            record = db(query).select(table.name,
-                                      limitby=(0, 1)).first()
+        db = current.db
+        table = db.org_organisation_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
         try:
-            return record.name
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1188,10 +1208,10 @@ class S3FacilityModel(S3Model):
                              Field("facility_type_id", "list:reference org_facility_type",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_facility_type.id",
-                                                          "%(name)s",
+                                                          self.org_facility_type_represent,
                                                           sort=True,
                                                           multiple=True)),
-                                   represent = self.org_facility_type_represent,
+                                   represent = self.org_facility_type_multirepresent,
                                    comment = S3AddResourceLink(c="org",
                                                                f="facility_type",
                                                                label=ADD_FAC,
@@ -1231,10 +1251,29 @@ class S3FacilityModel(S3Model):
         return Storage(
                 )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_type_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.org_facility_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
     # -----------------------------------------------------------------------------
     @staticmethod
-    def org_facility_type_represent(opt):
-        """ Represent a facility type in option fields or list views """
+    def org_facility_type_multirepresent(opt):
+        """ Represent a facility type in list views """
 
         db = current.db
         table = db.org_facility_type
@@ -1326,9 +1365,10 @@ class S3RoomModel(S3Model):
 
         # Reusable field for other tables to reference
         room_id = S3ReusableField("room_id", table, sortby="name",
-                                  requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                  "org_room.id",
-                                                                  "%(name)s")),
+                                  requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_room.id",
+                                                          self.org_room_represent
+                                                          )),
                                   represent = self.org_room_represent,
                                   label = T("Room"),
                                   comment = room_comment,
@@ -1343,18 +1383,20 @@ class S3RoomModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def org_room_represent(id):
-        """ Represent a room in option fields or list views """
+    def org_room_represent(id, row=None):
+        """ FK representation """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
         table = db.org_room
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
         try:
-            return record.name
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1522,20 +1564,20 @@ class S3OfficeModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def org_office_represent(id):
-        """
-            Represent an Office
-        """
+    def org_office_represent(id, row=None):
+        """ FK representation """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
 
         db = current.db
         table = db.org_office
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
         try:
-            return record.name
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1673,7 +1715,8 @@ def org_root_organisation(organisation_id=None, pe_id=None):
     return None, None
 
 # =============================================================================
-def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
+def org_organisation_represent(id, row=None, showlink=False,
+                               acronym=True, parent=True):
     """
         Represent an Organisation in option fields or list views
 
@@ -1682,61 +1725,47 @@ def org_organisation_represent(id, showlink=False, acronym=True, parent=True):
         @param parent: whether to show the parent Org for branches
     """
 
-    if not id:
+    if row:
+        id = row.id
+        if parent:
+            db = current.db
+            table = db.org_organisation
+    elif id:
+        db = current.db
+        table = db.org_organisation
+        row = db(table.id == id).select(table.name,
+                                        table.acronym,
+                                        limitby = (0, 1)).first()
+    else:
         return current.messages.NONE
 
-    db = current.db
-    s3db = current.s3db
-
-    if not parent and isinstance(id, Row):
-        # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
-        org = id
-    elif parent:
-        otable = s3db.org_organisation
-        btable = s3db.org_organisation_branch
-        query = (otable.id == id)
-        left = btable.on(btable.branch_id == otable.id)
-        org = db(query).select(otable.name,
-                               otable.acronym,
-                               btable.organisation_id,
-                               left = left,
-                               limitby = (0, 1)).first()
-    else:
-        otable = s3db.org_organisation
-        query = (otable.id == id)
-        org = db(query).select(otable.name,
-                               otable.acronym,
-                               limitby = (0, 1)).first()
-
-    if org:
-        if parent:
-            represent = org.org_organisation.name
-            if "org_organisation_branch" in org:
-                # We're a Branch
-                query = (otable.id == org.org_organisation_branch.organisation_id)
-                parent = db(query).select(otable.name,
-                                          limitby = (0, 1)).first()
-                if parent:
-                    represent = "%s > %s" % (parent.name,
-                                            represent)
-            elif acronym and org.org_organisation.acronym:
-                represent = "%s (%s)" % (represent,
-                                         org.org_organisation.acronym)
-        else:
-            represent = org.name
-            if acronym and org.acronym:
-                represent = "%s (%s)" % (represent,
-                                         org.acronym)
-        if showlink:
-            represent = A(represent,
-                          _href = URL(c="org", f="organisation", args = [id]))
-    else:
+    try:
+        represent = row.name
+    except:
         return current.messages.UNKNOWN_OPT
+
+    r = None
+    if parent:
+        btable = db.org_organisation_branch
+        query = (btable.branch_id == id) & \
+                (table.id == btable.organisation_id)
+        r = db(query).select(table.name,
+                             limitby = (0, 1)).first()
+        if r:
+            represent = "%s > %s" % (parent.name, represent)
+
+    if not r and acronym and row.acronym:
+        represent = "%s (%s)" % (represent, row.acronym)
+
+    if showlink:
+        represent = A(represent,
+                      _href = URL(c="org", f="organisation",
+                                  args=id))
 
     return represent
 
 # =============================================================================
-def org_site_represent(site_id, show_link=True):
+def org_site_represent(id, row=None, show_link=True):
     """
         Represent a Facility in option fields or list views
 
@@ -1744,62 +1773,61 @@ def org_site_represent(site_id, show_link=True):
         @param show_link: whether to render the representation as link
     """
 
-    if not site_id:
+    if row:
+        db = current.db
+        s3db = current.s3db
+        id = row.site_id
+    elif id:
+        db = current.db
+        s3db = current.s3db
+        table = s3db.org_site
+        row = db(table._id == id).select(table.instance_type,
+                                         limitby=(0, 1)).first()
+    else:
         return current.messages.NONE
 
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-    stable = s3db.org_site
-    if isinstance(site_id, Row) and "instance_type" in site_id:
-        # Do not repeat the lookup if already done by IS_ONE_OF
-        site = site_id
-        site_id = site.site_id
-    else:
-        site = db(stable._id == site_id).select(stable.site_id,
-                                                stable.name,
-                                                stable.instance_type,
-                                                limitby=(0, 1)).first()
-        if not site:
-            return current.messages.UNKNOWN_OPT
+    instance_type = row.instance_type
+    instance_type_nice = table.instance_type.represent(instance_type)
+    tab = None
 
-    instance_type = site.instance_type
     try:
         table = s3db[instance_type]
     except:
         return current.messages.UNKNOWN_OPT
 
-    instance_type_nice = stable.instance_type.represent(instance_type)
-    tab = None
-
     if instance_type == "org_office":
-        # Need lookup the instance record for the "type" field
-        query = (table.site_id == site.site_id)
-        office = db(query).select(table.type, limitby=(0, 1)).first()
-        if not office:
-            return current.messages.UNKNOWN_OPT
-        if office.type == 5:
-            # Override instance type for warehouses
-            instance_type = "inv_warehouse"
+        # Need to lookup the instance record for the "type" field
+        r = db(table.site_id == id).select(table.id,
+                                           table.name,
+                                           table.type,
+                                           limitby=(0, 1)).first()
+        if r.type == 5:
+            # Override label for warehouses
             instance_type_nice = current.T("Warehouse")
             # Add the url to the stock tab for the warehouse
             tab = "inv_item"
-
-    if site.name:
-        represent = "%s (%s)" % (site.name, instance_type_nice)
     else:
-        represent = "[site %d] (%s)" % (id, instance_type_nice)
+        r = db(table.site_id == id).select(table.id,
+                                           table.name,
+                                           limitby=(0, 1)).first()
+
+    try:
+        if r.name:
+            represent = "%s (%s)" % (r.name, instance_type_nice)
+        else:
+            represent = "[site %d] (%s)" % (id, instance_type_nice)
+    except:
+        return current.messages.UNKNOWN_OPT
 
     if show_link:
-        record_id = current.manager.model.get_instance(stable, site_id)[2]
         c, f = instance_type.split("_", 1)
-        if record_id:
-            args = [record_id]
-            if tab:
-                args.append(tab)
-            # extension="" removes the .aaData extension in paginated views
-            represent = A(represent,
-                          _href = URL(c=c, f=f, args=args, extension=""))
+        args = [r.id]
+        if tab:
+            args.append(tab)
+        # extension="" removes the .aaData extension in paginated views
+        represent = A(represent,
+                      _href = URL(c=c, f=f, args=args, extension=""))
+
     return represent
 
 # =============================================================================
@@ -2035,7 +2063,7 @@ def org_office_controller():
                     #~ label=T("Organization"),
                     #~ comment=T("Search for office by organization."),
                     #~ field="organisation_id",
-                    #~ represent ="%(name)s",
+                    #~ represent = %(name)s,
                     #~ cols = 3
                   #~ ),
                   S3SearchOrgHierarchyWidget(
