@@ -297,5 +297,38 @@ class S3Parsing(object):
             return reply
 
         return "Please provide one of the keywords - person, hospital, organisation"
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_ireport(message=""):
+        """
+            Parse Replies To Deployment Request.
+        """
+
+        if not message:
+            return None
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+	rtable = s3db.irs_ireport_human_resource
+	words = string.split(message)
+	message = ""
+	reponse = ""
+	for word in words:
+	    if "SI" and "#" in word:
+		report = word.split("#")[1]
+		report = int(report)
+	    elif soundex(word) == soundex("Yes"):
+		response = "Yes"
+	    elif soundex(word) == soundex("No"):
+		response = "No"
+	    else :
+		message+= word + " "
+		
+	db(rtable.ireport_id == report).update(comments=message, response = response)
+			
+	db.commit()
+	return "Response Logged in the Report"
     
 # END =========================================================================
