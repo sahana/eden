@@ -87,6 +87,11 @@ def ireport():
                     #dtable.url.readable = dtable.url.writable = False
                     dtable.person_id.readable = dtable.person_id.writable = False
                 elif r.component_name == "human_resource":
+                    if not r.component_id:
+                        # Hide fields from create forms (list_fields override)
+                        htable = s3db.irs_ireport_human_resource
+                        htable.response.readable = htable.response.writable = False
+                        htable.reply.readable = htable.reply.writable = False
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_human_resource"] = Storage(
                         title_create = T("Assign Human Resource"),

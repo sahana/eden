@@ -479,8 +479,8 @@ class S3IRSModel(S3Model):
                                     link=link_table,
                                     joinby="ireport_id",
                                     key="human_resource_id",
-                                    # Dispatcher doesn't need to Add/Edit records, just Link
-                                    actuate="link",
+                                    # Dispatcher doesn't need to Add/Edit HRs, just Link
+                                    actuate="hide",
                                     autocomplete="name",
                                     autodelete=False
                                 )
@@ -1010,7 +1010,8 @@ class S3IRSResponseModel(S3Model):
 
     names = ["irs_ireport_human_resource",
              "irs_ireport_vehicle",
-             "irs_ireport_vehicle_human_resource"]
+             "irs_ireport_vehicle_human_resource"
+             ]
 
     def model(self):
 
@@ -1019,6 +1020,8 @@ class S3IRSResponseModel(S3Model):
 
         human_resource_id = self.hrm_human_resource_id
         ireport_id = self.irs_ireport_id
+
+        define_table = self.define_table
 
         settings = current.deployment_settings
         hrm = settings.get_hrm_show_staff()
@@ -1030,76 +1033,94 @@ class S3IRSResponseModel(S3Model):
         else:
             hrm_label = T("Staff/Volunteer")
 
+        def response_represent(opt):
+            if opt is None:
+                return current.messages.NONE
+            elif opt:
+                return T("Yes")
+            else:
+                return T("No")
+
         # ---------------------------------------------------------------------
         # Staff assigned to an Incident
         #
+        msg_enabled = settings.has_module("msg")
         tablename = "irs_ireport_human_resource"
-        table = self.define_table(tablename,
-                                  ireport_id(),
-                                  # @ToDo: Limit Staff to those which are not already assigned to an Incident
-                                  human_resource_id(label = hrm_label,
-                                                    # Simple dropdown is faster for a small team
-                                                    #widget=None,
-                                                    #comment=None,
-                                                    ),
-                                  Field("incident_commander", "boolean",
-                                        default = False,
-                                        label = T("Incident Commander"),
-                                        represent = lambda incident_commander: \
-                                                (T("No"),
-                                                 T("Yes"))[incident_commander == True]),
-                                  Field("response", "boolean",
-                                        label = T("Able to Respond?"),
-                                        writable = settings.has_module("msg"),
-                                        readable = settings.has_module("msg"),
-                                        represent = lambda response: \
-                                                (T("No"),
-                                                 T("Yes"))[response == True]),
-                                  s3_comments(label = T("Reply Message"),
-                                              writable = settings.has_module("msg"),
-                                              readable = settings.has_module("msg")),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             ireport_id(),
+                             # @ToDo: Limit Staff to those which are not already assigned to an Incident
+                             human_resource_id(label = hrm_label,
+                                               # Simple dropdown is faster for a small team
+                                               #widget=None,
+                                               #comment=None,
+                                               ),
+                             Field("incident_commander", "boolean",
+                                   default = False,
+                                   label = T("Incident Commander"),
+                                   represent = lambda incident_commander: \
+                                           (T("No"),
+                                            T("Yes"))[incident_commander == True]),
+                             Field("response", "boolean",
+                                   default = None,
+                                   label = T("Able to Respond?"),
+                                   writable = msg_enabled,
+                                   readable = msg_enabled,
+                                   represent = response_represent,
+                                   ),
+                             s3_comments("reply",
+                                         label = T("Reply Message"),
+                                         writable = msg_enabled,
+                                         readable = msg_enabled
+                                         ),
+                             *s3_meta_fields())
+
+        self.configure(tablename,
+                       list_fields=["id",
+                                    "human_resource_id",
+                                    "incident_commander",
+                                    "response",
+                                    "reply",
+                                    ])
 
         if not settings.has_module("vehicle"):
-            return None
+            return Storage()
 
         # ---------------------------------------------------------------------
         # Vehicles assigned to an Incident
         #
         asset_id = self.asset_asset_id
         tablename = "irs_ireport_vehicle"
-        table = self.define_table(tablename,
-                                  ireport_id(),
-                                  asset_id(
-                                        label = T("Vehicle"),
-                                        # Limit Vehicles to those which are not already assigned to an Incident
-                                        requires=self.irs_vehicle_requires,
-                                        comment = S3AddResourceLink(
-                                            c="vehicle",
-                                            f="vehicle",
-                                            label=T("Add Vehicle"),
-                                            tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+        table = define_table(tablename,
+                             ireport_id(),
+                             asset_id(
+                                    label = T("Vehicle"),
+                                    # Limit Vehicles to those which are not already assigned to an Incident
+                                    requires=self.irs_vehicle_requires,
+                                    comment = S3AddResourceLink(
+                                        c="vehicle",
+                                        f="vehicle",
+                                        label=T("Add Vehicle"),
+                                        tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
 
                                     ),
-                                  Field("datetime", "datetime",
-                                        label=T("Dispatch Time"),
-                                        widget = S3DateTimeWidget(future=0),
-                                        requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
-                                        default = current.request.utcnow),
-                                  self.super_link("site_id", "org_site"),
-                                  self.gis_location_id(label=T("Destination")),
-                                  Field("closed",
-                                        # @ToDo: Close all assignments when Incident closed
-                                        readable=False,
-                                        writable=False),
-                                  s3_comments(),
-                                  *s3_meta_fields())
-
-        # Field options
-        table.site_id.label = T("Fire Station")
-        table.site_id.readable = True
-        # Populated from fire_station_vehicle
-        #table.site_id.writable = True
+                             Field("datetime", "datetime",
+                                   label=T("Dispatch Time"),
+                                   widget = S3DateTimeWidget(future=0),
+                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
+                                   default = current.request.utcnow),
+                             self.super_link("site_id", "org_site",
+                                             label = T("Fire Station"),
+                                             readable = True,
+                                             # Populated from fire_station_vehicle
+                                             #writable = True
+                                             ),
+                             self.gis_location_id(label=T("Destination")),
+                             Field("closed",
+                                   # @ToDo: Close all assignments when Incident closed
+                                   readable=False,
+                                   writable=False),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         table.virtualfields.append(irs_ireport_vehicle_virtual_fields())
 
@@ -1107,35 +1128,34 @@ class S3IRSResponseModel(S3Model):
         # Which Staff are assigned to which Vehicle?
         #
         tablename = "irs_ireport_vehicle_human_resource"
-        table = self.define_table(tablename,
-                                  ireport_id(),
-                                  # @ToDo: Limit Staff to those which are not already assigned to an Incident
-                                  human_resource_id(label = hrm_label,
-                                                    # Simple dropdown is faster for a small team
-                                                    widget=None,
-                                                    comment=None,
-                                                    ),
-                                  asset_id(label=T("Vehicle"),
-                                           # @ToDo: Limit to Vehicles which are assigned to this Incident
-                                           requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db,
-                                                                  "asset_asset.id",
-                                                                  self.asset_represent,
-                                                                  filterby="type",
-                                                                  filter_opts=(1,),
-                                                                  sort=True)),
-                                          comment = S3AddResourceLink(
-                                            c="vehicle",
-                                            f="vehicle",
-                                            label=T("Add Vehicle"),
-                                            tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+        table = define_table(tablename,
+                             ireport_id(),
+                             # @ToDo: Limit Staff to those which are not already assigned to an Incident
+                             human_resource_id(label = hrm_label,
+                                               # Simple dropdown is faster for a small team
+                                               widget=None,
+                                               comment=None,
+                                               ),
+                             asset_id(label=T("Vehicle"),
+                                      # @ToDo: Limit to Vehicles which are assigned to this Incident
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "asset_asset.id",
+                                                              self.asset_represent,
+                                                              filterby="type",
+                                                              filter_opts=(1,),
+                                                              sort=True)),
+                                     comment = S3AddResourceLink(
+                                        c="vehicle",
+                                        f="vehicle",
+                                        label=T("Add Vehicle"),
+                                        tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
 
-                                          ),
-                                  Field("closed",
-                                        # @ToDo: Close all assignments when Incident closed
-                                        readable=False,
-                                        writable=False),
-                                  *s3_meta_fields())
+                                     ),
+                             Field("closed",
+                                   # @ToDo: Close all assignments when Incident closed
+                                   readable=False,
+                                   writable=False),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*

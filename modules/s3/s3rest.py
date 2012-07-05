@@ -64,7 +64,7 @@ from s3xml import S3XML
 from s3export import S3Exporter
 from s3method import S3Method
 from s3sync import S3Sync
-from s3resource import S3Resource
+from s3resource import S3Resource, S3MarkupStripper
 
 DEBUG = False
 if DEBUG:
