@@ -336,6 +336,6 @@ class S3Parsing(object):
 	else:
 	    reply = "Please provide the keyword SI# followed by the Inciden Report ID."
 	db.commit()
-	return 
+	return reply
     
 # END =========================================================================
