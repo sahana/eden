@@ -119,6 +119,7 @@ class S3MessagingModel(S3Model):
                        list_fields=["id",
                                     "inbound",
                                     "pe_id",
+                                    "sender",
                                     "fromaddress",
                                     "recipient",
                                     "subject",
