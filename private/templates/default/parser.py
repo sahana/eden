@@ -337,7 +337,7 @@ class S3Parsing(object):
 	if ireport:	
 	    db(rtable.ireport_id == report).update(comments=message, \
 	                                           response = response)
-	    reply = "Response Logged in the Report"
+	    reply = "Response Logged in the Report (Id: %d )"%report
 	else:
 	    reply = "Please provide the keyword SI followed by \
 	    the pound key (#),followed by the Inciden Report ID. e.g. SI#1"
