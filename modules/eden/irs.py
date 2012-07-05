@@ -728,6 +728,12 @@ class S3IRSModel(S3Model):
                     message = message,
                     url = url
                 )
+            #Demo Hack
+            opts1 = dict(
+                subject = T("Deployment Request"),
+                message = message
+            )
+            
             # Pre-populate the recipients list if we can
             # @ToDo: Check that we have valid contact details
             #        - slower, but useful to fail early if we need to
@@ -752,6 +758,9 @@ class S3IRSModel(S3Model):
             elif len(recipients) == 1:
                 # Send to this person
                 opts["recipient"] = recipients.first()["pr_person"].pe_id
+                #Demo hack
+                opts1["pe_id"] = recipients.first()["pr_person"].pe_id
+                
             else:
                 # Send to the Incident Commander
                 ic = False
@@ -764,7 +773,9 @@ class S3IRSModel(S3Model):
                     # Provide an Autocomplete the select the person to send the notice to
                     opts["recipient_type"] = "pr_person"
             output = msg.compose(**opts)
-
+            #Demo Hack
+            output1 = msg.send_by_pe_id(**opts1)
+            
             # Maintain RHeader for consistency
             if "rheader" in attr:
                 rheader = attr["rheader"](r)
