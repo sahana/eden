@@ -145,6 +145,7 @@ class ValidateIntent(DetailView):
     status = _("The requested intent does not exist!")
 
     def get_object(self):
+	# Makes sure the space ins't already in the cache before hitting the databass
 	space_url = self.kwargs['space_url']
         space_object = get_or_insert_object_in_cache(
 						Space, 
@@ -239,6 +240,7 @@ class ViewSpaceIndex(DetailView):
     template_name = 'spaces/space_index.html'
     
     def get_object(self):
+	# Makes sure the space ins't already in the cache before hitting the databass
         space_url = self.kwargs['space_url']
 	space_object = get_or_insert_object_in_cache(
 						Space, 
