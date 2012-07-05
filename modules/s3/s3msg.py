@@ -1235,7 +1235,8 @@ class S3Msg(object):
                 body = textParts[0]
                 # Store in DB
                 inbox_table.insert(sender=sender, subject=subject, body=body)
-                log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                log_table.insert(sender=sender, subject=subject, message=body, \
+                                 source_task_id=source_task_id, direction=True)
                 
                 if delete:
                     # Add it to the list of messages to delete later
@@ -1307,7 +1308,9 @@ class S3Msg(object):
                         body = textParts[0]
                         # Store in DB
                         inbox_table.insert(sender=sender, subject=subject, body=body)
-                        log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                        log_table.insert(sender=sender, subject=subject, \
+                                message=body, source_task_id=source_task_id, \
+                                direction = True)
                         
                         if delete:
                             # Add it to the list of messages to delete later
