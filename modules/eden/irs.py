@@ -62,13 +62,12 @@ class S3IRSModel(S3Model):
         datetime_represent = S3DateTime.datetime_represent
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        set_method = model.set_method
-        super_link = model.super_link
+        set_method = self.set_method
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # List of Incident Categories
@@ -638,7 +637,6 @@ class S3IRSModel(S3Model):
                                        left=left,
                                        limitby=(0, 1)).first()
             if vehicle:
-                current.manager.load("vehicle_vehicle")
                 vehicle = vehicle.id
                 query = (vtable.asset_id == vehicle) & \
                         (fvtable.vehicle_id == vtable.id) & \
@@ -1080,7 +1078,7 @@ class S3IRSResponseModel(S3Model):
                                             f="vehicle",
                                             label=T("Add Vehicle"),
                                             tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
-                                   
+
                                     ),
                                   Field("datetime", "datetime",
                                         label=T("Dispatch Time"),
@@ -1130,7 +1128,7 @@ class S3IRSResponseModel(S3Model):
                                             f="vehicle",
                                             label=T("Add Vehicle"),
                                             tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
-                                   
+
                                           ),
                                   Field("closed",
                                         # @ToDo: Close all assignments when Incident closed
@@ -1187,7 +1185,7 @@ def irs_rheader(r, tabs=[]):
         s3db = current.s3db
         settings = current.deployment_settings
         hrm_label = T("Responder(s)")
-            
+
         tabs = [(T("Report Details"), None),
                 (T("Photos"), "image"),
                 (T("Documents"), "document"),

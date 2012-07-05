@@ -116,13 +116,12 @@ class S3ProjectModel(S3Model):
         theme_percentages = settings.get_project_theme_percentages()
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        set_method = model.set_method
-        super_link = model.super_link
+        set_method = self.set_method
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Theme
@@ -928,12 +927,11 @@ class S3Project3WModel(S3Model):
 
         NONE = current.messages.NONE
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Project Location ('Community')
@@ -1342,7 +1340,7 @@ class S3Project3WModel(S3Model):
         lh = current.gis.get_location_hierarchy()
         lh = [(lh[opt], opt) for opt in lh]
         report_fields.extend(lh)
-        
+
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1392,7 +1390,7 @@ class S3Project3WModel(S3Model):
             for year in xrange(start_year, end_year + 1):
                 years[year] = year
             return years
-        
+
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1773,7 +1771,6 @@ class S3ProjectActivityModel(S3Model):
 
         T = current.T
         db = current.db
-        model = current.manager.model
 
         settings = current.deployment_settings
         mode_task = settings.get_project_mode_task()
@@ -1783,7 +1780,7 @@ class S3ProjectActivityModel(S3Model):
         #
         tablename = "project_activity"
         table = self.define_table(tablename,
-                                  model.super_link("doc_id", "doc_entity"),
+                                  self.super_link("doc_id", "doc_entity"),
                                   self.project_project_id(),
                                   Field("name",
                                         label = T("Short Description"),
@@ -1865,7 +1862,7 @@ class S3ProjectActivityModel(S3Model):
             create_next = URL(c="project", f="activity",
                               args=["[id]"])
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity="doc_entity",
                         create_next=create_next,
                         search_method=project_activity_search,
@@ -1925,7 +1922,7 @@ class S3ProjectActivityModel(S3Model):
         #              project_activity="activity_id")
 
         # Tasks
-        model.add_component("project_task",
+        self.add_component("project_task",
                             project_activity=Storage(
                                 link="project_task_activity",
                                 joinby="activity_id",
@@ -2069,14 +2066,13 @@ class S3ProjectFrameworkModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Project Frameworks
         #
         tablename = "project_framework"
         table = define_table(tablename,
-                             model.super_link("doc_id", "doc_entity"),
+                             self.super_link("doc_id", "doc_entity"),
                              Field("name",
                                    label = T("Name"),
                                    ),
@@ -2112,7 +2108,7 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Frameworks found")
         )
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity="doc_entity",
                         create_next=URL(f="framework",
                                         args=["[id]", "organisation"]),
@@ -2127,7 +2123,7 @@ class S3ProjectFrameworkModel(S3Model):
                                 ondelete = "CASCADE",
                                 )
 
-        model.add_component("org_organisation",
+        self.add_component("org_organisation",
                             project_framework=Storage(
                                 link="project_framework_organisation",
                                 joinby="framework_id",
@@ -2325,12 +2321,11 @@ class S3ProjectTaskModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Project Milestone
@@ -2652,7 +2647,7 @@ class S3ProjectTaskModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Custom Methods
-        model.set_method("project", "task",
+        self.set_method("project", "task",
                          method="dispatch",
                          action=self.task_dispatch)
 
@@ -2867,7 +2862,7 @@ class S3ProjectTaskModel(S3Model):
 
         if not id:
             return current.messages.NONE
-            
+
         db = current.db
         table = db.project_milestone
         record = db(tabe.id == id).select(table.name,
@@ -3042,7 +3037,7 @@ class S3ProjectTaskModel(S3Model):
             # Remove any other links
             links = s3mgr.define_resource("project", "task_project",
                                           filter=filter)
-            ondelete = s3mgr.model.get_config("project_task_project",
+            ondelete = current.s3db.get_config("project_task_project",
                                               "ondelete")
             links.delete(ondelete=ondelete)
 
@@ -3069,7 +3064,7 @@ class S3ProjectTaskModel(S3Model):
             # Remove any other links
             links = s3mgr.define_resource("project", "task_activity",
                                           filter=filter)
-            ondelete = s3mgr.model.get_config("project_task_activity",
+            ondelete = current.s3db.get_config("project_task_activity",
                                               "ondelete")
             links.delete(ondelete=ondelete)
 
@@ -3374,7 +3369,7 @@ def project_assignee_represent(id):
             return record.name
         else:
             return current.messages.UNKNOWN_OPT
-        
+
     return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -3511,7 +3506,7 @@ def project_location_represent(id, row=None):
     """
     """
 
-    return current.s3db.gis_location_lx_represent( 
+    return current.s3db.gis_location_lx_represent(
                s3_get_db_field_value(tablename = "project_location",
                                      fieldname = "location_id",
                                      look_up_value = id)
@@ -3819,7 +3814,7 @@ class S3ProjectBeneficiaryVirtualFields:
         if not start_date or not end_date:
             return [start_date.year or end_date.year]
         return [year for year in xrange(start_date.year,end_date.year+1)]
-        
+
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:
@@ -4297,8 +4292,8 @@ def project_task_controller():
                        listadd=False)
         try:
             # Add Virtual Fields
-            list_fields = s3mgr.model.get_config(tablename,
-                                                 "list_fields")
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
             list_fields.insert(4, (T("Project"), "project"))
             # Hide the Assignee column (always us)
             list_fields.remove("pe_id")
@@ -4326,8 +4321,8 @@ def project_task_controller():
         crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
         crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
         # Add Virtual Fields
-        list_fields = s3mgr.model.get_config(tablename,
-                                             "list_fields")
+        list_fields = s3db.get_config(tablename,
+                                      "list_fields")
         list_fields.insert(2, (T("Activity"), "activity"))
         s3db.configure(tablename,
                        # Block Add until we get the injectable component lookups
@@ -4343,8 +4338,8 @@ def project_task_controller():
     else:
         crud_strings.title_list = T("All Tasks")
         crud_strings.title_search = T("All Tasks")
-        list_fields = s3mgr.model.get_config(tablename,
-                                             "list_fields")
+        list_fields = s3db.get_config(tablename,
+                                      "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
         s3db.configure(tablename,

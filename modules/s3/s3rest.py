@@ -78,7 +78,6 @@ from gluon.tools import callback
 from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key
 from s3validators import IS_ONE_OF
 from s3xml import S3XML
-from s3model import S3Model, S3ModelExtensions
 from s3export import S3Exporter
 from s3method import S3Method
 from s3import import S3ImportJob
@@ -164,12 +163,6 @@ class S3RequestManager(object):
 
         # Register
         current.manager = self
-
-        # Helpers
-        self.model = S3ModelExtensions()
-        self.configure = self.model.configure
-        self.load = S3Model.table
-        self.loader = self.model.loader
 
         self.xml = S3XML()
         self.exporter = S3Exporter()
@@ -557,14 +550,14 @@ class S3RequestManager(object):
     # -------------------------------------------------------------------------
     def onaccept(self, table, record, method="create"):
 
-        model = self.model
+        s3db = current.s3db
         if hasattr(table, "_tablename"):
             tablename = table._tablename
         else:
             tablename = table
 
-        onaccept = model.get_config(tablename, "%s_onaccept" % method,
-                   model.get_config(tablename, "onaccept"))
+        onaccept = s3db.get_config(tablename, "%s_onaccept" % method,
+                   s3db.get_config(tablename, "onaccept"))
         if onaccept:
             callback(onaccept, record, tablename=tablename)
         return
@@ -572,14 +565,14 @@ class S3RequestManager(object):
     # -------------------------------------------------------------------------
     def onvalidation(self, table, record, method="create"):
 
-        model = self.model
+        s3db = current.s3db
         if hasattr(table, "_tablename"):
             tablename = table._tablename
         else:
             tablename = table
 
-        onvalidation = model.get_config(tablename, "%s_onvalidation" % method,
-                       model.get_config(tablename, "onvalidation"))
+        onvalidation = s3db.get_config(tablename, "%s_onvalidation" % method,
+                       s3db.get_config(tablename, "onvalidation"))
         if onaccept:
             callback(onvalidation, record, tablename=tablename)
         return
@@ -917,7 +910,7 @@ class S3Request(object):
 
         # Get the names of all components
         tablename = "%s_%s" % (self.prefix, self.name)
-        components = current.manager.model.get_components(tablename)
+        components = current.s3db.get_components(tablename)
         if components:
             components = components.keys()
         else:
@@ -985,6 +978,7 @@ class S3Request(object):
             @param attr: Parameters for the method handler
         """
 
+        s3db = current.s3db
         manager = current.manager
         response = current.response
         session = current.session
@@ -1045,7 +1039,7 @@ class S3Request(object):
 
         # Custom action?
         if not self.custom_action:
-            self.custom_action = manager.model.get_method(self.prefix, self.name,
+            self.custom_action = s3db.get_method(self.prefix, self.name,
                                                           component_name=self.component_name,
                                                           method=self.method)
         # Method handling
@@ -1927,6 +1921,7 @@ class S3Resource(object):
             @param components: component name (or list of component names)
         """
 
+        s3db = current.s3db
         manager = current.manager
 
         self.ERROR = manager.ERROR
@@ -1950,7 +1945,7 @@ class S3Resource(object):
         # Table properties
         tablename = "%s_%s" % (prefix, name)
         try:
-            table = current.s3db[tablename]
+            table = s3db[tablename]
         except:
             manager.error = "Undefined table: %s" % tablename
             raise # KeyError(manager.error)
@@ -2002,12 +1997,11 @@ class S3Resource(object):
         self.linked = linked # the linked resource
 
         # Primary resource - attach components
-        model = manager.model
         self.components = Storage()
         self.links = Storage()
         if self.parent is None:
             # Attach components
-            hooks = model.get_components(self.table, names=components)
+            hooks = s3db.get_components(self.table, names=components)
             for alias in hooks:
                 self._attach(alias, hooks[alias])
 
@@ -2039,7 +2033,7 @@ class S3Resource(object):
         self.import_deleted = []
 
         # Search
-        self.search = model.get_config(self.tablename, "search_method", None)
+        self.search = s3db.get_config(self.tablename, "search_method", None)
         if not self.search:
             if "name" in self.table:
                 T = current.T
@@ -2358,9 +2352,9 @@ class S3Resource(object):
         clear_session = manager.clear_session
         DELETED = manager.DELETED
 
-        model = manager.model
-        get_config = model.get_config
-        delete_super = model.delete_super
+        s3db = current.s3db
+        get_config = s3db.get_config
+        delete_super = s3db.delete_super
 
         INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
         permit = self.permit
@@ -3333,14 +3327,14 @@ class S3Resource(object):
             @param marker: the marker for GIS encoding
         """
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
         xml = manager.xml
 
         tablename = self.tablename
         table = self.table
 
-        postprocess = model.get_config(tablename, "onexport", None)
+        postprocess = s3db.get_config(tablename, "onexport", None)
 
         default = (None, None)
 
@@ -4064,7 +4058,7 @@ class S3Resource(object):
         if tn and tn != self.alias:
             # Field in a component
             if tn not in self.components:
-                hook = manager.model.get_component(self.tablename, tn)
+                hook = s3db.get_component(self.tablename, tn)
                 if hook:
                     self._attach(tn, hook)
             if tn in self.components:
@@ -4489,9 +4483,9 @@ class S3Resource(object):
 
         ltable = self.table
         ltn = ltable._tablename
-        model = current.manager.model
-        onaccept = model.get_config(ltn, "create_onaccept",
-                   model.get_config(ltn, "onaccept", None))
+        s3db = current.s3db
+        onaccept = s3db.get_config(ltn, "create_onaccept",
+                   s3db.get_config(ltn, "onaccept", None))
 
         # Create the link if it does not already exist
         query = ((ltable[lkey] == _lkey) &
@@ -5417,8 +5411,8 @@ class S3ResourceFilter:
                 else:
                     return 0
         else:
-            list_fields = current.manager.model.get_config(tablename,
-                                                           "list_fields")
+            list_fields = current.s3db.get_config(tablename,
+                                                  "list_fields")
             sqltable = resource.sqltable
             rows = sqltable(fields=list_fields,
                             left=left,
@@ -6428,10 +6422,9 @@ class S3RecordMerger(object):
         form.vars.update(data)
         success = current.db(table._id==row[table._id]).update(**data)
         if success:
-            manager = current.manager
-            manager.model.update_super(table, form.vars)
+            current.s3db.update_super(table, form.vars)
             current.auth.s3_set_record_owner(table, row[table._id], force_update=True)
-            manager.onaccept(table, form, method="update")
+            current.manager.onaccept(table, form, method="update")
         else:
             self.raise_error("Could not update %s.%s" %
                             (table._tablename, id))
@@ -6444,9 +6437,8 @@ class S3RecordMerger(object):
             replaced_by = {str(id): replaced_by}
 
         prefix, name = table._tablename.split("_", 1)
-        manager = current.manager
-        resource = manager.define_resource(prefix, name, id=id)
-        ondelete = manager.model.get_config(resource.tablename, "ondelete")
+        resource = current.manager.define_resource(prefix, name, id=id)
+        ondelete = current.s3db.get_config(resource.tablename, "ondelete")
         success = resource.delete(ondelete=ondelete,
                                   replaced_by=replaced_by,
                                   cascade=True)
@@ -6493,7 +6485,7 @@ class S3RecordMerger(object):
                    constraints) must be declared in the table configuration
                    of the referenced table like:
 
-                   s3mgr.configure(tablename, referenced_by=[(tablename, fieldname)])
+                   s3db.configure(tablename, referenced_by=[(tablename, fieldname)])
 
                    This does not apply for list:references which will be found
                    automatically.
@@ -6509,7 +6501,6 @@ class S3RecordMerger(object):
 
         db = current.db
         manager = current.manager
-        model = manager.model
 
         resource = self.resource
         table = resource.table
@@ -6572,7 +6563,7 @@ class S3RecordMerger(object):
         referenced_by = table._referenced_by
 
         # Append virtual references
-        virtual_references = model.get_config(tablename, "referenced_by")
+        virtual_references = s3db.get_config(tablename, "referenced_by")
         if virtual_references:
             referenced_by.extend(virtual_references)
 
@@ -6591,7 +6582,7 @@ class S3RecordMerger(object):
         # Update all references
         for tn, fn in referenced_by:
 
-            se = model.get_config(tn, "super_entity")
+            se = s3db.get_config(tn, "super_entity")
             if is_super_entity and \
                (isinstance(se, (list, tuple)) and tablename in se or \
                 se == tablename):
@@ -6673,7 +6664,7 @@ class S3RecordMerger(object):
                 update_record(rtable, row[rtable._id], row, data)
 
         # Merge super-entity records
-        se = model.get_config(tablename, "super_entity")
+        se = s3db.get_config(tablename, "super_entity")
         if se is not None:
             if not isinstance(se, (list, tuple)):
                 se = [se]

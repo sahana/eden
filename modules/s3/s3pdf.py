@@ -80,6 +80,7 @@ except ImportError:
 
 from s3method import S3Method
 from s3utils import S3DateTime
+import s3codec
 
 try:
     from PIL import Image
@@ -513,7 +514,7 @@ class S3PDF(S3Method):
                 if not current.deployment_settings.has_module("ocr"):
                     r.error(501, self.ERROR.OCR_DISABLED)
 
-                manager.load("ocr_meta")
+                current.s3db.table("ocr_meta")
                 formUUID = uuid.uuid1()
                 self.newOCRForm(formUUID)
 
@@ -560,7 +561,7 @@ class S3PDF(S3Method):
                         r.error(501, manager.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given job_uuid
-                    manager.load("ocr_meta")
+                    current.s3db.table("ocr_meta")
                     statustable = db[statustablename]
                     query = (statustable.job_uuid == jobuuid)
                     row = db(query).select().first()
@@ -657,7 +658,7 @@ class S3PDF(S3Method):
                             r.error(501, manager.ERROR.BAD_REQUEST)
 
                     # Load ocr tables
-                    manager.load("ocr_meta")
+                    current.s3db.table("ocr_meta")
                     table = db.ocr_field_crops
                     if value:
                         query = (table.image_set_uuid == setuuid) & \
@@ -699,7 +700,7 @@ class S3PDF(S3Method):
                         r.error(501, manager.ERROR.BAD_REQUEST)
 
                     # Check if operation is valid on the given set_uuid
-                    manager.load("ocr_meta")
+                    current.s3db.table("ocr_meta")
                     statustable = db[statustablename]
                     query = (statustable.image_set_uuid == setuuid)
                     row = db(query).select().first()
@@ -900,7 +901,7 @@ class S3PDF(S3Method):
                         r.error(501, self.ERROR.NO_UTC_OFFSET)
 
                     # Load OCR tables
-                    manager.load("ocr_meta")
+                    current.s3db.table("ocr_meta")
 
                     # Create an html image upload form for user
                     formuuid = r.vars.get("formuuid", None)
@@ -955,7 +956,7 @@ class S3PDF(S3Method):
                 # Set id for given form
                 setuuid = uuid.uuid1()
 
-                manager.load("ocr_meta")
+                current.s3db.table("ocr_meta")
 
                 # Check for upload format
                 if uploadformat == "image":
@@ -1122,7 +1123,7 @@ class S3PDF(S3Method):
                     jobuuid = r.vars.pop("jobuuid")
 
                     # Check if operation is valid on the given job_uuid
-                    manager.load("ocr_meta")
+                    current.s3db.table("ocr_meta")
                     statustable = db["ocr_form_status"]
                     query = (statustable.job_uuid == jobuuid)
                     row = db(query).select().first()
@@ -3052,7 +3053,7 @@ class S3PDFDataSource:
                 fields = [table.id]
             list_fields = [f.name for f in fields]
         else:
-            indices = manager.model.indices
+            indices = s3codec.S3Codec.indices
             list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby

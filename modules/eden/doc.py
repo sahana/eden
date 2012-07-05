@@ -62,12 +62,11 @@ class S3DocumentLibrary(S3Model):
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Document-referencing entities

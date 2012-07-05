@@ -77,7 +77,7 @@ class S3ClimateModel(S3Model):
 
         NONE = current.messages.NONE
 
-        configure = current.manager.model.configure
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -448,7 +448,7 @@ class S3ClimateModel(S3Model):
             parameter_id = vars.parameter_id
             table = db.climate_sample_table_spec
             query = (table.id == parameter_id)
-            parameter_table = db(query).select(table.id,     
+            parameter_table = db(query).select(table.id,
                                                table.date_mapping,
                                                limitby=(0, 1)).first()
             parameter_table_id = parameter_table.id

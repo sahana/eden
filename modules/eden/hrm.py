@@ -82,7 +82,6 @@ class S3HRModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         crud_strings = current.response.s3.crud_strings
-        model = current.manager.model
 
         # =========================================================================
         # Human Resource
@@ -105,7 +104,7 @@ class S3HRModel(S3Model):
 
         tablename = "hrm_human_resource"
         table = self.define_table(tablename,
-                                  model.super_link("track_id", "sit_trackable"),
+                                  self.super_link("track_id", "sit_trackable"),
                                   self.org_organisation_id(
                                     widget=S3OrganisationAutocompleteWidget(
                                         default_from_profile=True),
@@ -372,8 +371,8 @@ class S3HRModel(S3Model):
         else:
             # Being added as a component to Org, Site or Project
             hrm_url = None
-        
-        model.configure(tablename,
+
+        self.configure(tablename,
                         super_entity = "sit_trackable",
                         deletable = current.deployment_settings.get_hrm_deletable(),
                         search_method = human_resource_search,
@@ -706,7 +705,7 @@ class S3HRJobModel(S3Model):
         else:
             label_create = T("Add New Job Role")
             tooltip = T("Add a new job role to the catalog.")
-        
+
         crud_strings[tablename] = Storage(
             title_create = T("Add Job Role"),
             title_display = T("Job Role Details"),
@@ -877,7 +876,7 @@ class S3HRJobModel(S3Model):
                                   ##Field("code"),
                                   #Field("title"),
                                   #Field("description", "text"),
-                                  #model.super_link("site_id", "org_site",
+                                  #self.super_link("site_id", "org_site",
                                                   #label=T("Facility"),
                                                   #readable=False,
                                                   #writable=False,
@@ -979,13 +978,12 @@ class S3HRSkillModel(S3Model):
         s3_date_format = settings.get_L10n_date_format()
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         s3_has_role = auth.s3_has_role
-        super_link = model.super_link
+        super_link = self.super_link
 
         root_org = auth.root_org()
 
@@ -2505,7 +2503,6 @@ class S3HRProgrammeModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         root_org = current.auth.root_org()
 
@@ -2564,7 +2561,7 @@ class S3HRProgrammeModel(S3Model):
                                                           tooltip=T("Add a new programme to the catalog.")),
                                 ondelete = "SET NULL")
 
-        model.add_component("hrm_programme_hours", hrm_programme=Storage(
+        self.add_component("hrm_programme_hours", hrm_programme=Storage(
                                                     name="person",
                                                     joinby="programme_id"))
 
@@ -2614,7 +2611,7 @@ class S3HRProgrammeModel(S3Model):
             msg_record_deleted = T("Hours deleted"),
             msg_list_empty = T("Currently no hours recorded for this volunteer"))
 
-        model.configure(tablename,
+        self.configure(tablename,
                         list_fields=["id",
                                      "training",
                                      "programme_id",

@@ -302,7 +302,7 @@ class S3Cube(S3CRUD):
 
                 # Fallback to list view ---------------------------------------
                 #
-                manager.configure(self.tablename, insertable=False)
+                current.s3db.configure(self.tablename, insertable=False)
                 output = self.select(r, **attr)
                 response.s3.actions = [
                         dict(url=r.url(method="", id="[id]", vars=r.get_vars),
@@ -601,8 +601,8 @@ class S3Report:
             @param layers: the report layers as [(fact, aggregate_method)]
         """
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
 
         # Initialize ----------------------------------------------------------
         #
@@ -631,8 +631,8 @@ class S3Report:
 
         # Get the fields ------------------------------------------------------
         #
-        fields = model.get_config(resource.tablename, "report_fields",
-                 model.get_config(resource.tablename, "list_fields"))
+        fields = s3db.get_config(resource.tablename, "report_fields",
+                 s3db.get_config(resource.tablename, "list_fields"))
         self._get_fields(fields=fields)
 
         # Retrieve the records --------------------------------------------------
@@ -1392,15 +1392,15 @@ class S3ContingencyTable(TABLE):
 
         DEFAULT = ""
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
 
         if field in lfields:
             lf = lfields[field]
         else:
             return DEFAULT
         get_config = lambda key, default, tablename=tablename: \
-                     model.get_config(tablename, key, default)
+                     s3db.get_config(tablename, key, default)
         list_fields = get_config("list_fields", None)
         fields = get_config(key, list_fields)
         if fields:

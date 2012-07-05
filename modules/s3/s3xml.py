@@ -1297,9 +1297,8 @@ class S3XML(S3Codec):
                 ftype = str(field.type)
                 if ftype[:9] == "reference":
                     ktablename = ftype[10:]
-                    current.manager.load(ktablename)
                     try:
-                        ktable = current.db[ktablename]
+                        ktable = current.s3db[ktablename]
                     except:
                         pass
                     else:

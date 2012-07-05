@@ -49,7 +49,7 @@ def index():
         module_name = T("Person Registry")
 
     # Load Model
-    s3mgr.load("pr_address")
+    s3db.table("pr_address")
 
     def prep(r):
         if r.representation == "html":
@@ -114,9 +114,9 @@ def person():
                 #(s3db.auth_user.registration_key != "disabled")
 
     # Custom Method for Contacts
-    s3mgr.model.set_method(module, resourcename,
-                           method="contacts",
-                           action=s3db.pr_contacts)
+    s3db.set_method(module, resourcename,
+                    method="contacts",
+                    action=s3db.pr_contacts)
 
     def prep(r):
         if r.representation == "json" and \
@@ -147,7 +147,7 @@ def person():
 
             #elif r.component_name == "pe_subscription":
             #    # Load all Tables
-            #    s3mgr.model.load_all_models()
+            #    s3db.load_all_models()
             #    db.pr_pe_subscription.resource.requires = IS_IN_SET(db.tables)
 
             elif r.id:
@@ -205,7 +205,7 @@ def person():
         return output
     s3.postp = postp
 
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "group_id",
                                  "group_head",
@@ -232,7 +232,7 @@ def person():
                        (T("Subscription Details"), "subscription")]
     tabs.append((T("Map Settings"), "config"))
 
-    s3mgr.configure("pr_person", listadd=False, insertable=True)
+    s3db.configure("pr_person", listadd=False, insertable=True)
 
     output = s3_rest_controller(main="first_name",
                                 extra="last_name",
@@ -253,7 +253,7 @@ def address():
         person_id = request.get_vars.get("person", None)
         controller = request.get_vars.get("controller", None)
         if person_id and controller:
-            s3mgr.configure("pr_address",
+            s3db.configure("pr_address",
                             create_next=URL(c=controller,
                                             f="person",
                                             args=[person_id, "contacts"]),
@@ -284,7 +284,7 @@ def contact():
     def prep(r):
         person_id = request.get_vars.get("person", None)
         if person_id:
-            s3mgr.configure("pr_contact",
+            s3db.configure("pr_contact",
                             create_next=URL(f="person",
                                             args=[person_id, "contacts"]),
                             update_next=URL(f="person",
@@ -313,7 +313,7 @@ def contact_emergency():
     def prep(r):
         person_id = request.get_vars.get("person", None)
         if person_id:
-            s3mgr.configure("pr_contact_emergency",
+            s3db.configure("pr_contact_emergency",
                             create_next=URL(f="person",
                                             args=[person_id, "contacts"]),
                             update_next=URL(f="person",
@@ -352,7 +352,7 @@ def group():
 
     s3.filter = (table.system == False) # do not show system groups
 
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "person_id",
                                  "group_head",

@@ -66,10 +66,9 @@ class SyncDataModel(S3Model):
         crud_strings = s3.crud_strings
         define_table = self.define_table
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
-        set_method = model.set_method
+        add_component = self.add_component
+        configure = self.configure
+        set_method = self.set_method
 
         scheduler_task_id = s3.scheduler_task_id
         s3_datetime_represent = lambda dt: \

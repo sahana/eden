@@ -72,12 +72,11 @@ class S3EventModel(S3Model):
         s3_datetime_format = settings.get_L10n_datetime_format()
         s3_utc_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
-        
+
         # ---------------------------------------------------------------------
         # Events
         #
@@ -538,7 +537,7 @@ class S3EventAssetModel(S3Model):
 
         if not current.deployment_settings.has_module("asset"):
             return None
-        
+
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -630,7 +629,7 @@ class S3EventIReportModel(S3Model):
 
         if not current.deployment_settings.has_module("irs"):
             return None
-        
+
         T = current.T
 
         # ---------------------------------------------------------------------
@@ -762,7 +761,7 @@ class S3EventTaskModel(S3Model):
 
         if not current.deployment_settings.has_module("project"):
             return None
-        
+
         T = current.T
 
         # ---------------------------------------------------------------------

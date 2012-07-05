@@ -62,7 +62,7 @@ class S3MembersModel(S3Model):
         s3_date_represent = S3DateTime.date_represent
         s3_date_format = settings.get_L10n_date_format()
 
-        configure = current.manager.model.configure
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 

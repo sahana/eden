@@ -115,11 +115,9 @@ class S3Sync(S3Method):
         """
 
         db = current.db
-        manager = current.manager
 
         tablename = "sync_status"
-        manager.load(tablename)
-        table = db[tablename]
+        table = current.s3db[tablename]
         row = db().select(table.ALL, limitby=(0, 1)).first()
         if not row:
             row = Storage()
@@ -132,11 +130,9 @@ class S3Sync(S3Method):
         """
 
         db = current.db
-        manager = current.manager
 
         tablename = "sync_status"
-        manager.load(tablename)
-        table = db[tablename]
+        table = current.s3db[tablename]
 
         data = Storage([(k, attr[k]) for k in attr if k in table.fields])
         data.update(timestmp = datetime.datetime.utcnow())
@@ -157,11 +153,9 @@ class S3Sync(S3Method):
         if not hasattr(self, "config"):
 
             db = current.db
-            manager = current.manager
 
             tablename = "sync_config"
-            manager.load(tablename)
-            table = db[tablename]
+            table = current.s3db[tablename]
 
             row = db().select(table.ALL, limitby=(0, 1)).first()
             self.config = row
@@ -564,8 +558,7 @@ class S3Sync(S3Method):
 
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository_id = row.id
@@ -726,8 +719,7 @@ class S3Sync(S3Method):
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository = row
@@ -797,8 +789,7 @@ class S3Sync(S3Method):
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository = row
@@ -922,12 +913,12 @@ class S3Sync(S3Method):
         """
 
         db = current.db
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
         xml = manager.xml
 
         tablename = resource.tablename
-        resolver = model.get_config(tablename, "onconflict")
+        resolver = s3db.get_config(tablename, "onconflict")
 
         _debug("Resolving conflict in %s" % resource.tablename)
         _debug("Repository: %s" % repository.name)
@@ -943,8 +934,7 @@ class S3Sync(S3Method):
                 _debug("Accept per custom rule")
         else:
             _debug("Applying default rule")
-            manager.load("sync_task")
-            ttable = db.sync_task
+            ttable = s3db.sync_task
             policies = S3ImportItem.POLICY
             query = (ttable.repository_id == repository.id) & \
                     (ttable.resource_name == tablename) & \
@@ -1026,8 +1016,7 @@ class S3SyncLog(S3Method):
             if r.interactive:
                 # READ for sync log for this resource
                 here = "%s.%s" % (r.controller, r.function)
-                manager.load(self.TABLENAME)
-                sync_log = db[self.TABLENAME]
+                sync_log = current.s3db[self.TABLENAME]
                 sync_log.resource_name.readable = False
                 query = (sync_log.resource_name == resource.tablename)
                 r = manager.parse_request(prefix="sync", name="log", args=[])
@@ -1098,9 +1087,7 @@ class S3SyncLog(S3Method):
                         remote=remote,
                         message=message)
 
-        manager = current.manager
-        manager.load(self.TABLENAME)
-        table = current.db[self.TABLENAME]
+        table = current.s3db[self.TABLENAME]
 
         table.insert(**entry)
         return

@@ -1231,7 +1231,7 @@ class S3CRUD(S3Method):
 
                 vars = form.vars
                 # Update super entity links
-                manager.model.update_super(table, vars)
+                current.s3db.update_super(table, vars)
 
                 # Update component link
                 if link and link.postprocess is None:
@@ -1775,13 +1775,13 @@ class S3CRUD(S3Method):
         """
 
         db = current.db
-        model = current.manager.model
+        s3db = current.s3db
         request = current.request
         T = current.T
 
         error_message = T("Could not create record.")
         get_config = lambda key, tablename=component: \
-                            model.get_config(tablename, key, None)
+                            s3db.get_config(tablename, key, None)
 
         try:
             selected = form.vars[key]
@@ -1806,7 +1806,7 @@ class S3CRUD(S3Method):
                         form.errors.update(_form.errors)
                         return
                     # Super-entity update
-                    model.update_super(table, dict(id=selected))
+                    s3db.update_super(table, dict(id=selected))
                     # Onaccept
                     onaccept = get_config("update_onaccept") or \
                                get_config("onaccept")
@@ -1827,7 +1827,7 @@ class S3CRUD(S3Method):
                         request.post_vars.update({key:str(selected)})
                         form.vars.update({key:selected})
                         # Super-entity update
-                        model.update_super(table, dict(id=selected))
+                        s3db.update_super(table, dict(id=selected))
                         # Onaccept
                         onaccept = get_config("create_onaccept") or \
                                    get_config("onaccept")
@@ -1852,19 +1852,18 @@ class S3CRUD(S3Method):
         c = None
         f = None
 
-        manager = current.manager
+        s3db = current.s3db
 
         prefix, name, table, tablename = r.target()
         permit = current.auth.s3_has_permission
-        model = manager.model
 
         if authorised is None:
             authorised = permit("update", tablename)
 
         if authorised and update:
-            linkto = model.get_config(tablename, "linkto_update", None)
+            linkto = s3db.get_config(tablename, "linkto_update", None)
         else:
-            linkto = model.get_config(tablename, "linkto", None)
+            linkto = s3db.get_config(tablename, "linkto", None)
 
         if r.component and native:
             # link to native component controller (be sure that you have one)

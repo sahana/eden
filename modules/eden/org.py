@@ -83,9 +83,8 @@ class S3OrganisationModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         SELECT_LOCATION = messages.SELECT_LOCATION
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -206,7 +205,7 @@ class S3OrganisationModel(S3Model):
                 # msg_record_deleted = T("Subsector deleted"),
                 # msg_list_empty = T("No Subsectors currently registered"))
 
-        # subsector_id = S3ReusableField("subsector_id", table, 
+        # subsector_id = S3ReusableField("subsector_id", table,
                                        # sortby="abrv",
                                        # requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                        # "org_subsector.id",
@@ -932,8 +931,7 @@ class S3SiteModel(S3Model):
         auth = current.auth
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
 
         # =====================================================================
         # Site / Facility (ICS terminology)
@@ -965,7 +963,7 @@ class S3SiteModel(S3Model):
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------
-        site_id = model.super_link("site_id", "org_site",
+        site_id = self.super_link("site_id", "org_site",
                                    #writable = True,
                                    #readable = True,
                                    label = T("Facility"),
@@ -990,7 +988,7 @@ class S3SiteModel(S3Model):
         add_component("hrm_human_resource_site",
                       org_site="site_id")
 
-        
+
         # Documents
         add_component("doc_document",
                       org_site="site_id")
@@ -1015,7 +1013,7 @@ class S3SiteModel(S3Model):
         add_component("req_commit",
                       org_site="site_id")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         onaccept = self.org_site_onaccept,
                         )
 
@@ -1135,7 +1133,6 @@ class S3FacilityModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Facility Types (generic)
@@ -1171,7 +1168,7 @@ class S3FacilityModel(S3Model):
         #
         tablename = "org_facility"
         table = define_table(tablename,
-                             model.super_link("site_id", "org_site"),
+                             self.super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64,           # Mayon Compatibility
                                    label = T("Name")),
@@ -1221,7 +1218,7 @@ class S3FacilityModel(S3Model):
             msg_record_deleted = T("Facility deleted"),
             msg_list_empty = T("No Facilities currently registered"))
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity="org_site"
                         )
 
@@ -1374,9 +1371,8 @@ class S3OfficeModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
         crud_strings = current.response.s3.crud_strings
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Offices
@@ -1492,10 +1488,10 @@ class S3OfficeModel(S3Model):
         )
 
         # Offices as component of Organisations
-        model.add_component(table,
+        self.add_component(table,
                             org_organisation="organisation_id")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity=("pr_pentity", "org_site"),
                         onvalidation=s3_address_onvalidation,
                         deduplicate=self.org_office_deduplicate,
@@ -1791,7 +1787,7 @@ def org_site_represent(site_id, show_link=True):
         represent = "[site %d] (%s)" % (id, instance_type_nice)
 
     if show_link:
-        record_id = current.manager.model.get_instance(stable, site_id)[2]
+        record_id = self.get_instance(stable, site_id)[2]
         c, f = instance_type.split("_", 1)
         if record_id:
             args = [record_id]
@@ -1937,7 +1933,7 @@ def org_organisation_controller():
     def prep(r):
         if r.representation == "json":
             r.table.pe_id.readable = True
-            list_fields = current.manager.model.get_config(r.tablename,
+            list_fields = self.get_config(r.tablename,
                                                            "list_fields") or []
             s3db.configure(r.tablename, list_fields = list_fields + ["pe_id"])
         elif r.interactive:
@@ -1950,7 +1946,7 @@ def org_organisation_controller():
                 realms = auth.user.realms or Storage()
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
-                    current.manager.model.set_method(r.prefix, r.name,
+                    self.set_method(r.prefix, r.name,
                                                      method="roles",
                                                      action=S3OrgRoleManager())
 
@@ -2088,7 +2084,7 @@ def org_office_controller():
                 realms = auth.user.realms or Storage()
                 if sr.ADMIN in realms or \
                    sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
-                    current.manager.model.set_method(r.prefix, r.name,
+                    self.set_method(r.prefix, r.name,
                                                      method="roles",
                                                      action=S3OrgRoleManager())
 

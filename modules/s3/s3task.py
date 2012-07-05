@@ -161,8 +161,7 @@ class S3Task(object):
         table.assigned_worker_name.readable = False
         table.assigned_worker_name.writable = False
 
-        manager = current.manager
-        manager.configure(tablename,
+        current.s3db.configure(tablename,
                           list_fields=["id",
                                        "enabled",
                                        "start_time",

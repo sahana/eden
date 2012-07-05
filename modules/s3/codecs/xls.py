@@ -96,7 +96,7 @@ class S3XLS(S3Codec):
         if not list_fields:
             fields = resource.readable_fields()
             list_fields = [f.name for f in fields if f != "id"]
-        indices = manager.model.indices
+        indices = self.indices
         list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby

@@ -1338,11 +1338,11 @@ class S3ComponentTab:
     # -------------------------------------------------------------------------
     def active(self, r):
 
+        s3db = current.s3db
         manager = current.manager
-        model = manager.model
 
-        get_components = model.get_components
-        get_method = model.get_method
+        get_components = s3db.get_components
+        get_method = s3db.get_method
         get_vars = r.get_vars
         tablename = None
         if "viewing" in get_vars:

@@ -70,7 +70,7 @@ class S3DVRModel(S3Model):
             2: T("Accepted"),
             3: T("Rejected"),
         }
-        
+
         tablename = "dvr_case"
         table = self.define_table(tablename,
                                   # @ToDo: Option to autogenerate these, like Waybills, et al
@@ -151,7 +151,7 @@ class S3DVRModel(S3Model):
                                       atable.location_id,
                                       left=left).first()
             if person:
-                _config = current.manager.model.get_config
+                _config = current.s3db.get_config
                 pe_id = person["pr_person"].pe_id
                 if not person["pr_address"].id:
                     # Create Home Address from location_id

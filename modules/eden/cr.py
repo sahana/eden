@@ -54,7 +54,6 @@ class S3CampDataModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
-        model = current.manager.model
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -192,7 +191,7 @@ class S3CampDataModel(S3Model):
 
         tablename = "cr_shelter"
         table = db.define_table(tablename,
-                                model.super_link("site_id", "org_site"),
+                                self.super_link("site_id", "org_site"),
                                 #Field("code",
                                 #      length=10,           # Mayon compatibility
                                 #      notnull=True,
@@ -288,13 +287,13 @@ class S3CampDataModel(S3Model):
 
         # Add Shelters as component of Services, Types as a simple way
         # to get reports showing shelters per type, etc.
-        model.add_component(tablename,
+        self.add_component(tablename,
                             cr_shelter_type="shelter_type_id")
                             # @todo: can't use a list:reference type for a
                             # component link => use a link table instead!
                             #cr_shelter_service="shelter_service_id")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity="org_site",
                         # Update the Address Fields
                         onvalidation=s3_address_onvalidation,
