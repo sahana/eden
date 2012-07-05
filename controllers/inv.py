@@ -271,7 +271,7 @@ def inv_item():
         """
         request = current.request
         resource, tree = data
-        xml = s3mgr.xml
+        xml = current.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
         if s3.importerReplace:
@@ -287,7 +287,7 @@ def inv_item():
                     org_name = org.get("value", None) or org.text
                     if org_name:
                         try:
-                            org_name = json.loads(s3mgr.xml.xml_decode(org_name))
+                            org_name = json.loads(xml.xml_decode(org_name))
                         except:
                             pass
                     if org_name:

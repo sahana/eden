@@ -76,9 +76,9 @@ def s3_barchart(r, **attr):
     # Here we check to make sure we can find value in the table,
     # and name (if it was provided)
     if not r.table.get(valKey):
-        raise HTTP (400, s3mgr.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
+        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
     elif nameKey and not r.table.get(nameKey):
-        raise HTTP (400, s3mgr.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
+        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
 
     start = request.vars.get("start")
     if start:

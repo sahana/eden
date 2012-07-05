@@ -113,11 +113,9 @@ class S3Sync(S3Method):
             Read the current sync status
         """
 
-        db = current.db
-
         tablename = "sync_status"
         table = current.s3db[tablename]
-        row = db().select(table.ALL, limitby=(0, 1)).first()
+        row = current.db().select(table.ALL, limitby=(0, 1)).first()
         if not row:
             row = Storage()
         return row
@@ -128,14 +126,12 @@ class S3Sync(S3Method):
             Update the current sync status
         """
 
-        db = current.db
-
         tablename = "sync_status"
         table = current.s3db[tablename]
 
         data = Storage([(k, attr[k]) for k in attr if k in table.fields])
         data.update(timestmp = datetime.datetime.utcnow())
-        row = db().select(table._id, limitby=(0, 1)).first()
+        row = current.db().select(table._id, limitby=(0, 1)).first()
         if row:
             row.update_record(**data)
         else:
@@ -151,12 +147,10 @@ class S3Sync(S3Method):
 
         if not hasattr(self, "config"):
 
-            db = current.db
-
             tablename = "sync_config"
             table = current.s3db[tablename]
 
-            row = db().select(table.ALL, limitby=(0, 1)).first()
+            row = current.db().select(table.ALL, limitby=(0, 1)).first()
             self.config = row
 
         return self.config
@@ -181,13 +175,12 @@ class S3Sync(S3Method):
                            remote=False,
                            result=self.log.FATAL,
                            message=message)
-            return current.manager.xml.json_message(False, 400, message=message)
+            return current.xml.json_message(False, 400, message=message)
 
-        db = current.db
-        rtable = db.sync_task
+        rtable = current.s3db.sync_task
         query = (rtable.repository_id == repository.id) & \
                 (rtable.deleted != True)
-        tasks = db(query).select()
+        tasks = current.db(query).select()
         for task in tasks:
             now = datetime.datetime.utcnow()
             if task.mode in (1, 3):
@@ -206,7 +199,7 @@ class S3Sync(S3Method):
             task.update_record(last_sync=now)
 
         # Success
-        return current.manager.xml.json_message()
+        return current.xml.json_message()
 
     # -------------------------------------------------------------------------
     def __pull(self, repository, task):
@@ -219,7 +212,7 @@ class S3Sync(S3Method):
 
         ignore_errors = True
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -409,7 +402,7 @@ class S3Sync(S3Method):
          """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -573,12 +566,12 @@ class S3Sync(S3Method):
             message = "no repository identifier specified"
 
         if result == self.log.SUCCESS:
-            output = current.manager.xml.json_message(message=message,
-                                                      sender="%s" % config.uuid)
+            output = current.xml.json_message(message=message,
+                                              sender="%s" % config.uuid)
         else:
-            output = current.manager.xml.json_message(False, 400,
-                                                      message=message,
-                                                      sender="%s" % config.uuid)
+            output = current.xml.json_message(False, 400,
+                                              message=message,
+                                              sender="%s" % config.uuid)
 
         # Set content type header
         headers = current.response.headers
@@ -603,7 +596,7 @@ class S3Sync(S3Method):
             @param repository: a sync_repository row
          """
 
-        xml = current.manager.xml
+        xml = current.xml
 
         if not repository.url:
             return True
@@ -730,7 +723,7 @@ class S3Sync(S3Method):
                 limit = None
         msince = _vars.get("msince", None)
         if msince is not None:
-            tfmt = current.manager.xml.ISOFORMAT
+            tfmt = current.xml.ISOFORMAT
             try:
                 (y, m, d, hh, mm, ss, t0, t1, t2) = \
                     time.strptime(msince, tfmt)
@@ -818,7 +811,7 @@ class S3Sync(S3Method):
                 conflict_policy = default_conflict_policy
             msince = r.get_vars.get("msince", None)
             if msince is not None:
-                tfmt = current.manager.xml.ISOFORMAT
+                tfmt = current.xml.ISOFORMAT
                 try:
                     (y, m, d, hh, mm, ss, t0, t1, t2) = \
                         time.strptime(msince, tfmt)
@@ -932,7 +925,7 @@ class S3Sync(S3Method):
                     item.conflict = False
                 elif task.conflict_policy == policies.NEWER:
                     # Accept if newer
-                    xml = current.manager.xml
+                    xml = current.xml
                     if xml.MTIME in original and \
                        xml.as_utc(original[xml.MTIME]) <= item.mtime:
                         _debug("Accept because newer")
@@ -941,7 +934,7 @@ class S3Sync(S3Method):
                         _debug("Do not accept")
                 elif task.conflict_policy == policies.MASTER:
                     # Accept if master
-                    if current.manager.xml.MCI in original and \
+                    if current.xml.MCI in original and \
                        original.mci == 0 or item.mci == 1:
                         _debug("Accept because master")
                         item.conflict = False

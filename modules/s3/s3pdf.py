@@ -1211,9 +1211,8 @@ class S3PDF(S3Method):
 
                     errordict = {}
 
-                    manager = current.manager
-                    _record = manager.xml.record
-                    validate = manager.validate
+                    _record = current.xml.record
+                    validate = current.manager.validate
                     s3record_dict = Storage()
                     for eachtable in s3xml_etree_dict.keys():
                         record = _record(db[eachtable],

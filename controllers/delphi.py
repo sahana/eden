@@ -343,7 +343,7 @@ def save_vote():
     try:
         rankings = request.post_vars.keys()[0].split(",")
     except IndexError:
-        status = s3mgr.xml.json_message(False, 400, "No Options Ranked")
+        status = current.xml.json_message(False, 400, "No Options Ranked")
         raise HTTP(400, body=status)
 
     # Check the votes are valid
@@ -355,7 +355,7 @@ def save_vote():
         options.append(row.id)
     for ranked in rankings:
         if int(ranked) not in options:
-            status = s3mgr.xml.json_message(False, 400, "Option isn't valid!")
+            status = current.xml.json_message(False, 400, "Option isn't valid!")
             raise HTTP(400, body=status)
 
     # Convert to a format suitable for comparisons
@@ -432,7 +432,7 @@ def save_vote():
         vtable.insert(problem_id=problem_id, solution_id=ranked, rank=count)
         count += 1
 
-    status = s3mgr.xml.json_message(True, 200, "Vote saved")
+    status = current.xml.json_message(True, 200, "Vote saved")
     return status
 
 # -----------------------------------------------------------------------------

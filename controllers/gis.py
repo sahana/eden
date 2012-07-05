@@ -443,7 +443,7 @@ def l0():
     try:
         record_id = request.args[0]
     except:
-        item = s3mgr.xml.json_message(False, 400, "Need to specify a record ID!")
+        item = current.xml.json_message(False, 400, "Need to specify a record ID!")
         raise HTTP(400, body=item)
 
     table = s3db.gis_location
@@ -468,7 +468,7 @@ def l0():
                               cache = s3db.cache,
                               limitby=(0, 1)).first()
     if not record:
-        item = s3mgr.xml.json_message(False, 400, "Invalid ID!")
+        item = current.xml.json_message(False, 400, "Invalid ID!")
         raise HTTP(400, body=item)
 
     result = record.as_dict()
@@ -637,7 +637,7 @@ def location_links():
     try:
         record_id = request.args[0]
     except:
-        item = s3mgr.xml.json_message(False, 400, "Need to specify a record ID!")
+        item = current.xml.json_message(False, 400, "Need to specify a record ID!")
         raise HTTP(400, body=item)
 
     try:
@@ -649,7 +649,7 @@ def location_links():
         query = deleted & query
         record = db(query).select(locations.id, limitby=(0, 1)).first().id
     except:
-        item = s3mgr.xml.json_message(False, 404, "Record not found!")
+        item = current.xml.json_message(False, 404, "Record not found!")
         raise HTTP(404, body=item)
 
     # Find all tables which link to the Locations table
@@ -2466,7 +2466,7 @@ def display_feature():
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
         session.error = T("No access to this record!")
-        raise HTTP(401, body=s3mgr.xml.json_message(False, 401, session.error))
+        raise HTTP(401, body=current.xml.json_message(False, 401, session.error))
 
     feature = db(table.id == feature_id).select(table.id,
                                                 table.parent,
@@ -2477,7 +2477,7 @@ def display_feature():
 
     if not feature:
         session.error = T("Record not found!")
-        raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
+        raise HTTP(404, body=current.xml.json_message(False, 404, session.error))
 
     # Centre on Feature
     lat = feature.lat
@@ -2493,7 +2493,7 @@ def display_feature():
             lon = latlon["lon"]
         else:
             session.error = T("No location information defined!")
-            raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
+            raise HTTP(404, body=current.xml.json_message(False, 404, session.error))
 
     # Default zoom +2 (same as a single zoom on a cluster)
     # config = gis.get_config()
@@ -2546,7 +2546,7 @@ def display_features():
         ok +=1
     if ok != 4:
         session.error = T("Insufficient vars: Need module, resource, jresource, instance")
-        raise HTTP(400, body=s3mgr.xml.json_message(False, 400, session.error))
+        raise HTTP(400, body=current.xml.json_message(False, 400, session.error))
 
     tablename = "%s_%s" % (res_module, resource)
     s3db.table(tablename)
@@ -3107,7 +3107,7 @@ def proxy():
             url = request.vars.url
         else:
             session.error = T("Need a 'url' argument!")
-            raise HTTP(400, body=s3mgr.xml.json_message(False, 400, session.error))
+            raise HTTP(400, body=current.xml.json_message(False, 400, session.error))
 
     # Debian has no default timeout so connection can get stuck with dodgy servers
     socket.setdefaulttimeout(30)

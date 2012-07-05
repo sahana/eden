@@ -1741,7 +1741,7 @@ class S3BulkImporter(object):
                 error = resource.error
                 self.errorList.append("%s - %s: %s" % (
                                       task[3], resource.tablename, error))
-                errors = current.manager.xml.collect_errors(resource)
+                errors = current.xml.collect_errors(resource)
                 if errors:
                     self.errorList.extend(errors)
                 db.rollback()
@@ -1965,7 +1965,7 @@ class S3DateTime(object):
         """
 
         session = current.session
-        xml = current.manager.xml
+        xml = current.xml
 
         if dt and utc:
             offset = IS_UTC_OFFSET.get_offset_value(session.s3.utc_offset)
