@@ -232,7 +232,7 @@ class S3Msg(object):
                 if pe_ids:
                     for pe_id in pe_ids:
                         otable.insert(message_id = reply.id,
-                                      address = row.sender, pe_id = pe_id.id)
+                                      address = row.sender, pe_id = pe_id.pe_id)
                 db.commit()
 
         return    
