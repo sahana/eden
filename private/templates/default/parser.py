@@ -317,6 +317,7 @@ class S3Parsing(object):
 	reponse = ""
 	ireport = False
 	reply = ""
+	comments = False
 	
 	for word in words:
 	    if "SI#" in word:
@@ -325,16 +326,21 @@ class S3Parsing(object):
 		ireport = True
 	    elif soundex(word) == soundex("Yes"):
 		response = "Yes"
+		comments = True
 	    elif soundex(word) == soundex("No"):
 		response = "No"
+		comments = True
 	    else :
-		message+= word + " "
+		if comments:
+		    message+= word + " "
 	
 	if ireport:	
-	    db(rtable.ireport_id == report).update(comments=message, response = response)
+	    db(rtable.ireport_id == report).update(comments=message, \
+	                                           response = response)
 	    reply = "Response Logged in the Report"
 	else:
-	    reply = "Please provide the keyword SI# followed by the Inciden Report ID."
+	    reply = "Please provide the keyword SI followed by \
+	    the pound key (#),followed by the Inciden Report ID. e.g. SI#1"
 	db.commit()
 	return reply
     
