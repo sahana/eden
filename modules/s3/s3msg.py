@@ -228,11 +228,11 @@ class S3Msg(object):
                 
                 query = (ctable.contact_method == "EMAIL") & \
                     (ctable.value == email)
-                pe_id = db(query).select(ctable.pe_id)
-                if pe_id:
-                    for id in pe_id:
+                pe_ids = db(query).select(ctable.pe_id)
+                if pe_ids:
+                    for pe_id in pe_ids:
                         otable.insert(message_id = reply.id,
-                                      address = row.sender, pe_id = id)
+                                      address = row.sender, pe_id = pe_id.id)
                 db.commit()
 
         return    
