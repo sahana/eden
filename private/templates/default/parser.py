@@ -62,7 +62,7 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_person(message=""):
+    def parse_person(message="", source=""):
         """
             Search for People
         """
@@ -145,7 +145,7 @@ class S3Parsing(object):
     
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_hospital(message=""):
+    def parse_hospital(message="", source=""):
         """
            Search for Hospitals
         """
@@ -228,7 +228,7 @@ class S3Parsing(object):
     
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_org(message=""):
+    def parse_org(message="", source=""):
         """
            Search for Organisations
         """
@@ -300,7 +300,7 @@ class S3Parsing(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_ireport(message=""):
+    def parse_ireport(message="", source=""):
         """
             Parse Replies To Deployment Request.
         """
@@ -312,6 +312,8 @@ class S3Parsing(object):
         db = current.db
         s3db = current.s3db
 	rtable = s3db.irs_ireport_human_resource
+	ctable = s3db.pr_contact
+	htable = s3db.hrm_human_resource
 	words = string.split(message)
 	message = ""
 	reponse = ""
@@ -324,23 +326,34 @@ class S3Parsing(object):
 		report = word.split("#")[1]
 		report = int(report)
 		ireport = True
-	    elif soundex(word) == soundex("Yes"):
-		response = "Yes"
+	    elif (soundex(word) == soundex("Yes")) and ireport and not comments:
+		response = True
 		comments = True
-	    elif soundex(word) == soundex("No"):
-		response = "No"
+	    elif soundex(word) == soundex("No") and ireport and not comments:
+		response = False
 		comments = True
 	    else :
 		if comments:
 		    message+= word + " "
 	
-	if ireport:	
-	    db(rtable.ireport_id == report).update(comments=message, \
-	                                           response = response)
+	query = (ctable.contact_method == "EMAIL") & \
+	    (ctable.value == source)
+	responder = db(query).select(ctable.pe_id, limitby=(0,1)).first()
+	if responder:
+	    query = (htable.person_id == responder.pe_id)
+	    human_resource = db(query).select(htable.id, \
+	                                      limitby=(0,1)).first()
+	
+	if ireport and human_resource:
+	    query = (rtable.ireport_id == report) & \
+	        (rtable.human_resource_id == human_resource.id)
+	    db(query).update(reply=message, \
+	                     response = response)
 	    reply = "Response Logged in the Report (Id: %d )"%report
 	else:
 	    reply = "Please provide the keyword SI followed by \
-	    the pound key (#),followed by the Inciden Report ID. e.g. SI#1"
+	    the pound key (#),the Inciden Report ID, the response \
+	    and comments seperated by spaces. e.g. SI#1 Yes/No Comments"
 	db.commit()
 	return reply
     

@@ -40,7 +40,7 @@ class S3Parsing(object):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def parser(workflow, message = ""):
+    def parser(workflow, message = "", source=""):
         """
            Parsing Workflow Filter.
            Called by parse_import() in s3msg.py.
@@ -64,6 +64,6 @@ class S3Parsing(object):
         for parser in parse_opts:
             if parser == workflow:
                 result = getattr(S3Parsing, parser)
-                return result(message)
+                return result(message, source)
 
 # END =========================================================================
