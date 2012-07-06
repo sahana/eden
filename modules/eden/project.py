@@ -3124,25 +3124,26 @@ class S3ProjectTaskModel(S3Model):
         table = db.project_task
 
         changed = {}
-        for var in vars:
-            vvar = vars[var]
-            rvar = record[var]
-            if vvar != rvar:
-                type = table[var].type
-                if type == "integer" or \
-                   type.startswith("reference"):
-                    vvar = int(vvar)
-                    if vvar == rvar:
-                        continue
-                represent = table[var].represent
-                if not represent:
-                    represent = lambda o: o
-                if rvar:
-                    changed[var] = "%s changed from %s to %s" % \
-                        (table[var].label, represent(rvar), represent(vvar))
-                else:
-                    changed[var] = "%s changed to %s" % \
-                        (table[var].label, represent(vvar))
+        if record: # Not True for a record merger
+            for var in vars:
+                vvar = vars[var]
+                rvar = record[var]
+                if vvar != rvar:
+                    type = table[var].type
+                    if type == "integer" or \
+                       type.startswith("reference"):
+                        vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if not represent:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (table[var].label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (table[var].label, represent(vvar))
 
         if changed:
             table = db.project_comment
