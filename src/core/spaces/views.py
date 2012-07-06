@@ -145,12 +145,12 @@ class ValidateIntent(DetailView):
     status = _("The requested intent does not exist!")
 
     def get_object(self):
-	# Makes sure the space ins't already in the cache before hitting the databass
-	space_url = self.kwargs['space_url']
+        # Makes sure the space ins't already in the cache before hitting the databass
+        space_url = self.kwargs['space_url']
         space_object = get_or_insert_object_in_cache(
-						Space, 
-						space_url, 
-						url=space_url)
+                                                    Space, 
+                                                    space_url, 
+                                                    url=space_url)
 
         if self.request.user in space_object.admins.all() \
         or self.request.user in space_object.mods.all() \
@@ -240,12 +240,12 @@ class ViewSpaceIndex(DetailView):
     template_name = 'spaces/space_index.html'
     
     def get_object(self):
-	# Makes sure the space ins't already in the cache before hitting the databass
+        # Makes sure the space ins't already in the cache before hitting the databass
         space_url = self.kwargs['space_url']
-	space_object = get_or_insert_object_in_cache(
-						Space, 
-						space_url, 
-						url=space_url)
+        space_object = get_or_insert_object_in_cache(
+                                                    Space, 
+                                                    space_url, 
+                                                    url=space_url)
         
         if space_object.public == True or self.request.user.is_staff or \
         self.request.user.is_superuser:
@@ -285,12 +285,12 @@ class ViewSpaceIndex(DetailView):
     # Get extra context data
     def get_context_data(self, **kwargs):
         context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
-	# Makes sure the space ins't already in the cache before hitting the databass
-	place_url = self.kwargs['space_url']
-	place = get_or_insert_object_in_cache(
-					    Space,
-					    place_url,
-					    url=place_url)
+        # Makes sure the space ins't already in the cache before hitting the databass
+        place_url = self.kwargs['space_url']
+        place = get_or_insert_object_in_cache(
+                                            Space,
+                                            place_url,
+                                            url=place_url)
 
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
@@ -302,9 +302,9 @@ class ViewSpaceIndex(DetailView):
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
         context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
 	#True if the request.user has admin rights on this space
-	context['user_is_admin'] = (self.request.user in place.admins.all() or \
-	    self.request.user in place.mods.all() or self.request.user.is_staff or \
-	    self.request.user.is_superuser) 
+        context['user_is_admin'] = (self.request.user in place.admins.all() or \
+            self.request.user in place.mods.all() or self.request.user.is_staff or \
+            self.request.user.is_superuser) 
         return context
         
 
