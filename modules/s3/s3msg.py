@@ -198,6 +198,12 @@ class S3Msg(object):
         wtable = s3db.msg_workflow
         otable = s3db.msg_outbox
         ctable = s3db.pr_contact
+        parser = S3Parsing.parser
+        linsert = ltable.insert
+        oinsert = otable.insert
+        contact_method = ctable.contact_method
+        value = ctable.value
+        lid = ltable.id
         
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
@@ -211,23 +217,24 @@ class S3Msg(object):
             
             for row in rows:
                 message = row.message
-                reply = S3Parsing.parser(workflow, message)
-                db(ltable.id == row.id).update(reply = reply,
-                                               is_parsed = True)
-                reply = ltable.insert(recipient = row.sender,
-                                      subject ="Parsed Reply",
-                                      message = reply)
                 try:
                     email = row.sender.split("<")[1].split(">")[0]
-                    query = (ctable.contact_method == "EMAIL") & \
-                        (ctable.value == email) 
+                    query = (contact_method == "EMAIL") & \
+                        (value == email) 
                     pe_ids = db(query).select(ctable.pe_id)
                 except:
                     raise ValueError("Email address not defined!")
                 
+                reply = parser(workflow, message, email)
+                db(lid == row.id).update(reply = reply,
+                                               is_parsed = True)
+                reply = linsert(recipient = row.sender,
+                                      subject ="Parsed Reply",
+                                      message = reply)
+                
                 if pe_ids:
                     for pe_id in pe_ids:
-                        otable.insert(message_id = reply.id,
+                        oinsert(message_id = reply.id,
                                       address = row.sender, pe_id = pe_id.pe_id)
                 db.commit()
 
