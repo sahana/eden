@@ -86,10 +86,10 @@ def warehouse():
                     represent ="%(name)s",
                     cols = 3
                   ),
-                  s3base.S3SearchLocationHierarchyWidget(
+                  s3base.S3SearchOptionsWidget(
                     name="warehouse_search_location",
-                    comment=T("Search for warehouse by location."),
-                    represent ="%(name)s",
+                    field="L1",
+                    location_level="L1",
                     cols = 3
                   ),
                   s3base.S3SearchLocationWidget(

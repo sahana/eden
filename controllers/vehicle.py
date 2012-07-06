@@ -114,10 +114,10 @@ def vehicle():
                             "comments"
                         ]
                   ),
-                s3base.S3SearchLocationHierarchyWidget(
+                s3base.S3SearchOptionsWidget(
                     name="vehicle_search_location",
-                    comment=T("Search for vehicle by location."),
-                    represent ="%(name)s",
+                    field="L1",
+                    location_level="L1",
                     cols = 3
                 ),
                 s3base.S3SearchLocationWidget(

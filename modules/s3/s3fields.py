@@ -471,6 +471,7 @@ def s3_roles_permitted(name="roles_permitted", **attr):
 #
 # These fields are populated onaccept from location_id
 # - for many reads to fewer writes, this is faster than Virtual Fields
+# - @ToDO: No need for virtual fields - replace with simple joins
 #
 # Labels that vary by country are set by gis.update_table_hierarchy_labels()
 #
@@ -825,70 +826,76 @@ def s3_date(name="date", **attr):
         represent = S3DateTime.date_represent
     if "requires" not in attr:
         if past is None and future is None:
-            attr["requires"] = IS_EMPTY_OR(IS_DATE(
+            requires = IS_DATE(
                     format=current.deployment_settings.get_L10n_date_format()
-                ))
-        elif past is None:
-            now = current.request.utcnow.date()
-            current_month = now.month
-            future_month = now.month + future
-            if future_month <= 12:
-                max = now.replace(month=future_month)
-            else:
-                current_year = now.year
-                years = int(future_month/12)
-                future_year = current_year + years
-                future_month = future_month - (years * 12)
-                max = now.replace(year=future_year,
-                                  month=future_month)
-            attr["requires"] = IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                    format=current.deployment_settings.get_L10n_date_format(),
-                    maximum=max,
-                    error_message=current.T("Date must be %(max)s or earlier!")
-                ))
-        elif future is None:
-            now = current.request.utcnow.date()
-            current_month = now.month
-            if past < current_month:
-                min = now.replace(month=current_month - past)
-            else:
-                current_year = now.year
-                past_years = int(past/12)
-                past_months = past - (past_years * 12)
-                min = now.replace(year=current_year - past_years,
-                                  month=current_month - past_months)
-            attr["requires"] = IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                    format=current.deployment_settings.get_L10n_date_format(),
-                    minimum=min,
-                    error_message=current.T("Date must be %(min)s or later!")
-                ))
+                )
         else:
             now = current.request.utcnow.date()
             current_month = now.month
-            future_month = now.month + future
-            if future_month < 13:
-                max = now.replace(month=future_month)
+            if past is None:
+                future_month = now.month + future
+                if future_month <= 12:
+                    max = now.replace(month=future_month)
+                else:
+                    current_year = now.year
+                    years = int(future_month/12)
+                    future_year = current_year + years
+                    future_month = future_month - (years * 12)
+                    max = now.replace(year=future_year,
+                                      month=future_month)
+                requires = IS_DATE_IN_RANGE(
+                        format=current.deployment_settings.get_L10n_date_format(),
+                        maximum=max,
+                        error_message=current.T("Date must be %(max)s or earlier!")
+                    )
+            elif future is None:
+                if past < current_month:
+                    min = now.replace(month=current_month - past)
+                else:
+                    current_year = now.year
+                    past_years = int(past/12)
+                    past_months = past - (past_years * 12)
+                    min = now.replace(year=current_year - past_years,
+                                      month=current_month - past_months)
+                requires = IS_DATE_IN_RANGE(
+                        format=current.deployment_settings.get_L10n_date_format(),
+                        minimum=min,
+                        error_message=current.T("Date must be %(min)s or later!")
+                    )
             else:
-                current_year = now.year
-                years = int(future_month/12)
-                future_year = now.year + years
-                future_month = future_month - (years * 12)
-                max = now.replace(year=future_year,
-                                  month=future_month)
-            if past < current_month:
-                min = now.replace(month=current_month - past)
+                future_month = now.month + future
+                if future_month < 13:
+                    max = now.replace(month=future_month)
+                else:
+                    current_year = now.year
+                    years = int(future_month/12)
+                    future_year = now.year + years
+                    future_month = future_month - (years * 12)
+                    max = now.replace(year=future_year,
+                                      month=future_month)
+                if past < current_month:
+                    min = now.replace(month=current_month - past)
+                else:
+                    current_year = now.year
+                    past_years = int(past/12)
+                    past_months = past - (past_years * 12)
+                    min = now.replace(year=current_year - past_years,
+                                      month=current_month - past_months)
+                requires = IS_DATE_IN_RANGE(
+                        format=current.deployment_settings.get_L10n_date_format(),
+                        maximum=max,
+                        minimum=min,
+                        error_message=current.T("Date must be between %(min)s and %(max)s!")
+                    )
+        if "empty" in attr:
+            if attr["empty"] is False:
+                attr["requires"] = requires
             else:
-                current_year = now.year
-                past_years = int(past/12)
-                past_months = past - (past_years * 12)
-                min = now.replace(year=current_year - past_years,
-                                  month=current_month - past_months)
-            attr["requires"] = IS_EMPTY_OR(IS_DATE_IN_RANGE(
-                    format=current.deployment_settings.get_L10n_date_format(),
-                    maximum=max,
-                    minimum=min,
-                    error_message=current.T("Date must be between %(min)s and %(max)s!")
-                ))
+                attr["requires"] = IS_EMPTY_OR(requires)
+            del attr["empty"]
+        else:
+            # Default
+            attr["requires"] = IS_EMPTY_OR(requires)
     if "widget" not in attr:
         if past is None and future is None:
             attr["widget"] = S3DateWidget()

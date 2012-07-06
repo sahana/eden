@@ -103,10 +103,11 @@ def project():
                     # Default the Location Selector list of countries to those found in the project
                     countries = r.record.countries_id
                     if countries:
-                        ltable = s3db.gis_location
-                        query = (ltable.id.belongs(countries))
-                        countries = db(query).select(ltable.code)
-                        settings.gis.countries = [c.code for c in countries]
+                        ttable = s3db.gis_location_tag
+                        query = (ttable.location_id.belongs(countries)) & \
+                                (ttable.tag == "ISO2")
+                        countries = db(query).select(ttable.value)
+                        settings.gis.countries = [c.value for c in countries]
                 elif r.component_name == "task":
                     r.component.table.milestone_id.requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                 "project_milestone.id",
