@@ -314,7 +314,8 @@ class S3XML(S3Codec):
              url=None,
              start=None,
              limit=None,
-             results=None):
+             results=None,
+             maxbounds=False):
         """
             Builds a S3XML tree from a list of elements
 
@@ -325,6 +326,7 @@ class S3XML(S3Codec):
             @param start: the start record (in server-side pagination)
             @param limit: the page size (in server-side pagination)
             @param results: number of total available results
+            @param maxbounds: include maximum Geo-boundaries (lat/lon min/max)
         """
 
         # For now we do not nsmap, because the default namespace cannot be
@@ -354,16 +356,17 @@ class S3XML(S3Codec):
             set(ATTRIBUTE.domain, self.domain)
         if url:
             set(ATTRIBUTE.url, current.response.s3.base_url)
-        # @ToDo: This should be done based on the features, not just the config
-        bounds = current.gis.get_bounds()
-        set(ATTRIBUTE.latmin,
-            str(bounds["min_lat"]))
-        set(ATTRIBUTE.latmax,
-            str(bounds["max_lat"]))
-        set(ATTRIBUTE.lonmin,
-            str(bounds["min_lon"]))
-        set(ATTRIBUTE.lonmax,
-            str(bounds["max_lon"]))
+        if maxbounds:
+            # @ToDo: This should be done based on the features, not just the config
+            bounds = current.gis.get_bounds()
+            set(ATTRIBUTE.latmin,
+                str(bounds["min_lat"]))
+            set(ATTRIBUTE.latmax,
+                str(bounds["max_lat"]))
+            set(ATTRIBUTE.lonmin,
+                str(bounds["min_lon"]))
+            set(ATTRIBUTE.lonmax,
+                str(bounds["max_lon"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------

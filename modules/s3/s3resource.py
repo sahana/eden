@@ -1069,6 +1069,7 @@ class S3Resource(object):
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
+                   maxbounds=False,
                    pretty_print=False, **args):
         """
             Export this resource as S3XML
@@ -1109,7 +1110,8 @@ class S3Resource(object):
                                 dereference=dereference,
                                 mcomponents=mcomponents,
                                 rcomponents=rcomponents,
-                                references=references)
+                                references=references,
+                                maxbounds=maxbounds)
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -1167,7 +1169,8 @@ class S3Resource(object):
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
-                    references=None):
+                    references=None,
+                    maxbounds=False):
         """
             Export the resource as element tree
 
@@ -1348,7 +1351,8 @@ class S3Resource(object):
                         url=base_url,
                         results=results,
                         start=start,
-                        limit=limit)
+                        limit=limit,
+                        maxbounds=maxbounds)
         return tree
 
     # -------------------------------------------------------------------------
