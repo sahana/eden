@@ -301,7 +301,7 @@ class ViewSpaceIndex(DetailView):
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
         context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
-	#True if the request.user has admin rights on this space
+        #True if the request.user has admin rights on this space
         context['user_is_admin'] = (self.request.user in place.admins.all() or \
             self.request.user in place.mods.all() or self.request.user.is_staff or \
             self.request.user.is_superuser) 
