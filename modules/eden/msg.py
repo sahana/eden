@@ -60,13 +60,12 @@ class S3MessagingModel(S3Model):
 
         T = current.T
         db = current.db
-        
+
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # Message priority
         msg_priority_opts = {
@@ -74,14 +73,14 @@ class S3MessagingModel(S3Model):
             2:T("Medium"),
             1:T("Low")
         }
-        
+
         mtable = self.msg_inbound_email_settings
         source_opts = []
         append = source_opts.append
         records = db(mtable.id > 0).select(mtable.username)
         for record in records:
             append(record.username)
-        
+
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         # ---------------------------------------------------------------------
@@ -114,35 +113,35 @@ class S3MessagingModel(S3Model):
                                    label = T("Reply")),
                              Field("source_task_id",
                                    requires = IS_IN_SET(source_opts,
-                                                        zero = None)),                                                                       
+                                                        zero = None)),
                              *s3_meta_fields())
 
         configure(tablename,
-                       list_fields=["id",
-                                    "inbound",
-                                    "pe_id",
-                                    "fromaddress",
-                                    "recipient",
-                                    "subject",
-                                    "message",
-                                    "verified",
-                                    #"verified_comments",
-                                    "actionable",
-                                    "actioned",
-                                    #"actioned_comments",
-                                    #"priority",
-                                    "is_parsed",
-                                    "reply",
-                                    "source_task_id"
-                                    ])
+                  list_fields=["id",
+                               "inbound",
+                               "pe_id",
+                               "fromaddress",
+                               "recipient",
+                               "subject",
+                               "message",
+                               "verified",
+                               #"verified_comments",
+                               "actionable",
+                               "actioned",
+                               #"actioned_comments",
+                               #"priority",
+                               "is_parsed",
+                               "reply",
+                               "source_task_id"
+                               ])
 
         # Components
-        model.add_component("msg_outbox", msg_log="message_id")
+        self.add_component("msg_outbox", msg_log="message_id")
 
         # Reusable Message ID
         message_id = S3ReusableField("message_id", table,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "msg_log.id")),
-                                     # FIXME: Subject works for Email but not SMS
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF_EMPTY(db, "msg_log.id")),
                                      represent = self.message_represent,
                                      ondelete = "RESTRICT")
 
@@ -535,7 +534,7 @@ class S3TwitterModel(S3Model):
         #T = current.T
         db = current.db
 
-        configure = current.manager.model.configure
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -572,7 +571,7 @@ class S3TwitterModel(S3Model):
         #table.twitter_search.represent = lambda id: db(db.msg_twitter_search.id == id).select(db.msg_twitter_search.search_query,
                                                                                               #limitby = (0, 1)).first().search_query
 
-        #model.add_component(table, msg_twitter_search="twitter_search")
+        #self.add_component(table, msg_twitter_search="twitter_search")
 
         configure(tablename,
                   list_fields=["id",
@@ -651,7 +650,7 @@ class S3XFormsModel(S3Model):
 
         # ---------------------------------------------------------------------
         return Storage()
-    
+
 # =============================================================================
 class S3ParsingModel(S3Model):
     """
@@ -664,7 +663,7 @@ class S3ParsingModel(S3Model):
 
         from s3 import s3parser
         import inspect
-        
+
         T = current.T
         mtable = self.msg_inbound_email_settings
         # source_opts contain the available message sources.
@@ -688,7 +687,7 @@ class S3ParsingModel(S3Model):
                                   Field("workflow_task_id",
                                         label = T("Workflow"),
                                         requires = IS_IN_SET(parse_opts,
-                                                             zero=None)), 
+                                                             zero=None)),
                                   *s3_meta_fields())
 
         return Storage()

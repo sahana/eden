@@ -57,7 +57,7 @@ class S3PatientModel(S3Model):
         s3_date_format = current.deployment_settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        add_component = current.managher.model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------

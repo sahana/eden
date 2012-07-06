@@ -60,7 +60,6 @@ except ImportError:
     raise
 
 # =============================================================================
-
 class S3XML(S3Codec):
     """
         XML toolkit for S3XRC
@@ -185,11 +184,8 @@ class S3XML(S3Codec):
     def __init__(self):
         """ Constructor """
 
-        manager = current.manager
-
-        self.domain = manager.domain
+        self.domain = current.manager.domain
         self.error = None
-
         self.filter_mci = False # Set to true to suppress export at MCI<0
 
     # XML+XSLT tools ==========================================================
@@ -1297,9 +1293,8 @@ class S3XML(S3Codec):
                 ftype = str(field.type)
                 if ftype[:9] == "reference":
                     ktablename = ftype[10:]
-                    current.manager.load(ktablename)
                     try:
-                        ktable = current.db[ktablename]
+                        ktable = current.s3db[ktablename]
                     except:
                         pass
                     else:

@@ -36,7 +36,6 @@ except:
     from StringIO import StringIO
 
 from gluon import *
-from gluon import current
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
 try:
@@ -49,7 +48,6 @@ except ImportError:
 from ..s3codec import S3Codec
 
 # =============================================================================
-
 class S3XLS(S3Codec):
     """
         Simple Microsoft Excel format codec
@@ -86,17 +84,13 @@ class S3XLS(S3Codec):
             @param report_groupby: a Field object of the field to group the records by
         """
 
-        manager = current.manager
-        request = current.request
-        response = current.response
-        s3 = response.s3
-
+        s3 = current.response.s3
 
         # List fields
         if not list_fields:
             fields = resource.readable_fields()
             list_fields = [f.name for f in fields if f != "id"]
-        indices = manager.model.indices
+        indices = self.indices
         list_fields = [f for f in list_fields if f not in indices]
 
         # Filter and orderby
@@ -112,7 +106,7 @@ class S3XLS(S3Codec):
         name = "title_list"
         tablename = resource.tablename
         crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
-        not_found = s3.crud_strings.get(name, request.function)
+        not_found = s3.crud_strings.get(name, current.request.function)
         title = str(crud_strings.get(name, not_found))
 
         # Only include fields that can be read.
@@ -193,10 +187,6 @@ class S3XLS(S3Codec):
             else:
                 groupby_label = report_groupby
 
-        # Environment
-        request = current.request
-        response = current.response
-
         # Date/Time formats from L10N deployment settings
         settings = current.deployment_settings
         date_format = S3XLS.dt_format_translate(settings.get_L10n_date_format())
@@ -251,6 +241,9 @@ class S3XLS(S3Codec):
         # Initialize counters
         rowCnt = 0
         colCnt = 0
+
+        # Environment
+        request = current.request
 
         # Title row
         totalCols = len(headers)-1
@@ -391,6 +384,7 @@ class S3XLS(S3Codec):
         # Response headers
         filename = "%s_%s.xls" % (request.env.server_name, str(title))
         disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition
 

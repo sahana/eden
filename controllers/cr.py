@@ -110,7 +110,7 @@ def shelter():
                                filter_opts=("pr_person",
                                             "pr_group"))
 
-    s3mgr.configure("pr_presence",
+    s3db.configure("pr_presence",
                     # presence not deletable in this view! (need to register a check-out
                     # for the same person instead):
                     deletable=False,
@@ -122,10 +122,10 @@ def shelter():
                                 ])
 
     # Access from Shelters
-    s3mgr.model.add_component("pr_presence",
+    s3db.add_component("pr_presence",
                               cr_shelter="shelter_id")
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     # Go to People check-in for this shelter after creation
                     create_next = URL(c="cr", f="shelter",
                                       args=["[id]", "presence"]))

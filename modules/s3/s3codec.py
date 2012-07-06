@@ -62,6 +62,9 @@ class S3Codec(object):
 
     ISOFORMAT = "%Y-%m-%dT%H:%M:%S" #: universal timestamp
 
+    # A list of fields which should be skipped from PDF/XLS exports
+    indices = ["id", "pe_id", "site_id", "sit_id", "item_entity_id"]
+
     # -------------------------------------------------------------------------
     @staticmethod
     def get_codec(format):

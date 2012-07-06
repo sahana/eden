@@ -89,7 +89,7 @@ def membership():
 '''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return output
     s3.postp = postp
-        
+
     output = s3_rest_controller(rheader=s3db.member_rheader)
     return output
 
@@ -108,9 +108,9 @@ def person():
             title_upload = T("Import Members"))
 
     # Custom Method for Contacts
-    s3mgr.model.set_method("pr", resourcename,
-                           method="contacts",
-                           action=s3db.pr_contacts)
+    s3db.set_method("pr", resourcename,
+                    method="contacts",
+                    action=s3db.pr_contacts)
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: \
@@ -124,7 +124,7 @@ def person():
             hook in s3mgr
         """
         resource, tree = data
-        xml = s3mgr.xml
+        xml = current.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
         if s3.import_replace:
@@ -137,7 +137,7 @@ def person():
                     org_name = org.get("value", None) or org.text
                     if org_name:
                         try:
-                            org_name = json.loads(s3mgr.xml.xml_decode(org_name))
+                            org_name = json.loads(xml.xml_decode(org_name))
                         except:
                             pass
                     if org_name:
@@ -146,7 +146,7 @@ def person():
                         query = (otable.name == org_name) & \
                                 (mtable.organisation_id == otable.id)
                         resource = s3mgr.define_resource("member", "membership", filter=query)
-                        ondelete = s3mgr.model.get_config("member_membership", "ondelete")
+                        ondelete = s3db.get_config("member_membership", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
 
     s3mgr.import_prep = import_prep
@@ -171,7 +171,7 @@ def person():
             member_id = request.get_vars.get("membership.id", None)
             if member_id and r.component_name == "membership":
                 r.component_id = member_id
-            s3mgr.configure("member_membership",
+            s3db.configure("member_membership",
                             insertable = False)
         return True
     s3.prep = prep
@@ -183,7 +183,7 @@ def person():
 '''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return output
     s3.postp = postp
-        
+
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.member_rheader,

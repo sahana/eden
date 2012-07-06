@@ -46,9 +46,9 @@ def project():
         #s3.crud_strings["project_project"].sub_title_list = T("Select Project")
         s3mgr.LABEL.READ = "Select"
         s3mgr.LABEL.UPDATE = "Select"
-        s3mgr.configure("project_project",
-                        deletable=False,
-                        listadd=False)
+        s3db.configure("project_project",
+                       deletable=False,
+                       listadd=False)
         # Post-process
         def postp(r, output):
             if r.interactive:
@@ -176,7 +176,7 @@ def project():
             if not r.component:
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
-    '''S3.start_end_date('project_project_start_date','project_project_end_date')''')
+'''S3.start_end_date('project_project_start_date','project_project_end_date')''')
                 if mode_task:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
@@ -219,10 +219,10 @@ def organisation():
     """ RESTful CRUD controller """
 
     if settings.get_project_multiple_organisations():
-        s3mgr.configure("project_organisation",
-                        insertable=False,
-                        editable=False,
-                        deletable=False)
+        s3db.configure("project_organisation",
+                       insertable=False,
+                       editable=False,
+                       deletable=False)
 
         list_btn = A(T("Funding Report"),
                      _href=URL(c="project", f="organisation",
@@ -253,10 +253,10 @@ def beneficiary():
 
     tablename = "project_beneficiary"
 
-    s3mgr.configure("project_beneficiary",
-                    insertable=False,
-                    editable=False,
-                    deletable=False)
+    s3db.configure("project_beneficiary",
+                   insertable=False,
+                   editable=False,
+                   deletable=False)
 
     list_btn = A(T("Beneficiary Report"),
                  _href=URL(c="project", f="beneficiary",
@@ -406,7 +406,7 @@ def location():
                         title = title,
                         details_btn = details_btn,
                     )
-            
+
         return output
     s3.postp = postp
 
@@ -482,19 +482,18 @@ def time():
     table = s3db[tablename]
     if "mine" in request.get_vars:
         # Show the Logged Time for this User
-        s3mgr.load("project_time")
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
-        s3mgr.configure("project_time",
-                        listadd=False)
+        s3db.configure("project_time",
+                       listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
             s3.filter = (table.person_id == person_id)
         try:
-            list_fields = s3mgr.model.get_config(tablename,
-                                                 "list_fields")
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
             list_fields.remove("person_id")
-            s3mgr.configure(tablename,
-                            list_fields=list_fields)
+            s3db.configure(tablename,
+                           list_fields=list_fields)
         except:
             pass
 
@@ -540,8 +539,8 @@ def comment_parse(comment, comments, task_id=None):
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not task_id and comment.task_id:
-        s3mgr.load("project_task")
-        task = "re: %s" % db.project_task[comment.task_id].name
+        table = s3db.project_task
+        task = "re: %s" % table[comment.task_id].name
         header = DIV(author, " ", task)
         task_id = comment.task_id
     else:
@@ -578,46 +577,27 @@ def comment_parse(comment, comments, task_id=None):
 
 # -----------------------------------------------------------------------------
 def comments():
-    """ Function accessed by AJAX from discuss() to handle Comments """
+    """ Function accessed by AJAX from rfooter to handle Comments """
 
     try:
-        resourcename = request.args[0]
+        task_id = request.args[0]
     except:
-        raise HTTP(400)
-
-    try:
-        id = request.args[1]
-    except:
-        raise HTTP(400)
-
-    if resourcename == "task":
-        task_id = id
-    else:
         raise HTTP(400)
 
     table = s3db.project_comment
-    if task_id:
-        table.task_id.default = task_id
-        table.task_id.writable = table.task_id.readable = False
-    else:
-        table.task_id.label = T("Related to Task (optional)")
-        table.task_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                       "project_task.id",
-                                                       "%(name)s"
-                                                      ))
+    field = table.task_id
+    field.default = task_id
+    field.writable = field.readable = False
 
     # Form to add a new Comment
-    form = crud.create(table)
+    form = crud.create(table, formname="project_comment/%s" % task_id)
 
     # List of existing Comments
-    if task_id:
-        comments = db(table.task_id == task_id).select(table.id,
-                                                       table.parent,
-                                                       table.body,
-                                                       table.created_by,
-                                                       table.created_on)
-    else:
-        comments = ""
+    comments = db(field == task_id).select(table.id,
+                                           table.parent,
+                                           table.body,
+                                           table.created_by,
+                                           table.created_on)
 
     output = UL(_id="comments")
     for comment in comments:
@@ -626,7 +606,6 @@ def comments():
             thread = comment_parse(comment, comments, task_id=task_id)
             output.append(thread)
 
-    # Also see the outer discuss()
     script = "".join((
 '''$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false})
 $('#project_comment_parent__row1').hide()

@@ -122,14 +122,13 @@ class S3PersonEntity(S3Model):
         db = current.db
         T = current.T
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_entity = self.super_entity
-        super_key = model.super_key
-        super_link = model.super_link
+        super_key = self.super_key
+        super_link = self.super_link
 
         YES = T("yes") #current.messages.YES
         NO = T("no") #current.messages.NO
@@ -518,10 +517,9 @@ class S3PersonModel(S3Model):
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
         define_table = self.define_table
-        super_link = model.super_link
-        add_component = model.add_component
+        super_link = self.super_link
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Person
@@ -720,7 +718,7 @@ class S3PersonModel(S3Model):
                                       ])
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity=("pr_pentity", "sit_trackable"),
                         list_fields = ["id",
                                        "first_name",
@@ -955,8 +953,7 @@ class S3GroupModel(S3Model):
         db = current.db
 
         messages = current.messages
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -973,7 +970,7 @@ class S3GroupModel(S3Model):
 
         tablename = "pr_group"
         table = define_table(tablename,
-                             model.super_link("pe_id", "pr_pentity"),
+                             self.super_link("pe_id", "pr_pentity"),
                              Field("group_type", "integer",
                                    requires = IS_IN_SET(pr_group_types, zero=None),
                                    default = 4,
@@ -1055,7 +1052,7 @@ class S3GroupModel(S3Model):
                                    ondelete = "RESTRICT")
 
         # Components
-        model.add_component("pr_group_membership", pr_group="group_id")
+        self.add_component("pr_group_membership", pr_group="group_id")
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1199,9 +1196,8 @@ class S3ContactModel(S3Model):
         T = current.T
         db = current.db
 
-        model = current.manager.model
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Contact
@@ -1260,7 +1256,7 @@ class S3ContactModel(S3Model):
             msg_list_empty = T("No contact information available"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         onvalidation=self.contact_onvalidation,
                         deduplicate=self.contact_deduplicate,
                         list_fields=["id",
@@ -1338,7 +1334,6 @@ class S3PersonAddressModel(S3Model):
     def model(self):
 
         T = current.T
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Address
@@ -1353,7 +1348,7 @@ class S3PersonAddressModel(S3Model):
 
         tablename = "pr_address"
         table = self.define_table(tablename,
-                                  model.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_address_type_opts, zero=None),
                                         widget = RadioWidget.widget,
@@ -1393,7 +1388,7 @@ class S3PersonAddressModel(S3Model):
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         onaccept=self.address_onaccept,
                         onvalidation=s3_address_onvalidation,
                         deduplicate=self.address_deduplicate,
@@ -1513,7 +1508,6 @@ class S3PersonImageModel(S3Model):
     def model(self):
 
         T = current.T
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Image
@@ -1529,7 +1523,7 @@ class S3PersonImageModel(S3Model):
 
         tablename = "pr_image"
         table = self.define_table(tablename,
-                                  model.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("profile", "boolean",
                                         default = False,
                                         label = T("Profile Picture?")
@@ -1576,7 +1570,7 @@ class S3PersonImageModel(S3Model):
             msg_list_empty = T("No Images currently registered"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         onaccept = self.pr_image_onaccept,
                         onvalidation = self.pr_image_onvalidation,
                         ondelete = self.pr_image_ondelete,
@@ -2391,8 +2385,7 @@ class S3PersonDescription(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Note
@@ -2455,7 +2448,7 @@ class S3PersonDescription(S3Model):
             msg_list_empty = T("No entry available"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         list_fields=["id",
                                      "timestmp",
                                      "location_id",

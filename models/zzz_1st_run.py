@@ -226,16 +226,16 @@ if len(pop_list) > 0:
     bi = s3base.S3BulkImporter()
 
     s3.import_role = bi.import_role
-    
+
     # Disable table protection
     protected = s3mgr.PROTECTED
     s3mgr.PROTECTED = []
 
     # Additional settings for user table imports:
-    s3mgr.configure("auth_user",
+    s3db.configure("auth_user",
                     onaccept = lambda form: \
                         auth.s3_link_to_person(user=form.vars))
-    s3mgr.model.add_component("auth_membership", auth_user="user_id")
+    s3db.add_component("auth_membership", auth_user="user_id")
 
     # Allow population via shell scripts
     if not request.env.request_method:

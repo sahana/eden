@@ -599,7 +599,6 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-
         query = (table.id == feature_id)
         feature = db(query).select(table.id,
                                    table.name,
@@ -629,7 +628,6 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-
         query = (table.deleted == False)
         if level:
             query = query & (table.level == level)
@@ -794,81 +792,6 @@ class GIS(object):
         return results
 
     # -------------------------------------------------------------------------
-    def get_parents_of_level(self, locations, level):
-        """
-            Given a list of gis_location.ids, return a list of the Parents of
-            the given Level (Lx)
-
-            - used by S3Report
-        """
-
-        output = []
-
-        if not locations or not level:
-            return output
-
-        while locations:
-            # Recursively pull out good records & try parents agaian
-            (newoutput, locations) = self._get_parents_of_level(locations, level)
-            for id in newoutput:
-                output.append(id)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _get_parents_of_level(locations, level):
-        """
-            Given a list of gis_location.ids, return a list of the Parents of
-            the given Level (Lx)
-
-            - helper functions used by get_parents_of_level() to handle recursion
-        """
-
-        output = []
-
-        if not locations or not level:
-            return output
-
-        # Read the records from the database
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-        query = (table.id.belongs(locations))
-        rows = db(query).select(table.id,
-                                table.level,
-                                table.parent,
-                                table.path)
-
-        tryagain = []
-
-        for row in rows:
-            _level = row.level
-            if _level == level:
-                # We're already at the right level, pass it back
-                output.append(row.id)
-            elif _level[1:] > level[1:]:
-                # We're already too high, skip
-                continue
-            else:
-                # Try the Path
-                path = row.path
-                if path:
-                    ids = path.split("/")
-                    # Ignore this one!
-                    ids.remove(str(row.id))
-                    for id in ids:
-                        if id not in tryagain:
-                            tryagain.append(int(id))
-                else:
-                    # Try the Parent
-                    parent = row.parent
-                    if parent and parent not in tryagain:
-                        tryagain.append(parent)
-
-        return (output, tryagain)
-
-    # -------------------------------------------------------------------------
     def update_table_hierarchy_labels(self, tablename=None):
         """
             Re-set table options that depend on location_hierarchy
@@ -876,17 +799,15 @@ class GIS(object):
             Only update tables which are already defined
         """
 
-        T = current.T
-        db = current.db
-
         levels = ["L1", "L2", "L3", "L4"]
         labels = self.get_location_hierarchy()
 
+        db = current.db
         if tablename and tablename in db:
             # Update the specific table which has just been defined
             table = db[tablename]
             if tablename == "gis_location":
-                labels["L0"] = T("Country")
+                labels["L0"] = current.T("Country")
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
@@ -955,7 +876,6 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-
         ctable = s3db.gis_config
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
@@ -1125,40 +1045,6 @@ class GIS(object):
         return gis.config
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def set_default_location(location, level=None):
-        """
-            Set the default location
-
-            @param: location - either name or ID
-            @param: level - useful to distinguish Names (ignored for IDs)
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        try:
-            # ID?
-            id = int(location)
-        except:
-            # name
-            query = (table.name == location)
-            if level:
-                query = query & (table.level == level)
-            _location = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
-            if _location:
-                id = _location.id
-            else:
-                s3_debug("S3GIS: Location cannot be set as defaut", location)
-                return
-
-        table = s3db.gis_config
-        query = (table.uuid == "SITE_DEFAULT")
-        db(query).update(default_location_id=id)
-
-    # -------------------------------------------------------------------------
     def get_location_hierarchy(self, level=None, location=None):
         """
             Returns the location hierarchy and it's labels
@@ -1189,7 +1075,6 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
 
         if level:
@@ -1255,9 +1140,7 @@ class GIS(object):
             @param: location - the location_id of the record to check
         """
 
-        db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
 
         # Read the system default
@@ -1266,9 +1149,9 @@ class GIS(object):
         if location:
             # Try the Location's Country, but ensure we have the fallback available in a single query
             query = query | (table.location_id == self.get_parent_country(location))
-        rows = db(query).select(table.uuid,
-                                table.strict_hierarchy,
-                                cache=s3db.cache)
+        rows = current.db(query).select(table.uuid,
+                                        table.strict_hierarchy,
+                                        cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
@@ -1298,9 +1181,9 @@ class GIS(object):
             Get the current hierarchy levels plus non-hierarchy levels.
         """
 
-        T = current.T
         all_levels = OrderedDict()
         all_levels.update(self.get_location_hierarchy())
+        #T = current.T
         #all_levels["GR"] = T("Location Group")
         #all_levels["XX"] = T("Imported")
 
@@ -1334,11 +1217,8 @@ class GIS(object):
 
         country = self.get_parent_country(id)
 
-        db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
-
         fieldname = "edit_%s" % level
 
         # Read the system default
@@ -1346,8 +1226,8 @@ class GIS(object):
         if country:
             # Try the Location's Country, but ensure we have the fallback available in a single query
             query = query | (table.location_id == country)
-        rows = db(query).select(table[fieldname],
-                                cache=s3db.cache)
+        rows = current.db(query).select(table[fieldname],
+                                        cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
@@ -1436,21 +1316,22 @@ class GIS(object):
 
             @param: location: the location or id to search for
             @param: key_type: whether to return an id or code
+
+            @ToDo: Optimise to not use try/except
         """
 
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
 
         try:
             # location is passed as integer (location_id)
+            table = s3db.gis_location
             query = (table.id == location)
             location = db(query).select(table.id,
                                         table.path,
                                         table.level,
                                         limitby=(0, 1),
-                                        cache=cache).first()
+                                        cache=s3db.cache).first()
         except:
             # location is passed as record
             pass
@@ -1505,6 +1386,9 @@ class GIS(object):
             Returns a gluon.sql.Rows of Features within a Polygon.
             The Polygon can be either a WKT string or the ID of a record in the
             gis_location table
+
+            Currently unused.
+            @ToDo: Optimise to not use try/except
         """
 
         from shapely.geos import ReadingError
@@ -1631,6 +1515,8 @@ class GIS(object):
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
+            
+            Unused
         """
 
         import math
@@ -1840,21 +1726,9 @@ class GIS(object):
         feature = db(query).select(table.id,
                                    table.lat,
                                    table.lon,
+                                   table.parent,
+                                   table.path,
                                    limitby=(0, 1)).first()
-
-        #query = (table.deleted == False)
-        #settings = current.deployment_settings
-        #if filter and not settings.get_gis_display_l0():
-            # @ToDo: This query looks wrong. Does it intend to exclude both
-            # L0 and no level? Because it's actually a no-op. If location is
-            # L0 then first term is false, but there is a level so the 2nd
-            # term is also false, so the combination is false, same as the
-            # 1st term alone. If the level isn't L0, the first term is true,
-            # so the 2nd is irrelevant and probably isn't even evaluated, so
-            # the combination is same as the 1st term alone.
-            # @ToDo And besides, it the L0 lon, lat is all we have, isn't it
-            # better to use that than nothing?
-            #query = query & ((table.level != "L0") | (table.level == None))
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -1863,7 +1737,7 @@ class GIS(object):
 
         else:
             # Step through ancestors to first with lon, lat.
-            parents = self.get_parents(feature.id)
+            parents = self.get_parents(feature.id, feature=feature)
             if parents:
                 lon = lat = None
                 for row in parents:

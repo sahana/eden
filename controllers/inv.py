@@ -63,13 +63,13 @@ def warehouse():
     s3.filter = (table.type == 5)
 
     # Remove type from list_fields
-    list_fields = s3mgr.model.get_config(tablename, "list_fields")
+    list_fields = s3db.get_config(tablename, "list_fields")
     try:
         list_fields.remove("type")
     except:
         # Already removed
         pass
-    s3mgr.configure(tablename, list_fields=list_fields)
+    s3db.configure(tablename, list_fields=list_fields)
 
     warehouse_search = s3base.S3Search(
         advanced=(s3base.S3SearchSimpleWidget(
@@ -97,7 +97,7 @@ def warehouse():
                     label=T("Map"),
                   ),
         ))
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     search_method = warehouse_search)
 
     # CRUD pre-process
@@ -111,7 +111,7 @@ def warehouse():
                 r.table.obsolete.readable = False
                 s3base.s3_address_hide(table)
                 # Process Base Location
-                #s3mgr.configure(table._tablename,
+                #s3db.configure(table._tablename,
                 #                onaccept=address_onaccept)
 
             if r.component:
@@ -119,10 +119,10 @@ def warehouse():
                     # Filter out items which are already in this inventory
                     s3db.inv_prep(r)
                     # Remove the Warehouse Name from the list_fields
-                    list_fields = s3mgr.model.get_config("inv_inv_item", "list_fields")
+                    list_fields = s3db.get_config("inv_inv_item", "list_fields")
                     try:
                         list_fields.remove("site_id")
-                        s3mgr.configure("inv_inv_item", list_fields=list_fields)
+                        s3db.configure("inv_inv_item", list_fields=list_fields)
                     except:
                         pass
 
@@ -217,7 +217,7 @@ def inv_item():
                 msg_list_empty = T("No Stock currently registered"),
                 title_search = T("Monetization Report"),
               ))
-            s3mgr.configure("inv_inv_item",
+            s3db.configure("inv_inv_item",
                             list_fields = ["id",
                                            (T("Donor"), "supply_org_id"),
                                            (T("Items/Description"), "item_id"),
@@ -230,7 +230,7 @@ def inv_item():
                                            ]
                             )
     else:
-        s3mgr.configure("inv_inv_item", 
+        s3db.configure("inv_inv_item",
                         list_fields = ["id",
                                        "site_id",
                                        "item_id",
@@ -271,7 +271,7 @@ def inv_item():
         """
         request = current.request
         resource, tree = data
-        xml = s3mgr.xml
+        xml = current.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
         if s3.importerReplace:
@@ -287,7 +287,7 @@ def inv_item():
                     org_name = org.get("value", None) or org.text
                     if org_name:
                         try:
-                            org_name = json.loads(s3mgr.xml.xml_decode(org_name))
+                            org_name = json.loads(xml.xml_decode(org_name))
                         except:
                             pass
                     if org_name:
@@ -295,7 +295,7 @@ def inv_item():
                                 (stable.organisation_id == otable.id) & \
                                 (itable.site_id == stable.id)
                         resource = s3mgr.define_resource("inv", "inv_item", filter=query)
-                        ondelete = s3mgr.model.get_config("inv_inv_item", "ondelete")
+                        ondelete = s3db.get_config("inv_inv_item", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml")
             resource.skip_import = True
     s3mgr.import_prep = import_prep
@@ -307,7 +307,7 @@ def inv_item():
 
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
-        s3mgr.configure("inv_track_item",
+        s3db.configure("inv_track_item",
                         create=False,
                         listadd=False,
                         editable=False,
@@ -343,7 +343,7 @@ def track_movement():
                 s3.filter = filter
         return True
 
-    s3mgr.configure("inv_track_item",
+    s3db.configure("inv_track_item",
                     create=False,
                     listadd=False,
                     editable=False,
@@ -483,7 +483,7 @@ def send():
         if record and record.status != SHIP_STATUS_IN_PROCESS:
             # now that the shipment has been sent
             # lock the record so that it can't be meddled with
-            s3mgr.configure("inv_send",
+            s3db.configure("inv_send",
                             create=False,
                             listadd=False,
                             editable=False,
@@ -535,7 +535,7 @@ def send():
                                "supply_org_id",
                                "item_status",
                               ]
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields=list_fields,
                            )
 
@@ -603,7 +603,7 @@ def send():
             if status == SHIP_STATUS_RETURNING:
                 editable = True
             # remove CRUD generated buttons in the tabs
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             create=False,
                             listadd=False,
                             editable=editable,
@@ -1047,7 +1047,7 @@ def recv():
              record.status != SHIP_STATUS_SENT)):
             # now that the shipment has been sent
             # lock the record so that it can't be meddled with
-            s3mgr.configure("inv_recv",
+            s3db.configure("inv_recv",
                             create=False,
                             listadd=False,
                             editable=False,
@@ -1098,19 +1098,19 @@ def recv():
                            "owner_org_id",
                            "supply_org_id",
                           ]
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields=list_fields,
                            )
         if status:
             # remove CRUD generated buttons in the tabs
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             create=False,
                             listadd=False,
                             editable=False,
                             deletable=False,
                            )
             if recvtable[request.args[0]].status == 2:
-                s3mgr.configure("inv_track_item",
+                s3db.configure("inv_track_item",
                                 editable=True,
                                )
 
@@ -1370,7 +1370,7 @@ def track_item():
 
     table = s3db.inv_track_item
 
-    s3mgr.configure("inv_track_item",
+    s3db.configure("inv_track_item",
                     create=False,
                     listadd=False,
                     editable=False,
@@ -1385,7 +1385,7 @@ def track_item():
                                                         subtitle_list = T("Summary Details"),
                                                         title_search = T("Summary of Releases"),
                                                         )
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields = ["id",
                                            #"send_id",
                                            #"req_item_id",
@@ -1412,7 +1412,7 @@ def track_item():
                                                         title_search = T("Summary of Incoming Supplies"),
                                                         )
 
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields = ["id",
                                            (T("Date Received"), "recv_id$date"),
                                            (T("Received By"), "recv_id$recipient_id"),
@@ -1438,7 +1438,7 @@ def track_item():
                                                         title_search = T("Utilization Report"),
                                                         )
 
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields = ["id",
                                            (T("Item/Description"), "item_id$name"),
                                            (T("Beneficiary"), "send_id$site_id"),
@@ -1462,7 +1462,7 @@ def track_item():
                                                         title_search = T("Expiration Report"),
                                                         )
 
-            s3mgr.configure("inv_track_item",
+            s3db.configure("inv_track_item",
                             list_fields = ["id",
                                            (T("Item/Description"), "item_id"),
                                            (T("Expiration Date"), "expiry_date"),
@@ -1522,7 +1522,7 @@ def adj():
 
     if len(request.args) > 1 and request.args[1] == "adj_item" and table[request.args[0]].status:
         # remove CRUD generated buttons in the tabs
-        s3mgr.configure("inv_adj_item",
+        s3db.configure("inv_adj_item",
                         create=False,
                         listadd=False,
                         editable=False,
@@ -1591,8 +1591,8 @@ def adj_close():
     # Change the status of the adj record to Complete
     db(atable.id == adj_id).update(status=1)
     # Go to the Inventory of the Site which has adjusted these items
-    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                          adj_rec.site_id)
+    (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
+                                                   adj_rec.site_id)
     if resourcename == "office":
         query = (otable.id == id)
         otype = db(query).select(otable.type, limitby=(0, 1)).first()

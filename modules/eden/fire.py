@@ -63,8 +63,7 @@ class S3FireStationModel(S3Model):
 
         s3_utc_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
-        model = current.manager.model
-        add_component = model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
 
         # =====================================================================
@@ -77,7 +76,7 @@ class S3FireStationModel(S3Model):
 
         tablename = "fire_station"
         table = self.define_table(tablename,
-                                  model.super_link("site_id", "org_site"),
+                                  self.super_link("site_id", "org_site"),
                                   Field("name", notnull=True, length=64,
                                         label = T("Name")),
                                   Field("code", unique=True, length=64,
@@ -103,7 +102,7 @@ class S3FireStationModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
-        model.configure("fire_station",
+        self.configure("fire_station",
                         super_entity="org_site")
 
         station_id = S3ReusableField("station_id", table,
@@ -171,7 +170,7 @@ class S3FireStationModel(S3Model):
             msg_no_match = T("No Vehicles could be found"),
             msg_list_empty = T("No Vehicles currently registered"))
 
-        model.set_method("fire", "station",
+        self.set_method("fire", "station",
                          method="vehicle_report",
                          action=self.vehicle_report)
 

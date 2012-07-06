@@ -172,14 +172,14 @@ def user():
     # Pre-processor
     def prep(r):
         if r.interactive:
-            s3mgr.configure(r.tablename,
-                            deletable=False,
-                            # jquery.validate is clashing with dataTables so don't embed the create form in with the List
-                            listadd=False,
-                            addbtn=True,
-                            sortby = [[2, "asc"], [1, "asc"]],
-                            # Password confirmation
-                            create_onvalidation = user_create_onvalidation)
+            s3db.configure(r.tablename,
+                           deletable=False,
+                           # jquery.validate is clashing with dataTables so don't embed the create form in with the List
+                           listadd=False,
+                           addbtn=True,
+                           sortby = [[2, "asc"], [1, "asc"]],
+                           # Password confirmation
+                           create_onvalidation = user_create_onvalidation)
 
             # Allow the ability for admin to Disable logins
             reg = r.table.registration_key
@@ -198,15 +198,15 @@ def user():
             if r.id == session.auth.user.id: # we're trying to delete ourself
                 request.get_vars.update({"user.id":str(r.id)})
                 r.id = None
-                s3mgr.configure(r.tablename,
-                                delete_next = URL(c="default", f="user/logout"))
+                s3db.configure(r.tablename,
+                               delete_next = URL(c="default", f="user/logout"))
                 s3.crud.confirm_delete = T("You are attempting to delete your own account - are you sure you want to proceed?")
 
         elif r.method == "update":
             # Send an email to user if their account is approved
             # (=moved from 'pending' to 'blank'(i.e. enabled))
-            s3mgr.configure(r.tablename,
-                            onvalidation = lambda form: user_approve(form))
+            s3db.configure(r.tablename,
+                           onvalidation = lambda form: user_approve(form))
         if r.http == "GET" and not r.method:
             session.s3.cancel = r.url()
         return True
@@ -276,10 +276,10 @@ def group():
     tablename = "auth_group"
 
     if not auth.s3_has_role(ADMIN):
-        s3mgr.configure(tablename,
-                        editable=False,
-                        insertable=False,
-                        deletable=False)
+        s3db.configure(tablename,
+                       editable=False,
+                       insertable=False,
+                       deletable=False)
 
     # CRUD Strings
     ADD_ROLE = T("Add Role")
@@ -297,7 +297,7 @@ def group():
         msg_record_deleted = T("Role deleted"),
         msg_list_empty = T("No Roles currently defined"))
 
-    s3mgr.configure(tablename, main="role")
+    s3db.configure(tablename, main="role")
     return s3_rest_controller("auth", resourcename)
 
 # -----------------------------------------------------------------------------
@@ -413,13 +413,13 @@ def acl():
     table.oacl.represent = lambda val: acl_represent(val,
                                                      auth.permission.PERMISSION_OPTS)
 
-    s3mgr.configure(tablename,
-        create_next = URL(r=request),
-        update_next = URL(r=request))
+    s3db.configure(tablename,
+                   create_next = URL(r=request),
+                   update_next = URL(r=request))
 
     if "_next" in request.vars:
         next = request.vars._next
-        s3mgr.configure(tablename, delete_next=next)
+        s3db.configure(tablename, delete_next=next)
 
     output = s3_rest_controller(module, name)
     return output
@@ -608,7 +608,7 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 
     if copy_database:
         # Copy the db for the portable app
-        s3mgr.model.load_all_models() # Load all modules to copy everything
+        s3db.load_all_models() # Load all modules to copy everything
 
         portable_db = DAL("sqlite://storage.db", folder=os.path.join(appdir, "databases"))
         for table in db:

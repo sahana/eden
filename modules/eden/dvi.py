@@ -59,11 +59,10 @@ class S3DVIModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         datetime_represent = S3DateTime.datetime_represent
 
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Recovery Request
@@ -196,7 +195,7 @@ class S3DVIModel(S3Model):
                   super_entity=("pr_pentity", "org_site"))
 
         # Components
-        model.add_component("dvi_body", dvi_morgue="morgue_id")
+        self.add_component("dvi_body", dvi_morgue="morgue_id")
 
         # ---------------------------------------------------------------------
         # Body

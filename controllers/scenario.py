@@ -36,7 +36,7 @@ def scenario():
     # Load the Models
     table = s3db.scenario_scenario
 
-    s3mgr.configure("gis_config",
+    s3db.configure("gis_config",
                     deletable=False)
 
     # Parse the Request
@@ -47,7 +47,7 @@ def scenario():
         s3.crud.submit_button = T("Assign")
 
     # Redirect to update view to open tabs
-    s3mgr.configure(table,
+    s3db.configure(table,
                     create_next = r.url(method="", id="[id]"))
 
     # Execute the request
@@ -137,7 +137,7 @@ def asset():
     # Pre-Process
     if r.id and link:
         # Go back to the asset list of the scenario/event after removing the asset
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "asset"]))
@@ -189,7 +189,7 @@ def human_resource():
     # Pre-Process
     if r.id and link:
         # Go back to the human_resource list of the scenario/event after removing the human_resource
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "human_resource"]))
@@ -241,7 +241,7 @@ def site():
     # Pre-Process
     if r.id and link:
         # Go back to the facility list of the scenario/event after removing the facility
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "site"]))
@@ -293,7 +293,7 @@ def task():
     # Pre-Process
     if r.id and link:
         # Go back to the task list of the scenario/event after removing the task
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "task"]))

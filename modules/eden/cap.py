@@ -65,7 +65,7 @@ class S3CAPModel(S3Model):
         location_id = self.gis_location_id
         message_id = self.msg_message_id
 
-        add_component = current.manager.model.add_component
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -331,7 +331,7 @@ class S3CAPModel(S3Model):
               _title="%s|%s" % (
                   T("The identifier of the sender of the alert message"),
                   T("This is guaranteed by assigner to be unique globally; e.g., may be based on an Internet domain name. Must not include spaces, commas or restricted characters (< and &).")))
-                  
+
         table.status.comment = DIV(
               _class="tooltip",
               _title="%s|%s" % (

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" 
+"""
     This is just a commented template to copy/paste from when implementing
     new models. Be sure you replace this docstring by something more
     appropriate, e.g. a short module description and a license statement.
@@ -79,7 +79,7 @@ class S3SkeletonDataModel(S3Model):
                                   Field("name"),
                                   *s3_meta_fields())
 
-        # Use self.configure to configure your model (not s3mgr.configure!)
+        # Use self.configure to configure your model (or current.s3db.configure)
         self.configure(tablename,
                        listadd=False)
 
@@ -90,9 +90,9 @@ class S3SkeletonDataModel(S3Model):
         # self.super_entity   => super_entity
         # self.super_key      => super_key
         # self.super_link     => super_link
-        # self.add_component  => s3mgr.model.add_component
-        # self.configure      => s3mgr.configure
-        # self.table          => s3mgr.load
+        # self.add_component  => s3db.add_component
+        # self.configure      => s3db.configure
+        # self.table          => s3db.table
         #
 
         # If you need to reference external tables, always use the table-method.
