@@ -216,6 +216,7 @@ class S3MainMenu:
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
+		            MM("Translation",c="admin",f="translate"),
                             MM("Tickets", f="errors"),
                         )
 
@@ -383,6 +384,7 @@ class S3OptionsMenu:
                     ),
                     #M("Edit Application", a="admin", c="default", f="design",
                       #args=[request.application]),
+		    M("Translation",c="admin",f="translate"),
                     M("Tickets", c="admin", f="errors"),
                     M("Portable App", c="admin", f="portable")
                 )

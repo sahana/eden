@@ -659,3 +659,55 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     return response.stream(portable_app)
 
 # END =========================================================================
+
+
+def translate():
+
+      from s3.s3translate import TranslateAPI
+      from math import ceil
+
+      def prep(r):
+	     if r.interactive:
+	         if r.method == "create":
+	             return True
+
+      def postp(r,output):
+              
+	     form = FORM()
+	     A = TranslateAPI()
+	     m = A.get_modules()
+	     m.sort()
+             l = len(m)     
+
+	     table = TABLE(_width="55%")
+             table.append(BR())	      
+             num = 0
+            
+	     max_rows = int(ceil(l/3.0))
+
+             while num < max_rows:
+                  row = TR( TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module', _value=m[num])) )
+		  for c in range(1,3):
+		     if num + c*max_rows < l:
+                       row.append( TD(num+1+c*max_rows) )
+	               row.append( TD(m[num+c*max_rows]) )
+	               row.append( TD(INPUT(_type = 'checkbox', _name = 'module', _value=m[num+c*max_rows])) ) 
+		  num += 1 
+		  table.append(row)
+
+	     div = DIV()
+	     div.append(table)
+	     div.append(BR())
+	     div.append(INPUT(_type='submit',_value='Submit'))
+	     form.append(div)
+	     output["form"] = form
+             return output
+	     
+      response.s3.prep = prep
+      response.s3.postp = postp
+
+#    output = s3_rest_controller("","")
+     return output
+#    return postp(None,{})
+
+	     
