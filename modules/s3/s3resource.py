@@ -4044,7 +4044,9 @@ class S3ResourceQuery:
         elif op == self.ANYOF:
             q = l.contains(r, all=False)
         elif op == self.BELONGS:
-            if type(r) is list and None in r:
+            if type(r) is not list:
+                r = [r]
+            if None in r:
                 _r = [item for item in r if item is not None]
                 q = ((l.belongs(_r)) | (l == None))
             else:
@@ -4196,6 +4198,8 @@ class S3ResourceQuery:
                     return True
             return False
         elif op == self.BELONGS:
+            if not isinstance(r, (list, tuple)):
+                r = [r]
             r = convert(l, r)
             result = contains(r, l)
         elif op == self.LIKE:
