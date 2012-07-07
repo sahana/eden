@@ -268,8 +268,8 @@ def address():
                                          limitby=(0, 1)).first().pe_id
                 s3db.pr_address.pe_id.default = pe_id
         return True
-    s3.prep = prep
-
+    response.s3.prep = prep
+    response.s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller()
     return output
 

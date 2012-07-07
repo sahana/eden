@@ -1761,9 +1761,21 @@ def org_organisation_represent(id, row=None, showlink=False,
     return represent
 
 # =============================================================================
+<<<<<<< HEAD
 def org_site_represent(id, row=None, show_link=True):
     """
         Represent a Facility in option fields or list views
+=======
+def org_site_represent(id, show_link=True):
+    """ Represent a Facility in option fields or list views """
+
+
+    db = current.db
+    s3db = current.s3db
+    represent = current.messages.NONE
+#    T = current.T
+    stable = s3db.org_site
+>>>>>>> work
 
         @param site_id: the org_site record ID or the org_site record
         @param show_link: whether to render the representation as link

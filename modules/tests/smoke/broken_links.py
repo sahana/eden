@@ -77,7 +77,7 @@ class BrokenLinkTest(Web2UnitTest):
                     form["password"] = self.password
                     self.b.submit("Login")
                     return True
-            except:
+            except ControlNotFoundError:
                 pass
         return False
 
