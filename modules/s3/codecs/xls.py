@@ -115,7 +115,8 @@ class S3XLS(S3Codec):
         not_found = s3.crud_strings.get(name, request.function)
         title = str(crud_strings.get(name, not_found))
 
-        headers = [f.label for f in lfields if f.show]
+        # Only include fields that can be read.
+        headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
         # Doesn't work with Virtual Fields
         #types = [f.field.type for f in lfields if f.show]
         types = []

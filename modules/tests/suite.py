@@ -9,24 +9,63 @@ import time
 import unittest
 import argparse
 
-#from s3 import s3_debug
+def loadAllTests():
+    # Create Organisation
+    suite = loadTests(Org_Organisation)
+    # Shortcut
+    addTests = suite.addTests
+    # Create Office
+    addTests(loadTests(org_create_office))
+    # Setup Staff
+    addTests(loadTests(hrm_setup_staff))
+    # Setup New Volunteer
+    addTests(loadTests(hrm_setup_volunteer))
+    # Setup Training Course
+    addTests(loadTests(hrm_setup_trainingcourse))
+    # Setup Training Event
+    #addTests(loadTests(hrm_setup_trainingevent))
+    # Inventory tests
+    addTests(loadTests(Logistics))
+
+    # Create Project
+    addTests(loadTests(project_create))
+
+    # Assign Staff to Organisation
+    #addTests(loadTests(hrm_assign_organisationstaff))
+    # Assign Staff to Office
+    #addTests(loadTests(hrm_assign_officestaff))
+    # Assign Staff to Warehouse
+    #addTests(loadTests(hrm_assign_warehousestaff))
+    return suite
 
 # Set up the command line arguments
 desc = "Script to run the Sahana Eden test suite."
 parser = argparse.ArgumentParser(description = desc)
-parser.add_argument("-C", "--class", help = "Name of class to run")
+parser.add_argument("-C", "--class",
+                    help = "Name of class to run"
+                   )
 method_desc = """Name of method to run, this is used in conjunction with the
 class argument or with the name of the class followed by the name of the method
 separated with a period, class.period.
 """
-parser.add_argument("-M", "--method", "--test", help = method_desc)
+parser.add_argument("-M",
+                    "--method",
+                    "--test",
+                    help = method_desc
+                   )
 parser.add_argument("-V", "--verbose",
                     type = int,
                     default = 1,
                     help = "The level of verbose reporting")
-parser.add_argument("--nohtml", help = "Disable HTML reporting.")
-parser.add_argument("--html-path", help = "Path where the HTML report will be saved.")
-parser.add_argument("--html-name-date", help = "Include just the date in the name of the HTML report.")
+parser.add_argument("--nohtml",
+                    help = "Disable HTML reporting."
+                   )
+parser.add_argument("--html-path",
+                    help = "Path where the HTML report will be saved."
+                   )
+parser.add_argument("--html-name-date",
+                    help = "Include just the date in the name of the HTML report."
+                   )
 suite_desc = """This will execute a standard testing schedule. The valid values
 are, smoke, quick, complete and full. If a method or class options is selected
 the the suite will be ignored.
@@ -46,8 +85,14 @@ parser.add_argument("--link-depth",
                     type = int,
                     default = 3,
                     help = "The recursive depth when looking for links")
+up_desc = """The user name and password, separated by a /. Multiple user name
+and passwords can be added by separating them with a comma. If multiple user
+name and passwords are provided then the same test will be run sequentially
+using the given user in each case.
+"""
 parser.add_argument("--user-password",
                     default = "admin@example.com/testing",
+                    help = up_desc
                     )
 parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
@@ -108,50 +153,38 @@ elif args["class"]:
     browser_open = True
     suite = loadTests(globals()[args["class"]])
 elif args["suite"] == "smoke":
-#    try:
-    from tests.smoke import *
-    broken_links = BrokenLinkTest()
-    broken_links.setDepth(args["link_depth"])
-    broken_links.setUser(args["user_password"])
-    broken_links.run()
-#    except NameError as msg:
-#        s3_debug("%s, unable to run the smoke tests." % msg)
-#        pass
-    exit()
-
+    try:
+        from tests.smoke import *
+        broken_links = BrokenLinkTest()
+        broken_links.setDepth(args["link_depth"])
+        broken_links.setUser(args["user_password"])
+        suite = unittest.TestSuite()
+        suite.addTest(broken_links)
+    except NameError as msg:
+        from s3 import s3_debug
+        s3_debug("%s, unable to run the smoke tests." % msg)
+        pass
+elif args["suite"] == "complete":
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    suite = loadAllTests()
+    try:
+        from tests.smoke import *
+        broken_links = BrokenLinkTest()
+        broken_links.setDepth(args["link_depth"])
+        broken_links.setUser(args["user_password"])
+        suite.addTest(broken_links)
+    except NameError as msg:
+        from s3 import s3_debug
+        s3_debug("%s, unable to run the smoke tests." % msg)
+        pass
 else:
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)
     browser_open = True
     # Run all Tests
-
-    # Create Organisation
-    suite = loadTests(Org_Organisation)
-    # Shortcut
-    addTests = suite.addTests
-    # Create Office
-    addTests(loadTests(org_create_office))
-    # Setup Staff
-    addTests(loadTests(hrm_setup_staff))
-    # Setup New Volunteer
-    addTests(loadTests(hrm_setup_volunteer))
-    # Setup Training Course
-    addTests(loadTests(hrm_setup_trainingcourse))
-    # Setup Training Event
-    #addTests(loadTests(hrm_setup_trainingevent))
-    # Inventory tests
-    addTests(loadTests(Logistics))
-    
-    # Create Project
-    addTests(loadTests(project_create))
-
-    # Assign Staff to Organisation
-    #addTests(loadTests(hrm_assign_organisationstaff))
-    # Assign Staff to Office
-    #addTests(loadTests(hrm_assign_officestaff))
-    # Assign Staff to Warehouse
-    #addTests(loadTests(hrm_assign_warehousestaff))
-
+    suite = loadAllTests()
 try:
     path = args["html_path"]
     if args["html_name_date"]:
@@ -161,13 +194,15 @@ try:
     fullname = os.path.join(path,filename)
     fp = file(fullname, "wb")
 
-    import HTMLTestRunner
-    runner = HTMLTestRunner.HTMLTestRunner(
-                                           stream=fp,
-                                           title="Sahana Eden",
-                                          )
+    config.html = True
+    from tests.runner import EdenHTMLTestRunner
+    runner = EdenHTMLTestRunner(
+                                stream=fp,
+                                title="Sahana Eden",
+                               )
     runner.run(suite)
 except:
+    config.html = False
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup
