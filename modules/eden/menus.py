@@ -384,10 +384,14 @@ class S3OptionsMenu:
                     ),
                     #M("Edit Application", a="admin", c="default", f="design",
                       #args=[request.application]),
-		    M("Translation",c="admin",f="translate"),
+		    M("Translation",c="admin",f="translate")(
+                       M("Select Modules for translaton", c="admin", f="translate", m="create",vars=dict(opt="1")),
+                       M("Upload translated files", c="admin", f="translate", m="create", vars=dict(opt="2"))
+		    ),   
                     M("Tickets", c="admin", f="errors"),
                     M("Portable App", c="admin", f="portable")
-                )
+		    )
+                    
 
     # -------------------------------------------------------------------------
     def assess(self):

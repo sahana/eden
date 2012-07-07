@@ -663,17 +663,27 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 
 def translate():
 
-      from s3.s3translate import TranslateAPI
-      from math import ceil
+    from s3.s3translate import TranslateAPI, StringsToExcel
+    from math import ceil
 
-      def prep(r):
-	     if r.interactive:
-	         if r.method == "create":
-	             return True
+    tablename = "translate_language"
+    opt = request.vars.opt
+    form = FORM()
 
-      def postp(r,output):
-              
-	     form = FORM()
+    def prep(r):
+        if r.interactive:
+            if r.method == "create":
+                   if form.accepts(request.vars):
+                      if request.vars.opt == "1": 
+                          X = StringsToExcel()
+                          X.convert_to_xls(form.request_vars.code + ".py" ,form.request_vars.module_list,[])
+
+		   return True
+
+    def postp(r,output):
+
+        if opt == "1":
+              	  
 	     A = TranslateAPI()
 	     m = A.get_modules()
 	     m.sort()
@@ -686,28 +696,29 @@ def translate():
 	     max_rows = int(ceil(l/3.0))
 
              while num < max_rows:
-                  row = TR( TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module', _value=m[num])) )
+                  row = TR( TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num])) )
 		  for c in range(1,3):
 		     if num + c*max_rows < l:
                        row.append( TD(num+1+c*max_rows) )
 	               row.append( TD(m[num+c*max_rows]) )
-	               row.append( TD(INPUT(_type = 'checkbox', _name = 'module', _value=m[num+c*max_rows])) ) 
+	               row.append( TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num+c*max_rows])) ) 
 		  num += 1 
 		  table.append(row)
 
 	     div = DIV()
 	     div.append(table)
+             div.append(TR(TD("Language code: "),TD(INPUT(_type='text',_name = 'code'))))
 	     div.append(BR())
 	     div.append(INPUT(_type='submit',_value='Submit'))
 	     form.append(div)
-	     output["form"] = form
-             return output
+             output["form"] = form
+          
+        return output
 	     
-      response.s3.prep = prep
-      response.s3.postp = postp
+    response.s3.prep = prep
+    response.s3.postp = postp
 
-#    output = s3_rest_controller("","")
-     return output
-#    return postp(None,{})
+    output = s3_rest_controller("translate","language")
+    return output
 
 	     
