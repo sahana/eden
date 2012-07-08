@@ -121,19 +121,22 @@ def location():
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
             field = "name"
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L0",
                 field="L0",
+                label = T("Country"),
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L1",
                 field="L1",
+                location_level="L1",
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L2",
                 field="L2",
+                location_level="L2",
                 cols = 3,
             ),
             s3base.S3SearchOptionsWidget(

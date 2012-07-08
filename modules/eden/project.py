@@ -1014,13 +1014,16 @@ class S3Project3WModel(S3Model):
                                     writable = False,
                                 ),
                              # @ToDo: This duplicates the data in gis_location
+                             #        - move to stats_demographic_data
                              Field("population", "integer",
                                    label = T("Population")),
                              # @ToDo: Replace with a 'family size' value & auto-calculate?
                              Field("number_families", "integer",
                                    label = T("Number of Families")),
                              s3_comments(),
-                             #format=lambda r: self.gis_location_lx_represent(r.location_id),
+                             # @ToDo: Once project_beneficiary can search Lx via project_location_id$location_id$L1
+                             #        or else maybe just add L1 direct to that table?
+                             #*s3_meta_fields())
                              *(s3_lx_fields() + s3_meta_fields()))
 
         table.virtualfields.append(S3ProjectLocationVirtualFields())
@@ -1097,11 +1100,10 @@ class S3Project3WModel(S3Model):
             """
                 Provide the options for the Theme search filter
             """
-            table = current.s3db.project_theme
-            query = (table.deleted == False)
-            opts = db(query).select(table.id,
-                                    table.name,
-                                    orderby=table.name)
+            table = self.project_theme
+            opts = db(table.deleted == False).select(table.id,
+                                                     table.name,
+                                                     orderby=table.name)
             od = OrderedDict()
             for opt in opts:
                 od[opt.id] = opt.name
@@ -1134,24 +1136,32 @@ class S3Project3WModel(S3Model):
             #    cols = 3
             #),
             theme_search,
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L0",
-                field="L0",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L0",
+                #field="L0",
+                field = "location_id$L0",
+                label = T("Country"),
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L1",
-                field="L1",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L1",
+                #field = "L1",
+                field = "location_id$L1",
+                location_level = "L1",
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L2",
-                field="L2",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L2",
+                #field = "L2",
+                field = "location_id$L2",
+                location_level = "L2",
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L3",
-                field="L3",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L3",
+                #field = "L3",
+                field = "location_id$L3",
+                location_level = "L3",
                 cols = 3
             )
         )
@@ -1201,10 +1211,10 @@ class S3Project3WModel(S3Model):
 
         # Reusable Field
         project_location_id = S3ReusableField("project_location_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "project_location.id",
-                                                                      project_location_represent,
-                                                                      sort=True)),
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_location.id",
+                                                              project_location_represent,
+                                                              sort=True)),
                                       represent = project_location_represent,
                                       label = LOCATION,
                                       comment = S3AddResourceLink(ADD_LOCATION,
@@ -1265,14 +1275,16 @@ class S3Project3WModel(S3Model):
                                      "person_id$last_name"
                                     ]
                         ),
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="community_contact_search_L1",
                             field="person_id$L1",
+                            location_level="L1",
                             cols = 3,
                         ),
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="community_contact_search_L2",
                             field="person_id$L2",
+                            location_level="L2",
                             cols = 3,
                         )
                     ))
@@ -1355,9 +1367,11 @@ class S3Project3WModel(S3Model):
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              s3_date("start_date",
                                      label = T("Start Date"),
+                                     empty = False,
                                      ),
                              s3_date("end_date",
                                      label = T("End Date"),
+                                     empty = False,
                                      ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -1471,9 +1485,12 @@ class S3Project3WModel(S3Model):
                             label=T("Year"),
                             options = year_options
                         ),
-                        S3SearchLocationHierarchyWidget(
-                            name="beneficiary_search_L1",
-                            field="project_location_id$L1",
+                        S3SearchOptionsWidget(
+                            name = "beneficiary_search_L1",
+                            # @ToDo
+                            #field = "project_location_id$location_id$L1",
+                            field = "project_location_id$L1",
+                            location_level = "L1",
                             cols = 3,
                         ),
                     ],
@@ -1494,14 +1511,10 @@ class S3Project3WModel(S3Model):
         beneficiary_id = S3ReusableField("beneficiary_id", table,
                                          sortby="name",
                                          requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db,
-                                                                  "project_beneficiary.id",
-                                                                  "%(type)s",
+                                                        IS_ONE_OF(db, "project_beneficiary.id",
+                                                                  self.project_beneficiary_represent,
                                                                   sort=True)),
-                                         represent = lambda id, row=None: \
-                                            s3_get_db_field_value(tablename = "project_beneficiary",
-                                                                  fieldname = "type",
-                                                                  look_up_value = id),
+                                         represent = self.project_beneficiary_represent,
                                          label = T("Beneficiaries"),
                                          comment = S3AddResourceLink(c="project",
                                                                      f="beneficiary",
@@ -1610,6 +1623,25 @@ class S3Project3WModel(S3Model):
                                       limitby = (0, 1)).first()
         try:
             return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_beneficiary_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.type
+        if not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_beneficiary
+        r = db(table.id == id).select(table.type,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.type
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -3124,25 +3156,26 @@ class S3ProjectTaskModel(S3Model):
         table = db.project_task
 
         changed = {}
-        for var in vars:
-            vvar = vars[var]
-            rvar = record[var]
-            if vvar != rvar:
-                type = table[var].type
-                if type == "integer" or \
-                   type.startswith("reference"):
-                    vvar = int(vvar)
-                    if vvar == rvar:
-                        continue
-                represent = table[var].represent
-                if not represent:
-                    represent = lambda o: o
-                if rvar:
-                    changed[var] = "%s changed from %s to %s" % \
-                        (table[var].label, represent(rvar), represent(vvar))
-                else:
-                    changed[var] = "%s changed to %s" % \
-                        (table[var].label, represent(vvar))
+        if record: # Not True for a record merger
+            for var in vars:
+                vvar = vars[var]
+                rvar = record[var]
+                if vvar != rvar:
+                    type = table[var].type
+                    if type == "integer" or \
+                       type.startswith("reference"):
+                        vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if not represent:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (table[var].label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (table[var].label, represent(vvar))
 
         if changed:
             table = db.project_comment
@@ -3877,7 +3910,7 @@ class S3ProjectBeneficiaryVirtualFields:
                     end_date = project.end_date
         if not start_date or not end_date:
             return [start_date.year or end_date.year]
-        return [year for year in xrange(start_date.year,end_date.year+1)]
+        return [year for year in xrange(start_date.year, end_date.year + 1)]
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:

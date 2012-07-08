@@ -311,14 +311,16 @@ class S3HRModel(S3Model):
                         represent = self.org_organisation_represent,
                         cols = 3,
                       ),
-                      S3SearchLocationHierarchyWidget(
+                      S3SearchOptionsWidget(
                         name="human_resource_search_L1",
                         field="L1",
+                        location_level="L1",
                         cols = 3,
                       ),
-                      S3SearchLocationHierarchyWidget(
+                      S3SearchOptionsWidget(
                         name="human_resource_search_L2",
                         field="L2",
+                        location_level="L2",
                         cols = 3,
                       ),
                       S3SearchLocationWidget(
@@ -388,14 +390,16 @@ class S3HRModel(S3Model):
                                     represent = self.org_organisation_represent,
                                     cols = 3
                                   ),
-                                S3SearchLocationHierarchyWidget(
+                                S3SearchOptionsWidget(
                                     name="human_resource_search_L1",
                                     field="L1",
+                                    location_level="L1",
                                     cols = 3,
                                 ),
-                                S3SearchLocationHierarchyWidget(
+                                S3SearchOptionsWidget(
                                     name="human_resource_search_L2",
                                     field="L2",
+                                    location_level="L2",
                                     cols = 3,
                                 ),
                                 S3SearchOptionsWidget(
@@ -1492,12 +1496,12 @@ class S3HRSkillModel(S3Model):
                                  "comments",
                                 ]
                     ),
-                    # S3SearchLocationHierarchyWidget(
+                    # S3SearchOptionsWidget(
                       # name="training_event_search_L1",
                       # field="site_id$L1",
                       # cols = 3,
                     # ),
-                    # S3SearchLocationHierarchyWidget(
+                    # S3SearchOptionsWidget(
                       # name="training_event_search_L2",
                       # field="site_id$L2",
                       # cols = 3,
@@ -1622,14 +1626,16 @@ class S3HRSkillModel(S3Model):
                       label=T("Course"),
                       field="course_id"
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                       name="training_search_L1",
                       field="person_id$L1",
+                      location_level="L1",
                       cols = 3,
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                       name="training_search_L2",
                       field="person_id$L2",
+                      location_level="L2",
                       cols = 3,
                     ),
                     # Needs options lookup function for virtual field
@@ -1679,14 +1685,16 @@ class S3HRSkillModel(S3Model):
                   deduplicate=self.hrm_training_duplicate,
                   report_options=Storage(
                       search=[
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="training_search_L1",
                             field="person_id$L1",
+                            location_level="L1",
                             cols = 3,
                         ),
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="training_search_L2",
                             field="person_id$L2",
+                            location_level="L2",
                             cols = 3,
                         ),
                         S3SearchOptionsWidget(

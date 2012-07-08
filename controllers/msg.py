@@ -282,10 +282,18 @@ def inbound_email_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Email Settings"),
-        label_create_button = T("Add Email Settings"),
-        msg_record_modified = T("Email settings updated"),
-    )
+    title_display = T("Email Setting Details"),
+    title_list = T("Email Settings"),
+    title_create = T("Add Email Settings"),
+    title_update = T("Edit Email Settings"),
+    title_search = T("Search Email Settings"),
+    label_list_button = T("View Email Settings"),
+    label_create_button = T("Add Email Settings"),
+    msg_record_created = T("Setting added"),
+    msg_record_deleted = T("Email Setting deleted"),
+    msg_list_empty = T("No Settings currently defined"),
+    msg_record_modified = T("Email settings updated")
+        )
 
     #response.menu_options = admin_menu_options
     s3db.configure(tablename, listadd=True, deletable=True)
@@ -396,9 +404,17 @@ def workflow():
 
     # CRUD Strings
     s3.crud_strings["msg_workflow"] = Storage(
-        title_update = T("Edit Message Parser Settings"),
+        title_display = T("Setting Details"),
+        title_list = T("Parser Settings"),
+        title_create = T("Add Parser Settings"),
+        title_update = T("Edit Parser Settings"),
+        title_search = T("Search Parser Settings"),
+        label_list_button = T("View Settings"),
         label_create_button = T("Add Parser Settings"),
-        msg_record_modified = T("Message Parser settings updated"),
+        msg_record_created = T("Setting added"),
+        msg_record_deleted = T("Parser Setting deleted"),
+        msg_list_empty = T("No Settings currently defined"),
+        msg_record_modified = T("Message Parser settings updated")
     )
 
     s3db.configure("msg_workflow", listadd=True, deletable=True)

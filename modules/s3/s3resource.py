@@ -1069,6 +1069,7 @@ class S3Resource(object):
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
+                   maxbounds=False,
                    pretty_print=False, **args):
         """
             Export this resource as S3XML
@@ -1109,7 +1110,8 @@ class S3Resource(object):
                                 dereference=dereference,
                                 mcomponents=mcomponents,
                                 rcomponents=rcomponents,
-                                references=references)
+                                references=references,
+                                maxbounds=maxbounds)
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -1167,7 +1169,8 @@ class S3Resource(object):
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
-                    references=None):
+                    references=None,
+                    maxbounds=False):
         """
             Export the resource as element tree
 
@@ -1348,7 +1351,8 @@ class S3Resource(object):
                         url=base_url,
                         results=results,
                         start=start,
-                        limit=limit)
+                        limit=limit,
+                        maxbounds=maxbounds)
         return tree
 
     # -------------------------------------------------------------------------
@@ -4040,7 +4044,9 @@ class S3ResourceQuery:
         elif op == self.ANYOF:
             q = l.contains(r, all=False)
         elif op == self.BELONGS:
-            if type(r) is list and None in r:
+            if type(r) is not list:
+                r = [r]
+            if None in r:
                 _r = [item for item in r if item is not None]
                 q = ((l.belongs(_r)) | (l == None))
             else:
@@ -4192,6 +4198,8 @@ class S3ResourceQuery:
                     return True
             return False
         elif op == self.BELONGS:
+            if not isinstance(r, (list, tuple)):
+                r = [r]
             r = convert(l, r)
             result = contains(r, l)
         elif op == self.LIKE:

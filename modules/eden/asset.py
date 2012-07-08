@@ -240,14 +240,16 @@ class S3AssetModel(S3Model):
                                 "comments",
                             ]
                       ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="asset_search_L1",
                         field="L1",
+                        location_level="L1",
                         cols = 3
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="asset_search_L2",
                         field="L2",
+                        location_level="L2",
                         cols = 3
                     ),
                     S3SearchLocationWidget(
@@ -280,14 +282,16 @@ class S3AssetModel(S3Model):
                   search_method=asset_search,
                   report_options=Storage(
                         search=[
-                                S3SearchLocationHierarchyWidget(
+                                S3SearchOptionsWidget(
                                     name="asset_search_L1",
                                     field="L1",
+                                    location_level="L1",
                                     cols = 3
                                 ),
-                                S3SearchLocationHierarchyWidget(
+                                S3SearchOptionsWidget(
                                     name="asset_search_L2",
                                     field="L2",
+                                    location_level="L2",
                                     cols = 3
                                 ),
                                 S3SearchOptionsWidget(

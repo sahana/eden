@@ -490,7 +490,9 @@ function s3_gis_search_layer_loadend(event) {
     var layer = event.object;
     // Zoom to Bounds
     var bounds = layer.getDataExtent();
-    map.zoomToExtent(bounds);
+    if (bounds) {
+        map.zoomToExtent(bounds);
+    }
     // Re-enable Clustering
     Ext.iterate(layer.strategies, function(key, val, obj) {
         if (key.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {

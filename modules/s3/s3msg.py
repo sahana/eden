@@ -201,6 +201,7 @@ class S3Msg(object):
         ltable = s3db.msg_log
         wtable = s3db.msg_workflow
         otable = s3db.msg_outbox
+        ctable = s3db.pr_contact
         
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
@@ -220,8 +221,18 @@ class S3Msg(object):
                 reply = ltable.insert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
-                otable.insert(message_id = reply.id,
-                              address = row.sender)
+                try:
+                    email = row.sender.split("<")[1].split(">")[0]
+                    query = (ctable.contact_method == "EMAIL") & \
+                        (ctable.value == email) 
+                    pe_ids = db(query).select(ctable.pe_id)
+                except:
+                    raise ValueError("Email address not defined!")
+                
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        otable.insert(message_id = reply.id,
+                                      address = row.sender, pe_id = pe_id.pe_id)
                 db.commit()
 
         return    
@@ -1242,7 +1253,8 @@ class S3Msg(object):
                 body = textParts[0]
                 # Store in DB
                 inbox_table.insert(sender=sender, subject=subject, body=body)
-                log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                log_table.insert(sender=sender, subject=subject, message=body, \
+                                 source_task_id=source_task_id, inbound=True)
                 
                 if delete:
                     # Add it to the list of messages to delete later
@@ -1314,7 +1326,9 @@ class S3Msg(object):
                         body = textParts[0]
                         # Store in DB
                         inbox_table.insert(sender=sender, subject=subject, body=body)
-                        log_table.insert(sender=sender, subject=subject, message=body, source_task_id=source_task_id)
+                        log_table.insert(sender=sender, subject=subject, \
+                                message=body, source_task_id=source_task_id, \
+                                inbound = True)
                         
                         if delete:
                             # Add it to the list of messages to delete later

@@ -2074,10 +2074,10 @@ def org_office_controller():
                     field="organisation_id",
                     represent ="%(name)s",
                   ),
-                  S3SearchLocationHierarchyWidget(
+                  S3SearchOptionsWidget(
                     name="office_search_location",
-                    comment=T("Search for office by location."),
-                    represent ="%(name)s",
+                    field = "L1",
+                    location_level = "L1",
                     cols = 3
                   ),
                   S3SearchLocationWidget(

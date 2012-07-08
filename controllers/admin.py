@@ -116,7 +116,7 @@ def user():
 
     # Custom Methods
     role_manager = s3base.S3RoleManager()
-    set_method = s3mg.model.set_method
+    set_method = s3db.set_method
     set_method("auth", "user", method="roles",
                action=role_manager)
 

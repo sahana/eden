@@ -1246,6 +1246,14 @@ class S3Request(object):
             if _vars["show_urls"].lower() == "false":
                 manager.show_urls = False
 
+        # Maxbounds (default: False)
+        maxbounds = False
+        if "maxbounds" in _vars:
+            if _vars["maxbounds"].lower() == "true":
+                maxbounds = True
+        if r.representation == "gpx":
+            maxbounds = True
+
         # Components of the master resource (tablenames)
         if "mcomponents" in _vars:
             mcomponents = _vars["mcomponents"]
@@ -1328,6 +1336,7 @@ class S3Request(object):
                                        rcomponents=rcomponents,
                                        stylesheet=stylesheet,
                                        as_json=as_json,
+                                       maxbounds=maxbounds,
                                        **args)
         # Transformation error?
         if not output:

@@ -364,14 +364,16 @@ class S3IRSModel(S3Model):
                                  "comments",
                                 ]
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="incident_search_L1",
                         field="L1",
+                        location_level="L1",
                         cols = 3,
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="incident_search_L2",
                         field="L2",
+                        location_level="L2",
                         cols = 3,
                     ),
                     S3SearchOptionsWidget(
@@ -402,14 +404,16 @@ class S3IRSModel(S3Model):
                   search_method = ireport_search,
                   report_options=Storage(
                       search=[
-                            S3SearchLocationHierarchyWidget(
+                            S3SearchOptionsWidget(
                                 name="incident_search_L1",
                                 field="L1",
+                                location_level="L1",
                                 cols = 3,
                             ),
-                            S3SearchLocationHierarchyWidget(
+                            S3SearchOptionsWidget(
                                 name="incident_search_L2",
                                 field="L2",
+                                location_level="L2",
                                 cols = 3,
                             ),
                             S3SearchOptionsWidget(
@@ -765,7 +769,7 @@ class S3IRSModel(S3Model):
                     # Provide an Autocomplete the select the person to send the notice to
                     opts["recipient_type"] = "pr_person"
             output = msg.compose(**opts)
-
+            
             # Maintain RHeader for consistency
             if "rheader" in attr:
                 rheader = attr["rheader"](r)
