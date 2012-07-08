@@ -192,7 +192,7 @@ class S3MembersModel(S3Model):
             """
             ttable = self.member_membership_type
 
-            if org:
+            if root_org:
                 query = (ttable.deleted == False) & \
                         ((ttable.organisation_id == root_org) | \
                          (ttable.organisation_id == None))
