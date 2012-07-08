@@ -36,7 +36,7 @@ def index():
     report_url = URL(c="mpr", f=resourcename,
                      args=["[id]", "note"],
                      vars=dict(status="missing"))
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     create_next=report_url,
                     list_fields=["id",
                                  "first_name",
@@ -106,14 +106,14 @@ def person():
         label_list_button = T("List Missing Persons"),
         msg_list_empty = T("No Persons currently reported missing"))
 
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "group_id",
                                  "group_head",
                                  "description"
                                 ])
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     create_next = URL(c="mpr", f="person",
                                       args=["[id]", "note", "create"],
                                       vars=dict(status="missing")),

@@ -793,11 +793,14 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
     def __init__(self,
                  post_process = "",
                  delay = 450,   # milliseconds
-                 min_length=2): # Increase this for large deployments
+                 min_length=2,  # Increase this for large deployments
+                 group=None,    # Filter to staff/volunteers
+                 ):
 
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
+        self.group = group
 
     def __call__(self, field, value, **attributes):
 
@@ -815,10 +818,23 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
         real_input = str(field).replace(".", "_")
         dummy_input = "dummy_%s" % real_input
-        url = URL(c="hrm",
-                  # This searches HRMs using S3HRSearch
-                  f="person_search",
-                  args="search.json")
+        group = self.group
+        if group == "staff":
+            # Search Staff using S3HRSearch
+            url = URL(c="hrm",
+                      f="person_search",
+                      args="search.json",
+                      vars={"group":"staff"})
+        elif group == "volunteer":
+            # Search Volunteers using S3HRSearch
+            url = URL(c="vol",
+                      f="person_search",
+                      args="search.json")
+        else:
+            # Search all HRs using S3HRSearch
+            url = URL(c="hrm",
+                      f="person_search",
+                      args="search.json")
 
         js_autocomplete = "".join((
 '''var %(real_input)s={val:$('#%(dummy_input)s').val(),accept:false}
@@ -3010,9 +3026,9 @@ class S3EmbedComponentWidget(FormWidget):
         self.select_existing = select_existing
         self.link_filter = link_filter
 
-        self.post_process = current.manager.model.get_config(link,
-                                                             "post_process",
-                                                             None)
+        self.post_process = current.s3db.get_config(link,
+                                                    "post_process",
+                                                    None)
 
     def __call__(self, field, value, **attributes):
 

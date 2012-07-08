@@ -47,11 +47,7 @@ class S3FloodModel(S3Model):
 
         T = current.T
 
-        location_id = self.gis_location_id
-
         # Shortcuts
-        #add_component = self.add_component
-        #configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -72,7 +68,7 @@ class S3FloodModel(S3Model):
                                    label=T("Name")),
                              Field("code",
                                    label=T("Code")),
-                             location_id(),
+                             self.gis_location_id(),
                              Field("url",
                                    label = T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),

@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SupplierModel",
-           "S3ProcurementModel",
-           "proc_rheader"]
+__all__ = ["S3ProcurementModel",
+           "proc_rheader"
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -44,7 +44,6 @@ class S3ProcurementModel(S3Model):
         A module to handle Procurement
 
         Currently handles
-            Suppliers
             Planned Procurements
 
         @ToDo: Extend to
@@ -56,80 +55,69 @@ class S3ProcurementModel(S3Model):
 
     names = ["proc_plan",
              "proc_plan_item"
-            ]
+             ]
 
     def model(self):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
+        auth = current.auth
 
-        item_id = self.supply_item_entity_id
-        supply_item_id = self.supply_item_id
-        item_pack_id = self.supply_item_pack_id
-        item_pack_virtualfields = self.supply_item_pack_virtualfields
-
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
         messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
-        s3_date_format = settings.get_L10n_date_format()
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+        configure = self.configure
 
         # =====================================================================
         # Planned Procurements
         #
-        proc_shipping_opts = { 0:NONE,
-                               1:"Air",
-                               2:"Rail",
-                               3:"Road",
-                               4:"Sea"
+        proc_shipping_opts = { 0: messages.NONE,
+                               1: T("Air"),
+                               2: T("Rail"),
+                               3: T("Road"),
+                               4: T("Sea")
                              }
 
         tablename = "proc_plan"
-        table = self.define_table(tablename,
-                                  self.super_link("site_id", "org_site",
-                                                  #label = T("Inventory"),
-                                                  label = T("Office"),
-                                                  default = auth.user.site_id if auth.is_logged_in() else None,
-                                                  readable = True,
-                                                  writable = True,
-                                                  empty = False,
-                                                  # Comment these to use a Dropdown & not an Autocomplete
-                                                  #widget = S3SiteAutocompleteWidget(),
-                                                  #comment = DIV(_class="tooltip",
-                                                  #              _title="%s|%s" % (T("Inventory"),
-                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                  represent=self.org_site_represent),
-                                  # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
-                                  #project_id(),
-                                  Field("order_date", "date",
-                                        label = T("Order Date"),
-                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                        represent = s3_date_represent,
-                                        widget = S3DateWidget()
-                                        ),
-                                  Field("eta", "date",
-                                        label = T("Date Expected"),
-                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                        represent = s3_date_represent,
-                                        widget = S3DateWidget()
-                                        ),
-                                  # @ToDo: Do we want more than 1 supplier per Plan?
-                                  supplier_id(),
-                                  Field("shipping", "integer",
-                                        requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
-                                        represent = lambda opt: proc_shipping_opts.get(opt,
-                                                                                       UNKNOWN_OPT),
-                                        label = T("Shipping Method"),
-                                        default = 0,
-                                        ),
-                                  # @ToDo: Add estimated shipping costs
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             self.super_link("site_id", "org_site",
+                                              #label = T("Inventory"),
+                                              label = T("Office"),
+                                              default = auth.user.site_id if auth.is_logged_in() else None,
+                                              readable = True,
+                                              writable = True,
+                                              empty = False,
+                                              # Comment these to use a Dropdown & not an Autocomplete
+                                              #widget = S3SiteAutocompleteWidget(),
+                                              #comment = DIV(_class="tooltip",
+                                              #              _title="%s|%s" % (T("Inventory"),
+                                              #                                T("Enter some characters to bring up a list of possible matches"))),
+                                              represent=self.org_site_represent),
+                              # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
+                              #project_id(),
+                              s3_date("order_date",
+                                      label = T("Order Date")
+                                      ),
+                              s3_date("eta",
+                                      label = T("Date Expected"),
+                                      ),
+                              # @ToDo: Do we want more than 1 supplier per Plan?
+                              # @ToDo: Filter to orgs of type 'supplier'
+                              self.org_organisation_id(label=T("Supplier")),
+                              Field("shipping", "integer",
+                                    requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
+                                    represent = lambda opt: \
+                                        proc_shipping_opts.get(opt,
+                                                               messages.UNKNOWN_OPT),
+                                    label = T("Shipping Method"),
+                                    default = 0,
+                                    ),
+                              # @ToDo: Add estimated shipping costs
+                              s3_comments(),
+                              *s3_meta_fields())
 
         # CRUD strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Procurement Plan"),
             title_display = T("Procurement Plan Details"),
             title_list = T("Procurement Plans"),
@@ -148,57 +136,56 @@ class S3ProcurementModel(S3Model):
         # Redirect to the Items tabs after creation
         plan_item_url = URL(c="default", f="plan", args=["[id]",
                                                          "plan_item"])
-        self.configure(tablename,
-                       # @ToDo: Move these to controller r.interactive?
-                       create_next = plan_item_url,
-                       update_next = plan_item_url)
+        configure(tablename,
+                  # @ToDo: Move these to controller r.interactive?
+                  create_next = plan_item_url,
+                  update_next = plan_item_url)
 
-        plan_id = S3ReusableField("plan_id", db.proc_plan, sortby="date",
-                                  requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                  "proc_plan.id",
-                                                                  self.proc_plan_represent,
-                                                                  orderby="proc_plan.date",
-                                                                  sort=True)),
+        plan_id = S3ReusableField("plan_id", table, sortby="date",
+                                  requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "proc_plan.id",
+                                                          self.proc_plan_represent,
+                                                          orderby="proc_plan.date",
+                                                          sort=True)),
                                   represent = self.proc_plan_represent,
                                   label = T("Procurement Plan"),
                                   ondelete = "CASCADE")
 
         # Items as a component of Plans
         self.add_component("proc_plan_item",
-                           proc_plan="plan_id")
+                            proc_plan="plan_id")
 
         # =====================================================================
         # Procurement Plan Items
         #
         tablename = "proc_plan_item"
-        table = self.define_table(tablename,
-                                  plan_id(),
-                                  item_id,
-                                  supply_item_id(),
-                                  item_pack_id(),
-                                  Field("quantity",
-                                        "double",
-                                        notnull = True,
-                                        label = T("Quantity"),
-                                        ),
-                                  # @ToDo: Move this into a Currency Widget for the pack_value field
-                                  s3_currency(
-                                              readable=False,
-                                              writable=False
-                                              ),
-                                  Field("pack_value",
-                                        "double",
-                                        readable=False,
-                                        writable=False,
-                                        label = T("Value per Pack")),
-                                  #Field("pack_quantity",
-                                  #      "double",
-                                  #      compute = record_pack_quantity), # defined in supply
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             plan_id(),
+                             self.supply_item_entity_id,
+                             self.supply_item_id(),
+                             self.supply_item_pack_id(),
+                             Field("quantity", "double", notnull = True,
+                                   label = T("Quantity"),
+                                   ),
+                             # @ToDo: Move this into a Currency Widget for the pack_value field
+                             s3_currency(
+                                         readable=False,
+                                         writable=False
+                                         ),
+                             Field("pack_value", "double",
+                                   readable=False,
+                                   writable=False,
+                                   label = T("Value per Pack")),
+                             #Field("pack_quantity",
+                             #      "double",
+                             #      compute = record_pack_quantity), # defined in supply
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        #table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename)
 
         # CRUD strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Item to Procurement Plan"),
             title_display = T("Procurement Plan Item Details"),
             title_list = T("Items in Procurement Plan"),
@@ -228,7 +215,14 @@ class S3ProcurementModel(S3Model):
                                 #"site_id$name"
                                 ]
                       ),
-                      # Requires VirtualFields
+                      S3SearchOptionsWidget(
+                        name="proc_plan_search_organisation",
+                        label=T("Supplier"),
+                        field="organisation_id$name",
+                        comment=T("If none are selected, then all are searched."),
+                        cols = 2
+                      ),
+                      # Requires options for VirtualField
                       #S3SearchOptionsWidget(
                       #  name="proc_plan_search_site",
                       #  label=T("Facility"),
@@ -251,12 +245,11 @@ class S3ProcurementModel(S3Model):
                       #)
             ))
 
-        # ---------------------------------------------------------------------
-        self.configure(tablename,
-                       super_entity = "supply_item_entity",
-                       search_method = plan_item_search,
-                       #report_groupby = db.proc_plan.site_id,
-                       report_hide_comments = True)
+        configure(tablename,
+                  super_entity = "supply_item_entity",
+                  search_method = plan_item_search,
+                  #report_groupby = db.proc_plan.site_id,
+                  report_hide_comments = True)
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -270,136 +263,18 @@ class S3ProcurementModel(S3Model):
         """
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         if not id:
-            return NONE
-        table = s3db.proc_plan
-        query = (table.id == id)
-        record = db(query).select(table.site_id,
-                                  table.order_date,
-                                  limitby=(0, 1)).first()
-        if record:
+            return current.messages.NONE
+        db = current.db
+        table = db.proc_plan
+        record = db(table.id == id).select(table.site_id,
+                                           table.order_date,
+                                           limitby=(0, 1)).first()
+        try:
             return "%s (%s)" % (table.site_id.represent(record.site_id),
                                 table.order_date.represent(record.order_date))
-        else:
-            return UNKNOWN_OPT
-
-
-# =============================================================================
-class S3SupplierModel(S3Model):
-    """
-        Suppliers
-
-        @ToDo: Are these really different enough from Orgs to be worth separating?
-               e.g. Donor Orgs vs Purchases
-    """
-
-    names = ["proc_supplier",
-             "proc_supplier_id",
-            ]
-
-    def model(self):
-
-        T = current.T
-        db = current.db
-        s3 = current.response.s3
-
-        location_id = self.gis_location_id
-
-        # =====================================================================
-        # Suppliers
-        #
-        # @ToDo: Replace with org_organisation?
-        #
-        tablename = "proc_supplier"
-        table = self.define_table(tablename,
-                                  Field("name", notnull=True, unique=True,
-                                        length=128,
-                                        label = T("Name")),
-                                  location_id(),
-                                  Field("phone", label = T("Phone"),
-                                        requires = IS_NULL_OR(s3_phone_requires)),
-                                  # @ToDo: Make this a component?
-                                  Field("contact", label = T("Contact")),
-                                  Field("website", label = T("Website"),
-                                        requires = IS_NULL_OR(IS_URL()),
-                                        represent = s3_url_represent),
-                                  s3_comments(),
-                                  *(s3_address_fields() + s3_meta_fields()))
-
-        # CRUD strings
-        s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Supplier"),
-            title_display = T("Supplier Details"),
-            title_list = T("Suppliers"),
-            title_update = T("Edit Supplier"),
-            title_search = T("Search Suppliers"),
-            subtitle_create = T("Add Supplier"),
-            label_list_button = T("List Suppliers"),
-            label_create_button = T("Add Supplier"),
-            label_delete_button = T("Delete Supplier"),
-            msg_record_created = T("Supplier added"),
-            msg_record_modified = T("Supplier updated"),
-            msg_record_deleted = T("Supplier deleted"),
-            msg_list_empty = T("No Suppliers currently registered"))
-
-        # Reusable Field
-        supplier_id = S3ReusableField("supplier_id", db.proc_supplier, sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "proc_supplier.id",
-                                                                      "%(name)s",
-                                                                      sort=True)),
-                                      represent = self.proc_supplier_represent,
-                                      label = T("Supplier"),
-                                      comment=S3AddResourceLink(c="proc",
-                                                                f="supplier",
-                                                                label=T("Add Supplier")),
-                                      ondelete = "RESTRICT")
-
-        # Plans as a component of Supplier
-        self.add_component("proc_plan",
-                           proc_supplier="supplier_id")
-
-        # Assets as a component of Supplier
-        self.add_component("asset_asset",
-                           proc_supplier="supplier_id")
-
-        # ---------------------------------------------------------------------
-        # Pass variables back to global scope (s3db.*)
-        #
-        return Storage(
-                proc_supplier_id = supplier_id
-            )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def proc_supplier_represent(id):
-        """
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
-        if not id:
-            return NONE
-        table = s3db.proc_supplier
-        query = (table.id == id)
-        record = db(query).select(table.name,
-                                  limitby=(0, 1)).first()
-        if record:
-            return record.name
-        else:
-            return UNKNOWN_OPT
-
+        except:
+            return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def proc_rheader(r):

@@ -40,7 +40,7 @@ def vehicle():
     tablename = "asset_asset"
     table = s3db[tablename]
 
-    s3mgr.configure("vehicle_vehicle",
+    s3db.configure("vehicle_vehicle",
                     deletable=False)
 
     # Type is Vehicle
@@ -54,9 +54,9 @@ def vehicle():
     s3.filter = (field == VEHICLE)
 
     # Remove type from list_fields
-    list_fields = s3mgr.model.get_config("asset_asset", "list_fields")
+    list_fields = s3db.get_config("asset_asset", "list_fields")
     list_fields.remove("type")
-    s3mgr.configure(tablename, list_fields=list_fields)
+    s3db.configure(tablename, list_fields=list_fields)
 
     field = table.item_id
     field.label = T("Vehicle Type")
@@ -114,10 +114,10 @@ def vehicle():
                             "comments"
                         ]
                   ),
-                s3base.S3SearchLocationHierarchyWidget(
+                s3base.S3SearchOptionsWidget(
                     name="vehicle_search_location",
-                    comment=T("Search for vehicle by location."),
-                    represent ="%(name)s",
+                    field="L1",
+                    location_level="L1",
                     cols = 3
                 ),
                 s3base.S3SearchLocationWidget(
@@ -125,7 +125,7 @@ def vehicle():
                     label=T("Map"),
                 ),
         ))
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     search_method = vehicle_search)
 
     # Defined in Model
@@ -198,7 +198,7 @@ def item_category():
     field = table.is_vehicle
     field.readable = field.writable = False
     field.default = True
-    
+
     return s3_rest_controller("supply", "item_category")
 
 # END =========================================================================

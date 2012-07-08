@@ -46,7 +46,6 @@ class S3SituationModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
         location_id = self.gis_location_id
 
@@ -109,7 +108,7 @@ class S3SituationModel(S3Model):
 
         # Shared component of all trackable types
         self.add_component(table,
-                           sit_trackable=self.super_key(sit_trackable))
+                            sit_trackable=self.super_key(sit_trackable))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)

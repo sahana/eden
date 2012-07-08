@@ -11,8 +11,8 @@
          Project..............string..........Project Name
          Activity.............string..........Activity
          Activity Type........string..........Activity Type
-         Name.................string..........Task short description
-         Description..........string..........Task detailed description
+         Short Description ...string..........Task short description
+         Detailed Description.string..........Task detailed description
          Date.................string..........Task created_on
          Author...............string..........Task created_by
          Source...............string..........Task source

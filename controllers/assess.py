@@ -64,7 +64,7 @@ human_resource_id = s3db.hrm_human_resource_id
 ireport_id = s3db.irs_ireport_id
 
 # Impact as component of assessments
-s3mgr.model.add_component("impact_impact", assess_assess="assess_id")
+s3db.add_component("impact_impact", assess_assess="assess_id")
 
 def assess_tables():
     """ Load the Assess Tables when needed """
@@ -118,12 +118,12 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # assess_assess as component of org_organisation
-    s3mgr.model.add_component(table, org_organisation="organisation_id")
+    s3db.add_component(table, org_organisation="organisation_id")
 
     # Hide Add Assessment functionality. Users should only add assessments
     # through the Basic Assessment.
-    s3mgr.configure(tablename,
-                    insertable=False)
+    s3db.configure(tablename,
+                   insertable=False)
 
     # =========================================================================
     # Baseline Type
@@ -162,9 +162,8 @@ def assess_tables():
         else:
             return None
 
-    baseline_type_id = S3ReusableField(
-       "baseline_type_id",
-       db.assess_baseline_type, sortby="name",
+    baseline_type_id = S3ReusableField("baseline_type_id", table,
+       sortby="name",
        requires = IS_NULL_OR(IS_ONE_OF(db,
                                        "assess_baseline_type.id",
                                        "%(name)s",
@@ -210,7 +209,7 @@ def assess_tables():
         name_nice_plural = T("Baselines"))
 
     # Baseline as component of assessments
-    s3mgr.model.add_component(table, assess_assess="assess_id")
+    s3db.add_component(table, assess_assess="assess_id")
 
     # =========================================================================
     # Summary
@@ -252,17 +251,12 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # Summary as component of assessments
-    s3mgr.model.add_component(table, assess_assess="assess_id")
+    s3db.add_component(table, assess_assess="assess_id")
 
     # Pass variables back to global scope (response.s3.*)
     return dict(
         assess_id = assess_id
         )
-
-# Provide a handle to this load function
-s3mgr.loader(assess_tables,
-             "assess_assess")
-
 
 # =========================================================================
 # Rapid Assessment Tool
@@ -406,7 +400,6 @@ def rat_tables():
     # Main Resource -----------------------------------------------------------
     # contains Section 1: Identification Information
     #
-    resourcename = "rat"
     tablename = "assess_rat"
     table = db.define_table(
         tablename,
@@ -533,9 +526,9 @@ def rat_tables():
     # Assessment as component of cr_shelter.
     # RAT has components itself, so best not to constrain within the parent resource tabs
     # - therefore disable the listadd & jump out of the tabs for Create/Update
-    s3mgr.model.add_component(table, cr_shelter="shelter_id")
+    s3db.add_component(table, cr_shelter="shelter_id")
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     listadd=False,    # We override this in the RAT controller for when not a component
                     onaccept=rat_assessment_onaccept)
 
@@ -648,10 +641,10 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 3: Shelter & Essential NFIs -------------------------------------
 
@@ -764,11 +757,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 4 - Water and Sanitation ----------------------------------------
 
@@ -926,11 +919,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 5 - Health ------------------------------------------------------
 
@@ -1091,11 +1084,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 6 - Nutrition/Food Security -------------------------------------
 
@@ -1196,11 +1189,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 7 - Livelihood --------------------------------------------------
 
@@ -1319,11 +1312,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # Section 8 - Education ---------------------------------------------------
 
@@ -1525,11 +1518,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
+    s3db.add_component(table,
                               assess_rat=dict(joinby="assessment_id",
                                               multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
 
     # Section 9 - Protection --------------------------------------------------
@@ -1791,11 +1784,11 @@ def rat_tables():
     # CRUD strings
     s3.crud_strings[tablename] = rat_section_crud_strings
 
-    s3mgr.model.add_component(table,
-                              assess_rat=dict(joinby="assessment_id",
-                                              multiple=False))
+    s3db.add_component(table,
+                       assess_rat=dict(joinby="assessment_id",
+                                       multiple=False))
 
-    s3mgr.configure(tablename, deletable=False)
+    s3db.configure(tablename, deletable=False)
 
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
@@ -1814,15 +1807,11 @@ def rat_tables():
             raise HTTP(501, body=BADMETHOD)
 
 
-    s3mgr.model.set_method(module, "rat",
-                           method="summary",
-                           action=assess_rat_summary)
+    s3db.set_method("assess", "rat",
+                     method="summary",
+                     action=assess_rat_summary)
 
     # Pass variables back to global scope (response.s3.*)
-
-# Provide a handle to this load function
-s3mgr.loader(rat_tables,
-             "assess_rat")
 
 # =========================================================================
 # UN Common Operational Datasets
@@ -1862,7 +1851,7 @@ s3.crud_strings[tablename] = Storage(
     name_nice_plural = T("Population Statistics"))
 
 # Impact as component of incident reports
-#s3mgr.model.add_component("impact_impact", irs_ireport="ireport_id")
+#s3db.add_component("impact_impact", irs_ireport="ireport_id")
 
 # =========================================================================
 def impact_tables():
@@ -1873,7 +1862,7 @@ def impact_tables():
 
     # Load the models we depend on
     if settings.has_module("assess"):
-        s3mgr.load("assess_assess")
+        assess_tables()
     assess_id = s3.assess_id
 
     module = "impact"
@@ -1914,7 +1903,7 @@ def impact_tables():
         else:
             return None
 
-    impact_type_id = S3ReusableField("impact_type_id", db.impact_type,
+    impact_type_id = S3ReusableField("impact_type_id", table,
                                      sortby="name",
                                      requires = IS_NULL_OR(IS_ONE_OF(db, "impact_type.id","%(name)s", sort=True)),
                                      represent = lambda id: s3_get_db_field_value(tablename = "impact_type",
@@ -1962,11 +1951,6 @@ def impact_tables():
         msg_record_deleted = T("Impact deleted"),
         msg_list_empty = T("No Impacts currently registered"))
 
-# Provide a handle to this load function
-s3mgr.loader(impact_tables,
-             "impact_impact",
-             "impact_type")
-
 # =============================================================================
 def index():
     """ Module's Home Page """
@@ -1998,7 +1982,7 @@ def rat():
     """ Rapid Assessments, RESTful controller """
 
     # Load Models
-    s3mgr.load("assess_rat")
+    assess_tables()
 
     tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
@@ -2009,7 +1993,7 @@ def rat():
     #                                                  repr_select, sort=True))
 
     # Subheadings in forms:
-    s3mgr.configure("assess_section2",
+    s3db.configure("assess_section2",
         subheadings = {
             T("Population and number of households"): "population_total",
             T("Fatalities"): "dead_women",
@@ -2017,14 +2001,14 @@ def rat():
             T("Missing Persons"): "missing_women",
             T("General information on demographics"): "household_head_elderly",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section3",
+    s3db.configure("assess_section3",
         subheadings = {
             T("Access to Shelter"): "houses_total",
             T("Water storage containers in households"): "water_containers_available",
             T("Other non-food items"): "cooking_equipment_available",
             T("Shelter/NFI Assistance"): "nfi_assistance_available",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section4",
+    s3db.configure("assess_section4",
         subheadings = {
             T("Water supply"): "water_source_pre_disaster_type",
             T("Water collection"): "water_coll_time",
@@ -2032,26 +2016,26 @@ def rat():
             T("Environment"): "close_industry",
             T("Latrines"): "latrines_number",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section5",
+    s3db.configure("assess_section5",
         subheadings = {
             T("Health services status"): "health_services_pre_disaster",
             T("Current health problems"): "health_problems_adults",
             T("Nutrition problems"): "malnutrition_present_pre_disaster",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section6",
+    s3db.configure("assess_section6",
         subheadings = {
             T("Existing food stocks"): "food_stocks_main_dishes",
             T("food_sources") : "Food sources",
             T("Food assistance"): "food_assistance_available",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section7",
+    s3db.configure("assess_section7",
         subheadings = {
             "%s / %s" % (T("Sources of income"),
                          T("Major expenses")): "income_sources_pre_disaster",
             T("business_damaged"): "Access to cash",
             T("Current community priorities"): "rank_reconstruction_assistance",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section8",
+    s3db.configure("assess_section8",
         subheadings = {
             T("Access to education services"): "schools_total",
             T("Alternative places for studying"): "alternative_study_places_available",
@@ -2059,7 +2043,7 @@ def rat():
             T("School attendance"): "children_0612_female",
             T("School assistance"): "school_assistance_available",
             T("Comments"): "comments"})
-    s3mgr.configure("assess_section9",
+    s3db.configure("assess_section9",
         subheadings = {
             T("Physical Safety"): "vulnerable_groups_safe_env",
             T("Separated children, caregiving arrangements"): "children_separated",
@@ -2103,7 +2087,7 @@ def rat():
     response.s3.postp = postp
 
     # Over-ride the listadd since we're not a component here
-    s3mgr.configure(tablename, create_next="", listadd=True)
+    s3db.configure(tablename, create_next="", listadd=True)
 
     tabs = [(T("Identification"), None),
             (T("Demographic"), "section2"),
@@ -2211,8 +2195,8 @@ def assess():
     """ RESTful CRUD controller """
 
     # Load Models
-    s3mgr.load("assess_assess")
-    s3mgr.load("impact_impact")
+    assess_tables()
+    impact_tables()
 
     tablename = "%s_%s" % (module, resourcename)
     table = db[tablename]
@@ -2246,7 +2230,7 @@ def impact_type():
     """ RESTful CRUD controller """
 
     # Load Models
-    s3mgr.load("impact_impact")
+    impact_tables()
 
     module = "impact"
     resourcename = "type"
@@ -2258,7 +2242,7 @@ def baseline_type():
     """ RESTful CRUD controller """
 
     # Load Models
-    s3mgr.load("assess_assess")
+    assess_tables()
 
     return s3_rest_controller()
 
@@ -2267,7 +2251,7 @@ def baseline():
     """ RESTful CRUD controller """
 
     # Load Models
-    s3mgr.load("assess_assess")
+    assess_tables()
 
     return s3_rest_controller()
 
@@ -2276,7 +2260,7 @@ def summary():
     """ RESTful CRUD controller """
 
     # Load Models
-    s3mgr.load("assess_assess")
+    assess_tables()
 
     return s3_rest_controller()
 
@@ -2289,8 +2273,8 @@ def basic_assess():
         redirect(URL(c="default", f="user", args=["login"]))
 
     # Load Models
-    s3mgr.load("assess_assess")
-    s3mgr.load("impact_impact")
+    assess_tables()
+    impact_tables()
 
     # See if we've been created from an Incident
     ireport_id = request.vars.get("ireport_id")
@@ -2343,8 +2327,8 @@ def mobile_basic_assess():
         redirect(URL(c="default", f="index"))
 
     # Load Models
-    s3mgr.load("assess_assess")
-    s3mgr.load("impact_impact")
+    assess_tables()
+    impact_tables()
 
     custom_assess_fields = (
                             ("assess", "location_id", "auto"),
@@ -2394,8 +2378,8 @@ def custom_assess(custom_assess_fields, location_id=None):
     """
 
     # Load Models
-    s3mgr.load("assess_assess")
-    s3mgr.load("impact_impact")
+    assess_tables()
+    impact_tables()
 
     form_rows = []
     comment = ""

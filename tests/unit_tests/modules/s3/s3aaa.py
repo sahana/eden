@@ -998,15 +998,15 @@ class S3HasPermissionTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -1014,19 +1014,19 @@ class S3HasPermissionTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
@@ -1477,15 +1477,15 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -1493,24 +1493,25 @@ class S3AccessibleQueryTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
         auth.s3_clear_session_ownership()
         auth.s3_impersonate(None)
+        deployment_settings.auth.record_approval = False
 
     def testPolicy3(self):
 
@@ -1962,6 +1963,297 @@ class S3AccessibleQueryTests(unittest.TestCase):
         auth.s3_delete_role("TESTDVIADMIN")
 
 # =============================================================================
+class S3RecordApprovalTests(unittest.TestCase):
+
+    def setUp(self):
+
+        sr = auth.get_system_roles()
+        auth.permission.update_acl(sr.AUTHENTICATED,
+                                   c="org",
+                                   uacl=auth.permission.READ,
+                                   oacl=auth.permission.READ|auth.permission.UPDATE)
+
+        auth.permission.update_acl(sr.AUTHENTICATED,
+                                   t="org_organisation",
+                                   uacl=auth.permission.READ|auth.permission.CREATE,
+                                   oacl=auth.permission.READ|auth.permission.UPDATE)
+
+        deployment_settings.security.policy = 5
+
+    def testRecordApprovedBy(self):
+        """ Test whether a new record is unapproved by default """
+
+        try:
+            # Set record approval on
+            deployment_settings.auth.record_approval = True
+
+            # Impersonate as admin
+            auth.s3_impersonate("admin@example.com")
+
+            # Create test record
+            otable = s3db.org_organisation
+            org = Storage(name="Test Approval Organisation")
+            org_id = otable.insert(**org)
+            self.assertTrue(org_id > 0)
+            org.update(id=org_id)
+            s3db.update_super(otable, org)
+
+            # Check record
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+
+        finally:
+            db.rollback()
+            deployment_settings.auth.record_approval = False
+            auth.s3_impersonate(None)
+
+    def testRecordApprovalWithComponents(self):
+        """ Test record approval including components """
+
+        try:
+            # Set record approval on
+            deployment_settings.auth.record_approval = True
+
+            # Impersonate as admin
+            auth.s3_impersonate("admin@example.com")
+
+            # Create test record
+            otable = s3db.org_organisation
+            org = Storage(name="Test Approval Organisation")
+            org_id = otable.insert(**org)
+            self.assertTrue(org_id > 0)
+            org.update(id=org_id)
+            s3db.update_super(otable, org)
+
+            # Create test component
+            ftable = s3db.org_office
+            office = Storage(name="Test Approval Office",
+                             organisation_id=org_id)
+            office_id = ftable.insert(**office)
+            self.assertTrue(office_id > 0)
+            office.update(id=office_id)
+            s3db.update_super(ftable, office)
+
+            # Check records
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+
+            approved = auth.permission.approved
+            unapproved = auth.permission.unapproved
+
+            # Check approved/unapproved
+            self.assertFalse(approved(otable, org_id))
+            self.assertTrue(unapproved(otable, org_id))
+            self.assertFalse(approved(ftable, office_id))
+            self.assertTrue(unapproved(ftable, office_id))
+
+            # Approve
+            resource = s3mgr.define_resource("org", "organisation", id=org_id)
+            self.assertTrue(resource.approve(components=["office"]))
+
+            # Check record
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, auth.user.id)
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, auth.user.id)
+
+            # Check approved/unapproved
+            self.assertTrue(approved(otable, org_id))
+            self.assertFalse(unapproved(otable, org_id))
+            self.assertTrue(approved(ftable, office_id))
+            self.assertFalse(unapproved(ftable, office_id))
+
+        finally:
+            db.rollback()
+            deployment_settings.auth.record_approval = False
+            auth.s3_impersonate(None)
+
+    def testRecordApprovalWithoutComponents(self):
+        """ Test record approval without components"""
+
+        try:
+            # Set record approval on
+            deployment_settings.auth.record_approval = True
+
+            # Impersonate as admin
+            auth.s3_impersonate("admin@example.com")
+
+            # Create test record
+            otable = s3db.org_organisation
+            org = Storage(name="Test Approval Organisation")
+            org_id = otable.insert(**org)
+            self.assertTrue(org_id > 0)
+            org.update(id=org_id)
+            s3db.update_super(otable, org)
+
+            # Create test component
+            ftable = s3db.org_office
+            office = Storage(name="Test Approval Office",
+                             organisation_id=org_id)
+            office_id = ftable.insert(**office)
+            self.assertTrue(office_id > 0)
+            office.update(id=office_id)
+            s3db.update_super(ftable, office)
+
+            # Check records
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+
+            approved = auth.permission.approved
+            unapproved = auth.permission.unapproved
+
+            # Check approved/unapproved
+            self.assertFalse(approved(otable, org_id))
+            self.assertTrue(unapproved(otable, org_id))
+            self.assertFalse(approved(ftable, office_id))
+            self.assertTrue(unapproved(ftable, office_id))
+
+            # Approve
+            resource = s3mgr.define_resource("org", "organisation", id=org_id)
+            self.assertTrue(resource.approve(components=None))
+
+            # Check record
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, auth.user.id)
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+
+            # Check approved/unapproved
+            self.assertTrue(approved(otable, org_id))
+            self.assertFalse(unapproved(otable, org_id))
+            self.assertFalse(approved(ftable, office_id))
+            self.assertTrue(unapproved(ftable, office_id))
+
+        finally:
+            db.rollback()
+            deployment_settings.auth.record_approval = False
+            auth.s3_impersonate(None)
+
+    def testHasPermissionWithRecordApproval(self):
+        """ Test has_permission with record approval """
+
+        try:
+            # Set record approval on
+            deployment_settings.auth.record_approval = True
+
+            # Impersonate as admin
+            auth.s3_impersonate("admin@example.com")
+
+            # Create test record
+            otable = s3db.org_organisation
+            org = Storage(name="Test Approval Organisation")
+            org_id = otable.insert(**org)
+            self.assertTrue(org_id > 0)
+            org.update(id=org_id)
+            s3db.update_super(otable, org)
+
+            has_permission = auth.s3_has_permission
+
+            # Normal user must not see unapproved record
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+
+            # Normal user can see unapproved record
+            # if they have the approver role and method is "approve"
+            AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
+            deployment_settings.auth.record_approver_role = AUTHENTICATED
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+
+            # Admin can always see the record
+            auth.s3_impersonate("admin@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+
+            # Approve the record
+            db(otable.id==org_id).update(approved_by=auth.user.id)
+
+            # Normal user can see the record
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+
+            # Admin can always see the record
+            auth.s3_impersonate("admin@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+
+        finally:
+            deployment_settings.auth.record_approval = False
+
+    def testAccessibleQueryWithRecordApproval(self):
+        """ Test accessible_query with record approval """
+
+        deployment_settings.auth.record_approval = True
+        accessible_query = auth.s3_accessible_query
+
+        table = s3db.pr_person
+
+        # Admin can always see all records
+        auth.s3_impersonate("admin@example.com")
+        query = accessible_query("read", table, c="pr", f="person")
+        self.assertEqual(str(query), "(pr_person.id > 0)")
+
+        # User can only see their own records - approved_by not relevant
+        auth.s3_impersonate("normaluser@example.com")
+        query = accessible_query("read", table, c="pr", f="person")
+        self.assertFalse("approved_by" in str(query))
+
+        table = s3db.org_organisation
+
+        # Admin can always see all records
+        auth.s3_impersonate("admin@example.com")
+        query = accessible_query("read", table, c="org", f="organisation")
+        self.assertEqual(str(query), "(org_organisation.id > 0)")
+
+        # User can only see approved records
+        auth.s3_impersonate("normaluser@example.com")
+        query = accessible_query("read", table, c="org", f="organisation")
+        self.assertEqual(str(query), "(org_organisation.approved_by IS NOT NULL)")
+
+        # User can see all unapproved records with method approve
+        # if they have the approver role
+        session.approver_role = None
+        deployment_settings.auth.record_approver_role = "AUTHENTICATED"
+        auth.s3_impersonate("normaluser@example.com")
+        self.assertEqual(session.approver_role, AUTHENTICATED)
+        self.assertTrue(session.approver_role in auth.user.realms)
+
+        # See only unapproved records in approve
+        query = accessible_query("approve", table, c="org", f="organisation")
+        self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
+
+        # See no unapproved records in read, though
+        query = accessible_query("read", table, c="org", f="organisation")
+        self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
+
+        # Turn of record approval and check the default query
+        deployment_settings.auth.record_approval = False
+        query = accessible_query("read", table, c="org", f="organisation")
+        self.assertEqual(str(query), "(org_organisation.id > 0)")
+
+    def tearDown(self):
+
+        db.rollback()
+
+# =============================================================================
 class S3DelegationTests(unittest.TestCase):
 
 
@@ -2015,15 +2307,15 @@ class S3DelegationTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -2031,19 +2323,19 @@ class S3DelegationTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
@@ -2209,15 +2501,15 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -2225,24 +2517,25 @@ class S3AccessibleQueryTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
         auth.s3_clear_session_ownership()
         auth.s3_impersonate(None)
+        deployment_settings.auth.record_approval = False
 
     def testPolicy3(self):
 
@@ -2778,7 +3071,8 @@ if __name__ == "__main__":
         S3HasPermissionTests,
         S3AccessibleQueryTests,
         S3DelegationTests,
-        S3EntityRoleManagerTests
+        S3EntityRoleManagerTests,
+        S3RecordApprovalTests,
     )
 
 # END ========================================================================

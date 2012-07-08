@@ -150,7 +150,6 @@ class S3TemplateModel(S3Model):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
 
         template_status = {
                             1: T("Pending"),
@@ -161,9 +160,9 @@ class S3TemplateModel(S3Model):
 
         add_component = self.add_component
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        
+
         # ---------------------------------------------------------------------
         # survey_template
         #
@@ -234,8 +233,7 @@ class S3TemplateModel(S3Model):
             msg_record_deleted = T("Assessment Template deleted"),
             msg_list_empty = T("No Assessment Templates"))
 
-        template_id = S3ReusableField("template_id",
-                                      db.survey_template,
+        template_id = S3ReusableField("template_id", table,
                                       sortby="name",
                                       label=T("Template"),
                                       requires = IS_ONE_OF(db,
@@ -245,9 +243,10 @@ class S3TemplateModel(S3Model):
                                       represent = self.survey_template_represent,
                                       ondelete = "RESTRICT")
         # Components
-        add_component(table, survey_template="template_id")
-        add_component("survey_translate",
-                      survey_template = "template_id")
+        #add_component("survey_template", survey_template="template_id")
+        add_component("survey_series", survey_template="template_id")
+        add_component("survey_translate", survey_template = "template_id")
+
         configure(tablename,
                   onvalidation = self.template_onvalidate,
                   onaccept = self.template_onaccept,
@@ -299,7 +298,7 @@ class S3TemplateModel(S3Model):
                  )
 
 
-        # Return names to response.s3
+        # Return names to s3db
         return Storage(
             survey_template_id = template_id,
             survey_template_status = template_status,
@@ -958,7 +957,7 @@ class S3QuestionModel(S3Model):
         #    Along with ids mapping back to these tables
         #    it will have a code that can be used to reference the question
         #    it will have the position that the question will appear in the template
-        
+
         tablename = "survey_question_list"
         template_id = self.survey_template_id
         table = define_table(tablename,
@@ -1550,13 +1549,19 @@ class S3SeriesModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-        settings = current.deployment_settings
 
-        series_status = {
-            1: T("Active"),
-            2: T("Closed"),
-        }
+        person_id = self.pr_person_id
+        pr_person_comment = self.pr_person_comment
+        organisation_id = self.org_organisation_id
+        template_id = self.survey_template_id
+
+        s3_date_represent = S3DateTime.date_represent
+        s3_date_format = current.deployment_settings.get_L10n_date_format()
+
+        crud_strings = current.response.s3.crud_strings
+
+        add_component = self.add_component
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # The survey_series table is used to hold all uses of a template
@@ -1571,14 +1576,12 @@ class S3SeriesModel(S3Model):
         #
         #    The series is a container for all the responses for the event
 
-        tablename = "survey_series"
-        template_id = self.survey_template_id
-        person_id = self.pr_person_id
-        pr_person_comment = self.pr_person_comment
-        organisation_id = self.org_organisation_id
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = settings.get_L10n_date_format()
+        series_status = {
+            1: T("Active"),
+            2: T("Closed"),
+        }
 
+        tablename = "survey_series"
         table = self.define_table(tablename,
                                  Field("name", "string",
                                        default="",
@@ -1611,7 +1614,7 @@ class S3SeriesModel(S3Model):
                                  *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Conduct a Disaster Assessment"),
             title_display = T("Details of Disaster Assessment"),
             title_list = T("Disaster Assessments"),
@@ -1639,16 +1642,15 @@ class S3SeriesModel(S3Model):
                         deduplicate = self.survey_series_duplicate,
                         )
 
-        add_component = self.add_component
-        add_component(table, survey_template="template_id")
+        # Components
         add_component("survey_complete",
                       survey_series = "series_id"
                       )
-        set_method = self.set_method
-        set_method("survey_series", method="summary", action=self.seriesSummary)
-        set_method("survey_series", method="graph", action=self.seriesGraph)
-        set_method("survey_series", method="map", action=self.seriesMap)
-        set_method("survey_series",
+        # Custom Methods
+        set_method("survey", "series", method="summary", action=self.seriesSummary)
+        set_method("survey", "series", method="graph", action=self.seriesGraph)
+        set_method("survey", "series", method="map", action=self.seriesMap)
+        set_method("survey", "series",
                    method="series_chart_download",
                    action=self.seriesChartDownload
                    )
@@ -2555,7 +2557,7 @@ class S3CompleteModel(S3Model):
 
         T = current.T
         s3 = current.response.s3
-        
+
         crud_strings = s3.crud_strings
 
         # ---------------------------------------------------------------------
@@ -2923,7 +2925,7 @@ def survey_answerlist_dataTable_pre():
     """
 
     list_fields = ["created_on", "series_id", "location", "modified_by"]
-    current.manager.configure("survey_complete", list_fields=list_fields)
+    current.s3db.configure("survey_complete", list_fields=list_fields)
 
 # =============================================================================
 def survey_answerlist_dataTable_post(r):
@@ -3150,7 +3152,7 @@ def getLocationList(series_id):
         for line in answer_list:
             (question,answer) = line.split(",")
             answer_dict[question.strip('"')] = answer.strip('"')
-        
+
         if "STD-Lat" in  answer_dict:
             lat = float(answer_dict["STD-Lat"])
             if lat < -90.0 or lat > 90.0:

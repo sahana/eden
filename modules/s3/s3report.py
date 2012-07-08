@@ -46,10 +46,10 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3rest import S3TypeConverter
+from s3resource import S3TypeConverter
 from s3crud import S3CRUD
 from s3search import S3Search
-from s3utils import s3_truncate, s3_has_foreign_key
+from s3utils import s3_truncate, s3_has_foreign_key, s3_unicode
 from s3validators import IS_INT_AMOUNT, IS_FLOAT_AMOUNT, IS_NUMBER
 
 
@@ -100,7 +100,6 @@ class S3Cube(S3CRUD):
         """
 
         T = current.T
-        manager = current.manager
         response = current.response
         session = current.session
         s3 = session.s3
@@ -296,13 +295,13 @@ class S3Cube(S3CRUD):
 
             else:
                 # @todo: support other formats
-                r.error(501, manager.ERROR.BAD_FORMAT)
+                r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         elif representation in ("html", "iframe"):
 
                 # Fallback to list view ---------------------------------------
                 #
-                manager.configure(self.tablename, insertable=False)
+                current.s3db.configure(self.tablename, insertable=False)
                 output = self.select(r, **attr)
                 response.s3.actions = [
                         dict(url=r.url(method="", id="[id]", vars=r.get_vars),
@@ -310,7 +309,7 @@ class S3Cube(S3CRUD):
                              label = str(T("Details")))
                 ]
         else:
-            r.error(501, manager.ERROR.BAD_METHOD)
+            r.error(501, current.manager.ERROR.BAD_METHOD)
 
         # Complete the page ---------------------------------------------------
         #
@@ -601,9 +600,6 @@ class S3Report:
             @param layers: the report layers as [(fact, aggregate_method)]
         """
 
-        manager = current.manager
-        model = manager.model
-
         # Initialize ----------------------------------------------------------
         #
         if not rows and not cols:
@@ -631,8 +627,9 @@ class S3Report:
 
         # Get the fields ------------------------------------------------------
         #
-        fields = model.get_config(resource.tablename, "report_fields",
-                 model.get_config(resource.tablename, "list_fields"))
+        s3db = current.s3db
+        fields = s3db.get_config(resource.tablename, "report_fields",
+                 s3db.get_config(resource.tablename, "list_fields"))
         self._get_fields(fields=fields)
 
         # Retrieve the records --------------------------------------------------
@@ -1040,8 +1037,6 @@ class S3ContingencyTable(TABLE):
             @param attributes: the HTML attributes for the table
         """
 
-        manager = current.manager
-
         T = current.T
         TOTAL = T("Total")
 
@@ -1200,7 +1195,7 @@ class S3ContingencyTable(TABLE):
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)
-                                        layer_values[id] = str(represent(f, fvalue))
+                                        layer_values[id] = s3_unicode(represent(f, fvalue))
 
 
                     cell_ids.append(layer_ids)
@@ -1294,7 +1289,6 @@ class S3ContingencyTable(TABLE):
             @param length: the maximum length N of the result list
             @param reverse: select the least N instead
         """
-        T = current.T
         try:
             if len(tl) > length:
                 m = length - 1
@@ -1302,7 +1296,8 @@ class S3ContingencyTable(TABLE):
                 l.sort(lambda x, y: int(y[1]-x[1]))
                 if least:
                     l.reverse()
-                ts = (str(T("Others")), reduce(lambda s, t: s+t[1], l[m:], 0))
+                ts = (str(current.T("Others")),
+                      reduce(lambda s, t: s+t[1], l[m:], 0))
                 l = l[:m] + [ts]
                 return l
         except (TypeError, ValueError):
@@ -1346,7 +1341,6 @@ class S3ContingencyTable(TABLE):
             @param default: the default representation
         """
 
-        manager = current.manager
         if field in lfields:
             lfield = lfields[field]
             if lfield.field:
@@ -1373,8 +1367,8 @@ class S3ContingencyTable(TABLE):
                             value = convert(datetime.datetime, value)
                     except TypeError, ValueError:
                         pass
-                return manager.represent(lfield.field, value,
-                                         strip_markup=True)
+                return current.manager.represent(lfield.field, value,
+                                                 strip_markup=True)
         if value is None:
             return default
         else:
@@ -1392,15 +1386,12 @@ class S3ContingencyTable(TABLE):
 
         DEFAULT = ""
 
-        manager = current.manager
-        model = manager.model
-
         if field in lfields:
             lf = lfields[field]
         else:
             return DEFAULT
         get_config = lambda key, default, tablename=tablename: \
-                     model.get_config(tablename, key, default)
+                     current.s3db.get_config(tablename, key, default)
         list_fields = get_config("list_fields", None)
         fields = get_config(key, list_fields)
         if fields:

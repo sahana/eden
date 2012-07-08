@@ -40,7 +40,7 @@ def patient():
     tablename = "patient_patient"
 
     # Load Models
-    s3mgr.load("patient_patient")
+    s3db.table("patient_patient")
 
     # Search method
     patient_search = s3base.S3Search(
@@ -76,13 +76,13 @@ def patient():
     )
 
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     search_method=patient_search,
                     create_next = URL(args=["[id]", "relative"]))
     # Pre-process
     def prep(r):
         if r.id:
-            s3mgr.configure("patient_relative",
+            s3db.configure("patient_relative",
                             create_next = URL(args=[str(r.id), "home"]))
         return True
     s3.prep = prep

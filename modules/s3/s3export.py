@@ -45,13 +45,7 @@ class S3Exporter(object):
     """
 
     def __init__(self):
-        """
-            Constructor
-
-            @param manager: the S3ResourceController
-
-            @todo 2.3: error message completion
-        """
+        """ Constructor """
 
         T = current.T
 

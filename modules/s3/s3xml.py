@@ -60,7 +60,6 @@ except ImportError:
     raise
 
 # =============================================================================
-
 class S3XML(S3Codec):
     """
         XML toolkit for S3XRC
@@ -185,11 +184,8 @@ class S3XML(S3Codec):
     def __init__(self):
         """ Constructor """
 
-        manager = current.manager
-
-        self.domain = manager.domain
+        self.domain = current.manager.domain
         self.error = None
-
         self.filter_mci = False # Set to true to suppress export at MCI<0
 
     # XML+XSLT tools ==========================================================
@@ -318,7 +314,8 @@ class S3XML(S3Codec):
              url=None,
              start=None,
              limit=None,
-             results=None):
+             results=None,
+             maxbounds=False):
         """
             Builds a S3XML tree from a list of elements
 
@@ -329,6 +326,7 @@ class S3XML(S3Codec):
             @param start: the start record (in server-side pagination)
             @param limit: the page size (in server-side pagination)
             @param results: number of total available results
+            @param maxbounds: include maximum Geo-boundaries (lat/lon min/max)
         """
 
         # For now we do not nsmap, because the default namespace cannot be
@@ -358,16 +356,17 @@ class S3XML(S3Codec):
             set(ATTRIBUTE.domain, self.domain)
         if url:
             set(ATTRIBUTE.url, current.response.s3.base_url)
-        # @ToDo: This should be done based on the features, not just the config
-        bounds = current.gis.get_bounds()
-        set(ATTRIBUTE.latmin,
-            str(bounds["min_lat"]))
-        set(ATTRIBUTE.latmax,
-            str(bounds["max_lat"]))
-        set(ATTRIBUTE.lonmin,
-            str(bounds["min_lon"]))
-        set(ATTRIBUTE.lonmax,
-            str(bounds["max_lon"]))
+        if maxbounds:
+            # @ToDo: This should be done based on the features, not just the config
+            bounds = current.gis.get_bounds()
+            set(ATTRIBUTE.latmin,
+                str(bounds["min_lat"]))
+            set(ATTRIBUTE.latmax,
+                str(bounds["max_lat"]))
+            set(ATTRIBUTE.lonmin,
+                str(bounds["min_lon"]))
+            set(ATTRIBUTE.lonmax,
+                str(bounds["max_lon"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
@@ -652,14 +651,14 @@ class S3XML(S3Codec):
         popup_url = None
         tooltips = None
         marker_url = None
+        symbol = None
         if locations:
             latlons = locations.get("latlons", None)
             geojsons = locations.get("geojsons", None)
             wkts = locations.get("wkts", None)
             popup_url = locations.get("popup_url", None)
             tooltips = locations.get("tooltips", None)
-            symbol = None
-        elif marker:
+        if marker and format == "kml":
             _marker = marker.get("image", None)
             if _marker:
                 # Quicker to download Icons from Static
@@ -669,9 +668,11 @@ class S3XML(S3Codec):
                     (settings.get_base_public_url(),
                      request.application)
                 marker_url = "%s/%s" % (download_url, _marker)
-            symbol = marker.get("gps_marker", gis.DEFAULT_SYMBOL)
-        else:
-            symbol = gis.DEFAULT_SYMBOL
+        if format == "gpx":
+            if marker:
+                symbol = marker.get("gps_marker", gis.DEFAULT_SYMBOL)
+            else:
+                symbol = gis.DEFAULT_SYMBOL
 
         table = resource.table
         tablename = resource.tablename
@@ -697,19 +698,19 @@ class S3XML(S3Codec):
             LatLon = None
             polygon = False
             # Use the value calculated in gis.get_geojson_and_popup/get_geojson_theme if we can
-            if latlons:
+            if latlons and tablename in latlons:
                 LatLon = latlons[tablename].get(record.id, None)
                 if LatLon:
                     lat = LatLon[0]
                     lon = LatLon[1]
-            elif geojsons:
+            elif geojsons and tablename in geojsons:
                 polygon = True
                 geojson = geojsons[tablename].get(record.id, None)
                 if geojson:
                     # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                     geometry = etree.SubElement(element, "geometry")
                     geometry.set("value", geojson)
-            elif wkts:
+            elif wkts and tablename in wkts:
                 # Nothing gets here currently
                 # tbc: KML Polygons (or we should also do these outside XSLT)
                 polygon = True
@@ -777,7 +778,6 @@ class S3XML(S3Codec):
                 attr[ATTRIBUTE.lat] = "%.4f" % lat
                 attr[ATTRIBUTE.lon] = "%.4f" % lon
                 if marker_url:
-                    # Don't add a marker if Feature Layer/Resource with this set 1/layer
                     attr[ATTRIBUTE.marker] = marker_url
                 if symbol:
                     attr[ATTRIBUTE.sym] = symbol
@@ -1296,9 +1296,8 @@ class S3XML(S3Codec):
                 ftype = str(field.type)
                 if ftype[:9] == "reference":
                     ktablename = ftype[10:]
-                    current.manager.load(ktablename)
                     try:
-                        ktable = current.db[ktablename]
+                        ktable = current.s3db[ktablename]
                     except:
                         pass
                     else:

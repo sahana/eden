@@ -52,13 +52,14 @@ class S3ScenarioModel(S3Model):
 
     names = ["scenario_scenario",
              "scenario_scenario_id",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
+
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Scenarios
@@ -82,7 +83,7 @@ class S3ScenarioModel(S3Model):
 
         # CRUD strings
         ADD_SCENARIO = T("New Scenario")
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_SCENARIO,
             title_display = T("Scenario Details"),
             title_list = T("Scenarios"),
@@ -99,8 +100,8 @@ class S3ScenarioModel(S3Model):
 
         # Components
         # Tasks
-        self.add_component("project_task",
-                           scenario_scenario=Storage(
+        add_component("project_task",
+                      scenario_scenario=Storage(
                                 link="scenario_task",
                                 joinby="scenario_id",
                                 key="task_id",
@@ -111,8 +112,8 @@ class S3ScenarioModel(S3Model):
                                 autodelete=False))
 
         # Human Resources
-        self.add_component("hrm_human_resource",
-                           scenario_scenario=Storage(
+        add_component("hrm_human_resource",
+                      scenario_scenario=Storage(
                                     link="scenario_human_resource",
                                     joinby="scenario_id",
                                     key="human_resource_id",
@@ -123,8 +124,8 @@ class S3ScenarioModel(S3Model):
                                     autodelete=False))
 
         # Assets
-        self.add_component("asset_asset",
-                           scenario_scenario=Storage(
+        add_component("asset_asset",
+                      scenario_scenario=Storage(
                                     link="scenario_asset",
                                     joinby="scenario_id",
                                     key="asset_id",
@@ -133,12 +134,12 @@ class S3ScenarioModel(S3Model):
                                     autodelete=False))
 
         # Facilities
-        self.add_component("scenario_site",
-                           scenario_scenario="scenario_id")
+        add_component("scenario_site",
+                      scenario_scenario="scenario_id")
 
         # Map Config as a component of Scenarios
-        self.add_component("gis_config",
-                           scenario_scenario=Storage(
+        add_component("gis_config",
+                      scenario_scenario=Storage(
                                     link="scenario_config",
                                     joinby="scenario_id",
                                     multiple=False,
@@ -147,16 +148,16 @@ class S3ScenarioModel(S3Model):
                                     autocomplete="name",
                                     autodelete=True))
 
-        scenario_id = S3ReusableField("scenario_id", db.scenario_scenario,
+        scenario_id = S3ReusableField("scenario_id", table,
                                       sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "scenario_scenario.id",
-                                                                      "%(name)s",
-                                                                      orderby="scenario_scenario.name",
-                                                                      sort=True)),
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "scenario_scenario.id",
+                                                              "%(name)s",
+                                                              orderby="scenario_scenario.name",
+                                                              sort=True)),
                                       represent = lambda id: \
                                         (id and [db(db.scenario_scenario.id == id).select(db.scenario_scenario.name,
-                                                                                          limitby=(0, 1)).first().name] or [NONE])[0],
+                                                                                          limitby=(0, 1)).first().name] or [current.messages.NONE])[0],
                                       label = T("Scenario"),
                                       ondelete = "SET NULL",
                                       # Comment these to use a Dropdown & not an Autocomplete
@@ -229,10 +230,6 @@ class S3ScenarioAssetModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        scenario_id = self.scenario_scenario_id
-        asset_id = self.asset_asset_id
 
         # ---------------------------------------------------------------------
         # Assets
@@ -243,11 +240,11 @@ class S3ScenarioAssetModel(S3Model):
 
         tablename = "scenario_asset"
         table = self.define_table(tablename,
-                                  scenario_id(),
-                                  asset_id(),
+                                  self.scenario_scenario_id(),
+                                  self.asset_asset_id(),
                                   *s3_meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Asset"),
             title_display = T("Asset Details"),
             title_list = T("Assets"),
@@ -274,14 +271,10 @@ class S3ScenarioHRModel(S3Model):
     """
 
     names = ["scenario_human_resource"]
- 
+
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        scenario_id = self.scenario_scenario_id
-        human_resource_id = self.hrm_human_resource_id
 
         # ---------------------------------------------------------------------
         # Staff/Volunteers
@@ -289,11 +282,11 @@ class S3ScenarioHRModel(S3Model):
         # @ToDo: Search Widget
         tablename = "scenario_human_resource"
         table = self.define_table(tablename,
-                                  scenario_id(),
-                                  human_resource_id(),
+                                  self.scenario_scenario_id(),
+                                  self.hrm_human_resource_id(),
                                   *s3_meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Human Resource"),
             title_display = T("Human Resource Details"),
             title_list = T("Human Resources"),
@@ -320,14 +313,10 @@ class S3ScenarioMapModel(S3Model):
     """
 
     names = ["scenario_config"]
- 
+
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        scenario_id = self.scenario_scenario_id
-        config_id = self.gis_config_id
 
         # ---------------------------------------------------------------------
         # Link Table for Map Config used in this Scenario
@@ -336,11 +325,11 @@ class S3ScenarioMapModel(S3Model):
 
         tablename = "scenario_config"
         table = self.define_table(tablename,
-                                  scenario_id(),
-                                  config_id(),
+                                  self.scenario_scenario_id(),
+                                  self.gis_config_id(),
                                   *s3_meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Map Configuration"),
             title_display = T("Map Configuration Details"),
             title_list = T("Map Configurations"),
@@ -367,14 +356,10 @@ class S3ScenarioSiteModel(S3Model):
     """
 
     names = ["scenario_site"]
- 
+
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        scenario_id = self.scenario_scenario_id
-        site_id = self.org_site_id
 
         # ---------------------------------------------------------------------
         # Facilities
@@ -382,13 +367,13 @@ class S3ScenarioSiteModel(S3Model):
 
         tablename = "scenario_site"
         table = self.define_table(tablename,
-                                  scenario_id(),
-                                  site_id,
+                                  self.scenario_scenario_id(),
+                                  self.org_site_id,
                                   *s3_meta_fields())
 
         table.site_id.readable = table.site_id.writable = True
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
@@ -419,10 +404,6 @@ class S3ScenarioTaskModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        scenario_id = self.scenario_scenario_id
-        task_id = self.project_task_id
 
         # ---------------------------------------------------------------------
         # Tasks
@@ -431,11 +412,11 @@ class S3ScenarioTaskModel(S3Model):
 
         tablename = "scenario_task"
         table = self.define_table(tablename,
-                                  scenario_id(),
-                                  task_id(),
+                                  self.scenario_scenario_id(),
+                                  self.project_task_id(),
                                   *s3_meta_fields())
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Task"),
             title_display = T("Task Details"),
             title_list = T("Tasks"),

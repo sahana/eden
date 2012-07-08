@@ -74,8 +74,7 @@ def req():
         s3db.req_prep(r)
 
         # Remove type from list_fields
-        list_fields = s3mgr.model.get_config("req_req",
-                                             "list_fields")
+        list_fields = s3db.get_config("req_req", "list_fields")
         try:
             list_fields.remove("type")
         except:
@@ -83,7 +82,7 @@ def req():
              # This can happen if the req controller is called
              # for a second time, such as when printing reports
             pass
-        s3mgr.configure("req_req", list_fields=list_fields)
+        s3db.configure("req_req", list_fields=list_fields)
 
         if r.interactive:
             # Set Fields and Labels depending on type
@@ -135,7 +134,7 @@ def req():
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
                     s3db.req_create_form_mods()
-                    s3mgr.configure(s3db.req_req,
+                    s3db.configure(s3db.req_req,
                                     create_next = URL(c="req",
                                                       f="req",
                                                       args=["[id]",
@@ -179,7 +178,7 @@ def req():
         if r.component and r.component.name == "commit":
             table = r.component.table
             # Allow commitments to be added when doing so as a component
-            s3mgr.configure(table,
+            s3db.configure(table,
                             listadd = True)
 
             type = r.record.type
@@ -189,7 +188,7 @@ def req():
                                           error_msg=T("You do not have permission for any facility to make a commitment."))
                 if r.interactive:
                     # Redirect to the Items tab after creation
-                    s3mgr.configure(table,
+                    s3db.configure(table,
                                     create_next = URL(c="req", f="commit",
                                                       args=["[id]", "commit_item"]),
                                     update_next = URL(c="req", f="commit",
@@ -214,7 +213,7 @@ def req():
                 table.site_id.writable = False
                 if r.interactive and r.record.type == 3: # People
                     # Redirect to the Persons tab after creation
-                    s3mgr.configure(table,
+                    s3db.configure(table,
                                     create_next = URL(c="req", f="commit",
                                                       args=["[id]", "commit_person"]),
                                     update_next = URL(c="req", f="commit",
@@ -284,7 +283,7 @@ def req():
 def req_item():
     """ REST Controller """
 
-    s3mgr.configure("req_req_item",
+    s3db.configure("req_req_item",
                     insertable=False)
 
     def prep(r):
@@ -446,7 +445,7 @@ def commit():
         table.person_id.writable = False
         # & can only make single-person commitments
         # (This should have happened in the main commitment)
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
                         insertable=False)
 
     def prep(r):
@@ -494,7 +493,7 @@ def commit():
                 #db.req_commit_skill.req_skill_id.requires = \
                 #    IS_ONE_OF(db,
                 #              "req_req_skill.id",
-                #              s3.req_skill_represent,
+                #              s3db.req_skill_represent,
                 #              orderby = "req_req_skill.id",
                 #              filterby = "req_id",
                 #              filter_opts = [req_id],
@@ -630,8 +629,7 @@ def commit_req():
     site_id = request.vars.get("site_id")
 
     # User must have permissions over facility which is sending
-    (prefix, resourcename, id) = s3mgr.model.get_instance(s3db.org_site,
-                                                          site_id)
+    (prefix, resourcename, id) = s3db.get_instance(s3db.org_site, site_id)
     if not site_id or not auth.s3_has_permission("update",
                                                  "%s_%s" % (prefix,
                                                             resourcename),
@@ -715,8 +713,7 @@ def send_req():
     site_id = request.vars.get("site_id")
 
     # User must have permissions over facility which is sending
-    (prefix, resourcename, id) = s3mgr.model.get_instance(db.org_site,
-                                                          site_id)
+    (prefix, resourcename, id) = s3db.get_instance(db.org_site, site_id)
     if not site_id or not auth.s3_has_permission("update",
                                                  "%s_%s" % (prefix,
                                                             resourcename),

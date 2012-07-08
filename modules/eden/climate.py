@@ -77,8 +77,6 @@ class S3ClimateModel(S3Model):
 
         NONE = current.messages.NONE
 
-        s3_date_format = current.deployment_settings.get_L10n_date_format()
-
         configure = self.configure
         define_table = self.define_table
 
@@ -118,26 +116,14 @@ class S3ClimateModel(S3Model):
         # not all places are stations with elevations
         # as in the case of "gridded" data
         # a station can only be in one place
-        define_table("climate_place_station_name",
-                     Field("name", "double",
-                           notnull=True,
-                           required=True,
-                          ),
-                    )
+        table = define_table("climate_place_station_name",
+                             Field("name", "double",
+                                   notnull=True,
+                                   required=True,
+                                  ),
+                            )
 
-        # ---------------------------------------------------------------------
-        # station id may not be useful or even meaningful
-        # e.g. gridded data has no stations.
-        # this is passive data so ok to store separately
-        define_table("climate_place_station_id",
-                     Field("station_id", "integer",
-                           notnull=True,
-                           required=True,
-                          ),
-                    )
-
-        station_id = S3ReusableField("station_id",
-                                     db.climate_place_station_name,
+        station_id = S3ReusableField("station_id", table,
                                      sortby="name",
                                      requires = IS_ONE_OF(db,
                                         "climate_place_station_name.id",
@@ -151,46 +137,56 @@ class S3ClimateModel(S3Model):
                                     )
 
         # ---------------------------------------------------------------------
+        # station id may not be useful or even meaningful
+        # e.g. gridded data has no stations.
+        # this is passive data so ok to store separately
+        define_table("climate_place_station_id",
+                     Field("station_id", "integer",
+                           notnull=True,
+                           required=True,
+                          ),
+                    )
+
+        # ---------------------------------------------------------------------
         # coefficient of variance is meaningless for degrees C but Ok for Kelvin
         # internally all scales must be ratio scales if coefficient
         # of variations is to be allowed, (which it is)
         # rainfall (mm), temp (K) are ok
         # output units
 
-        define_table("climate_sample_table_spec",
-                     Field("name",
-                           notnull=True,
-                           required=True,
-                          ),
-                     Field("sample_type_code",
-                           length = 1,
-                           notnull = True,
-                           # web2py requires a default value for not null fields
-                           default = "",
-                           required = True
-                          ),
-                     Field("field_type",
-                           notnull=True,
-                           required=True,
-                          ),
-                     Field("units",
-                           notnull=True,
-                           required=True,
-                          ),
-                     Field("date_mapping",
-                           default="",
-                           notnull=True,
-                           required=True
-                          ),
-                     Field("grid_size", "double",
-                           default = 0,
-                           notnull = True,
-                           required = True
-                          )
-                    )
+        table = define_table("climate_sample_table_spec",
+                             Field("name",
+                                   notnull=True,
+                                   required=True,
+                                  ),
+                             Field("sample_type_code",
+                                   length = 1,
+                                   notnull = True,
+                                   # web2py requires a default value for not null fields
+                                   default = "",
+                                   required = True
+                                  ),
+                             Field("field_type",
+                                   notnull=True,
+                                   required=True,
+                                  ),
+                             Field("units",
+                                   notnull=True,
+                                   required=True,
+                                  ),
+                             Field("date_mapping",
+                                   default="",
+                                   notnull=True,
+                                   required=True
+                                  ),
+                             Field("grid_size", "double",
+                                   default = 0,
+                                   notnull = True,
+                                   required = True
+                                  )
+                            )
 
-        parameter_id = S3ReusableField("parameter_id",
-                                       db.climate_sample_table_spec,
+        parameter_id = S3ReusableField("parameter_id", table,
                                        sortby="name",
                                        requires = IS_ONE_OF(db,
                                                 "climate_sample_table_spec.id",
@@ -313,18 +309,14 @@ class S3ClimateModel(S3Model):
                                    ondelete = "RESTRICT"
                                 ),
                              station_id(),
-                             Field("date_from", "date",
-                                   requires = IS_DATE(format=s3_date_format),
-                                   widget = S3DateWidget(),
-                                   default = utcnow,
-                                   required = True
-                                ),
-                             Field("date_to", "date",
-                                   requires = IS_DATE(format=s3_date_format),
-                                   widget = S3DateWidget(),
-                                   default = utcnow,
-                                   required = True
-                                   ),
+                             s3_date("date_from",
+                                     default = "now",
+                                     empty=False
+                                    ),
+                             s3_date("date_to",
+                                     default = "now",
+                                     empty=False
+                                    ),
                              Field("nationality", "integer",
                                    label = T("Category"),
                                    requires = IS_IN_SET(nationality_opts),
@@ -419,10 +411,11 @@ class S3ClimateModel(S3Model):
         """
 
         vars = form.request_vars
-        table = current.s3db.climate_prices
+        db = current.db
+        table = db.climate_prices
         query = (table.category == vars["category"]) & \
                 (table.parameter_id == vars["parameter_id"])
-        price = current.db(query).select(table.id,
+        price = db(query).select(table.id,
                                          limitby=(0, 1)).first()
         if price is not None:
             form.errors["nrs_per_datum"] = [
@@ -445,9 +438,7 @@ class S3ClimateModel(S3Model):
         id = vars.id
 
         db = current.db
-        s3db = current.s3db
-        ptable = s3db.climate_purchase
-
+        ptable = db.climate_purchase
         purchase = db(ptable.id == id).select(ptable.paid,
                                               limitby=(0, 1)).first()
 
@@ -457,7 +448,7 @@ class S3ClimateModel(S3Model):
             parameter_id = vars.parameter_id
             table = db.climate_sample_table_spec
             query = (table.id == parameter_id)
-            parameter_table = db(query).select(table.id,     
+            parameter_table = db(query).select(table.id,
                                                table.date_mapping,
                                                limitby=(0, 1)).first()
             parameter_table_id = parameter_table.id

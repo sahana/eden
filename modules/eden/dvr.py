@@ -47,12 +47,13 @@ class S3DVRModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         multi_activity_id = self.project_multi_activity_id
-        NONE = current.messages.NONE
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Case
@@ -69,7 +70,7 @@ class S3DVRModel(S3Model):
             2: T("Accepted"),
             3: T("Rejected"),
         }
-        
+
         tablename = "dvr_case"
         table = self.define_table(tablename,
                                   # @ToDo: Option to autogenerate these, like Waybills, et al
@@ -82,14 +83,16 @@ class S3DVRModel(S3Model):
                                   location_id(label = T("Home Address")),
                                   Field("damage", "integer",
                                         requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
-                                        represent = lambda opt: dvr_damage_opts.get(opt, NONE),
+                                        represent = lambda opt: \
+                                            dvr_damage_opts.get(opt, UNKNOWN_OPT),
                                         label= T("Damage Assessment")),
                                   Field("insurance", "boolean",
                                         label = T("Insurance")),
                                   Field("status", "integer",
                                         default = 1,
                                         requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
-                                        represent = lambda opt: dvr_status_opts.get(opt, NONE),
+                                        represent = lambda opt: \
+                                            dvr_status_opts.get(opt, UNKNOWN_OPT),
                                         label= T("Status")),
                                   multi_activity_id(),
                                   s3_comments(),
@@ -97,7 +100,7 @@ class S3DVRModel(S3Model):
 
         # CRUD Strings
         ADD_CASE = T("Add Case")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_CASE,
             title_display = T("Case Details"),
             title_list = T("Cases"),
@@ -138,7 +141,7 @@ class S3DVRModel(S3Model):
             person_id = vars.person_id
             db = current.db
             s3db = current.s3db
-            ptable = s3db.pr_person
+            ptable = db.pr_person
             atable = s3db.pr_address
             query = (ptable.id == person_id)
             left = atable.on((atable.pe_id == ptable.pe_id) & \
@@ -148,7 +151,7 @@ class S3DVRModel(S3Model):
                                       atable.location_id,
                                       left=left).first()
             if person:
-                _config = current.manager.model.get_config
+                _config = current.s3db.get_config
                 pe_id = person["pr_person"].pe_id
                 if not person["pr_address"].id:
                     # Create Home Address from location_id

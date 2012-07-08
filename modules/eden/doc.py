@@ -58,9 +58,6 @@ class S3DocumentLibrary(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        s3_date_format = current.deployment_settings.get_L10n_date_format()
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
-
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
@@ -105,13 +102,10 @@ class S3DocumentLibrary(S3Model):
                              person_id(label=T("Author"),
                                        comment=person_comment(T("Author"),
                                                               T("The Author of this Document (optional)"))),
-                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
-                             Field("date", "date",
-                                   label = T("Date Published"),
-                                   represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                   widget = S3DateWidget()
-                                   ),
+                             organisation_id(
+                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+                                ),
+                             s3_date(label = T("Date Published")),
                              location_id(),
                              s3_comments(),
                              #Field("entered", "boolean", label=T("Entered")),
@@ -171,7 +165,9 @@ class S3DocumentLibrary(S3Model):
                              super_link("pe_id", "pr_pentity"),
                              super_link("doc_id", doc_entity),
                              Field("file", "upload", autodelete=True,
-                                   requires = IS_NULL_OR(IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))),
+                                   requires = IS_NULL_OR(
+                                                IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)
+                                                         )),
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(current.request.folder,
                                                                "uploads",
@@ -189,14 +185,11 @@ class S3DocumentLibrary(S3Model):
                                    label = T("Image Type"),
                                    represent = lambda opt: doc_image_type_opts.get(opt, UNKNOWN_OPT)),
                              person_id(label=T("Author")),
-                             organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
+                             organisation_id(
+                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+                                ),
                              location_id(),
-                             Field("date", "date",
-                                   label = T("Date Taken"),
-                                   represent = s3_date_represent,
-                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                   widget = S3DateWidget()
-                                   ),
+                             s3_date(label = T("Date Taken")),
                              s3_comments(),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())
@@ -258,12 +251,16 @@ class S3DocumentLibrary(S3Model):
         if not id:
             return current.messages.NONE
 
-        represent = s3_get_db_field_value(tablename = "doc_document",
-                                          fieldname = "name",
-                                          look_up_value = id)
-        return A(represent,
-                 _href = URL(c="doc", f="document", args=[id], extension=""),
-                 _target = "blank")
+        db = current.db
+        table = db.doc_document
+        record = db(table.id == id).select(table.name,
+                                           limitby=(0, 1)).first()
+        try:
+            return A(record.name,
+                     _href = URL(c="doc", f="document", args=[id], extension=""),
+                     _target = "blank")
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -274,8 +271,6 @@ class S3DocumentLibrary(S3Model):
 
         T = current.T
         db = current.db
-        s3db = current.s3db
-        request = current.request
         vars = form.vars
 
         if document:
@@ -285,12 +280,12 @@ class S3DocumentLibrary(S3Model):
             tablename = "doc_image"
             msg = T("Either file upload or image URL required.")
 
-        table = s3db[tablename]
+        table = db[tablename]
 
         doc = vars.file
         url = vars.url
         if not hasattr(doc, "file"):
-            id = request.post_vars.id
+            id = current.request.post_vars.id
             if id:
                 record = db(table.id == id).select(table.file,
                                                    limitby=(0, 1)).first()

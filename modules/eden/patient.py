@@ -49,16 +49,16 @@ class S3PatientModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
-        s3 = current.response.s3
 
         person_id = self.pr_person_id
-        location_id = self.gis_location_id
-        hospital_id = self.hms_hospital_id
 
         messages = current.messages
 
         s3_date_format = current.deployment_settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
+        add_component = self.add_component
+        crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Patients
@@ -78,8 +78,10 @@ class S3PatientModel(S3Model):
                                         represent = lambda code: \
                                             gis.get_country(code, key_type="code") or \
                                                 messages.UNKNOWN_OPT),
-                                  hospital_id(empty=False,
-                                              label = T("Current Location Treating Hospital")),
+                                  self.hms_hospital_id(
+                                    empty=False,
+                                    label = T("Current Location Treating Hospital")
+                                    ),
                                   Field("phone", requires=s3_phone_requires,
                                         label=T("Current Location Phone Number")),
                                   Field("treatment_date", "date",
@@ -124,14 +126,14 @@ class S3PatientModel(S3Model):
 
         # Components
         # Relatives
-        self.add_component("patient_relative",
-                           patient_patient=dict(joinby="patient_id",
-                                                multiple=False))
+        add_component("patient_relative",
+                      patient_patient=dict(joinby="patient_id",
+                                           multiple=False))
 
         # Homes
-        self.add_component("patient_home",
-                           patient_patient=dict(joinby="patient_id",
-                                                multiple=False))
+        add_component("patient_home",
+                      patient_patient=dict(joinby="patient_id",
+                                           multiple=False))
 
         # ---------------------------------------------------------------------
         # Relatives
@@ -149,7 +151,7 @@ class S3PatientModel(S3Model):
 
         # CRUD strings
         ADD_RELATIVE = T("New Relative")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_RELATIVE,
             title_display = T("Relative Details"),
             title_list = T("Relatives"),
@@ -178,9 +180,11 @@ class S3PatientModel(S3Model):
                                             label=T("Home Relative"),
                                             comment=None),
                                   #person_id(label = T("Home Relative")),
-                                  location_id(label=T("Home City"),
-                                              widget = S3LocationAutocompleteWidget(level="L2"),
-                                              requires = IS_LOCATION(level="L2")),
+                                  self.gis_location_id(
+                                    label=T("Home City"),
+                                    widget = S3LocationAutocompleteWidget(level="L2"),
+                                    requires = IS_LOCATION(level="L2")
+                                    ),
                                   Field("phone",
                                         requires=IS_NULL_OR(s3_phone_requires),
                                         label=T("Home Phone Number")),
@@ -189,7 +193,7 @@ class S3PatientModel(S3Model):
 
         # CRUD strings
         ADD_HOME = T("New Home")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_HOME,
             title_display = T("Home Details"),
             title_list = T("Homes"),
@@ -219,16 +223,14 @@ class S3PatientModel(S3Model):
             # Do not repeat the lookup if already done by IS_ONE_OF or RHeader
             patient = id
         else:
-            s3db = current.s3db
-            table = s3db.patient_patient
-            query = (table.id == id)
-            patient = current.db(query).select(table.person_id,
-                                               limitby=(0, 1),
-                                               cache=s3db.cache).first()
-        if patient:
+            db = current.db
+            table = db.patient_patient
+            patient = db(table.id == id).select(table.person_id,
+                                                limitby=(0, 1)).first()
+        try:
             represent = s3_fullname(patient.person_id)
-        else:
-            represent = current.messages.NONE
+        except:
+            return current.messages.UNKNOWN_OPT
 
         return represent
 

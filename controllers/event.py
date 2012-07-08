@@ -47,15 +47,15 @@ def event():
                         # inc list_create (list_fields over-rides)
                         s3db.req_create_form_mods()
                 elif r.component.name == "config":
-                    s3mgr.configure("gis_config",
+                    s3db.configure("gis_config",
                                     deletable=False)
                     s3.crud.submit_button = T("Update")
                 elif r.component.name == "human_resource":
-                    s3mgr.configure("event_human_resource",
+                    s3db.configure("event_human_resource",
                                     list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
                 elif r.component.name == "asset":
-                    s3mgr.configure("event_asset",
+                    s3db.configure("event_asset",
                                     list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
                 else:
@@ -232,7 +232,7 @@ def asset():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    s3db.table("event_event")
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -242,7 +242,7 @@ def asset():
     # Pre-Process
     if r.id and link:
         # Go back to the asset list of the scenario/event after removing the asset
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "asset"]))
@@ -284,7 +284,7 @@ def human_resource():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    s3db.table("event_event")
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -294,7 +294,7 @@ def human_resource():
     # Pre-Process
     if r.id and link:
         # Go back to the human_resource list of the scenario/event after removing the human_resource
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "human_resource"]))
@@ -336,7 +336,7 @@ def site():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    s3db.table("event_event")
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -346,7 +346,7 @@ def site():
     # Pre-Process
     if r.id and link:
         # Go back to the facility list of the scenario/event after removing the facility
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "site"]))
@@ -388,7 +388,7 @@ def task():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    s3db.table("event_event")
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -398,7 +398,7 @@ def task():
     # Pre-Process
     if r.id and link:
         # Go back to the task list of the scenario/event after removing the task
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "task"]))

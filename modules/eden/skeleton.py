@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" 
+"""
     This is just a commented template to copy/paste from when implementing
     new models. Be sure you replace this docstring by something more
     appropriate, e.g. a short module description and a license statement.
@@ -65,9 +65,7 @@ class S3SkeletonDataModel(S3Model):
         db = current.db
         T = current.T
 
-        # This one should also be there:
-        s3 = current.response.s3
-        s3db = current.s3db
+        # This one may be useful:
         settings = current.deployment_settings
 
 
@@ -81,7 +79,7 @@ class S3SkeletonDataModel(S3Model):
                                   Field("name"),
                                   *s3_meta_fields())
 
-        # Use self.configure to configure your model (not s3mgr.configure!)
+        # Use self.configure to configure your model (or current.s3db.configure)
         self.configure(tablename,
                        listadd=False)
 
@@ -92,9 +90,9 @@ class S3SkeletonDataModel(S3Model):
         # self.super_entity   => super_entity
         # self.super_key      => super_key
         # self.super_link     => super_link
-        # self.add_component  => s3mgr.model.add_component
-        # self.configure      => s3mgr.configure
-        # self.table          => s3mgr.load
+        # self.add_component  => s3db.add_component
+        # self.configure      => s3db.configure
+        # self.table          => s3db.table
         #
 
         # If you need to reference external tables, always use the table-method.
@@ -151,10 +149,9 @@ class S3SkeletonDataModel(S3Model):
         """ Form validation """
 
         db = current.db
-        s3db = current.s3db
-
-        table = s3db.skeleton_example
-
+        # Note that we don't need to use s3db here since this is a method of the class,
+        # so the table must have loaded
+        table = db.skeleton_example
         query = (table.id == form.vars.id)
         record = db(query).select(table.name,
                                   limitby=(0, 1)).first()
@@ -170,10 +167,15 @@ class S3SkeletonDataModel(S3Model):
 #
 def skeleton_example_represent(id):
 
+    if not id:
+        # Don't do a DB lookup if we have no id
+        # Instead return a consistenct representation of a null value
+        return current.messages.NONE
+
     # Your function may need to access tables. If a table isn't defined
     # at the point when this function gets called, then this:
     s3db = current.s3db
-    skeleton_table = s3db.skeleton_table
+    table = s3db.skeleton_table
     # will load the table. This is the same function as self.table described in
     # the model class except that "self" is not available here, so you need to
     # use the class instance as reference instead
@@ -182,9 +184,11 @@ def skeleton_example_represent(id):
     query = (table.id == id)
     record = db(query).select(table.name,
                               limitby=(0, 1)).first()
-    if record:
+    try:
+        # Try faster than If for the common case where it works
         return record.name
-    else:
-        return current.messages.NONE
+    except:
+        # Data inconsistency error!
+        return current.messages.UNKNOWN_OPT
 
 # END =========================================================================

@@ -49,13 +49,12 @@ from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget
 
-from s3rest import S3FieldSelector
+from s3resource import S3FieldSelector
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
            "S3SearchMinMaxWidget",
            "S3SearchOptionsWidget",
-           "S3SearchLocationHierarchyWidget",
            "S3SearchLocationWidget",
            "S3SearchSkillsWidget",
            "S3SearchOrgHierarchyWidget",
@@ -338,6 +337,9 @@ class S3SearchMinMaxWidget(S3SearchWidget):
         select_min = self.method in ("min", "range")
         select_max = self.method in ("max", "range")
 
+        self.widmin = Storage()
+        self.widmax = Storage()
+
         if not self.search_field:
             self.build_master_query(resource)
 
@@ -506,6 +508,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
                          otherwise a LazyT for the label
 
             @keyword label: a label for the search widget
+            @keyword location_level: If-specified then generate a label when
+                                     rendered based on the current hierarchy
             @keyword comment: a comment for the search widget
         """
         super(S3SearchOptionsWidget, self).__init__(field, name, **attr)
@@ -519,15 +523,20 @@ class S3SearchOptionsWidget(S3SearchWidget):
             the referenced resource.
         """
         field = self.field
-        kfield = None
-
         if field.find("$") != -1:
             is_component = True
-            kfield, field = field.split("$")
+            try:
+                kfield, field = field.split("$")
+            except:
+                # @ToDo: Support multiple levels of components
+                raise NotImplementedError
             tablename = resource.table[kfield].type[10:]
             prefix, resource_name = tablename.split("_", 1)
             resource = current.manager.define_resource(prefix,
                                                        resource_name)
+        else:
+            kfield = None
+
         return resource, field, kfield
 
     # -------------------------------------------------------------------------
@@ -538,22 +547,32 @@ class S3SearchOptionsWidget(S3SearchWidget):
             @param resource: the resource to search in
             @param vars: the URL GET variables as dict
         """
-        T = current.T
 
         resource, field_name, kfield = self._get_reference_resource(resource)
 
-        if "_name" not in self.attr:
-            self.attr.update(_name="%s_search_select_%s" % (resource.name,
-                                                            field_name))
-        self.name = self.attr._name
+        attr = self.attr
+        if "_name" not in attr:
+            attr.update(_name="%s_search_select_%s" % (resource.name,
+                                                       field_name))
+        self.name = attr._name
 
-        # populate the field value from the GET parameter
+        if "location_level" in attr:
+            # This is searching a Location Hierarchy, so lookup the label now
+            level = attr["location_level"]
+            hierarchy = current.gis.get_location_hierarchy()
+            if level in hierarchy:
+                label = hierarchy[level]
+            else:
+                label = level
+            attr["label"] = label
+
+        # Populate the field value from the GET parameter
         if vars and self.name in vars:
             value = vars[self.name]
         else:
             value = None
 
-        # check the field type
+        # Check the field type
         try:
             field = resource.table[field_name]
         except:
@@ -596,12 +615,12 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                                 if row[field_name] != None]
 
         if opt_keys == []:
-            msg = self.attr.get("_no_opts", T("No options available"))
+            msg = attr.get("_no_opts", current.T("No options available"))
             return SPAN(msg, _class="no-options-available")
 
         if self.options is None:
             # Always use the represent of the widget, if present
-            represent = self.attr.represent
+            represent = attr.represent
             # Fallback to the field's represent
             if not represent or field_type[:9] != "reference":
                 represent = field.represent
@@ -721,10 +740,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
                     opt_field = Storage(name=self.name,
                                         requires=IS_IN_SET(options,
                                                            multiple=True))
-                    if self.attr.cols:
+                    if attr.cols:
                         letter_widget = CheckboxesWidgetS3.widget(opt_field,
                                                                   value,
-                                                                  cols=self.attr.cols,
+                                                                  cols=attr.cols,
                                                                   requires=requires,
                                                                   _class="search_select_letter_widget")
                     else:
@@ -741,10 +760,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
 
         else:
             try:
-                if self.attr.cols:
+                if attr.cols:
                     widget = CheckboxesWidgetS3.widget(opt_field,
                                                        value,
-                                                       cols=self.attr.cols)
+                                                       cols=attr.cols)
                 else:
                     widget = CheckboxesWidgetS3.widget(opt_field,
                                                        value)
@@ -786,56 +805,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
             return query
         else:
             return None
-
-# =============================================================================
-class S3SearchLocationHierarchyWidget(S3SearchOptionsWidget):
-    """
-        Displays a search widget which allows the user to search for records
-        by selecting a location from a specified level in the hierarchy.
-        - works only for tables with s3.address_fields() in
-          i.e. Sites & pr_address
-    """
-
-    def __init__(self, name=None, field=None, **attr):
-        """
-            Configures the search option
-
-            @param name: name of the search widget
-            @param field: field containing a hierarchy level to search
-
-            @keyword comment: a comment for the search widget
-        """
-
-        gis = current.gis
-
-        self.other = None
-
-        if field:
-            if field.find("$") != -1:
-                kfield, level = field.split("$")
-            else:
-                level = field
-        else:
-            # Default to the currently active gis_config
-            config = gis.get_config()
-            field = level = config.search_level or "L0"
-
-        hierarchy = gis.get_location_hierarchy()
-        if level in hierarchy:
-            label = hierarchy[level]
-        else:
-            label = level
-
-        self.field = field
-
-        super(S3SearchLocationHierarchyWidget, self).__init__(field,
-                                                              name,
-                                                              **attr)
-
-        self.attr = Storage(attr)
-        self.attr["label"] = label
-        if name is not None:
-            self.attr["_name"] = name
 
 # =============================================================================
 class S3SearchLocationWidget(S3SearchWidget):
@@ -963,8 +932,7 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
 
     def widget(self, resource, vars):
-        manager = current.manager
-        c = manager.define_resource("hrm", "credential")
+        c = current.manager.define_resource("hrm", "credential")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -998,8 +966,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
 
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
-        manager = current.manager
-        c = manager.define_resource("hrm", "competency")
+        c = current.manager.define_resource("hrm", "competency")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -1230,7 +1197,7 @@ class S3Search(S3CRUD):
                                     break
                         if flag == 1:
                             return DIV(save_search_a,
-                                       _style="font-size:12px; padding:5px 0px 5px 90px;",
+                                       _style="font-size:12px;padding:5px 0px 5px 90px;",
                                        _id="save_search"
                                        )
 
@@ -1249,8 +1216,8 @@ class S3Search(S3CRUD):
         s_var["save"] = True
         jurl = URL(r=request, c=r.controller, f=r.function,
                    args=["search"], vars=s_var)
-        save_search_script = '''
-$('#%s').live('click',function(){
+        save_search_script = \
+'''$('#%s').live('click',function(){
  $('#%s').show()
  $('#%s').hide()
  $.ajax({
@@ -1263,21 +1230,20 @@ $('#%s').live('click',function(){
   type:'POST'
  })
  return false
-})
-''' % (save_search_btn_id,
-       save_search_processing_id,
-       save_search_btn_id,
-       jurl,
-       json.dumps(search_vars),
-       save_search_a_id,
-       save_search_processing_id)
+})''' % (save_search_btn_id,
+         save_search_processing_id,
+         save_search_btn_id,
+         jurl,
+         json.dumps(search_vars),
+         save_search_a_id,
+         save_search_processing_id)
 
         current.response.s3.jquery_ready.append(save_search_script)
 
         widget = DIV(save_search_processing,
                      save_search_a,
                      save_search_btn,
-                     _style="font-size:12px; padding:5px 0px 5px 90px;",
+                     _style="font-size:12px;padding:5px 0px 5px 90px;",
                      _id="save_search"
                      )
         return widget
@@ -1798,7 +1764,7 @@ $('#%s').live('click',function(){
                 query = (field > value)
 
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                             False,
                             400,
                             "Unsupported filter! Supported filters: ~, =, <, >")
@@ -1869,7 +1835,7 @@ $('#%s').live('click',function(){
             current.response.headers["Content-Type"] = "application/json"
 
         else:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                         False,
                         400,
                         "Missing options! Require: field, filter & value")
@@ -2290,7 +2256,7 @@ class S3LocationSearch(S3Search):
                           table.addr_street,
                           table.addr_postcode]
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~, ="
@@ -2370,7 +2336,7 @@ class S3OrganisationSearch(S3Search):
                         (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
 
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~"
@@ -2453,7 +2419,7 @@ class S3PersonSearch(S3Search):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                             False,
                             400,
                             "No value provided!"
@@ -2538,7 +2504,7 @@ class S3HRSearch(S3Search):
         value = _vars.term or _vars.value or _vars.q or None
 
         if not value:
-            output = current.manager.xml.json_message(
+            output = current.xml.json_message(
                             False,
                             400,
                             "No value provided!"
@@ -2664,7 +2630,7 @@ class S3PentitySearch(S3Search):
                             (field3.lower().like(value + "%")))
                 resource.add_filter(query)
             else:
-                output = current.manager.xml.json_message(
+                output = current.xml.json_message(
                                 False,
                                 400,
                                 "Unsupported filter! Supported filters: ~"

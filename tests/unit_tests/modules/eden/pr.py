@@ -125,7 +125,7 @@ class PersonDeduplicateTests(unittest.TestCase):
                           date_of_birth = datetime.date(1974, 4, 13))
         person1_id = ptable.insert(**person1)
         person1.update(id=person1_id)
-        s3mgr.model.update_super(ptable, person1)
+        s3db.update_super(ptable, person1)
 
         self.person1_id = person1_id
         self.pe1_id = s3db.pr_get_pe_id(ptable, person1_id)
@@ -136,20 +136,20 @@ class PersonDeduplicateTests(unittest.TestCase):
                           date_of_birth = datetime.date(1974, 4, 23))
         person2_id = ptable.insert(**person2)
         person2.update(id=person2_id)
-        s3mgr.model.update_super(ptable, person2)
+        s3db.update_super(ptable, person2)
 
         self.person2_id = person2_id
         self.pe2_id = s3db.pr_get_pe_id(ptable, person2_id)
 
     def testHook(self):
 
-        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        deduplicate = s3db.get_config("pr_person", "deduplicate")
         self.assertNotEqual(deduplicate, None)
         self.assertTrue(callable(deduplicate))
 
     def testMatchNames(self):
 
-        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        deduplicate = s3db.get_config("pr_person", "deduplicate")
 
         # Test Match
         person = Storage(first_name = "Test",
@@ -169,7 +169,7 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def testMatchEmail(self):
 
-        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        deduplicate = s3db.get_config("pr_person", "deduplicate")
 
         # Test without contact records in the DB
 
@@ -236,7 +236,7 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def testMatchInitials(self):
 
-        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        deduplicate = s3db.get_config("pr_person", "deduplicate")
 
         # Insert contact records into the DB
         ctable = s3db.pr_contact
@@ -290,7 +290,7 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def testMatchDOB(self):
 
-        deduplicate = s3mgr.model.get_config("pr_person", "deduplicate")
+        deduplicate = s3db.get_config("pr_person", "deduplicate")
 
         # Insert contact records into the DB
         ctable = s3db.pr_contact

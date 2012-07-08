@@ -88,7 +88,6 @@ class S3Sync(S3Method):
             @param attr: controller attributes for the request
         """
 
-        manager = current.manager
         output = dict()
 
         if r.method == "sync":
@@ -97,14 +96,14 @@ class S3Sync(S3Method):
             elif r.http in ("PUT", "POST"):
                 output = self.__receive(r, **attr)
             else:
-                r.error(405, manager.ERROR.BAD_METHOD)
+                r.error(405, current.manager.ERROR.BAD_METHOD)
         elif r.name == "repository" and r.method == "register":
             if r.http == "GET":
                 output = self.__register(r, **attr)
             else:
-                r.error(405, manager.ERROR.BAD_METHOD)
+                r.error(405, current.manager.ERROR.BAD_METHOD)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
 
         return output
 
@@ -114,13 +113,9 @@ class S3Sync(S3Method):
             Read the current sync status
         """
 
-        db = current.db
-        manager = current.manager
-
         tablename = "sync_status"
-        manager.load(tablename)
-        table = db[tablename]
-        row = db().select(table.ALL, limitby=(0, 1)).first()
+        table = current.s3db[tablename]
+        row = current.db().select(table.ALL, limitby=(0, 1)).first()
         if not row:
             row = Storage()
         return row
@@ -131,16 +126,12 @@ class S3Sync(S3Method):
             Update the current sync status
         """
 
-        db = current.db
-        manager = current.manager
-
         tablename = "sync_status"
-        manager.load(tablename)
-        table = db[tablename]
+        table = current.s3db[tablename]
 
         data = Storage([(k, attr[k]) for k in attr if k in table.fields])
         data.update(timestmp = datetime.datetime.utcnow())
-        row = db().select(table._id, limitby=(0, 1)).first()
+        row = current.db().select(table._id, limitby=(0, 1)).first()
         if row:
             row.update_record(**data)
         else:
@@ -156,14 +147,10 @@ class S3Sync(S3Method):
 
         if not hasattr(self, "config"):
 
-            db = current.db
-            manager = current.manager
-
             tablename = "sync_config"
-            manager.load(tablename)
-            table = db[tablename]
+            table = current.s3db[tablename]
 
-            row = db().select(table.ALL, limitby=(0, 1)).first()
+            row = current.db().select(table.ALL, limitby=(0, 1)).first()
             self.config = row
 
         return self.config
@@ -178,9 +165,6 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.synchronize(%s)" % repository.url)
 
-        db = current.db
-        xml = current.manager.xml
-
         if not repository.url:
             message = "No URL set for repository"
             self.log.write(repository_id=repository.id,
@@ -191,12 +175,12 @@ class S3Sync(S3Method):
                            remote=False,
                            result=self.log.FATAL,
                            message=message)
-            return xml.json_message(False, 400, message=message)
+            return current.xml.json_message(False, 400, message=message)
 
-        rtable = db.sync_task
+        rtable = current.s3db.sync_task
         query = (rtable.repository_id == repository.id) & \
                 (rtable.deleted != True)
-        tasks = db(query).select()
+        tasks = current.db(query).select()
         for task in tasks:
             now = datetime.datetime.utcnow()
             if task.mode in (1, 3):
@@ -215,7 +199,7 @@ class S3Sync(S3Method):
             task.update_record(last_sync=now)
 
         # Success
-        return xml.json_message()
+        return current.xml.json_message()
 
     # -------------------------------------------------------------------------
     def __pull(self, repository, task):
@@ -228,7 +212,7 @@ class S3Sync(S3Method):
 
         ignore_errors = True
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -418,7 +402,7 @@ class S3Sync(S3Method):
          """
 
         manager = current.manager
-        xml = manager.xml
+        xml = current.xml
 
         resource_name = task.resource_name
         prefix, name = resource_name.split("_", 1)
@@ -551,11 +535,6 @@ class S3Sync(S3Method):
             @param attr: the controller attributes
         """
 
-        db = current.db
-        auth = current.auth
-        manager = current.manager
-        xml = manager.xml
-
         result = self.log.SUCCESS
         message = "registration successful"
         repository_id = None
@@ -564,15 +543,15 @@ class S3Sync(S3Method):
 
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
+            db = current.db
             rtable = db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository_id = row.id
-                if not row.accept_push and auth.s3_has_role("ADMIN"):
+                if not row.accept_push and current.auth.s3_has_role("ADMIN"):
                     row.update_record(accept_push=True)
             else:
-                if auth.s3_has_role("ADMIN"):
+                if current.auth.s3_has_role("ADMIN"):
                     accept_push = True
                 else:
                     accept_push = False
@@ -587,12 +566,12 @@ class S3Sync(S3Method):
             message = "no repository identifier specified"
 
         if result == self.log.SUCCESS:
-            output = xml.json_message(message=message,
-                                      sender="%s" % config.uuid)
+            output = current.xml.json_message(message=message,
+                                              sender="%s" % config.uuid)
         else:
-            output = xml.json_message(False, 400,
-                                      message=message,
-                                      sender="%s" % config.uuid)
+            output = current.xml.json_message(False, 400,
+                                              message=message,
+                                              sender="%s" % config.uuid)
 
         # Set content type header
         headers = current.response.headers
@@ -617,8 +596,7 @@ class S3Sync(S3Method):
             @param repository: a sync_repository row
          """
 
-        db = current.db
-        xml = current.manager.xml
+        xml = current.xml
 
         if not repository.url:
             return True
@@ -690,6 +668,7 @@ class S3Sync(S3Method):
                 message = "registration successful"
             result = self.log.SUCCESS
             if ruid is not None:
+                db = current.db
                 rtable = db.sync_repository
                 try:
                     db(rtable.id == repository.id).update(uuid=ruid)
@@ -718,15 +697,11 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.__send")
 
-        db = current.db
-        manager = current.manager
-        xml = manager.xml
-
         # Identify the requesting repository
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
+            db = current.db
             rtable = db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
@@ -748,7 +723,7 @@ class S3Sync(S3Method):
                 limit = None
         msince = _vars.get("msince", None)
         if msince is not None:
-            tfmt = xml.ISOFORMAT
+            tfmt = current.xml.ISOFORMAT
             try:
                 (y, m, d, hh, mm, ss, t0, t1, t2) = \
                     time.strptime(msince, tfmt)
@@ -789,22 +764,18 @@ class S3Sync(S3Method):
         _debug("S3Sync.__receive")
 
         db = current.db
-        manager = current.manager
-        auth = manager.auth
-        xml = manager.xml
 
         # Identify the sending repository
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            manager.load("sync_repository")
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository = row
         if not repository.id or \
            not repository.accept_push:
-            r.error(403, manager.ERROR.NOT_PERMITTED)
+            r.error(403, current.manager.ERROR.NOT_PERMITTED)
 
         # Get strategy and policy
         default_update_policy = S3ImportItem.POLICY.NEWER
@@ -840,7 +811,7 @@ class S3Sync(S3Method):
                 conflict_policy = default_conflict_policy
             msince = r.get_vars.get("msince", None)
             if msince is not None:
-                tfmt = xml.ISOFORMAT
+                tfmt = current.xml.ISOFORMAT
                 try:
                     (y, m, d, hh, mm, ss, t0, t1, t2) = \
                         time.strptime(msince, tfmt)
@@ -875,7 +846,7 @@ class S3Sync(S3Method):
                                          last_sync=last_sync,
                                          onconflict=onconflict)
         except IOError:
-            auth.permission.fail()
+            current.auth.permission.fail()
         except SyntaxError:
             e = sys.exc_info()[1]
             r.error(400, e)
@@ -921,13 +892,10 @@ class S3Sync(S3Method):
             @param resource: the resource the item shall be imported to
         """
 
-        db = current.db
-        manager = current.manager
-        model = manager.model
-        xml = manager.xml
+        s3db = current.s3db
 
         tablename = resource.tablename
-        resolver = model.get_config(tablename, "onconflict")
+        resolver = s3db.get_config(tablename, "onconflict")
 
         _debug("Resolving conflict in %s" % resource.tablename)
         _debug("Repository: %s" % repository.name)
@@ -943,13 +911,12 @@ class S3Sync(S3Method):
                 _debug("Accept per custom rule")
         else:
             _debug("Applying default rule")
-            manager.load("sync_task")
-            ttable = db.sync_task
+            ttable = s3db.sync_task
             policies = S3ImportItem.POLICY
             query = (ttable.repository_id == repository.id) & \
                     (ttable.resource_name == tablename) & \
                     (ttable.deleted != True)
-            task = db(query).select(limitby=(0, 1)).first()
+            task = current.db(query).select(limitby=(0, 1)).first()
             if task and item.original:
                 original = item.original
                 if task.conflict_policy == policies.OTHER:
@@ -958,6 +925,7 @@ class S3Sync(S3Method):
                     item.conflict = False
                 elif task.conflict_policy == policies.NEWER:
                     # Accept if newer
+                    xml = current.xml
                     if xml.MTIME in original and \
                        xml.as_utc(original[xml.MTIME]) <= item.mtime:
                         _debug("Accept because newer")
@@ -966,7 +934,7 @@ class S3Sync(S3Method):
                         _debug("Do not accept")
                 elif task.conflict_policy == policies.MASTER:
                     # Accept if master
-                    if xml.MCI in original and \
+                    if current.xml.MCI in original and \
                        original.mci == 0 or item.mci == 1:
                         _debug("Accept because master")
                         item.conflict = False
@@ -1011,11 +979,6 @@ class S3SyncLog(S3Method):
 
         output = dict()
 
-        T = current.T
-        manager = current.manager
-        db = current.db
-        response = current.response
-
         resource = r.resource
         if resource.tablename == "sync_log":
             return resource.crud.select(r, **attr)
@@ -1026,16 +989,17 @@ class S3SyncLog(S3Method):
             if r.interactive:
                 # READ for sync log for this resource
                 here = "%s.%s" % (r.controller, r.function)
-                manager.load(self.TABLENAME)
-                sync_log = db[self.TABLENAME]
+                sync_log = current.s3db[self.TABLENAME]
                 sync_log.resource_name.readable = False
                 query = (sync_log.resource_name == resource.tablename)
-                r = manager.parse_request(prefix="sync", name="log", args=[])
-                response.s3.filter = query
-                response.s3.prep = None
-                response.s3.postp = None
-                response.s3.actions = [
-                    dict(label=str(T("Details")),
+                r = current.manager.parse_request(prefix="sync", name="log",
+                                                  args=[])
+                s3 = current.response.s3
+                s3.filter = query
+                s3.prep = None
+                s3.postp = None
+                s3.actions = [
+                    dict(label=str(current.T("Details")),
                          _class="action-btn",
                          url=URL(c="sync", f="log",
                                  args=["[id]"],
@@ -1044,7 +1008,7 @@ class S3SyncLog(S3Method):
                 output = r(subtitle=None,
                            rheader=self.rheader)
             else:
-                r.error(501, manager.ERROR.BAD_FORMAT)
+                r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         return output
 
@@ -1098,9 +1062,7 @@ class S3SyncLog(S3Method):
                         remote=remote,
                         message=message)
 
-        manager = current.manager
-        manager.load(self.TABLENAME)
-        table = current.db[self.TABLENAME]
+        table = current.s3db[self.TABLENAME]
 
         table.insert(**entry)
         return

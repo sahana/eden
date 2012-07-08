@@ -35,7 +35,7 @@ __all__ = ["S3MessagingModel",
            "S3TwitterModel",
            "S3XFormsModel",
            "S3ParsingModel",
-        ]
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -54,17 +54,18 @@ class S3MessagingModel(S3Model):
              "msg_outbox",
              #"msg_channel",
              "msg_message_id",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
-        msg = current.msg
-        s3db = current.s3db
-        
+
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        configure = self.configure
+        define_table = self.define_table
+        super_link = self.super_link
 
         # Message priority
         msg_priority_opts = {
@@ -72,75 +73,75 @@ class S3MessagingModel(S3Model):
             2:T("Medium"),
             1:T("Low")
         }
-        
-        mtable = s3db.msg_inbound_email_settings
+
+        mtable = self.msg_inbound_email_settings
         source_opts = []
-        records = db(mtable.id>0).select(mtable.username)
+        append = source_opts.append
+        records = db(mtable.id > 0).select(mtable.username)
         for record in records:
-            source_opts += [record.username]
-        
-        
+            append(record.username)
+
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         # ---------------------------------------------------------------------
         tablename = "msg_log"
-        table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
-                                  Field("sender"),        # The name to go out incase of the email, if set used
-                                  Field("fromaddress"),   # From address if set changes sender to this
-                                  Field("recipient"),
-                                  Field("subject", length=78),
-                                  Field("message", "text"),
-                                  #Field("attachment", "upload", autodelete = True), #TODO
-                                  Field("verified", "boolean", default = False),
-                                  Field("verified_comments", "text"),
-                                  Field("actionable", "boolean", default = True),
-                                  Field("actioned", "boolean", default = False),
-                                  Field("actioned_comments", "text"),
-                                  Field("priority", "integer", default = 1,
-                                        requires = IS_NULL_OR(IS_IN_SET(msg_priority_opts)),
-                                        label = T("Priority")),
-                                  Field("inbound", "boolean", default = False,
-                                        represent = lambda direction: \
-                                            (direction and ["In"] or ["Out"])[0],
-                                        label = T("Direction")),
-                                  Field("is_parsed", "boolean", default = False,
-                                        represent = lambda status: \
-                                            (status and ["Parsed"] or ["Not Parsed"])[0],
-                                        label = T("Parsing Status")),
-                                  Field("reply", "text" ,
-                                        label = T("Reply")),
-                                  Field("source_task_id",
-                                        requires = IS_IN_SET(source_opts,
-                                                             zero = None)),                                                                       
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             Field("sender"),        # The name to go out incase of the email, if set used
+                             Field("fromaddress"),   # From address if set changes sender to this
+                             Field("recipient"),
+                             Field("subject", length=78),
+                             Field("message", "text"),
+                             #Field("attachment", "upload", autodelete = True), #TODO
+                             Field("verified", "boolean", default = False),
+                             Field("verified_comments", "text"),
+                             Field("actionable", "boolean", default = True),
+                             Field("actioned", "boolean", default = False),
+                             Field("actioned_comments", "text"),
+                             Field("priority", "integer", default = 1,
+                                   requires = IS_NULL_OR(IS_IN_SET(msg_priority_opts)),
+                                   label = T("Priority")),
+                             Field("inbound", "boolean", default = False,
+                                   represent = lambda direction: \
+                                       (direction and ["In"] or ["Out"])[0],
+                                   label = T("Direction")),
+                             Field("is_parsed", "boolean", default = False,
+                                   represent = lambda status: \
+                                       (status and ["Parsed"] or ["Not Parsed"])[0],
+                                   label = T("Parsing Status")),
+                             Field("reply", "text" ,
+                                   label = T("Reply")),
+                             Field("source_task_id",
+                                   requires = IS_IN_SET(source_opts,
+                                                        zero = None)),
+                             *s3_meta_fields())
 
-        self.configure(tablename,
-                       list_fields=["id",
-                                    "inbound",
-                                    "pe_id",
-                                    "fromaddress",
-                                    "recipient",
-                                    "subject",
-                                    "message",
-                                    "verified",
-                                    #"verified_comments",
-                                    "actionable",
-                                    "actioned",
-                                    #"actioned_comments",
-                                    #"priority",
-                                    "is_parsed",
-                                    "reply",
-                                    "source_task_id"
-                                    ])
+        configure(tablename,
+                  list_fields=["id",
+                               "inbound",
+                               "pe_id",
+                               "fromaddress",
+                               "recipient",
+                               "subject",
+                               "message",
+                               "verified",
+                               #"verified_comments",
+                               "actionable",
+                               "actioned",
+                               #"actioned_comments",
+                               #"priority",
+                               "is_parsed",
+                               "reply",
+                               "source_task_id"
+                               ])
 
         # Components
         self.add_component("msg_outbox", msg_log="message_id")
 
         # Reusable Message ID
-        message_id = S3ReusableField("message_id", db.msg_log,
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "msg_log.id")),
-                                     # FIXME: Subject works for Email but not SMS
+        message_id = S3ReusableField("message_id", table,
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF_EMPTY(db, "msg_log.id")),
                                      represent = self.message_represent,
                                      ondelete = "RESTRICT")
 
@@ -150,13 +151,13 @@ class S3MessagingModel(S3Model):
         #  - works by simply recording an entry for the timestamp to be checked against
         # @ToDo: have separate limits for Email & SMS
         tablename = "msg_limit"
-        table = self.define_table(tablename,
-                                  *s3_timestamp())
+        table = define_table(tablename,
+                             *s3_timestamp())
 
         # ---------------------------------------------------------------------
         # Message Tag - Used to tag a message to a resource
         # tablename = "msg_tag"
-        # table = self.define_table(tablename,
+        # table = define_table(tablename,
                                   # message_id(),
                                   # Field("resource"),
                                   # Field("record_uuid", # null in this field implies subscription to the entire resource
@@ -164,7 +165,7 @@ class S3MessagingModel(S3Model):
                                         # length=128),
                                   # *s3_meta_fields())
 
-        # self.configure(tablename,
+        # configure(tablename,
                        # list_fields=[ "id",
                                      # "message_id",
                                      # "record_uuid",
@@ -175,7 +176,7 @@ class S3MessagingModel(S3Model):
         # Outbound Messages
         # ---------------------------------------------------------------------
         # Show only the supported messaging methods
-        msg_contact_method_opts = msg.MSG_CONTACT_OPTS
+        msg_contact_method_opts = current.msg.MSG_CONTACT_OPTS
 
         # Valid message outbox statuses
         msg_status_type_opts = {
@@ -196,45 +197,44 @@ class S3MessagingModel(S3Model):
 
         # Outbox - needs to be separate to Log since a single message sent needs different outbox entries for each recipient
         tablename = "msg_outbox"
-        table = self.define_table(tablename,
-                                  message_id(),
-                                  self.super_link("pe_id", "pr_pentity"), # Person/Group to send the message out to
-                                  Field("address"),   # If set used instead of picking up from pe_id
-                                  Field("pr_message_method",
-                                        length=32,
-                                        requires = IS_IN_SET(msg_contact_method_opts,
-                                                             zero=None),
-                                        default = "EMAIL",
-                                        label = T("Contact Method"),
-                                        represent = lambda opt: \
-                                            msg_contact_method_opts.get(opt, UNKNOWN_OPT)),
-                                  opt_msg_status(),
-                                  Field("system_generated", "boolean", default = False),
-                                  Field("log"),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             message_id(),
+                             super_link("pe_id", "pr_pentity"), # Person/Group to send the message out to
+                             Field("address"),   # If set used instead of picking up from pe_id
+                             Field("pr_message_method", length=32,
+                                   requires = IS_IN_SET(msg_contact_method_opts,
+                                                        zero=None),
+                                   default = "EMAIL",
+                                   label = T("Contact Method"),
+                                   represent = lambda opt: \
+                                        msg_contact_method_opts.get(opt, UNKNOWN_OPT)),
+                             opt_msg_status(),
+                             Field("system_generated", "boolean", default = False),
+                             Field("log"),
+                             *s3_meta_fields())
 
-        self.configure(tablename,
-                       list_fields=[ "id",
-                                     "message_id",
-                                     "pe_id",
-                                     "status",
-                                     "log",
-                                    ])
+        configure(tablename,
+                  list_fields=["id",
+                               "message_id",
+                               "pe_id",
+                               "status",
+                               "log",
+                               ])
 
         # ---------------------------------------------------------------------
         # Inbound Messages
         # ---------------------------------------------------------------------
         # Channel - For inbound messages this tells which channel the message came in from.
         tablename = "msg_channel"
-        table = self.define_table(tablename,
-                                  message_id(),
-                                  Field("pr_message_method",
-                                        length=32,
-                                        requires = IS_IN_SET(msg_contact_method_opts,
-                                                             zero=None),
-                                        default = "EMAIL"),
-                                  Field("log"),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             message_id(),
+                             Field("pr_message_method",
+                                   length=32,
+                                   requires = IS_IN_SET(msg_contact_method_opts,
+                                                        zero=None),
+                                   default = "EMAIL"),
+                             Field("log"),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -247,23 +247,21 @@ class S3MessagingModel(S3Model):
     def message_represent(id):
         """ Represent a Message in the Log """
 
-        NONE = current.messages.NONE
         if not id:
-            return NONE
+            return current.messages.NONE
 
         db = current.db
-        s3db = current.s3db
-        table = s3db.msg_log
-        query = (table.id == id)
+        table = db.msg_log
+        record = db(table.id == id).select(table.subject,
+                                           table.message,
+                                           limitby=(0, 1)).first()
+        try:
+            if record.subject:
+                # EMail will use Subject
+                return record.subject
+        except:
+            return current.messages.UNKNOWN_OPT
 
-        record = db(query).select(table.subject,
-                                  limitby=(0, 1)).first()
-        if not record:
-            return NONE
-
-        if record.subject:
-            # EMail will use Subject
-            return record.subject
         # SMS/Tweet will use 1st 80 characters from body
         text = record.message
         if len(text) < 80:
@@ -282,44 +280,46 @@ class S3InboundEmailModel(S3Model):
     names = ["msg_inbound_email_settings",
              "msg_inbound_email_status",
              "msg_email_inbox",
-            ]
+             ]
 
     def model(self):
 
-        # @ToDo: i18n labels
         T = current.T
-        s3 = current.response.s3
+
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         tablename = "msg_inbound_email_settings"
-        table = self.define_table(tablename,
-                                  Field("server"),
-                                  Field("protocol",
-                                        requires = IS_IN_SET(["imap", "pop3"],
-                                                             zero=None)),
-                                  Field("use_ssl", "boolean"),
-                                  Field("port", "integer"),
-                                  Field("username"),
-                                  Field("password"),
-                                  # Set true to delete messages from the remote
-                                  # inbox after fetching them.
-                                  Field("delete_from_server", "boolean"),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("server"),
+                             Field("protocol",
+                                   requires = IS_IN_SET(["imap", "pop3"],
+                                                        zero=None)),
+                             Field("use_ssl", "boolean"),
+                             Field("port", "integer"),
+                             Field("username"),
+                             Field("password"),
+                             # Set true to delete messages from the remote
+                             # inbox after fetching them.
+                             Field("delete_from_server", "boolean"),
+                             *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
         # Incoming Email
         tablename = "msg_email_inbox"
-        table = self.define_table(tablename,
-                                  Field("sender", notnull=True),
-                                  Field("subject", length=78),    # RFC 2822
-                                  Field("body", "text"),
-                                  *s3_meta_fields())
-        table.sender.requires = IS_EMAIL()
-        table.sender.label = T("Sender")
+        table = define_table(tablename,
+                             Field("sender", notnull=True,
+                                   label = T("Sender"),
+                                   requires = IS_EMAIL()),
+                             Field("subject", length=78,    # RFC 2822
+                                   label = T("Subject")),
+                             Field("body", "text",
+                                   label = T("Body")),
+                             *s3_meta_fields())
+
         #table.sender.comment = SPAN("*", _class="req")
-        table.subject.label = T("Subject")
-        table.body.label = T("Body")
         VIEW_EMAIL_INBOX = T("View Email InBox")
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             #title_create = T("Add Incoming Email"),
             title_display = T("Email Details"),
             title_list = VIEW_EMAIL_INBOX,
@@ -332,10 +332,11 @@ class S3InboundEmailModel(S3Model):
             msg_record_deleted = T("Email deleted"),
             msg_list_empty = T("No Emails currently in InBox"))
 
+        # ---------------------------------------------------------------------
         # Status
         tablename = "msg_inbound_email_status"
-        table = self.define_table(tablename,
-                                  Field("status"))
+        table = define_table(tablename,
+                             Field("status"))
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -360,63 +361,65 @@ class S3SMSModel(S3Model):
 
     def model(self):
 
-        T = current.T
-        s3 = current.response.s3
-        msg = current.msg
+        #T = current.T
+
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Settings
         tablename = "msg_setting"
-        table = self.define_table(tablename,
-                                  Field("outgoing_sms_handler",
-                                        length=32,
-                                        requires = IS_IN_SET(msg.GATEWAY_OPTS,
-                                                             zero=None)),
-                                  # Moved to deployment_settings
-                                  #Field("default_country_code", "integer",
-                                  #      default=44),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("outgoing_sms_handler",
+                                   length=32,
+                                   requires = IS_IN_SET(current.msg.GATEWAY_OPTS,
+                                                        zero=None)),
+                             # Moved to deployment_settings
+                             #Field("default_country_code", "integer",
+                             #      default=44),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         tablename = "msg_modem_settings"
-        table = self.define_table(tablename,
-                                  # Nametag to remember account - To be used later
-                                  #Field("account_name"),
-                                  Field("modem_port"),
-                                  Field("modem_baud", "integer", default = 115200),
-                                  Field("enabled", "boolean", default = True),
-                                  # To be used later
-                                  #Field("preference", "integer", default = 5),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             # Nametag to remember account - To be used later
+                             #Field("account_name"),
+                             Field("modem_port"),
+                             Field("modem_baud", "integer", default = 115200),
+                             Field("enabled", "boolean", default = True),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         tablename = "msg_api_settings"
-        table = self.define_table(tablename,
-                                  Field("url",
-                                        default = "https://api.clickatell.com/http/sendmsg"),
-                                  Field("parameters",
-                                        default="user=yourusername&password=yourpassword&api_id=yourapiid"),
-                                  Field("message_variable", "string",
-                                        default = "text"),
-                                  Field("to_variable", "string",
-                                        default = "to"),
-                                  Field("enabled", "boolean", default = True),
-                                  # To be used later
-                                  #Field("preference", "integer", default = 5),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("url",
+                                   default = "https://api.clickatell.com/http/sendmsg"),
+                             Field("parameters",
+                                   default="user=yourusername&password=yourpassword&api_id=yourapiid"),
+                             Field("message_variable", "string",
+                                   default = "text"),
+                             Field("to_variable", "string",
+                                   default = "to"),
+                             Field("enabled", "boolean",
+                                   default = True),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         tablename = "msg_smtp_to_sms_settings"
-        table = self.define_table(tablename,
-                                  # Nametag to remember account - To be used later
-                                  #Field("account_name"),
-                                  Field("address", length=64,
-                                        requires=IS_NOT_EMPTY()),
-                                  Field("subject", length=64),
-                                  Field("enabled", "boolean", default = True),
-                                  # To be used later
-                                  #Field("preference", "integer", default = 5),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             # Nametag to remember account - To be used later
+                             #Field("account_name"),
+                             Field("address", length=64,
+                                   requires=IS_NOT_EMPTY()),
+                             Field("subject", length=64),
+                             Field("enabled", "boolean",
+                                   default = True),
+                             # To be used later
+                             #Field("preference", "integer", default = 5),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -433,11 +436,7 @@ class S3SubscriptionModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
         auth = current.auth
-        s3 = current.response.s3
-
-        person_id = self.pr_person_id
 
         # @ToDo: Use msg.CONTACT_OPTS
         msg_subscription_mode_opts = {
@@ -453,7 +452,8 @@ class S3SubscriptionModel(S3Model):
         table = self.define_table(tablename,
                                   Field("user_id", "integer",
                                         default = auth.user_id,
-                                        requires = IS_NOT_IN_DB(db, "msg_subscription.user_id"),
+                                        requires = IS_NOT_IN_DB(current.db,
+                                                                "msg_subscription.user_id"),
                                         readable = False,
                                         writable = False
                                         ),
@@ -471,8 +471,8 @@ class S3SubscriptionModel(S3Model):
                                                               "monthly"]),
                                         default = "daily",
                                         ),
-                                  person_id(label = T("Person"),
-                                            default = auth.s3_logged_in_person()),
+                                  self.pr_person_id(label = T("Person"),
+                                                    default = auth.s3_logged_in_person()),
                                   *s3_meta_fields())
 
         self.configure("msg_subscription",
@@ -497,25 +497,26 @@ class S3TropoModel(S3Model):
     def model(self):
 
         #T = current.T
-        s3 = current.response.s3
+
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         tablename = "msg_tropo_settings"
-        table = self.define_table(tablename,
-                                  Field("token_messaging"),
-                                  #Field("token_voice"),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("token_messaging"),
+                             #Field("token_voice"),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Tropo Scratch pad for outbound messaging
         tablename = "msg_tropo_scratch"
-        table = self.define_table(tablename,
-                                  Field("row_id","integer"),
-                                  Field("message_id","integer"),
-                                  Field("recipient"),
-                                  Field("message"),
-                                  Field("network")
-                                )
+        table = define_table(tablename,
+                             Field("row_id","integer"),
+                             Field("message_id","integer"),
+                             Field("recipient"),
+                             Field("message"),
+                             Field("network")
+                             )
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -530,39 +531,41 @@ class S3TwitterModel(S3Model):
 
     def model(self):
 
-        T = current.T
+        #T = current.T
         db = current.db
-        s3 = current.response.s3
+
+        configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         tablename = "msg_twitter_settings"
-        table = self.define_table(tablename,
-                                  Field("pin"),
-                                  Field("oauth_key",
-                                        readable = False, writable = False),
-                                  Field("oauth_secret",
-                                        readable = False, writable = False),
-                                  Field("twitter_account", writable = False),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("pin"),
+                             Field("oauth_key",
+                                   readable = False, writable = False),
+                             Field("oauth_secret",
+                                   readable = False, writable = False),
+                             Field("twitter_account", writable = False),
+                             *s3_meta_fields())
 
-        self.configure(tablename,
-                       onvalidation=self.twitter_settings_onvalidation)
+        configure(tablename,
+                  onvalidation=self.twitter_settings_onvalidation)
 
         # ---------------------------------------------------------------------
         # Twitter Search Queries
         tablename = "msg_twitter_search"
-        table = self.define_table(tablename,
-                                  Field("search_query", length = 140),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("search_query", length = 140),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         tablename = "msg_twitter_search_results"
-        table = self.define_table(tablename,
-                                  Field("tweet", length=140),
-                                  Field("posted_by"),
-                                  Field("posted_at"),
-                                  Field("twitter_search", db.msg_twitter_search),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("tweet", length=140),
+                             Field("posted_by"),
+                             Field("posted_at"),
+                             Field("twitter_search", db.msg_twitter_search),
+                             *s3_meta_fields())
 
         #table.twitter_search.requires = IS_ONE_OF(db, "twitter_search.search_query")
         #table.twitter_search.represent = lambda id: db(db.msg_twitter_search.id == id).select(db.msg_twitter_search.search_query,
@@ -570,13 +573,13 @@ class S3TwitterModel(S3Model):
 
         #self.add_component(table, msg_twitter_search="twitter_search")
 
-        self.configure(tablename,
-                       list_fields=[ "id",
-                                     "tweet",
-                                     "posted_by",
-                                     "posted_at",
-                                     "twitter_search",
-                                    ])
+        configure(tablename,
+                  list_fields=["id",
+                               "tweet",
+                               "posted_by",
+                               "posted_at",
+                               "twitter_search",
+                               ])
 
         # ---------------------------------------------------------------------
         return Storage()
@@ -633,22 +636,21 @@ class S3XFormsModel(S3Model):
     def model(self):
 
         #T = current.T
-        s3 = current.response.s3
 
         # ---------------------------------------------------------------------
         # SMS store for persistence and scratch pad for combining incoming xform chunks
         tablename = "msg_xforms_store"
         table = self.define_table(tablename,
-                                  Field("sender", "string", length = 20),
+                                  Field("sender", "string", length=20),
                                   Field("fileno", "integer"),
                                   Field("totalno", "integer"),
                                   Field("partno", "integer"),
-                                  Field("message", "string", length = 160)
+                                  Field("message", "string", length=160)
                                 )
 
         # ---------------------------------------------------------------------
         return Storage()
-    
+
 # =============================================================================
 class S3ParsingModel(S3Model):
     """
@@ -659,19 +661,28 @@ class S3ParsingModel(S3Model):
 
     def model(self):
 
-        from s3 import s3parser
         import inspect
-        
+        import sys
+
         T = current.T
+        
+        parser = current.deployment_settings.get_msg_parser()
+        module_name = "applications.%s.private.templates.%s.parser" % \
+            (current.request.application, parser)
+        __import__(module_name)
+        mymodule = sys.modules[module_name]
+        S3Parsing = mymodule.S3Parsing()
+        
         mtable = self.msg_inbound_email_settings
-        # source_opts contain the available message sources.
+        # source_opts contains the available message sources.
         source_opts = []
+        append = source_opts.append
         records = current.db(mtable.deleted == False).select(mtable.username)
         for record in records:
-            source_opts += [record.username]
+            append(record.username)
 
         # Dynamic lookup of the parsing functions in S3Parsing class.
-        parsers = inspect.getmembers(s3parser.S3Parsing, predicate=inspect.isfunction)
+        parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
         parse_opts = []
         for parser in parsers:
             parse_opts += [parser[0]]
@@ -681,13 +692,38 @@ class S3ParsingModel(S3Model):
                                   Field("source_task_id",
                                         label = T("Inbound Message Source"),
                                         requires = IS_IN_SET(source_opts,
-                                                             zero = None)),
+
+                                                             zero = None),
+                                        represent = lambda id: \
+                                        self.source_represent(id, 
+                                                              show_link=True)),
                                   Field("workflow_task_id",
                                         label = T("Workflow"),
                                         requires = IS_IN_SET(parse_opts,
+
                                                              zero=None)), 
                                   *s3_meta_fields())
 
         return Storage()
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def source_represent(id, show_link = True):
+        """ Represent a Message Source in the Workflow Table """
+    
+        db = current.db
+        stable = db.msg_inbound_email_settings
+        wtable = db.msg_workflow
+        source = db(wtable.source_task_id == id).select(wtable.source_task_id,
+                                                        limitby = (0,1)).first()
+        setting = db(stable.username == source.source_task_id).select(stable.id,
+                                                        limitby = (0,1)).first()
+        repr = source.source_task_id
+        if setting:
+            id = setting.id
+            repr = A(repr, _href=URL(f="inbound_email_settings",
+                                     args=["update", id]))
+            return repr
+        else:
+            return repr
 
 # END =========================================================================

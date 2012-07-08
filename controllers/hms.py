@@ -58,10 +58,10 @@ def hospital():
 
     # Load Models to add tabs
     if deployment_settings.has_module("inv"):
-        s3mgr.load("inv_inv_item")
+        s3db.table("inv_inv_item")
     elif deployment_settings.has_module("req"):
         # (gets loaded by Inv if available)
-        s3mgr.load("req_req")
+        s3db.table("req_req")
 
     # Pre-processor
     def prep(r):
@@ -124,9 +124,12 @@ def hospital():
                 elif r.component.name == "human_resource":
                     # Filter out people which are already staff for this hospital
                     s3base.s3_filter_staff(r)
+                    # Make it clear that this is for adding new staff, not assigning existing
+                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
                     # Cascade the organisation_id from the hospital to the staff
-                    db.hrm_human_resource.organisation_id.default = r.record.organisation_id
-                    db.hrm_human_resource.organisation_id.writable = False
+                    field = s3db.hrm_human_resource.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":

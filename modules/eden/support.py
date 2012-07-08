@@ -48,7 +48,6 @@ class S3SupportModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # -------------------------------------------------------------------------
@@ -89,7 +88,7 @@ class S3SupportModel(S3Model):
 
         # CRUD strings
         ADD_REQUEST = T("New Support Request")
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
             title_list = T("Support Requests"),

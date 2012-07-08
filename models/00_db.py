@@ -156,6 +156,10 @@ current.gis = gis
 s3mgr = s3base.S3RequestManager()
 current.manager = s3mgr
 
+# S3XML
+s3xml = s3base.S3XML()
+current.xml = s3xml
+
 # Messaging
 msg = s3base.S3Msg()
 current.msg = msg
@@ -169,6 +173,9 @@ def s3_clear_session():
     # Session-owned records
     if "owned_records" in session:
         del session["owned_records"]
+    # Approver-role
+    if "approver_role" in session:
+        del session["approver_role"]
 
     if "s3" in session:
         s3 = session.s3

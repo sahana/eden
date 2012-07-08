@@ -32,11 +32,12 @@
 __all__ = ["SyncDataModel",
            "sync_rheader",
            "sync_now",
-           "sync_job_reset"]
+           "sync_job_reset"
+           ]
 
 from gluon import *
-from gluon.storage import Storage
 from gluon.dal import Row
+from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
@@ -48,7 +49,8 @@ class SyncDataModel(S3Model):
              "sync_task",
              "sync_job",
              "sync_conflict",
-             "sync_log"]
+             "sync_log"
+             ]
 
     def model(self):
 
@@ -57,12 +59,15 @@ class SyncDataModel(S3Model):
         request = current.request
         s3 = current.response.s3
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        NONE = current.messages.NONE
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        NONE = messages.NONE
 
+        crud_strings = s3.crud_strings
         define_table = self.define_table
-        configure = self.configure
+
         add_component = self.add_component
+        configure = self.configure
         set_method = self.set_method
 
         scheduler_task_id = s3.scheduler_task_id
@@ -93,7 +98,7 @@ class SyncDataModel(S3Model):
                                     T("URL of the default proxy server to connect to remote repositories (if required). If only some of the repositories require the use of a proxy server, you can configure this in the respective repository configurations.")))
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_display = T("Synchronization Settings"),
             title_update = T("Edit Synchronization Settings"),
             msg_record_modified = T("Synchronization settings updated"))
@@ -184,7 +189,7 @@ class SyncDataModel(S3Model):
 
         # CRUD Strings
         ADD_REPOSITORY = T("Add Repository")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_REPOSITORY,
             title_display = T("Repository Configuration"),
             title_list = T("Repositories"),
@@ -212,7 +217,7 @@ class SyncDataModel(S3Model):
                   update_next=URL(c="sync", f="repository", args=["[id]"]))
 
         table.virtualfields.append(SyncRepositoryVirtualFields())
-        set_method(tablename, method="now", action=sync_now)
+        set_method("sync", "repository", method="now", action=sync_now)
 
         # Reusable Fields
         repository_id = S3ReusableField("repository_id", table,
@@ -351,7 +356,7 @@ class SyncDataModel(S3Model):
 
         # CRUD Strings
         ADD_TASK = T("Add Resource")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_TASK,
             title_display = T("Resource Configuration"),
             title_list = T("Resources"),
@@ -379,7 +384,7 @@ class SyncDataModel(S3Model):
 
         # CRUD Strings
         ADD_JOB = T("Add Job")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_JOB,
             title_display = T("Synchronization Job"),
             title_list = T("Synchronization Schedule"),
@@ -395,7 +400,7 @@ class SyncDataModel(S3Model):
             msg_no_match = T("No jobs configured"))
 
         # Resource Configuration
-        set_method(tablename,
+        set_method("sync", "job",
                    component_name="job",
                    method="reset",
                    action=sync_job_reset)
@@ -442,7 +447,7 @@ class SyncDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_display = T("Log Entry"),
             title_list = T("Synchronization Log"),
             label_list_button = T("List All Entries"),
@@ -474,16 +479,13 @@ class SyncDataModel(S3Model):
         """ Repository representation """
 
         db = current.db
-        s3db = current.s3db
-        NONE = current.messages.NONE
-
-        rtable = s3db.sync_repository
+        rtable = db.sync_repository
         repository = db(rtable.id == rid).select(rtable.name,
                                                  limitby=(0, 1)).first()
-        if repository:
+        try:
             return repository.name
-        else:
-            return NONE
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -495,23 +497,22 @@ class SyncDataModel(S3Model):
         """
 
         db = current.db
-        s3db = current.s3db
 
         # Delete all resources in this repository
-        rtable = s3db.sync_task
+        rtable = db.sync_task
         db(rtable.repository_id == row.id).update(deleted=True)
 
         # Delete all jobs for this repository
         # @todo: remove scheduler_task entry as well
-        jtable = s3db.sync_job
+        jtable = db.sync_job
         db(jtable.repository_id == row.id).update(deleted=True)
 
         # Delete all pending conflicts of this repository
-        ctable = s3db.sync_conflict
+        ctable = db.sync_conflict
         db(ctable.repository_id == row.id).delete()
 
         # Delete all log entries for this repository
-        ltable = s3db.sync_log
+        ltable = db.sync_log
         db(ltable.repository_id == row.id).delete()
 
         return
@@ -523,28 +524,24 @@ class SyncDataModel(S3Model):
             Send registration request to the peer
         """
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        sync = current.manager.sync
-
-        response = current.response
-
         try:
             repository_id = form.vars.id
         except:
             return
 
         if repository_id:
-            rtable = s3db.sync_repository
-            query = rtable.id == repository_id
+            db = current.db
+            rtable = db.sync_repository
+            query = (rtable.id == repository_id)
             repository = db(query).select(limitby=(0, 1)).first()
             if repository and repository.url:
-                success = sync.request_registration(repository)
+                success = current.manager.sync.request_registration(repository)
                 if not success:
-                    response.warning = T("Could not auto-register at the repository, please register manually.")
+                    current.response.warning = \
+                        current.T("Could not auto-register at the repository, please register manually.")
                 else:
-                    response.confirmation = T("Successfully registered at the repository.")
+                    current.response.confirmation = \
+                        current.T("Successfully registered at the repository.")
         return
 
     # -------------------------------------------------------------------------
@@ -554,46 +551,37 @@ class SyncDataModel(S3Model):
             Task record validation
         """
 
-        db = current.db
-        s3db = current.s3db
-        request = current.request
-
         repository_id = form.vars.repository_id or \
-                        request.post_vars.repository_id
+                        current.request.post_vars.repository_id
         resource_name = form.vars.resource_name
 
         if repository_id and resource_name:
-            ttable = s3db.sync_task
+            db = current.db
+            ttable = db.sync_task
             query = (ttable.repository_id == repository_id) & \
                     (ttable.resource_name == resource_name) & \
                     (ttable.deleted != True)
-            row = db(query).select(ttable.id, limitby=(0, 1)).first()
+            row = db(query).select(ttable.id,
+                                   limitby=(0, 1)).first()
             if row:
                 form.errors.resource_name = \
                 T("This resource is already configured for this repository")
 
 # =============================================================================
-
 class SyncRepositoryVirtualFields:
     """ Repository virtual fields """
 
     def last_sync_time(self):
         """ Last synchronization date/time for this repository """
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-
-        s3_datetime_represent = lambda dt: \
-                                S3DateTime.datetime_represent(dt, utc=True)
-        table = s3db.sync_task
-        query = table.repository_id == self.sync_repository.id
-        task = db(query).select(orderby=~table.last_sync,
-                                limitby=(0,1)).first()
+        table = current.s3db.sync_task
+        query = (table.repository_id == self.sync_repository.id)
+        task = current.db(query).select(orderby=~table.last_sync,
+                                        limitby=(0,1)).first()
         if task:
-            return s3_datetime_represent(task.last_sync)
+            return S3DateTime.datetime_represent(task.last_sync, utc=True)
         else:
-            return T("never")
+            return current.T("never")
 
 # -----------------------------------------------------------------------------
 def sync_rheader(r, tabs=[]):
@@ -601,11 +589,9 @@ def sync_rheader(r, tabs=[]):
         Synchronization resource headers
     """
 
-    T = current.T
-
     if r.representation == "html":
-
         if r.tablename == "sync_repository":
+            T = current.T
             repository = r.record
             if r.component and r.component_name=="log" and not r.component_id:
                 purge_log = A(T("Remove all log entries"),
@@ -636,14 +622,12 @@ def sync_job_reset(r, **attr):
         for "Reset" action button
     """
 
-    session = current.session
-
     if r.interactive:
         if r.component and r.component.alias == "job":
             job_id = r.component_id
             if job_id:
                 S3Task.reset(job_id)
-                session.confirmation = T("Job reactivated")
+                current.session.confirmation = T("Job reactivated")
     r.component_id = None
     redirect(r.url(method=""))
 
@@ -654,10 +638,7 @@ def sync_now(r, **attr):
     """
 
     T = current.T
-    manager = current.manager
     response = current.response
-    session = current.session
-    auth = current.auth
 
     rheader = attr.get("rheader", None)
     if rheader:
@@ -672,14 +653,14 @@ def sync_now(r, **attr):
         if r.http in ("GET", "POST"):
             repository = r.record
             if not repository:
-                r.error(404, manager.ERROR.BAD_RECORD)
+                r.error(404, current.manager.ERROR.BAD_RECORD)
             form = FORM(TABLE(
                         TR(TD(T("Click 'Start' to synchronize with this repository now:"))),
                         TR(TD(INPUT(_type="submit", _value=T("Start"))))))
-            if form.accepts(r.post_vars, session):
+            if form.accepts(r.post_vars, current.session):
                 task_id = s3task.async("sync_synchronize",
                                        args = [repository.id],
-                                       vars = dict(user_id=auth.user.id,
+                                       vars = dict(user_id=current.auth.user.id,
                                                    manual=True))
                 if task_id is False:
                     response.error = T("Could not initiate manual synchronization.")
@@ -689,9 +670,9 @@ def sync_now(r, **attr):
                     sync.set_status(manual=True)
                     response.flash = T("Manual synchronization started in the background.")
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
     else:
-        r.error(501, manager.ERROR.BAD_FORMAT)
+        r.error(501, current.manager.ERROR.BAD_FORMAT)
 
     status = sync.get_status()
     if status.running:

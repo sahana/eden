@@ -28,7 +28,8 @@
 """
 
 __all__ = ["HospitalDataModel",
-           "hms_hospital_rheader"]
+           "hms_hospital_rheader"
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -47,7 +48,8 @@ class HospitalDataModel(S3Model):
              "hms_ctc_capability",
              "hms_image",
              "hms_resources",
-             "hms_hospital_id"]
+             "hms_hospital_id"
+             ]
 
     def model(self):
 
@@ -68,10 +70,11 @@ class HospitalDataModel(S3Model):
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        super_link = self.super_link
-        define_table = self.define_table
-        configure = self.configure
         add_component = self.add_component
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Hospitals
@@ -338,7 +341,7 @@ class HospitalDataModel(S3Model):
 
         # CRUD Strings
         ADD_HOSPITAL = T("Add Hospital")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_HOSPITAL,
             title_display = T("Hospital Details"),
             title_list = T("Hospitals"),
@@ -408,7 +411,7 @@ class HospitalDataModel(S3Model):
                                                     title=T("Hospital"),
                                                     tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Add Hospital'."))
 
-        hospital_id = S3ReusableField("hospital_id", db.hms_hospital,
+        hospital_id = S3ReusableField("hospital_id", table,
                                       sortby="name",
                                       requires = IS_NULL_OR(IS_ONE_OF(db, "hms_hospital.id", "%(name)s")),
                                       represent = lambda id: \
@@ -454,7 +457,7 @@ class HospitalDataModel(S3Model):
                               *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Contact"),
             title_display = T("Contact Details"),
             title_list = T("Contacts"),
@@ -517,7 +520,7 @@ class HospitalDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Activity Report"),
             title_display = T("Activity Report"),
             title_list = T("Activity Reports"),
@@ -606,7 +609,7 @@ class HospitalDataModel(S3Model):
 
         # Field configuration
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Bed Type"),
             title_display = T("Bed Capacity"),
             title_list = T("Bed Capacity"),
@@ -677,7 +680,7 @@ class HospitalDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Service Profile"),
             title_display = T("Services Available"),
             title_list = T("Services Available"),
@@ -778,7 +781,7 @@ class HospitalDataModel(S3Model):
         table.modified_by.readable = True
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Cholera Treatment Capability Information"),
             title_display = T("Cholera Treatment Capability"),
             title_list = T("Cholera Treatment Capability"),
@@ -816,7 +819,7 @@ class HospitalDataModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Report Resource"),
             title_display = T("Resource Details"),
             title_list = T("Resources"),
@@ -857,19 +860,16 @@ class HospitalDataModel(S3Model):
         """ Bed Capacity Validation """
 
         db = current.db
-        s3db = current.s3db
-        T = current.T
-
-        htable = s3db.hms_hospital
-        ctable = s3db.hms_bed_capacity
-
+        htable = db.hms_hospital
+        ctable = db.hms_bed_capacity
         hospital_id = ctable.hospital_id.update
         bed_type = form.vars.bed_type
         query = (ctable.hospital_id == hospital_id) & \
                 (ctable.bed_type == bed_type)
-        row = db(query).select(ctable.id, limitby=(0, 1)).first()
+        row = db(query).select(ctable.id,
+                               limitby=(0, 1)).first()
         if row and str(row.id) != request.post_vars.id:
-            form.errors["bed_type"] = T("Bed type already registered")
+            form.errors["bed_type"] = current.T("Bed type already registered")
         elif "unit_id" not in form.vars:
             query = htable.id == hospital_id
             hospital = db(query).select(htable.uuid,
@@ -882,20 +882,18 @@ class HospitalDataModel(S3Model):
     def hms_bed_capacity_onaccept(form):
         """ Updates the number of total/available beds of a hospital """
 
-        db = current.db
-        s3db = current.s3db
-
         if isinstance(form, Row):
             formvars = form
         else:
             formvars = form.vars
 
-        ctable = s3db.hms_bed_capacity
-        htable = s3db.hms_hospital
-
+        db = current.db
+        ctable = db.hms_bed_capacity
+        htable = db.hms_hospital
         query = ((ctable.id == formvars.id) &
                  (htable.id == ctable.hospital_id))
-        hospital = db(query).select(htable.id, limitby=(0, 1))
+        hospital = db(query).select(htable.id,
+                                    limitby=(0, 1))
 
         if hospital:
             hospital = hospital.first()
@@ -916,13 +914,12 @@ class HospitalDataModel(S3Model):
     def hms_activity_onaccept(form):
 
         db = current.db
-        s3db = current.s3db
-
-        atable = s3db.hms_activity
-        htable = s3db.hms_hospital
+        atable = db.hms_activity
+        htable = db.hms_hospital
         query = ((atable.id == form.vars.id) & \
                  (htable.id == atable.hospital_id))
-        hospital = db(query).select(htable.id, htable.modified_on,
+        hospital = db(query).select(htable.id,
+                                    htable.modified_on,
                                     limitby=(0, 1)).first()
         timestmp = form.vars.date
         if hospital and hospital.modified_on < timestmp:
@@ -932,13 +929,10 @@ class HospitalDataModel(S3Model):
 def hms_hospital_rheader(r, tabs=[]):
     """ Page header for component resources """
 
-    T = current.T
-    response = current.response
-    s3 = response.s3
-    s3db = current.s3db
-
     rheader = None
     if r.representation == "html":
+        T = current.T
+        s3db = current.s3db
         tablename, record = s3_rheader_resource(r)
         if tablename == "hms_hospital" and record:
             hospital = record
@@ -951,9 +945,11 @@ def hms_hospital_rheader(r, tabs=[]):
                         "ctc_capability"), # @ToDo: make this a deployment_setting?
                         (T("Activity Report"), "activity"),
                         (T("Images"), "image"),
-                        (T("Staff"), "human_resource")]
+                        (T("Staff"), "human_resource"),
+                        (T("Assign Staff"), "human_resource_site"),
+                        ]
                 try:
-                    tabs = tabs + s3.req_tabs(r)
+                    tabs = tabs + s3db.req_tabs(r)
                 except:
                     pass
                 try:

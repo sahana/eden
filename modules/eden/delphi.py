@@ -28,7 +28,8 @@
 """
 
 __all__ = ["S3DelphiModel",
-           "S3DelphiUser"]
+           "S3DelphiUser",
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -47,7 +48,7 @@ class S3DelphiModel(S3Model):
              "delphi_vote",
              "delphi_comment",
              "delphi_solution_represent",
-            ]
+             ]
 
     def model(self):
 
@@ -97,13 +98,15 @@ class S3DelphiModel(S3Model):
                                "name",
                                "description"])
 
-        group_id = S3ReusableField("group_id", db.delphi_group, notnull=True,
+        group_id = S3ReusableField("group_id", table, notnull=True,
                                    label = T("Problem Group"),
                                    requires = IS_ONE_OF(db, "delphi_group.id",
-                                                        "%(name)s"),
-                                   represent = self.group_represent)
+                                                        self.delphi_group_represent
+                                                        ),
+                                   represent = self.delphi_group_represent)
 
-        user_id = S3ReusableField("user_id", db.auth_user, notnull=True,
+        user_id = S3ReusableField("user_id", current.auth.settings.table_user,
+                                  notnull=True,
                                   label = T("User"),
                                   requires = IS_ONE_OF(db, "auth_user.id",
                                                        s3_auth_user_represent),
@@ -223,11 +226,12 @@ class S3DelphiModel(S3Model):
                                "created_by",
                                "modified_on"])
 
-        problem_id = S3ReusableField("problem_id", db.delphi_problem, notnull=True,
+        problem_id = S3ReusableField("problem_id", table, notnull=True,
                                      label = T("Problem"),
                                      requires = IS_ONE_OF(db, "delphi_problem.id",
-                                                          "%(name)s"),
-                                     represent = self.problem_represent)
+                                                          self.delphi_problem_represent
+                                                          ),
+                                     represent = self.delphi_problem_represent)
 
         # Solutions as component of Problems
         add_component("delphi_solution",
@@ -289,13 +293,13 @@ class S3DelphiModel(S3Model):
                                (T("Comments"), "comments"),
                                ])
 
-        solution_id = S3ReusableField("solution_id", db.delphi_solution,
+        solution_id = S3ReusableField("solution_id", table,
                                       label = T("Solution"),
                                       requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db,
-                                                              "delphi_solution.id",
-                                                              "%(name)s")),
-                                      represent = self.solution_represent)
+                                                    IS_ONE_OF(db, "delphi_solution.id",
+                                                              self.delphi_solution_represent
+                                                              )),
+                                      represent = self.delphi_solution_represent)
 
         # ---------------------------------------------------------------------
         # Votes
@@ -323,8 +327,7 @@ class S3DelphiModel(S3Model):
         table = define_table(tablename,
                              Field("parent", "reference delphi_comment",
                                    requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db,
-                                                          "delphi_comment.id")),
+                                                IS_ONE_OF_EMPTY(db, "delphi_comment.id")),
                                    readable=False),
                              problem_id(),
                              # @ToDo: Tag to 1+ Solutions
@@ -345,64 +348,76 @@ class S3DelphiModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         return Storage(
-                        delphi_solution_represent = self.solution_represent
+                    delphi_solution_represent = self.delphi_solution_represent,
                     )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def group_represent(id):
+    def delphi_group_represent(id, row=None):
+        """ FK representation """
 
-        if not id:
+        if not row:
+            db = current.db
+            table = db.delphi_group
+            row = db(table.id == id).select(table.id,
+                                            table.name,
+                                            limitby = (0, 1)).first()
+        elif not id:
             return current.messages.NONE
 
-        table = current.s3db.delphi_group
-        query = (table.id == id)
-        record = current.db(query).select(table.name,
-                                          limitby=(0, 1)).first()
-        if not record:
+        try:
+            return A(row.name,
+                     _href=URL(c="delphi",
+                               f="group",
+                               args=[row.id]))
+        except:
             return current.messages.UNKNOWN_OPT
-        return A(record.name,
-                 _href=URL(c="delphi",
-                           f="group",
-                           args=[id]))
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def problem_represent(id, showlink=False, solutions=True):
+    def delphi_problem_represent(id, row=None, showlink=False,
+                                 solutions=True):
+        """ FK representation """
 
-        if not id:
+        if not row:
+            db = current.db
+            table = db.delphi_problem
+            row = db(table.id == id).select(table.id,
+                                            table.name,
+                                            limitby = (0, 1)).first()
+        elif not id:
             return current.messages.NONE
 
-        table = current.s3db.delphi_problem
-        query = (table.id == id)
-        record = current.db(query).select(table.name,
-                                          limitby=(0, 1)).first()
-        if not record:
-            return current.messages.UNKNOWN_OPT
-        if showlink:
-            if solutions:
-                url = URL(c="delphi", f="problem", args=[id, "solution"])
+        try:
+            if showlink:
+                if solutions:
+                    url = URL(c="delphi", f="problem", args=[row.id, "solution"])
+                else:
+                    url = URL(c="delphi", f="problem", args=[row.id])
+                return A(row.name, _href=url)
             else:
-                url = URL(c="delphi", f="problem", args=[id])
-            output = A(record.name, _href=url)
-            return output
-        else:
-            return record.name
+                return row.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def solution_represent(id):
+    def delphi_solution_represent(id, row=None):
+        """ FK representation """
 
+        if row:
+            return row.name
         if not id:
             return current.messages.NONE
 
-        table = current.s3db.delphi_solution
-        query = (table.id == id)
-        record = current.db(query).select(table.name,
-                                          limitby=(0, 1)).first()
-        if not record:
+        db = current.db
+        table = db.delphi_solution
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
             return current.messages.UNKNOWN_OPT
-        return record.name
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -536,7 +551,7 @@ class S3DelphiUser:
         # All but Guests can add Solutions & Discuss
         self.can_add_item = status != 1
         self.can_post = status != 1
-        
+
         self.membership = membership
         self.status = status
         self.user_id = user_id

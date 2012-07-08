@@ -48,14 +48,14 @@ class S3SecurityModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
         db = current.db
 
         location_id = self.gis_location_id
         human_resource_id = self.hrm_human_resource_id
 
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+
         # -----------------------------------------------------------
         # Security Zone Types
         tablename = "security_zone_type"
@@ -67,7 +67,7 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_ZONE = T("Add Zone Type")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ZONE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
@@ -87,25 +87,26 @@ class S3SecurityModel(S3Model):
         # Security Zones
         tablename = "security_zone"
         table = define_table(tablename,
-                                  Field("name",
-                                        label=T("Name")),
-                                  Field("zone_type_id", db.security_zone_type,
-                                        requires = IS_NULL_OR(IS_ONE_OF(db, "security_zone_type.id",
-                                                                        "%(name)s",
-                                                                        sort=True)),
-                                        represent = self.security_zone_type_represent,
-                                        comment = S3AddResourceLink(c="security",
-                                                                    f="zone_type",
-                                                                    label=ADD_ZONE,
-                                                                    tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
-                                        label=T("Type")),
-                                  location_id(),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+                             Field("name",
+                                   label=T("Name")),
+                             Field("zone_type_id", db.security_zone_type,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_zone_type.id",
+                                                          "%(name)s",
+                                                          sort=True)),
+                                   represent = self.security_zone_type_represent,
+                                   comment = S3AddResourceLink(c="security",
+                                                               f="zone_type",
+                                                               label=ADD_ZONE,
+                                                               tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                                   label=T("Type")),
+                             location_id(),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_ZONE = T("Add Zone")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_ZONE,
             title_display = T("Zone Details"),
             title_list = T("Zones"),
@@ -125,14 +126,14 @@ class S3SecurityModel(S3Model):
         # Security Staff Types
         tablename = "security_staff_type"
         table = define_table(tablename,
-                                  Field("name",
-                                        label=T("Name")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+                             Field("name",
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_STAFF = T("Add Staff Type")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_STAFF,
             title_display = T("Staff Type Details"),
             title_list = T("Staff Types"),
@@ -184,7 +185,7 @@ class S3SecurityModel(S3Model):
 
         # CRUD strings
         ADD_STAFF = T("Add Security-Related Staff")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_STAFF,
             title_display = T("Security-Related Staff Details"),
             title_list = T("Security-Related Staff"),
@@ -210,40 +211,34 @@ class S3SecurityModel(S3Model):
     def security_zone_type_represent(id):
         """ Represent a security zone type in option fields or list views """
 
-        NONE = current.messages.NONE
-
         if not id:
-            return NONE
+            return current.messages.NONE
 
         db = current.db
         table = db.security_zone_type
-
         record = db(table.id == id).select(table.name,
                                            limitby=(0, 1)).first()
-        if not record:
-            return NONE
-
-        return record.name
+        try:
+            return record.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -----------------------------------------------------------------------------
     @staticmethod
     def security_zone_represent(id):
         """ Represent a security zone in option fields or list views """
 
-        NONE = current.messages.NONE
-
         if not id:
-            return NONE
+            return current.messages.NONE
 
         db = current.db
         table = db.security_zone
-
         record = db(table.id == id).select(table.name,
                                            limitby=(0, 1)).first()
-        if not record:
-            return NONE
-
-        return record.name
+        try:
+            return record.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -----------------------------------------------------------------------------
     @staticmethod
