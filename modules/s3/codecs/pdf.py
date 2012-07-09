@@ -220,11 +220,12 @@ class S3RL_PDF(S3Codec):
                 resource = r.resource
             body_flowable = self.get_resource_flowable(resource,
                                                        doc)
-            
         styleSheet = getSampleStyleSheet()
         self.normalstyle = styleSheet["Normal"]
         self.normalstyle.fontName = "Helvetica"
         self.normalstyle.fontSize = 9
+        if not body_flowable:
+            body_flowable = [Paragraph("",self.normalstyle)]
         # Build the pdf
         doc.build(header_flowable,
                   body_flowable,
@@ -709,7 +710,8 @@ class S3PDFTable(object):
             self.data = [self.labels] + data
         elif self.raw_data != None:
             self.data = [self.labels] + self.raw_data
-        if len(self.data) == 0:
+        # Only build the table if we have some data
+        if not self.data or not (self.data[0]):
             return None
         endCol = len(self.labels) - 1
         rowCnt = len(self.data)

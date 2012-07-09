@@ -261,6 +261,29 @@ def person():
     configure(tablename,
               deletable=False)
 
+    s3.crud_strings[tablename].update(
+        title_upload = T("Import Staff"))
+    # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
+    table.occupation.readable = False
+    table.occupation.writable = False
+    # Just have a Home Address
+    table = s3db.pr_address
+    #table.type.default = 1
+    #table.type.readable = False
+    #table.type.writable = False
+    _crud = s3.crud_strings.pr_address
+    _crud.title_create = T("Add Home Address")
+    _crud.title_update = T("Edit Home Address")
+    if not current.auth.s3_has_role("staff_super"):
+        current.response.s3.filter = (table.type >= 3)
+    #s3mgr.model.add_component("pr_address",
+    #                          pr_pentity=dict(joinby=super_key(s3db.pr_pentity),
+    #                                          multiple=False))
+    # Default type for HR
+    table = s3db.hrm_human_resource
+    table.type.default = 1
+    request.get_vars.update(xsltmode="staff")
+
     mode = session.s3.hrm.mode
     if mode is not None:
         # Configure for personal mode

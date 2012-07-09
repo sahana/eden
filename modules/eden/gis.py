@@ -3027,6 +3027,9 @@ class S3MapModel(S3Model):
 
         #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
 
+#        table.queryable.readable = False
+#        table.legend_url.readable = False
+#        table.role_required.readable = False
         configure(tablename,
                   onaccept=gis_layer_onaccept,
                   super_entity="gis_layer_entity")

@@ -283,6 +283,34 @@ def person():
     set_method("pr", resourcename,
                method="contacts",
                action=s3db.pr_contacts)
+    # Custom Method for Identity
+    set_method("pr", resourcename,
+               method="identity")
+    # Custom Method for Education
+    set_method("pr", resourcename,
+               method="education")
+    # Custom Method for Description
+    set_method("pr", resourcename,
+               method="physical_description")
+    # Hide all but those details that we want
+    # Lock all the fields
+    pr_desc_table = s3db.pr_physical_description
+    for field in pr_desc_table.fields:
+        pr_desc_table[field].writable = False
+        pr_desc_table[field].readable = False
+    # Now enable those that we want
+    if current.auth.s3_has_role("vol_super"):
+            # The following fields fall under the category of 
+            # Sensitive Information and will only be accessible by
+            # the super editor.
+        pr_desc_table.ethnicity.writable = True
+        pr_desc_table.ethnicity.readable = True
+    pr_desc_table.blood_type.writable = True
+    pr_desc_table.blood_type.readable = True
+    pr_desc_table.medical_conditions.writable = True
+    pr_desc_table.medical_conditions.readable = True
+    pr_desc_table.other_details.writable = True
+    pr_desc_table.other_details.readable = True
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
@@ -530,6 +558,8 @@ def person():
     else:
         orgname = None
 
+    if not current.auth.s3_has_role("vol_super"):
+        current.response.s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.hrm_rheader,
