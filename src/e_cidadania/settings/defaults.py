@@ -162,6 +162,7 @@ ECIDADANIA_MODULES = (
     'apps.ecidadania.staticpages',
     'apps.ecidadania.cal',
     'extras.custom_stuff',
+    'apps.ecidadania.voting',
 )
 
 #Defining user roles
@@ -172,7 +173,6 @@ USER_ROLES = (
     'user',
     'anonymous'
 )
-
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

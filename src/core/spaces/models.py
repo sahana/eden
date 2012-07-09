@@ -88,6 +88,7 @@ class Space(models.Model):
     mod_news = models.BooleanField(_('News'))
     mod_cal = models.BooleanField(_('Calendar'))
     mod_docs = models.BooleanField(_('Documents'))
+    mod_polls = models.BooleanField(_('Polls'))
 
     class Meta:
         ordering = ['name']
