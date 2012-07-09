@@ -17,51 +17,49 @@
             <ul class="nav nav-tabs">
                 <li class="active"><a href="#overview" data-toggle="tab">{% trans "Overview" %}</a></li>
                 {% if get_place.mod_news %}
-                <li><a href="#news" data-toggle="tab">{% trans "News" %}</a></li>
+                    <li><a href="#news" data-toggle="tab">{% trans "News" %}</a></li>
                 {% endif %}
                 {% if get_place.mod_debate %}
-                <li><a href="#debates" data-toggle="tab">{% trans "Debates" %}</a></li>
+                    <li><a href="#debates" data-toggle="tab">{% trans "Debates" %}</a></li>
                 {% endif %}
                 {% if get_place.mod_proposals %}
-                <li><a href="#proposals" data-toggle="tab">{% trans "Proposals" %}</a></li>
+                    <li><a href="#proposals" data-toggle="tab">{% trans "Proposals" %}</a></li>
                 {% endif %}
                 {% if get_place.mod_docs %}
-                <li><a href="#docs" data-toggle="tab">{% trans "Documents" %}</a></li>
+                    <li><a href="#docs" data-toggle="tab">{% trans "Documents" %}</a></li>
                 {% endif %}
                 {% if get_place.mod_cal %}
-                <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
+                    <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
                 {% endif %}
-<<<<<<< HEAD
-                {% if user_is_admin %} 
-=======
                 {% if get_place.mod_polls %}
-                <li><a href="#voting" data-toggle="tab">{% trans "Voting" %}</a></li>
+                    {% if get_place.mod_polls %}
+                        <li><a href="#voting" data-toggle="tab">{% trans "Voting" %}</a></li>
+                    {% endif %}
                 {% endif %}
-                {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
->>>>>>> 3f373d95b85439d2e57ea8de3067a84c6c91dd94
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Administration" %} <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        {% if perms.news.add_post %}
-                            <li><a href="{% url 'add-post' get_place.url %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans 'Add new post' %}
-                            </a></li>
-                        {% endif %}
-                        {% if perms.spaces.change_space %}
-                            <li><a href="{% url 'edit-space' get_place.url %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>{% trans 'Edit space' %}
-                            </a></li>
-                            <li><a href="{% url 'edit-roles' get_place.url %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit user roles' %}" title="{% trans 'Edit user roles' %}"/>{% trans 'Edit user roles' %}
-                            </a></li>
-                        {% endif %}
-                        {% if perms.spaces.delete_space %}
-                        <li><a href="{% url 'delete-space' get_place.url %}">
-                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>{% trans 'Delete space' %}
-                            </a></li>
-                        {% endif %}
-                    </ul>
-                </li>
+                {% if user_is_admin %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Administration" %} <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            {% if perms.news.add_post %}
+                                <li><a href="{% url 'add-post' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans 'Add new post' %}
+                                </a></li>
+                            {% endif %}
+                            {% if perms.spaces.change_space %}
+                                <li><a href="{% url 'edit-space' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit space' %}" title="{% trans 'Edit space' %}"/>{% trans 'Edit space' %}
+                                </a></li>
+                                <li><a href="{% url 'edit-roles' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit user roles' %}" title="{% trans 'Edit user roles' %}"/>{% trans 'Edit user roles' %}
+                                </a></li>
+                            {% endif %}
+                            {% if perms.spaces.delete_space %}
+                                <li><a href="{% url 'delete-space' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>{% trans 'Delete space' %}
+                                </a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
                 {% endif %}
             </ul>
             <div id="my-tab-content" class="tab-content">
@@ -119,6 +117,16 @@
                                     {% endfor %}
                                 </ul>
                             {% endif %}
+                            {% if get_place.mod_polls %}
+                                <h6>{% trans "Polls" %}</h6>
+                                <ul class="unstyled">
+                                    {% for p in polls %}
+                                        <li><a href="{% url 'view-poll' get_place.url p.id %}">{{ p.question }}</a> {% trans "on" %} {{ p.pub_date|date:"d F Y" }}</li>
+                                    {% empty %}
+                                        <li>{% trans "No events registered." %}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         </div>
                         <div class="span4 space-sidebar">
                             <h4>{% trans "Next events" %}</h4>
@@ -137,8 +145,8 @@
                     <div class="row">
                         <div class="span8">
                             {% for poll in polls %}
-                            <h2 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
-                                    {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                                <h3 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
+                                    {% if user_is_admin %}
                                         {% if perms.voting.change_poll %}
                                             <a href="{% url 'edit-poll' get_place.url poll.id %}">
                                                 <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
@@ -150,11 +158,11 @@
                                             </a>
                                         {% endif %}
                                     {% endif %}
-                                </h2>
+                                </h3>
                             {% endfor %}
                         </div>
                         <div class="span4 space-sidebar">
-                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                            {% if user_is_admin %}
                                 {% if perms.voting.add_poll %}
                                     <h4>{% trans "Administration" %}</h4>
                                     <ul class="unstyled">
@@ -165,7 +173,8 @@
                                 {% endif %}
                             {% endif %}
                             <ul class="unstyled">
-                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "Other polls" %}</a></li>
+                                <h4>{% trans "Actions" %}</h4>
+                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List polls" %}</a></li>
                             </ul>
                         </div>
                     </div>

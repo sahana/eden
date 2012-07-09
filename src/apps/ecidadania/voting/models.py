@@ -51,15 +51,15 @@ class Poll(models.Model):
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
 
-        @models.permalink
-        def get_absolute_url(self):
-            if self.space is not None:
-                return ('view-polls', (), {
-                    'space_url': self.space.url,
-                    'poll_id': str(self.id)})
-            else:
-                return ('view-polls', (), {
-                    'poll_id': str(self.id)})
+    @models.permalink
+    def get_absolute_url(self):
+        if self.space is not None:
+            return ('view-polls', (), {
+                'space_url': self.space.url,
+                'poll_id': str(self.id)})
+        else:
+            return ('view-polls', (), {
+                'poll_id': str(self.id)})
 
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)

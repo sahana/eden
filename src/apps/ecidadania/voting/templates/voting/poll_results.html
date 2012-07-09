@@ -38,5 +38,5 @@
         {% endfor %}
     </ul>
 
-    <a href="../../{{ get_place.get_absolute_url }}">Vote again?</a>
+    <a href="{% url 'list-polls' get_place.url %}">Vote again?</a>
 {% endblock %}
