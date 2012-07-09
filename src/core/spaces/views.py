@@ -56,7 +56,7 @@ from core.spaces.forms import SpaceForm, DocForm, EventForm, EntityFormSet, \
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
-
+from apps.ecidadania.voting.models import Poll
 #
 # RSS FEED
 #
@@ -286,6 +286,7 @@ class ViewSpaceIndex(DetailView):
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
         context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
+        context['polls'] = Poll.objects.filter(space=place.id)
         return context
         
 
