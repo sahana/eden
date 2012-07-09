@@ -110,7 +110,7 @@ parser.add_argument("--suite",
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
-                    default = 3,
+                    default = 16,
                     help = "The recursive depth when looking for links")
 up_desc = """The user name and password, separated by a /. Multiple user name
 and passwords can be added by separating them with a comma. If multiple user

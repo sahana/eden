@@ -2614,7 +2614,7 @@ class S3PersonDescription(S3Model):
                                                 pr_complexion_opts.get(opt, UNKNOWN_OPT)),
                              Field("ethnicity",
                                    #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
-                                   length=64
+                                   length=64,
                                    readable=False,
                                    writable=False,
                                   ),   # Mayon Compatibility
