@@ -3139,9 +3139,20 @@ def hrm_human_resource_onaccept(form):
         if not user.organisation_id:
             # Set the Organisation in the Profile, if not already set
             profile["organisation_id"] = record.organisation_id
-        if not user.site_id:
-            # Set the Site in the Profile, if not already set
-            profile["site_id"] = site_id
+            if not user.site_id:
+                # Set the Site in the Profile, if not already set
+                profile["site_id"] = site_id
+        else:
+            # How many active HR records does the user have?
+            query = (htable.deleted == False) & \
+                    (htable.status == 1) & \
+                    (htable.person_id == person_id)
+            rows = db(query).select(htable.id,
+                                    limitby=(0, 2))
+            if len(rows) == 1:
+                # We can safely update
+                profile["organisation_id"] = record.organisation_id
+                profile["site_id"] = record.site_id
         if profile:
             query = (utable.id == user.id)
             db(query).update(**profile)
