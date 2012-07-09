@@ -1290,7 +1290,7 @@ class S3Project3WModel(S3Model):
                     ))
 
         # Resource configuration
-        hierarchy = current.gis.get_location_hierarchy()
+        #hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
                   search_method=community_contact_search,
                   list_fields=["person_id",
@@ -1408,10 +1408,15 @@ class S3Project3WModel(S3Model):
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       #"activity_id$multi_activity_type_id"
-                     ]
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
+                      (T("Country"), "L0"),
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      ]
+        #lh = current.gis.get_location_hierarchy()
+        #lh = [(lh[opt], opt) for opt in lh]
+        #report_fields.extend(lh)
 
         # ---------------------------------------------------------------------
         def year_options():
@@ -1931,10 +1936,6 @@ class S3ProjectActivityModel(S3Model):
         if settings.get_project_mode_drr():
             append((T("Hazard"), "project_id$multi_hazard_id"))
             append((T("HFA"), "project_id$hfa"))
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
-        append("location_id")
         list_fields = ["name",
                        "project_id",
                        "multi_activity_type_id",
@@ -4286,19 +4287,10 @@ def project_rheader(r, tabs=[]):
         else:
             location = ""
 
-        if record.pe_id:
-            assignee = TR(
-                            TH("%s: " % table.pe_id.label),
-                            s3db.pr_pentity_represent(record.pe_id,
-                                                      show_label=False),
-                        )
-        else:
-            assignee = ""
-
         if record.created_by:
             creator = TR(
                             TH("%s: " % T("Created by")),
-                            s3db.pr_pentity_represent(record.created_by, show_label=False),
+                            s3_auth_user_represent(record.created_by),
                         )
         else:
             creator = ""
@@ -4329,7 +4321,6 @@ def project_rheader(r, tabs=[]):
             description,
             facility,
             location,
-            assignee,
             creator,
             time_estimated,
             time_actual,
@@ -4407,9 +4398,9 @@ def project_task_controller():
                        #search_method=task_search,
                        list_fields=list_fields)
         ltable = s3db.project_task_project
-        response.s3.filter = (ltable.project_id == project) & \
-                             (ltable.task_id == table.id) & \
-                             (table.status.belongs(statuses))
+        s3.filter = (ltable.project_id == project) & \
+                    (ltable.task_id == table.id) & \
+                    (table.status.belongs(statuses))
     else:
         crud_strings.title_list = T("All Tasks")
         crud_strings.title_search = T("All Tasks")

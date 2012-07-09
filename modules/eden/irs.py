@@ -51,7 +51,8 @@ class S3IRSModel(S3Model):
     names = ["irs_icategory",
              "irs_ireport",
              "irs_ireport_person",
-             "irs_ireport_id"]
+             "irs_ireport_id"
+             ]
 
     def model(self):
 
@@ -390,13 +391,12 @@ class S3IRSModel(S3Model):
                     ),
             ))
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "category",
                          "datetime",
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
-                        ]
+                         "L1",
+                         "L2",
+                         ]
 
         # Resource Configuration
         configure(tablename,
