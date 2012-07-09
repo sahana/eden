@@ -578,9 +578,6 @@ class S3PersonModel(S3Model):
         else:
             last_name_validate = None
 
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = settings.get_L10n_date_format()
-
         tablename = "pr_person"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
@@ -602,8 +599,7 @@ class S3PersonModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    default=False),
-                             Field("first_name",
-                                   notnull=True,
+                             Field("first_name", notnull=True,
                                    default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
@@ -613,22 +609,19 @@ class S3PersonModel(S3Model):
                                                   _title="%s|%s" % (T("First Name"),
                                                                     T("The first or only name of the person (mandatory)."))),
                                    label = T("First Name")),
-                             Field("middle_name",
-                                   length=64, # Mayon Compatibility
+                             Field("middle_name", length=64, # Mayon Compatibility
                                    label = T("Middle Name")),
-                             Field("last_name",
-                                   length=64, # Mayon Compatibility
+                             Field("last_name", length=64, # Mayon Compatibility
                                    label = T("Last Name"),
                                    requires = last_name_validate),
-                             Field("initials",
-                                   length=8,
+                             Field("initials", length=8,
                                    label = T("Initials")),
-                             Field("preferred_name",
+                             Field("preferred_name", length=64, # Mayon Compatibility
                                    label = T("Preferred Name"),
                                    comment = DIV(DIV(_class="tooltip",
                                                      _title="%s|%s" % (T("Preferred Name"),
                                                                        T("The name to be used when calling for or directly addressing the person (optional).")))),
-                                   length=64), # Mayon Compatibility
+                                   ),
                              Field("local_name",
                                    label = T("Local Name"),
                                     comment = DIV(DIV(_class="tooltip",
@@ -668,8 +661,7 @@ class S3PersonModel(S3Model):
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
                                    ),
-                             Field("opt_in",
-                                   "string", # list of mailing lists which link to teams
+                             Field("opt_in", "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
                                    comment = DIV(DIV(_class="tooltip",
@@ -677,6 +669,7 @@ class S3PersonModel(S3Model):
                                                                        T("By selecting this you agree that we may contact you.")))),
                                    ),
                              s3_comments(),
+                             # @ToDo: Remove the lx_fields when we can Search person_id$location_id$Lx
                              *(s3_lx_fields() + s3_meta_fields()))
 
         # CRUD Strings
@@ -743,11 +736,12 @@ class S3PersonModel(S3Model):
 
         person_id = S3ReusableField("person_id", table,
                                     sortby = ["first_name", "middle_name", "last_name"],
-                                    requires = IS_NULL_OR(IS_ONE_OF(db, "pr_person.id",
-                                                                    pr_person_represent,
-                                                                    orderby="pr_person.first_name",
-                                                                    sort=True,
-                                                                    error_message=T("Person must be specified!"))),
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "pr_person.id",
+                                                          pr_person_represent,
+                                                          orderby="pr_person.first_name",
+                                                          sort=True,
+                                                          error_message=T("Person must be specified!"))),
                                     represent = pr_person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
@@ -1035,15 +1029,14 @@ class S3GroupModel(S3Model):
                   extra="description")
 
         # Reusable fields
-        group_represent = lambda id: \
-            (id and [db.pr_group[id].name] or [messages.NONE])[0]
         group_id = S3ReusableField("group_id", table,
                                    sortby="name",
-                                   requires = IS_NULL_OR(IS_ONE_OF(db, "pr_group.id",
-                                                                   "%(id)s: %(name)s",
-                                                                   filterby="system",
-                                                                   filter_opts=(False,))),
-                                   represent = group_represent,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "pr_group.id",
+                                                          self.group_represent,
+                                                          filterby="system",
+                                                          filter_opts=(False,))),
+                                   represent = self.group_represent,
                                    comment=S3AddResourceLink(c="pr",
                                                              f="group",
                                                              label=crud_strings.pr_group.label_create_button,
@@ -1123,9 +1116,28 @@ class S3GroupModel(S3Model):
         #
         return Storage(
             pr_group_id = group_id,
-            pr_group_represent = group_represent,
+            pr_group_represent = self.group_represent,
             pr_mailing_list_crud_strings = mailing_list_crud_strings
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.pr_group
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1329,11 +1341,12 @@ class S3PersonAddressModel(S3Model):
 
     names = ["pr_address",
              "pr_address_type_opts"
-            ]
+             ]
 
     def model(self):
 
         T = current.T
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Address
@@ -1359,7 +1372,7 @@ class S3PersonAddressModel(S3Model):
                                                         current.messages.UNKNOWN_OPT)),
                                   self.gis_location_id(),
                                   s3_comments(),
-                                  *(s3_address_fields() + s3_meta_fields()))
+                                  *s3_meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -1368,7 +1381,7 @@ class S3PersonAddressModel(S3Model):
                                          filter_opts=("pr_person", "pr_group"))
 
         # Field configuration
-        if not current.deployment_settings.get_gis_building_name():
+        if not settings.get_gis_building_name():
             table.building_name.readable = False
 
         # CRUD Strings
@@ -1389,19 +1402,19 @@ class S3PersonAddressModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                        onaccept=self.address_onaccept,
-                        onvalidation=s3_address_onvalidation,
-                        deduplicate=self.address_deduplicate,
-                        list_fields = ["id",
-                                       "type",
-                                       "address",
-                                       "postcode",
-                                       #"L4",
-                                       "L3",
-                                       "L2",
-                                       "L1",
-                                       "L0"
-                                       ])
+                       onaccept=self.address_onaccept,
+                       onvalidation=s3_address_onvalidation,
+                       deduplicate=self.address_deduplicate,
+                       list_fields = ["id",
+                                      "type",
+                                      (T("Address"), "location_id$addr_street"),
+                                      (settings.get_ui_label_postcode(), "location_id$addr_postcode"),
+                                      #"location_id$L4",
+                                      "location_id$L3",
+                                      "location_id$L2",
+                                      "location_id$L1",
+                                      (T("Country"), "location_id$L0"),
+                                      ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -1451,28 +1464,28 @@ class S3PersonAddressModel(S3Model):
                     # Update the Lx fields
                     s3_lx_update(table, person.id)
 
-            if person and str(vars.type) == "1": # Home Address
-                if settings.has_module("hrm"):
-                    # Also check for any Volunteer HRM record(s)
-                    htable = s3db.hrm_human_resource
-                    query = (htable.person_id == person.id) & \
-                            (htable.type == 2) & \
-                            (htable.deleted != True)
-                    hrs = db(query).select(htable.id)
-                    for hr in hrs:
-                        db(htable.id == hr.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        s3_lx_update(htable, hr.id)
-                if settings.has_module("member"):
-                    # Also check for any Member record(s)
-                    mtable = s3db.member_membership
-                    query = (mtable.person_id == person.id) & \
-                            (mtable.deleted != True)
-                    members = db(query).select(mtable.id)
-                    for member in members:
-                        db(mtable.id == member.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        s3_lx_update(mtable, member.id)
+            #if person and str(vars.type) == "1": # Home Address
+            #    if settings.has_module("hrm"):
+            #        # Also check for any Volunteer HRM record(s)
+            #        htable = s3db.hrm_human_resource
+            #        query = (htable.person_id == person.id) & \
+            #                (htable.type == 2) & \
+            #                (htable.deleted != True)
+            #        hrs = db(query).select(htable.id)
+            #        for hr in hrs:
+            #            db(htable.id == hr.id).update(location_id=location_id)
+            #            # Update the Lx fields
+            #            s3_lx_update(htable, hr.id)
+                #if settings.has_module("member"):
+                #    # Also check for any Member record(s)
+                #    mtable = s3db.member_membership
+                #    query = (mtable.person_id == person.id) & \
+                #            (mtable.deleted != True)
+                #    members = db(query).select(mtable.id)
+                #    for member in members:
+                #        db(mtable.id == member.id).update(location_id=location_id)
+                #        # Update the Lx fields
+                #        s3_lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -1489,11 +1502,14 @@ class S3PersonAddressModel(S3Model):
                 return
 
             table = item.table
+            db = current.db
+            ltable = db.gis_location
             query = (table.pe_id == pe_id) & \
-                    (table.address == address) & \
+                    (ltable.id == table.location_id) & \
+                    (ltable.addr_street == address) & \
                     (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE

@@ -93,10 +93,9 @@ class S3XLS(S3Codec):
         indices = self.indices
         list_fields = [f for f in list_fields if f not in indices]
 
-        # Filter and orderby
+        # Filter
         if s3.filter is not None:
             resource.add_filter(s3.filter)
-        orderby = report_groupby
 
         # Retrieve the resource contents
         table = resource.table
@@ -110,17 +109,29 @@ class S3XLS(S3Codec):
         title = str(crud_strings.get(name, not_found))
 
         # Only include fields that can be read.
-        headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
+        # - doesn't work with virtual fields and anyway list_fields should override readable
+        #headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
+        headers = [f.label for f in lfields if f.show]
         # Doesn't work with Virtual Fields
         #types = [f.field.type for f in lfields if f.show]
         types = []
         for f in lfields:
             if f.show:
-                try:
+                if f.field:
                     types.append(f.field.type)
-                except:
+                else:
                     # Virtual Field
                     types.append("string")
+
+        orderby = report_groupby
+        if not orderby:
+            # @ToDo: Some central function (where does HRM List get it's orderby from?)
+            if "person_id" in list_fields:
+                orderby = "pr_person.first_name"
+                list_fields.append("person_id$first_name")
+            elif "organisation_id" in list_fields:
+                orderby = "org_organisation.name"
+                list_fields.append("organisation_id$name")
 
         items = resource.sqltable(fields=list_fields,
                                   start=None,

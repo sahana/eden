@@ -108,12 +108,6 @@ def hospital():
                 _title="%s|%s" % (T("Road Conditions"),
                                   T("Describe the condition of the roads to your hospital."))))
 
-            if r.method and r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                #s3base.s3_address_hide(r.table)   # Once separate fields have been migrated from location_id
-                pass
-
             if r.component:
                 if r.component.name == "inv_item" or \
                    r.component.name == "recv" or \

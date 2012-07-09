@@ -1,4 +1,4 @@
-Name,Organisation,Branch,Type,Country,Building name,Address,Post code,State/Region,District/Province,City/Municipality,Lat,Lon,Address,Phone,Email,Comments
+Name,Organisation,Branch,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Address,Phone,Email,Comments
 NROC WAREHOUSE A,Department of Social Welfare and Development,National Resource Operation Center,Warehouse,Philippines,NROC-WH-A,Pasay City,1300,National Capital Region,Metro Manila,Pasay City,,,,,,
 NROC WAREHOUSE B,Department of Social Welfare and Development,National Resource Operation Center,Warehouse,Philippines,NROC-WH-B,Pasay City,1300,National Capital Region,Metro Manila,Pasay City,,,,,,
 NROC WAREHOUSE C,Department of Social Welfare and Development,National Resource Operation Center,Warehouse,Philippines,NROC-WH-C,Pasay City,1300,National Capital Region,Metro Manila,Pasay City,,,,,,

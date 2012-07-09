@@ -1218,7 +1218,7 @@ class S3FacilityModel(S3Model):
                                 default_from_profile=True)),
                              self.gis_location_id(),
                              s3_comments(),
-                             *(s3_address_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_FAC = T("Add Facility")
@@ -1487,10 +1487,7 @@ class S3OfficeModel(S3Model):
                                         default = False),
                                   #document_id(),  # Better to have multiple Documents on a Tab
                                   s3_comments(),
-                                  *(s3_address_fields() + s3_meta_fields()))
-
-        if not current.deployment_settings.get_gis_building_name():
-            table.building_name.readable = False
+                                  *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -1535,17 +1532,18 @@ class S3OfficeModel(S3Model):
 
         self.configure(tablename,
                        super_entity=("pr_pentity", "org_site"),
-                       onvalidation=s3_address_onvalidation,
+                       #onvalidation=s3_address_onvalidation,
                        deduplicate=self.org_office_deduplicate,
                        list_fields=["id",
                                     "name",
                                     "organisation_id",   # Filtered in Component views
                                     "type",
-                                    "L0",
-                                    "L1",
-                                    "L2",
-                                    "L3",
-                                    #"L4",
+                                    #(T("Address"), "location_id$addr_street"),
+                                    (T("Country"), "location_id$L0"),
+                                    "location_id$L1",
+                                    "location_id$L2",
+                                    "location_id$L3",
+                                    #"location_id$L4",
                                     "phone1",
                                     "email"
                                     ])
@@ -1997,16 +1995,6 @@ def org_organisation_controller():
                 s3db.org_organisation_branch.branch_id.represent = lambda val: \
                     s3db.org_organisation_represent(val, parent=False)
 
-            elif r.component_name == "office" and \
-                 r.method and r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                otable = r.component.table
-                s3_address_hide(otable)
-                # Process Base Location
-                #s3db.configure(table._tablename,
-                #               onaccept=s3.address_onaccept)
-
             elif r.component_name == "task" and \
                  r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -2076,7 +2064,7 @@ def org_office_controller():
                   ),
                   S3SearchOptionsWidget(
                     name="office_search_location",
-                    field = "L1",
+                    field = "location_id$L1",
                     location_level = "L1",
                     cols = 3
                   ),
@@ -2137,7 +2125,7 @@ def org_office_controller():
                 # inc list_create (list_fields over-rides)
                 table.obsolete.writable = False
                 table.obsolete.readable = False
-                s3_address_hide(table)
+                #s3_address_hide(table)
 
             if r.component:
 
