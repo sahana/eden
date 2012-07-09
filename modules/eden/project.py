@@ -4321,7 +4321,6 @@ def project_rheader(r, tabs=[]):
             description,
             facility,
             location,
-            assignee,
             creator,
             time_estimated,
             time_actual,

@@ -577,16 +577,18 @@ def s3_auth_user_represent(id):
         @todo: parameter description?
     """
 
-    db = current.db
-    s3db = current.s3db
+    if not id:
+        return current.messages.NONE
 
-    table = s3db.auth_user
+    db = current.db
+    table = db.auth_user
     user = db(table.id == id).select(table.email,
                                      limitby=(0, 1),
-                                     cache=s3db.cache).first()
-    if user:
+                                     cache=current.s3db.cache).first()
+    try:
         return user.email
-    return None
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def s3_auth_group_represent(opt):
