@@ -31,7 +31,14 @@
                 {% if get_place.mod_cal %}
                 <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
                 {% endif %}
+<<<<<<< HEAD
                 {% if user_is_admin %} 
+=======
+                {% if get_place.mod_polls %}
+                <li><a href="#voting" data-toggle="tab">{% trans "Voting" %}</a></li>
+                {% endif %}
+                {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+>>>>>>> 3f373d95b85439d2e57ea8de3067a84c6c91dd94
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">{% trans "Administration" %} <b class="caret"></b></a>
                     <ul class="dropdown-menu">
@@ -49,7 +56,7 @@
                             </a></li>
                         {% endif %}
                         {% if perms.spaces.delete_space %}
-                            <li><a href="{% url 'delete-space' get_place.url %}">
+                        <li><a href="{% url 'delete-space' get_place.url %}">
                                 <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>{% trans 'Delete space' %}
                             </a></li>
                         {% endif %}
@@ -125,6 +132,45 @@
                         </div>
                     </div>
                 </div>
+                {% if get_place.mod_polls %}
+                <div class="tab-pane" id="voting">
+                    <div class="row">
+                        <div class="span8">
+                            {% for poll in polls %}
+                            <h2 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
+                                    {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                                        {% if perms.voting.change_poll %}
+                                            <a href="{% url 'edit-poll' get_place.url poll.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                            </a>
+                                        {% endif %}
+                                        {% if perms.voting.delete_poll %}
+                                            <a href="{% url 'delete-poll' get_place.url poll.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </h2>
+                            {% endfor %}
+                        </div>
+                        <div class="span4 space-sidebar">
+                            {% if request.user in get_place.admins.all or request.user in get_place.mods.all or request.user.is_staff or request.user.is_superuser %}
+                                {% if perms.voting.add_poll %}
+                                    <h4>{% trans "Administration" %}</h4>
+                                    <ul class="unstyled">
+                                        <li><a href="{% url 'add-poll' get_place.url %}">
+                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new poll' %}" title="{% trans 'Add new poll' %}"/>{% trans 'Add new poll' %}
+                                        </a></li>
+                                    </ul>
+                                {% endif %}
+                            {% endif %}
+                            <ul class="unstyled">
+                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "Other polls" %}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 
                 
                 {% if get_place.mod_news %}
