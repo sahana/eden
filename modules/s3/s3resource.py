@@ -2155,6 +2155,8 @@ class S3Resource(object):
         fields = []
         append = fields.append
 
+        get_location_hierarchy = current.gis.get_location_hierarchy
+
         for s in slist:
 
             # Allow to override the field label
@@ -2175,11 +2177,15 @@ class S3Resource(object):
 
             # Fall back to the field label
             if label is None:
-                f = field.field
-                if f:
-                    label = f.label
+                fname = field.fname
+                if fname in ["L1", "L2", "L3", "L3", "L4", "L5"]:
+                    label = get_location_hierarchy(fname)
                 else:
-                    label = field.fname.capitalize()
+                    f = field.field
+                    if f:
+                        label = f.label
+                    else:
+                        label = fname.capitalize()
             field.label = label
 
             # Resolve the joins
@@ -2438,36 +2444,33 @@ class S3Resource(object):
             @param references: foreign key fields to include (None for all)
         """
 
-        manager = current.manager
-        xml = current.xml
-
-        UID = xml.UID
-        IGNORE_FIELDS = xml.IGNORE_FIELDS
-        FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
-
-        table = self.table
-        tablename = self.tablename
-
-        if tablename == "gis_location":
-            if "wkt" not in skip:
-                # Skip Bulky WKT fields
-                skip.append("wkt")
-            if current.deployment_settings.get_gis_spatialdb() and \
-               "the_geom" not in skip:
-                skip.append("the_geom")
-
         rfields = self.rfields
         dfields = self.dfields
 
         if rfields is None or dfields is None:
+            if self.tablename == "gis_location":
+                if "wkt" not in skip:
+                    # Skip Bulky WKT fields
+                    skip.append("wkt")
+                if current.deployment_settings.get_gis_spatialdb() and \
+                   "the_geom" not in skip:
+                    skip.append("the_geom")
+
+            xml = current.xml
+            UID = xml.UID
+            IGNORE_FIELDS = xml.IGNORE_FIELDS
+            FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
+
+            show_ids = current.manager.show_ids
             rfields = []
             dfields = []
+            table = self.table
             pkey = table._id.name
             for f in table.fields:
                 if f == UID or \
                    f in skip or \
                    f in IGNORE_FIELDS:
-                    if f != pkey or not manager.show_ids:
+                    if f != pkey or not show_ids:
                         continue
                 if s3_has_foreign_key(table[f]) and \
                     f not in FIELDS_TO_ATTRIBUTES and \

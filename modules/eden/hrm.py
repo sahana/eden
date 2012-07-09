@@ -355,14 +355,13 @@ class S3HRModel(S3Model):
             )
         )
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "organisation_id",
                          "person_id",
                          "site_id",
                          (T("Training"), "course"),
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
+                         "L1",
+                         "L2",
                         ]
 
         # Redirect to the Details tabs after creation
@@ -430,6 +429,15 @@ class S3HRModel(S3Model):
                     hrm_autocomplete_search = hrm_autocomplete_search,
                     hrm_type_opts = hrm_type_opts,
                 )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+        human_resource_id = S3ReusableField("human_resource_id", "integer",
+                                            readable=False, writable=False)
+        return Storage(hrm_human_resource_id = human_resource_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1665,7 +1673,6 @@ class S3HRSkillModel(S3Model):
                     ),
             ))
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "training_event_id",
                          "person_id",
@@ -1673,9 +1680,9 @@ class S3HRSkillModel(S3Model):
                          (T("Organization"), "organisation"),
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
-                         (hierarchy["L1"], "person_id$L1"),
-                         (hierarchy["L2"], "person_id$L2"),
-                        ]
+                         "person_id$L1",
+                         "person_id$L2",
+                         ]
 
         # Resource Configuration
         configure(tablename,
