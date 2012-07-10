@@ -65,20 +65,85 @@ def role():
     output = s3_rest_controller(module, name)
     return output
 
+# -----------------------------------------------------------------------------
+def user_onaccept(form):
+    """
+        Update HRM record, if-present
+    """
+
+    vars = form.vars
+    user_id = vars.id
+    organisation_id = vars.organisation_id
+
+    if organisation_id:
+        htable = s3db.table("hrm_human_resource")
+        if htable:
+            # Update HRM record
+            site_id = vars.site_id
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
+            query = (htable.deleted == False) & \
+                    (htable.status == 1) & \
+                    (htable.person_id == ptable.id) & \
+                    (ptable.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == user_id)
+            rows = db(query).select(htable.id,
+                                    limitby=(0, 2))
+            if len(rows) == 1:
+                # We know which record we can update
+                hr_id = rows.first().id
+                db(htable.id == hr_id).update(organisation_id = organisation_id,
+                                              site_id = site_id)
+                # Update record ownership
+                auth.s3_set_record_owner(htable, hr_id, force_update=True)
+                # Update Site link
+                hstable = s3db.hrm_human_resource_site
+                query = (hstable.human_resource_id == hr_id)
+                this = db(query).select(hstable.id,
+                                        limitby=(0, 1)).first()
+                if this:
+                    db(query).update(site_id=site_id,
+                                     human_resource_id=id)
+                else:
+                    hstable.insert(site_id=site_id,
+                                   human_resource_id=hr_id)
+
+        # Update link to organisation
+        ltable = s3db.org_organisation_user
+        query = (ltable.user_id == user_id)
+        rows = db(query).select(ltable.organisation_id,
+                                limitby=(0, 2))
+        if len(rows) == 1:
+            if rows.first().organisation_id != organisation_id:
+                # We know which record we can update
+                db(query).update(organisation_id=organisation_id)
+            # No more action required
+            return
+        elif rows:
+            query = query & (ltable.organisation_id == organisation_id)
+            rows = db(query).select(ltable.id,
+                                    limitby=(0, 2)).first()
+            if len(rows) == 1:
+                # No action required
+                return
+        # Insert a new one
+        ltable.insert(user_id=user_id,
+                      organisation_id=organisation_id)
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def user():
     """ RESTful CRUD controller """
 
-    module = "auth"
     tablename = "auth_user"
     table = db[tablename]
 
     s3db.configure(tablename,
                    main="first_name",
                    # Add users to Person Registry & 'Authenticated' role:
-                   create_onaccept = auth.s3_register)
+                   create_onaccept = auth.s3_register,
+                   update_onaccept = user_onaccept,
+                   )
 
     def disable_user(r):
         if not r.id:
@@ -262,9 +327,8 @@ def user():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(module, resourcename)
+    output = s3_rest_controller("auth", resourcename)
     return output
-
 
 # =============================================================================
 def group():
@@ -371,7 +435,6 @@ def user_approve(form):
                     return
         else:
             return
-
 
 # =============================================================================
 @auth.s3_requires_membership(1)
