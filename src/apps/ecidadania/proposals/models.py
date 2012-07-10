@@ -44,6 +44,12 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
+OPTIONAL_FIELDS = (
+    ('tags', _('Tags')), 
+    ('latitude', _('Latitude')),
+    ('longitude', _('Longitude'))
+)
+
 
 class BaseProposalAbstractModel(models.Model):
 
@@ -182,3 +188,25 @@ class Proposal(BaseProposalAbstractModel):
         return ('view-proposal', (), {
             'space_url': self.space.url,
             'prop_id': str(self.id)})
+
+class ProposalField(models.Model):
+    
+    """
+    Proposal Fields data model. This will store details of addition form fields which can be 
+    optionally added the proposal form which is residing in a particular proposal set.
+
+    user filled fields: proposalset, field_name
+
+    """
+
+    proposalset= models.ForeignKey(ProposalSet, help_text= _('Customizing proposal \
+                                    form for a proposal set'), unique=False)
+    field_name = models.CharField(max_length=100, choices=OPTIONAL_FIELDS,help_text \
+                                    = _('Additional field that needed to added to the proposal form'))
+
+    def __unicode__(self):
+        return self.field_name
+
+    class Meta:
+        verbose_name = _('ProposalField')
+        verbose_name_plural = _('ProposalFields')

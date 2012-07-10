@@ -38,7 +38,7 @@ from django.http import HttpResponse
 
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
-     ProposalSetForm
+        ProposalSetForm, ProposalFieldForm
 from core.spaces.models import Space
 
 
@@ -193,6 +193,61 @@ class ListProposals(ListView):
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
 
+
+    """
+    To add form fields to the proposal form based on the proposalset. The admin will be able to customize the proposal forms \
+    for each proposal set
+    """
+
+def add_proposal_fields(request, space_url):
+    form = ProposalFieldForm(request.POST or None)
+    get_place = get_object_or_404(Space, url=space_url)
+    if request.method == 'POST':
+        if form.is_valid():
+            form_data = form.save()
+            proposal_fields = ProposalField.objects.filter(proposalset=form_data.proposalset)
+            return render_to_response("proposals/proposal_add_fields.html", {'form_data':form_data,\
+                                        'get_place':get_place, 'prop_fields':proposal_fields,'form':form},\
+                                        context_instance = RequestContext(request))
+    return render_to_response("proposals/proposal_add_fields.html", {'form':form, 'get_place':get_place\
+                                },context_instance = RequestContext(request))
+
+
+    """
+    Removing proposal form fields for a particular proposalset
+    """
+
+def remove_proposal_field(request, space_url):
+    d_form = ProposalFieldDeleteForm(request.POST or None)
+    get_place = get_object_or_404(Space, url=space_url)
+    if request.method == 'POST':
+        if d_form.is_valid():
+            form_data = d_form.save(commit=False)
+            delete_field = ProposalField.objects.filter(proposalset=form_data.proposalset, field_name=form_data.field_name)
+            delete_field.delete()
+            return render_to_response("proposals/proposalfield_remove_field.html", {'form':d_form, 'get_place':get_place,\
+                                        'deleted_field':form_data}, context_instance = RequestContext(request))
+
+    return render_to_response("proposals/proposalfield_delete_form.html", {'form':d_form, 'get_place':get_place}, \
+                                context_instance = RequestContext(request))
+
+    """
+    The user need to select the proposalset beforing filling the proposal form as proposal forms are customized based on
+    Proposal Set
+    """
+
+def proposal_to_set(request, space_url):
+    sel_form = ProposalSetSelectForm(request.POST or None)
+    get_place = get_object_or_404(Space, url=space_url)
+
+    if request.method == 'POST':
+        if sel_form.is_valid():
+            return redirect('/spaces/'+ space_url +'/proposal/add/'+request.POST['proposalset']+'/')
+
+    return render_to_response("proposals/proposalset_select_form.html", {'form':sel_form, 'get_place':get_place},\
+                                context_instance = RequestContext(request))
+
+    
 #
 # Proposal Sets
 #

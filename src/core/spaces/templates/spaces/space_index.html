@@ -52,6 +52,9 @@
                                 <li><a href="{% url 'edit-roles' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit user roles' %}" title="{% trans 'Edit user roles' %}"/>{% trans 'Edit user roles' %}
                                 </a></li>
+                                <li><a href="{% url 'add_fields' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add form field' %}" title="{% trans 'Add Form field'%}"/>{% trans 'Add form fields '%}
+                                </a></li>
                             {% endif %}
                             {% if perms.spaces.delete_space %}
                                 <li><a href="{% url 'delete-space' get_place.url %}">
@@ -329,7 +332,7 @@
                                 </ul>
                                 <ul class="unstyled">
                                     {% if perms.proposals.add_proposal %}
-                                        <li><a href="{% url 'add-proposal' get_place.url %}">
+                                        <li><a href="{% url 'select_set' get_place.url %}">
                                                 <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans "Add proposal" %}
                                             </a>
                                         </li>
