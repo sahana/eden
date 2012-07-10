@@ -46,8 +46,6 @@ def AddPoll(request, space_url):
 
     """
     Create a new poll. Only registered users belonging to a concrete group
-    are allowed to create polls. only site administrators will be able to
-    post polls in the index page.
     are allowed to create polls. 
     
     :parameters: space_url
