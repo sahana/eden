@@ -964,7 +964,11 @@ def s3_has_foreign_key(field, m2m=True):
                to find real foreign key constraints, then set m2m=False.
     """
 
-    ftype = str(field.type)
+    try:
+        ftype = str(field.type)
+    except:
+        # Virtual Field
+        return False
     if ftype[:9] == "reference":
         return True
     if m2m and ftype[:14] == "list:reference":

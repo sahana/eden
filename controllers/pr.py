@@ -248,6 +248,9 @@ def address():
         contacts()
     """
 
+    # Deployment Roles shouldn't be hardcoded in trunk models
+    #s3.filter = (s3db["pr_address"].type >= 3)
+
     # CRUD pre-process
     def prep(r):
         person_id = request.get_vars.get("person", None)

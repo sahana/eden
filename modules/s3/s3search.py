@@ -593,6 +593,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 options = self.options()
                 opt_keys = options.keys()
                 opt_list = options.items()
+        elif field_type == "virtual":
+            # Need to specify options
+            raise NotImplementedError
         else:
             if field_type == "boolean":
                 opt_keys = (True, False)

@@ -823,7 +823,7 @@ def s3_date(name="date", **attr):
     if "label" not in attr:
         attr["label"] = current.T("Date")
     if "represent" not in attr:
-        represent = S3DateTime.date_represent
+        attr["represent"] = S3DateTime.date_represent
     if "requires" not in attr:
         if past is None and future is None:
             requires = IS_DATE(

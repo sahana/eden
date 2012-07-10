@@ -148,11 +148,6 @@ def cr_shelter_prep(r):
         r.resource.add_filter(s3db.pr_presence.closed == False)
 
     if r.interactive:
-        if r.method != "read":
-            # Don't want to see in Create forms
-            # inc list_create (list_fields over-rides)
-            s3base.s3_address_hide(r.table)
-
         if r.component:
             if r.component.name == "inv_item" or \
                r.component.name == "recv" or \
