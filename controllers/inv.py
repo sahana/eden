@@ -88,7 +88,7 @@ def warehouse():
                   ),
                   s3base.S3SearchOptionsWidget(
                     name="warehouse_search_location",
-                    field="L1",
+                    field="location_id$L1",
                     location_level="L1",
                     cols = 3
                   ),
@@ -109,7 +109,7 @@ def warehouse():
                 # inc list_create (list_fields over-rides)
                 r.table.obsolete.writable = False
                 r.table.obsolete.readable = False
-                s3base.s3_address_hide(table)
+                #s3base.s3_address_hide(table)
                 # Process Base Location
                 #s3db.configure(table._tablename,
                 #                onaccept=address_onaccept)
@@ -574,7 +574,6 @@ def send():
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
             if r.interactive:
-                SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
                 if r.record.status == SHIP_STATUS_IN_PROCESS:
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Process Shipment to Send")
@@ -582,8 +581,13 @@ def send():
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Review Incoming Shipment to Receive")
         else:
+            if request.get_vars.received:
+                # Set the items to being received
+                sendtable[r.id] = dict(status = SHIP_STATUS_RECEIVED)
+                db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
+                response.message = T("Shipment received")
             # else set the inv_send attributes
-            if r.id:
+            elif r.id:
                 record = sendtable[r.id]
                 set_send_attr(record.status)
             else:

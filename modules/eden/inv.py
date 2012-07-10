@@ -333,9 +333,9 @@ $(document).ready(function(){
                 )
             ],
             #rows=["item_id", "currency"],
-            rows=["item_id", (T("Category"), "item_category"),],
+            rows=["item_id", (T("Category"), "item_category"), "currency"],
             #cols=["site_id", "currency"],
-            cols=["site_id", "owner_org_id", "supply_org_id"],
+            cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
             groupby=self.inv_inv_item.site_id,
@@ -2321,8 +2321,8 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-                        return_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                                                     % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                        return_btn_confirm = SCRIPT("S3ConfirmClick('#send_return', '%s')"
+                                                     % T("Confirm that some items were returned from a delivery to beneficiaries and they will be accept back into stock.") )
                         rfooter.append(return_btn_confirm)
                         action.append( A( T("Confirm Shipment Received"),
                                         _href = URL(f = "send",

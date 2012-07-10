@@ -3234,7 +3234,8 @@ class GIS(object):
                 parent = db(table.id == parent_id).select(table.level,
                                                           table.name,
                                                           table.parent,
-                                                          table.path).first()
+                                                          table.path,
+                                                          cache=current.s3db.cache).first()
             if parent_id and parent:
                 if parent.path:
                     # Parent has a path.

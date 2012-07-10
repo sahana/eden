@@ -88,7 +88,8 @@ parser.add_argument("--nohtml",
                     help = "Disable HTML reporting."
                    )
 parser.add_argument("--html-path",
-                    help = "Path where the HTML report will be saved."
+                    help = "Path where the HTML report will be saved.",
+                    default = ""
                    )
 parser.add_argument("--html-name-date",
                     help = "Include just the date in the name of the HTML report."
@@ -219,6 +220,8 @@ try:
         filename = "Sahana-Eden-%s.html" % current.request.now.date()
     else:
         filename = "Sahana-Eden-%s.html" % current.request.now
+    # Some lesser operating systems don't like colons in the filename so
+    filename = filename.replace(":", "-")
     fullname = os.path.join(path,filename)
     fp = file(fullname, "wb")
 
@@ -229,7 +232,7 @@ try:
                                 title="Sahana Eden",
                                )
     runner.run(suite)
-except:
+except ImportError:
     config.html = False
     unittest.TextTestRunner(verbosity=2).run(suite)
 
