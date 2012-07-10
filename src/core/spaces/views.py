@@ -56,7 +56,10 @@ from core.spaces.forms import SpaceForm, DocForm, EventForm, EntityFormSet, \
 from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
+<<<<<<< HEAD
 from helpers.cache import get_or_insert_object_in_cache
+=======
+>>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
 from apps.ecidadania.voting.models import Poll
 #
 # RSS FEED
@@ -301,10 +304,13 @@ class ViewSpaceIndex(DetailView):
         context['messages'] = messages.get_messages(self.request)
         context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
         context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
+<<<<<<< HEAD
         #True if the request.user has admin rights on this space
         context['user_is_admin'] = (self.request.user in place.admins.all() or \
             self.request.user in place.mods.all() or self.request.user.is_staff or \
             self.request.user.is_superuser) 
+=======
+>>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
         context['polls'] = Poll.objects.filter(space=place.id)
         return context
         
