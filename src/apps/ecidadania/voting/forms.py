@@ -18,11 +18,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 from django.forms import ModelForm
-<<<<<<< HEAD
-
-=======
 from django.forms.models import modelformset_factory
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
 from apps.ecidadania.voting.models import *
 
 
@@ -32,18 +28,14 @@ class PollForm(ModelForm):
         class Meta:
             model = Poll
 
-<<<<<<< HEAD
-
 class ChoiceForm(ModelForm):
         """
         """
         class Meta:
             model = Choice
             exclude = ('poll',)
-=======
+
 # Create a formset for choices. This formset can be attached to any other form
 # but will be usually attached to PollForm
 
 ChoiceFormSet = modelformset_factory(Choice, exclude=('poll'), extra=5)
-
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d

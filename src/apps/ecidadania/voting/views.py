@@ -32,82 +32,30 @@ from django.views.generic.create_update import update_object
 from django.contrib.auth.models import User
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.forms.models import modelformset_factory, inlineformset_factory
-from core.spaces.models import Space
-from apps.ecidadania.voting.models import *
-from apps.ecidadania.voting.forms import *
 from django.core.exceptions import ObjectDoesNotExist
 from helpers.cache import get_or_insert_object_in_cache
 from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
 
-<<<<<<< HEAD
-=======
+from core.spaces.models import Space
+from apps.ecidadania.voting.models import *
+from apps.ecidadania.voting.forms import *
+
 @permission_required('voting.add_poll')
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
 def AddPoll(request, space_url):
 
     """
     Create a new poll. Only registered users belonging to a concrete group
-<<<<<<< HEAD
     are allowed to create polls. only site administrators will be able to
     post polls in the index page.
-=======
     are allowed to create polls. 
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
     
     :parameters: space_url
     :context: get_place
     """
     place = get_object_or_404(Space, url=space_url)
-
-<<<<<<< HEAD
-    if request.user in place.admins.all() or request.user.is_staff or request.user.is_superuser:
-     
-        class RequiredFormSet(BaseFormSet):
-
-            def __init__(self, *args, **kwargs):
-                super(RequiredFormSet, self).__init__(*args, **kwargs)
-                for form in self.forms:
-                    form.empty_permitted = False
-
-        ChoiceFormSet = formset_factory(ChoiceForm, max_num=10, formset=RequiredFormSet, can_delete=True)
-
-        poll_form = PollForm(request.POST or None)
-        choice_form = ChoiceFormSet(request.POST or None, prefix="choiceform")
-
-        try:
-            last_poll_id = Poll.objects.latest('id')
-            current_poll_id = last_poll_id.pk + 1
-        except ObjectDoesNotExist:
-            current_poll_id = 1
-
-        if request.user.has_perm('poll_add') or request.user.is_staff:
-            if request.method == 'POST':
-                if poll_form.is_valid() and choice_form.is_valid():
-                    poll_form_uncommited = poll_form.save(commit=False)
-                    poll_form_uncommited.space = place
-                    poll_form_uncommited.author = request.user
-
-                    saved_poll = poll_form_uncommited.save()
-                    poll_instance = get_object_or_404(Poll, pk=current_poll_id)
-
-                    for form in choice_form.forms:
-                        choice = form.save(commit=False)
-                        choice.poll = poll_instance
-                        choice.save()
-                    return redirect('/spaces/' + space_url)
-
-            return render_to_response('voting/poll_form.html',
-                                     {'form': poll_form,
-                                      'choiceform': choice_form,
-                                      'get_place': place,
-                                      'pollid': current_poll_id,},
-                                     context_instance=RequestContext(request))
-
-    return render_to_response('not_allowed.html',context_instance=RequestContext(request))
-=======
     poll_form = PollForm(request.POST or None)
-    choice_form = ChoiceFormSet(request.POST or None, queryset=Choice.objects.none())
+    choice_form = ChoiceFormSet(request.POST or None, prefix="choiceform")
 
     try:
         last_poll_id = Poll.objects.latest('id')
@@ -115,30 +63,28 @@ def AddPoll(request, space_url):
     except ObjectDoesNotExist:
         current_poll_id = 1
 
-    if request.method == 'POST':
-        if poll_form.is_valid() and choice_form.is_valid():
-            poll_form_uncommited = poll_form.save(commit=False)
-            poll_form_uncommited.space = place
-            poll_form_uncommited.author = request.user
-            saved_poll = poll_form_uncommited.save()
-            poll_instance = get_object_or_404(Poll, pk=current_poll_id)
+    if request.user.has_perm('poll_add') or request.user.is_staff:
+        if request.method == 'POST':
+            if poll_form.is_valid() and choice_form.is_valid():
+                poll_form_uncommited = poll_form.save(commit=False)
+                poll_form_uncommited.space = place
+                poll_form_uncommited.author = request.user
 
-            form_uncommited = choice_form.save(commit=False)
-            for form in form_uncommited:
-                form.poll = poll_instance
-                form.save()
-            return redirect('/spaces/' + space_url)
+                saved_poll = poll_form_uncommited.save()
+                poll_instance = get_object_or_404(Poll, pk=current_poll_id)
 
-    return render_to_response('voting/poll_form.html',
-                             {'form': poll_form,
-                              'choiceform': choice_form,
-                              'get_place': place,
-                              'pollid': current_poll_id,},
-                             context_instance=RequestContext(request))
+                for form in choice_form.forms:
+                    choice = form.save(commit=False)
+                    choice.poll = poll_instance
+                    choice.save()
 
-    #return render_to_response('not_allowed.html',context_instance=RequestContext(request))
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
-
+                return redirect('/spaces/' + space_url)
+                
+            return render_to_response('voting/poll_form.html',
+                {'form': poll_form, 'choiceform': choice_form,
+                 'get_place': place, 'pollid': current_poll_id,},
+                 context_instance=RequestContext(request))
+    return render_to_response('not_allowed.html',context_instance=RequestContext(request))
 
 def EditPoll(request, space_url, poll_id):
     """
@@ -148,7 +94,6 @@ def EditPoll(request, space_url, poll_id):
 
     if request.user in place.admins.all() or request.user.is_staff or request.user.is_superuser:
      
-<<<<<<< HEAD
         ChoiceFormSet = inlineformset_factory(Poll, Choice)
         instance = Poll.objects.get(pk=poll_id)
         poll_form = PollForm(request.POST or None, instance=instance)
@@ -175,32 +120,7 @@ def EditPoll(request, space_url, poll_id):
                                       'get_place': place,
                                       'pollid': poll_id,},
                                      context_instance=RequestContext(request))
-=======
-        instance = Poll.objects.get(pk=poll_id)
-        poll_form = PollForm(request.POST or None, instance=instance)
-        choice_form = ChoiceFormSet(request.POST or None, queryset=Choice.objects.all().filter(poll=instance))
 
-        if request.method == 'POST':
-            if poll_form.is_valid() and choice_form.is_valid():
-                poll_form_uncommited = poll_form.save(commit=False)
-                poll_form_uncommited.space = place
-                poll_form_uncommited.author = request.user
-
-                saved_poll = poll_form_uncommited.save()
-
-                form_uncommited = choice_form.save(commit=False)
-                for form in form_uncommited:
-                    form.poll = instance
-                    form.save()
-                return redirect('/spaces/' + space_url)
-
-        return render_to_response('voting/poll_edit.html',
-                                 {'form': poll_form,
-                                  'choiceform': choice_form,
-                                  'get_place': place,
-                                  'pollid': poll_id,},
-                                 context_instance=RequestContext(request))
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
 
 class DeletePoll(DeleteView):
 
@@ -250,10 +170,7 @@ class ListPolls(ListView):
 
 
 def vote(request, poll_id, space_url):
-<<<<<<< HEAD
-=======
     place = get_object_or_404(Space, url=space_url)
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
     p = get_object_or_404(Poll, pk=poll_id)
     try:
         selected_choice = p.choice_set.get(pk=request.POST['choice'])
@@ -265,10 +182,4 @@ def vote(request, poll_id, space_url):
     else:
         selected_choice.votes += 1
         selected_choice.save()
-<<<<<<< HEAD
-        return TemplateResponse(request, 'voting/poll_results.html', {'poll':p})
-
-=======
         return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
->>>>>>> 3b3ac388b7a57e17a6e718f847c0cef55dbd788d
-
