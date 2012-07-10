@@ -1746,7 +1746,7 @@ def org_organisation_represent(id, row=None, showlink=False,
         r = db(query).select(table.name,
                              limitby = (0, 1)).first()
         if r:
-            represent = "%s > %s" % (parent.name, represent)
+            represent = "%s > %s" % (r.name, represent)
 
     if not r and acronym and row.acronym:
         represent = "%s (%s)" % (represent, row.acronym)
@@ -1762,10 +1762,13 @@ def org_organisation_represent(id, row=None, showlink=False,
 def org_site_represent(id, row=None, show_link=True):
     """
         Represent a Facility in option fields or list views
-
         @param site_id: the org_site record ID or the org_site record
         @param show_link: whether to render the representation as link
     """
+    db = current.db
+    s3db = current.s3db
+    represent = current.messages.NONE
+    stable = s3db.org_site
 
     if row:
         db = current.db

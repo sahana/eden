@@ -662,8 +662,6 @@ class S3PersonModel(S3Model):
                                    requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
                                    represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
-                                   #readable=False,
-                                   #writable=False,
                                    ),
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
@@ -719,20 +717,6 @@ class S3PersonModel(S3Model):
 
 
         # Resource configuration
-        # Deployment Roles shouldn't be hardcoded in trunk models
-        #if current.auth.s3_has_role("staff_super") or \
-        #   current.auth.s3_has_role("vol_super"):
-        #    # The following fields fall under the category of
-        #    # Sensitive Information and will only be accessible by
-        #    # the super editor.
-        #    table.father_name.readable = True
-        #    table.father_name.writable = True
-        #    table.mother_name.readable = True
-        #    table.mother_name.writable = True
-        #    table.date_of_birth.readable = True
-        #    table.date_of_birth.writable = True
-        #    table.religion.readable = True
-        #    table.religion.writable = True
         self.configure(tablename,
                         super_entity=("pr_pentity", "sit_trackable"),
                         list_fields = ["id",
@@ -1374,9 +1358,6 @@ class S3PersonAddressModel(S3Model):
         # ---------------------------------------------------------------------
         # Address
         #
-        # Deployment Roles shouldn't be hardcoded in trunk models
-        #if current.auth.s3_has_role("staff_super") or \
-        #   current.auth.s3_has_role("vol_super"):
         pr_address_type_opts = {
             1:T("Current Home Address"),
             2:T("Permanent Home Address"),
@@ -1384,12 +1365,6 @@ class S3PersonAddressModel(S3Model):
             #4:T("Holiday Address"),
             9:T("Other Address")
         }
-        #else:
-        #    pr_address_type_opts = {
-        #        3:T("Office Address"),
-        #        #4:T("Holiday Address"),
-        #        9:T("Other Address")
-        #    }
 
         tablename = "pr_address"
         table = self.define_table(tablename,
@@ -2626,8 +2601,6 @@ class S3PersonDescription(S3Model):
                                                 pr_complexion_opts.get(opt, UNKNOWN_OPT)),
                              Field("ethnicity", length=64,
                                    #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
-                                   #readable=False,
-                                   #writable=False,
                                   ),   # Mayon Compatibility
 
                              # Height and weight
@@ -2723,6 +2696,14 @@ class S3PersonDescription(S3Model):
         # Field configuration
         table.pe_id.readable = False
         table.pe_id.writable = False
+        if current.auth.s3_has_role("staff_super") or \
+           current.auth.s3_has_role("vol_super"):
+            # The following fields fall under the category of
+            # Sensitive Information and will only be accessible by
+            # the super editor.
+            table.ethnicity.readable = True
+            table.ethnicity.writable = True
+
 
         # Deployment Roles shouldn't be hardcoded in trunk models
         #if current.auth.s3_has_role("staff_super") or \
@@ -3195,11 +3176,6 @@ def pr_contacts(r, **attr):
     # Contacts
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
-    # Deployment Roles shouldn't be hardcoded in trunk models
-    #if not current.auth.s3_has_role("staff_super") and \
-    #   not current.auth.s3_has_role("vol_super"):
-    #    query = query & (ctable.contact_method != "HOME_PHONE" and \
-    #                     ctable.contact_method != "SMS")
     contacts = db(query).select(ctable.id,
                                 ctable.value,
                                 ctable.contact_method,

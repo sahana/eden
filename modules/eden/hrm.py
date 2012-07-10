@@ -1562,13 +1562,7 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_training"
         table = define_table(tablename,
                              #@ToDo: Create a way to add new people to training as staff/volunteers
-                             person_id(empty=False,
-                                       comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Participant"),
-                                                            T("Start typing the Participant's name.")
-                                                            )
-                                          )
-                                ),
+                             person_id(empty=False),
                              # Just used when created from participation in an Event
                              Field("training_event_id", db.hrm_training_event,
                                    readable = False,
