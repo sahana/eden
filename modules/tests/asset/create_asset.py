@@ -64,7 +64,8 @@ class CreateAsset(SeleniumUnitTest):
                      ( "purchase_price",
                        8),
                      ( "purchase_currency",
-                       "USD"),
+                       "USD",
+                       "option"),
                      ( "comments",
                        "Test Asset")]
                      )
@@ -74,8 +75,7 @@ class CreateAsset(SeleniumUnitTest):
         self.browser.find_element_by_link_text("Set Base Facility/Site").click()
         
         self.create("asset_log", 
-                    [( "datetime",
-                       now),
+                    [
                      ( "organisation_id",
                        "Timor-Leste Red Cross Society",
                        "autocomplete"),
@@ -99,19 +99,13 @@ class CreateAsset(SeleniumUnitTest):
         #self.browser.find_element_by_id("rheader_tab_log").click()
         
         self.create("asset_log",
-                    [( "datetime",
-                       now),
-                     ( "datetime_until",
-                       now_1_week),
+                    [
                      ( "person_id",
                        "Yakobus Sereno",
                        "autocomplete"),
                      ( "site_id",
-                       "Besusu (Site)",
+                       "Besusu (Facility)",
                        "option"),
-                     #( "room-id",
-                     #  "-",
-                     #  "option"),
                      ( "cond",
                        "Good Condition",
                        "option"),
@@ -128,23 +122,13 @@ class CreateAsset(SeleniumUnitTest):
         #self.browser.find_element_by_id("rheader_tab_log").click()
         
         self.create("asset_log",
-                    [( "datetime",
-                       now_1_day),
-                     ( "datetime_until",
-                       now_1_week),
+                    [
                      ( "person_id",
                        "Margarida Martins",
                        "autocomplete"),
-                     # @ToDo: Determine how to enter checkboxes
-                     #( "check_in_to_person",
-                     #  "true",
-                     #  "option"),
                      ( "site_id",
-                       "Besusu (Site)",
+                       "Besusu (Facility)",
                        "option"),
-                     #( "room-id",
-                     #  "-",
-                     #  "option"),
                      ( "cond",
                        "Good Condition",
                        "option"),

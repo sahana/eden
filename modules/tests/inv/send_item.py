@@ -52,7 +52,7 @@ class SendItem(InvTestFunctions):
         user = "admin"
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
-                 "Manatuto Warehouse",
+                 "Manatuto Warehouse (Warehouse)",
                  "option",
                 ),
                 ("to_site_id",
@@ -70,19 +70,11 @@ class SendItem(InvTestFunctions):
                ]
         item_data = [
                      [("send_inv_item_id",
-                       "Blankets - 123457 - Australian Red Cross",
+                       "Blankets - Timor-Leste Red Cross Society",
                        "inv_widget",
                       ),
                       ("quantity",
                        "3",
-                      ),
-                     ],
-                     [("send_inv_item_id",
-                       "Jerry Cans - 123461 - Australian Red Cross",
-                       "inv_widget",
-                      ),
-                      ("quantity",
-                       "7",
                       ),
                      ],
                     ]
