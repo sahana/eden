@@ -50,7 +50,7 @@ class SendReceiveItem(InvTestFunctions):
         user = "admin"
         method = "search"
         send_data = [("site_id",
-                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "Lospalos Warehouse (Warehouse)",
                  "option",
                 ),
                 ("to_site_id",

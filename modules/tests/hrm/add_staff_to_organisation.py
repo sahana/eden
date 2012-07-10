@@ -58,7 +58,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
                        "herculandfo@icandodfmybest.com",
                        "pr_person"),
                      ( "job_role_id",
-                       "Chairman",
+                       "Security Officer",
                        "option"),
                      ]
                      )

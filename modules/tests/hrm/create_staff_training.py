@@ -48,7 +48,11 @@ class CreateStaffTraining(SeleniumUnitTest):
             @ToDo: 
             * Add Staff Participants
         """
-        
+        import datetime
+        from dateutil.relativedelta import relativedelta
+
+        #@ToDo: Move these into we2unittest
+        today = datetime.date.today().strftime("%Y-%m-%d")
         browser = self.browser
         self.login(account="admin", nexturl="hrm/course/create")
 
@@ -69,5 +73,11 @@ class CreateStaffTraining(SeleniumUnitTest):
                        "autocomplete"),
                      ( "comments",
                        "Testing comments"),
+                     ( "start_date",
+                       "2012-04-11"),
+                     ( "end_date",
+                       "2012-04-12"),
+                    ( "hours",
+                       "10"),
                      ]
                      )

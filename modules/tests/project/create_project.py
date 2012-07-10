@@ -52,7 +52,7 @@ class CreateProject(SeleniumUnitTest):
         
         self.create("project_project", 
                     [( "name",
-                       "Community Strengthening through Dance" )]
+                       "Community Strengthening through Dance2" )]
                      )
         self.create("project_organisation", 
                     [( "organisation_id",
@@ -125,7 +125,11 @@ class CreateProject(SeleniumUnitTest):
                      ( "number",
                        "100"),
                      ( "comments",
-                       "Primary Beneficiary")
+                       "Primary Beneficiary"),
+                     ("start_date",
+                      "25-Sep-2012"),
+                     ("end_date",
+                      "28-Sep-2012")
                      ]
                      )
         
@@ -139,6 +143,10 @@ class CreateProject(SeleniumUnitTest):
                      ( "number",
                        "1000"),
                      ( "comments",
-                       "Secondary Beneficiary")
+                       "Secondary Beneficiary"),
+                     ("start_date",
+                      "25-Sep-2012"),
+                     ("end_date",
+                      "28-Sep-2012")
                      ]
                      )
