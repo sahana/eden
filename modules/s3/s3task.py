@@ -240,12 +240,11 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Run the task asynchronously
-        db = current.db
-        record = db.scheduler_task.insert(task_name=task,
-                                          function_name=task,
-                                          args=json.dumps(args),
-                                          vars=json.dumps(vars),
-                                          timeout=timeout)
+        record = current.db.scheduler_task.insert(task_name=task,
+                                                  function_name=task,
+                                                  args=json.dumps(args),
+                                                  vars=json.dumps(vars),
+                                                  timeout=timeout)
 
         # Return record so that status can be polled
         return record

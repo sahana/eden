@@ -113,14 +113,14 @@ if len(pop_list) > 0:
 
         # Send Messages from Outbox
         # SMS every minute
-        s3task.schedule_task("process_outbox",
+        s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"SMS"},
                              period=120,  # seconds
                              timeout=120, # seconds
                              repeats=0    # unlimited
                             )
         # Emails every 5 minutes
-        s3task.schedule_task("process_outbox",
+        s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"EMAIL"},
                              period=300,  # seconds
                              timeout=300, # seconds

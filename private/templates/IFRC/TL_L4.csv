@@ -37,7 +37,6 @@
 ,"Acumau","Relolisa",15146,125.6453,-8.61786
 ,"Acumau","Remexio",15145,125.66626,-8.61549
 ,"Acumau","Ulaen",15148,125.63962,-8.63478
-"ADM2_NAME","ADM3_NAME","ADM4_NAME","CODE","LON","LAT"
 ,"Afaca","Afaca",15151,126.60062,-8.54558
 ,"Afaca","Boralai",15152,126.60256,-8.55183
 ,"Afaca","Loirae",15153,126.6131,-8.56321
@@ -45,17 +44,19 @@
 ,"Afaca","Quelicai",15149,126.5972,-8.54516
 ,"Afaca","Vecubuti",15150,126.59877,-8.54312
 "Baguia","Afaloicai","Afaloicai",15155,126.61111,-8.65833
+"Baguia","Afaloicai","Lacolu",15160,126.61962,-8.66926
+"Baguia","Afaloicai","Salai",15157,126.6125,-8.65972
+"Baguia","Afaloicai","Samalari",15159,126.61634,-8.66738
+"Baguia","Afaloicai","Uai-Mata",15156,126.61132,-8.66637
+"Baguia","Afaloicai","Ulolaco",15158,126.61528,-8.66944
 "Uatucarbau","Afaloicai","Afaloicai",15163,126.67101,-8.68716
 "Uatucarbau","Afaloicai","Alooli",15180,126.64028,-8.692
-"Watulari","Afaloicai","Ateuaissi",15188,126.51562,-8.68089
 "Uatucarbau","Afaloicai","Bahatata",15177,126.65131,-8.64917
 "Uatucarbau","Afaloicai","Betoria",15183,126.6666,-8.692
 "Uatucarbau","Afaloicai","Bualale",15161,126.65808,-8.6882
 "Uatucarbau","Afaloicai","Builicorae",15178,126.64724,-8.6476
 "Uatucarbau","Afaloicai","Caiualita",15172,126.62822,-8.65587
 "Uatucarbau","Afaloicai","Deralare",15162,126.66873,-8.68789
-"Watulari","Afaloicai","Ilalein",15187,126.56998,-8.70007
-"Baguia","Afaloicai","Lacolu",15160,126.61962,-8.66926
 "Uatucarbau","Afaloicai","Lecoala",15164,126.67274,-8.68552
 "Uatucarbau","Afaloicai","Liabuta",15170,126.64704,-8.66049
 "Uatucarbau","Afaloicai","Locohu",15166,126.62921,-8.673
@@ -65,19 +66,17 @@
 "Uatucarbau","Afaloicai","Nelouai",15179,126.65599,-8.64435
 "Uatucarbau","Afaloicai","Ossohuna",15173,126.62778,-8.65417
 "Uatucarbau","Afaloicai","Ossomali",15165,126.63243,-8.67551
-"Baguia","Afaloicai","Salai",15157,126.6125,-8.65972
-"Watulari","Afaloicai","Samadare",15185,126.53607,-8.73414
-"Baguia","Afaloicai","Samalari",15159,126.61634,-8.66738
 "Uatucarbau","Afaloicai","Samalari",15176,126.65694,-8.65139
-"Watulari","Afaloicai","Siquilari",15184,126.52186,-8.74964
 "Uatucarbau","Afaloicai","Tatadere",15175,126.65694,-8.65512
 "Uatucarbau","Afaloicai","Tetumori",15168,126.65799,-8.66687
-"Baguia","Afaloicai","Uai-Mata",15156,126.61132,-8.66637
 "Uatucarbau","Afaloicai","Uaimare",15169,126.66882,-8.66587
 "Uatucarbau","Afaloicai","Uaniuma",15181,126.63801,-8.69262
 "Uatucarbau","Afaloicai","Uatobita",15167,126.64815,-8.66865
+"Watulari","Afaloicai","Ateuaissi",15188,126.51562,-8.68089
+"Watulari","Afaloicai","Ilalein",15187,126.56998,-8.70007
+"Watulari","Afaloicai","Samadare",15185,126.53607,-8.73414
+"Watulari","Afaloicai","Siquilari",15184,126.52186,-8.74964
 "Watulari","Afaloicai","Uatora",15186,126.54861,-8.71184
-"Baguia","Afaloicai","Ulolaco",15158,126.61528,-8.66944
 ,"Ai-Assa","Aiasa",15194,125.31231,-9.04034
 ,"Ai-Assa","Laho",15190,125.2958,-9.05927
 ,"Ai-Assa","Mausama",15189,125.31296,-9.04451
@@ -239,12 +238,7 @@
 ,"Baboi Craic","Lauabe",15350,125.39842,-8.91185
 ,"Baboi Craic","Leloiere",15351,125.4037,-8.91228
 ,"Baboi Craic","Raibuti",15348,125.39541,-8.91699
-"Watulari","Babulo","Afloicai",15367,126.56297,-8.77664
-"Watulari","Babulo","Aliambata",15363,126.58264,-8.80411
-"Watulari","Babulo","Babulo",15366,126.56389,-8.77778
 "Same","Babulo","Babulu",15354,125.65539,-9.02318
-"Watulari","Babulo","Borolalo",15365,126.55972,-8.79167
-"Watulari","Babulo","Cucodere",15368,126.61103,-8.77522
 "Same","Babulo","Laiuru",15353,125.6535,-9.02525
 "Same","Babulo","Lianai",15361,125.63166,-9.00852
 "Same","Babulo","Maibuti",15358,125.63973,-9.01385
@@ -254,8 +248,13 @@
 "Same","Babulo","Raimerak",15360,125.64715,-9.01013
 "Same","Babulo","Searema",15357,125.64295,-9.01707
 "Same","Babulo","Turon",15352,125.66276,-9.03658
-"Watulari","Babulo","Uatolari",15369,126.57803,-8.76294
 "Same","Babulo","Umaliurai",15356,125.65272,-9.01983
+"Watulari","Babulo","Afloicai",15367,126.56297,-8.77664
+"Watulari","Babulo","Aliambata",15363,126.58264,-8.80411
+"Watulari","Babulo","Babulo",15366,126.56389,-8.77778
+"Watulari","Babulo","Borolalo",15365,126.55972,-8.79167
+"Watulari","Babulo","Cucodere",15368,126.61103,-8.77522
+"Watulari","Babulo","Uatolari",15369,126.57803,-8.76294
 "Watulari","Babulo","Vessoro",15364,126.57981,-8.80058
 ,"Bado Ho'o","Bado Ho'o",15376,126.40458,-8.60098
 ,"Bado Ho'o","Lacouma",15374,126.44794,-8.58902
@@ -335,13 +334,13 @@
 ,"Balibo Vila","Misi",15434,125.03749,-8.96631
 ,"Balibo Vila","Raihun",15444,125.05161,-8.9774
 "Nitibe","Banafi","Besatoko",15450,124.30852,-9.39097
-"Oesilo","Banafi","Cuanobe",15449,124.31873,-9.37517
 "Nitibe","Banafi","Kusi",15453,124.2875,-9.42083
 "Nitibe","Banafi","Naofe",15448,124.3041,-9.37943
 "Nitibe","Banafi","Nefomtasa",15452,124.3212,-9.40871
 "Nitibe","Banafi","Neofmetan",15447,124.30036,-9.37989
 "Nitibe","Banafi","Noetoko",15454,124.30556,-9.37222
 "Nitibe","Banafi","Nunafa",15451,124.30833,-9.39583
+"Oesilo","Banafi","Cuanobe",15449,124.31873,-9.37517
 ,"Bandudato","Bibteron",15457,125.57241,-8.77435
 ,"Bandudato","Dailor",15458,125.57057,-8.76078
 ,"Bandudato","Raifusu",15456,125.56876,-8.76331
@@ -945,19 +944,19 @@
 ,"Fahinehan","Riamori",16054,125.75584,-8.92519
 ,"Fahiria","Sarin",16058,125.57274,-8.74849
 ,"Fahiria","Sidole",16057,125.58653,-8.721
-"Remexio","Fahisoi","Aitoi",16068,125.63097,-8.67381
-"Remexio","Fahisoi","Bauhun",16071,125.63662,-8.64414
-"Remexio","Fahisoi","Berlorai",16070,125.64828,-8.64864
 "Liquidoe","Fahisoi","Dailorluta",16064,125.65132,-8.69189
 "Liquidoe","Fahisoi","Daulalan",16059,125.63123,-8.68727
-"Remexio","Fahisoi","Derohati",16069,125.63757,-8.65117
 "Liquidoe","Fahisoi","Fahisoi",16061,125.64256,-8.69199
 "Liquidoe","Fahisoi","Liquidoe",16060,125.63678,-8.69162
 "Liquidoe","Fahisoi","Lokotui",16063,125.64637,-8.6943
+"Liquidoe","Fahisoi","Tatilsame",16062,125.6383,-8.6938
+"Remexio","Fahisoi","Aitoi",16068,125.63097,-8.67381
+"Remexio","Fahisoi","Bauhun",16071,125.63662,-8.64414
+"Remexio","Fahisoi","Berlorai",16070,125.64828,-8.64864
+"Remexio","Fahisoi","Derohati",16069,125.63757,-8.65117
 "Remexio","Fahisoi","Maunahei",16066,125.64008,-8.65975
 "Remexio","Fahisoi","Mautoba",16065,125.64434,-8.6659
 "Remexio","Fahisoi","Ritutu",16067,125.63705,-8.66762
-"Liquidoe","Fahisoi","Tatilsame",16062,125.6383,-8.6938
 ,"Fatisi","Lebihin",16073,125.53166,-8.64426
 ,"Fatisi","Sabereke",16072,125.5267,-8.64573
 ,"Fatu-Besi","Hohulo",16078,125.60951,-8.80129
@@ -1124,16 +1123,16 @@
 ,"Gildapil","Nandikole",16236,125.2095,-9.1201
 ,"Gildapil","Sassa",16235,125.19583,-9.09444
 "Cailaco","Goulolo","Aitasiabe",16242,125.29051,-8.92484
-"Letefoho","Goulolo","Betorema",16246,125.41794,-8.81397
-"Letefoho","Goulolo","Gaulala",16245,125.45343,-8.81918
-"Letefoho","Goulolo","Goulolo",16248,125.4292,-8.80162
-"Letefoho","Goulolo","Kailiti",16244,125.43099,-8.82009
 "Cailaco","Goulolo","Malitia",16238,125.29941,-8.90953
 "Cailaco","Goulolo","Mubaa",16243,125.30417,-8.92917
 "Cailaco","Goulolo","Pasarema",16240,125.29372,-8.92268
 "Cailaco","Goulolo","Poetete",16239,125.30421,-8.91527
-"Letefoho","Goulolo","Raipusa",16247,125.42727,-8.81108
 "Cailaco","Goulolo","Suriubu",16241,125.3,-8.92361
+"Letefoho","Goulolo","Betorema",16246,125.41794,-8.81397
+"Letefoho","Goulolo","Gaulala",16245,125.45343,-8.81918
+"Letefoho","Goulolo","Goulolo",16248,125.4292,-8.80162
+"Letefoho","Goulolo","Kailiti",16244,125.43099,-8.82009
+"Letefoho","Goulolo","Raipusa",16247,125.42727,-8.81108
 ,"Gricenfor","Grilos",16250,125.58395,-8.55344
 ,"Gricenfor","Sentral",16249,125.58427,-8.5549
 ,"Grotu","Grotu",16252,125.60064,-9.03326
@@ -1573,36 +1572,36 @@
 ,"Leohito","Remian",16686,125.05692,-9.02003
 ,"Leohito","Ualeten",16676,125.085,-8.97453
 ,"Leohito","Wiwik",16679,125.07479,-8.99113
-"Hatu-Udo","Leolima","Aimerliu",16692,125.57328,-9.1349
-"Hatu-Udo","Leolima","Ausur",16697,125.57946,-9.12902
-"Hatu-Udo","Leolima","Bismata",16694,125.60486,-9.13203
-"Hatu-Udo","Leolima","Bonuk",16688,125.53972,-9.21533
 "Balibo","Leolima","Datolia",16707,125.05085,-8.90364
 "Balibo","Leolima","Diruana",16714,125.10059,-8.94294
 "Balibo","Leolima","Duaderok",16712,125.07917,-8.92361
 "Balibo","Leolima","Dualanok",16710,125.09091,-8.91302
 "Balibo","Leolima","Fatu Rui",16713,125.07845,-8.93091
 "Balibo","Leolima","Goubin",16717,125.07361,-8.86916
+"Balibo","Leolima","Kiru",16708,125.06984,-8.90442
+"Balibo","Leolima","Nunura",16715,125.10518,-8.95766
+"Balibo","Leolima","Oetapo",16709,125.06466,-8.90818
+"Balibo","Leolima","Semautleten",16706,125.08415,-8.89491
+"Balibo","Leolima","Sosoana",16716,125.10834,-8.95306
+"Balibo","Leolima","Sulilako",16705,125.13204,-8.92651
+"Balibo","Leolima","Taumrian",16711,125.05438,-8.9181
+"Hatu-Udo","Leolima","Aimerliu",16692,125.57328,-9.1349
+"Hatu-Udo","Leolima","Ausur",16697,125.57946,-9.12902
+"Hatu-Udo","Leolima","Bismata",16694,125.60486,-9.13203
+"Hatu-Udo","Leolima","Bonuk",16688,125.53972,-9.21533
 "Hatu-Udo","Leolima","Goulau",16700,125.58599,-9.11476
 "Hatu-Udo","Leolima","Groto",16698,125.58872,-9.11987
 "Hatu-Udo","Leolima","Hatu-Udo",16699,125.5914,-9.11958
 "Hatu-Udo","Leolima","Hutseo 1",16690,125.58631,-9.13691
 "Hatu-Udo","Leolima","Hutseo 2",16689,125.57941,-9.15373
-"Balibo","Leolima","Kiru",16708,125.06984,-8.90442
 "Hatu-Udo","Leolima","Leolima",16702,125.58594,-9.11082
 "Hatu-Udo","Leolima","Lese",16691,125.57018,-9.13435
 "Hatu-Udo","Leolima","Luru",16696,125.58523,-9.12667
 "Hatu-Udo","Leolima","Nonuboka",16693,125.59534,-9.13307
-"Balibo","Leolima","Nunura",16715,125.10518,-8.95766
-"Balibo","Leolima","Oetapo",16709,125.06466,-8.90818
 "Hatu-Udo","Leolima","Raesoro",16703,125.58114,-9.10784
 "Hatu-Udo","Leolima","Raibere",16704,125.56467,-9.06699
 "Hatu-Udo","Leolima","Raisoro",16695,125.59697,-9.13087
-"Balibo","Leolima","Semautleten",16706,125.08415,-8.89491
-"Balibo","Leolima","Sosoana",16716,125.10834,-8.95306
-"Balibo","Leolima","Sulilako",16705,125.13204,-8.92651
 "Hatu-Udo","Leolima","Surukraik",16701,125.58253,-9.11004
-"Balibo","Leolima","Taumrian",16711,125.05438,-8.9181
 ,"Leorema","Baura",16718,125.37199,-8.65378
 ,"Leorema","Baura",16725,125.38325,-8.66366
 ,"Leorema","Buku Mera",16723,125.38972,-8.64426
@@ -1666,9 +1665,6 @@
 ,"Lihu","Kamal Raihei",16777,125.41963,-8.67722
 ,"Lihu","Raidu",16776,125.42202,-8.67569
 ,"Lihu","Railaco",16779,125.42944,-8.66712
-,"Loilubo","Cautaranau",16783,126.33925,-8.57447
-,"Loilubo","Nunoti",16781,126.33683,-8.5711
-,"Loilubo","Uaidau",16782,126.33831,-8.57258
 ,"Lissadila","Darolema",16786,125.22505,-8.66565
 ,"Lissadila","Esloso",16790,125.23466,-8.67768
 ,"Lissadila","Glai",16795,125.19985,-8.73376
@@ -1715,6 +1711,9 @@
 ,"Loidahar","Kotalara",16821,125.32814,-8.59848
 ,"Loidahar","Manacolohata",16819,125.33344,-8.63492
 ,"Loidahar","Soatala",16822,125.32329,-8.62179
+,"Loilubo","Cautaranau",16783,126.33925,-8.57447
+,"Loilubo","Nunoti",16781,126.33683,-8.5711
+,"Loilubo","Uaidau",16782,126.33831,-8.57258
 ,"Lontas","Halimutin",16832,125.2375,-9.10139
 ,"Lontas","Piron",16830,125.22724,-9.1412
 ,"Lontas","Tasmil",16831,125.22876,-9.10732
@@ -1734,8 +1733,8 @@
 "Bobonaro","Lour","Galitaz",16849,125.36215,-9.07375
 "Bobonaro","Lour","Helikei",16848,125.36236,-9.07158
 "Bobonaro","Lour","Oloolo",16847,125.36165,-9.07254
-"Zumalai","Lour","Salasa",16850,125.45948,-9.13795
 "Bobonaro","Lour","Tasqolo",16846,125.35758,-9.06795
+"Zumalai","Lour","Salasa",16850,125.45948,-9.13795
 ,"Lourba","Gumer",16851,125.34335,-9.01539
 ,"Lourba","Lourba",16853,125.35487,-9.0169
 ,"Lourba","Lourbaleten",16852,125.3558,-9.01506
@@ -1951,11 +1950,11 @@
 ,"Maulau","Rita",17050,125.6151,-8.82771
 ,"Maulau","Tarabula",17051,125.66405,-8.82115
 ,"Maulau","Uculoli",17053,125.66468,-8.80332
-"Remexio","Maumeta","Aibana",17060,125.66232,-8.67474
-"Remexio","Maumeta","Aioi",17061,125.65306,-8.67056
 "Bazartete","Maumeta","Liquiçá",17065,125.34209,-8.58767
 "Bazartete","Maumeta","Nartutu",17063,125.34583,-8.58889
 "Bazartete","Maumeta","Pisulete",17064,125.34706,-8.58611
+"Remexio","Maumeta","Aibana",17060,125.66232,-8.67474
+"Remexio","Maumeta","Aioi",17061,125.65306,-8.67056
 "Remexio","Maumeta","Tukeu",17062,125.6552,-8.67053
 ,"Mehara","Louiquero",17075,127.18248,-8.39754
 ,"Mehara","Malahara",17072,127.14074,-8.47343
@@ -2299,20 +2298,20 @@
 ,"Sagadati","Selegua",17406,126.68995,-8.51962
 ,"Sagadati","Sire-Bu'u",17413,126.72375,-8.5358
 ,"Sagadati","Ulabuti",17405,126.70683,-8.51053
-"Laga","Samalari","Bubodefo",17422,126.66155,-8.4845
 "Baguia","Samalari","Ira-Osso",17427,126.66379,-8.59945
+"Baguia","Samalari","Taubere",17426,126.66938,-8.5908
+"Baucau","Samalari","Manulai",17415,126.46582,-8.52183
+"Baucau","Samalari","Sorulai",17416,126.47083,-8.51944
+"Baucau","Samalari","Visto",17414,126.47343,-8.5161
+"Baucau","Samalari","Waidua",17417,126.4811,-8.52827
+"Laga","Samalari","Bubodefo",17422,126.66155,-8.4845
 "Laga","Samalari","Lalulai",17425,126.67778,-8.49722
 "Laga","Samalari","Lari-Sula",17424,126.67044,-8.49091
 "Laga","Samalari","Laucolo",17419,126.6677,-8.47408
 "Laga","Samalari","Loilaco",17420,126.6619,-8.48261
 "Laga","Samalari","Lualari",17418,126.66731,-8.47236
-"Baucau","Samalari","Manulai",17415,126.46582,-8.52183
 "Laga","Samalari","Samalari",17423,126.66866,-8.4861
 "Laga","Samalari","Sorogua",17421,126.66528,-8.48194
-"Baucau","Samalari","Sorulai",17416,126.47083,-8.51944
-"Baguia","Samalari","Taubere",17426,126.66938,-8.5908
-"Baucau","Samalari","Visto",17414,126.47343,-8.5161
-"Baucau","Samalari","Waidua",17417,126.4811,-8.52827
 ,"Samalete","Eraulo",17429,125.51123,-8.66635
 ,"Samalete","Leburema",17428,125.51576,-8.68377
 ,"Samalete","Rihiu",17430,125.51429,-8.66051
@@ -2416,16 +2415,16 @@
 ,"Suai Loro","Sukabilaran",17528,125.26189,-9.33477
 ,"Suai Loro","Sukuloro",17525,125.26934,-9.34501
 "Aileu Vila","Suco Liurai","Bandeirahun",17536,125.53607,-8.757
-"Maubisse","Suco Liurai","Bertai",17532,125.53022,-8.8471
-"Maubisse","Suco Liurai","Erbean",17531,125.54005,-8.84917
 "Aileu Vila","Suco Liurai","Fatubesi",17539,125.5132,-8.81315
 "Aileu Vila","Suco Liurai","Fatulai",17542,125.47622,-8.79328
 "Aileu Vila","Suco Liurai","Kabasfatin",17533,125.56266,-8.73462
 "Aileu Vila","Suco Liurai","Kirilelo",17540,125.4958,-8.81731
-"Maubisse","Suco Liurai","Mamude",17530,125.52024,-8.85445
 "Aileu Vila","Suco Liurai","Maurusa",17534,125.51559,-8.74522
 "Aileu Vila","Suco Liurai","Raimaso",17537,125.51814,-8.77438
 "Aileu Vila","Suco Liurai","Rairema",17538,125.53234,-8.79207
+"Maubisse","Suco Liurai","Bertai",17532,125.53022,-8.8471
+"Maubisse","Suco Liurai","Erbean",17531,125.54005,-8.84917
+"Maubisse","Suco Liurai","Mamude",17530,125.52024,-8.85445
 ,"Suco-Liurai","Blinklala",17543,125.70933,-8.58212
 ,"Suco-Liurai","Haukeo",17545,125.71591,-8.57993
 ,"Suco-Liurai","Laraluha",17544,125.71363,-8.57803

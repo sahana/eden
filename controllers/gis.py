@@ -205,7 +205,7 @@ def location():
 
     # Custom Method
     s3db.set_method("gis", "location", method="parents",
-                           action=s3_gis_location_parents)
+                    action=s3_gis_location_parents)
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
@@ -262,6 +262,10 @@ def location():
                                                              vars=dict(child="parent")),
                                            parent_comment)
 
+            table.inherited.comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (table.inherited.label,
+                                                            T("Whether the Latitude & Longitude are inherited from a higher level in the location hierarchy rather than being a separately-entered figure.")))
+
             table.comments.comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Comments"),
                                                            T("Please use this field to record any additional information, such as Ushahidi instance IDs. Include a history of the record if it is updated.")))
@@ -310,10 +314,6 @@ def location():
                     # Same as a single zoom on a cluster
                     zoom = zoom + 2
 
-                # @ToDo: Does map make sense if the user is updating a group?
-                # If not, maybe leave it out. OTOH, might be nice to select
-                # admin regions to include in the group by clicking on them in
-                # the map. Would involve boundaries...
                 _map = gis.show_map(lat = lat,
                                     lon = lon,
                                     zoom = zoom,

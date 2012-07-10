@@ -4527,11 +4527,11 @@ def pr_url_represent(url):
 
 # -----------------------------------------------------------------------------
 def pr_image_modify(image_file,
-                 image_name,
-                 original_name,
-                 size = (None, None),
-                 to_format = None,
-                ):
+                    image_name,
+                    original_name,
+                    size = (None, None),
+                    to_format = None,
+                    ):
     """
         Resize the image passed in and store on the table
 
