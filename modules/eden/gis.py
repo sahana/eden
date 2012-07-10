@@ -330,7 +330,6 @@ class S3LocationModel(S3Model):
     def countries_represent(locations, row=None):
         """ FK representation """
 
-        db = current.db
         if isinstance(locations, Rows):
             try:
                 locations = [r.name for r in locations]
@@ -339,6 +338,7 @@ class S3LocationModel(S3Model):
                 locations = [r.id for r in locations]
         if not isinstance(locations, list):
             locations = [locations]
+        db = current.db
         table = db.gis_location
         query = table.id.belongs(locations)
         rows = db(query).select(table.name)
@@ -353,7 +353,8 @@ class S3LocationModel(S3Model):
 
         # Update the Path
         vars = form.vars
-        current.gis.update_location_tree(vars.id, vars.parent)
+        current.gis.update_location_tree(vars.id, vars.parent,
+                                         name=vars.name, level=vars.level)
         return
 
     # -------------------------------------------------------------------------
@@ -522,24 +523,6 @@ class S3LocationModel(S3Model):
 
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
-
-        # Add the Lx
-        if level == "L0":
-            vars.L0 = vars.name
-        elif level == "L1":
-            vars.L1 = vars.name
-            if parent:
-                country = db(table.id == parent).select(table.name,
-                                                        limitby=(0, 1)).first()
-                if country:
-                    vars.L0 = country.name
-        else:
-            # Get Names of ancestors at each level
-            vars = gis.get_parent_per_level(vars,
-                                            vars.id, # Will be None for Creates
-                                            feature=vars,
-                                            ids=False,
-                                            names=True)
 
         return
 
@@ -794,7 +777,7 @@ class S3LocationHierarchyModel(S3Model):
 
     names = ["gis_hierarchy",
              "gis_hierarchy_form_setup",
-            ]
+             ]
 
     def model(self):
 
@@ -970,7 +953,7 @@ class S3GISConfigModel(S3Model):
              "gis_projection_id",
              "gis_symbology_id",
              "gis_config_form_setup",
-            ]
+             ]
 
     def model(self):
 
@@ -1236,10 +1219,6 @@ class S3GISConfigModel(S3Model):
                              location_id("default_location_id",
                                          widget = S3LocationAutocompleteWidget(),
                                          requires = IS_NULL_OR(IS_LOCATION())),
-                             Field("search_level", length=2,
-                                   # @ToDo: Remove default once we have cascading working
-                                   default="L0",
-                                   requires=IS_NULL_OR(IS_IN_SET(gis.hierarchy_level_keys))),
                              Field("geocoder", "boolean",
                                    # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
                                    #readable=False,
@@ -1513,12 +1492,6 @@ class S3GISConfigModel(S3Model):
             _title="%s|%s" % (
                 T("Zoom"),
                 T("How much detail is seen. A high Zoom level means lot of detail, but not a wide area. A low Zoom level means seeing a wide area, but not a high level of detail.")))
-        table.search_level.label = T("Search Level")
-        table.search_level.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Search Level"),
-                T("The level at which Searches are filtered.")))
         table.region_location_id.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
@@ -3051,8 +3024,6 @@ class S3MapModel(S3Model):
                              s3_role_required(),       # Single Role
                              #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                              *s3_meta_fields())
-
-        #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
 
         configure(tablename,
                   onaccept=gis_layer_onaccept,

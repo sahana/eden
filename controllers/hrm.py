@@ -45,25 +45,9 @@ def human_resource():
             return True
         if r.interactive:
             if r.method == "create" and not r.component:
-                # Don't redirect
-                # Assume staff only between 16-81
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
-
-                _type.default = 1
-                _type.readable = False
-                _type.writable = False
-                table = r.table
-                field = table.site_id
-                field.comment = DIV(DIV(_class="tooltip",
-                                        _title="%s|%s|%s" % \
-                    (T("Facility"),
-                     T("The site where this position is based."),
-                     T("Enter some characters to bring up a list of possible matches."))))
-                field.writable = True
-                field.readable = True
-                table.status.writable = False
-                table.status.readable = False
-
+                redirect(URL(f="volunteer",
+                             args=args,
+                             vars=vars))
             elif r.method == "delete":
                 # Don't redirect
                 pass
@@ -121,6 +105,7 @@ def staff():
                    "person_id",
                    "job_role_id",
                    "organisation_id",
+                   "department",
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
@@ -149,7 +134,8 @@ def staff():
     def prep(r):
         if r.interactive:
             if not r.component and \
-               r.method not in ["read", "import", "update", "delete"]:
+               not r.id and \
+               r.method in [None, "create"]:
                 # Don't redirect
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
@@ -434,8 +420,8 @@ def person():
                 r.component_id = hr_id
             configure("hrm_human_resource",
                       insertable = False)
-            if not r.component_id or r.method in ("create", "update"):
-                s3base.s3_address_hide(s3db.pr_address)
+            #if not r.component_id or r.method in ("create", "update"):
+            #    s3base.s3_address_hide(s3db.pr_address)
         return True
     s3.prep = prep
 

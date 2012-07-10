@@ -1021,10 +1021,7 @@ class S3Project3WModel(S3Model):
                              Field("number_families", "integer",
                                    label = T("Number of Families")),
                              s3_comments(),
-                             # @ToDo: Once project_beneficiary can search Lx via project_location_id$location_id$L1
-                             #        or else maybe just add L1 direct to that table?
-                             #*s3_meta_fields())
-                             *(s3_lx_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
 
         table.virtualfields.append(S3ProjectLocationVirtualFields())
 
@@ -1191,7 +1188,7 @@ class S3Project3WModel(S3Model):
                   create_next=URL(c="project", f="location",
                                   args=["[id]", "beneficiary"]),
                   search_method=project_location_search,
-                  onaccept=self.project_location_onaccept,
+                  #onaccept=self.project_location_onaccept,
                   deduplicate=self.project_location_deduplicate,
                   report_options=Storage(
                                          search = advanced_search,
@@ -1290,7 +1287,7 @@ class S3Project3WModel(S3Model):
                     ))
 
         # Resource configuration
-        hierarchy = current.gis.get_location_hierarchy()
+        #hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
                   search_method=community_contact_search,
                   list_fields=["person_id",
@@ -1408,10 +1405,15 @@ class S3Project3WModel(S3Model):
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       #"activity_id$multi_activity_type_id"
-                     ]
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
+                      (T("Country"), "L0"),
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      ]
+        #lh = current.gis.get_location_hierarchy()
+        #lh = [(lh[opt], opt) for opt in lh]
+        #report_fields.extend(lh)
 
         # ---------------------------------------------------------------------
         def year_options():
@@ -1463,6 +1465,23 @@ class S3Project3WModel(S3Model):
                 years[year] = year
             return years
 
+        # ---------------------------------------------------------------------
+        def beneficiary_L1_opts():
+            """
+                Provide the options for the L1 search filter
+                @ToDo: Limit to just those project_lcoations to which the user has access
+            """
+            table = self.project_location
+            ltable = self.gis_location
+            query = (table.deleted == False) & \
+                    (table.location_id == ltable.id)
+            opts = db(query).select(ltable.L1,
+                                    orderby=ltable.L1)
+            od = OrderedDict()
+            for opt in opts:
+                od[opt.L1] = opt.L1
+            return od
+
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1487,10 +1506,9 @@ class S3Project3WModel(S3Model):
                         ),
                         S3SearchOptionsWidget(
                             name = "beneficiary_search_L1",
-                            # @ToDo
-                            #field = "project_location_id$location_id$L1",
-                            field = "project_location_id$L1",
+                            field = "L1",
                             location_level = "L1",
+                            options = beneficiary_L1_opts,
                             cols = 3,
                         ),
                     ],
@@ -1694,14 +1712,14 @@ class S3Project3WModel(S3Model):
     def project_location_onaccept(form):
         """
             Populate the Lx fields from the location_id
+            - disabled
         """
 
-        vars = form.vars
-        location_id = vars.location_id
-        if location_id:
-            # Populate the Lx fields
-            ctable = current.db.project_location
-            s3_lx_update(ctable, vars.id)
+        #vars = form.vars
+        #location_id = vars.location_id
+        #if location_id:
+        #    # Populate the Lx fields
+        #    s3_lx_update(current.db.project_location, vars.id)
 
         return
 
@@ -1887,7 +1905,7 @@ class S3ProjectActivityModel(S3Model):
                                                              T("hours"))),
                                   s3_comments(),
                                   format="%(name)s",
-                                  *(s3_lx_fields() + s3_meta_fields()))
+                                  *s3_meta_fields())
         # CRUD Strings
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
@@ -1909,18 +1927,12 @@ class S3ProjectActivityModel(S3Model):
             msg_list_empty = T("No Activities Found")
         )
 
-        # Virtual Fields
-        if mode_task:
-            table.virtualfields.append(S3ProjectActivityVirtualFields())
-
         # Search Method
         project_activity_search = S3Search(field="name")
 
         # Resource Configuration
         report_fields = []
         append = report_fields.append
-        if mode_task:
-            append((T("Organization"), "organisation"))
         append((T("Project"), "project_id"))
         append((T("Activity"), "name"))
         append((T("Activity Type"), "multi_activity_type_id"))
@@ -1931,10 +1943,6 @@ class S3ProjectActivityModel(S3Model):
         if settings.get_project_mode_drr():
             append((T("Hazard"), "project_id$multi_hazard_id"))
             append((T("HFA"), "project_id$hfa"))
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
-        append("location_id")
         list_fields = ["name",
                        "project_id",
                        "multi_activity_type_id",
@@ -1974,12 +1982,9 @@ class S3ProjectActivityModel(S3Model):
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_activity.id",
-                                                              "%(name)s",
+                                                              self.project_activity_represent,
                                                               sort=True)),
-                                      represent = lambda id, row=None: \
-                                                  s3_get_db_field_value(tablename = "project_activity",
-                                                                        fieldname = "name",
-                                                                        look_up_value = id),
+                                      represent = self.project_activity_represent,
                                       label = ACTIVITY,
                                       comment = S3AddResourceLink(ADD_ACTIVITY,
                                                                   c="project", f="activity",
@@ -1991,7 +1996,7 @@ class S3ProjectActivityModel(S3Model):
                                             label = T("Activities"),
                                             requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_activity.id",
-                                                                  "%(name)s",
+                                                                  self.project_activity_represent,
                                                                   multiple=True,
                                                                   sort=True)),
                                             widget = S3MultiSelectWidget(),
@@ -2043,6 +2048,25 @@ class S3ProjectActivityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_activity_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_activity
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
 
@@ -2055,10 +2079,8 @@ class S3ProjectActivityModel(S3Model):
             # Match activity by project_id and name
             project_id = data.project_id
             name = data.name
-            location_id = data.location_id
             query = (table.project_id == project_id) & \
-                    (table.name == name) & \
-                    (table.location_id == location_id)
+                    (table.name == name)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
         if duplicate:
@@ -2087,7 +2109,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         self.define_table(tablename,
                           self.project_project_id(requires=IS_ONE_OF(current.db,
                                                    "project_project.id",
-                                                   "%(name)s")),
+                                                   project_project_represent)),
                           Field("year", "integer", notnull=True,
                                 default=None, # make it current year
                                 requires=IS_INT_IN_RANGE(1950, 3000),
@@ -3600,14 +3622,18 @@ def project_location_represent(id, row=None):
     """
     """
 
-    if row:
+    if not id:
+        return current.messages.NONE
+
+    if not row:
+        db = current.db
+        table = db.project_location
+        row = db(table.id == id).select(table.location_id,
+                                        limitby=(0, 1)).first()
+    try:
         return current.s3db.gis_location_lx_represent(row.location_id)
-    else:
-        return current.s3db.gis_location_lx_represent( 
-               s3_get_db_field_value(tablename = "project_location",
-                                     fieldname = "location_id",
-                                     look_up_value = id)
-                )
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def task_notify(form):
@@ -3681,81 +3707,6 @@ class S3ProjectBudgetVirtualFields:
                 (pabtable.project_id == self.project_project.id)
         sum_field = pabtable.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-
-# =============================================================================
-class S3ProjectActivityVirtualFields:
-    """ Virtual fields for the project_activity table """
-
-    extra_fields = ["project_id", "location_id"]
-
-    # -------------------------------------------------------------------------
-    def organisation(self):
-        """ Name of the lead organisation of the project """
-
-        LEAD_ROLE = current.deployment_settings.get_project_organisation_lead_role()
-
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        ltable = s3db.project_organisation
-
-        query = (ltable.deleted != True) & \
-                (ltable.project_id == self.project_activity.project_id) & \
-                (ltable.role == LEAD_ROLE) & \
-                (ltable.organisation_id == otable.id)
-        org = current.db(query).select(otable.name,
-                                       limitby=(0, 1)).first()
-        if org:
-            return org.name
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L0(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L0" in parents:
-            return parents["L0"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L1(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L1" in parents:
-            return parents["L1"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L2(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L2" in parents:
-            return parents["L2"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L3(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L3" in parents:
-            return parents["L3"]
-        else:
-            return None
 
 # =============================================================================
 class S3ProjectLocationVirtualFields:
@@ -3833,28 +3784,29 @@ class S3ProjectLocationVirtualFields:
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_location_id",
+    extra_fields = ["project_location_id$location_id",
                     "project_id",
                     "start_date",
                     "end_date"]
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _get_project_location(project_location_id):
+    def _get_project_location(id):
         """
             Get the location from the database for this project_location and
             return the location tree
         """
 
-        ctable = current.s3db.project_location
-        query = (ctable.id == project_location_id)
-        project_location = current.db(query).select(ctable.location_id,
-                                                    limitby=(0,1)).first()
+        db = current.db
+        table = db.project_location
+        r = db(table.id == id).select(table.location_id,
+                                      limitby=(0,1),
+                                      cache=current.s3db.cache).first()
 
         parents = Storage()
-        if project_location:
+        if r:
             parents = current.gis.get_parent_per_level(parents,
-                                                       project_location.location_id,
+                                                       r.location_id,
                                                        ids=False,
                                                        names=True)
 
@@ -3862,40 +3814,115 @@ class S3ProjectBeneficiaryVirtualFields:
 
     # -------------------------------------------------------------------------
     def L0(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L0" in parents:
-            return parents["L0"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L0" in parents:
+        #    return parents["L0"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
-
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L0
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L1(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L1" in parents:
-            return parents["L1"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L1" in parents:
+        #    return parents["L1"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L1
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L2(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L2" in parents:
-            return parents["L2"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L2" in parents:
+        #    return parents["L2"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L2
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L3(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L3" in parents:
-            return parents["L3"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L3" in parents:
+        #    return parents["L3"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L3
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def year(self):
@@ -4286,19 +4313,10 @@ def project_rheader(r, tabs=[]):
         else:
             location = ""
 
-        if record.pe_id:
-            assignee = TR(
-                            TH("%s: " % table.pe_id.label),
-                            s3db.pr_pentity_represent(record.pe_id,
-                                                      show_label=False),
-                        )
-        else:
-            assignee = ""
-
         if record.created_by:
             creator = TR(
                             TH("%s: " % T("Created by")),
-                            s3db.pr_pentity_represent(record.created_by, show_label=False),
+                            s3_auth_user_represent(record.created_by),
                         )
         else:
             creator = ""
@@ -4329,7 +4347,6 @@ def project_rheader(r, tabs=[]):
             description,
             facility,
             location,
-            assignee,
             creator,
             time_estimated,
             time_actual,
@@ -4407,9 +4424,9 @@ def project_task_controller():
                        #search_method=task_search,
                        list_fields=list_fields)
         ltable = s3db.project_task_project
-        response.s3.filter = (ltable.project_id == project) & \
-                             (ltable.task_id == table.id) & \
-                             (table.status.belongs(statuses))
+        s3.filter = (ltable.project_id == project) & \
+                    (ltable.task_id == table.id) & \
+                    (table.status.belongs(statuses))
     else:
         crud_strings.title_list = T("All Tasks")
         crud_strings.title_search = T("All Tasks")

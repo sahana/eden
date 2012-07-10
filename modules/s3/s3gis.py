@@ -225,7 +225,7 @@ GPS_SYMBOLS = [
 # -----------------------------------------------------------------------------
 class GIS(object):
     """
-        GIS functions
+        GeoSpatial functions
     """
 
     def __init__(self):
@@ -599,13 +599,12 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-        query = (table.id == feature_id)
-        feature = db(query).select(table.id,
-                                   table.name,
-                                   table.level,
-                                   table.path,
-                                   table.parent,
-                                   limitby=(0, 1)).first()
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.name,
+                                                    table.level,
+                                                    table.path,
+                                                    table.parent,
+                                                    limitby=(0, 1)).first()
 
         return feature
 
@@ -686,11 +685,11 @@ class GIS(object):
 
             # Retrieve parents - order in which they're returned is arbitrary.
             s3db = current.s3db
-            cache = s3db.cache
             table = s3db.gis_location
             query = (table.id.belongs(reverse_path))
             fields = [table.id, table.name, table.level, table.lat, table.lon]
-            unordered_parents = current.db(query).select(cache=cache, *fields)
+            unordered_parents = current.db(query).select(cache=s3db.cache,
+                                                         *fields)
 
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
@@ -967,15 +966,15 @@ class GIS(object):
                         marker = row["gis_marker"]
                         for key in ["image", "height", "width"]:
                             cache["marker_%s" % key] = marker[key] if key in marker else None
-                    if "base" not in cache:
-                        # Default Base Layer?
-                        query = (ltable.config_id == config.id) & \
-                                (ltable.base == True) & \
-                                (ltable.enabled == True)
-                        base = db(query).select(ltable.layer_id,
-                                                limitby=(0, 1)).first()
-                        if base:
-                            cache["base"] = base.layer_id
+                    #if "base" not in cache:
+                    #    # Default Base Layer?
+                    #    query = (ltable.config_id == config.id) & \
+                    #            (ltable.base == True) & \
+                    #            (ltable.enabled == True)
+                    #    base = db(query).select(ltable.layer_id,
+                    #                            limitby=(0, 1)).first()
+                    #    if base:
+                    #        cache["base"] = base.layer_id
                 # Add NULL values for any that aren't defined, to avoid KeyErrors
                 for key in ["epsg", "units", "maxResolution", "maxExtent",
                             "marker_image", "marker_height", "marker_width",
@@ -1012,15 +1011,15 @@ class GIS(object):
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker else None
             # Default Base Layer?
-            query = (ltable.config_id == config_id) & \
-                    (ltable.base == True) & \
-                    (ltable.enabled == True)
-            base = db(query).select(ltable.layer_id,
-                                    limitby=(0, 1)).first()
-            if base:
-                cache["base"] = base.layer_id
-            else:
-                cache["base"] = None
+            #query = (ltable.config_id == config_id) & \
+            #        (ltable.base == True) & \
+            #        (ltable.enabled == True)
+            #base = db(query).select(ltable.layer_id,
+            #                        limitby=(0, 1)).first()
+            #if base:
+            #    cache["base"] = base.layer_id
+            #else:
+            #    cache["base"] = None
 
         # Store the values
         s3.gis.config = cache
@@ -1050,7 +1049,6 @@ class GIS(object):
             Returns the location hierarchy and it's labels
 
             @param: level - a specific level for which to lookup the label
-                            (this use is to be discouraged, especially for the early runs as the result won't be cached)
             @param: location - the location_id to lookup the location for
                                currently only the actual location is supported
                                @ToDo: Do a search of parents to allow this
@@ -1077,16 +1075,12 @@ class GIS(object):
         s3db = current.s3db
         table = s3db.gis_hierarchy
 
-        if level:
-            fields = [table.uuid,
-                      table[level]]
-        else:
-            fields = [table.uuid,
-                      table.L1,
-                      table.L2,
-                      table.L3,
-                      table.L4,
-                      table.L5]
+        fields = [table.uuid,
+                  table.L1,
+                  table.L2,
+                  table.L3,
+                  table.L4,
+                  table.L5]
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
@@ -1103,6 +1097,8 @@ class GIS(object):
             rows.exclude(filter)
         elif not rows:
             # prepop hasn't run yet
+            if level:
+                return level
             levels = OrderedDict()
             hierarchy_level_keys = self.hierarchy_level_keys
             for key in hierarchy_level_keys:
@@ -1130,7 +1126,10 @@ class GIS(object):
             if not _location:
                 # Cache the value
                 self.hierarchy_levels = levels
-            return levels
+            if level:
+                return levels[level]
+            else:
+                return levels
 
     # -------------------------------------------------------------------------
     def get_strict_hierarchy(self, location=None):
@@ -1326,12 +1325,11 @@ class GIS(object):
         try:
             # location is passed as integer (location_id)
             table = s3db.gis_location
-            query = (table.id == location)
-            location = db(query).select(table.id,
-                                        table.path,
-                                        table.level,
-                                        limitby=(0, 1),
-                                        cache=s3db.cache).first()
+            location = db(table.id == location).select(table.id,
+                                                       table.path,
+                                                       table.level,
+                                                       limitby=(0, 1),
+                                                       cache=s3db.cache).first()
         except:
             # location is passed as record
             pass
@@ -1345,8 +1343,10 @@ class GIS(object):
                         (ttable.location_id == location.id)
                 tag = db(query).select(ttable.value,
                                        limitby=(0, 1)).first()
-                if tag:
+                try:
                     return tag.value
+                except:
+                    return None
         else:
             parents = self.get_parents(location.id,
                                        feature=location)
@@ -1361,8 +1361,10 @@ class GIS(object):
                                     (ttable.location_id == row.id)
                             tag = db(query).select(ttable.value,
                                                    limitby=(0, 1)).first()
-                            if tag:
+                            try:
                                 return tag.value
+                            except:
+                                return None
         return None
 
     # -------------------------------------------------------------------------
@@ -1707,28 +1709,18 @@ class GIS(object):
 
             used by display_feature() in gis controller
 
-            @param feature_id: the feature ID (int) or UUID (str)
+            @param feature_id: the feature ID
             @param filter: Filter out results based on deployment_settings
         """
 
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        if isinstance(feature_id, int):
-            query = (table.id == feature_id)
-        elif isinstance(feature_id, str):
-            query = (table.uuid == feature_id)
-        else:
-            # Bail out
-            return None
-
-        feature = db(query).select(table.id,
-                                   table.lat,
-                                   table.lon,
-                                   table.parent,
-                                   table.path,
-                                   limitby=(0, 1)).first()
+        table = db.gis_location
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.parent,
+                                                    table.path,
+                                                    limitby=(0, 1)).first()
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -3225,62 +3217,87 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
-    def update_location_tree(self, location_id=None, parent_id=None):
+    def update_location_tree(self, location_id=None, parent_id=None,
+                             name=None, level=None):
         """
-            Update the Tree for GIS Locations:
-            @author: Aravind Venkatesan and Ajay Kumar Sreenivasan from NCSU
-            @summary: Using Materialized path for each node in the tree
-            http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
-            Do a lazy update of a database that does not have location paths.
-            For convenience of get_parents, return the path.
+            Update GIS Locations' Materialized path & Lx locations
+
+            returns the path
         """
 
         db = current.db
-        table = current.s3db.gis_location
+        table = db.gis_location
 
         if location_id:
+            parent = None
             if parent_id:
-                query = (table.id == parent_id)
-                parent = db(query).select(table.parent,
-                                          table.path).first()
-            # It is Somebody Else's Problem (see Douglas Adams) to assure that
-            # parent_id points to an actual location.  We just protect ourselves
-            # in case they didn't.
+                parent = db(table.id == parent_id).select(table.level,
+                                                          table.name,
+                                                          table.parent,
+                                                          table.path,
+                                                          cache=current.s3db.cache).first()
             if parent_id and parent:
                 if parent.path:
                     # Parent has a path.
-                    path = "%s/%s" % (str(parent.path), str(location_id))
+                    path = "%s/%s" % (parent.path, location_id)
                 elif parent.parent:
                     parent_path = self.update_location_tree(parent_id,
-                                                            parent.parent)
+                                                            parent.parent,
+                                                            name=parent.name,
+                                                            level=parent.level)
                     # Ok, *now* the parent has a path.
-                    path = "%s/%s" % (str(parent_path), str(location_id))
+                    path = "%s/%s" % (parent_path, location_id)
                 else:
                     # Parent has no parent.
-                    path = "%s/%s" % (str(parent_id), str(location_id))
+                    path = "%s/%s" % (parent_id, location_id)
             else:
-                path = str(location_id)
+                path = "%s" % location_id
 
-            db(table.id == location_id).update(path=path)
+            vars = Storage()
+            vars["path"] = path
+            if name:
+                # Add the Lx
+                vars["name"] = name
+                if level == "L0":
+                    vars["L0"] = name
+                elif level == "L1":
+                    vars["L1"] = name
+                    if parent:
+                        vars["L0"] = parent.name
+                else:
+                    # Get Names of ancestors at each level
+                    vars["parent"] = parent_id
+                    vars = self.get_parent_per_level(vars,
+                                                     location_id,
+                                                     feature=vars,
+                                                     ids=False,
+                                                     names=True)
+
+            db(table.id == location_id).update(**vars)
 
             return path
 
         else:
             # Do the whole database
-            query = (table.id > 0)
-            features = db(query).select(table.id,
-                                        table.gis_feature_type,
-                                        table.lat,
-                                        table.lon,
-                                        table.wkt,
-                                        table.parent)
+            # @ToDo: Do in pages to avoid memory errors
+            features = db(table.id > 0).select(table.id,
+                                               table.name,
+                                               table.level,
+                                               table.gis_feature_type,
+                                               table.lat,
+                                               table.lon,
+                                               table.wkt,
+                                               table.parent)
+            update_location_tree = self.update_location_tree
+            wkt_centroid = self.wkt_centroid
             for feature in features:
-                self.update_location_tree(feature.id, feature.parent)
-                # Also do the Bounds/Centroids/WKT
+                update_location_tree(feature.id, feature.parent,
+                                     name=feature.name, level=feature.level)
+                # Also do the Bounds/Centroid/WKT
                 form = Storage()
                 form.vars = feature
                 form.errors = Storage()
-                self.wkt_centroid(form)
+                wkt_centroid(form)
                 _vars = form.vars
                 if "lat_max" in _vars:
                     db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
