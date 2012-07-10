@@ -76,9 +76,9 @@ def s3_barchart(r, **attr):
     # Here we check to make sure we can find value in the table,
     # and name (if it was provided)
     if not r.table.get(valKey):
-        raise HTTP (400, s3mgr.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
+        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
     elif nameKey and not r.table.get(nameKey):
-        raise HTTP (400, s3mgr.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
+        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
 
     start = request.vars.get("start")
     if start:
@@ -164,7 +164,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
         CRUD can be configured per table using:
 
-            s3mgr.configure(tablename, **attr)
+            s3db.configure(tablename, **attr)
 
         *** Redirection:
 
@@ -229,18 +229,18 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
             # If the component has components itself, then use the
             # component's native controller for CRU(D) => make sure
             # you have one, or override by native=False
-            if r.component and s3mgr.model.has_components(table):
+            if r.component and s3db.has_components(table):
                 native = output.get("native", True)
             else:
                 native = False
 
             # Get table config
-            model = s3mgr.model
-            listadd = model.get_config(tablename, "listadd", True)
-            editable = model.get_config(tablename, "editable", True) and \
+            get_config = s3db.get_config
+            listadd = get_config(tablename, "listadd", True)
+            editable = get_config(tablename, "editable", True) and \
                        not auth.permission.ownership_required("update", table)
-            deletable = model.get_config(tablename, "deletable", True)
-            copyable = model.get_config(tablename, "copyable", False)
+            deletable = get_config(tablename, "deletable", True)
+            copyable = get_config(tablename, "copyable", False)
 
             # URL to open the resource
             open_url = r.resource.crud._linkto(r,

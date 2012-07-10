@@ -90,7 +90,7 @@ def blog():
 
     # Pre-process
     def prep(r):
-        s3mgr.configure(r.tablename, listadd=False)
+        s3db.configure(r.tablename, listadd=False)
         return True
     s3.prep = prep
 
@@ -123,7 +123,7 @@ def post():
         _crud.title_create = T("New Page")
         _crud.title_update = T("Edit Page")
         url = URL(c=_module, f="index")
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
                         create_next = url,
                         update_next = url)
     else:
@@ -136,14 +136,14 @@ def post():
             _crud.title_create = T("New Page")
             _crud.title_update = T("Edit Page")
             url = URL(c="default", f="index", vars={"page":page})
-            s3mgr.configure(tablename,
+            s3db.configure(tablename,
                             create_next = url,
                             update_next = url)
 
     # Custom Method to add Comments
-    s3mgr.model.set_method(module, resourcename,
-                           method="discuss",
-                           action=discuss)
+    s3db.set_method(module, resourcename,
+                    method="discuss",
+                    action=discuss)
 
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
@@ -156,7 +156,7 @@ def page():
 
     # Pre-process
     def prep(r):
-        s3mgr.configure(r.tablename, listadd=False)
+        s3db.configure(r.tablename, listadd=False)
         return True
     s3.prep = prep
 

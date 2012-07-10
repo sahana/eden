@@ -244,8 +244,7 @@ class S3Method(object):
             @param default: the default value
         """
 
-        manager = current.manager
-        return manager.model.get_config(self.tablename, key, default)
+        return current.s3db.get_config(self.tablename, key, default)
 
     # -------------------------------------------------------------------------
     @staticmethod

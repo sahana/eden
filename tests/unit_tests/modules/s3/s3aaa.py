@@ -998,15 +998,15 @@ class S3HasPermissionTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -1014,19 +1014,19 @@ class S3HasPermissionTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
@@ -1477,15 +1477,15 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -1493,19 +1493,19 @@ class S3AccessibleQueryTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
@@ -1996,7 +1996,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
             org.update(id=org_id)
-            s3mgr.model.update_super(otable, org)
+            s3db.update_super(otable, org)
 
             # Check record
             row = db(otable.id==org_id).select(limitby=(0, 1)).first()
@@ -2024,7 +2024,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
             org.update(id=org_id)
-            s3mgr.model.update_super(otable, org)
+            s3db.update_super(otable, org)
 
             # Create test component
             ftable = s3db.org_office
@@ -2033,7 +2033,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             office_id = ftable.insert(**office)
             self.assertTrue(office_id > 0)
             office.update(id=office_id)
-            s3mgr.model.update_super(ftable, office)
+            s3db.update_super(ftable, office)
 
             # Check records
             row = db(otable.id==org_id).select(limitby=(0, 1)).first()
@@ -2091,7 +2091,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
             org.update(id=org_id)
-            s3mgr.model.update_super(otable, org)
+            s3db.update_super(otable, org)
 
             # Create test component
             ftable = s3db.org_office
@@ -2100,7 +2100,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             office_id = ftable.insert(**office)
             self.assertTrue(office_id > 0)
             office.update(id=office_id)
-            s3mgr.model.update_super(ftable, office)
+            s3db.update_super(ftable, office)
 
             # Check records
             row = db(otable.id==org_id).select(limitby=(0, 1)).first()
@@ -2158,7 +2158,7 @@ class S3RecordApprovalTests(unittest.TestCase):
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
             org.update(id=org_id)
-            s3mgr.model.update_super(otable, org)
+            s3db.update_super(otable, org)
 
             has_permission = auth.s3_has_permission
 
@@ -2307,15 +2307,15 @@ class S3DelegationTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -2323,19 +2323,19 @@ class S3DelegationTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership
@@ -2501,15 +2501,15 @@ class S3AccessibleQueryTests(unittest.TestCase):
         # Create test organisations
         table = s3db.org_organisation
         record_id = table.insert(name="TestOrganisation1")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org1 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation2")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org2 = s3db.pr_get_pe_id(table, record_id)
 
         record_id = table.insert(name="TestOrganisation3")
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.org3 = s3db.pr_get_pe_id(table, record_id)
 
         # Create test records
@@ -2517,19 +2517,19 @@ class S3AccessibleQueryTests(unittest.TestCase):
         record_id = table.insert(pe_label="TestRecord1",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org1)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record1 = record_id
 
         record_id = table.insert(pe_label="TestRecord2",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org2)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record2 = record_id
 
         record_id = table.insert(pe_label="TestRecord3",
                                  owned_by_user=auth.user.id,
                                  owned_by_entity=self.org3)
-        s3mgr.model.update_super(table, Storage(id=record_id))
+        s3db.update_super(table, Storage(id=record_id))
         self.record3 = record_id
 
         # Remove session ownership

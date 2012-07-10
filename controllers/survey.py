@@ -61,7 +61,7 @@ def template():
                 table.language.writable = False
                 table.code.writable = False
             # remove CRUD generated buttons in the tabs
-            s3mgr.configure(table,
+            s3db.configure(table,
                             deletable=False)
         else:
             s3_action_buttons(r)
@@ -73,7 +73,7 @@ def template():
                 s3.actions[1]["restrict"] = [str(row.id) for row in rows]
             except IndexError: # the delete buttons doesn't exist
                 pass
-            s3mgr.configure(r.tablename,
+            s3db.configure(r.tablename,
                             orderby = "%s.status" % r.tablename,
                             create_next = URL(c="survey", f="template"),
                             update_next = URL(c="survey", f="template"),
@@ -152,7 +152,7 @@ def template():
             return
 
     # remove CRUD generated buttons in the tabs
-    s3mgr.configure("survey_template",
+    s3db.configure("survey_template",
                     listadd=False,
                     deletable=False,
                    )
@@ -182,7 +182,7 @@ def templateRead():
     s3.postp = postp
 
     # remove CRUD generated buttons in the tabs
-    s3mgr.configure("survey_template",
+    s3db.configure("survey_template",
                     listadd=False,
                     editable=False,
                     deletable=False,
@@ -200,8 +200,8 @@ def templateSummary():
     # Load Model
     resourcename = "template"
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
-    s3mgr.load("survey_complete")
+    s3db.table(tablename)
+    s3db.table("survey_complete")
     crud_strings = s3.crud_strings[tablename]
 
     def postp(r, output):
@@ -218,7 +218,7 @@ def templateSummary():
             return output
 
     # remove CRUD generated buttons in the tabs
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     listadd=False,
                     deletable=False,
                    )
@@ -240,9 +240,9 @@ def templateTranslateDownload():
     # Load Model
     resourcename = "translate"
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("survey_template")
-    s3mgr.load("survey_translate")
-    s3mgr.load("survey_complete")
+    s3db.table("survey_template")
+    s3db.table("survey_translate")
+    s3db.table("survey_complete")
 
     try:
         import xlwt
@@ -372,9 +372,9 @@ def series():
         return output
 
     # Remove CRUD generated buttons in the tabs
-    s3mgr.configure("survey_series",
+    s3db.configure("survey_series",
                     deletable = False,)
-    s3mgr.configure("survey_complete",
+    s3db.configure("survey_complete",
                     listadd=False,
                     deletable=False)
     s3.prep = prep
@@ -389,9 +389,9 @@ def export_all_responses():
     """
     """
 
-    s3mgr.load("survey_series")
-    s3mgr.load("survey_section")
-    s3mgr.load("survey_complete")
+    s3db.table("survey_series")
+    s3db.table("survey_section")
+    s3db.table("survey_complete")
     # turn off lazy translation
     # otherwise xlwt will crash if it comes across a T string
     T.lazy = False
@@ -470,8 +470,8 @@ def series_export_formatted():
     """
     """
 
-    s3mgr.load("survey_series")
-    s3mgr.load("survey_complete")
+    s3db.table("survey_series")
+    s3db.table("survey_complete")
     # Check that the series_id has been passed in
     if len(request.args) != 1:
         output = s3_rest_controller("survey",
@@ -1021,11 +1021,11 @@ def section():
 
     # Load Model
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
     table = db[tablename]
 
     def prep(r):
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         deletable = False,
                         orderby = "%s.posn" % r.tablename,
                         )
@@ -1056,7 +1056,7 @@ def question():
     """ RESTful CRUD controller """
 
     def prep(r):
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         orderby = r.tablename+".posn",
                         )
         return True
@@ -1096,8 +1096,8 @@ def newAssessment():
     # Load Model
     resourcename = "complete"
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load("survey_complete")
-    s3mgr.load("survey_series")
+    s3db.table("survey_complete")
+    s3db.table("survey_series")
     table = db[tablename]
 
     def prep(r):
@@ -1168,8 +1168,8 @@ def complete():
     """ RESTful CRUD controller """
 
     # Load Model
-    s3mgr.load("survey_complete")
-    s3mgr.load("survey_series")
+    s3db.table("survey_complete")
+    s3db.table("survey_series")
     table = db["survey_complete"]
     s3db.survey_answerlist_dataTable_pre()
 
@@ -1197,7 +1197,7 @@ def complete():
             sheetR = workbook.sheet_by_name("Assessment")
             sheetM = workbook.sheet_by_name("Metadata")
         except:
-            session.error = T("You need to use the spreadsheet which you can download from this page") 
+            session.error = T("You need to use the spreadsheet which you can download from this page")
             redirect(URL(c="survey",
                      f="newAssessment",
                      args=[],
@@ -1284,7 +1284,7 @@ def complete():
     except:
         csv_extra_fields = []
 
-    s3mgr.configure("survey_complete",
+    s3db.configure("survey_complete",
                     listadd=False,
                     deletable=False)
 
@@ -1308,7 +1308,7 @@ def analysis():
         template_id = request.args[0]
     except:
         pass
-    s3mgr.configure("survey_complete",
+    s3db.configure("survey_complete",
                     listadd=False,
                     deletable=False)
     output = s3_rest_controller(module, "complete")

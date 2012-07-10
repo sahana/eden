@@ -54,7 +54,6 @@ class S3CampDataModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
 
-        model = current.manager.model
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -109,11 +108,9 @@ class S3CampDataModel(S3Model):
 
         shelter_type_id = S3ReusableField("shelter_type_id", table,
                                           requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db,
-                                                                  "cr_shelter_type.id",
-                                                                 "%(name)s")),
-                                          represent = lambda id: \
-                                            (id and [db.cr_shelter_type[id].name] or ["None"])[0],
+                                                        IS_ONE_OF(db, "cr_shelter_type.id",
+                                                                  self.cr_shelter_type_represent)),
+                                          represent = self.cr_shelter_type_represent,
                                           comment=S3AddResourceLink(c="cr",
                                                                     f="shelter_type",
                                                                     label=ADD_SHELTER_TYPE),
@@ -175,7 +172,7 @@ class S3CampDataModel(S3Model):
                                                                       "cr_shelter_service.id",
                                                                       self.cr_shelter_service_represent,
                                                                       multiple=True)),
-                                             represent = self.cr_shelter_service_represent,
+                                             represent = self.cr_shelter_service_multirepresent,
                                              label = SHELTER_SERVICE_LABEL,
                                              comment = S3AddResourceLink(c="cr",
                                                                          f="shelter_service",
@@ -192,7 +189,7 @@ class S3CampDataModel(S3Model):
 
         tablename = "cr_shelter"
         table = db.define_table(tablename,
-                                model.super_link("site_id", "org_site"),
+                                self.super_link("site_id", "org_site"),
                                 #Field("code",
                                 #      length=10,           # Mayon compatibility
                                 #      notnull=True,
@@ -224,7 +221,7 @@ class S3CampDataModel(S3Model):
                                 Field("source",
                                       label = T("Source")),
                                 s3_comments(),
-                                *(s3_address_fields() + s3_meta_fields()))
+                                *s3_meta_fields())
 
         # CRUD strings
         if settings.get_ui_camp():
@@ -270,11 +267,10 @@ class S3CampDataModel(S3Model):
         # Reusable field
         shelter_id = S3ReusableField("shelter_id", table,
                                      requires = IS_NULL_OR(
-                                        IS_ONE_OF(db, "cr_shelter.id",
-                                                  "%(name)s",
-                                                  sort=True)),
-                                     represent = lambda id: \
-                                        (id and [db.cr_shelter[id].name] or ["None"])[0],
+                                                    IS_ONE_OF(db, "cr_shelter.id",
+                                                              self.cr_shelter_represent,
+                                                              sort=True)),
+                                     represent = self.cr_shelter_represent,
                                      ondelete = "RESTRICT",
                                      comment=S3AddResourceLink(c="cr",
                                                                f="shelter",
@@ -288,16 +284,16 @@ class S3CampDataModel(S3Model):
 
         # Add Shelters as component of Services, Types as a simple way
         # to get reports showing shelters per type, etc.
-        model.add_component(tablename,
+        self.add_component(tablename,
                             cr_shelter_type="shelter_type_id")
                             # @todo: can't use a list:reference type for a
                             # component link => use a link table instead!
                             #cr_shelter_service="shelter_service_id")
 
-        model.configure(tablename,
+        self.configure(tablename,
                         super_entity="org_site",
                         # Update the Address Fields
-                        onvalidation=s3_address_onvalidation,
+                        #onvalidation=s3_address_onvalidation,
                         list_fields=["id",
                                      "name",
                                      "status",
@@ -305,10 +301,10 @@ class S3CampDataModel(S3Model):
                                      "shelter_service_id",
                                      "capacity",
                                      "population",
-                                     "location_id",
-                                     "L1",
-                                     "L2",
-                                     "L3",
+                                     "location_id$addr_street",
+                                     "location_id$L1",
+                                     "location_id$L2",
+                                     "location_id$L3",
                                      "person_id",
                                     ])
 
@@ -326,9 +322,66 @@ class S3CampDataModel(S3Model):
 
         return
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.cr_shelter
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_type_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.cr_shelter_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_service_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.cr_shelter_service
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
     # -----------------------------------------------------------------------------
     @staticmethod
-    def cr_shelter_service_represent(shelter_service_ids):
+    def cr_shelter_service_multirepresent(shelter_service_ids):
         """
         """
         if not shelter_service_ids:

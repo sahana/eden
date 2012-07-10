@@ -122,14 +122,13 @@ class S3PersonEntity(S3Model):
         db = current.db
         T = current.T
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_entity = self.super_entity
-        super_key = model.super_key
-        super_link = model.super_link
+        super_key = self.super_key
+        super_link = self.super_link
 
         YES = T("yes") #current.messages.YES
         NO = T("no") #current.messages.NO
@@ -518,10 +517,9 @@ class S3PersonModel(S3Model):
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
         define_table = self.define_table
-        super_link = model.super_link
-        add_component = model.add_component
+        super_link = self.super_link
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Person
@@ -580,9 +578,6 @@ class S3PersonModel(S3Model):
         else:
             last_name_validate = None
 
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = settings.get_L10n_date_format()
-
         tablename = "pr_person"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
@@ -604,8 +599,7 @@ class S3PersonModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    default=False),
-                             Field("first_name",
-                                   notnull=True,
+                             Field("first_name", notnull=True,
                                    default = "?" if current.auth.permission.format != "html" else "",
                                    length=64, # Mayon Compatibility
                                    # NB Not possible to have an IS_NAME() validator here
@@ -615,22 +609,20 @@ class S3PersonModel(S3Model):
                                                   _title="%s|%s" % (T("First Name"),
                                                                     T("The first or only name of the person (mandatory)."))),
                                    label = T("First Name")),
-                             Field("middle_name",
-                                   length=64, # Mayon Compatibility
+                             Field("middle_name", length=64, # Mayon Compatibility
                                    label = T("Middle Name")),
-                             Field("last_name",
-                                   length=64, # Mayon Compatibility
+                             Field("last_name", length=64, # Mayon Compatibility
                                    label = T("Last Name"),
                                    requires = last_name_validate),
-                             Field("initials",
-                                   length=8,
+                             Field("initials", length=8,
                                    label = T("Initials")),
-                             Field("preferred_name",
+                             Field("preferred_name", length=64, # Mayon Compatibility
                                    label = T("Preferred Name"),
                                    comment = DIV(DIV(_class="tooltip",
                                                      _title="%s|%s" % (T("Preferred Name"),
                                                                        T("The name to be used when calling for or directly addressing the person (optional).")))),
-                                   length=64), # Mayon Compatibility
+                                   ),
+                             # @ToDo: Move these fields to a component to keep the main heavily-used table as clean as possible
                              Field("local_name",
                                    label = T("Local Name"),
                                     comment = DIV(DIV(_class="tooltip",
@@ -638,9 +630,13 @@ class S3PersonModel(S3Model):
                                                                         T("Name of the person in local language and script (optional)."))))),
                              Field("father_name",
                                    label = T("Name of Father"),
+                                   readable = False,
+                                   writable = False,
                                   ),
                              Field("mother_name",
                                    label = T("Name of Mother"),
+                                   readable = False,
+                                   writable = False,
                                   ),
                              pr_gender(label = T("Gender")),
                              s3_date("date_of_birth",
@@ -648,9 +644,9 @@ class S3PersonModel(S3Model):
                                      past = 1320,  # Months, so 110 years
                                      ),
                              pr_age_group(
-                                    readable = False,
-                                    writable = False,
-                                ),
+                                     readable = False,
+                                     writable = False,
+                                    ),
                              Field("nationality",
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                                 lambda: gis.get_countries(key_type="code"),
@@ -666,12 +662,13 @@ class S3PersonModel(S3Model):
                                    requires = IS_NULL_OR(IS_IN_SET(pr_religion_opts)),
                                    represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
+                                   #readable=False,
+                                   #writable=False,
                                    ),
                              Field("occupation", length=128, # Mayon Compatibility
                                    label = T("Profession"),
                                    ),
-                             Field("opt_in",
-                                   "string", # list of mailing lists which link to teams
+                             Field("opt_in", "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
                                    comment = DIV(DIV(_class="tooltip",
@@ -679,6 +676,7 @@ class S3PersonModel(S3Model):
                                                                        T("By selecting this you agree that we may contact you.")))),
                                    ),
                              s3_comments(),
+                             # @ToDo: Remove the lx_fields when we can Search person_id$location_id$Lx
                              *(s3_lx_fields() + s3_meta_fields()))
 
         # CRUD Strings
@@ -719,8 +717,23 @@ class S3PersonModel(S3Model):
                                        "identity.value"
                                       ])
 
+
         # Resource configuration
-        model.configure(tablename,
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
+        #    # The following fields fall under the category of
+        #    # Sensitive Information and will only be accessible by
+        #    # the super editor.
+        #    table.father_name.readable = True
+        #    table.father_name.writable = True
+        #    table.mother_name.readable = True
+        #    table.mother_name.writable = True
+        #    table.date_of_birth.readable = True
+        #    table.date_of_birth.writable = True
+        #    table.religion.readable = True
+        #    table.religion.writable = True
+        self.configure(tablename,
                         super_entity=("pr_pentity", "sit_trackable"),
                         list_fields = ["id",
                                        "first_name",
@@ -745,11 +758,12 @@ class S3PersonModel(S3Model):
 
         person_id = S3ReusableField("person_id", table,
                                     sortby = ["first_name", "middle_name", "last_name"],
-                                    requires = IS_NULL_OR(IS_ONE_OF(db, "pr_person.id",
-                                                                    pr_person_represent,
-                                                                    orderby="pr_person.first_name",
-                                                                    sort=True,
-                                                                    error_message=T("Person must be specified!"))),
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "pr_person.id",
+                                                          pr_person_represent,
+                                                          orderby="pr_person.first_name",
+                                                          sort=True,
+                                                          error_message=T("Person must be specified!"))),
                                     represent = pr_person_represent,
                                     label = T("Person"),
                                     comment = person_id_comment,
@@ -955,8 +969,7 @@ class S3GroupModel(S3Model):
         db = current.db
 
         messages = current.messages
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -973,7 +986,7 @@ class S3GroupModel(S3Model):
 
         tablename = "pr_group"
         table = define_table(tablename,
-                             model.super_link("pe_id", "pr_pentity"),
+                             self.super_link("pe_id", "pr_pentity"),
                              Field("group_type", "integer",
                                    requires = IS_IN_SET(pr_group_types, zero=None),
                                    default = 4,
@@ -1038,15 +1051,14 @@ class S3GroupModel(S3Model):
                   extra="description")
 
         # Reusable fields
-        group_represent = lambda id: \
-            (id and [db.pr_group[id].name] or [messages.NONE])[0]
         group_id = S3ReusableField("group_id", table,
                                    sortby="name",
-                                   requires = IS_NULL_OR(IS_ONE_OF(db, "pr_group.id",
-                                                                   "%(id)s: %(name)s",
-                                                                   filterby="system",
-                                                                   filter_opts=(False,))),
-                                   represent = group_represent,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "pr_group.id",
+                                                          self.group_represent,
+                                                          filterby="system",
+                                                          filter_opts=(False,))),
+                                   represent = self.group_represent,
                                    comment=S3AddResourceLink(c="pr",
                                                              f="group",
                                                              label=crud_strings.pr_group.label_create_button,
@@ -1055,7 +1067,7 @@ class S3GroupModel(S3Model):
                                    ondelete = "RESTRICT")
 
         # Components
-        model.add_component("pr_group_membership", pr_group="group_id")
+        self.add_component("pr_group_membership", pr_group="group_id")
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1126,9 +1138,28 @@ class S3GroupModel(S3Model):
         #
         return Storage(
             pr_group_id = group_id,
-            pr_group_represent = group_represent,
+            pr_group_represent = self.group_represent,
             pr_mailing_list_crud_strings = mailing_list_crud_strings
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.pr_group
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1199,9 +1230,8 @@ class S3ContactModel(S3Model):
         T = current.T
         db = current.db
 
-        model = current.manager.model
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Contact
@@ -1226,7 +1256,8 @@ class S3ContactModel(S3Model):
                              Field("value",
                                    label= T("Value"),
                                    notnull=True,
-                                   requires = IS_NOT_EMPTY()),
+                                   requires = IS_NOT_EMPTY(),
+                                  ),
                              Field("priority", "integer",
                                    label= T("Priority"),
                                    comment = DIV(_class="tooltip",
@@ -1260,7 +1291,7 @@ class S3ContactModel(S3Model):
             msg_list_empty = T("No contact information available"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         onvalidation=self.contact_onvalidation,
                         deduplicate=self.contact_deduplicate,
                         list_fields=["id",
@@ -1333,16 +1364,19 @@ class S3PersonAddressModel(S3Model):
 
     names = ["pr_address",
              "pr_address_type_opts"
-            ]
+             ]
 
     def model(self):
 
         T = current.T
-        model = current.manager.model
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Address
         #
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
         pr_address_type_opts = {
             1:T("Current Home Address"),
             2:T("Permanent Home Address"),
@@ -1350,10 +1384,16 @@ class S3PersonAddressModel(S3Model):
             #4:T("Holiday Address"),
             9:T("Other Address")
         }
+        #else:
+        #    pr_address_type_opts = {
+        #        3:T("Office Address"),
+        #        #4:T("Holiday Address"),
+        #        9:T("Other Address")
+        #    }
 
         tablename = "pr_address"
         table = self.define_table(tablename,
-                                  model.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("type", "integer",
                                         requires = IS_IN_SET(pr_address_type_opts, zero=None),
                                         widget = RadioWidget.widget,
@@ -1364,7 +1404,7 @@ class S3PersonAddressModel(S3Model):
                                                         current.messages.UNKNOWN_OPT)),
                                   self.gis_location_id(),
                                   s3_comments(),
-                                  *(s3_address_fields() + s3_meta_fields()))
+                                  *s3_meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
@@ -1373,7 +1413,7 @@ class S3PersonAddressModel(S3Model):
                                          filter_opts=("pr_person", "pr_group"))
 
         # Field configuration
-        if not current.deployment_settings.get_gis_building_name():
+        if not settings.get_gis_building_name():
             table.building_name.readable = False
 
         # CRUD Strings
@@ -1393,20 +1433,20 @@ class S3PersonAddressModel(S3Model):
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
         # Resource configuration
-        model.configure(tablename,
-                        onaccept=self.address_onaccept,
-                        onvalidation=s3_address_onvalidation,
-                        deduplicate=self.address_deduplicate,
-                        list_fields = ["id",
-                                       "type",
-                                       "address",
-                                       "postcode",
-                                       #"L4",
-                                       "L3",
-                                       "L2",
-                                       "L1",
-                                       "L0"
-                                       ])
+        self.configure(tablename,
+                       onaccept=self.address_onaccept,
+                       onvalidation=s3_address_onvalidation,
+                       deduplicate=self.address_deduplicate,
+                       list_fields = ["id",
+                                      "type",
+                                      (T("Address"), "location_id$addr_street"),
+                                      (settings.get_ui_label_postcode(), "location_id$addr_postcode"),
+                                      #"location_id$L4",
+                                      "location_id$L3",
+                                      "location_id$L2",
+                                      "location_id$L1",
+                                      (T("Country"), "location_id$L0"),
+                                      ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -1456,28 +1496,28 @@ class S3PersonAddressModel(S3Model):
                     # Update the Lx fields
                     s3_lx_update(table, person.id)
 
-            if person and str(vars.type) == "1": # Home Address
-                if settings.has_module("hrm"):
-                    # Also check for any Volunteer HRM record(s)
-                    htable = s3db.hrm_human_resource
-                    query = (htable.person_id == person.id) & \
-                            (htable.type == 2) & \
-                            (htable.deleted != True)
-                    hrs = db(query).select(htable.id)
-                    for hr in hrs:
-                        db(htable.id == hr.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        s3_lx_update(htable, hr.id)
-                if settings.has_module("member"):
-                    # Also check for any Member record(s)
-                    mtable = s3db.member_membership
-                    query = (mtable.person_id == person.id) & \
-                            (mtable.deleted != True)
-                    members = db(query).select(mtable.id)
-                    for member in members:
-                        db(mtable.id == member.id).update(location_id=location_id)
-                        # Update the Lx fields
-                        s3_lx_update(mtable, member.id)
+            #if person and str(vars.type) == "1": # Home Address
+            #    if settings.has_module("hrm"):
+            #        # Also check for any Volunteer HRM record(s)
+            #        htable = s3db.hrm_human_resource
+            #        query = (htable.person_id == person.id) & \
+            #                (htable.type == 2) & \
+            #                (htable.deleted != True)
+            #        hrs = db(query).select(htable.id)
+            #        for hr in hrs:
+            #            db(htable.id == hr.id).update(location_id=location_id)
+            #            # Update the Lx fields
+            #            s3_lx_update(htable, hr.id)
+                #if settings.has_module("member"):
+                #    # Also check for any Member record(s)
+                #    mtable = s3db.member_membership
+                #    query = (mtable.person_id == person.id) & \
+                #            (mtable.deleted != True)
+                #    members = db(query).select(mtable.id)
+                #    for member in members:
+                #        db(mtable.id == member.id).update(location_id=location_id)
+                #        # Update the Lx fields
+                #        s3_lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -1494,11 +1534,14 @@ class S3PersonAddressModel(S3Model):
                 return
 
             table = item.table
+            db = current.db
+            ltable = db.gis_location
             query = (table.pe_id == pe_id) & \
-                    (table.address == address) & \
+                    (ltable.id == table.location_id) & \
+                    (ltable.addr_street == address) & \
                     (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
+            duplicate = db(query).select(table.id,
+                                         limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -1513,7 +1556,6 @@ class S3PersonImageModel(S3Model):
     def model(self):
 
         T = current.T
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Image
@@ -1529,7 +1571,7 @@ class S3PersonImageModel(S3Model):
 
         tablename = "pr_image"
         table = self.define_table(tablename,
-                                  model.super_link("pe_id", "pr_pentity"),
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("profile", "boolean",
                                         default = False,
                                         label = T("Profile Picture?")
@@ -1576,7 +1618,7 @@ class S3PersonImageModel(S3Model):
             msg_list_empty = T("No Images currently registered"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         onaccept = self.pr_image_onaccept,
                         onvalidation = self.pr_image_onvalidation,
                         ondelete = self.pr_image_ondelete,
@@ -2391,8 +2433,7 @@ class S3PersonDescription(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Note
@@ -2455,7 +2496,7 @@ class S3PersonDescription(S3Model):
             msg_list_empty = T("No entry available"))
 
         # Resource configuration
-        model.configure(tablename,
+        self.configure(tablename,
                         list_fields=["id",
                                      "timestmp",
                                      "location_id",
@@ -2583,9 +2624,11 @@ class S3PersonDescription(S3Model):
                                    label = T("Complexion"),
                                    represent = lambda opt: \
                                                 pr_complexion_opts.get(opt, UNKNOWN_OPT)),
-                             Field("ethnicity",
+                             Field("ethnicity", length=64,
                                    #requires=IS_NULL_OR(IS_IN_SET(pr_ethnicity_opts)),
-                                   length=64),   # Mayon Compatibility
+                                   #readable=False,
+                                   #writable=False,
+                                  ),   # Mayon Compatibility
 
                              # Height and weight
                              Field("height", "integer",
@@ -2612,7 +2655,6 @@ class S3PersonDescription(S3Model):
                                                  _title="%s|%s" % (T("Weight"),
                                                                    T("The weight in kg.")))
                                    ),
-
                              # Blood type, eye color
                              Field("blood_type",
                                    requires = IS_EMPTY_OR(IS_IN_SET(pr_blood_type_opts)),
@@ -2681,6 +2723,16 @@ class S3PersonDescription(S3Model):
         # Field configuration
         table.pe_id.readable = False
         table.pe_id.writable = False
+
+        # Deployment Roles shouldn't be hardcoded in trunk models
+        #if current.auth.s3_has_role("staff_super") or \
+        #   current.auth.s3_has_role("vol_super"):
+        #    # The following fields fall under the category of
+        #    # Sensitive Information and will only be accessible by
+        #    # the super editor.
+        #    table.ethnicity.readable = True
+        #    table.ethnicity.writable = True
+
 
         # CRUD Strings
         # ?
@@ -3143,6 +3195,11 @@ def pr_contacts(r, **attr):
     # Contacts
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
+    # Deployment Roles shouldn't be hardcoded in trunk models
+    #if not current.auth.s3_has_role("staff_super") and \
+    #   not current.auth.s3_has_role("vol_super"):
+    #    query = query & (ctable.contact_method != "HOME_PHONE" and \
+    #                     ctable.contact_method != "SMS")
     contacts = db(query).select(ctable.id,
                                 ctable.value,
                                 ctable.contact_method,

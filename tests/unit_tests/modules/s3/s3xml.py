@@ -9,12 +9,43 @@ import unittest
 from gluon.contrib import simplejson as json
 
 # =============================================================================
+class S3TreeBuilderTests(unittest.TestCase):
+
+    def testEmptyTree(self):
+
+        xml = current.xml
+
+        tree = xml.tree(None)
+        root = tree.getroot()
+
+        attrib = root.attrib
+        self.assertEqual(root.tag, xml.TAG.root)
+        self.assertEqual(len(attrib), 1)
+        self.assertEqual(attrib["success"], "false")
+
+    def testIncludeMaxBounds(self):
+
+        xml = current.xml
+
+        tree = xml.tree(None, maxbounds=True)
+        root = tree.getroot()
+
+        attrib = root.attrib
+        self.assertEqual(root.tag, xml.TAG.root)
+        self.assertEqual(len(attrib), 5)
+        self.assertEqual(attrib["success"], "false")
+        self.assertTrue("latmin" in attrib)
+        self.assertTrue("latmax" in attrib)
+        self.assertTrue("lonmin" in attrib)
+        self.assertTrue("lonmax" in attrib)
+
+# =============================================================================
 class S3JSONMessageTests(unittest.TestCase):
 
     def testDefaultSuccessMessage(self):
         """ Test whether 200 issued by default if success=True """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message()
         msg = json.loads(msg)
@@ -25,7 +56,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testDefaultErrorMessage(self):
         """ Test whether 404 issued by default if success=False """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(False)
         msg = json.loads(msg)
@@ -36,7 +67,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedSuccessMessage(self):
         """ Test success message with specified message text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(True, message="Test")
         msg = json.loads(msg)
@@ -48,7 +79,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedSuccessMessageWithResultNumber(self):
         """ Test success message with specified message text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(True, message="Test", results=40)
         msg = json.loads(msg)
@@ -61,7 +92,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedSuccessMessageWithSenderID(self):
         """ Test success message with specified message text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(True, message="Test", sender="XYZ")
         msg = json.loads(msg)
@@ -74,7 +105,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedSuccessMessageWithCreatedIDs(self):
         """ Test success message with specified message text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(True, message="Test", created=[1, 2, 3])
         msg = json.loads(msg)
@@ -87,7 +118,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedSuccessMessageWithUpdatedIDs(self):
         """ Test success message with specified message text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(True, message="Test", updated=[1, 2, 3])
         msg = json.loads(msg)
@@ -100,7 +131,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedErrorMessage(self):
         """ Test error message with specified error code and text """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(False, 405, message="Test")
         msg = json.loads(msg)
@@ -112,7 +143,7 @@ class S3JSONMessageTests(unittest.TestCase):
     def testExtendedErrorMessageWithTree(self):
         """ Test error message with specified error code, text and JSON tree """
 
-        json_message = s3mgr.xml.json_message
+        json_message = current.xml.json_message
 
         msg = json_message(False, 405, message="Test", tree='{"test": "value"}')
         msg = json.loads(msg)
@@ -142,6 +173,7 @@ if __name__ == "__main__":
 
     run_suite(
         S3JSONMessageTests,
+        S3TreeBuilderTests,
     )
 
 # END ========================================================================

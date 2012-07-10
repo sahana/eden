@@ -66,8 +66,7 @@ class S3ProcurementModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         messages = current.messages
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
 
         # =====================================================================
         # Planned Procurements
@@ -81,7 +80,7 @@ class S3ProcurementModel(S3Model):
 
         tablename = "proc_plan"
         table = define_table(tablename,
-                             model.super_link("site_id", "org_site",
+                             self.super_link("site_id", "org_site",
                                               #label = T("Inventory"),
                                               label = T("Office"),
                                               default = auth.user.site_id if auth.is_logged_in() else None,
@@ -153,7 +152,7 @@ class S3ProcurementModel(S3Model):
                                   ondelete = "CASCADE")
 
         # Items as a component of Plans
-        model.add_component("proc_plan_item",
+        self.add_component("proc_plan_item",
                             proc_plan="plan_id")
 
         # =====================================================================
@@ -184,7 +183,7 @@ class S3ProcurementModel(S3Model):
                              *s3_meta_fields())
 
         #table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename)
-        
+
         # CRUD strings
         crud_strings[tablename] = Storage(
             title_create = T("Add Item to Procurement Plan"),

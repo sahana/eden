@@ -45,25 +45,9 @@ def human_resource():
             return True
         if r.interactive:
             if r.method == "create" and not r.component:
-                # Don't redirect
-                # Assume staff only between 16-81
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
-
-                _type.default = 1
-                _type.readable = False
-                _type.writable = False
-                table = r.table
-                field = table.site_id
-                field.comment = DIV(DIV(_class="tooltip",
-                                        _title="%s|%s|%s" % \
-                    (T("Facility"),
-                     T("The site where this position is based."),
-                     T("Enter some characters to bring up a list of possible matches."))))
-                field.writable = True
-                field.readable = True
-                table.status.writable = False
-                table.status.readable = False
-
+                redirect(URL(f="volunteer",
+                             args=args,
+                             vars=vars))
             elif r.method == "delete":
                 # Don't redirect
                 pass
@@ -121,6 +105,7 @@ def staff():
                    "person_id",
                    "job_role_id",
                    "organisation_id",
+                   "department",
                    "site_id",
                    #"site_contact",
                    (T("Email"), "email"),
@@ -136,19 +121,21 @@ def staff():
             (table.end_date < (request.utcnow + datetime.timedelta(weeks=4)))
         s3.crud_strings[tablename].title_list = T("Staff with Contracts Expiring in the next Month")
         # Remove the big Add button
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
                         insertable=False)
     # Remove Type filter from the Search widget
-    human_resource_search = s3mgr.model.get_config(tablename,
-                                                   "search_method")
+    human_resource_search = s3db.get_config(tablename,
+                                            "search_method")
     human_resource_search.advanced.pop(1)
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     list_fields = list_fields,
                     search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
-            if r.method == "create" and not r.component:
+            if not r.component and \
+               not r.id and \
+               r.method in [None, "create"]:
                 # Don't redirect
                 # Assume staff only between 16-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-192)
@@ -209,9 +196,8 @@ def person():
         - includes components relevant to HRM
     """
 
-    model = s3mgr.model
-    configure = model.configure
-    set_method = model.set_method
+    configure = s3db.configure
+    set_method = s3db.set_method
 
     # Custom Method for Contacts
     set_method("pr", resourcename,
@@ -226,7 +212,7 @@ def person():
 
     if settings.has_module("asset"):
         # Assets as component of people
-        model.add_component("asset_asset",
+        s3db.add_component("asset_asset",
                             pr_person="assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
@@ -314,7 +300,7 @@ def person():
             hook in s3mgr
         """
         resource, tree = data
-        xml = s3mgr.xml
+        xml = current.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
         if s3.import_replace:
@@ -334,7 +320,7 @@ def person():
                     org_name = org.get("value", None) or org.text
                     if org_name:
                         try:
-                            org_name = json.loads(s3mgr.xml.xml_decode(org_name))
+                            org_name = json.loads(xml.xml_decode(org_name))
                         except:
                             pass
                     if org_name:
@@ -344,7 +330,7 @@ def person():
                                 (htable.organisation_id == otable.id) & \
                                 (htable.type == group)
                         resource = s3mgr.define_resource("hrm", "human_resource", filter=query)
-                        ondelete = model.get_config("hrm_human_resource", "ondelete")
+                        ondelete = s3db.get_config("hrm_human_resource", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
 
     s3mgr.import_prep = import_prep
@@ -434,8 +420,8 @@ def person():
                 r.component_id = hr_id
             configure("hrm_human_resource",
                       insertable = False)
-            if not r.component_id or r.method in ("create", "update"):
-                s3base.s3_address_hide(s3db.pr_address)
+            #if not r.component_id or r.method in ("create", "update"):
+            #    s3base.s3_address_hide(s3db.pr_address)
         return True
     s3.prep = prep
 
@@ -487,7 +473,7 @@ def person_search():
     elif group == "volunteer":
         s3.filter = (s3db.hrm_human_resource.type == 2)
 
-    s3mgr.configure("hrm_human_resource",
+    s3db.configure("hrm_human_resource",
                     # S3HRSearch
                     search_method = s3db.hrm_autocomplete_search,
                    )
@@ -556,11 +542,11 @@ def group():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    s3mgr.configure(tablename, main="name", extra="description",
+    s3db.configure(tablename, main="name", extra="description",
                     # Redirect to member list when a new group has been created
                     create_next = URL(f="group",
                                       args=["[id]", "group_membership"]))
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "person_id",
                                  "group_head",

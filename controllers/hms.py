@@ -58,10 +58,10 @@ def hospital():
 
     # Load Models to add tabs
     if deployment_settings.has_module("inv"):
-        s3mgr.load("inv_inv_item")
+        s3db.table("inv_inv_item")
     elif deployment_settings.has_module("req"):
         # (gets loaded by Inv if available)
-        s3mgr.load("req_req")
+        s3db.table("req_req")
 
     # Pre-processor
     def prep(r):
@@ -107,12 +107,6 @@ def hospital():
             table.access_status.comment =  DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Road Conditions"),
                                   T("Describe the condition of the roads to your hospital."))))
-
-            if r.method and r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                #s3base.s3_address_hide(r.table)   # Once separate fields have been migrated from location_id
-                pass
 
             if r.component:
                 if r.component.name == "inv_item" or \

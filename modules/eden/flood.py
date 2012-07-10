@@ -48,9 +48,6 @@ class S3FloodModel(S3Model):
         T = current.T
 
         # Shortcuts
-        # model = current.manager.model
-        #add_component = model.add_component
-        #configure = model.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 

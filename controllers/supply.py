@@ -69,7 +69,7 @@ def item_pack():
 
     tablename = "%s_%s" % (module, resourcename)
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     listadd=False)
 
     return s3_rest_controller()
@@ -83,7 +83,7 @@ def brand():
 # =============================================================================
 def item():
     """ RESTful CRUD controller """
-    
+
     # Defined in the Model for use from Multiple Controllers for unified menus
     return s3db.supply_item_controller()
 

@@ -38,38 +38,19 @@ def human_resource():
     s3.filter = (_type == 2)
 
     # Custom method for Service Record
-    s3mgr.model.set_method("hrm", "human_resource",
-                           method="form",
-                           action=s3db.hrm_service_record
-                           )
+    s3db.set_method("hrm", "human_resource",
+                    method="form",
+                    action=s3db.hrm_service_record
+                   )
 
     def prep(r):
         if r.method == "form":
             return True
         if r.interactive:
             if r.method == "create" and not r.component:
-                # Don't redirect
-                # Assume volunteers only between 12-81
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
-
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
-                table = r.table
-                _type.default = 2
-                _type.readable = False
-                _type.writable = False
-                _location = table.location_id
-                _location.label = T("Home Address")
-                _location.writable = True
-                _location.readable = True
-                table.status.writable = False
-                table.status.readable = False
-                table.site_contact.writable = False
-                table.site_contact.readable = False
-                table.job_role_id.label = T("Volunteer Role")
-
+                redirect(URL(f="volunteer",
+                             args=args,
+                             vars=vars))
             elif r.method == "delete":
                 # Don't redirect
                 pass
@@ -129,11 +110,11 @@ def volunteer():
                    (T("Certificates"), "certificate"),
                    (T("Email"), "email"),
                   ]
-    report_options = s3mgr.model.get_config(tablename,
-                                            "report_options")
+    report_options = s3db.get_config(tablename,
+                                     "report_options")
     # Remove inappropriate filters from the Search widget
-    human_resource_search = s3mgr.model.get_config(tablename,
-                                                   "search_method")
+    human_resource_search = s3db.get_config(tablename,
+                                            "search_method")
     # Remove Facility
     human_resource_search.advanced.pop(5)
     if settings.get_hrm_vol_experience() == "programme":
@@ -160,8 +141,8 @@ def volunteer():
                             field="active",
                             cols = 2,
                             options = {
-                                    True:  T("Yes"),
-                                    False: T("No")
+                                    T("Yes"):  T("Yes"),
+                                    T("No"): T("No")
                                 }
                           ),
         search_widget = ("human_resource_search_active", widget[0])
@@ -199,14 +180,16 @@ def volunteer():
     else:
         list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     list_fields = list_fields,
                     report_options = report_options,
                     search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
-            if r.method == "create" and not r.component:
+            if not r.component and \
+               not r.id and \
+               r.method in [None, "create"]:
                 # Don't redirect
                 # Assume staff only between 12-81
                 s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
@@ -256,6 +239,30 @@ def volunteer():
                             "_class": "action-btn",
                             "label": str(T("Send Message"))
                         })
+                if settings.get_hrm_vol_experience() == "programme" and \
+                   r.method not in ["search", "report", "import"] and \
+                   "form" in output:
+                    # Insert field to set the Programme
+                    sep = ": "
+                    table = s3db.hrm_programme_hours
+                    field = table.programme_id
+                    default = field.default
+                    widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                    field_id = "%s_%s" % (table._tablename, field.name)
+                    label = field.label
+                    label = LABEL(label, label and sep, _for=field_id,
+                                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                    row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                    programme = s3.crud.formstyle(row_id, label, widget, field.comment)
+                    try:
+                        output["form"][0].insert(4, programme[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(4, programme[0])
+                    except:
+                        pass
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
@@ -274,9 +281,9 @@ def person():
         - includes components relevant to HRM
     """
 
-    configure = s3mgr.configure
-    set_method = s3mgr.model.set_method
-    super_key = s3mgr.model.super_key
+    configure = s3db.configure
+    set_method = s3db.set_method
+    super_key = s3db.super_key
 
     # Custom Method for Contacts
     set_method("pr", resourcename,
@@ -291,8 +298,8 @@ def person():
 
     if settings.has_module("asset"):
         # Assets as component of people
-        s3mgr.model.add_component("asset_asset",
-                                  pr_person="assigned_to_id")
+        s3db.add_component("asset_asset",
+                           pr_person="assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
         configure("asset_asset",
@@ -379,7 +386,7 @@ def person():
             hook in s3mgr
         """
         resource, tree = data
-        xml = s3mgr.xml
+        xml = current.xml
         tag = xml.TAG
         att = xml.ATTRIBUTE
         if s3.import_replace:
@@ -399,7 +406,7 @@ def person():
                     org_name = org.get("value", None) or org.text
                     if org_name:
                         try:
-                            org_name = json.loads(s3mgr.xml.xml_decode(org_name))
+                            org_name = json.loads(xml.xml_decode(org_name))
                         except:
                             pass
                     if org_name:
@@ -409,7 +416,7 @@ def person():
                                 (htable.organisation_id == otable.id) & \
                                 (htable.type == group)
                         resource = s3mgr.define_resource("hrm", "human_resource", filter=query)
-                        ondelete = s3mgr.model.get_config("hrm_human_resource", "ondelete")
+                        ondelete = s3db.get_config("hrm_human_resource", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
     s3mgr.import_prep = import_prep
 
@@ -436,10 +443,13 @@ def person():
                     table.site_contact.readable = False
                     org = session.s3.hrm.org
                     if org is not None:
-                        table.organisation_id.default = org
-                        table.organisation_id.comment = None
-                        table.organisation_id.readable = False
-                        table.organisation_id.writable = False
+                        field = table.organisation_id
+                        field.default = org
+                        field.readable = False
+                        field.writable = False
+                elif r.component_name == "hours":
+                    filter = (r.component.table.hours != None)
+                    r.resource.add_component_filter("hours", filter)
                 elif r.component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
@@ -497,8 +507,6 @@ def person():
                 r.component_id = hr_id
             configure("hrm_human_resource",
                       insertable = False)
-            if not r.component_id or r.method in ("create", "update"):
-                s3base.s3_address_hide(s3db.pr_address)
         return True
     s3.prep = prep
 
@@ -509,6 +517,38 @@ def person():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+                if settings.get_hrm_vol_experience() == "programme" and \
+                   r.method not in ["search", "report", "import"] and \
+                   "form" in output:
+                    # Insert field to set the Programme
+                    sep = ": "
+                    table = s3db.hrm_programme_hours
+                    field = table.programme_id
+                    if r.id:
+                        query = (table.person_id == r.id)
+                        default = db(query).select(table.programme_id,
+                                                   orderby=table.date).last()
+                        if default:
+                            default = default.programme_id
+                    else:
+                        default = field.default
+                    widget = field.widget or SQLFORM.widgets.options.widget(field, default)
+                    field_id = "%s_%s" % (table._tablename, field.name)
+                    label = field.label
+                    label = LABEL(label, label and sep, _for=field_id,
+                                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
+                    row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                    programme = s3.crud.formstyle(row_id, label, widget, field.comment)
+                    try:
+                        output["form"][0].insert(2, programme[1])
+                    except:
+                        # A non-standard formstyle with just a single row
+                        pass
+                    try:
+                        output["form"][0].insert(2, programme[0])
+                    except:
+                        pass
+
             elif r.component_name == "experience":
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
@@ -529,6 +569,9 @@ def person():
     else:
         orgname = None
 
+    # Deployment Roles shouldn't be hardcoded in trunk models
+    #if not auth.s3_has_role("vol_super"):
+    #    s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.hrm_rheader,
@@ -547,7 +590,7 @@ def person_search():
 
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
-    s3mgr.configure("hrm_human_resource",
+    s3db.configure("hrm_human_resource",
                     # S3HRSearch
                     search_method = s3db.hrm_autocomplete_search,
                    )
@@ -616,11 +659,11 @@ def group():
         msg_record_deleted = T("Membership deleted"),
         msg_list_empty = T("No Members currently registered"))
 
-    s3mgr.configure(tablename, main="name", extra="description",
+    s3db.configure(tablename, main="name", extra="description",
                     # Redirect to member list when a new group has been created
                     create_next = URL(f="group",
                                       args=["[id]", "group_membership"]))
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "person_id",
                                  "group_head",

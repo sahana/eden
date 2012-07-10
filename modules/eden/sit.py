@@ -49,8 +49,7 @@ class S3SituationModel(S3Model):
 
         location_id = self.gis_location_id
 
-        model = current.manager.model
-        configure = model.configure
+        configure = self.configure
         super_entity = self.super_entity
 
         # Situation Super-Entity ----------------------------------------------
@@ -98,7 +97,7 @@ class S3SituationModel(S3Model):
         #
         tablename = "sit_presence"
         table = self.define_table(tablename,
-                                  model.super_link("track_id", sit_trackable),
+                                  self.super_link("track_id", sit_trackable),
                                   Field("timestmp", "datetime",
                                         label=T("Date/Time")),
                                   location_id(),
@@ -108,7 +107,7 @@ class S3SituationModel(S3Model):
                                   *s3_meta_fields())
 
         # Shared component of all trackable types
-        model.add_component(table,
+        self.add_component(table,
                             sit_trackable=self.super_key(sit_trackable))
 
         # ---------------------------------------------------------------------

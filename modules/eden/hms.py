@@ -70,12 +70,11 @@ class HospitalDataModel(S3Model):
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Hospitals
@@ -414,10 +413,11 @@ class HospitalDataModel(S3Model):
 
         hospital_id = S3ReusableField("hospital_id", table,
                                       sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "hms_hospital.id", "%(name)s")),
-                                      represent = lambda id: \
-                                                  (id and [db(db.hms_hospital.id == id).select(db.hms_hospital.name,
-                                                                                               limitby=(0, 1)).first().name] or ["None"])[0],
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "hms_hospital.id",
+                                                              self.hms_hospital_represent
+                                                              )),
+                                      represent = self.hms_hospital_represent,
                                       label = T("Hospital"),
                                       comment = hms_hospital_id_comment,
                                       ondelete = "RESTRICT")
@@ -854,6 +854,25 @@ class HospitalDataModel(S3Model):
                                       writable=False)
 
         return Storage(hms_hospital_id=hospital_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_hospital_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hms_hospital
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -29,18 +29,10 @@
 {{pass}}
 <script src="/{{=appname}}/static/scripts/ext/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
 <script type="text/javascript">//<![CDATA[
- {{include "l10n.js"}}
- S3.Ap = '/{{=appname}}';
-{{if s3.rtl:}}
- S3.rtl = true;
-{{else:}}
- S3.rtl = false;
-{{pass}}
-{{if s3.interactive:}}
- S3.interactive = true;
-{{else:}}
- S3.interactive = false;
-{{pass}}
+{{include "l10n.js"}}
+S3.Ap='/{{=appname}}'
+{{if s3.rtl:}}S3.rtl=true{{else:}}S3.rtl=false{{pass}}
+{{if s3.interactive:}}S3.interactive=true{{else:}}S3.interactive=false{{pass}}
 //]]></script>
 {{try:}}
  {{if r.representation == "popup":}}{{representation = "popup"}}

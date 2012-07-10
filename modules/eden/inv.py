@@ -61,7 +61,7 @@ inv_ship_status = {
                     "RETURNING"  : SHIP_STATUS_RETURNING,
                 }
 
-T = current.T  
+T = current.T
 shipment_status = { SHIP_STATUS_IN_PROCESS: T("In Process"),
                     SHIP_STATUS_RECEIVED:   T("Received"),
                     SHIP_STATUS_SENT:       T("Sent"),
@@ -123,14 +123,13 @@ class S3InventoryModel(S3Model):
              "inv_item_id",
              "inv_item_represent",
              "inv_prep",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
         db = current.db
         auth = current.auth
-        model = current.manager.model
 
         org_id = self.org_organisation_id
 
@@ -155,7 +154,7 @@ class S3InventoryModel(S3Model):
         table = self.define_table(tablename,
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
-                                  model.super_link("site_id", "org_site",
+                                  self.super_link("site_id", "org_site",
                                                    label = T("Warehouse"),
                                                    default = auth.user.site_id if auth.is_logged_in() else None,
                                                    readable = True,
@@ -346,7 +345,7 @@ $(document).ready(function(){
         # Item Search Method (Advanced Search only)
         inv_item_search = S3Search(advanced=report_options.get("search"))
 
-        model.configure(tablename,
+        self.configure(tablename,
                         # Lock the record so that it can't be meddled with
                         create=False,
                         listadd=False,
@@ -421,7 +420,7 @@ $(document).ready(function(){
                   ):
         """
             Check that the required_total can be removed from the inv_record
-            if their is insufficient stock then set up the total to being 
+            if their is insufficient stock then set up the total to being
             what is in stock otherwise set it to be the required total.
             If the update flag is true then remove it from stock.
 
@@ -612,12 +611,11 @@ class S3TrackingModel(S3Model):
         NONE = messages.NONE
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        set_method = model.set_method
+        set_method = self.set_method
 
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
@@ -652,7 +650,7 @@ class S3TrackingModel(S3Model):
                                        comment = self.pr_person_comment(child="sender_id")),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
-                             model.super_link("site_id", "org_site",
+                             self.super_link("site_id", "org_site",
                                               label = T("From Facility"),
                                               default = auth.user.site_id if auth.is_logged_in() else None,
                                               readable = True,
@@ -768,7 +766,7 @@ class S3TrackingModel(S3Model):
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
                                             "track_item"])
-        
+
         configure(tablename,
                   # it shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
@@ -787,9 +785,9 @@ class S3TrackingModel(S3Model):
                                  "vehicle_plate_no",
                                  "driver_name",
                                  "time_in",
-                                 "time_out", 
-                                 "comments"                        
-                                ],                                      
+                                 "time_out",
+                                 "comments"
+                                ],
                   onaccept = self.inv_send_onaccept,
                   create_next = send_item_url,
                   update_next = send_item_url,
@@ -1020,7 +1018,7 @@ class S3TrackingModel(S3Model):
                                  "purchase_ref",
                                  "recipient_id",
                                  "site_id",
-                                 "date",                                      
+                                 "date",
                                  "type",
                                  "status",
                                  "req_ref",
@@ -1158,7 +1156,7 @@ $(document).ready(function(){
   'fncRepresent':fncRepresentItem
  })
 })''')),
-                            item_id(ondelete = "RESTRICT"),      
+                            item_id(ondelete = "RESTRICT"),
                             item_pack_id(ondelete = "SET NULL"),
                             Field("quantity", "double", notnull=True,
                                    label = T("Quantity Sent"),
@@ -1366,7 +1364,7 @@ $(document).ready(function(){
         type = vars.type
         if type:
             # Add all inv_items with status matching the send shipment type
-            # eg. Items for Dump, Sale, Reject, Surplus  
+            # eg. Items for Dump, Sale, Reject, Surplus
             site_id = vars.site_id
             itable = db.inv_inv_item
             tracktable = db.inv_track_item
@@ -1592,7 +1590,7 @@ $(document).ready(function(){
     @staticmethod
     def inv_send_ref_represent(value, show_link=True):
         """
-            Represent for the Tall Out number, 
+            Represent for the Tall Out number,
             if show_link is True then it will generate a link to the pdf
         """
         if value:
@@ -1603,7 +1601,8 @@ $(document).ready(function(){
                                                          limitby=(0, 1)).first()
                 if row:
                     return A(value,
-                             _href = URL(f = "send",
+                             _href = URL(c = "inv",
+                                         f = "send",
                                          args = [row.id, "form"]
                                         ),
                             )
@@ -1618,7 +1617,7 @@ $(document).ready(function(){
     @staticmethod
     def inv_recv_ref_represent(value, show_link=True):
         """
-            Represent for the Goods Received Note 
+            Represent for the Goods Received Note
             if show_link is True then it will generate a link to the pdf
         """
 
@@ -1629,7 +1628,8 @@ $(document).ready(function(){
                 recv_row = db(table.recv_ref == value).select(table.id,
                                                               limitby=(0, 1)).first()
                 return A(value,
-                         _href = URL(f = "recv",
+                         _href = URL(c = "inv",
+                                     f = "recv",
                                      args = [recv_row.id, "form"]
                                     ),
                         )
@@ -2618,7 +2618,6 @@ class S3AdjustModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         s3_date_format = current.deployment_settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
@@ -2677,7 +2676,7 @@ class S3AdjustModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        model.configure("inv_adj",
+        self.configure("inv_adj",
                         onaccept = self.inv_adj_onaccept,
                         create_next = URL(args=["[id]", "adj_item"]),
                         )
@@ -2815,7 +2814,7 @@ class S3AdjustModel(S3Model):
             msg_list_empty = T("No items currently in stock"))
 
         # Component
-        model.add_component("inv_adj_item",
+        self.add_component("inv_adj_item",
                             inv_adj="adj_id")
 
         return Storage(
@@ -3036,7 +3035,7 @@ class InvItemVirtualFields:
         except:
             # not available
             return current.messages.NONE
-        
+
 # =============================================================================
 class InvTrackItemVirtualFields:
     """ Virtual fields as dimension classes for reports """

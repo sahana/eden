@@ -39,7 +39,7 @@ def index():
  evt.preventDefault()
  }
 })''')
-                     
+
     return dict(map=map)
 
 # =============================================================================
@@ -121,19 +121,22 @@ def location():
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
             field = "name"
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L0",
                 field="L0",
+                label = T("Country"),
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L1",
                 field="L1",
+                location_level="L1",
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L2",
                 field="L2",
+                location_level="L2",
                 cols = 3,
             ),
             s3base.S3SearchOptionsWidget(
@@ -180,7 +183,7 @@ def location():
                 return None
 
     table.virtualfields.append(S3LocationVirtualFields())
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     # Don't include Bulky Location Selector in List Views
                     listadd=False,
                     # Custom Search Method
@@ -201,7 +204,7 @@ def location():
                     )
 
     # Custom Method
-    s3mgr.model.set_method("gis", "location", method="parents",
+    s3db.set_method("gis", "location", method="parents",
                            action=s3_gis_location_parents)
 
     # Pre-processor
@@ -443,7 +446,7 @@ def l0():
     try:
         record_id = request.args[0]
     except:
-        item = s3mgr.xml.json_message(False, 400, "Need to specify a record ID!")
+        item = current.xml.json_message(False, 400, "Need to specify a record ID!")
         raise HTTP(400, body=item)
 
     table = s3db.gis_location
@@ -468,7 +471,7 @@ def l0():
                               cache = s3db.cache,
                               limitby=(0, 1)).first()
     if not record:
-        item = s3mgr.xml.json_message(False, 400, "Invalid ID!")
+        item = current.xml.json_message(False, 400, "Invalid ID!")
         raise HTTP(400, body=item)
 
     result = record.as_dict()
@@ -637,7 +640,7 @@ def location_links():
     try:
         record_id = request.args[0]
     except:
-        item = s3mgr.xml.json_message(False, 400, "Need to specify a record ID!")
+        item = current.xml.json_message(False, 400, "Need to specify a record ID!")
         raise HTTP(400, body=item)
 
     try:
@@ -649,7 +652,7 @@ def location_links():
         query = deleted & query
         record = db(query).select(locations.id, limitby=(0, 1)).first().id
     except:
-        item = s3mgr.xml.json_message(False, 404, "Record not found!")
+        item = current.xml.json_message(False, 404, "Record not found!")
         raise HTTP(404, body=item)
 
     # Find all tables which link to the Locations table
@@ -720,7 +723,7 @@ def config():
     """ RESTful CRUD controller """
 
     # Custom Methods to enable/disable layers
-    set_method = s3mgr.model.set_method
+    set_method = s3db.set_method
     set_method(module, resourcename,
                component_name="layer_entity",
                method="enable",
@@ -805,8 +808,7 @@ def config():
                             (ltable.config_id == r.id)
                     rows = db(query).select(table.layer_id)
                     # Filter them out
-                    ltable.layer_id.requires = IS_ONE_OF(db,
-                                                         "gis_layer_entity.layer_id",
+                    ltable.layer_id.requires = IS_ONE_OF(db, "gis_layer_entity.layer_id",
                                                          s3db.gis_layer_represent,
                                                          not_filterby="layer_id",
                                                          not_filter_opts=[row.layer_id for row in rows]
@@ -967,8 +969,7 @@ def symbology():
                     rows = db(query).select(table.layer_id)
                     # Filter them out
                     # Restrict Layers to those which have Markers
-                    ltable.layer_id.requires = IS_ONE_OF(db,
-                                                         "gis_layer_entity.layer_id",
+                    ltable.layer_id.requires = IS_ONE_OF(db, "gis_layer_entity.layer_id",
                                                          s3db.gis_layer_represent,
                                                          filterby="instance_type",
                                                          filter_opts=("gis_layer_feature",
@@ -1083,9 +1084,9 @@ def layer_entity():
         auth.permission.fail()
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename,
-                           method="disable",
-                           action=disable_layer)
+    s3db.set_method(module, resourcename,
+                    method="disable",
+                    action=disable_layer)
 
     def prep(r):
         if r.interactive:
@@ -1124,8 +1125,7 @@ def layer_entity():
                             (ltable.layer_id == r.id)
                     rows = db(query).select(table.id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                          "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                           "%(name)s",
                                                           not_filterby="id",
                                                           not_filter_opts=[row.id for row in rows]
@@ -1150,8 +1150,7 @@ def layer_entity():
                             (ltable.layer_id == r.id)
                     rows = db(query).select(table.id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.id for row in rows]
@@ -1167,9 +1166,9 @@ def layer_feature():
     """ RESTful CRUD controller """
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename,
-                           method="disable",
-                           action=disable_layer)
+    s3db.set_method(module, resourcename,
+                    method="disable",
+                    action=disable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1187,8 +1186,7 @@ def layer_feature():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1202,8 +1200,7 @@ def layer_feature():
                         (table.id == r.id)
                 rows = db(query).select(ltable.symbology_id)
                 # Filter them out
-                ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                         "gis_symbology.id",
+                ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                          "%(name)s",
                                                          not_filterby="id",
                                                          not_filter_opts=[row.symbology_id for row in rows]
@@ -1229,7 +1226,7 @@ def layer_openstreetmap():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "OpenStreetMap"
@@ -1264,8 +1261,7 @@ def layer_openstreetmap():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1292,7 +1288,7 @@ def layer_bing():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "Bing"
@@ -1303,7 +1299,7 @@ def layer_bing():
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     deletable=False,
                     listadd=False)
 
@@ -1323,8 +1319,7 @@ def layer_bing():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1351,7 +1346,7 @@ def layer_empty():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "Empty"
@@ -1362,7 +1357,7 @@ def layer_empty():
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     deletable=False,
                     listadd=False)
 
@@ -1382,8 +1377,7 @@ def layer_empty():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1401,7 +1395,7 @@ def layer_google():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "Google"
@@ -1412,7 +1406,7 @@ def layer_google():
         msg_record_created=LAYER_ADDED,
         msg_record_modified=LAYER_UPDATED)
 
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
                     deletable=False,
                     listadd=False)
 
@@ -1432,8 +1426,7 @@ def layer_google():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1459,7 +1452,7 @@ def layer_mgrs():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "MGRS"
@@ -1481,7 +1474,7 @@ def layer_mgrs():
         msg_record_deleted=LAYER_DELETED,
         msg_list_empty=NO_LAYERS)
 
-    s3mgr.configure(tablename, deletable=False, listadd=False)
+    s3db.configure(tablename, deletable=False, listadd=False)
 
     # Pre-processor
     def prep(r):
@@ -1499,8 +1492,7 @@ def layer_mgrs():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1517,7 +1509,7 @@ def layer_arcrest():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "ArcGIS REST"
@@ -1542,8 +1534,8 @@ def layer_arcrest():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename, method="enable",
-                           action=enable_layer)
+    s3db.set_method(module, resourcename, method="enable",
+                    action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1561,8 +1553,7 @@ def layer_arcrest():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1589,7 +1580,7 @@ def layer_geojson():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "GeoJSON"
@@ -1629,8 +1620,7 @@ def layer_geojson():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1648,8 +1638,7 @@ def layer_geojson():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1676,7 +1665,7 @@ def layer_georss():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "GeoRSS"
@@ -1701,8 +1690,8 @@ def layer_georss():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename, method="enable",
-                           action=enable_layer)
+    s3db.set_method(module, resourcename, method="enable",
+                    action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1720,8 +1709,7 @@ def layer_georss():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1739,8 +1727,7 @@ def layer_georss():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1767,7 +1754,7 @@ def layer_gpx():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # Model options
     # Needed in multiple controllers, so defined in Model
@@ -1810,8 +1797,7 @@ def layer_gpx():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1837,7 +1823,7 @@ def layer_kml():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "KML"
@@ -1862,9 +1848,9 @@ def layer_kml():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    #s3mgr.model.set_method(module, resourcename,
-    #                       method="enable",
-    #                       action=enable_layer)
+    #s3db.set_method(module, resourcename,
+    #                method="enable",
+    #                action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1882,13 +1868,14 @@ def layer_kml():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
                                                          )
             elif r.component_name == "symbology":
+                ltable = s3db.gis_layer_symbology
+                field = ltable.gps_marker
                 field.readable = False
                 field.writable = False
                 if r.method != "update":
@@ -1899,8 +1886,7 @@ def layer_kml():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1927,7 +1913,7 @@ def layer_theme():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "Theme"
@@ -1952,9 +1938,9 @@ def layer_theme():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    #s3mgr.model.set_method(module, resourcename,
-    #                       method="enable",
-    #                       action=enable_layer)
+    #s3db.set_method(module, resourcename,
+    #                method="enable",
+    #                action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -1975,8 +1961,7 @@ def layer_theme():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2014,7 +1999,7 @@ def layer_tms():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "TMS"
@@ -2039,8 +2024,8 @@ def layer_tms():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename,
-                           method="enable",
+    s3db.set_method(module, resourcename,
+                    method="enable",
                            action=enable_layer)
 
     # Pre-processor
@@ -2059,8 +2044,7 @@ def layer_tms():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2087,7 +2071,7 @@ def layer_wfs():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "WFS"
@@ -2127,8 +2111,7 @@ def layer_wfs():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2155,7 +2138,7 @@ def layer_wms():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "WMS"
@@ -2180,7 +2163,7 @@ def layer_wms():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename,
+    s3db.set_method(module, resourcename,
                            method="enable",
                            action=enable_layer)
 
@@ -2197,8 +2180,7 @@ def layer_wms():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2225,7 +2207,7 @@ def layer_xyz():
     """ RESTful CRUD controller """
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "XYZ"
@@ -2250,7 +2232,7 @@ def layer_xyz():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3mgr.model.set_method(module, resourcename,
+    s3db.set_method(module, resourcename,
                            method="enable",
                            action=enable_layer)
 
@@ -2270,8 +2252,7 @@ def layer_xyz():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2301,7 +2282,7 @@ def layer_js():
         auth.permission.fail()
 
     tablename = "%s_%s" % (module, resourcename)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
 
     # CRUD Strings
     type = "JS"
@@ -2338,8 +2319,7 @@ def layer_js():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2395,7 +2375,7 @@ def cache_feed():
     resourcename = "cache"
 
     # Load Models
-    #s3mgr.load("gis_cache")
+    #s3db.table("gis_cache")
 
     #if kml:
         # Unzip & Follow Network Links
@@ -2466,7 +2446,7 @@ def display_feature():
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
         session.error = T("No access to this record!")
-        raise HTTP(401, body=s3mgr.xml.json_message(False, 401, session.error))
+        raise HTTP(401, body=current.xml.json_message(False, 401, session.error))
 
     feature = db(table.id == feature_id).select(table.id,
                                                 table.parent,
@@ -2477,8 +2457,8 @@ def display_feature():
 
     if not feature:
         session.error = T("Record not found!")
-        raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
-    
+        raise HTTP(404, body=current.xml.json_message(False, 404, session.error))
+
     # Centre on Feature
     lat = feature.lat
     lon = feature.lon
@@ -2493,7 +2473,7 @@ def display_feature():
             lon = latlon["lon"]
         else:
             session.error = T("No location information defined!")
-            raise HTTP(404, body=s3mgr.xml.json_message(False, 404, session.error))
+            raise HTTP(404, body=current.xml.json_message(False, 404, session.error))
 
     # Default zoom +2 (same as a single zoom on a cluster)
     # config = gis.get_config()
@@ -2546,12 +2526,12 @@ def display_features():
         ok +=1
     if ok != 4:
         session.error = T("Insufficient vars: Need module, resource, jresource, instance")
-        raise HTTP(400, body=s3mgr.xml.json_message(False, 400, session.error))
+        raise HTTP(400, body=current.xml.json_message(False, 400, session.error))
 
     tablename = "%s_%s" % (res_module, resource)
-    s3mgr.load(tablename)
+    s3db.table(tablename)
     table = db[table]
-    component, pkey, fkey = s3mgr.model.get_component(table, jresource)
+    component, pkey, fkey = s3db.get_component(table, jresource)
     jtable = db[str(component.table)]
     query = (jtable[fkey] == table[pkey]) & (table.id == instance)
     # Filter out deleted
@@ -2701,7 +2681,7 @@ def geocode_manual():
         return True
     s3.prep = lambda r, vars=vars: prep(r, vars)
 
-    s3mgr.configure(table._tablename,
+    s3db.configure(table._tablename,
                     listadd=False,
                     list_fields=["id",
                                  "name",
@@ -3107,7 +3087,7 @@ def proxy():
             url = request.vars.url
         else:
             session.error = T("Need a 'url' argument!")
-            raise HTTP(400, body=s3mgr.xml.json_message(False, 400, session.error))
+            raise HTTP(400, body=current.xml.json_message(False, 400, session.error))
 
     # Debian has no default timeout so connection can get stuck with dodgy servers
     socket.setdefaulttimeout(30)

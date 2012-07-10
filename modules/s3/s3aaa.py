@@ -61,6 +61,7 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status
 from s3method import S3Method
 from s3utils import s3_mark_required
+from s3error import S3PermissionError
 
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
@@ -502,11 +503,11 @@ class AuthS3(Auth):
             of a register form
         """
 
-        response = current.response
+        cookies = current.response.cookies
 
-        response.cookies["registered"] = "yes"
-        response.cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
-        response.cookies["registered"]["path"] = "/"
+        cookies["registered"] = "yes"
+        cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
+        cookies["registered"]["path"] = "/"
 
     # -------------------------------------------------------------------------
     def login(self,
@@ -1196,9 +1197,9 @@ class AuthS3(Auth):
                 record_id = htable.insert(**record)
                 if record_id:
                     record["id"] = record_id
-                    manager = current.manager
-                    manager.model.update_super(htable, record)
-                    manager.onaccept(htablename, record, method="create")
+                    s3db.update_super(htable, record)
+                    current.manager.onaccept(htablename, record,
+                                             method="create")
 
         # Return person_id for init scripts
         return person_id
@@ -1213,8 +1214,6 @@ class AuthS3(Auth):
 
         db = current.db
         s3db = current.s3db
-        manager = current.manager
-        model = manager.model
 
         organisation_id = user.organisation_id
         if not organisation_id:
@@ -1230,8 +1229,8 @@ class AuthS3(Auth):
                 # Callbacks
                 if organisation_id:
                     record["id"] = organisation_id
-                    model.update_super(otable, record)
-                    manager.onaccept(otable, record, method="create")
+                    s3db.update_super(otable, record)
+                    current.manager.onaccept(otable, record, method="create")
                     self.s3_set_record_owner(otable, organisation_id)
 
                 # Update user
@@ -2940,7 +2939,6 @@ class AuthS3(Auth):
         """
 
         s3db = current.s3db
-        model = current.manager.model
 
         # Ownership fields
         OUSR = "owned_by_user"
@@ -3025,7 +3023,7 @@ class AuthS3(Auth):
         # Find owned_by_group
         if OGRP in fields_in_table:
             # Check for type-specific handler to find the owner group
-            handler = model.get_config(tablename, "owner_group")
+            handler = s3db.get_config(tablename, "owner_group")
             if handler:
                 if callable(handler):
                     data[OGRP] = handler(table, row)
@@ -3041,7 +3039,7 @@ class AuthS3(Auth):
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
                 # Check for type-specific handler to find the owner entity
-                handler = model.get_config(tablename, "owner_entity")
+                handler = s3db.get_config(tablename, "owner_entity")
                 if callable(handler):
                     owner_entity = handler(table, row)
                     data[OENT] = owner_entity
@@ -3126,7 +3124,7 @@ class AuthS3(Auth):
                 tablename = table._tablename
             else:
                 tablename = table
-            current.manager.configure(tablename, insertable = False)
+            s3db.configure(tablename, insertable = False)
 
         return []
 
@@ -3190,12 +3188,6 @@ class AuthS3(Auth):
                     lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120
                 )
-
-# =============================================================================
-class S3PermissionError(StandardError):
-    """ Custom exception class for low-level permission checks """
-
-    pass
 
 # =============================================================================
 class S3Permission(object):
@@ -5008,7 +5000,6 @@ class S3RoleManager(S3Method):
         CANCEL = T("Cancel")
 
         auth = manager.auth
-        model = manager.model
         permission = auth.permission
         acl_table = permission.table
         NONE = permission.NONE

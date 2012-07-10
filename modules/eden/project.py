@@ -36,7 +36,6 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
-           "project_project_represent",
            "project_location_represent",
            "project_rheader",
            "project_task_controller",
@@ -77,7 +76,7 @@ class S3ProjectModel(S3Model):
         Theer are also a number of other deployment_settings to control behaviour
 
         This class contains the tables common to both uses
-        There are additional tabels in S3Project3WModel and S3ProjectTaskModel
+        There are additional tables in S3Project3WModel and S3ProjectTaskModel
         for the other 2 use cases
         There are also additional Classes for optional Link Tables
     """
@@ -116,13 +115,12 @@ class S3ProjectModel(S3Model):
         theme_percentages = settings.get_project_theme_percentages()
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        set_method = model.set_method
-        super_link = model.super_link
+        set_method = self.set_method
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Theme
@@ -151,9 +149,9 @@ class S3ProjectModel(S3Model):
                                    sortby = "name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_theme.id",
-                                                          "%(name)s",
+                                                          self.project_theme_represent,
                                                           sort=True)),
-                                   represent = project_theme_represent,
+                                   represent = self.project_theme_represent,
                                    ondelete = "RESTRICT")
 
         # Multiple for theme_percentages=False
@@ -163,7 +161,7 @@ class S3ProjectModel(S3Model):
                                          sortby = "name",
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_theme.id",
-                                                                  "%(name)s",
+                                                                  self.project_theme_represent,
                                                                   sort=True,
                                                                   multiple=True)),
                                          represent = lambda opt, row=None: \
@@ -203,7 +201,7 @@ class S3ProjectModel(S3Model):
                                           label = T("Hazards"),
                                           requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_hazard.id",
-                                                                  "%(name)s",
+                                                                  self.project_hazard_represent,
                                                                   sort=True,
                                                                   multiple=True)),
                                           represent = lambda opt, row=None: \
@@ -457,8 +455,10 @@ class S3ProjectModel(S3Model):
         # Reusable Field
         project_id = S3ReusableField("project_id", table,
                                      sortby="name",
-                                     requires = IS_NULL_OR(IS_ONE_OF(db, "project_project.id",
-                                                                     "%(name)s")),
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_project.id",
+                                                              project_project_represent
+                                                              )),
                                      represent = project_project_represent,
                                      comment = S3AddResourceLink(c="project", f="project",
                                                                  tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
@@ -568,10 +568,10 @@ class S3ProjectModel(S3Model):
         # Reusable Fields
         activity_type_id = S3ReusableField("activity_type_id", table,
                                            sortby = "name",
-                                           requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                           "project_activity_type.id",
-                                                                           "%(name)s",
-                                                                           sort=True)),
+                                           requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "project_activity_type.id",
+                                                                  self.project_activity_type_represent,
+                                                                  sort=True)),
                                            represent = lambda id, row=None: \
                                                        s3_get_db_field_value(tablename = "project_activity_type",
                                                                              fieldname = "name",
@@ -587,11 +587,11 @@ class S3ProjectModel(S3Model):
                                                  "list:reference project_activity_type",
                                                  sortby = "name",
                                                  label = T("Types of Activities"),
-                                                 requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                                 "project_activity_type.id",
-                                                                                 "%(name)s",
-                                                                                 sort=True,
-                                                                                 multiple=True)),
+                                                 requires = IS_NULL_OR(
+                                                                IS_ONE_OF(db, "project_activity_type.id",
+                                                                          self.project_activity_type_represent,
+                                                                          sort=True,
+                                                                          multiple=True)),
                                                  represent = lambda opt, row=None: \
                                                     multiref_represent(opt, "project_activity_type"),
                                                  widget = lambda f, v: \
@@ -857,6 +857,63 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_activity_type_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_activity_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_hazard_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_hazard
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_theme
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hfa_opts_represent(opt, row=None):
         """ Option representation """
 
@@ -928,12 +985,11 @@ class S3Project3WModel(S3Model):
 
         NONE = current.messages.NONE
 
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Project Location ('Community')
@@ -958,14 +1014,14 @@ class S3Project3WModel(S3Model):
                                     writable = False,
                                 ),
                              # @ToDo: This duplicates the data in gis_location
+                             #        - move to stats_demographic_data
                              Field("population", "integer",
                                    label = T("Population")),
                              # @ToDo: Replace with a 'family size' value & auto-calculate?
                              Field("number_families", "integer",
                                    label = T("Number of Families")),
                              s3_comments(),
-                             #format=lambda r: self.gis_location_lx_represent(r.location_id),
-                             *(s3_lx_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
 
         table.virtualfields.append(S3ProjectLocationVirtualFields())
 
@@ -1041,11 +1097,10 @@ class S3Project3WModel(S3Model):
             """
                 Provide the options for the Theme search filter
             """
-            table = current.s3db.project_theme
-            query = (table.deleted == False)
-            opts = db(query).select(table.id,
-                                    table.name,
-                                    orderby=table.name)
+            table = self.project_theme
+            opts = db(table.deleted == False).select(table.id,
+                                                     table.name,
+                                                     orderby=table.name)
             od = OrderedDict()
             for opt in opts:
                 od[opt.id] = opt.name
@@ -1078,24 +1133,32 @@ class S3Project3WModel(S3Model):
             #    cols = 3
             #),
             theme_search,
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L0",
-                field="L0",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L0",
+                #field="L0",
+                field = "location_id$L0",
+                label = T("Country"),
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L1",
-                field="L1",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L1",
+                #field = "L1",
+                field = "location_id$L1",
+                location_level = "L1",
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L2",
-                field="L2",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L2",
+                #field = "L2",
+                field = "location_id$L2",
+                location_level = "L2",
                 cols = 3
             ),
-            S3SearchLocationHierarchyWidget(
-                name="project_location_search_L3",
-                field="L3",
+            S3SearchOptionsWidget(
+                name = "project_location_search_L3",
+                #field = "L3",
+                field = "location_id$L3",
+                location_level = "L3",
                 cols = 3
             )
         )
@@ -1125,7 +1188,7 @@ class S3Project3WModel(S3Model):
                   create_next=URL(c="project", f="location",
                                   args=["[id]", "beneficiary"]),
                   search_method=project_location_search,
-                  onaccept=self.project_location_onaccept,
+                  #onaccept=self.project_location_onaccept,
                   deduplicate=self.project_location_deduplicate,
                   report_options=Storage(
                                          search = advanced_search,
@@ -1145,10 +1208,10 @@ class S3Project3WModel(S3Model):
 
         # Reusable Field
         project_location_id = S3ReusableField("project_location_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "project_location.id",
-                                                                      project_location_represent,
-                                                                      sort=True)),
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "project_location.id",
+                                                              project_location_represent,
+                                                              sort=True)),
                                       represent = project_location_represent,
                                       label = LOCATION,
                                       comment = S3AddResourceLink(ADD_LOCATION,
@@ -1209,20 +1272,22 @@ class S3Project3WModel(S3Model):
                                      "person_id$last_name"
                                     ]
                         ),
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="community_contact_search_L1",
                             field="person_id$L1",
+                            location_level="L1",
                             cols = 3,
                         ),
-                        S3SearchLocationHierarchyWidget(
+                        S3SearchOptionsWidget(
                             name="community_contact_search_L2",
                             field="person_id$L2",
+                            location_level="L2",
                             cols = 3,
                         )
                     ))
 
         # Resource configuration
-        hierarchy = current.gis.get_location_hierarchy()
+        #hierarchy = current.gis.get_location_hierarchy()
         configure(tablename,
                   search_method=community_contact_search,
                   list_fields=["person_id",
@@ -1299,9 +1364,11 @@ class S3Project3WModel(S3Model):
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              s3_date("start_date",
                                      label = T("Start Date"),
+                                     empty = False,
                                      ),
                              s3_date("end_date",
                                      label = T("End Date"),
+                                     empty = False,
                                      ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -1338,11 +1405,16 @@ class S3Project3WModel(S3Model):
                       "project_id$multi_hazard_id",
                       "project_id$multi_theme_id",
                       #"activity_id$multi_activity_type_id"
-                     ]
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
-        
+                      (T("Country"), "L0"),
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      ]
+        #lh = current.gis.get_location_hierarchy()
+        #lh = [(lh[opt], opt) for opt in lh]
+        #report_fields.extend(lh)
+
         # ---------------------------------------------------------------------
         def year_options():
             """
@@ -1392,7 +1464,24 @@ class S3Project3WModel(S3Model):
             for year in xrange(start_year, end_year + 1):
                 years[year] = year
             return years
-        
+
+        # ---------------------------------------------------------------------
+        def beneficiary_L1_opts():
+            """
+                Provide the options for the L1 search filter
+                @ToDo: Limit to just those project_lcoations to which the user has access
+            """
+            table = self.project_location
+            ltable = self.gis_location
+            query = (table.deleted == False) & \
+                    (table.location_id == ltable.id)
+            opts = db(query).select(ltable.L1,
+                                    orderby=ltable.L1)
+            od = OrderedDict()
+            for opt in opts:
+                od[opt.L1] = opt.L1
+            return od
+
         configure(tablename,
                   onaccept=self.project_beneficiary_onaccept,
                   deduplicate=self.project_beneficiary_deduplicate,
@@ -1415,9 +1504,11 @@ class S3Project3WModel(S3Model):
                             label=T("Year"),
                             options = year_options
                         ),
-                        S3SearchLocationHierarchyWidget(
-                            name="beneficiary_search_L1",
-                            field="project_location_id$L1",
+                        S3SearchOptionsWidget(
+                            name = "beneficiary_search_L1",
+                            field = "L1",
+                            location_level = "L1",
+                            options = beneficiary_L1_opts,
                             cols = 3,
                         ),
                     ],
@@ -1438,14 +1529,10 @@ class S3Project3WModel(S3Model):
         beneficiary_id = S3ReusableField("beneficiary_id", table,
                                          sortby="name",
                                          requires = IS_NULL_OR(
-                                                        IS_ONE_OF(db,
-                                                                  "project_beneficiary.id",
-                                                                  "%(type)s",
+                                                        IS_ONE_OF(db, "project_beneficiary.id",
+                                                                  self.project_beneficiary_represent,
                                                                   sort=True)),
-                                         represent = lambda id, row=None: \
-                                            s3_get_db_field_value(tablename = "project_beneficiary",
-                                                                  fieldname = "type",
-                                                                  look_up_value = id),
+                                         represent = self.project_beneficiary_represent,
                                          label = T("Beneficiaries"),
                                          comment = S3AddResourceLink(c="project",
                                                                      f="beneficiary",
@@ -1538,26 +1625,42 @@ class S3Project3WModel(S3Model):
         return Storage(
         )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def project_beneficiary_type_represent(type_id, row=None):
+    def project_beneficiary_type_represent(id, row=None):
         """ FK representation """
 
-        if isinstance(type_id, Row):
-            if "name" in type_id:
-                return type_id.name
-            elif "id" in type_id:
-                type_id = type_id.id
-            else:
-                return current.messages.UNKNOWN_OPT
-
-        bnf_type = current.s3db.project_beneficiary_type
-        query = bnf_type.id == type_id
-        row = current.db(query).select(bnf_type.name,
-                                       limitby=(0, 1)).first()
         if row:
             return row.name
-        else:
+        if not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_beneficiary_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_beneficiary_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.type
+        if not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_beneficiary
+        r = db(table.id == id).select(table.type,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.type
+        except:
             return current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
@@ -1609,14 +1712,14 @@ class S3Project3WModel(S3Model):
     def project_location_onaccept(form):
         """
             Populate the Lx fields from the location_id
+            - disabled
         """
 
-        vars = form.vars
-        location_id = vars.location_id
-        if location_id:
-            # Populate the Lx fields
-            ctable = current.db.project_location
-            s3_lx_update(ctable, vars.id)
+        #vars = form.vars
+        #location_id = vars.location_id
+        #if location_id:
+        #    # Populate the Lx fields
+        #    s3_lx_update(current.db.project_location, vars.id)
 
         return
 
@@ -1773,7 +1876,6 @@ class S3ProjectActivityModel(S3Model):
 
         T = current.T
         db = current.db
-        model = current.manager.model
 
         settings = current.deployment_settings
         mode_task = settings.get_project_mode_task()
@@ -1783,7 +1885,7 @@ class S3ProjectActivityModel(S3Model):
         #
         tablename = "project_activity"
         table = self.define_table(tablename,
-                                  model.super_link("doc_id", "doc_entity"),
+                                  self.super_link("doc_id", "doc_entity"),
                                   self.project_project_id(),
                                   Field("name",
                                         label = T("Short Description"),
@@ -1803,7 +1905,7 @@ class S3ProjectActivityModel(S3Model):
                                                              T("hours"))),
                                   s3_comments(),
                                   format="%(name)s",
-                                  *(s3_lx_fields() + s3_meta_fields()))
+                                  *s3_meta_fields())
         # CRUD Strings
         ACTIVITY = T("Activity")
         ACTIVITY_TOOLTIP = T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'.")
@@ -1825,18 +1927,12 @@ class S3ProjectActivityModel(S3Model):
             msg_list_empty = T("No Activities Found")
         )
 
-        # Virtual Fields
-        if mode_task:
-            table.virtualfields.append(S3ProjectActivityVirtualFields())
-
         # Search Method
         project_activity_search = S3Search(field="name")
 
         # Resource Configuration
         report_fields = []
         append = report_fields.append
-        if mode_task:
-            append((T("Organization"), "organisation"))
         append((T("Project"), "project_id"))
         append((T("Activity"), "name"))
         append((T("Activity Type"), "multi_activity_type_id"))
@@ -1847,10 +1943,6 @@ class S3ProjectActivityModel(S3Model):
         if settings.get_project_mode_drr():
             append((T("Hazard"), "project_id$multi_hazard_id"))
             append((T("HFA"), "project_id$hfa"))
-        lh = current.gis.get_location_hierarchy()
-        lh = [(lh[opt], opt) for opt in lh]
-        report_fields.extend(lh)
-        append("location_id")
         list_fields = ["name",
                        "project_id",
                        "multi_activity_type_id",
@@ -1865,12 +1957,12 @@ class S3ProjectActivityModel(S3Model):
             create_next = URL(c="project", f="activity",
                               args=["[id]"])
 
-        model.configure(tablename,
-                        super_entity="doc_entity",
-                        create_next=create_next,
-                        search_method=project_activity_search,
-                        deduplicate=self.project_activity_deduplicate,
-                        report_options=Storage(
+        self.configure(tablename,
+                       super_entity="doc_entity",
+                       create_next=create_next,
+                       search_method=project_activity_search,
+                       deduplicate=self.project_activity_deduplicate,
+                       report_options=Storage(
                                 rows=report_fields,
                                 cols=report_fields,
                                 facts=report_fields,
@@ -1882,20 +1974,17 @@ class S3ProjectActivityModel(S3Model):
                                     totals=True
                                 )
                             ),
-                        list_fields = list_fields,
-                        )
+                       list_fields = list_fields,
+                       )
 
         # Reusable Field
         activity_id = S3ReusableField("activity_id", table,
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_activity.id",
-                                                              "%(name)s",
+                                                              self.project_activity_represent,
                                                               sort=True)),
-                                      represent = lambda id, row=None: \
-                                                  s3_get_db_field_value(tablename = "project_activity",
-                                                                        fieldname = "name",
-                                                                        look_up_value = id),
+                                      represent = self.project_activity_represent,
                                       label = ACTIVITY,
                                       comment = S3AddResourceLink(ADD_ACTIVITY,
                                                                   c="project", f="activity",
@@ -1907,7 +1996,7 @@ class S3ProjectActivityModel(S3Model):
                                             label = T("Activities"),
                                             requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_activity.id",
-                                                                  "%(name)s",
+                                                                  self.project_activity_represent,
                                                                   multiple=True,
                                                                   sort=True)),
                                             widget = S3MultiSelectWidget(),
@@ -1925,8 +2014,8 @@ class S3ProjectActivityModel(S3Model):
         #              project_activity="activity_id")
 
         # Tasks
-        model.add_component("project_task",
-                            project_activity=Storage(
+        self.add_component("project_task",
+                           project_activity=Storage(
                                 link="project_task_activity",
                                 joinby="activity_id",
                                 key="task_id",
@@ -1959,6 +2048,25 @@ class S3ProjectActivityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_activity_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_activity
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
 
@@ -1971,10 +2079,8 @@ class S3ProjectActivityModel(S3Model):
             # Match activity by project_id and name
             project_id = data.project_id
             name = data.name
-            location_id = data.location_id
             query = (table.project_id == project_id) & \
-                    (table.name == name) & \
-                    (table.location_id == location_id)
+                    (table.name == name)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
         if duplicate:
@@ -2003,7 +2109,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         self.define_table(tablename,
                           self.project_project_id(requires=IS_ONE_OF(current.db,
                                                    "project_project.id",
-                                                   "%(name)s")),
+                                                   project_project_represent)),
                           Field("year", "integer", notnull=True,
                                 default=None, # make it current year
                                 requires=IS_INT_IN_RANGE(1950, 3000),
@@ -2069,14 +2175,13 @@ class S3ProjectFrameworkModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        model = current.manager.model
 
         # ---------------------------------------------------------------------
         # Project Frameworks
         #
         tablename = "project_framework"
         table = define_table(tablename,
-                             model.super_link("doc_id", "doc_entity"),
+                             self.super_link("doc_id", "doc_entity"),
                              Field("name",
                                    label = T("Name"),
                                    ),
@@ -2112,11 +2217,11 @@ class S3ProjectFrameworkModel(S3Model):
             msg_list_empty = T("No Frameworks found")
         )
 
-        model.configure(tablename,
-                        super_entity="doc_entity",
-                        create_next=URL(f="framework",
-                                        args=["[id]", "organisation"]),
-                        )
+        self.configure(tablename,
+                       super_entity="doc_entity",
+                       create_next=URL(f="framework",
+                                       args=["[id]", "organisation"]),
+                       )
 
         framework_id = S3ReusableField("framework_id", table,
                                 label = T("Organization"),
@@ -2127,8 +2232,8 @@ class S3ProjectFrameworkModel(S3Model):
                                 ondelete = "CASCADE",
                                 )
 
-        model.add_component("org_organisation",
-                            project_framework=Storage(
+        self.add_component("org_organisation",
+                           project_framework=Storage(
                                 link="project_framework_organisation",
                                 joinby="framework_id",
                                 key="organisation_id",
@@ -2169,22 +2274,20 @@ class S3ProjectFrameworkModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_framework_represent(id):
-        """ Framework representation """
+    def project_framework_represent(id, row=None):
+        """ FK representation """
 
+        if row:
+            return row.name
         if not id:
             return current.messages.NONE
 
-        if isinstance(id, Row):
-            record = id
-        else:
-            db = current.db
-            table = db.project_framework
-            query = (table.id == id)
-            record = db(query).select(table.name,
-                                      limitby=(0, 1)).first()
+        db = current.db
+        table = db.project_framework
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
         try:
-            return record.name
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -2325,12 +2428,11 @@ class S3ProjectTaskModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # Shortcuts
-        model = current.manager.model
-        add_component = model.add_component
-        configure = model.configure
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        super_link = model.super_link
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Project Milestone
@@ -2460,8 +2562,7 @@ class S3ProjectTaskModel(S3Model):
                                         label = T("Assigned to"),
                                         filterby = "instance_type",
                                         filter_opts = ["pr_person", "pr_group", "org_organisation"],
-                                        represent = lambda id, row=None: \
-                                                    project_assignee_represent(id),
+                                        represent = self.project_assignee_represent,
                                         # @ToDo: Widget
                                         #widget = S3PentityWidget(),
                                         #comment = DIV(_class="tooltip",
@@ -2536,35 +2637,7 @@ class S3ProjectTaskModel(S3Model):
         table.virtualfields.append(S3ProjectTaskVirtualFields())
 
         # Search Method
-        task_search = S3Search(
-                advanced = (
-                    # Virtual fields not supported by Search Widgets yet
-                    #S3SearchOptionsWidget(
-                        #name = "task_search_project",
-                        #label = T("Project"),
-                        #field = "project",
-                        #cols = 3
-                    #),
-                    # This Syntax not supported by Search Widgets yet
-                    #S3SearchOptionsWidget(
-                    #    name = "task_search_project",
-                    #    label = T("Project"),
-                    #    field = "task.task_id:project_task:project_id$name",
-                    #    cols = 3
-                    #),
-                    # Virtual fields not supported by Search Widgets yet
-                    #S3SearchOptionsWidget(
-                        #name = "task_search_activity",
-                        #label = T("Activity"),
-                        #field = "activity",
-                        #cols = 3
-                    #),
-                    S3SearchOptionsWidget(
-                        name = "task_search_priority",
-                        label = T("Priority"),
-                        field = "priority",
-                        cols = 4
-                    ),
+        advanced_task_search = [
                     S3SearchSimpleWidget(
                         name = "task_search_text_advanced",
                         label = T("Description"),
@@ -2572,6 +2645,26 @@ class S3ProjectTaskModel(S3Model):
                         field = [ "name",
                                   "description",
                                 ]
+                    ),
+                    S3SearchOptionsWidget(
+                        name = "task_search_priority",
+                        label = T("Priority"),
+                        field = "priority",
+                        cols = 4
+                    ),
+                    S3SearchOptionsWidget(
+                        name = "task_search_project",
+                        label = T("Project"),
+                        field = "project",
+                        options = self.task_project_opts,
+                        cols = 3
+                    ),
+                    S3SearchOptionsWidget(
+                        name = "task_search_activity",
+                        label = T("Activity"),
+                        field = "activity",
+                        options = self.task_activity_opts,
+                        cols = 3
                     ),
                     S3SearchOptionsWidget(
                         name = "task_search_created_by",
@@ -2604,8 +2697,7 @@ class S3ProjectTaskModel(S3Model):
                         field = "status",
                         cols = 4
                     ),
-                )
-            )
+                ]
         list_fields=["id",
                      "priority",
                      (T("ID"), "task_id"),
@@ -2620,6 +2712,14 @@ class S3ProjectTaskModel(S3Model):
 
         if settings.get_project_milestones():
             list_fields.insert(5, "milestone_id")
+            advanced_task_search.insert(4, S3SearchOptionsWidget(
+                                                name = "task_search_milestone",
+                                                label = T("Milestone"),
+                                                field = "milestone_id$name",
+                                                cols = 3
+                                            ))
+
+        task_search = S3Search(advanced = advanced_task_search)
 
         # Resource Configuration
         configure(tablename,
@@ -2652,9 +2752,9 @@ class S3ProjectTaskModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Custom Methods
-        model.set_method("project", "task",
-                         method="dispatch",
-                         action=self.task_dispatch)
+        self.set_method("project", "task",
+                        method="dispatch",
+                        action=self.task_dispatch)
 
         # Components
         # Projects (for imports)
@@ -2757,8 +2857,9 @@ class S3ProjectTaskModel(S3Model):
         tablename = "project_comment"
         table = define_table(tablename,
                              Field("parent", "reference project_comment",
-                                   requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                                    "project_comment.id")),
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "project_comment.id"
+                                                          )),
                                    readable=False),
                              task_id(),
                              Field("body", "text",
@@ -2860,21 +2961,105 @@ class S3ProjectTaskModel(S3Model):
             project_task_id = lambda: dummy("task_id")
         )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_project_opts():
+        """
+            Provide the options for the Project search filter
+            - all Projects with Tasks
+        """
+
+        db = current.db
+        ptable = db.project_project
+        ttable = db.project_task
+        ltable = db.project_task_project
+        query = (ttable.deleted == False) & \
+                (ltable.task_id == ttable.id) & \
+                (ltable.project_id == ptable.id)
+        opts = db(query).select(ptable.name)
+        _dict = {}
+        for opt in opts:
+            _dict[opt.name] = opt.name
+        return _dict
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def task_activity_opts():
+        """
+            Provide the options for the Activity search filter
+            - all Activities with Tasks
+        """
+
+        db = current.db
+        atable = db.project_activity
+        ttable = db.project_task
+        ltable = db.project_task_activity
+        query = (ttable.deleted == False) & \
+                (ltable.task_id == ttable.id) & \
+                (ltable.activity_id == atable.id)
+        opts = db(query).select(atable.name)
+        _dict = {}
+        for opt in opts:
+            _dict[opt.name] = opt.name
+        return _dict
+
     # ---------------------------------------------------------------------
     @staticmethod
     def milestone_represent(id, row=None):
         """ FK representation """
 
-        if not id:
+        if row:
+            return row.name
+        elif not id:
             return current.messages.NONE
             
         db = current.db
         table = db.project_milestone
-        record = db(tabe.id == id).select(table.name,
+        record = db(table.id == id).select(table.name,
                                           limitby=(0, 1)).first()
         try:
             return record.name
         except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_assignee_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            id = row.pe_id
+            instance_type = row.instance_type
+        elif id:
+            if isinstance(id, Row):
+                instance_type = id.instance_type
+                id = id.pe_id
+            else:
+                instance_type = None
+        else:
+            return current.messages.NONE
+        
+        db = current.db
+        s3db = current.s3db
+        if not instance_type:
+            table = s3db.pr_pentity
+            r = db(table._id == id).select(table.instance_type,
+                                           limitby=(0, 1)).first()
+            instance_type = r.instance_type
+
+        if instance_type == "pr_person":
+            # initials?
+            return s3_fullname(pe_id=id) or current.messages.UNKNOWN_OPT
+        elif instance_type in ("pr_group", "org_organisation"):
+            # Team or Organisation
+            table = s3db[instance_type]
+            r = db(table.pe_id == id).select(table.name,
+                                             limitby=(0, 1)).first()
+            try:
+                return r.name
+            except:
+                return current.messages.UNKNOWN_OPT
+        else:
             return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
@@ -2983,6 +3168,7 @@ class S3ProjectTaskModel(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
         s3mgr = current.manager
 
         vars = form.vars
@@ -2992,23 +3178,26 @@ class S3ProjectTaskModel(S3Model):
         table = db.project_task
 
         changed = {}
-        for var in vars:
-            vvar = vars[var]
-            rvar = record[var]
-            if vvar != rvar:
-                if table[var].type == "integer":
-                    vvar = int(vvar)
-                    if vvar == rvar:
-                        continue
-                represent = table[var].represent
-                if not represent:
-                    represent = lambda o: o
-                if rvar:
-                    changed[var] = "%s changed from %s to %s" % \
-                        (table[var].label, represent(rvar), represent(vvar))
-                else:
-                    changed[var] = "%s changed to %s" % \
-                        (table[var].label, represent(vvar))
+        if record: # Not True for a record merger
+            for var in vars:
+                vvar = vars[var]
+                rvar = record[var]
+                if vvar != rvar:
+                    type = table[var].type
+                    if type == "integer" or \
+                       type.startswith("reference"):
+                        vvar = int(vvar)
+                        if vvar == rvar:
+                            continue
+                    represent = table[var].represent
+                    if not represent:
+                        represent = lambda o: o
+                    if rvar:
+                        changed[var] = "%s changed from %s to %s" % \
+                            (table[var].label, represent(rvar), represent(vvar))
+                    else:
+                        changed[var] = "%s changed to %s" % \
+                            (table[var].label, represent(vvar))
 
         if changed:
             table = db.project_comment
@@ -3042,8 +3231,8 @@ class S3ProjectTaskModel(S3Model):
             # Remove any other links
             links = s3mgr.define_resource("project", "task_project",
                                           filter=filter)
-            ondelete = s3mgr.model.get_config("project_task_project",
-                                              "ondelete")
+            ondelete = s3db.get_config("project_task_project",
+                                       "ondelete")
             links.delete(ondelete=ondelete)
 
         if "activity_id" in vars:
@@ -3069,8 +3258,8 @@ class S3ProjectTaskModel(S3Model):
             # Remove any other links
             links = s3mgr.define_resource("project", "task_activity",
                                           filter=filter)
-            ondelete = s3mgr.model.get_config("project_task_activity",
-                                              "ondelete")
+            ondelete = s3db.get_config("project_task_activity",
+                                       "ondelete")
             links.delete(ondelete=ondelete)
 
         # Notify Assignee
@@ -3298,12 +3487,18 @@ class S3ProjectTaskIReportModel(S3Model):
 def project_project_represent(id, row=None, show_link=True):
     """ FK representation """
 
-    if not row and id:
-        table = current.s3db.project_project
-        row = current.db(table.id == id).select(table.name,
-                                                table.code,
-                                                limitby=(0, 1)).first()
     if row:
+        pass
+    elif id:
+        db = current.db
+        table = db.project_project
+        row = db(table.id == id).select(table.name,
+                                        table.code,
+                                        limitby=(0, 1)).first()
+    else:
+        return current.messages.NONE
+
+    try:
         if current.deployment_settings.get_project_codes():
             repr = "%s: %s" % (row.code, row.name)
         else:
@@ -3313,92 +3508,8 @@ def project_project_represent(id, row=None, show_link=True):
         return A(repr, _href = URL(c="project",
                                    f="project",
                                    args=[id]))
-    else:
-        return current.messages.NONE
-
-# =============================================================================
-def project_location_represent(id, row=None):
-    """
-    """
-
-    return current.s3db.gis_location_lx_represent(
-               s3_get_db_field_value(tablename = "project_location",
-                                     fieldname = "location_id",
-                                     look_up_value = id)
-                )
-
-# =============================================================================
-def project_assignee_represent(id):
-    """ Represent the Person a Task is assigned-to or list views """
-
-    if not id:
-        return current.messages.NONE
-
-    db = current.db
-    s3db = current.s3db
-    cache = s3db.cache
-
-    if isinstance(id, Row):
-        instance_type = id.instance_type
-        id = id.pe_id
-    else:
-        etable = s3db.pr_pentity
-        query = (etable.id == id)
-        record = db(query).select(etable.instance_type,
-                                  cache=cache,
-                                  limitby=(0, 1)).first()
-        if not record:
-            return current.messages.UNKNOWN_OPT
-
-        instance_type = record.instance_type
-
-    table = s3db[instance_type]
-    query = (table.pe_id == id)
-    if instance_type == "pr_person":
-        record = db(query).select(table.first_name,
-                                  table.middle_name,
-                                  table.last_name,
-                                  table.initials,
-                                  cache=cache,
-                                  limitby=(0, 1)).first()
-        if record:
-            return record.initials or s3_fullname(record)
-        else:
-            return current.messages.UNKNOWN_OPT
-    elif instance_type in ("pr_group", "org_organisation"):
-        # Team or Organisation
-        record = db(query).select(table.name,
-                                  cache=cache,
-                                  limitby=(0, 1)).first()
-        if record:
-            return record.name
-        else:
-            return current.messages.UNKNOWN_OPT
-        
-    return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def project_theme_represent(id):
-    """
-        Theme representation
-        - for multiple=False
-    """
-
-    if not id:
-        return current.messages.NONE
-
-    if isinstance(id, Row):
-        # Do not repeat the lookup if already done by IS_ONE_OF
-        theme = id
-    else:
-        table = current.s3db.project_theme
-        theme = current.db(table.id == id).select(table.name,
-                                                  limitby=(0, 1)).first()
-
-    if not theme:
+    except:
         return current.messages.UNKNOWN_OPT
-
-    return theme.name
 
 # =============================================================================
 def multiref_represent(opts, tablename, represent_string = "%(name)s"):
@@ -3511,11 +3622,18 @@ def project_location_represent(id, row=None):
     """
     """
 
-    return current.s3db.gis_location_lx_represent( 
-               s3_get_db_field_value(tablename = "project_location",
-                                     fieldname = "location_id",
-                                     look_up_value = id)
-                )
+    if not id:
+        return current.messages.NONE
+
+    if not row:
+        db = current.db
+        table = db.project_location
+        row = db(table.id == id).select(table.location_id,
+                                        limitby=(0, 1)).first()
+    try:
+        return current.s3db.gis_location_lx_represent(row.location_id)
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def task_notify(form):
@@ -3589,81 +3707,6 @@ class S3ProjectBudgetVirtualFields:
                 (pabtable.project_id == self.project_project.id)
         sum_field = pabtable.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-
-# =============================================================================
-class S3ProjectActivityVirtualFields:
-    """ Virtual fields for the project_activity table """
-
-    extra_fields = ["project_id", "location_id"]
-
-    # -------------------------------------------------------------------------
-    def organisation(self):
-        """ Name of the lead organisation of the project """
-
-        LEAD_ROLE = current.deployment_settings.get_project_organisation_lead_role()
-
-        s3db = current.s3db
-        otable = s3db.org_organisation
-        ltable = s3db.project_organisation
-
-        query = (ltable.deleted != True) & \
-                (ltable.project_id == self.project_activity.project_id) & \
-                (ltable.role == LEAD_ROLE) & \
-                (ltable.organisation_id == otable.id)
-        org = current.db(query).select(otable.name,
-                                       limitby=(0, 1)).first()
-        if org:
-            return org.name
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L0(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L0" in parents:
-            return parents["L0"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L1(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L1" in parents:
-            return parents["L1"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L2(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L2" in parents:
-            return parents["L2"]
-        else:
-            return None
-
-    # -------------------------------------------------------------------------
-    def L3(self):
-        parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_activity.location_id,
-                                                   ids=False,
-                                                   names=True)
-        if "L3" in parents:
-            return parents["L3"]
-        else:
-            return None
 
 # =============================================================================
 class S3ProjectLocationVirtualFields:
@@ -3741,28 +3784,29 @@ class S3ProjectLocationVirtualFields:
 class S3ProjectBeneficiaryVirtualFields:
     """ Virtual fields for the project_beneficiary table """
 
-    extra_fields = ["project_location_id",
+    extra_fields = ["project_location_id$location_id",
                     "project_id",
                     "start_date",
                     "end_date"]
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _get_project_location(project_location_id):
+    def _get_project_location(id):
         """
             Get the location from the database for this project_location and
             return the location tree
         """
 
-        ctable = current.s3db.project_location
-        query = (ctable.id == project_location_id)
-        project_location = current.db(query).select(ctable.location_id,
-                                                    limitby=(0,1)).first()
+        db = current.db
+        table = db.project_location
+        r = db(table.id == id).select(table.location_id,
+                                      limitby=(0,1),
+                                      cache=current.s3db.cache).first()
 
         parents = Storage()
-        if project_location:
+        if r:
             parents = current.gis.get_parent_per_level(parents,
-                                                       project_location.location_id,
+                                                       r.location_id,
                                                        ids=False,
                                                        names=True)
 
@@ -3770,40 +3814,115 @@ class S3ProjectBeneficiaryVirtualFields:
 
     # -------------------------------------------------------------------------
     def L0(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L0" in parents:
-            return parents["L0"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L0" in parents:
+        #    return parents["L0"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
-
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L0
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L1(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L1" in parents:
-            return parents["L1"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L1" in parents:
+        #    return parents["L1"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L1
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L2(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L2" in parents:
-            return parents["L2"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L2" in parents:
+        #    return parents["L2"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L2
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def L3(self):
-        parents = self._get_project_location(self.project_beneficiary.project_location_id)
-
-        if "L3" in parents:
-            return parents["L3"]
+        #parents = self._get_project_location(self.project_beneficiary.project_location_id)
+        #if "L3" in parents:
+        #    return parents["L3"]
+        #else:
+        #    return current.messages.NONE
+        try:
+            id = self.project_beneficiary.project_location_id
+        except:
+             return current.messages.NONE
         else:
-            return current.messages.NONE
+            db = current.db
+            table = db.project_location
+            ltable = db.gis_location
+            query = (table.id == id) & \
+                    (table.location_id == ltable.id)
+            r = db(query).select(ltable.L0,
+                                 ltable.L1,
+                                 ltable.L2,
+                                 ltable.L3,
+                                 cache=current.s3db.cache,
+                                 limitby=(0, 1)).first()
+            try:
+                return r.L3
+            except:
+                return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     def year(self):
@@ -3818,8 +3937,7 @@ class S3ProjectBeneficiaryVirtualFields:
                     end_date = project.end_date
         if not start_date or not end_date:
             return [start_date.year or end_date.year]
-        return [year for year in xrange(start_date.year,end_date.year+1)]
-        
+        return [year for year in xrange(start_date.year, end_date.year + 1)]
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:
@@ -4012,23 +4130,6 @@ function comment_reply(id){
     s3.js_global.append(js)
 
 # =============================================================================
-def project_discuss(r, **attr):
-    """ Custom Method to manage the discussion of a Task """
-
-    id = r.id
-
-    # Add the RHeader to maintain consistency with the other pages
-    rheader = project_rheader(r)
-
-    # Load the Project Comments JS
-    project_ckeditor()
-
-    current.response.view = "project/discuss.html"
-    return dict(rheader=rheader,
-                resourcename="task",
-                id=id)
-
-# =============================================================================
 def project_rheader(r, tabs=[]):
     """ Project Resource Headers - used in Project & Budget modules """
 
@@ -4146,7 +4247,6 @@ def project_rheader(r, tabs=[]):
         staff = auth.s3_has_role("STAFF")
         if staff:
             append((T("Time"), "time")),
-        #append((T("Comments"), "discuss"))
         append((T("Attachments"), "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
@@ -4162,12 +4262,14 @@ def project_rheader(r, tabs=[]):
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.id,
+        project = db(query).select(ptable.code,
+                                   ptable.name,
                                    limitby=(0, 1)).first()
         if project:
             project = TR(
                             TH("%s: " % T("Project")),
-                            project_project_represent(project.id)
+                            project_project_represent(id=None,
+                                                      row=project)
                         )
         else:
             project = ""
@@ -4211,19 +4313,10 @@ def project_rheader(r, tabs=[]):
         else:
             location = ""
 
-        if record.pe_id:
-            assignee = TR(
-                            TH("%s: " % table.pe_id.label),
-                            s3db.pr_pentity_represent(record.pe_id,
-                                                      show_label=False),
-                        )
-        else:
-            assignee = ""
-
         if record.created_by:
             creator = TR(
                             TH("%s: " % T("Created by")),
-                            s3db.pr_pentity_represent(record.created_by, show_label=False),
+                            s3_auth_user_represent(record.created_by),
                         )
         else:
             creator = ""
@@ -4254,7 +4347,6 @@ def project_rheader(r, tabs=[]):
             description,
             facility,
             location,
-            assignee,
             creator,
             time_estimated,
             time_actual,
@@ -4277,15 +4369,10 @@ def project_task_controller():
     s3 = current.response.s3
     db = current.db
     s3db = current.s3db
-    s3mgr = current.manager
 
+    # Load model
     tablename = "project_task"
     table = s3db[tablename]
-    # Custom Method to add Comments
-    s3db("project", "task",
-         method="discuss",
-         action=project_discuss)
-
     statuses = s3.project_task_active_statuses
     crud_strings = s3.crud_strings[tablename]
     if "mine" in request.get_vars:
@@ -4297,8 +4384,8 @@ def project_task_controller():
                        listadd=False)
         try:
             # Add Virtual Fields
-            list_fields = s3mgr.model.get_config(tablename,
-                                                 "list_fields")
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
             list_fields.insert(4, (T("Project"), "project"))
             # Hide the Assignee column (always us)
             list_fields.remove("pe_id")
@@ -4326,8 +4413,8 @@ def project_task_controller():
         crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
         crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
         # Add Virtual Fields
-        list_fields = s3mgr.model.get_config(tablename,
-                                             "list_fields")
+        list_fields = s3db.get_config(tablename,
+                                      "list_fields")
         list_fields.insert(2, (T("Activity"), "activity"))
         s3db.configure(tablename,
                        # Block Add until we get the injectable component lookups
@@ -4337,14 +4424,14 @@ def project_task_controller():
                        #search_method=task_search,
                        list_fields=list_fields)
         ltable = s3db.project_task_project
-        response.s3.filter = (ltable.project_id == project) & \
-                             (ltable.task_id == table.id) & \
-                             (table.status.belongs(statuses))
+        s3.filter = (ltable.project_id == project) & \
+                    (ltable.task_id == table.id) & \
+                    (table.status.belongs(statuses))
     else:
         crud_strings.title_list = T("All Tasks")
         crud_strings.title_search = T("All Tasks")
-        list_fields = s3mgr.model.get_config(tablename,
-                                             "list_fields")
+        list_fields = s3db.get_config(tablename,
+                                      "list_fields")
         list_fields.insert(2, (T("Project"), "project"))
         list_fields.insert(3, (T("Activity"), "activity"))
         s3db.configure(tablename,
@@ -4371,11 +4458,11 @@ def project_task_controller():
                 # Put the Comments in the RFooter
                 project_ckeditor()
                 s3.rfooter = LOAD("project", "comments.load",
-                                  args=["task", r.id],
+                                  args=[r.id],
                                   ajax=True)
             if r.component:
                 if r.component_name == "req":
-                    if deployment_settings.has_module("hrm"):
+                    if current.deployment_settings.has_module("hrm"):
                         r.component.table.type.default = 3
                     if r.method != "update" and r.method != "read":
                         # Hide fields which don't make sense in a Create form
@@ -4408,8 +4495,8 @@ def project_task_controller():
         if r.interactive:
             if r.method != "import":
                 update_url = URL(args=["[id]"], vars=request.get_vars)
-                s3mgr.crud.action_buttons(r,
-                                          update_url=update_url)
+                current.manager.crud.action_buttons(r,
+                                                    update_url=update_url)
                 if not r.component and \
                    r.method != "search" and \
                    "form" in output:
@@ -4419,8 +4506,8 @@ def project_task_controller():
                         # Activity not easy for non-Staff to know about, so don't add
                         table = s3db.project_task_activity
                         field = table.activity_id
-                        if r.record:
-                            query = (table.task_id == r.record.id)
+                        if r.id:
+                            query = (table.task_id == r.id)
                             default = db(query).select(table.activity_id,
                                                        limitby=(0, 1)).first()
                             if default:
@@ -4451,8 +4538,8 @@ def project_task_controller():
                     else:
                         table = s3db.project_task_project
                         field = table.project_id
-                        if r.record:
-                            query = (table.task_id == r.record.id)
+                        if r.id:
+                            query = (table.task_id == r.id)
                             default = db(query).select(table.project_id,
                                                        limitby=(0, 1)).first()
                             if default:
