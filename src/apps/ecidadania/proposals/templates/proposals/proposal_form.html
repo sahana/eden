@@ -64,24 +64,6 @@ automatically if found in the data models.
                 </div>
             </div>
 
-
-            <div class="control-group {% if form.proposalset.errors %}error{% endif %}">
-                <label>{{ form.proposalset.label }}</label>
-                <div class="controls">
-                    <div class="input-prepend">
-                        {{ form.proposalset }}
-                        {% if form.proposalset.help_text %}
-                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.proposalset.help_text }}"><i class="icon-question-sign"></i></a></span>
-                        {% endif %}
-                    </div>
-                    {% if form.proposalset.errors %}
-                        {% for error in form.proposalset.errors %}
-                            {{ error|escape }}
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            </div>
-
             <div class="control-group {% if form.description.errors %}error{% endif %}">
                 <label>{{ form.description.label }}</label>
                 <div class="controls">
