@@ -496,19 +496,86 @@ class GIS(object):
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=[]):
+    def get_bounds(self, features=[], parent=None):
         """
-            Calculate the Bounds of a list of Features
+            Calculate the Bounds of a list of Point Features
             e.g. When a map is displayed that focuses on a collection of points,
                  the map is zoomed to show just the region bounding the points.
             e.g. To use in GPX export for correct zooming
 `
             Ensure a minimum size of bounding box, and that the points
             are inset from the border.
-            @ToDo: Optimised Geospatial routines rather than this crude hack
+
+            @param features: A list of point features
+            @param parent: A location_id to provide a polygonal bounds suitable
+                           for validating child locations
         """
 
-        #
+        if parent:
+            table = current.s3db.gis_location
+            db = current.db
+            parent = db(table.id == parent).select(table.level,
+                                                   table.name,
+                                                   table.parent,
+                                                   table.path,
+                                                   table.lon,
+                                                   table.lat,
+                                                   table.lon_min,
+                                                   table.lat_min,
+                                                   table.lon_max,
+                                                   table.lat_max).first()
+            if parent.lon_min is None or \
+               parent.lon_max is None or \
+               parent.lat_min is None or \
+               parent.lat_max is None or \
+               parent.lon == parent.lon_min or \
+               parent.lon == parent.lon_max or \
+               parent.lat == parent.lat_min or \
+               parent.lat == parent.lat_max:
+                # This is unsuitable - try higher parent
+                if parent.level == "L1":
+                    if parent.parent:
+                        # We can trust that L0 should have the data from prepop
+                        L0 = db(table.id == parent.parent).select(table.name,
+                                                                  table.lon_min,
+                                                                  table.lat_min,
+                                                                  table.lon_max,
+                                                                  table.lat_max).first()
+                        return L0.lat_min, L0.lon_min, L0.lat_max, L0.lon_max, L0.name
+                if parent.path:
+                    path = parent.path
+                else:
+                    path = self.update_location_tree(dict(id=parent))
+                path_list = map(int, path.split("/"))
+                rows = db(table.id.belongs(path_list)).select(table.level,
+                                                              table.name,
+                                                              table.lat,
+                                                              table.lon,
+                                                              table.lon_min,
+                                                              table.lat_min,
+                                                              table.lon_max,
+                                                              table.lat_max,
+                                                              orderby=table.level)
+                row_list = rows.as_list()
+                row_list.reverse()
+                ok = False
+                for row in row_list:
+                    if row["lon_min"] is not None and row["lon_max"] is not None and \
+                       row["lat_min"] is not None and row["lat_max"] is not None and \
+                       row["lon"] != row["lon_min"] != row["lon_max"] and \
+                       row["lat"] != row["lat_min"] != row["lat_max"]:
+                        ok = True
+                        break
+
+                if ok:
+                    # This level is suitable
+                    return row["lat_min"], row["lon_min"], row["lat_max"], row["lon_max"], row["name"]
+            else:
+                # This level is suitable
+                return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
+               
+            return -90, -180, 90, 180, None
+
         # Minimum Bounding Box
         # - gives a minimum width and height in degrees for the region shown.
         # Without this, a map showing a single point would not show any extent around that point.
@@ -532,6 +599,7 @@ class GIS(object):
             except (AttributeError, KeyError):
                 simple = False
 
+            # @ToDo: Optimised Geospatial routines rather than this crude hack
             for feature in features:
 
                 try:
@@ -572,20 +640,25 @@ class GIS(object):
             min_lat -= bbox_inset
             max_lat += bbox_inset
 
-            # Check that we're still within overall bounds
-            # - seems unnecessary?
-            #min_lon = max(config.min_lon, min_lon)
-            #min_lat = max(config.min_lat, min_lat)
-            #max_lon = min(config.max_lon, max_lon)
-            #max_lat = min(config.max_lat, max_lat)
-
         else:
             # no features
             config = self.get_config()
-            min_lon = config.min_lon or -180
-            max_lon = config.max_lon or 180
-            min_lat = config.min_lat or -90
-            max_lat = config.max_lat or 90
+            if config.min_lat is not None:
+                min_lat = config.min_lat
+            else:
+                min_lat = -90
+            if config.min_lon is not None:
+                min_lon = config.min_lon
+            else:
+                min_lon = -180
+            if config.max_lat is not None:
+                max_lat = config.max_lat
+            else:
+                max_lat = 90
+            if config.max_lon is not None:
+                max_lon = config.max_lon
+            else:
+                max_lon = 180
 
         return dict(min_lon=min_lon, min_lat=min_lat,
                     max_lon=max_lon, max_lat=max_lat)
@@ -4015,8 +4088,14 @@ class GIS(object):
                 form.errors["lon"] = messages.lon_empty
             else:
                 vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                vars.lon_min = vars.lon_max = vars.lon
-                vars.lat_min = vars.lat_max = vars.lat
+                if "lon_min" not in vars or vars.lon_min is None:
+                    vars.lon_min = vars.lon
+                if "lon_max" not in vars or vars.lon_max is None:
+                    vars.lon_max = vars.lon
+                if "lat_min" not in vars or vars.lat_min is None:
+                    vars.lat_min = vars.lat
+                if "lat_max" not in vars or vars.lat_max is None:
+                    vars.lat_max = vars.lat
 
         elif vars.wkt:
             # Parse WKT for LineString, Polygon, etc
@@ -4079,8 +4158,14 @@ class GIS(object):
                 form.errors["lon"] = messages.lon_empty
             else:
                 vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                vars.lon_min = vars.lon_max = vars.lon
-                vars.lat_min = vars.lat_max = vars.lat
+                if "lon_min" not in vars or vars.lon_min is None:
+                    vars.lon_min = vars.lon
+                if "lon_max" not in vars or vars.lon_max is None:
+                    vars.lon_max = vars.lon
+                if "lat_min" not in vars or vars.lat_min is None:
+                    vars.lat_min = vars.lat
+                if "lat_max" not in vars or vars.lat_max is None:
+                    vars.lat_max = vars.lat
 
         return
 

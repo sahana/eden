@@ -421,11 +421,6 @@ class S3LocationModel(S3Model):
         if parent:
             table = db.gis_location
             _parent = db(table.id == parent).select(table.level,
-                                                    table.gis_feature_type,
-                                                    table.lat_min,
-                                                    table.lon_min,
-                                                    table.lat_max,
-                                                    table.lon_max,
                                                     limitby=(0, 1)).first()
 
         # Check Parents are in sane order
@@ -473,31 +468,27 @@ class S3LocationModel(S3Model):
             # Skip if no Lat/Lon provided
             if lat and lon:
                 name = vars.name
-                if parent and _parent.gis_feature_type == 3:
+                if parent:
                     # Check within Bounds of the Parent
                     # Rough (Bounding Box)
-                    min_lat = _parent.lat_min
-                    min_lon = _parent.lon_min
-                    max_lat = _parent.lat_max
-                    max_lon = _parent.lon_max
-                    name = vars.name
-                    if name:
-                        base_error = T("Sorry location %(location)s appears to be outside the area of the Parent.") % dict(location=name)
-                    else:
-                        base_error = T("Sorry location appears to be outside the area of the Parent.")
-                    lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                  str(min_lat), str(max_lat))
-                    lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                 str(min_lon), str(max_lon))
+                    min_lat, min_lon, max_lat, max_lon, parent_name = gis.get_bounds(parent=parent)
                     if (lat > max_lat) or (lat < min_lat):
-                        response.error = base_error
-                        s3_debug(base_error)
+                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                      min_lat, max_lat)
                         form.errors["lat"] = lat_error
-                        return
-                    elif (lon > max_lon) or (lon < min_lon):
+                    if (lon > max_lon) or (lon < min_lon):
+                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                     min_lon, max_lon)
+                        form.errors["lon"] = lon_error
+                    if form.errors:
+                        if name:
+                            base_error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
+                                dict(location=name, parent=parent_name)
+                        else:
+                            base_error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
+                                dict(parent=parent_name)
                         response.error = base_error
                         s3_debug(base_error)
-                        form.errors["lon"] = lon_error
                         return
 
                     # @ToDo: Precise (GIS function)
@@ -506,10 +497,22 @@ class S3LocationModel(S3Model):
                 else:
                     # Check bounds for the Instance
                     config = gis.get_config()
-                    min_lat = config.min_lat or -90
-                    min_lon = config.min_lon or -180
-                    max_lat = config.max_lat or 90
-                    max_lon = config.max_lon or 180
+                    if config.min_lat is not None:
+                        min_lat = config.min_lat
+                    else:
+                        min_lat = -90
+                    if config.min_lon is not None:
+                        min_lon = config.min_lon
+                    else:
+                        min_lon = -180
+                    if config.max_lat is not None:
+                        max_lat = config.max_lat
+                    else:
+                        max_lat = 90
+                    if config.max_lon is not None:
+                        max_lon = config.max_lon
+                    else:
+                        max_lon = 180
                     if name:
                         base_error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % dict(location=name)
                     else:
