@@ -332,6 +332,7 @@ $(document).ready(function(){
                     field="expiry_date"
                 )
             ],
+
             rows=["item_id", (T("Category"), "item_category"), "currency"],
             cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
             facts=["quantity", (T("Total Value"), "total_value"),],
@@ -2116,15 +2117,27 @@ def inv_warehouse_rheader(r):
     rfooter = TAG[""]()
     if record and "site_id" in record:
         if (r.component and r.component.name == "inv_item"):
-            as_btn = A( T("Adjust Stock"),
-                          _href = URL(c = "inv",
-                                      f = "adj",
-                                      args = ["create"],
-                                      vars = {"site":record.site_id},
-                                      ),
-                          _class = "action-btn"
-                          )
-            rfooter.append(as_btn)
+            if r.component_id:
+                asi_btn = A( T("Adjust Stock Item"),
+                              _href = URL(c = "inv",
+                                          f = "adj",
+                                          args = ["create"],
+                                          vars = {"site":record.site_id,
+                                                  "item":r.component_id},
+                                          ),
+                              _class = "action-btn"
+                              )
+                rfooter.append(asi_btn)
+            else:
+                as_btn = A( T("Adjust Stock"),
+                              _href = URL(c = "inv",
+                                          f = "adj",
+                                          args = ["create"],
+                                          vars = {"site":record.site_id},
+                                          ),
+                              _class = "action-btn"
+                              )
+                rfooter.append(as_btn)
             ts_btn = A( T("Track Shipment"),
                           _href = URL(c = "inv",
                                       f = "track_movement",
@@ -2743,8 +2756,12 @@ class S3AdjustModel(S3Model):
                                    represent = lambda opt: \
                                     adjust_reason.get(opt, UNKNOWN_OPT),
                                    writable = False),
-                             Field("pack_value", "double",
-                                   label = T("Value per Pack")),
+                             Field("old_pack_value",
+                                   "double",
+                                   label = T("Original Value per Pack")),
+                             Field("new_pack_value",
+                                   "double",
+                                   label = T("Revised Value per Pack")),
                              s3_currency(),
                              Field("old_status", "integer",
                                    label = T("Current Status"),
@@ -2863,10 +2880,13 @@ class S3AdjustModel(S3Model):
                                     old_quantity = inv_item.quantity,
                                     currency = inv_item.currency,
                                     old_status = inv_item.status,
-                                    pack_value = inv_item.pack_value,
+                                    new_status = inv_item.status,
+                                    old_pack_value = inv_item.pack_value,
+                                    new_pack_value = inv_item.pack_value,
                                     expiry_date = inv_item.expiry_date,
                                     bin = inv_item.bin,
                                     old_owner_org_id = inv_item.owner_org_id,
+                                    new_owner_org_id = inv_item.owner_org_id,
                                    )
 
     # ---------------------------------------------------------------------
