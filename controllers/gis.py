@@ -205,48 +205,26 @@ def location():
 
     # Custom Method
     s3db.set_method("gis", "location", method="parents",
-                           action=s3_gis_location_parents)
+                    action=s3_gis_location_parents)
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
     vars = {}
-    # @ToDo: Clean up what needs to be done only for interactive views,
-    # vs. what needs to be done generally. E.g. some tooltips are defined
-    # for non-interactive.
     def prep(r, vars):
 
-        def get_location_info():
-            table = s3db.gis_location
-            query = (table.id == r.id)
-            return db(query).select(table.lat,
-                                    table.lon,
-                                    table.level,
-                                    limitby=(0, 1)).first()
+        if r.interactive and not r.component:
+            # Restrict access to Polygons to just MapAdmins
+            if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+                table.gis_feature_type.writable = table.gis_feature_type.readable = False
+                table.wkt.writable = table.wkt.readable = False
+            else:
+                table.wkt.comment = DIV(_class="stickytip",
+                                        _title="WKT|%s %s%s %s%s" % (T("The"),
+                                                                   "<a href='http://en.wikipedia.org/wiki/Well-known_text' target=_blank>",
+                                                                   T("Well-Known Text"),
+                                                                   "</a>",
+                                                                   T("representation of the Polygon/Line.")))
 
-        # Restrict access to Polygons to just MapAdmins
-        if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-            table.gis_feature_type.writable = table.gis_feature_type.readable = False
-            table.wkt.writable = table.wkt.readable = False
-        elif r.interactive:
-            table.wkt.comment = DIV(_class="stickytip",
-                                    _title="WKT|%s %s%s %s%s" % (T("The"),
-                                                               "<a href='http://en.wikipedia.org/wiki/Well-known_text' target=_blank>",
-                                                               T("Well-Known Text"),
-                                                               "</a>",
-                                                               T("representation of the Polygon/Line.")))
-
-        if r.interactive:
-            # Don't show street address, postcode for hierarchy on read or update.
-            if r.method != "create" and r.id:
-                try:
-                    location
-                except:
-                    location = get_location_info()
-                if location.level:
-                    table.addr_street.writable = table.addr_street.readable = False
-                    table.addr_postcode.writable = table.addr_postcode.readable = False
-
-            # Options which are only required in interactive HTML views
             table.level.comment = DIV(_class="tooltip",
                                       _title="%s|%s" % (T("Level"),
                                                         T("If the location is a geographic area, then state at what level here.")))
@@ -262,18 +240,13 @@ def location():
                                                              vars=dict(child="parent")),
                                            parent_comment)
 
+            table.inherited.comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (table.inherited.label,
+                                                            T("Whether the Latitude & Longitude are inherited from a higher level in the location hierarchy rather than being a separately-entered figure.")))
+
             table.comments.comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Comments"),
                                                            T("Please use this field to record any additional information, such as Ushahidi instance IDs. Include a history of the record if it is updated.")))
-
-            if r.representation == "iframe":
-                # De-duplicator needs to be able to access UUID fields
-                table.uuid.readable = table.uuid.writable = True
-                table.uuid.label = "UUID"
-                table.uuid.comment = DIV(_class="stickytip",
-                                         _title="UUID|%s%s%s" % (T("The"),
-                                                                 " <a href='http://eden.sahanafoundation.org/wiki/UUID#Mapping' target=_blank>Universally Unique ID</a>. ",
-                                                                 T("Suggest not changing this field unless you know what you are doing.")))
 
             if r.method in (None, "list") and r.record is None:
                 # List
@@ -281,6 +254,7 @@ def location():
             elif r.method in ("delete", "search"):
                 pass
             else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
                 lat = config.lat
@@ -291,6 +265,7 @@ def location():
                 if r.method == "create":
                     add_feature = True
                     add_feature_active = True
+                    table.inherited.readable = False
                 else:
                     if r.method == "update":
                         add_feature = True
@@ -300,20 +275,13 @@ def location():
                         add_feature = False
                         add_feature_active = False
 
-                    try:
-                        location
-                    except:
-                        location = get_location_info()
-                    if location and location.lat is not None and location.lon is not None:
-                        lat = location.lat
-                        lon = location.lon
+                    record = r.record
+                    if record and record.lat is not None and record.lon is not None:
+                        lat = record.lat
+                        lon = record.lon
                     # Same as a single zoom on a cluster
                     zoom = zoom + 2
 
-                # @ToDo: Does map make sense if the user is updating a group?
-                # If not, maybe leave it out. OTOH, might be nice to select
-                # admin regions to include in the group by clicking on them in
-                # the map. Would involve boundaries...
                 _map = gis.show_map(lat = lat,
                                     lon = lon,
                                     zoom = zoom,

@@ -215,7 +215,6 @@ def index():
                 #["dec", T("Gap Report"), "project", "gap_report"],
                 ["dec", T("Requests"), "req", "req"],
                 ["res", T("Projects"), "project", "project"],
-                ["res", T("Activities"), "project", "activity"],
                 ["res", T("Commitments"), "req", "commit"],
                 ["res", T("Sent Shipments"), "inv", "send"],
                 ["res", T("Received Shipments"), "inv", "recv"]

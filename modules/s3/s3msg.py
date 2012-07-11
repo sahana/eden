@@ -360,8 +360,6 @@ class S3Msg(object):
                                   vars.message,
                                   sender_pe_id,
                                   vars.pr_message_method):
-                # Trigger a Process Outbox
-                self.process_outbox(contact_method = vars.pr_message_method)
                 current.session.confirmation = T("Check outbox for the message status")
                 redirect(url)
             else:
@@ -504,8 +502,9 @@ class S3Msg(object):
             except:
                 return False
 
-        # @ToDo: Process Outbox (once this can be done async)
-        # - or is this better to do in the wrapper script?
+        # Process OutBox async
+        current.s3task.async("msg_process_outbox",
+                             args=[pr_message_method])
 
         return True
 
@@ -1479,8 +1478,6 @@ class S3Compose(S3CRUD):
                              vars.message,
                              sender_pe_id,
                              vars.pr_message_method):
-            # Trigger a Process Outbox
-            msg.process_outbox(contact_method = vars.pr_message_method)
             session.confirmation = T("Check outbox for the message status")
             redirect(url)
         else:

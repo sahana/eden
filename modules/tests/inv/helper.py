@@ -73,7 +73,7 @@ class InvTestFunctions(SeleniumUnitTest):
             s3_debug ("Stock level before %s, stock level after %s" % (stock_before, stock_after))
         return result
     
-        # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def send_shipment(self, user, send_id):
         """
             Helper method to send a shipment with id of send_id
@@ -113,7 +113,50 @@ class InvTestFunctions(SeleniumUnitTest):
             self.assertTrue(rec.status == 2, "Shipment item is not status sent")
         s3_debug("Shipment items are all of status: sent")
     
-        # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    def confirm_received_shipment(self, user, send_id):
+        """
+            Helper method to confirm that a shipment has been received
+            outside of the system. This means that the items in the
+            shipment will not be recorded as being at a site but
+            the status of the shipment will be modified.
+        """
+        s3db = current.s3db
+        db = current.db
+        stable = s3db.inv_send
+        ititable = s3db.inv_track_item
+        # Get the current status
+        query = (stable.id == send_id)
+        record = db(query).select(stable.status,
+                      limitby=(0, 1)).first()
+        send_status = record.status
+        query = (ititable.send_id == send_id)
+        item_records = db(query).select(ititable.status)
+        # check that the status is correct
+        self.assertTrue(send_status == 2, "Shipment is not status sent")
+        s3_debug("Shipment status is: preparing")
+        for rec in item_records:
+            self.assertTrue(rec.status == 2, "Shipment item is not status sent")
+        s3_debug("Shipment items are all of status: sent")
+
+        # Now send the shipment on its way
+        self.login(account=user, nexturl="inv/send/%s?received=True" % send_id)
+
+        # Get the current status
+        query = (stable.id == send_id)
+        record = db(query).select(stable.status,
+                      limitby=(0, 1)).first()
+        send_status = record.status
+        query = (ititable.send_id == send_id)
+        item_records = db(query).select(ititable.status)
+        # check that the status is correct
+        self.assertTrue(send_status == 1, "Shipment is not status received")
+        s3_debug("Shipment status is: sent")
+        for rec in item_records:
+            self.assertTrue(rec.status == 4, "Shipment item is not status arrived")
+        s3_debug("Shipment items are all of status: arrived")
+    
+    # -------------------------------------------------------------------------
     def receive(self, user, data):
         """
             Helper method to add a inv_send record by the given user

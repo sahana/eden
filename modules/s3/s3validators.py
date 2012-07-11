@@ -715,6 +715,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 ):
         self.error_message = error_message
         self.errors = Storage()
+        self.id = None
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -753,8 +754,8 @@ class IS_LOCATION_SELECTOR(Validator):
 
                 value = table.insert(**vars)
                 # onaccept
-                current.gis.update_location_tree(value, location.parent,
-                                                 name=location.name)
+                vars["id"] = value
+                current.gis.update_location_tree(vars)
                 return (value, None)
             else:
                 return (None, None)
@@ -771,6 +772,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                         limitby=(0, 1)).first()
             if location:
                 # Update the record, in case changes have been made
+                self.id = value
                 location = self._process_values()
                 if self.errors:
                     errors = self.errors
@@ -781,6 +783,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 vars = dict(name = location.name,
                             lat = location.lat,
                             lon = location.lon,
+                            inherited = location.inherited,
                             addr_street = location.street,
                             addr_postcode = location.postcode,
                             parent = location.parent,
@@ -797,8 +800,8 @@ class IS_LOCATION_SELECTOR(Validator):
 
                 db(table.id == value).update(**vars)
                 # onaccept
-                current.gis.update_location_tree(value, location.parent,
-                                                 name=location.name)
+                vars["id"] = value
+                current.gis.update_location_tree(vars)
                 return (value, None)
             else:
                 return (value, self.error_message or current.T("Invalid Location!"))
@@ -811,7 +814,7 @@ class IS_LOCATION_SELECTOR(Validator):
             Note: This is also used by IS_SITE_SELECTOR()
         """
 
-        # Check for valid Lat/Lon
+        # Rough check for valid Lat/Lon (detailed later)
         vars = current.request.vars
         lat = vars.get("gis_location_lat", None)
         lon = vars.get("gis_location_lon", None)
@@ -888,16 +891,17 @@ class IS_LOCATION_SELECTOR(Validator):
         if L1:
             try:
                 # Is this an ID?
-                int(L1)
+                L1 = int(L1)
                 # Do we need to update it's parent?
                 if L0:
-                    parent = L0
                     location = db(table.id == L1).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != parent):
-                        db(query).update(parent=parent)
-                        onaccept(L1, parent, level="L1", name=location.name)
+                    if location and (location.parent != int(L0)):
+                        db(query).update(parent = L0)
+                        location["level"] = "L1"
+                        location["id"] = L1
+                        onaccept(location)
             except:
                 # Name
                 # Test for duplicates
@@ -909,31 +913,39 @@ class IS_LOCATION_SELECTOR(Validator):
                 if location:
                     # Use Existing record
                     L1 = location.id
-                elif L0 and L1_allowed:
-                    parent = L0
-                    L1_name = L1
-                    L1 = table.insert(name=L1, level="L1", parent=parent)
-                    onaccept(L1, parent, level="L1", name=L1_name)
                 elif L1_allowed:
-                    L1_name = L1
-                    L1 = table.insert(name=L1, level="L1")
-                    onaccept(L1, level="L1", name=L1_name)
+                    if L0:
+                        f = dict(name = L1,
+                                 level = "L1",
+                                 parent = L0,
+                                 )
+                        L1 = table.insert(**f)
+                        f["id"] = L1
+                        onaccept(f)
+                    else:
+                        f = dict(name=L1,
+                                 level="L1",
+                                 )
+                        L1 = table.insert(**f)
+                        f["id"] = L1
+                        onaccept(f)
                 else:
                     L1 = None
         # L2
         if L2:
             try:
                 # Is this an ID?
-                int(L2)
+                L2 = int(L2)
                 # Do we need to update it's parent?
                 if L1:
-                    parent = L1
                     location = db(table.id == L2).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != parent):
-                        db(query).update(parent=parent)
-                        onaccept(L2, parent, level="L2", name=location.name)
+                    if location and (location.parent != L1):
+                        db(query).update(parent=L1)
+                        location["level"] = "L2"
+                        location["id"] = L2
+                        onaccept(location)
             except:
                 # Name
                 # Test for duplicates
@@ -946,36 +958,47 @@ class IS_LOCATION_SELECTOR(Validator):
                 if location:
                     # Use Existing record
                     L2 = location.id
-                elif L1 and L2_allowed:
-                    parent = L1
-                    L2_name = L2
-                    L2 = table.insert(name=L2, level="L2", parent=parent)
-                    onaccept(L2, parent, level="L2", name=L2_name)
-                elif L0 and L2_allowed:
-                    parent = L0
-                    L2_name = L2
-                    L2 = table.insert(name=L2, level="L2", parent=parent)
-                    onaccept(L2, parent, level="L2", name=L2_name)
                 elif L2_allowed:
-                    L2_name = L2
-                    L2 = table.insert(name=L2, level="L2")
-                    onaccept(L2, level="L2", name=L2_name)
+                    if L1:
+                        f = dict(name=L2,
+                                 level="L2",
+                                 parent=L1,
+                                 )
+                        L2 = table.insert(**f)
+                        f["id"] = L2
+                        onaccept(f)
+                    elif L0:
+                        f = dict(name=L2,
+                                 level="L2",
+                                 parent=L0,
+                                 )
+                        L2 = table.insert(**f)
+                        f["id"] = L2
+                        onaccept(f)
+                    else:
+                        f = dict(name=L2,
+                                 level="L2",
+                                 )
+                        L2 = table.insert(**f)
+                        f["id"] = L2
+                        onaccept(f)
                 else:
                     L2 = None
         # L3
         if L3:
             try:
                 # Is this an ID?
-                int(L3)
+                L3 = int(L3)
                 # Do we need to update it's parent?
                 if L2:
-                    parent = L2
                     location = db(table.id == L3).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != parent):
-                        db(query).update(parent=parent)
-                        onaccept(L3, parent, level="L3", name=location.name)
+                    if location and (location.parent != L2):
+                        db(query).update(parent=L2)
+                        location["level"] = "L3"
+                        location["id"] = L3
+                        onaccept(location)
             except:
                 # Name
                 # Test for duplicates
@@ -988,41 +1011,55 @@ class IS_LOCATION_SELECTOR(Validator):
                 if location:
                     # Use Existing record
                     L3 = location.id
-                elif L2 and L3_allowed:
-                    parent = L2
-                    L3_name = L3
-                    L3 = table.insert(name=L3, level="L3", parent=parent)
-                    onaccept(L3, parent, level="L3", name=L3_name)
-                elif L1 and L3_allowed:
-                    parent = L1
-                    L3_name = L3
-                    L3 = table.insert(name=L3, level="L3", parent=parent)
-                    onaccept(L3, parent, level="L3", name=L3_name)
-                elif L0 and L3_allowed:
-                    parent = L0
-                    L3_name = L3
-                    L3 = table.insert(name=L3, level="L3", parent=parent)
-                    onaccept(L3, parent, level="L3", name=L3_name)
                 elif L3_allowed:
-                    L3 = table.insert(name=L3, level="L3")
-                    L3_name = L3
-                    onaccept(L3, level="L3", name=L3_name)
+                    if L2:
+                        f = dict(name=L3,
+                                 level="L3",
+                                 parent=L2,
+                                 )
+                        L3 = table.insert(**f)
+                        f["id"] = L3
+                        onaccept(f)
+                    elif L1:
+                        f = dict(name=L3,
+                                 level="L3",
+                                 parent=L1,
+                                 )
+                        L3 = table.insert(**f)
+                        f["id"] = L3
+                        onaccept(f)
+                    elif L0:
+                        f = dict(name=L3,
+                                 level="L3",
+                                 parent=L0,
+                                 )
+                        L3 = table.insert(**f)
+                        f["id"] = L3
+                        onaccept(f)
+                    else:
+                        f = dict(name=L3,
+                                 level="L3",
+                                 )
+                        L3 = table.insert(**f)
+                        f["id"] = L3
+                        onaccept(f)
                 else:
                     L3 = None
         # L4
         if L4:
             try:
                 # Is this an ID?
-                int(L4)
+                L4 = int(L4)
                 # Do we need to update it's parent?
                 if L3:
-                    parent = L3
                     location = db(table.id == L4).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != parent):
-                        db(query).update(parent=parent)
-                        onaccept(L4, parent, level="L4", name=location.name)
+                    if location and (location.parent != L3):
+                        db(query).update(parent=L3)
+                        location["level"] = "L4"
+                        location["id"] = L4
+                        onaccept(location)
             except:
                 # Name
                 # Test for duplicates
@@ -1035,46 +1072,63 @@ class IS_LOCATION_SELECTOR(Validator):
                 if location:
                     # Use Existing record
                     L4 = location.id
-                elif L3 and L4_allowed:
-                    parent = L3
-                    L4_name = L4
-                    L4 = table.insert(name=L4, level="L4", parent=parent)
-                    onaccept(L4, parent, level="L4", name=L4_name)
-                elif L2 and L4_allowed:
-                    parent = L2
-                    L4_name = L4
-                    L4 = table.insert(name=L4, level="L4", parent=parent)
-                    onaccept(L4, parent, level="L4", name=L4_name)
-                elif L1 and L4_allowed:
-                    parent = L1
-                    L4_name = L4
-                    L4 = table.insert(name=L4, level="L4", parent=parent)
-                    onaccept(L4, parent, level="L4", name=L4_name)
-                elif L0 and L4_allowed:
-                    parent = L0
-                    L4_name = L4
-                    L4 = table.insert(name=L4, level="L4", parent=parent)
-                    onaccept(L4, parent, level="L4", name=L4_name)
                 elif L4_allowed:
-                    L4_name = L4
-                    L4 = table.insert(name=L4, level="L4")
-                    onaccept(L4, level="L4", name=L4_name)
+                    if L3:
+                        f = dict(name=L4,
+                                 level="L4",
+                                 parent=L3,
+                                 )
+                        L4 = table.insert(**f)
+                        f["id"] = L4
+                        onaccept(f)
+                    elif L2:
+                        f = dict(name=L4,
+                                 level="L4",
+                                 parent=L2,
+                                 )
+                        L4 = table.insert(**f)
+                        f["id"] = L4
+                        onaccept(f)
+                    elif L1:
+                        f = dict(name=L4,
+                                 level="L4",
+                                 parent=L1,
+                                 )
+                        L4 = table.insert(**f)
+                        f["id"] = L4
+                        onaccept(f)
+                    elif L0:
+                        f = dict(name=L4,
+                                 level="L4",
+                                 parent=L0,
+                                 )
+                        L4 = table.insert(**f)
+                        f["id"] = L4
+                        onaccept(f)
+                    else:
+                        f = dict(name=L4,
+                                 level="L4",
+                                 )
+                        L4 = table.insert(**f)
+                        f["id"] = L4
+                        onaccept(f)
                 else:
                     L4 = None
         # L5
         if L5:
             try:
                 # Is this an ID?
-                int(L5)
+                L5 = int(L5)
                 # Do we need to update it's parent?
                 if L4:
-                    parent = L4
                     location = db(table.id == L5).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != parent):
-                        db(query).update(parent=parent)
-                        onaccept(L5, parent, level="L5", name=location.name)
+                    if location and (location.parent != L4):
+                        db(query).update(parent=L4)
+                        location["level"] = "L5"
+                        location["id"] = L5
+                        onaccept(location)
             except:
                 # Name
                 # Test for duplicates
@@ -1087,35 +1141,54 @@ class IS_LOCATION_SELECTOR(Validator):
                 if location:
                     # Use Existing record
                     L5 = location.id
-                elif L4 and L5_allowed:
-                    parent = L4
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5", parent=parent)
-                    onaccept(L5, parent, level="L5", name=L5_name)
-                elif L3 and L5_allowed:
-                    parent = L3
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5", parent=parent)
-                    onaccept(L5, parent, level="L5", name=L5_name)
-                elif L2 and L5_allowed:
-                    parent = L2
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5", parent=parent)
-                    onaccept(L5, parent, level="L5", name=L5_name)
-                elif L1 and L5_allowed:
-                    parent = L1
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5", parent=parent)
-                    onaccept(L5, parent, level="L5", name=L5_name)
-                elif L0 and L5_allowed:
-                    parent = L0
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5", parent=parent)
-                    onaccept(L5, parent, level="L5", name=L5_name)
                 elif L5_allowed:
-                    L5_name = L5
-                    L5 = table.insert(name=L5, level="L5")
-                    onaccept(L5, level="L5", name=L5_name)
+                    if L4:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 parent=L4,
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
+                    elif L3:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 parent=L3,
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
+                    elif L2:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 parent=L2,
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
+                    elif L1:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 parent=L1,
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
+                    elif L0:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 parent=L1,
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
+                    else:
+                        f = dict(name=L5,
+                                 level="L5",
+                                 )
+                        L5 = table.insert(**f)
+                        f["id"] = L5
+                        onaccept(f)
                 else:
                     L5 = None
 
@@ -1133,6 +1206,12 @@ class IS_LOCATION_SELECTOR(Validator):
         vars.lat = lat
         vars.lon = lon
         vars.parent = parent
+        if self.id:
+            # Provide the old record to check inherited
+            form.record = db(table.id == self.id).select(table.inherited,
+                                                         table.lat,
+                                                         table.lon,
+                                                         limitby=(0, 1)).first()
         # onvalidation
         s3db.gis_location_onvalidation(form)
         if form.errors:
@@ -1141,6 +1220,7 @@ class IS_LOCATION_SELECTOR(Validator):
         location = Storage(
                         name=name,
                         lat=lat, lon=lon,
+                        inherited=vars.inherited,
                         street=street,
                         postcode=postcode,
                         parent=parent,
@@ -1174,6 +1254,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
                 ):
         self.error_message = error_message
         self.errors = Storage()
+        self.id = None
         self.site_type = site_type
 
     # -------------------------------------------------------------------------
@@ -1184,44 +1265,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
         table = db.gis_location
         stable = db[self.site_type]
 
-        try:
-            # Is this an ID?
-            value = int(value)
-            # Yes: This must be an Update form
-            if not auth.s3_has_permission("update", stable, record_id=value):
-                return (value, auth.messages.access_denied)
-            # Check that this is a valid site_id
-            query = (stable.id == value) & \
-                    (stable.deleted == False)
-            site = db(query).select(stable.id,
-                                    stable.name,
-                                    stable.location_id,
-                                    limitby=(0, 1)).first()
-            if site and site.location_id:
-                # Update the location, in case changes have been made
-                location = self._process_values()
-                if self.errors:
-                    errors = self.errors
-                    error = ""
-                    for e in errors:
-                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
-                    return (value, error)
-                # Location update
-                lquery = (table.id == site.location_id)
-                db(lquery).update(name = location.name,
-                                  lat = location.lat,
-                                  lon = location.lon,
-                                  addr_street = location.street,
-                                  addr_postcode = location.postcode,
-                                  parent = location.parent)
-                # Location onaccept
-                gis.update_location_tree(site.location_id, location.parent)
-
-                if stable.name != location.name:
-                    # Site Name has changed
-                    db(query).update(name = location.name)
-                return (value, None)
-        except:
+        if value == "dummy":
             # Create form
             if not auth.s3_has_permission("create", stable):
                 return (None, auth.messages.access_denied)
@@ -1235,26 +1279,69 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             if location.name or location.lat or location.lon or \
                location.street or location.postcode or location.parent:
                 # Location creation
-                location_id = table.insert(name = location.name,
-                                           lat = location.lat,
-                                           lon = location.lon,
-                                           addr_street = location.street,
-                                           addr_postcode = location.postcode,
-                                           parent = location.parent,
-                                           wkt = form.vars.wkt,
-                                           lon_min = form.vars.lon_min,
-                                           lon_max = form.vars.lon_max,
-                                           lat_min = form.vars.lat_min,
-                                           lat_max = form.vars.lat_max
-                                           )
+                vars = dict(name = location.name,
+                            lat = location.lat,
+                            lon = location.lon,
+                            addr_street = location.street,
+                            addr_postcode = location.postcode,
+                            parent = location.parent,
+                            wkt = form.vars.wkt,
+                            lon_min = form.vars.lon_min,
+                            lon_max = form.vars.lon_max,
+                            lat_min = form.vars.lat_min,
+                            lat_max = form.vars.lat_max
+                            )
+                location_id = table.insert(**vars)
                 # Location onaccept
-                gis.update_location_tree(location_id, location.parent)
+                vars["id"] = location_id
+                gis.update_location_tree(vars)
                 # Site creation
                 value = stable.insert(name = location.name,
                                       location_id = location_id)
                 return (value, None)
             else:
                 return (None, None)
+        else:
+            # This must be an Update form
+            if not auth.s3_has_permission("update", stable, record_id=value):
+                return (value, auth.messages.access_denied)
+            # Check that this is a valid site_id
+            query = (stable.id == value) & \
+                    (stable.deleted == False)
+            site = db(query).select(stable.id,
+                                    stable.name,
+                                    stable.location_id,
+                                    limitby=(0, 1)).first()
+            location_id = site.location_id if site else None
+            if location_id:
+                # Update the location, in case changes have been made
+                self.id = value
+                location = self._process_values()
+                if self.errors:
+                    errors = self.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (value, error)
+                # Location update
+                name = location.name
+                vars = dict(name = name,
+                            lat = location.lat,
+                            lon = location.lon,
+                            addr_street = location.street,
+                            addr_postcode = location.postcode,
+                            parent = location.parent
+                            )
+                lquery = (table.id == location_id)
+                db(lquery).update(**vars)
+                # Location onaccept
+                vars["id"] = location_id
+                gis.update_location_tree(vars)
+
+                if stable.name != name:
+                    # Site Name has changed
+                    db(query).update(name = name)
+                return (value, None)
 
         return (value, self.error_message or current.T("Invalid Site!"))
 

@@ -161,6 +161,12 @@
                                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                            <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                            <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                            <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                            <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
                         <!-- Named Tags -->
                         <resource name="gis_location_tag">
                             <data field="tag">ISO2</data>
@@ -260,6 +266,12 @@
                                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                            <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                            <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                            <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                            <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -349,6 +361,12 @@
                                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                            <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                            <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                            <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                            <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -447,6 +465,12 @@
                                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                            <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                            <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                            <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                            <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -554,6 +578,12 @@
                                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                            <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                            <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                            <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                            <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -615,6 +645,12 @@
                         <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                     </xsl:when>
                 </xsl:choose>
+                <xsl:if test="col[@field='lat_min']!='' and col[@field='lat_max']!='' and col[@field='lon_min']!='' and col[@field='lon_max']!='' ">
+                    <data field="lat_min"><xsl:value-of select="col[@field='lat_min']"/></data>
+                    <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
+                    <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
+                    <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                </xsl:if>
                 <xsl:if test="col[@field='Elevation']!=''">
                     <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
                 </xsl:if>

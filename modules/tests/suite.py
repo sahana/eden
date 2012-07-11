@@ -85,10 +85,13 @@ parser.add_argument("-V", "--verbose",
                     default = 1,
                     help = "The level of verbose reporting")
 parser.add_argument("--nohtml",
+                    action='store_const',
+                    const=True,
                     help = "Disable HTML reporting."
                    )
 parser.add_argument("--html-path",
-                    help = "Path where the HTML report will be saved."
+                    help = "Path where the HTML report will be saved.",
+                    default = ""
                    )
 parser.add_argument("--html-name-date",
                     help = "Include just the date in the name of the HTML report."
@@ -157,10 +160,9 @@ base_dir = os.path.join(os.getcwd(), "applications", current.request.application
 test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
-
-# Shortcut
-loadTests = unittest.TestLoader().loadTestsFromTestCase
-loadNamedTests = unittest.TestLoader().loadTestsFromName
+if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
+    print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
+    exit()
 
 config.verbose = args["verbose"]
 browser_open = False
@@ -173,12 +175,14 @@ if args["method"]:
         name = "%s.%s" % (args["class"], args["method"])
     else:
         name = args["method"]
-    suite = loadNamedTests(args["method"], globals()[args["class"]])
+    suite = unittest.TestLoader().loadTestsFromName(args["method"],
+                                                    globals()[args["class"]]
+                                                   )
 elif args["class"]:
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)
     browser_open = True
-    suite = loadTests(globals()[args["class"]])
+    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["class"]])
 elif args["suite"] == "smoke":
     try:
         from tests.smoke import *
@@ -213,25 +217,31 @@ else:
     # Run all Tests
     suite = loadAllTests()
 
-try:
-    path = args["html_path"]
-    if args["html_name_date"]:
-        filename = "Sahana-Eden-%s.html" % current.request.now.date()
-    else:
-        filename = "Sahana-Eden-%s.html" % current.request.now
-    fullname = os.path.join(path,filename)
-    fp = file(fullname, "wb")
-
-    config.html = True
-    from tests.runner import EdenHTMLTestRunner
-    runner = EdenHTMLTestRunner(
-                                stream=fp,
-                                title="Sahana Eden",
-                               )
-    runner.run(suite)
-except:
-    config.html = False
+config.html = False
+if args["nohtml"]:
     unittest.TextTestRunner(verbosity=2).run(suite)
+else:
+    try:
+        path = args["html_path"]
+        if args["html_name_date"]:
+            filename = "Sahana-Eden-%s.html" % current.request.now.date()
+        else:
+            filename = "Sahana-Eden-%s.html" % current.request.now
+        # Windows compatibility
+        filename = filename.replace(":", "-")
+        fullname = os.path.join(path,filename)
+        fp = file(fullname, "wb")
+
+        config.html = True
+        from tests.runner import EdenHTMLTestRunner
+        runner = EdenHTMLTestRunner(
+                                    stream=fp,
+                                    title="Sahana Eden",
+                                   )
+        runner.run(suite)
+    except ImportError:
+        config.html = False
+        unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup
 if browser_open and not args["keep_browser_open"]:

@@ -118,4 +118,58 @@ class SendReceiveItem(InvTestFunctions):
         # Receive the shipment
         self.recv_sent_shipment(method, user, send_ref, recv_data)
 
+    def test_inv019_send_and_confirm(self):
+        """ Test to send a shipment and confirm that it is receive outside of the system """
+        user = "admin"
+        method = "search"
+        send_data = [("site_id",
+                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "option",
+                ),
+                ("to_site_id",
+                 "Lori (Facility)",
+                 "option",
+                ),
+                ("sender_id",
+                 "Beatriz de Carvalho",
+                 "autocomplete",
+                ),
+               ]
+        item_data = [
+                     [("send_inv_item_id",
+                       "Blankets - 123457 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "6",
+                      ),
+                     ],
+                     [("send_inv_item_id",
+                       "Jerry Cans - 123461 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "3",
+                      ),
+                     ],
+                     [("send_inv_item_id",
+                       "Kitchen Sets - 123458 - Australian Red Cross",
+                       "inv_widget",
+                      ),
+                      ("quantity",
+                       "2",
+                      ),
+                     ]
+                    ]
+        # Create the send record
+        send_result = self.send(user, send_data)
+        send_id = self.send_get_id(send_result)
+        send_ref= self.send_get_ref(send_result)
+        # Add the items to the send record
+        for data in item_data:
+            item_result = self.track_send_item(user, send_id, data)
+        # Send the shipment
+        self.send_shipment(user, send_id)
+        # Confirm Receipt of the shipment
+        self.confirm_received_shipment(user, send_id)
 # END =========================================================================

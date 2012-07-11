@@ -1232,7 +1232,6 @@ $('#%(dummy_input)s').blur(function(){
                     requires = field.requires
                   )
 
-
 # =============================================================================
 class S3LocationDropdownWidget(FormWidget):
     """
