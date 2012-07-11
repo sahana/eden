@@ -63,7 +63,10 @@ def AddPoll(request, space_url):
     except ObjectDoesNotExist:
         current_poll_id = 1
 
-    if request.user.has_perm('poll_add') or request.user.is_staff:
+    if request.user in place.admins.all() \
+    or request.user in place.mods.all() \
+    or request.user.is_staff or request.user.is_superuser \
+    or request.user.has_perm('poll_add'):
         if request.method == 'POST':
             if poll_form.is_valid() and choice_form.is_valid():
                 poll_form_uncommited = poll_form.save(commit=False)
@@ -80,10 +83,11 @@ def AddPoll(request, space_url):
 
                 return redirect('/spaces/' + space_url)
                 
-            return render_to_response('voting/poll_form.html',
-                {'form': poll_form, 'choiceform': choice_form,
-                 'get_place': place, 'pollid': current_poll_id,},
-                 context_instance=RequestContext(request))
+        return render_to_response('voting/poll_form.html',
+            {'form': poll_form, 'choiceform': choice_form,
+             'get_place': place, 'pollid': current_poll_id,},
+             context_instance=RequestContext(request))
+    
     return render_to_response('not_allowed.html',context_instance=RequestContext(request))
 
 def EditPoll(request, space_url, poll_id):
