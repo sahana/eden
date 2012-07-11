@@ -36,9 +36,10 @@ from django.views.generic.create_update import update_object
 from django.db.models import F
 from django.http import HttpResponse
 
-from apps.ecidadania.proposals.models import Proposal, ProposalSet
+from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
+        ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
-        ProposalSetForm, ProposalFieldForm
+        ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm
 from core.spaces.models import Space
 
 
@@ -60,6 +61,7 @@ class AddProposal(FormView):
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)
+        form_uncommited.proposalset = self.kwargs['p_set']
         form_uncommited.space = self.space
         form_uncommited.author = self.request.user
         form_uncommited.save()
