@@ -473,6 +473,9 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
+            elif r.method == "contacts":
+                #s3.js_global.append('''controller="vol"''')
+                pass
             else:
                 table = r.table
                 # Assume volunteers only between 12-81

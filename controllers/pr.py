@@ -253,8 +253,8 @@ def address():
 
     # CRUD pre-process
     def prep(r):
+        controller = request.get_vars.get("controller", "pr")
         person_id = request.get_vars.get("person", None)
-        controller = request.get_vars.get("controller", None)
         if person_id and controller:
             s3db.configure("pr_address",
                             create_next=URL(c=controller,
@@ -285,12 +285,15 @@ def contact():
 
     # CRUD pre-process
     def prep(r):
+        controller = request.get_vars.get("controller", "pr")
         person_id = request.get_vars.get("person", None)
         if person_id:
             s3db.configure("pr_contact",
-                            create_next=URL(f="person",
+                            create_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
+                            update_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"])
                             )
             if r.method == "create":
@@ -314,12 +317,15 @@ def contact_emergency():
 
     # CRUD pre-process
     def prep(r):
+        controller = request.get_vars.get("controller", "pr")
         person_id = request.get_vars.get("person", None)
         if person_id:
             s3db.configure("pr_contact_emergency",
-                            create_next=URL(f="person",
+                            create_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"]),
-                            update_next=URL(f="person",
+                            update_next=URL(c=controller,
+                                            f="person",
                                             args=[person_id, "contacts"])
                             )
             if r.method == "create":

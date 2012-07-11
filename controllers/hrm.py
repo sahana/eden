@@ -341,7 +341,7 @@ def person():
             s3mgr.show_ids = True
         elif r.interactive and r.method != "import":
             if r.component:
-                if r.component_name == "human-resource":
+                if r.component_name == "human_resource":
                     table = r.component.table
                     table.site_id.writable = True
                     table.site_id.readable = True
@@ -384,6 +384,9 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
+            elif r.method == "contacts":
+                #s3.js_global.append('''controller="hrm"''')
+                pass
             else:
                 table = r.table
                 # No point showing the 'Occupation' field - that's the Job Title in the Staff Record

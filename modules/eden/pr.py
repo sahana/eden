@@ -1228,7 +1228,6 @@ class S3ContactModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
 
         define_table = self.define_table
         super_link = self.super_link
@@ -1268,7 +1267,7 @@ class S3ContactModel(S3Model):
                              *s3_meta_fields())
 
         # Field configuration
-        table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+        table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
                                          orderby="instance_type",
                                          filterby="instance_type",
@@ -1292,12 +1291,12 @@ class S3ContactModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                        onvalidation=self.contact_onvalidation,
-                        deduplicate=self.contact_deduplicate,
-                        list_fields=["id",
-                                     "contact_method",
-                                     "value",
-                                     "priority",
+                       onvalidation=self.contact_onvalidation,
+                       deduplicate=self.contact_deduplicate,
+                       list_fields=["id",
+                                    "contact_method",
+                                    "value",
+                                    "priority",
                                     ])
 
         # ---------------------------------------------------------------------
@@ -1496,28 +1495,28 @@ class S3PersonAddressModel(S3Model):
                     # Update the Lx fields
                     s3_lx_update(table, person.id)
 
-            #if person and str(vars.type) == "1": # Home Address
-            #    if settings.has_module("hrm"):
-            #        # Also check for any Volunteer HRM record(s)
-            #        htable = s3db.hrm_human_resource
-            #        query = (htable.person_id == person.id) & \
-            #                (htable.type == 2) & \
-            #                (htable.deleted != True)
-            #        hrs = db(query).select(htable.id)
-            #        for hr in hrs:
-            #            db(htable.id == hr.id).update(location_id=location_id)
-            #            # Update the Lx fields
-            #            s3_lx_update(htable, hr.id)
-                #if settings.has_module("member"):
-                #    # Also check for any Member record(s)
-                #    mtable = s3db.member_membership
-                #    query = (mtable.person_id == person.id) & \
-                #            (mtable.deleted != True)
-                #    members = db(query).select(mtable.id)
-                #    for member in members:
-                #        db(mtable.id == member.id).update(location_id=location_id)
-                #        # Update the Lx fields
-                #        s3_lx_update(mtable, member.id)
+            if person and str(vars.type) == "1": # Home Address
+                if settings.has_module("hrm"):
+                    # Also check for any Volunteer HRM record(s)
+                    htable = s3db.hrm_human_resource
+                    query = (htable.person_id == person.id) & \
+                            (htable.type == 2) & \
+                            (htable.deleted != True)
+                    hrs = db(query).select(htable.id)
+                    for hr in hrs:
+                        db(htable.id == hr.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        #s3_lx_update(htable, hr.id)
+                if settings.has_module("member"):
+                    # Also check for any Member record(s)
+                    mtable = s3db.member_membership
+                    query = (mtable.person_id == person.id) & \
+                            (mtable.deleted != True)
+                    members = db(query).select(mtable.id)
+                    for member in members:
+                        db(mtable.id == member.id).update(location_id=location_id)
+                        # Update the Lx fields
+                        #s3_lx_update(mtable, member.id)
         return
 
     # -------------------------------------------------------------------------
@@ -1619,18 +1618,18 @@ class S3PersonImageModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                        onaccept = self.pr_image_onaccept,
-                        onvalidation = self.pr_image_onvalidation,
-                        ondelete = self.pr_image_ondelete,
-                        mark_required = ["url", "image"],
-                        list_fields=["id",
-                                     "title",
-                                     "profile",
-                                     "type",
-                                     "image",
-                                     "url",
-                                     "description"
-                                     ])
+                       onaccept = self.pr_image_onaccept,
+                       onvalidation = self.pr_image_onvalidation,
+                       ondelete = self.pr_image_ondelete,
+                       mark_required = ["url", "image"],
+                       list_fields=["id",
+                                    "title",
+                                    "profile",
+                                    "type",
+                                    "image",
+                                    "url",
+                                    "description"
+                                    ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -1911,7 +1910,7 @@ class S3PersonIdentityModel(S3Model):
                                     "value",
                                     "country_code",
                                     "ia_name"
-                                   ])
+                                    ])
 
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
@@ -1999,8 +1998,9 @@ class S3PersonEducationModel(S3Model):
                                     "grade",
                                     "institute",
                                    ],
-                      orderby = ~table.year,
-                      sortby = [[1, "desc"]])
+                       orderby = ~table.year,
+                       sortby = [[1, "desc"]]
+                       )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
@@ -3324,8 +3324,8 @@ def pr_contacts(r, **attr):
         s3.scripts.append(URL(c="static", f="scripts",
                               args=["S3", "s3.contacts.min.js"]))
 
-    #s3.js_global.append("controller='%s';" % current.request.controller)
-    s3.js_global.append("personId = %s;" % person.id);
+    s3.js_global.append("controller='%s'" % current.request.controller)
+    s3.js_global.append("personId=%s" % person.id);
 
     # Load the Google JS now as can't load it async
     # @ToDo: Is this worth making conditional on this being their default base layer?
