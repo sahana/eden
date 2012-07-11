@@ -392,17 +392,6 @@ class S3LocationModel(S3Model):
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
-        table = db.gis_location
-
-        # If you need more info from the old location record, add it here.
-        # Check if this has already been called and use the existing info.
-        def get_location_info():
-            if "id" in request:
-                return db(table.id == request.id).select(table.level,
-                                                         limitby=(0, 1)).first()
-            else:
-                return None
-
         record_error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
         field_error = T("Please select another level")
 
@@ -431,6 +420,7 @@ class S3LocationModel(S3Model):
                 return
 
         if parent:
+            table = db.gis_location
             _parent = db(table.id == parent).select(table.level,
                                                     table.gis_feature_type,
                                                     table.lat_min,
@@ -543,12 +533,12 @@ class S3LocationModel(S3Model):
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
 
-        record = form.record
-        inherited = record.inherited
-        if inherited:
-            # Have we provided more accurate data?
-            if lat != record.lat or lon != record.lon:
-                vars.inherited = False
+        if form.record:
+            inherited = form.record.inherited
+            if inherited:
+                # Have we provided more accurate data?
+                if lat != form.record.lat or lon != form.record.lon:
+                    vars.inherited = False
         return
 
     # -------------------------------------------------------------------------

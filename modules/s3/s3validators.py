@@ -715,6 +715,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 ):
         self.error_message = error_message
         self.errors = Storage()
+        self.id = None
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -771,6 +772,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                         limitby=(0, 1)).first()
             if location:
                 # Update the record, in case changes have been made
+                self.id = value
                 location = self._process_values()
                 if self.errors:
                     errors = self.errors
@@ -781,6 +783,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 vars = dict(name = location.name,
                             lat = location.lat,
                             lon = location.lon,
+                            inherited = location.inherited,
                             addr_street = location.street,
                             addr_postcode = location.postcode,
                             parent = location.parent,
@@ -811,7 +814,7 @@ class IS_LOCATION_SELECTOR(Validator):
             Note: This is also used by IS_SITE_SELECTOR()
         """
 
-        # Check for valid Lat/Lon
+        # Rough check for valid Lat/Lon (detailed later)
         vars = current.request.vars
         lat = vars.get("gis_location_lat", None)
         lon = vars.get("gis_location_lon", None)
@@ -888,14 +891,15 @@ class IS_LOCATION_SELECTOR(Validator):
         if L1:
             try:
                 # Is this an ID?
-                int(L1)
+                L1 = int(L1)
                 # Do we need to update it's parent?
                 if L0:
                     location = db(table.id == L1).select(table.name,
                                                          table.parent,
                                                          limitby=(0, 1)).first()
-                    if location and (location.parent != L0):
+                    if location and (location.parent != int(L0)):
                         db(query).update(parent = L0)
+                        location["level"] = "L1"
                         location["id"] = L1
                         onaccept(location)
             except:
@@ -931,7 +935,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if L2:
             try:
                 # Is this an ID?
-                int(L2)
+                L2 = int(L2)
                 # Do we need to update it's parent?
                 if L1:
                     location = db(table.id == L2).select(table.name,
@@ -939,6 +943,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                                          limitby=(0, 1)).first()
                     if location and (location.parent != L1):
                         db(query).update(parent=L1)
+                        location["level"] = "L2"
                         location["id"] = L2
                         onaccept(location)
             except:
@@ -983,7 +988,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if L3:
             try:
                 # Is this an ID?
-                int(L3)
+                L3 = int(L3)
                 # Do we need to update it's parent?
                 if L2:
                     location = db(table.id == L3).select(table.name,
@@ -991,6 +996,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                                          limitby=(0, 1)).first()
                     if location and (location.parent != L2):
                         db(query).update(parent=L2)
+                        location["level"] = "L3"
                         location["id"] = L3
                         onaccept(location)
             except:
@@ -1043,7 +1049,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if L4:
             try:
                 # Is this an ID?
-                int(L4)
+                L4 = int(L4)
                 # Do we need to update it's parent?
                 if L3:
                     location = db(table.id == L4).select(table.name,
@@ -1051,6 +1057,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                                          limitby=(0, 1)).first()
                     if location and (location.parent != L3):
                         db(query).update(parent=L3)
+                        location["level"] = "L4"
                         location["id"] = L4
                         onaccept(location)
             except:
@@ -1111,7 +1118,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if L5:
             try:
                 # Is this an ID?
-                int(L5)
+                L5 = int(L5)
                 # Do we need to update it's parent?
                 if L4:
                     location = db(table.id == L5).select(table.name,
@@ -1119,6 +1126,7 @@ class IS_LOCATION_SELECTOR(Validator):
                                                          limitby=(0, 1)).first()
                     if location and (location.parent != L4):
                         db(query).update(parent=L4)
+                        location["level"] = "L5"
                         location["id"] = L5
                         onaccept(location)
             except:
@@ -1198,6 +1206,12 @@ class IS_LOCATION_SELECTOR(Validator):
         vars.lat = lat
         vars.lon = lon
         vars.parent = parent
+        if self.id:
+            # Provide the old record to check inherited
+            form.record = db(table.id == self.id).select(table.inherited,
+                                                         table.lat,
+                                                         table.lon,
+                                                         limitby=(0, 1)).first()
         # onvalidation
         s3db.gis_location_onvalidation(form)
         if form.errors:
@@ -1206,6 +1220,7 @@ class IS_LOCATION_SELECTOR(Validator):
         location = Storage(
                         name=name,
                         lat=lat, lon=lon,
+                        inherited=vars.inherited,
                         street=street,
                         postcode=postcode,
                         parent=parent,
@@ -1239,6 +1254,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
                 ):
         self.error_message = error_message
         self.errors = Storage()
+        self.id = None
         self.site_type = site_type
 
     # -------------------------------------------------------------------------
@@ -1299,6 +1315,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
             location_id = site.location_id if site else None
             if location_id:
                 # Update the location, in case changes have been made
+                self.id = value
                 location = self._process_values()
                 if self.errors:
                     errors = self.errors

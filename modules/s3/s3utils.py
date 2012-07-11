@@ -1016,7 +1016,7 @@ def s3_get_foreign_key(field, m2m=True):
     return (rtablename, key, multiple)
 
 # =============================================================================
-def s3_unicode(s, encoding='utf-8'):
+def s3_unicode(s, encoding="utf-8"):
     """
         Convert an object into an unicode instance, to be used instead of
         unicode(s) (Note: user data should never be converted into str).
@@ -1029,22 +1029,22 @@ def s3_unicode(s, encoding='utf-8'):
         return s
     try:
         if not isinstance(s, basestring):
-            if hasattr(s, '__unicode__'):
+            if hasattr(s, "__unicode__"):
                 s = unicode(s)
             else:
                 try:
-                    s = unicode(str(s), encoding, 'strict')
+                    s = unicode(str(s), encoding, "strict")
                 except UnicodeEncodeError:
                     if not isinstance(s, Exception):
                         raise
-                    s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+                    s = " ".join([s3_unicode(arg, encoding) for arg in s])
         else:
             s = s.decode(encoding)
     except UnicodeDecodeError:
         if not isinstance(s, Exception):
             raise
         else:
-            s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+            s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
 
 # =============================================================================

@@ -3265,7 +3265,7 @@ class GIS(object):
         id = "id" in feature and str(feature["id"])
         if not id:
             # Nothing we can do
-            return None
+            raise ValueError
 
         # L0
         db = current.db
@@ -3789,7 +3789,10 @@ class GIS(object):
                 self.update_location_tree(row)
             return _path
 
+        # @ToDo: L5
+
         # Specific Location
+        # - or unspecified (which we should avoid happening)
         if name is False or lat is False or lon is False or inherited is None or \
            parent is False or path is False or L0 is False or L1 is False or \
                                                L2 is False or L3 is False or \
