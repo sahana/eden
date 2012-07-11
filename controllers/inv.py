@@ -574,7 +574,6 @@ def send():
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
             if r.interactive:
-                SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
                 if r.record.status == SHIP_STATUS_IN_PROCESS:
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Process Shipment to Send")
@@ -582,8 +581,13 @@ def send():
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Review Incoming Shipment to Receive")
         else:
+            if request.get_vars.received:
+                # Set the items to being received
+                sendtable[r.id] = dict(status = SHIP_STATUS_RECEIVED)
+                db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
+                response.message = T("Shipment received")
             # else set the inv_send attributes
-            if r.id:
+            elif r.id:
                 record = sendtable[r.id]
                 set_send_attr(record.status)
             else:

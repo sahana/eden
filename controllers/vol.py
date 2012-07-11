@@ -572,9 +572,6 @@ def person():
     else:
         orgname = None
 
-    # Deployment Roles shouldn't be hardcoded in trunk models
-    #if not auth.s3_has_role("vol_super"):
-    #    s3.filter = (s3db["pr_address"].type >= 3)
     output = s3_rest_controller("pr", resourcename,
                                 native=False,
                                 rheader=s3db.hrm_rheader,
