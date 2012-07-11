@@ -225,7 +225,7 @@ GPS_SYMBOLS = [
 # -----------------------------------------------------------------------------
 class GIS(object):
     """
-        GIS functions
+        GeoSpatial functions
     """
 
     def __init__(self):
@@ -599,13 +599,12 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-        query = (table.id == feature_id)
-        feature = db(query).select(table.id,
-                                   table.name,
-                                   table.level,
-                                   table.path,
-                                   table.parent,
-                                   limitby=(0, 1)).first()
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.name,
+                                                    table.level,
+                                                    table.path,
+                                                    table.parent,
+                                                    limitby=(0, 1)).first()
 
         return feature
 
@@ -669,7 +668,7 @@ class GIS(object):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(feature_id, feature.parent)
+                path = self.update_location_tree(feature)
 
             path_list = map(int, path.split("/"))
             if len(path_list) == 1:
@@ -686,11 +685,11 @@ class GIS(object):
 
             # Retrieve parents - order in which they're returned is arbitrary.
             s3db = current.s3db
-            cache = s3db.cache
             table = s3db.gis_location
             query = (table.id.belongs(reverse_path))
             fields = [table.id, table.name, table.level, table.lat, table.lon]
-            unordered_parents = current.db(query).select(cache=cache, *fields)
+            unordered_parents = current.db(query).select(cache=s3db.cache,
+                                                         *fields)
 
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
@@ -733,7 +732,7 @@ class GIS(object):
             results = {}
 
         id = feature_id
-        # if we don't have a feature or a feature id return the empty dict
+        # if we don't have a feature or a feature id return the dict as-is
         if not feature_id and not feature:
             return results
         if not feature_id and "path" not in feature and "parent" in feature:
@@ -748,7 +747,7 @@ class GIS(object):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(id, feature.parent)
+                path = self.update_location_tree(feature)
 
             # Get ids of ancestors at each level.
             if feature.parent:
@@ -967,15 +966,15 @@ class GIS(object):
                         marker = row["gis_marker"]
                         for key in ["image", "height", "width"]:
                             cache["marker_%s" % key] = marker[key] if key in marker else None
-                    if "base" not in cache:
-                        # Default Base Layer?
-                        query = (ltable.config_id == config.id) & \
-                                (ltable.base == True) & \
-                                (ltable.enabled == True)
-                        base = db(query).select(ltable.layer_id,
-                                                limitby=(0, 1)).first()
-                        if base:
-                            cache["base"] = base.layer_id
+                    #if "base" not in cache:
+                    #    # Default Base Layer?
+                    #    query = (ltable.config_id == config.id) & \
+                    #            (ltable.base == True) & \
+                    #            (ltable.enabled == True)
+                    #    base = db(query).select(ltable.layer_id,
+                    #                            limitby=(0, 1)).first()
+                    #    if base:
+                    #        cache["base"] = base.layer_id
                 # Add NULL values for any that aren't defined, to avoid KeyErrors
                 for key in ["epsg", "units", "maxResolution", "maxExtent",
                             "marker_image", "marker_height", "marker_width",
@@ -1012,15 +1011,15 @@ class GIS(object):
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker else None
             # Default Base Layer?
-            query = (ltable.config_id == config_id) & \
-                    (ltable.base == True) & \
-                    (ltable.enabled == True)
-            base = db(query).select(ltable.layer_id,
-                                    limitby=(0, 1)).first()
-            if base:
-                cache["base"] = base.layer_id
-            else:
-                cache["base"] = None
+            #query = (ltable.config_id == config_id) & \
+            #        (ltable.base == True) & \
+            #        (ltable.enabled == True)
+            #base = db(query).select(ltable.layer_id,
+            #                        limitby=(0, 1)).first()
+            #if base:
+            #    cache["base"] = base.layer_id
+            #else:
+            #    cache["base"] = None
 
         # Store the values
         s3.gis.config = cache
@@ -1050,7 +1049,6 @@ class GIS(object):
             Returns the location hierarchy and it's labels
 
             @param: level - a specific level for which to lookup the label
-                            (this use is to be discouraged, especially for the early runs as the result won't be cached)
             @param: location - the location_id to lookup the location for
                                currently only the actual location is supported
                                @ToDo: Do a search of parents to allow this
@@ -1077,16 +1075,12 @@ class GIS(object):
         s3db = current.s3db
         table = s3db.gis_hierarchy
 
-        if level:
-            fields = [table.uuid,
-                      table[level]]
-        else:
-            fields = [table.uuid,
-                      table.L1,
-                      table.L2,
-                      table.L3,
-                      table.L4,
-                      table.L5]
+        fields = [table.uuid,
+                  table.L1,
+                  table.L2,
+                  table.L3,
+                  table.L4,
+                  table.L5]
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
@@ -1103,6 +1097,8 @@ class GIS(object):
             rows.exclude(filter)
         elif not rows:
             # prepop hasn't run yet
+            if level:
+                return level
             levels = OrderedDict()
             hierarchy_level_keys = self.hierarchy_level_keys
             for key in hierarchy_level_keys:
@@ -1130,7 +1126,10 @@ class GIS(object):
             if not _location:
                 # Cache the value
                 self.hierarchy_levels = levels
-            return levels
+            if level:
+                return levels[level]
+            else:
+                return levels
 
     # -------------------------------------------------------------------------
     def get_strict_hierarchy(self, location=None):
@@ -1326,12 +1325,11 @@ class GIS(object):
         try:
             # location is passed as integer (location_id)
             table = s3db.gis_location
-            query = (table.id == location)
-            location = db(query).select(table.id,
-                                        table.path,
-                                        table.level,
-                                        limitby=(0, 1),
-                                        cache=s3db.cache).first()
+            location = db(table.id == location).select(table.id,
+                                                       table.path,
+                                                       table.level,
+                                                       limitby=(0, 1),
+                                                       cache=s3db.cache).first()
         except:
             # location is passed as record
             pass
@@ -1345,8 +1343,10 @@ class GIS(object):
                         (ttable.location_id == location.id)
                 tag = db(query).select(ttable.value,
                                        limitby=(0, 1)).first()
-                if tag:
+                try:
                     return tag.value
+                except:
+                    return None
         else:
             parents = self.get_parents(location.id,
                                        feature=location)
@@ -1361,8 +1361,10 @@ class GIS(object):
                                     (ttable.location_id == row.id)
                             tag = db(query).select(ttable.value,
                                                    limitby=(0, 1)).first()
-                            if tag:
+                            try:
                                 return tag.value
+                            except:
+                                return None
         return None
 
     # -------------------------------------------------------------------------
@@ -1707,28 +1709,18 @@ class GIS(object):
 
             used by display_feature() in gis controller
 
-            @param feature_id: the feature ID (int) or UUID (str)
+            @param feature_id: the feature ID
             @param filter: Filter out results based on deployment_settings
         """
 
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        if isinstance(feature_id, int):
-            query = (table.id == feature_id)
-        elif isinstance(feature_id, str):
-            query = (table.uuid == feature_id)
-        else:
-            # Bail out
-            return None
-
-        feature = db(query).select(table.id,
-                                   table.lat,
-                                   table.lon,
-                                   table.parent,
-                                   table.path,
-                                   limitby=(0, 1)).first()
+        table = db.gis_location
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.parent,
+                                                    table.path,
+                                                    limitby=(0, 1)).first()
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -1936,6 +1928,7 @@ class GIS(object):
         latlons = {}
         wkts = {}
         geojsons = {}
+        gtable = s3db.gis_location
         if trackable:
             # Use S3Track
             ids = resource._ids
@@ -1945,16 +1938,15 @@ class GIS(object):
                 # This table isn't trackable
                 pass
             else:
-                gtable = s3db.gis_location
                 _latlons = tracker.get_location(_fields=[gtable.lat,
                                                          gtable.lon])
                 index = 0
                 for id in ids:
-                    latlons[id] = (_latlons[index].lat, _latlons[index].lon)
+                    _location = _latlons[index]
+                    latlons[id] = (_location.lat, _location.lon)
                     index += 1
 
         if not latlons:
-            gtable = s3db.gis_location
             if "location_id" in table.fields:
                 query = (table.id.belongs(resource._ids)) & \
                         (table.location_id == gtable.id)
@@ -2002,10 +1994,12 @@ class GIS(object):
             else:
                 # Points
                 rows = db(query).select(table.id,
+                                        gtable.path,
                                         gtable.lat,
                                         gtable.lon)
                 for row in rows:
-                    latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
+                    _location = row["gis_location"]
+                    latlons[row[tablename].id] = (_location.lat, _location.lon)
 
         _latlons = {}
         _latlons[tablename] = latlons
@@ -2781,7 +2775,7 @@ class GIS(object):
             self.update_location_tree()
         except MemoryError:
             # If doing all L2s, it can break memory limits
-            # @ToDo: Amend function to do in chunks
+            # @ToDo: Check now that we're doing by level
             s3_debug("Memory error when trying to update_location_tree()!")
 
         db.commit()
@@ -3225,72 +3219,767 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
-    def update_location_tree(self, location_id=None, parent_id=None):
+    def update_location_tree(self, feature=None):
         """
-            Update the Tree for GIS Locations:
-            @author: Aravind Venkatesan and Ajay Kumar Sreenivasan from NCSU
-            @summary: Using Materialized path for each node in the tree
-            http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
-            Do a lazy update of a database that does not have location paths.
-            For convenience of get_parents, return the path.
+            Update GIS Locations' Materialized path, Lx locations & Lat/Lon
+
+            @param feature: a feature dict to update the tree for
+            - if not provided then update the whole tree
+
+            returns the path of the feature
+
+            Called onaccept for locations (async, where-possible)
         """
 
-        db = current.db
-        table = current.s3db.gis_location
-
-        if location_id:
-            if parent_id:
-                query = (table.id == parent_id)
-                parent = db(query).select(table.parent,
-                                          table.path).first()
-            # It is Somebody Else's Problem (see Douglas Adams) to assure that
-            # parent_id points to an actual location.  We just protect ourselves
-            # in case they didn't.
-            if parent_id and parent:
-                if parent.path:
-                    # Parent has a path.
-                    path = "%s/%s" % (str(parent.path), str(location_id))
-                elif parent.parent:
-                    parent_path = self.update_location_tree(parent_id,
-                                                            parent.parent)
-                    # Ok, *now* the parent has a path.
-                    path = "%s/%s" % (str(parent_path), str(location_id))
-                else:
-                    # Parent has no parent.
-                    path = "%s/%s" % (str(parent_id), str(location_id))
-            else:
-                path = str(location_id)
-
-            db(table.id == location_id).update(path=path)
-
-            return path
-
-        else:
+        if not feature:
             # Do the whole database
-            query = (table.id > 0)
-            features = db(query).select(table.id,
-                                        table.gis_feature_type,
-                                        table.lat,
-                                        table.lon,
-                                        table.wkt,
-                                        table.parent)
-            for feature in features:
-                self.update_location_tree(feature.id, feature.parent)
-                # Also do the Bounds/Centroids/WKT
-                form = Storage()
-                form.vars = feature
-                form.errors = Storage()
-                self.wkt_centroid(form)
-                _vars = form.vars
-                if "lat_max" in _vars:
-                    db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
-                                                      lat = _vars.lat,
-                                                      lon = _vars.lon,
-                                                      wkt = _vars.wkt,
-                                                      lat_max = _vars.lat_max,
-                                                      lat_min = _vars.lat_min,
-                                                      lon_min = _vars.lon_min,
-                                                      lon_max = _vars.lon_max)
+            # Do in chunks to save memory and also do in correct order
+            fields = [table.id, table.name, table.gis_feature_type,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.wkt, table.inherited,
+                      table.path, table.parent]
+            update_location_tree = self.update_location_tree
+            wkt_centroid = self.wkt_centroid
+            for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
+                features = db(table.level == L0).select(*fields)
+                for feature in features:
+                    feature["level"] = level
+                    update_location_tree(feature)
+                    # Also do the Bounds/Centroid/WKT
+                    form = Storage()
+                    form.vars = feature
+                    form.errors = Storage()
+                    wkt_centroid(form)
+                    _vars = form.vars
+                    if "lat_max" in _vars:
+                        db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
+                                                          lat = _vars.lat,
+                                                          lon = _vars.lon,
+                                                          wkt = _vars.wkt,
+                                                          lat_max = _vars.lat_max,
+                                                          lat_min = _vars.lat_min,
+                                                          lon_min = _vars.lon_min,
+                                                          lon_max = _vars.lon_max)
+            return
+
+        id = "id" in feature and str(feature["id"])
+        if not id:
+            # Nothing we can do
+            return None
+
+        # L0
+        db = current.db
+        table = db.gis_location
+        name = feature.get("name", False)
+        level = feature.get("level", False)
+        path = feature.get("path", False)
+        L0 = feature.get("L0", False)
+        if level == "L0":
+            if name:
+                if path == id and L0 == name:
+                    # No action required
+                    return path
+                else:
+                    db(table.id == id).update(L0=name,
+                                              path=id)
+            else:
+                # Look this up
+                feature = db(table.id == id).select(table.name,
+                                                    table.path,
+                                                    table.L0,
+                                                    limitby=(0, 1)).first()
+                if feature:
+                    name = feature["name"]
+                    path = feature["path"]
+                    L0 = feature["L0"]
+                    if path == id and L0 == name:
+                        # No action required
+                        return path
+                    else:
+                        db(table.id == id).update(L0=name,
+                                                  path=id)
+            return id
+
+        # L1
+        parent = feature.get("parent", False)
+        L1 = feature.get("L1", False)
+        lat = feature.get("lat", False)
+        lon = feature.get("lon", False)
+        inherited = feature.get("inherited", None)
+        if level == "L1":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+
+            if parent:
+                _path = "%s/%s" % (parent, id)
+                _L0 = db(table.id == parent).select(table.name,
+                                                    table.lat,
+                                                    table.lon,
+                                                    limitby=(0, 1),
+                                                    cache=current.s3db.cache).first()
+                L0_name = _L0.name
+                L0_lat = _L0.lat
+                L0_lon = _L0.lon
+            else:
+                _path = id
+                L0_name = None
+                L0_lat = None
+                L0_lon = None
+
+            if path == _path and L1 == name and L0 == L0_name:
+                if inherited and lat == L0_lat and lon == L0_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=L0_lat,
+                                              lon=L0_lon)
+            elif inherited and lat == L0_lat and lon == L0_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name)
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name,
+                                          inherited=True,
+                                          lat=L0_lat,
+                                          lon=L0_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # L2
+        L2 = feature.get("L2", False)
+        if level == "L2":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+
+            if parent:
+                Lx = db(table.id == parent).select(table.name,
+                                                   table.level,
+                                                   table.parent,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L1":
+                    L1_name = Lx.name
+                    _parent = Lx.parent
+                    if _parent:
+                        _path = "%s/%s/%s" % (_parent, parent, id)
+                        L0_name = db(table.id == _parent).select(table.name,
+                                                                 limitby=(0, 1),
+                                                                 cache=current.s3db.cache).first().name
+                    else:
+                        _path = "%s/%s" % (parent, id)
+                        L0_name = None
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L2 == name and L0 == L0_name and \
+                                                L1 == L1_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # L3
+        L3 = feature.get("L3", False)
+        if level == "L3":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False or L3 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    table.L3,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+                L3 = feature.L3
+
+            if parent:
+                Lx = db(table.id == parent).select(table.name,
+                                                   table.level,
+                                                   table.L0,
+                                                   table.L1,
+                                                   table.path,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L2":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.name
+                    _path = Lx.path
+                    if _path and L0_name and L1_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                elif Lx.level == "L1":
+                    L0_name = Lx.L0
+                    L1_name = Lx.name
+                    L2_name = None
+                    _path = Lx.path
+                    if _path and L0_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                    L2_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                L2_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L3 == name and L0 == L0_name and \
+                                 L1 == L1_name and L2 == L2_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+            
+        # L4
+        L4 = feature.get("L4", False)
+        if level == "L4":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False or L3 is False or \
+                                                   L4 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    table.L3,
+                                                    table.L4,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+                L3 = feature.L3
+                L4 = feature.L4
+
+            if parent:
+                Lx = db(table.id == parent).select(table.name,
+                                                   table.level,
+                                                   table.L0,
+                                                   table.L1,
+                                                   table.L2,
+                                                   table.path,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L3":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+                    L3_name = Lx.name
+                    _path = Lx.path
+                    if _path and L0_name and L1_name and L2_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.L2,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                        L2_name = Lx.L2
+                elif Lx.level == "L2":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.name
+                    L3_name = None
+                    _path = Lx.path
+                    if _path and L0_name and L1_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                elif Lx.level == "L1":
+                    L0_name = Lx.L0
+                    L1_name = Lx.name
+                    L2_name = None
+                    L3_name = None
+                    _path = Lx.path
+                    if _path and L0_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                    L2_name = None
+                    L3_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                L2_name = None
+                L3_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L4 == name and L0 == L0_name and \
+                                 L1 == L1_name and L2 == L2_name and \
+                                 L3 == L3_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # Specific Location
+        if name is False or lat is False or lon is False or inherited is None or \
+           parent is False or path is False or L0 is False or L1 is False or \
+                                               L2 is False or L3 is False or \
+                                               L4 is False:
+            # Get the whole feature
+            feature = db(table.id == id).select(table.name,
+                                                table.parent,
+                                                table.path,
+                                                table.lat,
+                                                table.lon,
+                                                table.inherited,
+                                                table.L0,
+                                                table.L1,
+                                                table.L2,
+                                                table.L3,
+                                                table.L4,
+                                                limitby=(0, 1)).first()
+            name = feature.name
+            parent = feature.parent
+            path = feature.path
+            lat = feature.lat
+            lon = feature.lon
+            inherited = feature.inherited
+            L0 = feature.L0
+            L1 = feature.L1
+            L2 = feature.L2
+            L3 = feature.L3
+            L4 = feature.L4
+
+        if parent:
+            Lx = db(table.id == parent).select(table.name,
+                                               table.level,
+                                               table.L0,
+                                               table.L1,
+                                               table.L2,
+                                               table.L3,
+                                               table.path,
+                                               table.lat,
+                                               table.lon,
+                                               limitby=(0, 1),
+                                               cache=current.s3db.cache).first()
+            if Lx.level == "L4":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.L2
+                L3_name = Lx.L3
+                L4_name = Lx.name
+                _path = Lx.path
+                if _path and L0_name and L1_name and L2_name and L3_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.L2,
+                                                       table.L3,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+                    L3_name = Lx.L3
+            elif Lx.level == "L3":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.L2
+                L3_name = Lx.name
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name and L1_name and L2_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.L2,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+            elif Lx.level == "L2":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.name
+                L3_name = None
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name and L1_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+            elif Lx.level == "L1":
+                L0_name = Lx.L0
+                L1_name = Lx.name
+                L2_name = None
+                L3_name = None
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+            elif Lx.level == "L0":
+                _path = "%s/%s" % (parent, id)
+                L0_name = Lx.name
+                L1_name = None
+                L2_name = None
+                L3_name = None
+                L4_name = None
+            else:
+                raise ValueError
+            Lx_lat = Lx.lat
+            Lx_lon = Lx.lon
+        else:
+            _path = id
+            L0_name = None
+            L1_name = None
+            L2_name = None
+            L3_name = None
+            L4_name = None
+            Lx_lat = None
+            Lx_lon = None
+
+        if path == _path and L0 == L0_name and \
+                             L1 == L1_name and L2 == L2_name and \
+                             L3 == L3_name and L4 == L4_name:
+            if inherited and lat == Lx_lat and lon == Lx_lon:
+                # No action required
+                return path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+        elif inherited and lat == Lx_lat and lon == Lx_lon:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name,
+                                      )
+        elif inherited or lat is None or lon is None:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name,
+                                      inherited=True,
+                                      lat=Lx_lat,
+                                      lon=Lx_lon)
+        else:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name)
+        return _path
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3308,7 +3997,25 @@ class GIS(object):
         messages = current.messages
         vars = form.vars
 
-        if vars.wkt:
+        if vars.gis_feature_type == "1":
+            # Point
+            if (vars.lon is None and vars.lat is None) or \
+             (vars.lon == "" and vars.lat == ""):
+                # No Geometry available
+                # Don't clobber existing records (e.g. in Prepop)
+                #vars.gis_feature_type = "0"
+                # Cannot create WKT, so Skip
+                return
+            elif vars.lat is None or vars.lat == "":
+                form.errors["lat"] = messages.lat_empty
+            elif vars.lon is None or vars.lon == "":
+                form.errors["lon"] = messages.lon_empty
+            else:
+                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
+                vars.lon_min = vars.lon_max = vars.lon
+                vars.lat_min = vars.lat_max = vars.lat
+
+        elif vars.wkt:
             # Parse WKT for LineString, Polygon, etc
             from shapely.wkt import loads as wkt_loads
             try:
@@ -4447,31 +5154,33 @@ S3.gis.layers_feature_resources[%i] = {
             # Add just the default Base Layer
             s3.gis.base = True
             layer_types = []
-            base = config["base"]
-            if base:
-                ltable = s3db.gis_layer_entity
-                query = (ltable.id == base)
-                layer = db(query).select(ltable.instance_type,
-                                         limitby=(0, 1)).first()
-                if layer:
-                    layer_type = layer.instance_type
-                    if layer_type == "gis_layer_openstreetmap":
-                        layer_types = [OSMLayer]
-                    elif layer_type == "gis_layer_google":
-                        # NB v3 doesn't work when initially hidden
-                        layer_types = [GoogleLayer]
-                    elif layer_type == "gis_layer_arcrest":
-                        layer_types = [ArcRESTLayer]
-                    elif layer_type == "gis_layer_bing":
-                        layer_types = [BingLayer]
-                    elif layer_type == "gis_layer_tms":
-                        layer_types = [TMSLayer]
-                    elif layer_type == "gis_layer_wms":
-                        layer_types = [WMSLayer]
-                    elif layer_type == "gis_layer_xyz":
-                        layer_types = [XYZLayer]
-                    elif layer_type == "gis_layer_empty":
-                        layer_types = [EmptyLayer]
+            ltable = s3db.gis_layer_config
+            etable = s3db.gis_layer_entity
+            query = (etable.id == ltable.layer_id) & \
+                    (ltable.config_id == config["id"]) & \
+                    (ltable.base == True) & \
+                    (ltable.enabled == True)
+            layer = db(query).select(etable.instance_type,
+                                     limitby=(0, 1)).first()
+            if layer:
+                layer_type = layer.instance_type
+                if layer_type == "gis_layer_openstreetmap":
+                    layer_types = [OSMLayer]
+                elif layer_type == "gis_layer_google":
+                    # NB v3 doesn't work when initially hidden
+                    layer_types = [GoogleLayer]
+                elif layer_type == "gis_layer_arcrest":
+                    layer_types = [ArcRESTLayer]
+                elif layer_type == "gis_layer_bing":
+                    layer_types = [BingLayer]
+                elif layer_type == "gis_layer_tms":
+                    layer_types = [TMSLayer]
+                elif layer_type == "gis_layer_wms":
+                    layer_types = [WMSLayer]
+                elif layer_type == "gis_layer_xyz":
+                    layer_types = [XYZLayer]
+                elif layer_type == "gis_layer_empty":
+                    layer_types = [EmptyLayer]
             if not layer_types:
                 layer_types = [EmptyLayer]
 
@@ -5446,7 +6155,7 @@ class KMLLayer(Layer):
 
                 if download:
                     # Download file (async, if workers alive)
-                    current.s3task.async("download_kml",
+                    current.s3task.async("gis_download_kml",
                                          args=[self.id, filename])
                     if cached:
                         db(query).update(modified_on=request.utcnow)

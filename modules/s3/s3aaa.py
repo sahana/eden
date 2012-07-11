@@ -503,11 +503,11 @@ class AuthS3(Auth):
             of a register form
         """
 
-        response = current.response
+        cookies = current.response.cookies
 
-        response.cookies["registered"] = "yes"
-        response.cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
-        response.cookies["registered"]["path"] = "/"
+        cookies["registered"] = "yes"
+        cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
+        cookies["registered"]["path"] = "/"
 
     # -------------------------------------------------------------------------
     def login(self,
@@ -1214,7 +1214,6 @@ class AuthS3(Auth):
 
         db = current.db
         s3db = current.s3db
-        manager = current.manager
 
         organisation_id = user.organisation_id
         if not organisation_id:
@@ -1231,7 +1230,7 @@ class AuthS3(Auth):
                 if organisation_id:
                     record["id"] = organisation_id
                     s3db.update_super(otable, record)
-                    manager.onaccept(otable, record, method="create")
+                    current.manager.onaccept(otable, record, method="create")
                     self.s3_set_record_owner(otable, organisation_id)
 
                 # Update user

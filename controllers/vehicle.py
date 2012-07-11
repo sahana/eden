@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not _settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # Vehicle Module depends on Assets

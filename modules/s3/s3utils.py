@@ -577,16 +577,18 @@ def s3_auth_user_represent(id):
         @todo: parameter description?
     """
 
-    db = current.db
-    s3db = current.s3db
+    if not id:
+        return current.messages.NONE
 
-    table = s3db.auth_user
+    db = current.db
+    table = db.auth_user
     user = db(table.id == id).select(table.email,
                                      limitby=(0, 1),
-                                     cache=s3db.cache).first()
-    if user:
+                                     cache=current.s3db.cache).first()
+    try:
         return user.email
-    return None
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def s3_auth_group_represent(opt):
@@ -962,7 +964,11 @@ def s3_has_foreign_key(field, m2m=True):
                to find real foreign key constraints, then set m2m=False.
     """
 
-    ftype = str(field.type)
+    try:
+        ftype = str(field.type)
+    except:
+        # Virtual Field
+        return False
     if ftype[:9] == "reference":
         return True
     if m2m and ftype[:14] == "list:reference":

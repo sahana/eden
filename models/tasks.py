@@ -7,7 +7,9 @@
 tasks = {}
 
 # -----------------------------------------------------------------------------
-def download_kml(record_id, filename, user_id=None):
+# GIS
+# -----------------------------------------------------------------------------
+def gis_download_kml(record_id, filename, user_id=None):
     """
         Download a KML file
             - will normally be done Asynchronously if there is a worker alive
@@ -23,13 +25,32 @@ def download_kml(record_id, filename, user_id=None):
     result = gis.download_kml(record_id, filename)
     return result
 
-tasks["download_kml"] = download_kml
+tasks["gis_download_kml"] = gis_download_kml
+
+# -----------------------------------------------------------------------------
+def gis_update_location_tree(feature, user_id=None):
+    """
+        Update the Location Tree for a feature
+            - will normally be done Asynchronously if there is a worker alive
+
+        @param feature: the feature (in JSON format)
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task
+    feature = json.loads(feature)
+    result = gis.update_location_tree(feature)
+    return result
+
+tasks["gis_update_location_tree"] = gis_update_location_tree
 
 # -----------------------------------------------------------------------------
 if settings.has_module("msg"):
 
     # -------------------------------------------------------------------------
-    def process_outbox(contact_method, user_id=None):
+    def msg_process_outbox(contact_method, user_id=None):
         """
             Process Outbox
                 - will normally be done Asynchronously if there is a worker alive
@@ -44,10 +65,10 @@ if settings.has_module("msg"):
         result = msg.process_outbox(contact_method)
         return result
 
-    tasks["process_outbox"] = process_outbox
+    tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
-    def process_inbound_email(username, user_id):
+    def msg_process_inbound_email(username, user_id):
         """
             Poll an inbound email source.
 
@@ -58,10 +79,10 @@ if settings.has_module("msg"):
         result = msg.fetch_inbound_email(username)
         return result
 
-    tasks["process_inbound_email"] = process_inbound_email
+    tasks["msg_process_inbound_email"] = msg_process_inbound_email
 
     # -----------------------------------------------------------------------------
-    def parse_workflow(workflow, source, user_id):
+    def msg_parse_workflow(workflow, source, user_id):
         """
         Processes the msg_log for unparsed messages.
         """
@@ -69,7 +90,7 @@ if settings.has_module("msg"):
         result = msg.parse_import(workflow, source)
         return result
         
-    tasks["parse_workflow"] = parse_workflow
+    tasks["msg_parse_workflow"] = msg_parse_workflow
     
 # -----------------------------------------------------------------------------
 def sync_synchronize(repository_id, user_id=None, manual=False):

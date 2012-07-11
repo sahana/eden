@@ -45,6 +45,14 @@ __all__ = ["S3LocationModel",
 
 import os
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
 from gluon.dal import Row, Rows
 from gluon.storage import Storage
@@ -158,6 +166,12 @@ class S3LocationModel(S3Model):
                                    requires = IS_LENGTH(2 ** 24),
                                    represent = gis.abbreviate_wkt,
                                    label = "WKT (Well-Known Text)"),
+                             Field("inherited", "boolean",
+                                   label = T("Inherited?"),
+                                   default = False,
+                                   writable = False,
+                                   represent = lambda opt: \
+                                    T("Yes") if opt == True else T("No")),
                              # Bounding box
                              Field("lat_min", "double",
                                    readable=False, writable=False),
@@ -230,24 +244,24 @@ class S3LocationModel(S3Model):
         country_id = S3ReusableField("country_id", table,
                                      sortby = "name",
                                      label = T("Country"),
-                                     requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                     "gis_location.id",
-                                                                     "%(name)s",
-                                                                     filterby = "level",
-                                                                     filter_opts = ["L0"],
-                                                                     sort=True)),
+                                     requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "gis_location.id",
+                                                              self.country_represent,
+                                                              filterby = "level",
+                                                              filter_opts = ["L0"],
+                                                              sort=True)),
                                      represent = self.country_represent,
                                      ondelete = "RESTRICT")
 
         countries_id = S3ReusableField("countries_id", "list:reference gis_location",
                                        label = T("Countries"),
-                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       "gis_location.id",
-                                                                       "%(name)s",
-                                                                       filterby = "level",
-                                                                       filter_opts = ["L0"],
-                                                                       sort=True,
-                                                                       multiple=True)),
+                                       requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "gis_location.id",
+                                                              self.country_represent,
+                                                              filterby = "level",
+                                                              filter_opts = ["L0"],
+                                                              sort=True,
+                                                              multiple=True)),
                                        represent = self.countries_represent,
                                        ondelete = "RESTRICT")
 
@@ -313,24 +327,28 @@ class S3LocationModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def country_represent(location, row=None):
+    def country_represent(id, row=None):
         """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
 
         db = current.db
         table = db.gis_location
-        query = (table.id == location)
-        row = db(query).select(table.name).first()
-        if row:
-            return row.name
-        else:
-            return current.messages.NONE
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
     @staticmethod
     def countries_represent(locations, row=None):
         """ FK representation """
 
-        db = current.db
         if isinstance(locations, Rows):
             try:
                 locations = [r.name for r in locations]
@@ -339,6 +357,7 @@ class S3LocationModel(S3Model):
                 locations = [r.id for r in locations]
         if not isinstance(locations, list):
             locations = [locations]
+        db = current.db
         table = db.gis_location
         query = table.id.belongs(locations)
         rows = db(query).select(table.name)
@@ -351,9 +370,10 @@ class S3LocationModel(S3Model):
             On Accept for GIS Locations (after DB I/O)
         """
 
-        # Update the Path
-        vars = form.vars
-        current.gis.update_location_tree(vars.id, vars.parent)
+        # Update the Path (async if-possible)
+        feature = json.dumps(dict(id=form.vars.id))
+        current.s3task.async("gis_update_location_tree",
+                             args=[feature])
         return
 
     # -------------------------------------------------------------------------
@@ -395,10 +415,10 @@ class S3LocationModel(S3Model):
         if lon:
             if lon > 180:
                 # Map Selector wrapped
-                lon = lon - 360
+                vars.lon = lon = lon - 360
             elif lon < -180:
                 # Map Selector wrapped
-                lon = lon + 360
+                vars.lon = lon = lon + 360
         id = "id" in request.vars and request.vars.id
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
@@ -523,24 +543,12 @@ class S3LocationModel(S3Model):
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
 
-        # Add the Lx
-        if level == "L0":
-            vars.L0 = vars.name
-        elif level == "L1":
-            vars.L1 = vars.name
-            if parent:
-                country = db(table.id == parent).select(table.name,
-                                                        limitby=(0, 1)).first()
-                if country:
-                    vars.L0 = country.name
-        else:
-            # Get Names of ancestors at each level
-            vars = gis.get_parent_per_level(vars,
-                                            vars.id, # Will be None for Creates
-                                            feature=vars,
-                                            ids=False,
-                                            names=True)
-
+        record = form.record
+        inherited = record.inherited
+        if inherited:
+            # Have we provided more accurate data?
+            if lat != record.lat or lon != record.lon:
+                vars.inherited = False
         return
 
     # -------------------------------------------------------------------------
@@ -794,7 +802,7 @@ class S3LocationHierarchyModel(S3Model):
 
     names = ["gis_hierarchy",
              "gis_hierarchy_form_setup",
-            ]
+             ]
 
     def model(self):
 
@@ -970,7 +978,7 @@ class S3GISConfigModel(S3Model):
              "gis_projection_id",
              "gis_symbology_id",
              "gis_config_form_setup",
-            ]
+             ]
 
     def model(self):
 
@@ -1236,10 +1244,6 @@ class S3GISConfigModel(S3Model):
                              location_id("default_location_id",
                                          widget = S3LocationAutocompleteWidget(),
                                          requires = IS_NULL_OR(IS_LOCATION())),
-                             Field("search_level", length=2,
-                                   # @ToDo: Remove default once we have cascading working
-                                   default="L0",
-                                   requires=IS_NULL_OR(IS_IN_SET(gis.hierarchy_level_keys))),
                              Field("geocoder", "boolean",
                                    # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
                                    #readable=False,
@@ -1513,12 +1517,6 @@ class S3GISConfigModel(S3Model):
             _title="%s|%s" % (
                 T("Zoom"),
                 T("How much detail is seen. A high Zoom level means lot of detail, but not a wide area. A low Zoom level means seeing a wide area, but not a high level of detail.")))
-        table.search_level.label = T("Search Level")
-        table.search_level.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Search Level"),
-                T("The level at which Searches are filtered.")))
         table.region_location_id.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
@@ -3051,8 +3049,6 @@ class S3MapModel(S3Model):
                              s3_role_required(),       # Single Role
                              #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                              *s3_meta_fields())
-
-        #table.url.requires = [IS_URL, IS_NOT_EMPTY()]
 
         configure(tablename,
                   onaccept=gis_layer_onaccept,

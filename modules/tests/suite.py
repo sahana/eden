@@ -62,7 +62,7 @@ def loadAllTests():
     
     # Create a Category
     addTests(loadTests(CreateCategory))
-    
+
     return suite
 
 # Set up the command line arguments
@@ -110,7 +110,7 @@ parser.add_argument("--suite",
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
-                    default = 3,
+                    default = 16,
                     help = "The recursive depth when looking for links")
 up_desc = """The user name and password, separated by a /. Multiple user name
 and passwords can be added by separating them with a comma. If multiple user
@@ -212,38 +212,25 @@ else:
     browser_open = True
     # Run all Tests
     suite = loadAllTests()
-    
-"""Temporarily commented out"""
-#from tests.runner import EdenHTMLTestRunner
-#try:
-#    path = args["html_path"]
-#    if args["html_name_date"]:
-#        filename = "Sahana-Eden-%s.html" % current.request.now.date()
-#    else:
-#        filename = "Sahana-Eden-%s.html" % current.request.now
-#    fullname = os.path.join(path,filename)
-#    fp = file(fullname, "wb")
-#
-#    config.html = True
-#    from tests.runner import EdenHTMLTestRunner
-#    runner = EdenHTMLTestRunner(
-#                                stream=fp,
-#                                title="Sahana Eden",
-#                               )
-#    runner.run(suite)
-#except:
-#    config.html = False
-#    unittest.TextTestRunner(verbosity=2).run(suite)
 
 try:
-    import HTMLTestRunner
-    fp = file("Sahana-Eden.html", "wb")
-    runner = HTMLTestRunner.HTMLTestRunner(
-                                           stream=fp,
-                                           title="Sahana Eden",
-                                          )
+    path = args["html_path"]
+    if args["html_name_date"]:
+        filename = "Sahana-Eden-%s.html" % current.request.now.date()
+    else:
+        filename = "Sahana-Eden-%s.html" % current.request.now
+    fullname = os.path.join(path,filename)
+    fp = file(fullname, "wb")
+
+    config.html = True
+    from tests.runner import EdenHTMLTestRunner
+    runner = EdenHTMLTestRunner(
+                                stream=fp,
+                                title="Sahana Eden",
+                               )
     runner.run(suite)
 except:
+    config.html = False
     unittest.TextTestRunner(verbosity=2).run(suite)
 
 # Cleanup

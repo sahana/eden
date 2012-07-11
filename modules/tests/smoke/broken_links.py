@@ -44,10 +44,13 @@ class BrokenLinkTest(Web2UnitTest):
         # list of links that return a http_code other than 200
         # with the key being the URL and the value the http code
         self.brokenLinks = dict()
+        # List of links visited (key) with the parent
+        self.urlParentList = dict()
         # List of links visited (key) with the depth
         self.urlList = dict()
         # List of urls for each model
         self.model_url = dict()
+        self.totalLinks = 0
 
     def setDepth(self, depth):
         self.maxDepth = depth
@@ -77,7 +80,7 @@ class BrokenLinkTest(Web2UnitTest):
                     form["password"] = self.password
                     self.b.submit("Login")
                     return True
-            except:
+            except ControlNotFoundError:
                 pass
         return False
 
@@ -94,6 +97,7 @@ class BrokenLinkTest(Web2UnitTest):
         for depth in range(self.maxDepth):
             if len(to_visit) == 0:
                 break
+            self.totalLinks += len(to_visit)
             visit_start = time()
             msg = "%d urls" % len(to_visit)
             to_visit = self.visit(to_visit, depth)
@@ -166,6 +170,7 @@ class BrokenLinkTest(Web2UnitTest):
                         url = url[0:location]
                 if url not in self.urlList:
                     self.urlList[url] = depth
+                    self.urlParentList[url[len(self.homeURL):]] = visited_url
                     self.add_to_model(url, depth, visited_url)
                     if url not in to_visit:
                         to_visit.append(url)
@@ -177,15 +182,32 @@ class BrokenLinkTest(Web2UnitTest):
 #        for (url, depth) in self.urlList.items():
 #            print "%d. depth %d %s" % (n, depth, url,)
 #            n += 1
-    
+        self.reporter("%d URLs visited" % self.totalLinks)
         self.reporter("Broken Links")
         n = 1
         for (url, result) in self.brokenLinks.items():
             http_code = result[0]
+            try:
+                parent = self.urlParentList[url]
+                if current.test_config.html:
+                    parent = "<a href=%s target=\"_blank\">Parent</a>" % (parent)
+            except:
+                parent = "unknown"
             if len(result) == 1:
-                self.reporter("%3d. (%s) %s" % (n, http_code, url,))
+                self.reporter("%3d. (%s) %s called from %s" % (n,
+                                                http_code,
+                                                url,
+                                                parent
+                                               )
+                )
             else:
-                self.reporter("%3d. (%s-%s) %s" % (n, http_code, result[1], url))
+                self.reporter("%3d. (%s-%s) %s called from %s" % (n,
+                                                   http_code,
+                                                   result[1],
+                                                   url,
+                                                   parent
+                                                  )
+                )
             n += 1
     
     def report_model_url(self):

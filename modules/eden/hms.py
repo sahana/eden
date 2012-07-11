@@ -413,10 +413,11 @@ class HospitalDataModel(S3Model):
 
         hospital_id = S3ReusableField("hospital_id", table,
                                       sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "hms_hospital.id", "%(name)s")),
-                                      represent = lambda id: \
-                                                  (id and [db(db.hms_hospital.id == id).select(db.hms_hospital.name,
-                                                                                               limitby=(0, 1)).first().name] or ["None"])[0],
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "hms_hospital.id",
+                                                              self.hms_hospital_represent
+                                                              )),
+                                      represent = self.hms_hospital_represent,
                                       label = T("Hospital"),
                                       comment = hms_hospital_id_comment,
                                       ondelete = "RESTRICT")
@@ -853,6 +854,25 @@ class HospitalDataModel(S3Model):
                                       writable=False)
 
         return Storage(hms_hospital_id=hospital_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_hospital_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hms_hospital
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

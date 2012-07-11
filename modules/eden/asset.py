@@ -32,7 +32,7 @@ __all__ = ["S3AssetModel",
            "asset_types",
            "asset_log_status",
            "asset_controller",
-          ]
+           ]
 
 from gluon import *
 from gluon.sqlhtml import RadioWidget
@@ -264,15 +264,14 @@ class S3AssetModel(S3Model):
                     ),
             ))
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
                          (T("Facility/Site"), "site"),
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
-                        ]
+                         "L1",
+                         "L2",
+                         ]
 
         # Resource Configuration
         configure(tablename,

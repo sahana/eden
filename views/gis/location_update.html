@@ -8,30 +8,31 @@
 <p>&nbsp;</p>
 {{="%s (" % T("You can select the Draw tool")}}<img src="/{{=appname}}/static/img/gis/add_point_off.png">{{=") %s:" % T("& then click on the map below to adjust the Lat/Lon fields")}}
 <p>&nbsp;</p>
-{{try:}}{{=XML(_map)}}
-{{except:}}{{pass}}
+<div style='margin:0 0 0 -16px;'>
+{{try:}}{{=XML(_map)}}{{except:}}{{pass}}
+</div>
 <script type="text/javascript">//<![CDATA[
-$(function() {
-    var level = $('#gis_location_level').val();
-    // If the Location is a Admin Boundary then Street Address makes no sense
-    if (level){
-        $('#gis_location_addr_street__row').hide();
-        // If the Location is a Country then Parent makes no sense
-        if (level == 'L0'){
-            $('#gis_location_parent__row').hide();
-        }
-    }
-    // When the Level changes:
-	$('#gis_location_level').change(function() {
-		// What is the new type?
-        level = $(this).val();
-        if (level){
-            $('#gis_location_addr_street__row').hide();
-            if (level == 'L0'){
-                $('#gis_location_parent__row').hide();
-            }
-        }
-    });
-});
+$(function(){
+ var level=$('#gis_location_level').val()
+ {{#If the Location is a Admin Boundary then Street Address makes no sense}}
+ if(level){
+  $('#gis_location_addr_street__row').hide()
+  {{# If the Location is a Country then Parent makes no sense}}
+  if(level == 'L0'){
+   $('#gis_location_parent__row').hide()
+  }
+ }
+ {{# When the Level changes:}}
+ $('#gis_location_level').change(function(){
+  {{# What is the new type?}}
+  level=$(this).val()
+  if(level){
+   $('#gis_location_addr_street__row').hide()
+   if (level == 'L0'){
+    $('#gis_location_parent__row').hide()
+   }
+  }
+ })
+})
 //]]></script>
 {{include "gis/feature_crud.js"}}

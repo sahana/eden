@@ -542,7 +542,7 @@ def schedule_parser():
     workflow = record.workflow_task_id
     source = record.source_task_id
 
-    s3task.schedule_task("parse_workflow",
+    s3task.schedule_task("msg_parse_workflow",
                          vars={"workflow": workflow, "source": source},
                          period=300,  # seconds
                          timeout=300, # seconds
@@ -568,7 +568,7 @@ def schedule_email():
                                         limitby=(0, 1)).first()
     username = record.username
 
-    s3task.schedule_task("process_inbound_email",
+    s3task.schedule_task("msg_process_inbound_email",
                          vars={"username": username},
                          period=300,  # seconds
                          timeout=300, # seconds
