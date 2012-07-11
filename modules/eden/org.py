@@ -1748,7 +1748,7 @@ def org_organisation_represent(id, row=None, showlink=False,
         r = db(query).select(table.name,
                              limitby = (0, 1)).first()
         if r:
-            represent = "%s > %s" % (parent.name, represent)
+            represent = "%s > %s" % (r.name, represent)
 
     if not r and acronym and row.acronym:
         represent = "%s (%s)" % (represent, row.acronym)

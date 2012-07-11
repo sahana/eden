@@ -189,7 +189,7 @@ class S3RequestModel(S3Model):
                                   Field("purpose", "text",
                                         label=T("Purpose")), # Donations: What will the Items be used for?; People: Task Details
                                   Field("date_required", "datetime",
-                                        label = T("Date Needed BY"),
+                                        label = T("Date Needed By"),
                                         requires = [IS_EMPTY_OR(
                                                     #IS_UTC_DATETIME_IN_RANGE(
                                                     IS_DATE_IN_RANGE(
