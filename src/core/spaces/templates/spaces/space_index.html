@@ -31,7 +31,7 @@
                 {% if get_place.mod_cal %}
                     <li><a href="#events" data-toggle="tab">{% trans "Events" %}</a></li>
                 {% endif %}
-                {% if get_place.mod_polls %}
+                {% if get_place.mod_voting %}
                     <li><a href="#voting" data-toggle="tab">{% trans "Voting" %}</a></li>
                 {% endif %}
                 {% if user_is_admin %}
@@ -71,7 +71,7 @@
                                 <p><strong>{% trans "Description:" %}</strong> {{ get_place.description|removetags:'p'|safe }}</p>
                             {% endif %}
                             <p><strong>{% trans "Current status:" %}</strong> Not implemented</p>
-                            <p><strong>{% trans "Participants:" %}</strong> Not implemented</p>
+                            <p><strong>{% trans "Participants:" %}</strong> {{ get_place.users.count }}</p>
                             <hr />
                             <h4>{% trans "Recent activity" %}</h4>
                             
@@ -118,7 +118,7 @@
                                     {% endfor %}
                                 </ul>
                             {% endif %}
-                            {% if get_place.mod_polls %}
+                            {% if get_place.mod_voting %}
                                 <h6>{% trans "Polls" %}</h6>
                                 <ul class="unstyled">
                                     {% for p in polls %}
@@ -126,6 +126,10 @@
                                     {% empty %}
                                         <li>{% trans "No events registered." %}</li>
                                     {% endfor %}
+                                </ul>
+                                <h6>{% trans "Votings" %}</h6>
+                                <ul class="unstyled">
+                                    <li>nothing at this moment. Not implemented!</li>
                                 </ul>
                             {% endif %}
                         </div>
@@ -141,7 +145,7 @@
                         </div>
                     </div>
                 </div>
-                {% if get_place.mod_polls %}
+                {% if get_place.mod_voting %}
                 <div class="tab-pane" id="voting">
                     <div class="row">
                         <div class="span8">

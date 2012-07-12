@@ -98,6 +98,7 @@ class SpaceFeed(Feed):
 
 @login_required
 def add_intent(request, space_url):
+
      """
      Returns a page where the logged in user can click on a "I want to
      participate" button, which after sends an email to the administrator of
@@ -148,10 +149,8 @@ class ValidateIntent(DetailView):
     def get_object(self):
         # Makes sure the space ins't already in the cache before hitting the databass
         space_url = self.kwargs['space_url']
-        space_object = get_or_insert_object_in_cache(
-                                                    Space, 
-                                                    space_url, 
-                                                    url=space_url)
+        space_object = get_or_insert_object_in_cache(Space, space_url, 
+            url=space_url)
 
         if self.request.user in space_object.admins.all() \
         or self.request.user in space_object.mods.all() \
@@ -221,10 +220,7 @@ def create_space(request):
                               {'form': space_form,
                                'entityformset': entity_forms},
                               context_instance=RequestContext(request))
-#    else:
-#        return render_to_response('not_allowed.html',
-#                                  context_instance=RequestContext(request))
-                                  
+
 
 class ViewSpaceIndex(DetailView):
 
@@ -243,43 +239,35 @@ class ViewSpaceIndex(DetailView):
     def get_object(self):
         # Makes sure the space ins't already in the cache before hitting the databass
         space_url = self.kwargs['space_url']
-        space_object = get_or_insert_object_in_cache(
-                                                    Space, 
-                                                    space_url, 
-                                                    url=space_url)
+        space_object = get_or_insert_object_in_cache(Space, space_url,
+            url=space_url)
         
-        if space_object.public == True or self.request.user.is_staff or \
-        self.request.user.is_superuser:
+        if space_object.public == True \
+        or self.request.user.is_staff \
+        or self.request.user.is_superuser:
             if self.request.user.is_anonymous():
                 messages.info(self.request, _("Hello anonymous user. Remember \
-                                              that this space is public to view, but \
-                                              you must <a href=\"/accounts/register\">register</a> \
-                                              or <a href=\"/accounts/login\">login</a> to participate."))
+                    that this space is public to view, but you must \
+                    <a href=\"/accounts/register\">register</a> or \
+                    <a href=\"/accounts/login\">login</a> to participate."))
             return space_object
 
+        # Check if the user is in the admitted user groups of the space
+        if self.request.user in space_object.users \
+        or self.request.user in space_object.admins \
+        or self.request.user in space_object.mods:
+            return space_object
+
+        # If the user does not meet any of the conditions, it's not allowed to
+        # enter the space
         if self.request.user.is_anonymous():
-            messages.info(self.request, _("You're an anonymous user. \
-                          You must <a href=\"/accounts/register\">register</a> \
-                          or <a href=\"/accounts/login\">login</a> to access here."))
-            self.template_name = 'not_allowed.html'
-            return space_object
-
-        # Check if the user is in the admitted users of the space
-        for u in space_object.users.all():
-            if self.request.user == u:
-                return space_object
-
-        # Check if the user is an admin
-        for u in space_object.admins.all():
-            if self.request.user == u:
-                return space_object
-
-        # Check if the user is a moderator
-        for u in space_object.mods.all():
-            if self.request.user == u:
-                return space_object
-
-        messages.warning(self.request, _("You're not registered to this space."))
+            messages.info(self.request, _("You're an anonymous user. You must \
+                <a href=\"/accounts/register\">register</a> or \
+                <a href=\"/accounts/login\">login</a> to access here."))
+        else:
+            messages.warning(self.request, _("You're not registered to this \
+            space."))
+        
         self.template_name = 'not_allowed.html'
         return space_object
 
@@ -288,24 +276,25 @@ class ViewSpaceIndex(DetailView):
         context = super(ViewSpaceIndex, self).get_context_data(**kwargs)
         # Makes sure the space ins't already in the cache before hitting the databass
         place_url = self.kwargs['space_url']
-        place = get_or_insert_object_in_cache(
-                                            Space,
-                                            place_url,
-                                            url=place_url)
-
+        place = get_or_insert_object_in_cache(Space, place_url, url=place_url)
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
-        context['proposals'] = Proposal.objects.filter(space=place.id).order_by('-pub_date')
-        context['publication'] = Post.objects.filter(space=place.id).order_by('-pub_date')[:10]
-        context['page'] = StaticPage.objects.filter(show_footer=True).order_by('-order')
+        context['proposals'] = Proposal.objects.filter(space=place.id) \
+                                                    .order_by('-pub_date')
+        context['publication'] = Post.objects.filter(space=place.id) \
+                                                    .order_by('-pub_date')[:10]
+        context['page'] = StaticPage.objects.filter(show_footer=True) \
+                                                    .order_by('-order')
         context['messages'] = messages.get_messages(self.request)
-        context['debates'] = Debate.objects.filter(space=place.id).order_by('-date')
-        context['event'] = Event.objects.filter(space=place.id).order_by('-event_date')
+        context['debates'] = Debate.objects.filter(space=place.id) \
+                                                    .order_by('-date')
+        context['event'] = Event.objects.filter(space=place.id) \
+                                                .order_by('-event_date')
         #True if the request.user has admin rights on this space
-        context['user_is_admin'] = (self.request.user in place.admins.all() or \
-            self.request.user in place.mods.all() or self.request.user.is_staff or \
-            self.request.user.is_superuser) 
+        context['user_is_admin'] = (self.request.user in place.admins.all()
+            or self.request.user in place.mods.all()
+            or self.request.user.is_staff or self.request.user.is_superuser) 
         context['polls'] = Poll.objects.filter(space=place.id)
         return context
         
@@ -334,9 +323,10 @@ def edit_space(request, space_url):
     place = get_object_or_404(Space, url=space_url)
 
     if request.user in place.admins.all():
-        form = SpaceForm(request.POST or None, request.FILES or None, instance=place)
-        entity_forms = EntityFormSet(request.POST or None, request.FILES or None,
-                                 queryset=Entity.objects.all().filter(space=place))
+        form = SpaceForm(request.POST or None, request.FILES or None,
+            instance=place)
+        entity_forms = EntityFormSet(request.POST or None, request.FILES
+            or None, queryset=Entity.objects.all().filter(space=place))
 
         if request.method == 'POST':
             if form.is_valid() and entity_forms.is_valid():
@@ -365,8 +355,8 @@ class DeleteSpace(DeleteView):
 
     """
     Returns a confirmation page before deleting the space object completely.
-    This does not delete the space related content. Only the site administrators
-    can delete a space.
+    This does not delete the space related content. Only the site
+    administrators can delete a space.
     
     :rtype: Confirmation
     """
@@ -396,7 +386,8 @@ class GoToSpace(RedirectView):
     :rtype: Redirect
     """
     def get_redirect_url(self, **kwargs):
-        self.place = get_object_or_404(Space, name = self.request.GET['spaces'])
+        self.place = get_object_or_404(Space,
+            name = self.request.GET['spaces'])
         return '/spaces/%s' % self.place.url
 
 
