@@ -11,6 +11,7 @@ import argparse
 
 def loadAllTests():
     # Create Organisation
+    loadTests = unittest.TestLoader().loadTestsFromTestCase
     suite = loadTests(CreateOrganisation)
     
     # Shortcut
@@ -102,10 +103,10 @@ the the suite will be ignored.
 
 The suite options can be described as follows:
 
- smoke: This will run the broken link test
- quick: This will run all the tests marked as essential
- complete: This will run all tests except those marked as long
- full: This will run all test
+smoke: This will run the broken link test
+quick: This will run all the tests marked as essential
+complete: This will run all tests except those marked as long
+full: This will run all test
 """
 parser.add_argument("--suite",
                     help = suite_desc,
