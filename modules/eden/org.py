@@ -78,11 +78,8 @@ class S3OrganisationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
-        settings = current.deployment_settings
-
         messages = current.messages
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-        SELECT_LOCATION = messages.SELECT_LOCATION
+        settings = current.deployment_settings
 
         add_component = self.add_component
         configure = self.configure
@@ -208,10 +205,10 @@ class S3OrganisationModel(S3Model):
 
         # subsector_id = S3ReusableField("subsector_id", table,
                                        # sortby="abrv",
-                                       # requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       # "org_subsector.id",
-                                                                       # self.org_subsector_requires_represent,
-                                                                       # sort=True)),
+                                       # requires = IS_NULL_OR(
+                                                        # IS_ONE_OF(db, "org_subsector.id",
+                                                                  # self.org_subsector_requires_represent,
+                                                                  # sort=True)),
                                        # represent = self.org_subsector_represent,
                                        # label = SUBSECTOR,
                                        ##comment = Script to filter the sector_subsector drop down
@@ -307,9 +304,9 @@ class S3OrganisationModel(S3Model):
                                    #writable = False,
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                         lambda: gis.get_countries(key_type="code"),
-                                                                  zero = SELECT_LOCATION)),
+                                                                  zero = messages.SELECT_LOCATION)),
                                    represent = lambda code: \
-                                        gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                                        gis.get_country(code, key_type="code") or messages.UNKNOWN_OPT),
                              Field("logo", "upload",
                                    label = T("Logo"),
                                    requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
@@ -484,7 +481,11 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
-        # Facilities
+        # Offices
+        add_component("org_office",
+                      org_organisation="organisation_id")
+
+        # Sites
         add_component("org_site",
                       org_organisation="organisation_id")
 
@@ -985,7 +986,6 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
-        # Shortcuts
         add_component = self.add_component
 
         # =====================================================================
@@ -1442,12 +1442,7 @@ class S3OfficeModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-
         messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         crud_strings = current.response.s3.crud_strings
         super_link = self.super_link
 
@@ -1492,7 +1487,7 @@ class S3OfficeModel(S3Model):
                                   Field("type", "integer", label = T("Type"),
                                         requires = IS_NULL_OR(IS_IN_SET(org_office_type_opts)),
                                         represent = lambda opt: \
-                                          org_office_type_opts.get(opt, UNKNOWN_OPT)),
+                                          org_office_type_opts.get(opt, messages.UNKNOWN_OPT)),
                                   self.gis_location_id(),
                                   Field("phone1", label = T("Phone 1"),
                                         requires = IS_NULL_OR(s3_phone_requires)),
@@ -1518,7 +1513,7 @@ class S3OfficeModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or [NONE])[0],
+                                          (bool and [T("Obsolete")] or [messages.NONE])[0],
                                         default = False),
                                   #document_id(),  # Better to have multiple Documents on a Tab
                                   s3_comments(),
@@ -1560,10 +1555,6 @@ class S3OfficeModel(S3Model):
             msg_record_deleted = T("Warehouse deleted"),
             msg_list_empty = T("No Warehouses currently registered")
         )
-
-        # Offices as component of Organisations
-        self.add_component(table,
-                           org_organisation="organisation_id")
 
         self.configure(tablename,
                        super_entity=("pr_pentity", "org_site"),

@@ -2736,6 +2736,7 @@ class S3ImportJob():
                                              original = None,
                                              uid = None)
 
+            add_item = self.add_item
             xml = current.xml
             for celement in xml.components(element, names=cinfos.keys()):
 
@@ -2763,10 +2764,10 @@ class S3ImportJob():
                         celement.set(xml.UID, uid)
                     cinfo.original = original
 
-                item_id = self.add_item(element=celement,
-                                        original=original,
-                                        parent=item,
-                                        joinby=(pkey, fkey))
+                item_id = add_item(element=celement,
+                                   original=original,
+                                   parent=item,
+                                   joinby=(pkey, fkey))
                 if item_id is None:
                     item.error = self.error
                     self.error_tree.append(deepcopy(item.element))
@@ -2789,7 +2790,7 @@ class S3ImportJob():
                 for reference in item.references:
                     entry = reference.entry
                     if entry and entry.element is not None:
-                        item_id = self.add_item(element=entry.element)
+                        item_id = add_item(element=entry.element)
                         if item_id:
                             entry.update(item_id=item_id)
 

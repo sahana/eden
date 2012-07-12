@@ -84,7 +84,7 @@ class BrokenLinkTest(Web2UnitTest):
                     self.b.submit("Login")
                     # If login is successful then should be redirected to the homepage
                     return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except ControlNotFoundError:
+            except:
                 pass
         return False
 
