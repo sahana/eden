@@ -3546,6 +3546,7 @@ def gis_location_represent(id, row=None, showlink=True, simpletext=False):
         if row.level in ["L1", "L2", "L3", "L4", "L5"]:
             level_name = None
             # Find the L0 Ancestor to lookup the hierarchy
+            gis = current.gis
             L0 = gis.get_parent_country(row)
             if L0:
                 htable = s3db.gis_hierarchy

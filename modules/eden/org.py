@@ -70,6 +70,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation_type_id",
              "org_organisation",
              "org_organisation_id",
+             "org_organisation_branch",
              ]
 
     def model(self):
@@ -141,7 +142,7 @@ class S3OrganisationModel(S3Model):
                 msg_record_deleted = T("Sector deleted"),
                 msg_list_empty = T("No Sectors currently registered"))
 
-        configure("org_sector", deduplicate=self.org_sector_deduplicate)
+        configure("org_sector", deduplicate=self.org_sector_duplicate)
 
         sector_id = S3ReusableField("sector_id", "list:reference org_sector",
                                     sortby="abrv",
@@ -216,7 +217,7 @@ class S3OrganisationModel(S3Model):
                                        ##comment = Script to filter the sector_subsector drop down
                                        # ondelete = "SET NULL")
 
-        # configure("org_subsector", deduplicate=self.org_sector_deduplicate)
+        # configure("org_subsector", deduplicate=self.org_sector_duplicate)
         # add_component("org_subsector", org_sector="sector_id")
 
         # ---------------------------------------------------------------------
@@ -471,7 +472,7 @@ class S3OrganisationModel(S3Model):
                   super_entity = "pr_pentity",
                   referenced_by = [(utablename, "organisation_id")],
                   search_method=organisation_search,
-                  deduplicate=self.organisation_deduplicate,
+                  deduplicate=self.organisation_duplicate,
                   list_fields = ["id",
                                  "name",
                                  "acronym",
@@ -519,6 +520,7 @@ class S3OrganisationModel(S3Model):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
+
         # For imports
         add_component("org_organisation",
                       org_organisation=Storage(
@@ -595,8 +597,10 @@ class S3OrganisationModel(S3Model):
             msg_list_empty = T("No Branch Organizations currently registered"))
 
         configure(tablename,
+                  deduplicate=self.org_branch_duplicate,
                   onaccept=self.org_branch_onaccept,
-                  ondelete=self.org_branch_onaccept)
+                  ondelete=self.org_branch_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -709,7 +713,7 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_sector_deduplicate(item):
+    def org_sector_duplicate(item):
         """ Import item de-duplication """
 
         if item.tablename in ("org_sector", "org_subsector"):
@@ -782,7 +786,7 @@ class S3OrganisationModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def organisation_deduplicate(item):
+    def organisation_duplicate(item):
         """
             Import item deduplication, match by name
             NB: usually, this is only needed to catch cases where the
@@ -861,6 +865,24 @@ class S3OrganisationModel(S3Model):
             except:
                 return current.messages.UNKNOWN_OPT
 
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_duplicate(item):
+        """
+            An Organisation can only be a branch of one Organisation
+        """
+
+        if item.tablename == "org_organisation_branch":
+            table = item.table
+            branch_id = "branch_id" in item.data and item.data.branch_id
+            if branch_id:
+                query = (table.branch_id == branch_id)
+                duplicate = current.db(query).select(table.id,
+                                                     limitby=(0, 1)).first()
+                if duplicate:
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
+
     # -------------------------------------------------------------------------
     @staticmethod
     def org_branch_onaccept(form):
@@ -868,34 +890,47 @@ class S3OrganisationModel(S3Model):
             Remove any duplicate memberships and update affiliations
         """
 
+        id = form.vars.id
         db = current.db
-        ltable = db.org_organisation_branch
-
-        if hasattr(form, "vars"):
-            _id = form.vars.id
-        elif isinstance(form, Row) and "id" in form:
-            _id = form.id
-        else:
-            return
-        if _id:
-            record = db(ltable.id == _id).select(limitby=(0, 1)).first()
-        else:
-            return
-        if record:
+        table = db.org_organisation_branch
+        record = db(table.id == id).select(table.branch_id,
+                                           table.organisation_id,
+                                           table.deleted,
+                                           table.deleted_fk,
+                                           limitby=(0, 1)).first()
+        try:
             branch_id = record.branch_id
             organisation_id = record.organisation_id
             if branch_id and organisation_id and not record.deleted:
-                query = (ltable.branch_id == branch_id) & \
-                        (ltable.organisation_id == organisation_id) & \
-                        (ltable.id != record.id) & \
-                        (ltable.deleted != True)
+                query = (table.branch_id == branch_id) & \
+                        (table.organisation_id == organisation_id) & \
+                        (table.id != id) & \
+                        (table.deleted != True)
                 deleted_fk = {"branch_id": branch_id,
                               "organisation_id": organisation_id}
                 db(query).update(deleted = True,
                                  branch_id = None,
                                  organisation_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
-            current.s3db.pr_update_affiliations(ltable, record)
+            current.s3db.pr_update_affiliations(table, record)
+        except:
+            return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_ondelete(row):
+        """
+            Update affiliations
+        """
+
+        db = current.db
+        table = db.org_organisation_branch
+        record = db(table.id == row.id).select(table.branch_id,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               limitby=(0, 1)).first()
+        if record:
+            current.s3db.pr_update_affiliations(table, record)
         return
 
 # =============================================================================
@@ -1533,7 +1568,7 @@ class S3OfficeModel(S3Model):
         self.configure(tablename,
                        super_entity=("pr_pentity", "org_site"),
                        #onvalidation=s3_address_onvalidation,
-                       deduplicate=self.org_office_deduplicate,
+                       deduplicate=self.org_office_duplicate,
                        list_fields=["id",
                                     "name",
                                     "organisation_id",   # Filtered in Component views
@@ -1577,7 +1612,7 @@ class S3OfficeModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def org_office_deduplicate(item):
+    def org_office_duplicate(item):
         """
             Import item deduplication, match by name
                 (Adding location_id doesn't seem to be a good idea)
@@ -1746,7 +1781,7 @@ def org_organisation_represent(id, row=None, showlink=False,
         r = db(query).select(table.name,
                              limitby = (0, 1)).first()
         if r:
-            represent = "%s > %s" % (parent.name, represent)
+            represent = "%s > %s" % (r.name, represent)
 
     if not r and acronym and row.acronym:
         represent = "%s (%s)" % (represent, row.acronym)
