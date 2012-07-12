@@ -50,7 +50,7 @@ class SendReceiveItem(InvTestFunctions):
         user = "admin"
         method = "search"
         send_data = [("site_id",
-                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "Timor-Leste Red Cross Society (CVTL) National Warehouse",
                  "option",
                 ),
                 ("to_site_id",
@@ -118,12 +118,12 @@ class SendReceiveItem(InvTestFunctions):
         # Receive the shipment
         self.recv_sent_shipment(method, user, send_ref, recv_data)
 
-    def test_inv019_send_and_confirm(self):
+    def test_inv021_send_and_confirm(self):
         """ Test to send a shipment and confirm that it is receive outside of the system """
         user = "admin"
         method = "search"
         send_data = [("site_id",
-                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "Timor-Leste Red Cross Society (CVTL) National Warehouse",
                  "option",
                 ),
                 ("to_site_id",
