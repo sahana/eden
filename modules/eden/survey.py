@@ -2192,9 +2192,10 @@ $('#chart_btn').click(function(){
                                          "query": response_locations,
                                          "active": True })
                 if bounds == {}:
-                    bounds = (gis.get_bounds(response_locations))
+                    bounds = (gis.get_bounds(features=response_locations))
                 else:
-                    new_bounds = gis.get_bounds(response_locations)
+                    new_bounds = gis.get_bounds(features=response_locations)
+                    # Where is merge_bounds defined!?
                     bounds = merge_bounds([bounds, new_bounds])
         if bounds == {}:
             bounds = gis.get_bounds()

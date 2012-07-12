@@ -1137,6 +1137,12 @@ def newAssessment():
                              f="series",
                              args=[series_id,"read"],
                              vars = {}))
+            # This is a bespoke form which confuses CRUD, which displays an
+            # error "Invalid form (re-opened in another window?)"
+            # So so long as we don't have an error in the form we can
+            # delete this error.
+            elif response.error and not output["form"]["error"]:
+                response.error = None
             s3.survey_answerlist_dataTable_post(r)
             form = s3.survey_buildQuestionnaireFromSeries(series_id, None)
             urlimport = URL(c=module,

@@ -70,6 +70,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation_type_id",
              "org_organisation",
              "org_organisation_id",
+             "org_organisation_branch",
              ]
 
     def model(self):
@@ -77,11 +78,8 @@ class S3OrganisationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
-        settings = current.deployment_settings
-
         messages = current.messages
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-        SELECT_LOCATION = messages.SELECT_LOCATION
+        settings = current.deployment_settings
 
         add_component = self.add_component
         configure = self.configure
@@ -141,7 +139,7 @@ class S3OrganisationModel(S3Model):
                 msg_record_deleted = T("Sector deleted"),
                 msg_list_empty = T("No Sectors currently registered"))
 
-        configure("org_sector", deduplicate=self.org_sector_deduplicate)
+        configure("org_sector", deduplicate=self.org_sector_duplicate)
 
         sector_id = S3ReusableField("sector_id", "list:reference org_sector",
                                     sortby="abrv",
@@ -207,16 +205,16 @@ class S3OrganisationModel(S3Model):
 
         # subsector_id = S3ReusableField("subsector_id", table,
                                        # sortby="abrv",
-                                       # requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       # "org_subsector.id",
-                                                                       # self.org_subsector_requires_represent,
-                                                                       # sort=True)),
+                                       # requires = IS_NULL_OR(
+                                                        # IS_ONE_OF(db, "org_subsector.id",
+                                                                  # self.org_subsector_requires_represent,
+                                                                  # sort=True)),
                                        # represent = self.org_subsector_represent,
                                        # label = SUBSECTOR,
                                        ##comment = Script to filter the sector_subsector drop down
                                        # ondelete = "SET NULL")
 
-        # configure("org_subsector", deduplicate=self.org_sector_deduplicate)
+        # configure("org_subsector", deduplicate=self.org_sector_duplicate)
         # add_component("org_subsector", org_sector="sector_id")
 
         # ---------------------------------------------------------------------
@@ -306,9 +304,9 @@ class S3OrganisationModel(S3Model):
                                    #writable = False,
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(
                                         lambda: gis.get_countries(key_type="code"),
-                                                                  zero = SELECT_LOCATION)),
+                                                                  zero = messages.SELECT_LOCATION)),
                                    represent = lambda code: \
-                                        gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                                        gis.get_country(code, key_type="code") or messages.UNKNOWN_OPT),
                              Field("logo", "upload",
                                    label = T("Logo"),
                                    requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
@@ -471,7 +469,7 @@ class S3OrganisationModel(S3Model):
                   super_entity = "pr_pentity",
                   referenced_by = [(utablename, "organisation_id")],
                   search_method=organisation_search,
-                  deduplicate=self.organisation_deduplicate,
+                  deduplicate=self.organisation_duplicate,
                   list_fields = ["id",
                                  "name",
                                  "acronym",
@@ -483,7 +481,11 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
-        # Facilities
+        # Offices
+        add_component("org_office",
+                      org_organisation="organisation_id")
+
+        # Sites
         add_component("org_site",
                       org_organisation="organisation_id")
 
@@ -519,6 +521,7 @@ class S3OrganisationModel(S3Model):
                                     actuate="embed",
                                     autocomplete="name",
                                     autodelete=False))
+
         # For imports
         add_component("org_organisation",
                       org_organisation=Storage(
@@ -595,8 +598,10 @@ class S3OrganisationModel(S3Model):
             msg_list_empty = T("No Branch Organizations currently registered"))
 
         configure(tablename,
+                  deduplicate=self.org_branch_duplicate,
                   onaccept=self.org_branch_onaccept,
-                  ondelete=self.org_branch_onaccept)
+                  ondelete=self.org_branch_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -709,7 +714,7 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_sector_deduplicate(item):
+    def org_sector_duplicate(item):
         """ Import item de-duplication """
 
         if item.tablename in ("org_sector", "org_subsector"):
@@ -782,7 +787,7 @@ class S3OrganisationModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def organisation_deduplicate(item):
+    def organisation_duplicate(item):
         """
             Import item deduplication, match by name
             NB: usually, this is only needed to catch cases where the
@@ -861,6 +866,24 @@ class S3OrganisationModel(S3Model):
             except:
                 return current.messages.UNKNOWN_OPT
 
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_duplicate(item):
+        """
+            An Organisation can only be a branch of one Organisation
+        """
+
+        if item.tablename == "org_organisation_branch":
+            table = item.table
+            branch_id = "branch_id" in item.data and item.data.branch_id
+            if branch_id:
+                query = (table.branch_id == branch_id)
+                duplicate = current.db(query).select(table.id,
+                                                     limitby=(0, 1)).first()
+                if duplicate:
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
+
     # -------------------------------------------------------------------------
     @staticmethod
     def org_branch_onaccept(form):
@@ -868,34 +891,47 @@ class S3OrganisationModel(S3Model):
             Remove any duplicate memberships and update affiliations
         """
 
+        id = form.vars.id
         db = current.db
-        ltable = db.org_organisation_branch
-
-        if hasattr(form, "vars"):
-            _id = form.vars.id
-        elif isinstance(form, Row) and "id" in form:
-            _id = form.id
-        else:
-            return
-        if _id:
-            record = db(ltable.id == _id).select(limitby=(0, 1)).first()
-        else:
-            return
-        if record:
+        table = db.org_organisation_branch
+        record = db(table.id == id).select(table.branch_id,
+                                           table.organisation_id,
+                                           table.deleted,
+                                           table.deleted_fk,
+                                           limitby=(0, 1)).first()
+        try:
             branch_id = record.branch_id
             organisation_id = record.organisation_id
             if branch_id and organisation_id and not record.deleted:
-                query = (ltable.branch_id == branch_id) & \
-                        (ltable.organisation_id == organisation_id) & \
-                        (ltable.id != record.id) & \
-                        (ltable.deleted != True)
+                query = (table.branch_id == branch_id) & \
+                        (table.organisation_id == organisation_id) & \
+                        (table.id != id) & \
+                        (table.deleted != True)
                 deleted_fk = {"branch_id": branch_id,
                               "organisation_id": organisation_id}
                 db(query).update(deleted = True,
                                  branch_id = None,
                                  organisation_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
-            current.s3db.pr_update_affiliations(ltable, record)
+            current.s3db.pr_update_affiliations(table, record)
+        except:
+            return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_branch_ondelete(row):
+        """
+            Update affiliations
+        """
+
+        db = current.db
+        table = db.org_organisation_branch
+        record = db(table.id == row.id).select(table.branch_id,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               limitby=(0, 1)).first()
+        if record:
+            current.s3db.pr_update_affiliations(table, record)
         return
 
 # =============================================================================
@@ -950,7 +986,6 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
-        # Shortcuts
         add_component = self.add_component
 
         # =====================================================================
@@ -1407,12 +1442,7 @@ class S3OfficeModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-
         messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
-
         crud_strings = current.response.s3.crud_strings
         super_link = self.super_link
 
@@ -1457,7 +1487,7 @@ class S3OfficeModel(S3Model):
                                   Field("type", "integer", label = T("Type"),
                                         requires = IS_NULL_OR(IS_IN_SET(org_office_type_opts)),
                                         represent = lambda opt: \
-                                          org_office_type_opts.get(opt, UNKNOWN_OPT)),
+                                          org_office_type_opts.get(opt, messages.UNKNOWN_OPT)),
                                   self.gis_location_id(),
                                   Field("phone1", label = T("Phone 1"),
                                         requires = IS_NULL_OR(s3_phone_requires)),
@@ -1483,7 +1513,7 @@ class S3OfficeModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or [NONE])[0],
+                                          (bool and [T("Obsolete")] or [messages.NONE])[0],
                                         default = False),
                                   #document_id(),  # Better to have multiple Documents on a Tab
                                   s3_comments(),
@@ -1526,14 +1556,10 @@ class S3OfficeModel(S3Model):
             msg_list_empty = T("No Warehouses currently registered")
         )
 
-        # Offices as component of Organisations
-        self.add_component(table,
-                           org_organisation="organisation_id")
-
         self.configure(tablename,
                        super_entity=("pr_pentity", "org_site"),
                        #onvalidation=s3_address_onvalidation,
-                       deduplicate=self.org_office_deduplicate,
+                       deduplicate=self.org_office_duplicate,
                        list_fields=["id",
                                     "name",
                                     "organisation_id",   # Filtered in Component views
@@ -1577,7 +1603,7 @@ class S3OfficeModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def org_office_deduplicate(item):
+    def org_office_duplicate(item):
         """
             Import item deduplication, match by name
                 (Adding location_id doesn't seem to be a good idea)
@@ -1746,7 +1772,7 @@ def org_organisation_represent(id, row=None, showlink=False,
         r = db(query).select(table.name,
                              limitby = (0, 1)).first()
         if r:
-            represent = "%s > %s" % (parent.name, represent)
+            represent = "%s > %s" % (r.name, represent)
 
     if not r and acronym and row.acronym:
         represent = "%s (%s)" % (represent, row.acronym)

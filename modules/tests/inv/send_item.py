@@ -52,7 +52,7 @@ class SendItem(InvTestFunctions):
         user = "admin"
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
-                 "Cruz Vermelha de Timor-Leste (CVTL) National Warehouse (Warehouse)",
+                 "Timor-Leste Red Cross Society (CVTL) National Warehouse"
                  "option",
                 ),
                 ("to_site_id",
