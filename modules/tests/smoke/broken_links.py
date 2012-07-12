@@ -1,5 +1,6 @@
 from time import time
 from StringIO import StringIO
+import sys
 
 from tests.web2unittest import Web2UnitTest
 from gluon import current
@@ -31,13 +32,15 @@ class BrokenLinkTest(Web2UnitTest):
         # Tuple of strings that if in the URL will be ignored
         # Useful to avoid dynamic URLs that trigger the same functionality
         self.include_ignore = ("_language=",
-                               "/admin/default/",
+                               "logout",
+                               "appadmin",
+                               "admin"
                               )
         # tuple of strings that should be removed from the URL before storing
         # Typically this will be some variables passed in via the URL 
         self.strip_url = ("?_next=",
                           )
-        self.maxDepth = 2 # sanity check
+        self.maxDepth = 16 # sanity check
         self.setUser("test@example.com/eden")
 
     def clearRecord(self):
@@ -79,8 +82,9 @@ class BrokenLinkTest(Web2UnitTest):
                     form["email"] = self.user
                     form["password"] = self.password
                     self.b.submit("Login")
-                    return True
-            except ControlNotFoundError:
+                    # If login is successful then should be redirected to the homepage
+                    return self.b.get_url()[len(self.homeURL):] == "/default/index"
+            except:
                 pass
         return False
 
@@ -105,8 +109,8 @@ class BrokenLinkTest(Web2UnitTest):
             self.reporter(msg)
         finish = time()
         self.report()
-#        self.report_model_url()
         self.reporter("Finished took %.3f seconds" % (finish - start))
+#        self.report_model_url()
     
 
 

@@ -997,13 +997,13 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         self.ANSWER_INVALID = 3
 
         T = current.T
-        db = current.db
+        s3db = current.s3db
         # The various database tables that the widget may want access to
-        self.qtable = db.survey_question
-        self.mtable = db.survey_question_metadata
-        self.qltable = db.survey_question_list
-        self.ctable = db.survey_complete
-        self.atable = db.survey_answer
+        self.qtable = s3db.survey_question
+        self.mtable = s3db.survey_question_metadata
+        self.qltable = s3db.survey_question_list
+        self.ctable = s3db.survey_complete
+        self.atable = s3db.survey_answer
         # the general instance variables
         self.metalist = ["Help message"]
         self.attr = {}
