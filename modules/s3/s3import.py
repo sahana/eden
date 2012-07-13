@@ -2717,7 +2717,7 @@ class S3ImportJob():
             table = item.table
             components = current.s3db.get_components(table, names=components)
 
-            cnames = []
+            cnames = Storage()
             cinfos = Storage()
             for alias in components:
                 component = components[alias]
@@ -2729,7 +2729,10 @@ class S3ImportJob():
                     ctable = component.table
                     fkey = component.fkey
                 ctablename = ctable._tablename
-                cnames.append(ctablename)
+                if ctablename in cnames:
+                    cnames[ctablename].append(alias)
+                else:
+                    cnames[ctablename] = [alias]
                 cinfos[(ctablename, alias)] = Storage(component = component,
                                                       ctable = ctable,
                                                       pkey = pkey,
@@ -2738,7 +2741,7 @@ class S3ImportJob():
                                                       uid = None)
             add_item = self.add_item
             xml = current.xml
-            for celement in xml.components(element, names=cnames):
+            for celement in xml.components(element, names=cnames.keys()):
 
                 # Get the component tablename
                 ctablename = celement.get(xml.ATTRIBUTE.name, None)
@@ -2748,10 +2751,14 @@ class S3ImportJob():
                 # Get the component alias (for disambiguation)
                 calias = celement.get(xml.ATTRIBUTE.alias, None)
                 if calias is None:
-                    try:
-                        calias = ctablename.split("_", 1)[1]
-                    except IndexError:
-                        calias = ctablename
+                    if ctablename not in cnames:
+                        continue
+                    aliases = cnames[ctablename]
+                    if len(aliases) == 1:
+                        calias = aliases[0]
+                    else:
+                        # ambiguous components *must* use alias
+                        continue
                 if (ctablename, calias) not in cinfos:
                     continue
                 else:
