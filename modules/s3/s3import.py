@@ -2715,10 +2715,10 @@ class S3ImportJob():
         else:
             # Now parse the components
             table = item.table
-
             components = current.s3db.get_components(table, names=components)
-            cinfos = Storage()
 
+            cnames = []
+            cinfos = Storage()
             for alias in components:
                 component = components[alias]
                 pkey = component.pkey
@@ -2729,22 +2729,33 @@ class S3ImportJob():
                     ctable = component.table
                     fkey = component.fkey
                 ctablename = ctable._tablename
-                cinfos[ctablename] = Storage(component = component,
-                                             ctable = ctable,
-                                             pkey = pkey,
-                                             fkey = fkey,
-                                             original = None,
-                                             uid = None)
-
+                cnames.append(ctablename)
+                cinfos[(ctablename, alias)] = Storage(component = component,
+                                                      ctable = ctable,
+                                                      pkey = pkey,
+                                                      fkey = fkey,
+                                                      original = None,
+                                                      uid = None)
             add_item = self.add_item
             xml = current.xml
-            for celement in xml.components(element, names=cinfos.keys()):
+            for celement in xml.components(element, names=cnames):
 
+                # Get the component tablename
                 ctablename = celement.get(xml.ATTRIBUTE.name, None)
-                if ctablename is None or ctablename not in cinfos:
+                if not ctablename:
+                    continue
+
+                # Get the component alias (for disambiguation)
+                calias = celement.get(xml.ATTRIBUTE.alias, None)
+                if calias is None:
+                    try:
+                        calias = ctablename.split("_", 1)[1]
+                    except IndexError:
+                        calias = ctablename
+                if (ctablename, calias) not in cinfos:
                     continue
                 else:
-                    cinfo = cinfos[ctablename]
+                    cinfo = cinfos[(ctablename, calias)]
 
                 component = cinfo.component
                 original = cinfo.original
