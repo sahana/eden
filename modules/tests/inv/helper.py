@@ -272,7 +272,6 @@ class InvTestFunctions(SeleniumUnitTest):
             It will get the stock in the warehouse before and then after
             and check that the stock levels have been properly increased
         """
-        
         browser = self.browser
         if method == "search":
             self.login(account=user, nexturl="inv/recv/search")
