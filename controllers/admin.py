@@ -672,17 +672,25 @@ def translate():
 
     def prep(r):
         if r.interactive:
-            if r.method == "create":
-                   if form.accepts(request.vars):
-                      if request.vars.opt == "1": 
-                          X = StringsToExcel()
-                          X.convert_to_xls(form.request_vars.code + ".py" ,form.request_vars.module_list,[])
-
+             if r.method == "create":
 		   return True
 
     def postp(r,output):
 
         if opt == "1":
+             if form.accepts(request.vars,session):
+                   if opt == "1":
+	     
+	              modlist = []
+	              if type(form.request_vars.module_list)==str:
+		          modlist.append(form.request_vars.module_list)
+                      else:
+		          modlist = form.request_vars.module_list
+		      code = form.request_vars.code + ".py"
+
+                      X = StringsToExcel()
+                      output = X.convert_to_xls(code , modlist, [])
+                      return output
               	  
 	     A = TranslateAPI()
 	     m = A.get_modules()
@@ -712,7 +720,6 @@ def translate():
 	     div.append(INPUT(_type='submit',_value='Submit'))
 	     form.append(div)
              output["form"] = form
-          
         return output
 	     
     response.s3.prep = prep

@@ -6,9 +6,14 @@ import parser
 import symbol
 import token
 import csv
-import xlwt
 from subprocess import call
 from gluon import current
+
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
+
 
 class TranslateGetFiles:
 
@@ -671,8 +676,10 @@ class StringsToExcel:
 	    """ Function to create a spreadsheet (.xls file) of strings with
 	        location, original string and translated string as columns """
 
-            base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
-            filename = os.path.join(base_dir,"TranslationFunctionality/trans.xls")
+            import xlwt
+            from gluon.contenttype import contenttype
+
+	    response = current.response
 
             # Defining spreadsheet properties
             wbk = xlwt.Workbook("utf-8")
@@ -700,8 +707,24 @@ class StringsToExcel:
 	    for colx in range(0,3):
                 sheet.col(colx).width = 15000
 
+            # Initialize output
+            output = StringIO()
+
+
             # Saving the spreadsheet    
-            wbk.save(filename)
+            wbk.save(output)
+
+	 
+            #Modifying headers to return the xls file for download
+            filename = "trans.xls"
+            disposition = "attachment; filename=\"%s\"" % filename
+            response.headers["Content-Type"] = contenttype(".xls")
+            response.headers["Content-disposition"] = disposition
+
+            output.seek(0)
+            return output.read()
+	    return None
+
 
         #----------------------------------------------------------------------------------
 
@@ -754,7 +777,7 @@ class StringsToExcel:
 	          else:
 	              Strings.append( (l,s,'') )
 
-            self.create_spreadsheet(Strings)
+            return self.create_spreadsheet(Strings)
 
 
 #==================================================================================================
@@ -780,7 +803,11 @@ class CsvToWeb2py:
         def convert_to_w2p( self, csvfiles, w2pfilename, option):
       
 	   """ Function to merge multiple translated csv files into one
-	       and then merge/overwrite the existing w2p language file """ 
+	       and then merge/overwrite the existing w2p language file """
+
+           base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+           langdir = os.path.join(base_dir,"TranslationFunctionality")
+	   w2pfilename = os.path.join(langdir,w2pfilename)
 
            # Dictionary to store (location,translated string) with untranslated string as the key	
 	   d = {}

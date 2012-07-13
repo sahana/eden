@@ -1,21 +1,4 @@
 # -*- coding: utf-8 -*-
-""" 
-    This is just a commented template to copy/paste from when implementing
-    new models. Be sure you replace this docstring by something more
-    appropriate, e.g. a short module description and a license statement.
-
-    The module prefix is the same as the filename (without the ".py"), in this
-    case "skeleton". Remember to always add an import statement for your module
-    to:
-
-    models/00_tables.py
-
-    like:
-
-    import eden.skeleton
-
-    (Yeah - not this one of course :P it's just an example)
-"""
 
 # mandatory __all__ statement:
 #
@@ -38,6 +21,7 @@ from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 from eden.layouts import S3AddResourceLink
+import os
 
 # =============================================================================
 # Define a new class as subclass of S3Model
@@ -56,72 +40,31 @@ class S3TranslateModel(S3Model):
     #
     names = ["translate_language"]
 
-    # Define a function model() which takes no parameters (except self):
     def model(self):
 
-        # You will most likely need (at least) these:
         db = current.db
         T = current.T
 
-        # This one should also be there:
         s3 = current.response.s3
         s3db = current.s3db
         settings = current.deployment_settings
 
-        # ===========================================================
-        # Now define your table(s),
-        # -> always use self.define_table instead of db.define_table, this
-        #    makes sure the table won't be re-defined if it's already in db
-        # -> use s3.meta_fields to include meta fields (not s3_meta_fields!),
-        #    of course this needs the s3 assignment above
         tablename = "translate_language"
+	base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+	upload_folder = os.path.join(base_dir,"TranslationFunctionality")
+
         table = self.define_table(tablename,
                                   Field("code",notnull=True,
                                          length=10,
  					 label = T("Language code")),
-                                  Field("file","upload",
+                                  Field("file","upload", uploadfolder = upload_folder,
                                          label = T("Translated File")),
 				  *s3.meta_fields()
 				 )
 
-        # Use self.configure to configure your model (not s3mgr.configure!)
-        #self.configure(tablename,
-        #               listadd=False)
-
-        # The following shortcuts for S3 model functions are available (make
-        # sure you do not overwrite them):
-        #
-        # self.define_table   => db.define_table (repeat-safe variant)
-        # self.super_entity   => super_entity
-        # self.super_key      => super_key
-        # self.super_link     => super_link
-        # self.add_component  => s3mgr.model.add_component
-        # self.configure      => s3mgr.configure
-        # self.table          => s3mgr.load
-        #
-
-        # If you need to reference external tables, always use the table-method.
-        # This will automatically load the respective model unless it is already
-        # loaded at this point:
-        #xy_table = self.table("xy_table")
-        # Alternatively, you can also use on of these:
-        #xy_table = self.xy_table
-        #xy_table = self["xy_table"]
-
-        # The following two are equivalent:
-        #xy_variable = self.xy_variable
-        # and:
-        #xy_variable = response.s3.xy_variable
-        # However, if "xy_variable" is also a tablename, then the first
-        # variant would return that table instead. Thus, make sure your
-        # response.s3-global variables do not use tablenames as names
-
-        # You can define ReusableFields,
-        # -> make sure you prefix their names properly with the module prefix:
-        #skeleton_example_id = S3ReusableField("skeleton_example_id", table,
-        #                                       label = T("Skeleton Example"),
-        #                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-        #                                                             "skeleton_example.id")))
+        self.configure(tablename,
+                       onaccept = self.translate_language_onaccept,
+                       )
 
         # Return names to response.s3
         return Storage()
@@ -140,21 +83,25 @@ class S3TranslateModel(S3Model):
         return Storage()
 
     # ---------------------------------------------------------------------
-    # Static so that calling it doesn't require loading the models
-#    @staticmethod
-#    def skeleton_example_onvalidation(form):
-#       """ Form validation """
-#
-#       db = current.db
-#       s3db = current.s3db
-#
-#       table = s3db.skeleton_example
-#
-#       query = (table.id == form.vars.id)
-#       record = db(query).select(table.name,
-#                                 limitby=(0, 1)).first()
-#
-#       return
+    @staticmethod
+    def translate_language_onaccept(form):
+
+        """ Receive the uploaded csv file """
+
+	from ..s3.s3translate import CsvToWeb2py
+
+	base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+	upload_folder = os.path.join(base_dir,"TranslationFunctionality")
+
+	csvfilelist = []
+        csvfilename = os.path.join(base_dir,upload_folder,form.vars.file)
+        csvfilelist.append(csvfilename)
+	code = form.vars.code
+	C = CsvToWeb2py()
+
+        C.convert_to_w2p(csvfilelist,code+".py","m")
+
+        return
 
 # =============================================================================
 # Module-global functions will automatically be added to response.s3 if

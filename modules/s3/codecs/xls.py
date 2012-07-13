@@ -71,7 +71,7 @@ class S3XLS(S3Codec):
         # Error codes
         T = current.T
         self.ERROR = Storage(
-            XLRD_ERROR = T("ERROR: Running Python needs the xlrd module installed for XLS export"),
+             _ERROR = T("ERROR: Running Python needs the xlrd module installed for XLS export"),
             XLWT_ERROR = T("ERROR: Running Python needs the xlwt module installed for XLS export")
         )
 
