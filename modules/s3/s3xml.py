@@ -629,8 +629,8 @@ class S3XML(S3Codec):
         """
 
         gis = current.gis
-        if not gis:
-            return
+        #if not gis:
+        #    return
 
         db = current.db
         s3db = current.s3db
@@ -792,14 +792,10 @@ class S3XML(S3Codec):
                 if format == "geojson":
                     # Assume being used within the Sahana Mapping client so use local URLs
                     # to keep filesize down
-                    try:
-                        url = "%s/%i.plain" % (url, record.id)
-                    except:
-                        # This is a Super-Entity without an id
-                        url = ""
+                    url = "%s/%i.plain" % (url, record[table._id])
                 else:
                     # Assume being used outside the Sahana Mapping client so use public URLs
-                    url = "%s%s/%i" % (settings.get_base_public_url(), url, record.id)
+                    url = "%s%s/%i" % (settings.get_base_public_url(), url, record[table._id])
                 attr[ATTRIBUTE.url] = url
 
                 if tooltips and tablename in tooltips:

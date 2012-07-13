@@ -2026,7 +2026,7 @@ class GIS(object):
             elif "site_id" in table.fields:
                 stable = s3db.org_site
                 query = (table.id.belongs(resource._ids)) & \
-                        (table.site_id == stable.id) & \
+                        (table.site_id == stable.site_id) & \
                         (stable.location_id == gtable.id)
             else:
                 # Can't display this resource on the Map

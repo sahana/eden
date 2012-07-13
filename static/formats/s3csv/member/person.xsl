@@ -123,15 +123,10 @@
                         <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$BranchName"/></data>
-                    <resource name="org_organisation_branch">
+                    <resource name="org_organisation_branch" alias="parent">
                         <reference field="organisation_id" resource="org_organisation">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="col[@field='Organisation']"/>
-                            </xsl:attribute>
-                        </reference>
-                        <reference field="branch_id" resource="org_organisation">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
                             </xsl:attribute>
                         </reference>
                     </resource>
