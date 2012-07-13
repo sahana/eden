@@ -3307,6 +3307,8 @@ class GIS(object):
         if not feature:
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
+            db = current.db
+            table = db.gis_location
             fields = [table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
@@ -3314,7 +3316,7 @@ class GIS(object):
             update_location_tree = self.update_location_tree
             wkt_centroid = self.wkt_centroid
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
-                features = db(table.level == L0).select(*fields)
+                features = db(table.level == level).select(*fields)
                 for feature in features:
                     feature["level"] = level
                     update_location_tree(feature)
@@ -3583,7 +3585,8 @@ class GIS(object):
                 L3 = feature.L3
 
             if parent:
-                Lx = db(table.id == parent).select(table.name,
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
                                                    table.level,
                                                    table.L0,
                                                    table.L1,
@@ -3723,7 +3726,8 @@ class GIS(object):
                 L4 = feature.L4
 
             if parent:
-                Lx = db(table.id == parent).select(table.name,
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
                                                    table.level,
                                                    table.L0,
                                                    table.L1,
@@ -3896,7 +3900,8 @@ class GIS(object):
             L4 = feature.L4
 
         if parent:
-            Lx = db(table.id == parent).select(table.name,
+            Lx = db(table.id == parent).select(table.id,
+                                               table.name,
                                                table.level,
                                                table.L0,
                                                table.L1,

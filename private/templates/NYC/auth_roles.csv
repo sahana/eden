@@ -1,6 +1,6 @@
 uid,role, description,controller,function,table,uacl,oacl,org,facility,hidden,system,protected,Notes
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,,,
-AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,,,What does this do?
+AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,,,For Autocompletes
 AUTHENTICATED,Authenticated,,gis,layer_arcrest,,READ|CREATE,,,,,,,
 AUTHENTICATED,Authenticated,,gis,layer_bing,,READ,,,,,,,
 AUTHENTICATED,Authenticated,,gis,layer_coordinate,,READ,,,,,,,

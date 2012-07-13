@@ -2,6 +2,7 @@ UUID,Country,L1,L2,L3,L4,Edit L1
 SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",
 ,AU,"State / Territory","Local Government Area","","",
 ,BD,"Division","District","Thana / Upazil","Village / Union / Area",
+,FI,"Regional State Administrative Agency","Region","Sub-region","Municipality",
 ,PH,"Region","Province","City / Municipality","Barangay",
 ,TL,"District","SubDistrict","Suco","Aldeia",
 ,NZ,"Region","Territorial Authority",,,

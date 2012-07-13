@@ -986,8 +986,6 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
-        add_component = self.add_component
-
         # =====================================================================
         # Site / Facility (ICS terminology)
         #
@@ -1035,6 +1033,7 @@ class S3SiteModel(S3Model):
                                   )
 
         # Components
+        add_component = self.add_component
 
         # Human Resources
         # - direct component (suitable for Create/List)
