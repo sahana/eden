@@ -1549,9 +1549,21 @@ class S3Resource(object):
         # Reference map for this record
         rmap = xml.rmap(table, record, rfields)
 
+        # Use alias if distinct from resource name
+        linked = self.linked
+        if self.parent is not None and linked is not None:
+            alias = linked.alias
+            name = linked.name
+        else:
+            alias = self.alias
+            name = self.name
+        if alias == name:
+            alias = None
+
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
+                               alias=alias,
                                postprocess=postprocess,
                                url=url)
         # Add the references
