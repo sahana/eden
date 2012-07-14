@@ -928,30 +928,6 @@ def s3_filename(filename):
     return "".join(c for c in cleanedFilename if c in validFilenameChars)
 
 # =============================================================================
-def s3_table_links(reference):
-    """
-        Return a dict of tables & their fields which have references to the
-        specified table
-
-        @deprecated: to be replaced by db[tablename]._referenced_by
-        - used by controllers/gis.py & pr.py
-    """
-
-    db = current.db
-    current.s3db.load_all_models()
-    tables = {}
-    for table in db.tables:
-        count = 0
-        for field in db[table].fields:
-            if str(db[table][field].type) == "reference %s" % reference:
-                if count == 0:
-                    tables[table] = {}
-                tables[table][count] = field
-                count += 1
-
-    return tables
-
-# =============================================================================
 def s3_has_foreign_key(field, m2m=True):
     """
         Check whether a field contains a foreign key constraint
