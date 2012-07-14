@@ -658,10 +658,14 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 
     return response.stream(portable_app)
 
-# END =========================================================================
-
+# =============================================================================
+# Translation Functionality
+# =============================================================================
 
 def translate():
+
+    if not request.vars.opt:
+	   return dict()
 
     from s3.s3translate import TranslateAPI, StringsToExcel
     from math import ceil
@@ -729,3 +733,4 @@ def translate():
     return output
 
 	     
+# END =========================================================================

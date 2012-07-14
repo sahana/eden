@@ -50,15 +50,13 @@ class S3TranslateModel(S3Model):
         settings = current.deployment_settings
 
         tablename = "translate_language"
-	base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
-	upload_folder = os.path.join(base_dir,"TranslationFunctionality")
 
         table = self.define_table(tablename,
                                   Field("code",notnull=True,
                                          length=10,
  					 label = T("Language code")),
-                                  Field("file","upload", uploadfolder = upload_folder,
-                                         label = T("Translated File")),
+                                  Field("file","upload",
+                                        label = T("Translated File")),
 				  *s3.meta_fields()
 				 )
 
@@ -91,7 +89,7 @@ class S3TranslateModel(S3Model):
 	from ..s3.s3translate import CsvToWeb2py
 
 	base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
-	upload_folder = os.path.join(base_dir,"TranslationFunctionality")
+	upload_folder = os.path.join(base_dir,"uploads")
 
 	csvfilelist = []
         csvfilename = os.path.join(base_dir,upload_folder,form.vars.file)

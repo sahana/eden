@@ -806,7 +806,7 @@ class CsvToWeb2py:
 	       and then merge/overwrite the existing w2p language file """
 
            base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
-           langdir = os.path.join(base_dir,"TranslationFunctionality")
+           langdir = os.path.join(base_dir,"languages")
 	   w2pfilename = os.path.join(langdir,w2pfilename)
 
            # Dictionary to store (location,translated string) with untranslated string as the key	
