@@ -939,8 +939,8 @@ class S3PDFTable(object):
                         for i in range(1, len(self.data)): # skip the heading
                             try:
                                 comments = self.data[i][colNo]
-                                comments = self.pdf.addParagraph(comments, append=False)
                                 if comments:
+                                    comments = self.pdf.addParagraph(comments, append=False)
                                     self.data[i][colNo] = comments
                             except IndexError:
                                 pass

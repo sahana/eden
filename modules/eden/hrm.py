@@ -263,7 +263,7 @@ class S3HRModel(S3Model):
                       _title="%s|%s" % (T("Human Resource"),
                                         T("Enter some characters to bring up a list of possible matches")))
         comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
-                                    f = group or "human_resource",
+                                    f = group or "staff",
                                     label=crud_strings[tablename].label_create_button,
                                     title=label,
                                     tooltip=tooltip)
@@ -953,6 +953,7 @@ class S3HRSkillModel(S3Model):
 
     names = ["hrm_skill_type",
              "hrm_skill",
+             "hrm_competency_rating",
              "hrm_competency",
              "hrm_credential",
              "hrm_training",
@@ -1952,7 +1953,8 @@ class S3HRSkillModel(S3Model):
 
         if current.auth.s3_has_role(current.session.s3.system_roles.ADMIN):
             label_create = s3.crud_strings["hrm_competency_rating"].label_create_button
-            comment = S3AddResourceLink(f="competency_rating",
+            comment = S3AddResourceLink(c="hrm",
+                                        f="competency_rating",
                                         label=label_create,
                                         tooltip=T("Add a new competency rating to the catalog."))
         else:
