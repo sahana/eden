@@ -579,7 +579,25 @@ class TranslateReadFiles:
                  for element in stList:
                     P.parseConfig(spmod,strings,element,modlist)
 
-            return strings   
+            # Extracting strings from deployment_settings.variable() calls
+            final_strings = []
+	    settings = current.deployment_settings
+	    for (loc,s) in strings:
+	        if s[0]!='"' and "settings." in s:
+
+                    # Converting the call to a standard form
+                    s = s.replace("current.deployment_settings","settings")
+                    s = s.replace("()",'')
+                    l = s.split('.')
+		    obj = settings
+
+                    #Getting the actual value
+                    for atr in l[1:]:   
+                         obj = getattr(obj,atr)()
+                    s=obj	
+                final_strings.append((loc,s))
+
+            return final_strings   
 
         #-------------------------------------------------------------------------------------------
         

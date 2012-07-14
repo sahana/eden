@@ -683,8 +683,8 @@ def translate():
 
         if opt == "1":
              if form.accepts(request.vars,session):
-                   if opt == "1":
-	     
+                  
+                      r.next = None	     
 	              modlist = []
 	              if type(form.request_vars.module_list)==str:
 		          modlist.append(form.request_vars.module_list)
