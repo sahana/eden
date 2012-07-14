@@ -128,8 +128,8 @@ parser.add_argument("--user-password",
                     )
 parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
-                    type = bool,
-                    default = False)
+                    action='store_const',
+                    const = True)
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 
