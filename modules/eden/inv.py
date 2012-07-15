@@ -337,6 +337,10 @@ $(document).ready(function(){
             cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
+            defaults=Storage(rows="item_id",
+                             cols="site_id",
+                             fact="quantity",
+                             aggregate="sum"),
             groupby=self.inv_inv_item.site_id,
             hide_comments=True,
         )
@@ -760,7 +764,7 @@ class S3TrackingModel(S3Model):
         # Generate Consignment Note
         set_method("inv", "send",
                    method="form",
-                   action=self.inv_send_form )
+                   action=self.inv_send_form)
 
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
@@ -776,7 +780,7 @@ class S3TrackingModel(S3Model):
                                  "sender_id",
                                  "site_id",
                                  "date",
-                                 "recepient_id",
+                                 "recipient_id",
                                  "delivery_date",
                                  "to_site_id",
                                  "status",
@@ -2623,9 +2627,7 @@ class S3AdjustModel(S3Model):
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
 
-        messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2658,6 +2660,8 @@ class S3AdjustModel(S3Model):
                                    requires = IS_ONE_OF(db, "org_site.site_id",
                                                         lambda id: \
                                                             org_site_represent(id, show_link = False),
+                                                        filterby = "site_id",
+                                                        filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                         sort=True,
                                                         ),
                                    represent=org_site_represent),

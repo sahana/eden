@@ -139,6 +139,7 @@ class S3XML(S3Codec):
         table="table",
         field="field",
         value="value",
+        alias="alias",
         resource="resource",
         ref="ref",
         domain="domain",
@@ -628,11 +629,8 @@ class S3XML(S3Codec):
             @param locations: locations dict
         """
 
-        gis = current.gis
-        if not gis:
-            return
-
         db = current.db
+        gis = current.gis
         s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
@@ -676,6 +674,7 @@ class S3XML(S3Codec):
 
         table = resource.table
         tablename = resource.tablename
+        pkey = table._id
 
         references = []
         for r in rmap:
@@ -699,13 +698,13 @@ class S3XML(S3Codec):
             polygon = False
             # Use the value calculated in gis.get_geojson_and_popup/get_geojson_theme if we can
             if latlons and tablename in latlons:
-                LatLon = latlons[tablename].get(record.id, None)
+                LatLon = latlons[tablename].get(record[pkey], None)
                 if LatLon:
                     lat = LatLon[0]
                     lon = LatLon[1]
             elif geojsons and tablename in geojsons:
                 polygon = True
-                geojson = geojsons[tablename].get(record.id, None)
+                geojson = geojsons[tablename].get(record[pkey], None)
                 if geojson:
                     # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                     geometry = etree.SubElement(element, "geometry")
@@ -714,14 +713,14 @@ class S3XML(S3Codec):
                 # Nothing gets here currently
                 # tbc: KML Polygons (or we should also do these outside XSLT)
                 polygon = True
-                wkt = wkts[tablename][record.id]
+                wkt = wkts[tablename][record[pkey]]
                 # Convert the WKT in XSLT
                 attr[ATTRIBUTE.wkt] = wkt
             elif "polygons" in request.get_vars:
                 # Calculate the Polygons 1/feature since we didn't do it earlier
                 # - no current case for this
                 if WKTFIELD in fields:
-                    query = (ktable.id == r_id)
+                    query = (ktable._id == r_id)
                     if settings.get_gis_spatialdb():
                         if format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
@@ -793,19 +792,19 @@ class S3XML(S3Codec):
                     # Assume being used within the Sahana Mapping client so use local URLs
                     # to keep filesize down
                     try:
-                        url = "%s/%i.plain" % (url, record.id)
+                        url = "%s/%i.plain" % (url, record[pkey])
                     except:
                         # This is a Super-Entity without an id
                         url = ""
                 else:
                     # Assume being used outside the Sahana Mapping client so use public URLs
-                    url = "%s%s/%i" % (settings.get_base_public_url(), url, record.id)
+                    url = "%s%s/%i" % (settings.get_base_public_url(), url, record[pkey])
                 attr[ATTRIBUTE.url] = url
 
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip
-                    tooltip = tooltips[tablename][record.id]
+                    tooltip = tooltips[tablename][record[pkey]]
                     try:
                         # encode suitable for use as XML attribute
                         tooltip = self.xml_encode(tooltip).decode("utf-8")
@@ -815,7 +814,11 @@ class S3XML(S3Codec):
                         attr[ATTRIBUTE.popup] = tooltip
 
     # -------------------------------------------------------------------------
-    def resource(self, parent, table, record,
+    def resource(self,
+                 parent,
+                 table,
+                 record,
+                 alias=None,
                  fields=[],
                  postprocess=None,
                  url=None):
@@ -825,9 +828,10 @@ class S3XML(S3Codec):
             @param parent: the parent element in the document tree
             @param table: the database table
             @param record: the record
+            @param alias: the resource alias (for disambiguation of components)
             @param fields: list of field names to include
             @param postprocess: post-process hook (function to process
-                <resource> elements after compilation)
+                                <resource> elements after compilation)
             @param url: URL of the record
         """
 
@@ -843,6 +847,7 @@ class S3XML(S3Codec):
 
         ATTRIBUTE = self.ATTRIBUTE
         NAME = ATTRIBUTE.name
+        ALIAS = ATTRIBUTE.alias
         FIELD = ATTRIBUTE.field
         VALUE = ATTRIBUTE.value
         URL = ATTRIBUTE.url
@@ -859,6 +864,8 @@ class S3XML(S3Codec):
             elem = etree.Element(RESOURCE)
         attrib = elem.attrib
         attrib[NAME] = tablename
+        if alias:
+            attrib[ALIAS] = alias
 
         # UID
         if UID in table.fields and UID in record:

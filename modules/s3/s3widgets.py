@@ -1145,7 +1145,7 @@ def S3GenericAutocompleteTemplate(post_process,
 
     default = dict(
         _type = "text",
-        value = (value != None and str(value)) or "",
+        value = (value != None and s3_unicode(value)) or "",
         )
     attr = StringWidget._attributes(field, default, **attributes)
 
@@ -1202,7 +1202,7 @@ $('#%(dummy_input)s').blur(function(){
 
     if value:
         # Provide the representation for the current/default Value
-        text = str(field.represent(default["value"]))
+        text = s3_unicode(field.represent(default["value"]))
         if "<" in text:
             # Strip Markup
             try:
@@ -1222,7 +1222,7 @@ $('#%(dummy_input)s').blur(function(){
     return TAG[""](
                     INPUT(_id=dummy_input,
                           _class="string",
-                          _value=represent),
+                          value=represent),
                     IMG(_src="/%s/static/img/ajax-loader.gif" % \
                              current.request.application,
                         _height=32, _width=32,

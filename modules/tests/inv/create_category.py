@@ -41,8 +41,6 @@ class CreateCategory(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        print "\n"
-
         # Login, if not-already done so
         self.login(account="admin", nexturl="supply/item_category/create")
         self.create("supply_item_category", 

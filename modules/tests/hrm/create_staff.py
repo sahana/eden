@@ -64,7 +64,7 @@ class CreateStaff(SeleniumUnitTest):
                        "rjltestdonotusetest99@romanian.com",
                        "pr_person"),
                      ( "job_role_id",
-                       "Administrative Officer",
+                       "Warehouse Manager",
                        "option"),
                      ( "site_id",
                        "AP Zone",

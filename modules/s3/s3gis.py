@@ -2026,7 +2026,7 @@ class GIS(object):
             elif "site_id" in table.fields:
                 stable = s3db.org_site
                 query = (table.id.belongs(resource._ids)) & \
-                        (table.site_id == stable.id) & \
+                        (table.site_id == stable.site_id) & \
                         (stable.location_id == gtable.id)
             else:
                 # Can't display this resource on the Map
@@ -3307,6 +3307,8 @@ class GIS(object):
         if not feature:
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
+            db = current.db
+            table = db.gis_location
             fields = [table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
@@ -3314,7 +3316,7 @@ class GIS(object):
             update_location_tree = self.update_location_tree
             wkt_centroid = self.wkt_centroid
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
-                features = db(table.level == L0).select(*fields)
+                features = db(table.level == level).select(*fields)
                 for feature in features:
                     feature["level"] = level
                     update_location_tree(feature)
@@ -3583,7 +3585,8 @@ class GIS(object):
                 L3 = feature.L3
 
             if parent:
-                Lx = db(table.id == parent).select(table.name,
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
                                                    table.level,
                                                    table.L0,
                                                    table.L1,
@@ -3723,7 +3726,8 @@ class GIS(object):
                 L4 = feature.L4
 
             if parent:
-                Lx = db(table.id == parent).select(table.name,
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
                                                    table.level,
                                                    table.L0,
                                                    table.L1,
@@ -3896,7 +3900,8 @@ class GIS(object):
             L4 = feature.L4
 
         if parent:
-            Lx = db(table.id == parent).select(table.name,
+            Lx = db(table.id == parent).select(table.id,
+                                               table.name,
                                                table.level,
                                                table.L0,
                                                table.L1,
@@ -5291,8 +5296,7 @@ S3.gis.layers_feature_resources[%i] = {
                         else:
                             add_javascript(script, ready=ready)
             except Exception, exception:
-                error = "%s not shown: %s" % (LayerType.__name__,
-                                                           exception)
+                error = "%s not shown: %s" % (LayerType.__name__, exception)
                 if debug:
                     raise HTTP(500, error)
                 else:
@@ -5517,8 +5521,8 @@ class Layer(object):
 
     def __init__(self):
 
-        self.sublayers = []
-        append = self.sublayers.append
+        sublayers = []
+        append = sublayers.append
         self.scripts = []
 
         gis = current.response.s3.gis
@@ -5589,6 +5593,10 @@ class Layer(object):
                 append(record)
             else:
                 append(SubLayer(record))
+
+        # Alphasort layers
+        # - client will only sort within their type: s3.gis.layers.js
+        self.sublayers = sorted(sublayers, key=lambda row: row.name)
 
     # -------------------------------------------------------------------------
     def as_javascript(self):
@@ -6425,11 +6433,9 @@ class WMSLayer(Layer):
     def __init__(self):
         super(WMSLayer, self).__init__()
         if self.sublayers:
-            debug = current.response.s3.debug
-            add_script = self.scripts.append
-            if debug:
+            if current.response.s3.debug:
                 # Non-debug has this included within GeoExt.js
-                add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
+                self.scripts.append("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):

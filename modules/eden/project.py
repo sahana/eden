@@ -457,7 +457,7 @@ class S3ProjectModel(S3Model):
                                      sortby="name",
                                      requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_project.id",
-                                                              project_project_represent
+                                                              project_project_represent_no_link
                                                               )),
                                      represent = project_project_represent,
                                      comment = S3AddResourceLink(c="project", f="project",
@@ -3484,6 +3484,9 @@ class S3ProjectTaskIReportModel(S3Model):
         return
 
 # =============================================================================
+def project_project_represent_no_link(id, row=None):
+    return project_project_represent(id, row, False)
+
 def project_project_represent(id, row=None, show_link=True):
     """ FK representation """
 

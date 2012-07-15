@@ -206,40 +206,43 @@ def req_match():
 def inv_item():
     """ REST Controller """
 
-    table = s3db.inv_inv_item
-    s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
+    tablename = "inv_inv_item"
+    # Load model to be able to override CRUD string(s)
+    table = s3db[tablename]
+    s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
     if "report" in request.get_vars and \
        request.get_vars.report == "mon":
-            s3.crud_strings["inv_inv_item"].update(dict(
+            s3.crud_strings[tablename].update(dict(
                 title_list = T("Monetization Report"),
                 subtitle_list = T("Monetization Details"),
                 msg_list_empty = T("No Stock currently registered"),
                 title_search = T("Monetization Report"),
               ))
-            s3db.configure("inv_inv_item",
-                            list_fields = ["id",
-                                           (T("Donor"), "supply_org_id"),
-                                           (T("Items/Description"), "item_id"),
-                                           (T("Quantity"), "quantity"),
-                                           (T("Unit"), "item_pack_id"),
-                                           (T("Unit Value"), "pack_value"),
-                                           (T("Total Value"), "total_value"),
-                                           (T("Remarks"), "comments"),
-                                           "status",
-                                           ]
-                            )
+            s3db.configure(tablename,
+                           list_fields = ["id",
+                                          (T("Donor"), "supply_org_id"),
+                                          (T("Items/Description"), "item_id"),
+                                          (T("Quantity"), "quantity"),
+                                          (T("Unit"), "item_pack_id"),
+                                          (T("Unit Value"), "pack_value"),
+                                          (T("Total Value"), "total_value"),
+                                          (T("Remarks"), "comments"),
+                                          "status",
+                                          ]
+                           )
     else:
-        s3db.configure("inv_inv_item",
-                        list_fields = ["id",
-                                       "site_id",
-                                       "item_id",
-                                       (T("Item Code"), "item_code"),
-                                       (T("Category"), "item_category"),
-                                       "quantity",
-                                       "pack_value",
-                                       ]
-                        )
+        s3db.configure(tablename,
+                       insertable=False,
+                       list_fields = ["id",
+                                      "site_id",
+                                      "item_id",
+                                      (T("Item Code"), "item_code"),
+                                      (T("Category"), "item_category"),
+                                      "quantity",
+                                      "pack_value",
+                                      ]
+                       )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -308,10 +311,10 @@ def inv_item():
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
         s3db.configure("inv_track_item",
-                        create=False,
-                        listadd=False,
-                        editable=False,
-                        deletable=False,
+                       create=False,
+                       listadd=False,
+                       editable=False,
+                       deletable=False,
                        )
 
     output = s3_rest_controller(rheader=s3db.inv_warehouse_rheader,

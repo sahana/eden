@@ -1,6 +1,7 @@
 __all__ = ["w_autocomplete",
            "w_inv_item_select",
            "w_supply_select",
+           "w_facility_select",
            "w_gis_location",
           ]
 
@@ -121,6 +122,20 @@ def w_supply_select(item_repr,
     # Now wait for the pack_item to be populated
     browser = current.test_config.browser
     el_id = "%s_%s" % (tablename, "item_pack_id")
+    _autocomple_finish(el_id, browser)
+    return raw_value
+
+# -----------------------------------------------------------------------------
+def w_facility_select(item_repr,
+                      tablename,
+                      field,
+                      quiet = True,
+                     ):
+    el_id = "%s_%s" % (tablename, field)
+    raw_value = w_autocomplete(item_repr, el_id)
+    # Now wait for the pack_item to be populated
+    browser = current.test_config.browser
+    el_id = "%s_%s" % (tablename, "site_id")
     _autocomple_finish(el_id, browser)
     return raw_value
 

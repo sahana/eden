@@ -1589,9 +1589,13 @@ class S3OptionsMenu(object):
         # and should therefore perhaps be replaced by a real path-check in
         # the main menu?
         if controller != "default":
-            breadcrumbs(
-                layout(all_modules[controller].name_nice, c=controller)
-            )
+            try:
+                breadcrumbs(
+                    layout(all_modules[controller].name_nice, c=controller)
+                )
+            except:
+                # Module not defined
+                pass
 
         # This checks the path in the options menu, omitting the top-level item
         # (because that's the menu itself which doesn't have a linked label):
