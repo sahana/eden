@@ -1,5 +1,8 @@
 from time import time
-from StringIO import StringIO
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
 import sys
 
 from tests.web2unittest import Web2UnitTest
@@ -11,8 +14,9 @@ try:
 except ImportError:
     raise NameError("Twill not installed")
 try:
-    from mechanize import BrowserStateError
-    from mechanize import ControlNotFoundError
+    import mechanize
+#    from mechanize import BrowserStateError
+#    from mechanize import ControlNotFoundError
 except ImportError:
     raise NameError("Mechanize not installed")
 
@@ -42,6 +46,7 @@ class BrokenLinkTest(Web2UnitTest):
                           )
         self.maxDepth = 16 # sanity check
         self.setUser("test@example.com/eden")
+        self.linkDepth = []
 
     def clearRecord(self):
         # list of links that return a http_code other than 200
@@ -84,7 +89,7 @@ class BrokenLinkTest(Web2UnitTest):
                     self.b.submit("Login")
                     # If login is successful then should be redirected to the homepage
                     return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except:
+            except mechanize.ControlNotFoundError:
                 pass
         return False
 
@@ -97,19 +102,26 @@ class BrokenLinkTest(Web2UnitTest):
     def visitLinks(self):
         url = self.homeURL
         to_visit = [url]
+        self.linkDepth.append(len(to_visit))
         start = time()
         for depth in range(self.maxDepth):
             if len(to_visit) == 0:
                 break
             self.totalLinks += len(to_visit)
             visit_start = time()
-            msg = "%d urls" % len(to_visit)
+            url_visited = "%d urls" % len(to_visit)
             to_visit = self.visit(to_visit, depth)
-            msg = "Visited %s in %.3f seconds, %d more urls found" % (msg, time()-visit_start, len(to_visit))
+            self.linkDepth.append(len(to_visit))
+            msg = "Visited %s in %.3f seconds, %d more urls found" % (url_visited, time()-visit_start, len(to_visit))
             self.reporter(msg)
+            if self.config.verbose == 2:
+                if self.stdout.isatty(): # terminal should support colour
+                    msg = "Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (url_visited, time()-visit_start, len(to_visit))
+                print >> self.stdout, msg
         finish = time()
         self.report()
         self.reporter("Finished took %.3f seconds" % (finish - start))
+        self.report_link_depth()
 #        self.report_model_url()
     
 
@@ -146,7 +158,7 @@ class BrokenLinkTest(Web2UnitTest):
                 self.brokenLinks[index_url] = (http_code,url)
             try:
                 links = self.b._browser.links()
-            except BrowserStateError:
+            except mechanize.BrowserStateError:
                 continue # not html so unable to extract links
             for link in (links):
                 url = link.absolute_url
@@ -213,7 +225,41 @@ class BrokenLinkTest(Web2UnitTest):
                                                   )
                 )
             n += 1
-    
+
+    def report_link_depth(self):
+        """
+            Method to draw a histogram of the number of new links
+            discovered at each depth.
+            (i.e. show how many links are required to reach a link)
+        """
+        try:
+            from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+            self.FigureCanvas = FigureCanvas
+            from matplotlib.figure import Figure
+            self.Figure = Figure
+            from numpy import arange
+        except ImportError:
+            return
+        self.reporter("Analysis of link depth")
+        fig = Figure(figsize=(4, 2.5))
+        # Draw a histogram
+        width = 0.9 / len(self.linkDepth)
+        rect = [0.0, 0.0, 1.0, 1.0]
+        ax = fig.add_axes(rect)
+        left = []
+        for cnt in range(len(self.linkDepth)):
+            left.append(width*cnt)    # the x locations for the bars
+        plot = ax.bar(left, self.linkDepth, width=width)
+
+        chart = StringIO()
+        canvas = self.FigureCanvas(fig)
+        canvas.print_figure(chart)
+        image = chart.getvalue()
+        import base64
+        base64Img = base64.b64encode(image)
+        image = "<img src=\"data:image/png;base64,%s\">" % base64Img
+        self.reporter(image)
+
     def report_model_url(self):
         print "Report breakdown by module"
         for (model, value) in self.model_url.items():

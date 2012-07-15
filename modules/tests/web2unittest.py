@@ -30,10 +30,14 @@ class Web2UnitTest(unittest.TestCase):
         self.app = current.request.application
         self.url = self.config.url
         self.user = "admin"
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
         
     def reporter(self, msg, verbose_level = 1):
         if self.config.verbose >= verbose_level:
             print >> sys.stderr, msg
+            if self.config.verbose > 2:
+                print >> self.stdout, msg
 
 # =============================================================================
 class SeleniumUnitTest(Web2UnitTest):
