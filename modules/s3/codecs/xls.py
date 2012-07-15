@@ -30,6 +30,7 @@
 
 __all__ = ["S3XLS"]
 
+import sys
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -41,7 +42,6 @@ from gluon.contenttype import contenttype
 try:
     from lxml import etree
 except ImportError:
-    import sys
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
@@ -193,7 +193,9 @@ class S3XLS(S3Codec):
             (title, types, headers, items) = self.extractResource(data_source,
                                                                   list_fields,
                                                                   report_groupby)
-
+        if len(headers) != len(items):
+            print >> sys.stderr, "modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
+            print >> sys.stderr, list_fields
         if report_groupby != None:
             if isinstance(report_groupby, Field):
                 groupby_label = report_groupby.label
@@ -300,8 +302,8 @@ class S3XLS(S3Codec):
                 style = styleEven
             else:
                 style = styleOdd
-            for label in headers:
-                represent = item[colCnt]
+            for represent in item:
+                label = headers[colCnt]
                 if type(represent) is not str:
                     represent = unicode(represent)
                 if len(represent) > max_cell_size:
