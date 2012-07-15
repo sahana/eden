@@ -665,7 +665,7 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 def translate():
 
     if not request.vars.opt:
-	   return dict()
+        return dict()
 
     from s3.s3translate import TranslateAPI, StringsToExcel
     from math import ceil
@@ -676,61 +676,60 @@ def translate():
 
     def prep(r):
         if r.interactive:
-             if r.method == "create":
-		   return True
+            if r.method == "create":
+                return True
 
-    def postp(r,output):
+    def postp(r, output):
 
         if opt == "1":
-             if form.accepts(request.vars,session):
-                  
-                      r.next = None	     
-	              modlist = []
-	              if type(form.request_vars.module_list)==str:
-		          modlist.append(form.request_vars.module_list)
-                      else:
-		          modlist = form.request_vars.module_list
-		      code = form.request_vars.code + ".py"
+            if form.accepts(request.vars, session):
 
-                      X = StringsToExcel()
-                      output = X.convert_to_xls(code , modlist, [])
-                      return output
-              	  
-	     A = TranslateAPI()
-	     m = A.get_modules()
-	     m.sort()
-             l = len(m)     
+                r.next = None
+                modlist = []
+                if type(form.request_vars.module_list)==str:
+                    modlist.append(form.request_vars.module_list)
+                else:
+                    modlist = form.request_vars.module_list
+                code = form.request_vars.code + ".py"
 
-	     table = TABLE(_width="55%")
-             table.append(BR())	      
-             num = 0
-            
-	     max_rows = int(ceil(l/3.0))
+                X = StringsToExcel()
+                output = X.convert_to_xls(code, modlist, [])
+                return output
 
-             while num < max_rows:
-                  row = TR( TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num])) )
-		  for c in range(1,3):
-		     if num + c*max_rows < l:
-                       row.append( TD(num+1+c*max_rows) )
-	               row.append( TD(m[num+c*max_rows]) )
-	               row.append( TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num+c*max_rows])) ) 
-		  num += 1 
-		  table.append(row)
+            A = TranslateAPI()
+            m = A.get_modules()
+            m.sort()
+            l = len(m)
 
-	     div = DIV()
-	     div.append(table)
-             div.append(TR(TD("Language code: "),TD(INPUT(_type='text',_name = 'code'))))
-	     div.append(BR())
-	     div.append(INPUT(_type='submit',_value='Submit'))
-	     form.append(div)
-             output["form"] = form
+            table = TABLE(_width="55%")
+            table.append(BR())
+            num = 0
+
+            max_rows = int(ceil(l/3.0))
+
+            while num < max_rows:
+                row = TR(TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num])))
+                for c in range(1,3):
+                    if num + c*max_rows < l:
+                        row.append(TD(num+1+c*max_rows))
+                        row.append(TD(m[num+c*max_rows]))
+                        row.append(TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num+c*max_rows])))
+                num += 1
+                table.append(row)
+
+            div = DIV()
+            div.append(table)
+            div.append(TR(TD("Language code: "),TD(INPUT(_type='text',_name = 'code'))))
+            div.append(BR())
+            div.append(INPUT(_type='submit',_value='Submit'))
+            form.append(div)
+            output["form"] = form
         return output
-	     
+
     response.s3.prep = prep
     response.s3.postp = postp
 
-    output = s3_rest_controller("translate","language")
+    output = s3_rest_controller("translate", "language")
     return output
 
-	     
 # END =========================================================================
