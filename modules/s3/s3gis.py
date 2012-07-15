@@ -5296,8 +5296,7 @@ S3.gis.layers_feature_resources[%i] = {
                         else:
                             add_javascript(script, ready=ready)
             except Exception, exception:
-                error = "%s not shown: %s" % (LayerType.__name__,
-                                                           exception)
+                error = "%s not shown: %s" % (LayerType.__name__, exception)
                 if debug:
                     raise HTTP(500, error)
                 else:
@@ -5522,8 +5521,8 @@ class Layer(object):
 
     def __init__(self):
 
-        self.sublayers = []
-        append = self.sublayers.append
+        sublayers = []
+        append = sublayers.append
         self.scripts = []
 
         gis = current.response.s3.gis
@@ -5594,6 +5593,10 @@ class Layer(object):
                 append(record)
             else:
                 append(SubLayer(record))
+
+        # Alphasort layers
+        # - client will only sort within their type: s3.gis.layers.js
+        self.sublayers = sorted(sublayers, key=lambda row: row.name)
 
     # -------------------------------------------------------------------------
     def as_javascript(self):
@@ -6430,11 +6433,9 @@ class WMSLayer(Layer):
     def __init__(self):
         super(WMSLayer, self).__init__()
         if self.sublayers:
-            debug = current.response.s3.debug
-            add_script = self.scripts.append
-            if debug:
+            if current.response.s3.debug:
                 # Non-debug has this included within GeoExt.js
-                add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
+                self.scripts.append("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
