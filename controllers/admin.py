@@ -672,6 +672,7 @@ def translate():
 
     tablename = "translate_language"
     opt = request.vars.opt
+    # Creating a custom form
     form = FORM()
 
     def prep(r):
@@ -681,21 +682,30 @@ def translate():
 
     def postp(r, output):
 
+        # To prevent redirection
+        r.next = None
+
+        # If 1st workflow, i.e selecting the modules for translation is selected
         if opt == "1":
+
             if form.accepts(request.vars, session):
 
-                r.next = None
                 modlist = []
+                # If only one module is selected
                 if type(form.request_vars.module_list)==str:
                     modlist.append(form.request_vars.module_list)
+                # If multile modules are selected
                 else:
                     modlist = form.request_vars.module_list
+                # Obtaining the language file from the language code
                 code = form.request_vars.code + ".py"
 
+                # Generating the xls file for download
                 X = StringsToExcel()
                 output = X.convert_to_xls(code, modlist, [])
                 return output
 
+            # Creating a form with checkboxes for list of modules
             A = TranslateAPI()
             m = A.get_modules()
             m.sort()
@@ -703,8 +713,9 @@ def translate():
 
             table = TABLE(_width="55%")
             table.append(BR())
-            num = 0
 
+            # Displaying three modules per row so as to utilize the page completely
+            num = 0
             max_rows = int(ceil(l/3.0))
 
             while num < max_rows:
@@ -723,12 +734,15 @@ def translate():
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)
+            # Adding the custom form to the output
+            output["title"] = T("Select the required modules")
             output["form"] = form
+
         return output
 
     response.s3.prep = prep
     response.s3.postp = postp
-
+    # Refering to the translate_language table defined in modules/eden/translate.py
     output = s3_rest_controller("translate", "language")
     return output
 

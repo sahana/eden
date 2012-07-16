@@ -53,16 +53,19 @@ class S3TranslateModel(S3Model):
         tablename = "translate_language"
 
         table = self.define_table(tablename,
-                                  Field("code", notnull=True,
-                                         length=10,
+                                  Field("code", notnull = True,
+                                         length = 10,
                                          label = T("Language code")),
-                                  Field("file", "upload",
+                                  Field("file", "upload", notnull = True,
                                         label = T("Translated File")),
                                         *s3.meta_fields())
 
         self.configure(tablename,
                        onaccept = self.translate_language_onaccept,
                        )
+        s3.crud_strings[tablename] = Storage(
+            title_create = T("Upload file"),
+            msg_record_created = T("File uploaded"))
 
         # Return names to response.s3
         return Storage()
@@ -96,7 +99,7 @@ class S3TranslateModel(S3Model):
         csvfilelist.append(csvfilename)
         code = form.vars.code
         C = CsvToWeb2py()
-
+        # Merging the existing translations with the new translations
         C.convert_to_w2p(csvfilelist, code+".py", "m")
 
         return
