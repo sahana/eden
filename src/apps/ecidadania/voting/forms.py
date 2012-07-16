@@ -28,14 +28,13 @@ class PollForm(ModelForm):
         class Meta:
             model = Poll
 
-class ChoiceForm(ModelForm):
-        """
-        """
-        class Meta:
-            model = Choice
-            exclude = ('poll',)
-
 # Create a formset for choices. This formset can be attached to any other form
 # but will be usually attached to PollForm
 
 ChoiceFormSet = modelformset_factory(Choice, exclude=('poll'), extra=5)
+
+class VotingForm(ModelForm):
+        """
+        """
+        class Meta:
+            model = Voting

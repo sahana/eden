@@ -31,5 +31,9 @@ class PollAdmin(admin.ModelAdmin):
 
         inlines = [ChoiceInline]
 
+class VotingAdmin(admin.ModelAdmin):
 
+        list_display = ('title', 'start_date', 'end_date', 'author', 'space')
+        search_fields = ('title', 'author', 'space')
 admin.site.register(Poll, PollAdmin)
+admin.site.register(Voting, VotingAdmin)

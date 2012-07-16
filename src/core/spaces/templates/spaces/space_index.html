@@ -180,7 +180,42 @@
                             <ul class="unstyled">
                                 <h4>{% trans "Actions" %}</h4>
                                 <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List polls" %}</a></li>
-                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "Other polls" %}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="span8">
+                            {% for voting in votings %}
+                                <h4 class="posttitle"><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a>
+                                    {% if user_is_admin %}
+                                       {% if perms.voting.change_voting %}
+                                            <a href="{% url 'edit-voting' get_place.url voting.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                            </a>
+                                        {% endif %}
+                                        {% if perms.voting.delete_voting %}
+                                            <a href="{% url 'delete-voting' get_place.url voting.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}                             
+                                </h4>
+                            {% endfor %}
+                        </div>
+                        <div class="span4 space-sidebar">
+                            {% if user_is_admin %}
+                                {% if perms.voting.add_voting %}
+                                    <h4>{% trans "Administration" %}</h4>
+                                    <ul class="unstyled">
+                                        <li><a href="{% url 'add-voting' get_place.url %}">
+                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new voting process' %}" title="{% trans 'Add new voting process' %}"/>{% trans 'Add new voting process' %}
+                                        </a></li>
+                                    </ul>
+                                {% endif %}
+                            {% endif %}
+                            <ul class="unstyled">
+                                <h4>{% trans "Actions" %}</h4>
+                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List voting" %}</a></li>
                             </ul>
                         </div>
                     </div>
