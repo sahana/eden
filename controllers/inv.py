@@ -88,7 +88,7 @@ def warehouse():
                   ),
                   s3base.S3SearchOptionsWidget(
                     name="warehouse_search_location",
-                    field="L1",
+                    field="location_id$L1",
                     location_level="L1",
                     cols = 3
                   ),
@@ -109,7 +109,7 @@ def warehouse():
                 # inc list_create (list_fields over-rides)
                 r.table.obsolete.writable = False
                 r.table.obsolete.readable = False
-                s3base.s3_address_hide(table)
+                #s3base.s3_address_hide(table)
                 # Process Base Location
                 #s3db.configure(table._tablename,
                 #                onaccept=address_onaccept)
@@ -206,40 +206,43 @@ def req_match():
 def inv_item():
     """ REST Controller """
 
-    table = s3db.inv_inv_item
-    s3.crud_strings["inv_inv_item"].msg_list_empty = T("No Stock currently registered")
+    tablename = "inv_inv_item"
+    # Load model to be able to override CRUD string(s)
+    table = s3db[tablename]
+    s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
     if "report" in request.get_vars and \
        request.get_vars.report == "mon":
-            s3.crud_strings["inv_inv_item"].update(dict(
+            s3.crud_strings[tablename].update(dict(
                 title_list = T("Monetization Report"),
                 subtitle_list = T("Monetization Details"),
                 msg_list_empty = T("No Stock currently registered"),
                 title_search = T("Monetization Report"),
               ))
-            s3db.configure("inv_inv_item",
-                            list_fields = ["id",
-                                           (T("Donor"), "supply_org_id"),
-                                           (T("Items/Description"), "item_id"),
-                                           (T("Quantity"), "quantity"),
-                                           (T("Unit"), "item_pack_id"),
-                                           (T("Unit Value"), "pack_value"),
-                                           (T("Total Value"), "total_value"),
-                                           (T("Remarks"), "comments"),
-                                           "status",
-                                           ]
-                            )
+            s3db.configure(tablename,
+                           list_fields = ["id",
+                                          (T("Donor"), "supply_org_id"),
+                                          (T("Items/Description"), "item_id"),
+                                          (T("Quantity"), "quantity"),
+                                          (T("Unit"), "item_pack_id"),
+                                          (T("Unit Value"), "pack_value"),
+                                          (T("Total Value"), "total_value"),
+                                          (T("Remarks"), "comments"),
+                                          "status",
+                                          ]
+                           )
     else:
-        s3db.configure("inv_inv_item",
-                        list_fields = ["id",
-                                       "site_id",
-                                       "item_id",
-                                       (T("Item Code"), "item_code"),
-                                       (T("Category"), "item_category"),
-                                       "quantity",
-                                       "pack_value",
-                                       ]
-                        )
+        s3db.configure(tablename,
+                       insertable=False,
+                       list_fields = ["id",
+                                      "site_id",
+                                      "item_id",
+                                      (T("Item Code"), "item_code"),
+                                      (T("Category"), "item_category"),
+                                      "quantity",
+                                      "pack_value",
+                                      ]
+                       )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -308,10 +311,10 @@ def inv_item():
     if len(request.args) > 1 and request.args[1] == "track_item":
         # remove CRUD generated buttons in the tabs
         s3db.configure("inv_track_item",
-                        create=False,
-                        listadd=False,
-                        editable=False,
-                        deletable=False,
+                       create=False,
+                       listadd=False,
+                       editable=False,
+                       deletable=False,
                        )
 
     output = s3_rest_controller(rheader=s3db.inv_warehouse_rheader,
@@ -574,7 +577,6 @@ def send():
             else:
                 set_track_attr(TRACK_STATUS_PREPARING)
             if r.interactive:
-                SHIP_STATUS_SENT = s3db.inv_ship_status["SENT"]
                 if r.record.status == SHIP_STATUS_IN_PROCESS:
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Process Shipment to Send")
@@ -582,8 +584,13 @@ def send():
                     s3.crud_strings.inv_send.title_update = \
                     s3.crud_strings.inv_send.title_display = T("Review Incoming Shipment to Receive")
         else:
+            if request.get_vars.received:
+                # Set the items to being received
+                sendtable[r.id] = dict(status = SHIP_STATUS_RECEIVED)
+                db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
+                response.message = T("Shipment received")
             # else set the inv_send attributes
-            if r.id:
+            elif r.id:
                 record = sendtable[r.id]
                 set_send_attr(record.status)
             else:
@@ -1508,7 +1515,41 @@ def adj():
                     table.site_id.writable = False
                     table.comments.writable = False
                 else:
-                    if "site" in request.vars:
+                    if "item" in request.vars and "site" in request.vars:
+                        # create a adj record with a single adj_item record
+                        adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
+                                              site_id = request.vars.site,
+                                              adjustment_date = request.utcnow,
+                                              status = 0,
+                                              category = 1,
+                                              comments = "Single item adjustment"
+                                              )
+                        inv_item_table = s3db.inv_inv_item
+                        inv_item = inv_item_table[request.vars.item]
+                        adjitemtable = s3db.inv_adj_item
+                        adj_item_id = adjitemtable.insert(reason = 0,
+                                    adj_id = adj_id,
+                                    inv_item_id = inv_item.id, # original source inv_item
+                                    item_id = inv_item.item_id, # the supply item
+                                    item_pack_id = inv_item.item_pack_id,
+                                    old_quantity = inv_item.quantity,
+                                    currency = inv_item.currency,
+                                    old_status = inv_item.status,
+                                    new_status = inv_item.status,
+                                    old_pack_value = inv_item.pack_value,
+                                    new_pack_value = inv_item.pack_value,
+                                    expiry_date = inv_item.expiry_date,
+                                    bin = inv_item.bin,
+                                    old_owner_org_id = inv_item.owner_org_id,
+                                    new_owner_org_id = inv_item.owner_org_id,
+                                   )
+                        redirect(URL(c = "inv",
+                                     f = "adj",
+                                     args = [adj_id,
+                                             "adj_item",
+                                             adj_item_id,
+                                             "update"]))
+                    elif "site" in request.vars:
                         table.site_id.writable = True
                         table.site_id.default = request.vars.site
         return True
@@ -1571,7 +1612,7 @@ def adj_close():
                                                 item_pack_id = adj_item.item_pack_id,
                                                 currency = adj_item.currency,
                                                 bin = adj_item.bin,
-                                                pack_value = adj_item.pack_value,
+                                                pack_value = adj_item.old_pack_value,
                                                 expiry_date = adj_item.expiry_date,
                                                 quantity = adj_item.new_quantity,
                                                 owner_org_id = adj_item.old_owner_org_id,
@@ -1582,7 +1623,7 @@ def adj_close():
             # Update the existing stock item
             db(inv_item_table.id == adj_item.inv_item_id).update(item_pack_id = adj_item.item_pack_id,
                                                                  bin = adj_item.bin,
-                                                                 pack_value = adj_item.pack_value,
+                                                                 pack_value = adj_item.old_pack_value,
                                                                  expiry_date = adj_item.expiry_date,
                                                                  quantity = adj_item.new_quantity,
                                                                  owner_org_id = adj_item.new_owner_org_id,

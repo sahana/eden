@@ -123,7 +123,7 @@ class S3InventoryModel(S3Model):
              "inv_item_id",
              "inv_item_represent",
              "inv_prep",
-            ]
+             ]
 
     def model(self):
 
@@ -332,12 +332,15 @@ $(document).ready(function(){
                     field="expiry_date"
                 )
             ],
-            #rows=["item_id", "currency"],
-            rows=["item_id", (T("Category"), "item_category"),],
-            #cols=["site_id", "currency"],
-            cols=["site_id", "owner_org_id", "supply_org_id"],
+
+            rows=["item_id", (T("Category"), "item_category"), "currency"],
+            cols=["site_id", "owner_org_id", "supply_org_id", "currency"],
             facts=["quantity", (T("Total Value"), "total_value"),],
             methods=["sum"],
+            defaults=Storage(rows="item_id",
+                             cols="site_id",
+                             fact="quantity",
+                             aggregate="sum"),
             groupby=self.inv_inv_item.site_id,
             hide_comments=True,
         )
@@ -761,7 +764,7 @@ class S3TrackingModel(S3Model):
         # Generate Consignment Note
         set_method("inv", "send",
                    method="form",
-                   action=self.inv_send_form )
+                   action=self.inv_send_form)
 
         # Redirect to the Items tabs after creation
         send_item_url = URL(f="send", args=["[id]",
@@ -777,7 +780,7 @@ class S3TrackingModel(S3Model):
                                  "sender_id",
                                  "site_id",
                                  "date",
-                                 "recepient_id",
+                                 "recipient_id",
                                  "delivery_date",
                                  "to_site_id",
                                  "status",
@@ -1601,7 +1604,8 @@ $(document).ready(function(){
                                                          limitby=(0, 1)).first()
                 if row:
                     return A(value,
-                             _href = URL(f = "send",
+                             _href = URL(c = "inv",
+                                         f = "send",
                                          args = [row.id, "form"]
                                         ),
                             )
@@ -1627,7 +1631,8 @@ $(document).ready(function(){
                 recv_row = db(table.recv_ref == value).select(table.id,
                                                               limitby=(0, 1)).first()
                 return A(value,
-                         _href = URL(f = "recv",
+                         _href = URL(c = "inv",
+                                     f = "recv",
                                      args = [recv_row.id, "form"]
                                     ),
                         )
@@ -2116,15 +2121,27 @@ def inv_warehouse_rheader(r):
     rfooter = TAG[""]()
     if record and "site_id" in record:
         if (r.component and r.component.name == "inv_item"):
-            as_btn = A( T("Adjust Stock"),
-                          _href = URL(c = "inv",
-                                      f = "adj",
-                                      args = ["create"],
-                                      vars = {"site":record.site_id},
-                                      ),
-                          _class = "action-btn"
-                          )
-            rfooter.append(as_btn)
+            if r.component_id:
+                asi_btn = A( T("Adjust Stock Item"),
+                              _href = URL(c = "inv",
+                                          f = "adj",
+                                          args = ["create"],
+                                          vars = {"site":record.site_id,
+                                                  "item":r.component_id},
+                                          ),
+                              _class = "action-btn"
+                              )
+                rfooter.append(asi_btn)
+            else:
+                as_btn = A( T("Adjust Stock"),
+                              _href = URL(c = "inv",
+                                          f = "adj",
+                                          args = ["create"],
+                                          vars = {"site":record.site_id},
+                                          ),
+                              _class = "action-btn"
+                              )
+                rfooter.append(as_btn)
             ts_btn = A( T("Track Shipment"),
                           _href = URL(c = "inv",
                                       f = "track_movement",
@@ -2319,8 +2336,8 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-                        return_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
-                                                     % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
+                        return_btn_confirm = SCRIPT("S3ConfirmClick('#send_return','%s')"
+                                                     % T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock.") )
                         rfooter.append(return_btn_confirm)
                         action.append( A( T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
@@ -2333,7 +2350,7 @@ def inv_send_rheader(r):
                                         )
                                      )
 
-                        receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive', '%s')"
+                        receive_btn_confirm = SCRIPT("S3ConfirmClick('#send_receive','%s')"
                                                      % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
                         rfooter.append(receive_btn_confirm)
                     if auth.s3_has_permission("delete",
@@ -2610,9 +2627,7 @@ class S3AdjustModel(S3Model):
         inv_item_id = self.inv_item_id
         item_pack_id = self.supply_item_pack_id
 
-        messages = current.messages
-        NONE = messages.NONE
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2645,6 +2660,8 @@ class S3AdjustModel(S3Model):
                                    requires = IS_ONE_OF(db, "org_site.site_id",
                                                         lambda id: \
                                                             org_site_represent(id, show_link = False),
+                                                        filterby = "site_id",
+                                                        filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                         sort=True,
                                                         ),
                                    represent=org_site_represent),
@@ -2743,8 +2760,12 @@ class S3AdjustModel(S3Model):
                                    represent = lambda opt: \
                                     adjust_reason.get(opt, UNKNOWN_OPT),
                                    writable = False),
-                             Field("pack_value", "double",
-                                   label = T("Value per Pack")),
+                             Field("old_pack_value",
+                                   "double",
+                                   label = T("Original Value per Pack")),
+                             Field("new_pack_value",
+                                   "double",
+                                   label = T("Revised Value per Pack")),
                              s3_currency(),
                              Field("old_status", "integer",
                                    label = T("Current Status"),
@@ -2863,10 +2884,13 @@ class S3AdjustModel(S3Model):
                                     old_quantity = inv_item.quantity,
                                     currency = inv_item.currency,
                                     old_status = inv_item.status,
-                                    pack_value = inv_item.pack_value,
+                                    new_status = inv_item.status,
+                                    old_pack_value = inv_item.pack_value,
+                                    new_pack_value = inv_item.pack_value,
                                     expiry_date = inv_item.expiry_date,
                                     bin = inv_item.bin,
                                     old_owner_org_id = inv_item.owner_org_id,
+                                    new_owner_org_id = inv_item.owner_org_id,
                                    )
 
     # ---------------------------------------------------------------------

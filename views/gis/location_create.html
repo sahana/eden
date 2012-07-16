@@ -3,35 +3,6 @@
 <p>&nbsp;</p>
 {{="%s:" % T("You can click on the map below to select the Lat/Lon fields")}}
 <p>&nbsp;</p>
-{{try:}}
-{{=XML(_map)}}
-{{except:}}{{pass}}
-<script type="text/javascript">//<![CDATA[
-$(function() {
-    // When the Level changes:
-	$('#gis_location_level').change(function() {
-		// What is the new type?
-        var level = $(this).val();
-        if (level) {
-            // If the Location is a Admin Boundary then Street Address makes no sense
-            $('#gis_location_addr_street__row').hide();
-            $('#gis_location_addr_street__row1').hide();
-            // If the Location is a Country then Parent makes no sense
-            if (level == 'L0') {
-                $('#gis_location_parent__row').hide();
-                $('#gis_location_parent__row1').hide();
-                $('#gis_location_parent').val('');
-            } else {
-                $('#gis_location_parent__row').show();
-                $('#gis_location_parent__row1').show();
-            }
-        } else {
-            $('#gis_location_addr_street__row').show();
-            $('#gis_location_addr_street__row1').show();
-            $('#gis_location_parent__row').show();
-            $('#gis_location_parent__row1').show();
-        }
-    });
-});
-//]]></script>
-{{include "gis/feature_crud.js"}}
+<div style='margin:0 0 0 -16px;'>
+{{try:}}{{=XML(_map)}}{{except:}}{{pass}}
+</div>

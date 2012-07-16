@@ -817,8 +817,8 @@ function s3_gis_search_tab() {
 
     // Change the label of the Map button
     $('#gis_location_map-btn').html(S3.i18n.gis_view_on_map);
-    // Display it
-    $('#gis_location_map_button_row').show();
+    // Hide it
+    $('#gis_location_map_button_row').hide();
 
     // Set the Classes on the tabs
     $('#gis_loc_add_tab').removeClass('tab_here').addClass('tab_other');

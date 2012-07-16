@@ -577,16 +577,18 @@ def s3_auth_user_represent(id):
         @todo: parameter description?
     """
 
-    db = current.db
-    s3db = current.s3db
+    if not id:
+        return current.messages.NONE
 
-    table = s3db.auth_user
+    db = current.db
+    table = db.auth_user
     user = db(table.id == id).select(table.email,
                                      limitby=(0, 1),
-                                     cache=s3db.cache).first()
-    if user:
+                                     cache=current.s3db.cache).first()
+    try:
         return user.email
-    return None
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def s3_auth_group_represent(opt):
@@ -926,30 +928,6 @@ def s3_filename(filename):
     return "".join(c for c in cleanedFilename if c in validFilenameChars)
 
 # =============================================================================
-def s3_table_links(reference):
-    """
-        Return a dict of tables & their fields which have references to the
-        specified table
-
-        @deprecated: to be replaced by db[tablename]._referenced_by
-        - used by controllers/gis.py & pr.py
-    """
-
-    db = current.db
-    current.s3db.load_all_models()
-    tables = {}
-    for table in db.tables:
-        count = 0
-        for field in db[table].fields:
-            if str(db[table][field].type) == "reference %s" % reference:
-                if count == 0:
-                    tables[table] = {}
-                tables[table][count] = field
-                count += 1
-
-    return tables
-
-# =============================================================================
 def s3_has_foreign_key(field, m2m=True):
     """
         Check whether a field contains a foreign key constraint
@@ -962,7 +940,11 @@ def s3_has_foreign_key(field, m2m=True):
                to find real foreign key constraints, then set m2m=False.
     """
 
-    ftype = str(field.type)
+    try:
+        ftype = str(field.type)
+    except:
+        # Virtual Field
+        return False
     if ftype[:9] == "reference":
         return True
     if m2m and ftype[:14] == "list:reference":
@@ -1010,7 +992,7 @@ def s3_get_foreign_key(field, m2m=True):
     return (rtablename, key, multiple)
 
 # =============================================================================
-def s3_unicode(s, encoding='utf-8'):
+def s3_unicode(s, encoding="utf-8"):
     """
         Convert an object into an unicode instance, to be used instead of
         unicode(s) (Note: user data should never be converted into str).
@@ -1023,22 +1005,22 @@ def s3_unicode(s, encoding='utf-8'):
         return s
     try:
         if not isinstance(s, basestring):
-            if hasattr(s, '__unicode__'):
+            if hasattr(s, "__unicode__"):
                 s = unicode(s)
             else:
                 try:
-                    s = unicode(str(s), encoding, 'strict')
+                    s = unicode(str(s), encoding, "strict")
                 except UnicodeEncodeError:
                     if not isinstance(s, Exception):
                         raise
-                    s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+                    s = " ".join([s3_unicode(arg, encoding) for arg in s])
         else:
             s = s.decode(encoding)
     except UnicodeDecodeError:
         if not isinstance(s, Exception):
             raise
         else:
-            s = ' '.join([s3_unicode(arg, encoding) for arg in s])
+            s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
 
 # =============================================================================

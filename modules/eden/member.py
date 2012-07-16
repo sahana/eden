@@ -29,7 +29,7 @@
 
 __all__ = ["S3MembersModel",
            "member_rheader"
-          ]
+           ]
 
 import datetime
 from gluon import *
@@ -58,9 +58,6 @@ class S3MembersModel(S3Model):
         organisation_id = self.org_organisation_id
 
         NONE = current.messages.NONE
-
-        s3_date_represent = S3DateTime.date_represent
-        s3_date_format = settings.get_L10n_date_format()
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -109,13 +106,11 @@ class S3MembersModel(S3Model):
             sortby = "name",
             label = T("Type"),
             requires = IS_NULL_OR(
-                        IS_ONE_OF(db,
-                                  "member_membership_type.id",
-                                  "%(name)s",
+                        IS_ONE_OF(db, "member_membership_type.id",
+                                  self.membership_type_represent,
                                   filterby="organisation_id",
                                   filter_opts=filter_opts)),
-            represent = lambda id: \
-                (id and [db.member_membership_type[id].name] or [NONE])[0],
+            represent = self.membership_type_represent,
             comment=S3AddResourceLink(f="membership_type",
                                       label=label_create,
                                       title=label_create,
@@ -142,31 +137,22 @@ class S3MembersModel(S3Model):
                                        comment=None),
                              membership_type_id(),
                              # History
-                             Field("start_date", "date",
-                                   label = T("Date Joined"),
-                                   requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget()
-                                   ),
-                             Field("end_date", "date",
-                                   label = T("Date resigned"),
-                                   requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget()
-                                   ),
+                             s3_date("start_date",
+                                     label = T("Date Joined"),
+                                     ),
+                             s3_date("end_date",
+                                     label = T("Date resigned"),
+                                     ),
                              Field("membership_fee", "double",
                                    label = T("Membership Fee"),
                                    ),
-                             Field("membership_paid", "date",
-                                   label = T("Membership Paid"),
-                                   requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget()
-                                   ),
+                             s3_date("membership_paid",
+                                     label = T("Membership Paid")
+                                     ),
                              # Location (from pr_address component)
                              location_id(readable=False,
                                          writable=False),
-                             *(s3_lx_fields() + s3_meta_fields()))
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Member"),
@@ -230,25 +216,25 @@ class S3MembersModel(S3Model):
                       ),
                       S3SearchOptionsWidget(
                         name="member_search_L1",
-                        field="L1",
+                        field="location_id$L1",
                         location_level="L1",
                         cols = 3,
                       ),
                       S3SearchOptionsWidget(
                         name="member_search_L2",
-                        field="L2",
+                        field="location_id$L2",
                         location_level="L2",
                         cols = 3,
                       ),
                       S3SearchOptionsWidget(
                         name="member_search_L3",
-                        field="L3",
+                        field="location_id$L3",
                         location_level="L3",
                         cols = 3,
                       ),
                       S3SearchOptionsWidget(
                         name="member_search_L4",
-                        field="L4",
+                        field="location_id$L4",
                         location_level="L4",
                         cols = 3,
                       ),
@@ -272,16 +258,35 @@ class S3MembersModel(S3Model):
                                (T("Paid"), "paid"),
                                (T("Email"), "email"),
                                (T("Phone"), "phone"),
-                               "L1",
-                               "L2",
-                               "L3",
-                               "L4",
+                               "location_id$L1",
+                               "location_id$L2",
+                               "location_id$L3",
+                               "location_id$L4",
                                ])
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def membership_type_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.member_membership_type
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -356,9 +361,9 @@ class S3MembersModel(S3Model):
             return
         record.update_record(**data)
 
-        if data.location_id:
-            # Populate the Lx fields
-            s3_lx_update(mtable, record.id)
+        #if data.location_id:
+        #    # Populate the Lx fields
+        #    s3_lx_update(mtable, record.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -434,16 +439,14 @@ def member_rheader(r, tabs=[]):
     rheader_tabs = s3_rheader_tabs(r, tabs)
 
     if resourcename == "membership":
-        db = current.db
-        s3db = current.s3db
-        ptable = s3db.pr_person
+        ptable = current.s3db.pr_person
         query = (table.id == record.id) & \
                 (ptable.id == table.person_id)
-        person = db(query).select(ptable.id,
-                                  ptable.first_name,
-                                  ptable.middle_name,
-                                  ptable.last_name,
-                                  limitby=(0, 1)).first()
+        person = current.db(query).select(ptable.id,
+                                          ptable.first_name,
+                                          ptable.middle_name,
+                                          ptable.last_name,
+                                          limitby=(0, 1)).first()
         if person is not None:
             rheader = DIV(DIV(s3_avatar_represent(person.id,
                                                   "pr_person",
@@ -507,8 +510,10 @@ class MemberVirtualFields:
             elif now_month == start_month:
                 now_day = now.day
                 start_day = start_date.day
-                if now_day > start_day:
+                if now_day >= start_day:
                     due = datetime.date(now.year, start_month, start_day)
+                else:
+                    due = datetime.date((now.year - 1), start_month, start_day)
             else:
                 due = datetime.date((now.year - 1), start_month, start_date.day)
 

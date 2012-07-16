@@ -52,40 +52,38 @@ class CreateProject(SeleniumUnitTest):
         
         self.create("project_project", 
                     [( "name",
-                       "Community Strengthening through Dance" )]
-                     )
-        self.create("project_organisation", 
-                    [( "organisation_id",
+                       "Community Strengthening through Dance" ),
+                     ( "organisation_id",
                        "Timor-Leste Red Cross Society",
                        "autocomplete"),
                      ( "currency",
                        "USD",),
                      ( "comments",
                        "Host National Society")
-                     ]
-                     )
-        
-        # Show Add Form
-        self.browser.find_element_by_id("show-add-btn").click()
-        
-        self.create("project_organisation", 
-                    [( "organisation_id",
-                       "New Zealand Red Cross",
-                       "autocomplete"),
-                     ( "role",
-                       "Donor",
-                       "option"),
-                     ( "amount",
-                       "1000"),
-                     ( "currency",
-                       "USD"),
-                     ( "comments",
-                       "International Donation")
-                     ]
-                     )
-        
+                    ]
+                   )
+
+#        # Show Add Form
+#        self.browser.find_element_by_id("show-add-btn").click()
+#        
+#        self.create("project_organisation", 
+#                    [( "organisation_id",
+#                       "New Zealand Red Cross",
+#                       "autocomplete"),
+#                     ( "role",
+#                       "Donor",
+#                       "option"),
+#                     ( "amount",
+#                       "1000"),
+#                     ( "currency",
+#                       "USD"),
+#                     ( "comments",
+#                       "International Donation")
+#                     ]
+#                     )
+
         self.browser.find_element_by_id("rheader_tab_location").click()
-        
+
         self.create("project_location", 
                     [( "L0",
                        "Timor-Leste",

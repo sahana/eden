@@ -511,7 +511,6 @@ class S3Cube(S3CRUD):
             @param attr: the HTML attributes for the SELECT
         """
 
-        resolve = self.resource.resolve_selectors
         value = None
         if current.request.env.request_method == "GET":
             if "_name" in attr:
@@ -519,7 +518,7 @@ class S3Cube(S3CRUD):
                 if form_values and name in form_values:
                     value = form_values[name]
         table = self.table
-        lfields, joins, left, distinct = resolve(list_fields)
+        lfields, joins, left, distinct = self.resource.resolve_selectors(list_fields)
         options = [OPTION(f.label,
                           _value=f.selector,
                           _selected= value == f.selector and "selected" or None)

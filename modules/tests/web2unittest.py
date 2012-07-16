@@ -30,10 +30,14 @@ class Web2UnitTest(unittest.TestCase):
         self.app = current.request.application
         self.url = self.config.url
         self.user = "admin"
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
         
     def reporter(self, msg, verbose_level = 1):
         if self.config.verbose >= verbose_level:
             print >> sys.stderr, msg
+            if self.config.verbose > 2:
+                print >> self.stdout, msg
 
 # =============================================================================
 class SeleniumUnitTest(Web2UnitTest):
@@ -124,6 +128,11 @@ class SeleniumUnitTest(Web2UnitTest):
                                                      tablename,
                                                      details[0],
                                                     )
+                elif el_type == "facility_widget":
+                    raw_value = self.w_facility_select(el_value,
+                                                       tablename,
+                                                       details[0],
+                                                      )
                 elif el_type == "gis_location":
                     self.w_gis_location(el_value,
                                         details[0],
@@ -264,7 +273,7 @@ class SeleniumUnitTest(Web2UnitTest):
                      ):
 
         return w_gis_location(item_repr, field, quiet)
-    
+
     # -------------------------------------------------------------------------
     def w_supply_select(self,
                        item_repr,
@@ -274,5 +283,15 @@ class SeleniumUnitTest(Web2UnitTest):
                       ):
 
         return w_supply_select(item_repr, tablename, field, quiet)
+
+    # -------------------------------------------------------------------------
+    def w_facility_select(self,
+                          org_repr,
+                          tablename,
+                          field,
+                          quiet = True,
+                         ):
+
+        return w_facility_select(org_repr, tablename, field, quiet)
 
 # END =========================================================================

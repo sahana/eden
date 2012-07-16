@@ -10,7 +10,9 @@ import unittest
 import argparse
 
 def loadAllTests():
+    loadTests = unittest.TestLoader().loadTestsFromTestCase
     # Create Organisation
+    loadTests = unittest.TestLoader().loadTestsFromTestCase
     suite = loadTests(CreateOrganisation)
     
     # Shortcut
@@ -62,7 +64,7 @@ def loadAllTests():
     
     # Create a Category
     addTests(loadTests(CreateCategory))
-    
+
     return suite
 
 # Set up the command line arguments
@@ -85,10 +87,13 @@ parser.add_argument("-V", "--verbose",
                     default = 1,
                     help = "The level of verbose reporting")
 parser.add_argument("--nohtml",
+                    action='store_const',
+                    const=True,
                     help = "Disable HTML reporting."
                    )
 parser.add_argument("--html-path",
-                    help = "Path where the HTML report will be saved."
+                    help = "Path where the HTML report will be saved.",
+                    default = ""
                    )
 parser.add_argument("--html-name-date",
                     help = "Include just the date in the name of the HTML report."
@@ -99,10 +104,10 @@ the the suite will be ignored.
 
 The suite options can be described as follows:
 
- smoke: This will run the broken link test
- quick: This will run all the tests marked as essential
- complete: This will run all tests except those marked as long
- full: This will run all test
+smoke: This will run the broken link test
+quick: This will run all the tests marked as essential
+complete: This will run all tests except those marked as long
+full: This will run all test
 """
 parser.add_argument("--suite",
                     help = suite_desc,
@@ -110,7 +115,7 @@ parser.add_argument("--suite",
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
-                    default = 3,
+                    default = 16,
                     help = "The recursive depth when looking for links")
 up_desc = """The user name and password, separated by a /. Multiple user name
 and passwords can be added by separating them with a comma. If multiple user
@@ -123,8 +128,8 @@ parser.add_argument("--user-password",
                     )
 parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
-                    type = bool,
-                    default = False)
+                    action='store_const',
+                    const = True)
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 
@@ -157,10 +162,9 @@ base_dir = os.path.join(os.getcwd(), "applications", current.request.application
 test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
-
-# Shortcut
-loadTests = unittest.TestLoader().loadTestsFromTestCase
-loadNamedTests = unittest.TestLoader().loadTestsFromName
+if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
+    print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
+    exit()
 
 config.verbose = args["verbose"]
 browser_open = False
@@ -173,12 +177,14 @@ if args["method"]:
         name = "%s.%s" % (args["class"], args["method"])
     else:
         name = args["method"]
-    suite = loadNamedTests(args["method"], globals()[args["class"]])
+    suite = unittest.TestLoader().loadTestsFromName(args["method"],
+                                                    globals()[args["class"]]
+                                                   )
 elif args["class"]:
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)
     browser_open = True
-    suite = loadTests(globals()[args["class"]])
+    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["class"]])
 elif args["suite"] == "smoke":
     try:
         from tests.smoke import *
@@ -212,39 +218,33 @@ else:
     browser_open = True
     # Run all Tests
     suite = loadAllTests()
-    
-"""Temporarily commented out"""
-#from tests.runner import EdenHTMLTestRunner
-#try:
-#    path = args["html_path"]
-#    if args["html_name_date"]:
-#        filename = "Sahana-Eden-%s.html" % current.request.now.date()
-#    else:
-#        filename = "Sahana-Eden-%s.html" % current.request.now
-#    fullname = os.path.join(path,filename)
-#    fp = file(fullname, "wb")
-#
-#    config.html = True
-#    from tests.runner import EdenHTMLTestRunner
-#    runner = EdenHTMLTestRunner(
-#                                stream=fp,
-#                                title="Sahana Eden",
-#                               )
-#    runner.run(suite)
-#except:
-#    config.html = False
-#    unittest.TextTestRunner(verbosity=2).run(suite)
 
-try:
-    import HTMLTestRunner
-    fp = file("Sahana-Eden.html", "wb")
-    runner = HTMLTestRunner.HTMLTestRunner(
-                                           stream=fp,
-                                           title="Sahana Eden",
-                                          )
-    runner.run(suite)
-except:
-    unittest.TextTestRunner(verbosity=2).run(suite)
+config.html = False
+if args["nohtml"]:
+    unittest.TextTestRunner(verbosity=config.verbose).run(suite)
+else:
+    try:
+        path = args["html_path"]
+        if args["html_name_date"]:
+            filename = "Sahana-Eden-%s.html" % current.request.now.date()
+        else:
+            filename = "Sahana-Eden-%s.html" % current.request.now
+        # Windows compatibility
+        filename = filename.replace(":", "-")
+        fullname = os.path.join(path,filename)
+        fp = file(fullname, "wb")
+
+        config.html = True
+        from tests.runner import EdenHTMLTestRunner
+        runner = EdenHTMLTestRunner(
+                                    stream = fp,
+                                    title = "Sahana Eden",
+                                    verbosity = config.verbose,
+                                   )
+        runner.run(suite)
+    except ImportError:
+        config.html = False
+        unittest.TextTestRunner(verbosity=config.verbose).run(suite)
 
 # Cleanup
 if browser_open and not args["keep_browser_open"]:
