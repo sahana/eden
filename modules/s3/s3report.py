@@ -1192,7 +1192,7 @@ class S3ContingencyTable(TABLE):
                                 fvalue = record[field.name]
 
                             if fvalue is not None:
-                                if s3_has_foreign_key(lf.field):
+                                if s3_has_foreign_key(field):
                                     if not isinstance(fvalue, list):
                                         fvalue = [fvalue]
 
@@ -1200,7 +1200,7 @@ class S3ContingencyTable(TABLE):
                                     for fk in fvalue:
                                         if fk not in layer_ids:
                                             layer_ids.append(fk)
-                                            layer_values[fk] = str(lf.field.represent(fk))
+                                            layer_values[fk] = str(field.represent(fk))
                                 else:
                                     if id not in layer_ids:
                                         layer_ids.append(id)
