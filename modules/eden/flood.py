@@ -46,17 +46,10 @@ class S3FloodModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-
-        location_id = self.gis_location_id
 
         # Shortcuts
-        #add_component = self.add_component
-        comments = s3.comments
-        #configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
 
         # -----------------------------------------------------------------------------
         # Gauges
@@ -75,7 +68,7 @@ class S3FloodModel(S3Model):
                                    label=T("Name")),
                              Field("code",
                                    label=T("Code")),
-                             location_id(),
+                             self.gis_location_id(),
                              Field("url",
                                    label = T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),
@@ -91,20 +84,19 @@ class S3FloodModel(S3Model):
                                    represent = lambda opt: \
                                     flowstatus_opts.get(opt, opt),
                                    label = T("Flow Status")),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         ADD_GAUGE = T("Add Gauge")
-        LIST_GAUGES = T("List Gauges")
         crud_strings[tablename] = Storage(
             title_create = ADD_GAUGE,
             title_display = T("Gauge Details"),
-            title_list = LIST_GAUGES,
+            title_list = T("Gauges"),
             title_update = T("Edit Gauge"),
             title_search = T("Search Gauges"),
+            title_map = T("Map of Gauges"),
             subtitle_create = T("Add New Gauge"),
-            subtitle_list = T("Gauges"),
-            label_list_button = LIST_GAUGES,
+            label_list_button = T("List Gauges"),
             label_create_button = ADD_GAUGE,
             msg_record_created = T("Gauge added"),
             msg_record_modified = T("Gauge updated"),
@@ -120,21 +112,19 @@ class S3FloodModel(S3Model):
                              Field("name",
                                    label=T("Name"),
                                    requires = IS_NOT_EMPTY()),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_RIVER = T("Add River")
-        LIST_RIVERS = T("List Rivers")
         crud_strings[tablename] = Storage(
             title_create = ADD_RIVER,
             title_display = T("River Details"),
-            title_list = LIST_RIVERS,
+            title_list = T("Rivers"),
             title_update = T("Edit River"),
             title_search = T("Search Rivers"),
             subtitle_create = T("Add New River"),
-            subtitle_list = T("Rivers"),
-            label_list_button = LIST_RIVERS,
+            label_list_button = T("List Rivers"),
             label_create_button = ADD_RIVER,
             msg_record_created = T("River added"),
             msg_record_modified = T("River updated"),
@@ -153,7 +143,7 @@ class S3FloodModel(S3Model):
         #                           ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
 

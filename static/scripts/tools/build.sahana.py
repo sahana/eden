@@ -1,11 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
+# run as:
+#   python web2py.py -S eden -M -R applications/eden/static/scripts/tools/build.sahana.py
+# or
+#   python web2py.py -S eden -M -R applications/eden/static/scripts/tools/build.sahana.py -A gis
+#
 #
 # Built with code/inspiration from MapFish, OpenLayers & Michael Crute
 #
 
+try:
+    theme = settings.get_theme()
+except:
+    print "ERROR: File now needs to be run in the web2py environment in order to pick up which theme to build"
+    exit()
+
+import os
 import sys
+import shutil
+
+SCRIPTPATH = os.path.join(request.folder, "static", "scripts", "tools")
+os.chdir(SCRIPTPATH)
+
 sys.path.append("./")
 
 # For JS
@@ -15,15 +32,11 @@ import jsmin, mergejs
 # For CSS
 import re
 
-# For file moves
-import shutil
-import os
-
 def mergeCSS(inputFilenames, outputFilename):
     output = ""
     for inputFilename in inputFilenames:
-        output += file(inputFilename, "r").read()
-    file(outputFilename, "w").write(output)
+        output += open(inputFilename, "r").read()
+    open(outputFilename, "w").write(output)
     return outputFilename
 
 def cleanline(theLine):
@@ -70,7 +83,7 @@ def cleanline(theLine):
     return m
 
 def compressCSS(inputFilename, outputFilename):
-    theFile = file(inputFilename, "r").read()
+    theFile = open(inputFilename, "r").read()
     output = ""
     for line in theFile:
         output = output + cleanline(line)
@@ -78,7 +91,7 @@ def compressCSS(inputFilename, outputFilename):
     # Once more, clean the entire file string
     _output = cleanline(output)
 
-    file(outputFilename, "w").write(_output)
+    open(outputFilename, "w").write(_output)
     return
 
 def dojs(dogis = False, warnings = True):
@@ -113,10 +126,6 @@ def dojs(dogis = False, warnings = True):
     configFilename = "sahana.js.cfg"
     outputFilename = "S3.min.js"
 
-    sourceDirectorydataTables = "../S3"
-    configFilenamedataTables = "sahana.js.dataTables.cfg"
-    outputFilenamedataTables = "s3.dataTables.min.js"
-
     # Merge JS files
     print "Merging Core libraries."
     merged = mergejs.run(sourceDirectory, None, configFilename)
@@ -127,11 +136,11 @@ def dojs(dogis = False, warnings = True):
 
     # Add license
     print "Adding license file."
-    minimized = file("license.txt").read() + minimized
+    minimized = open("license.txt").read() + minimized
 
     # Print to output files
     print "Writing to %s." % outputFilename
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
 
     # Remove old JS files
     print "Deleting %s." % outputFilename
@@ -146,24 +155,40 @@ def dojs(dogis = False, warnings = True):
 
     # Also do dataTables
     print "Compressing dataTables"
+    sourceDirectorydataTables = ".."
+    configFilenamedataTables = "sahana.js.dataTables.cfg"
+    outputFilenamedataTables = "s3.dataTables.min.js"
     mergeddataTables = mergejs.run(sourceDirectorydataTables,
                                    None,
                                    configFilenamedataTables)
     minimizeddataTables = minimize(mergeddataTables)
-    file(outputFilenamedataTables, "w").write(minimizeddataTables)
+    open(outputFilenamedataTables, "w").write(minimizeddataTables)
     try:
         os.remove("../S3/%s" % outputFilenamedataTables)
     except:
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    # Also do s3.locationselector.widget.js
+    print "Compressing s3.locationselector.widget.js"
+    inputFilename = os.path.join("..", "S3", "s3.locationselector.widget.js")
+    outputFilename = "s3.locationselector.widget.min.js"
+    input = open(inputFilename, "r").read()
+    minimized = minimize(input)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Also do s3.embed_component.js
     print "Compressing s3.embed_component.js"
     inputFilename = os.path.join("..", "S3", "s3.embed_component.js")
     outputFilename = "s3.embed_component.min.js"
-    input = file(inputFilename, "r").read()
+    input = open(inputFilename, "r").read()
     minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
     except:
@@ -174,9 +199,9 @@ def dojs(dogis = False, warnings = True):
     print "Compressing s3.contacts.js"
     inputFilename = os.path.join("..", "S3", "s3.contacts.js")
     outputFilename = "s3.contacts.min.js"
-    input = file(inputFilename, "r").read()
+    input = open(inputFilename, "r").read()
     minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
     except:
@@ -187,9 +212,9 @@ def dojs(dogis = False, warnings = True):
     print "Compressing s3.report.js"
     inputFilename = os.path.join("..", "S3", "s3.report.js")
     outputFilename = "s3.report.min.js"
-    input = file(inputFilename, "r").read()
+    input = open(inputFilename, "r").read()
     minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
     except:
@@ -200,9 +225,9 @@ def dojs(dogis = False, warnings = True):
     print "Compressing s3.select_person.js"
     inputFilename = os.path.join("..", "S3", "s3.select_person.js")
     outputFilename = "s3.select_person.min.js"
-    input = file(inputFilename, "r").read()
+    input = open(inputFilename, "r").read()
     minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
     except:
@@ -213,9 +238,9 @@ def dojs(dogis = False, warnings = True):
     print "Compressing s3.timeline.js"
     inputFilename = os.path.join("..", "S3", "s3.timeline.js")
     outputFilename = "s3.timeline.min.js"
-    input = file(inputFilename, "r").read()
+    input = open(inputFilename, "r").read()
     minimized = minimize(input)
-    file(outputFilename, "w").write(minimized)
+    open(outputFilename, "w").write(minimized)
     try:
         os.remove("../S3/%s" % outputFilename)
     except:
@@ -316,26 +341,26 @@ def dojs(dogis = False, warnings = True):
         #minimizedGeoExplorer = minimize(mergedGeoExplorer)
 
         # Add license
-        #minimizedGIS = file("license.gis.txt").read() + minimizedGIS
+        #minimizedGIS = open("license.gis.txt").read() + minimizedGIS
 
         # Print to output files
         print "Writing to %s." % outputFilenameGIS
-        file(outputFilenameGIS, "w").write(minimizedGIS)
+        open(outputFilenameGIS, "w").write(minimizedGIS)
 
         print "Writing to %s." % outputFilenameOpenLayers
-        file(outputFilenameOpenLayers, "w").write(minimizedOpenLayers)
+        open(outputFilenameOpenLayers, "w").write(minimizedOpenLayers)
 
         print "Writing to %s." % outputFilenameMGRS
-        file(outputFilenameMGRS, "w").write(minimizedMGRS)
+        open(outputFilenameMGRS, "w").write(minimizedMGRS)
 
         print "Writing to %s." % outputFilenameGeoExt
-        file(outputFilenameGeoExt, "w").write(minimizedGeoExt)
+        open(outputFilenameGeoExt, "w").write(minimizedGeoExt)
 
         print "Writing to %s." % outputFilenameGxp
-        file(outputFilenameGxp, "w").write(minimizedGxp)
+        open(outputFilenameGxp, "w").write(minimizedGxp)
 
         #print "Writing to %s." % outputFilenameGeoExplorer
-        #file(outputFilenameGeoExplorer, "w").write(minimizedGeoExplorer)
+        #open(outputFilenameGeoExplorer, "w").write(minimizedGeoExplorer)
 
         # Move new JS files
         print "Deleting %s." % outputFilenameGIS
@@ -388,9 +413,13 @@ def dojs(dogis = False, warnings = True):
 
 def docss():
     """ Compresses the  CSS files """
+
     listCSS = []
 
-    f = open("sahana.css.cfg", "r")
+    theme = settings.get_theme()
+    print "Using theme %s" % theme
+    css_cfg = os.path.join("..", "..", "..", "private", "templates", theme, "css.cfg")
+    f = open(css_cfg, "r")
     files = f.readlines()
     f.close()
     for file in files[:-1]:
@@ -398,7 +427,7 @@ def docss():
         file = p.sub("", file)
         listCSS.append("../../styles/%s" % file)
 
-    outputFilenameCSS = "sahana.min.css"
+    outputFilenameCSS = "eden.min.css"
 
     # Merge CSS files
     print "Merging Core styles."
@@ -411,11 +440,11 @@ def docss():
     # Move files to correct locations
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../styles/S3/%s" % outputFilenameCSS)
+        os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/S3")
+    shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
 def main(argv):
     try:

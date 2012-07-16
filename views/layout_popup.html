@@ -1,9 +1,9 @@
-{{response.s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
+{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
 {{if response.flash or response.confirmation:}}
   {{# Close the pop up}}
-  {{response.s3.jquery_ready.append("self.parent.$('.TB_closeAjaxWindow').html('');")}}
+  {{s3.jquery_ready.append("self.parent.$('.TB_closeAjaxWindow').html('');")}}
   {{# Refresh the DIV}}
-  {{response.s3.js_global.append("s3_tb_refresh();")}}
+  {{s3.js_global.append("s3_tb_refresh();")}}
 {{pass}}
 </head>
 <body>

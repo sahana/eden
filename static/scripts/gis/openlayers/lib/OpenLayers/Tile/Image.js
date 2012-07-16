@@ -1,11 +1,12 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
 /**
  * @requires OpenLayers/Tile.js
+ * @requires OpenLayers/Animation.js
  */
 
 /**
@@ -20,9 +21,9 @@
 OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
 
     /** 
-     * Property: url
+     * APIProperty: url
      * {String} The URL of the image being requested. No default. Filled in by
-     * layer.getURL() function. 
+     * layer.getURL() function. May be modified by loadstart listeners.
      */
     url: null,
     
@@ -81,10 +82,29 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      */
     maxGetUrlLength: null,
 
+    /**
+     * Property: canvasContext
+     * {CanvasRenderingContext2D} A canvas context associated with
+     * the tile image.
+     */
+    canvasContext: null,
+    
+    /**
+     * APIProperty: crossOriginKeyword
+     * The value of the crossorigin keyword to use when loading images. This is
+     * only relevant when using <getCanvasContext> for tiles from remote
+     * origins and should be set to either 'anonymous' or 'use-credentials'
+     * for servers that send Access-Control-Allow-Origin headers with their
+     * tiles.
+     */
+    crossOriginKeyword: null,
+
     /** TBD 3.0 - reorder the parameters to the init function to remove 
      *             URL. the getUrl() function on the layer gets called on 
      *             each draw(), so no need to specify it here.
-     * 
+     */
+
+    /** 
      * Constructor: OpenLayers.Tile.Image
      * Constructor for a new <OpenLayers.Tile.Image> instance.
      * 
@@ -146,10 +166,10 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             }
             if (this.isLoading) {
                 //if we're already loading, send 'reload' instead of 'loadstart'.
-                this.events.triggerEvent("reload"); 
+                this._loadEvent = "reload"; 
             } else {
                 this.isLoading = true;
-                this.events.triggerEvent("loadstart");
+                this._loadEvent = "loadstart";
             }
             this.positionTile();
             this.renderTile();
@@ -168,15 +188,14 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
         this.layer.div.appendChild(this.getTile());
         if (this.layer.async) {
             // Asynchronous image requests call the asynchronous getURL method
-            // on the layer to fetch an image that covers 'this.bounds', in the scope of
-            // 'this', setting the 'url' property of the layer itself, and running
-            // the callback 'initImage' when the image request returns.
-            var myId = this.asyncRequestId = (this.asyncRequestId || 0) + 1;
-            this.layer.getURLasync(this.bounds, this, "url", function() {
-                if (myId == this.asyncRequestId) {
+            // on the layer to fetch an image that covers 'this.bounds'.
+            var id = this.asyncRequestId = (this.asyncRequestId || 0) + 1;
+            this.layer.getURLasync(this.bounds, function(url) {
+                if (id == this.asyncRequestId) {
+                    this.url = url;
                     this.initImage();
                 }
-            });
+            }, this);
         } else {
             // synchronous image requests get the url immediately.
             this.url = this.layer.getURL(this.bounds);
@@ -191,11 +210,13 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * code.
      */
     positionTile: function() {
-        var style = this.getTile().style;
+        var style = this.getTile().style,
+            size = this.frame ? this.size :
+                                this.layer.getImageSize(this.bounds);
         style.left = this.position.x + "%";
         style.top = this.position.y + "%";
-        style.width = this.size.w + "%";
-        style.height = this.size.h + "%";
+        style.width = size.w + "%";
+        style.height = size.h + "%";
     },
 
     /** 
@@ -204,6 +225,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * it can be reused in a new location.
      */
     clear: function() {
+        OpenLayers.Tile.prototype.clear.apply(this, arguments);
         var img = this.imgDiv;
         if (img) {
             OpenLayers.Event.stopObservingElement(img);
@@ -217,6 +239,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             }
             OpenLayers.Element.removeClass(img, "olImageLoadError");
         }
+        this.canvasContext = null;
     },
     
     /**
@@ -232,16 +255,16 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             this.imgDiv.galleryImg = "no";
 
             var style = this.imgDiv.style;
-            if (this.layer.gutter) {
-                var left = this.layer.gutter / this.layer.tileSize.w * 100;
-                var top = this.layer.gutter / this.layer.tileSize.h * 100;
+            if (this.frame) {
+                var left = 0, top = 0;
+                if (this.layer.gutter) {
+                    left = this.layer.gutter / this.layer.tileSize.w * 100;
+                    top = this.layer.gutter / this.layer.tileSize.h * 100;
+                }
                 style.left = -left + "%";
                 style.top = -top + "%";
                 style.width = (2 * left + 100) + "%";
                 style.height = (2 * top + 100) + "%";
-            } else {
-                style.width = "100%";
-                style.height = "100%";
             }
             style.visibility = "hidden";
             style.opacity = 0;
@@ -270,6 +293,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * Creates the content for the frame on the tile.
      */
     initImage: function() {
+        this.events.triggerEvent(this._loadEvent);
         var img = this.getImage();
         if (this.url && img.getAttribute("src") == this.url) {
             this.onImageLoad();
@@ -298,6 +322,9 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             } else {
                 OpenLayers.Event.observe(img, "load", load);
                 OpenLayers.Event.observe(img, "error", load);
+                if (this.crossOriginKeyword) {
+                    img.removeAttribute("crossorigin");
+                }
                 img.src = this.blankImageUrl;
             }
         }
@@ -315,6 +342,14 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
         img.style.visibility = 'hidden';
         img.style.opacity = 0;
         if (url) {
+            // don't set crossOrigin if the url is a data URL
+            if (this.crossOriginKeyword) {
+                if (url.substr(0, 5) !== 'data:') {
+                    img.setAttribute("crossorigin", this.crossOriginKeyword);
+                } else {
+                    img.removeAttribute("crossorigin");
+                }
+            }
             img.src = url;
         }
     },
@@ -367,6 +402,7 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
         img.style.opacity = this.layer.opacity;
 
         this.isLoading = false;
+        this.canvasContext = null;
         this.events.triggerEvent("loadend");
 
         // IE<7 needs a reflow when the tiles are loaded because of the
@@ -402,8 +438,41 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
                 this.setImgSrc(this.layer.getURL(this.bounds));
             } else {
                 OpenLayers.Element.addClass(img, "olImageLoadError");
+                this.events.triggerEvent("loaderror");
                 this.onImageLoad();
             }
+        }
+    },
+
+    /**
+     * APIMethod: getCanvasContext
+     * Returns a canvas context associated with the tile image (with
+     * the image drawn on it).
+     * Returns undefined if the browser does not support canvas, if
+     * the tile has no image or if it's currently loading.
+     *
+     * The function returns a canvas context instance but the
+     * underlying canvas is still available in the 'canvas' property:
+     * (code)
+     * var context = tile.getCanvasContext();
+     * if (context) {
+     *     var data = context.canvas.toDataURL('image/jpeg');
+     * }
+     * (end)
+     *
+     * Returns:
+     * {Boolean}
+     */
+    getCanvasContext: function() {
+        if (OpenLayers.CANVAS_SUPPORTED && this.imgDiv && !this.isLoading) {
+            if (!this.canvasContext) {
+                var canvas = document.createElement("canvas");
+                canvas.width = this.size.w;
+                canvas.height = this.size.h;
+                this.canvasContext = canvas.getContext("2d");
+                this.canvasContext.drawImage(this.imgDiv, 0, 0);
+            }
+            return this.canvasContext;
         }
     },
 

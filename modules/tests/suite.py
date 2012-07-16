@@ -7,6 +7,131 @@ import sys
 import re
 import time
 import unittest
+import argparse
+
+def loadAllTests():
+    loadTests = unittest.TestLoader().loadTestsFromTestCase
+    # Create Organisation
+    loadTests = unittest.TestLoader().loadTestsFromTestCase
+    suite = loadTests(CreateOrganisation)
+    
+    # Shortcut
+    addTests = suite.addTests
+    
+    # Create Office
+    addTests(loadTests(CreateOffice))
+    
+    # Setup Staff
+    addTests(loadTests(CreateStaff))
+    
+    # Setup New Volunteer
+    addTests(loadTests(CreateVolunteer))
+    
+    # Create Staff & Volunteer Training
+    addTests(loadTests(CreateStaffTraining))
+    addTests(loadTests(CreateVolunteerTraining))
+
+    # Inventory tests
+    addTests(loadTests(SendItem))
+    addTests(loadTests(ReceiveItem))
+    addTests(loadTests(SendReceiveItem))
+    
+    # Project Tests
+    addTests(loadTests(CreateProject))
+
+    # Asset Tests
+    addTests(loadTests(CreateAsset))
+
+    # Assign Staff to Organisation
+    addTests(loadTests(AddStaffToOrganisation))
+    
+    # Assign Staff to Office
+    addTests(loadTests(AddStaffToOffice))
+    
+    # Assign Staff to Warehouse
+    addTests(loadTests(AddStaffToWarehouse))
+    # Delete a prepop organisation
+    #addTests(loadTests(DeleteOrganisation))
+
+    # Create a Warehouse
+    addTests(loadTests(CreateWarehouse))
+    
+    # Create an Item
+    addTests(loadTests(CreateItem))
+    
+    # Create a Catalog
+    addTests(loadTests(CreateCatalog))
+    
+    # Create a Category
+    addTests(loadTests(CreateCategory))
+
+    return suite
+
+# Set up the command line arguments
+desc = "Script to run the Sahana Eden test suite."
+parser = argparse.ArgumentParser(description = desc)
+parser.add_argument("-C", "--class",
+                    help = "Name of class to run"
+                   )
+method_desc = """Name of method to run, this is used in conjunction with the
+class argument or with the name of the class followed by the name of the method
+separated with a period, class.period.
+"""
+parser.add_argument("-M",
+                    "--method",
+                    "--test",
+                    help = method_desc
+                   )
+parser.add_argument("-V", "--verbose",
+                    type = int,
+                    default = 1,
+                    help = "The level of verbose reporting")
+parser.add_argument("--nohtml",
+                    action='store_const',
+                    const=True,
+                    help = "Disable HTML reporting."
+                   )
+parser.add_argument("--html-path",
+                    help = "Path where the HTML report will be saved.",
+                    default = ""
+                   )
+parser.add_argument("--html-name-date",
+                    help = "Include just the date in the name of the HTML report."
+                   )
+suite_desc = """This will execute a standard testing schedule. The valid values
+are, smoke, quick, complete and full. If a method or class options is selected
+the the suite will be ignored.
+
+The suite options can be described as follows:
+
+smoke: This will run the broken link test
+quick: This will run all the tests marked as essential
+complete: This will run all tests except those marked as long
+full: This will run all test
+"""
+parser.add_argument("--suite",
+                    help = suite_desc,
+                    choices = ["smoke", "quick", "complete", "full"],
+                    default = "quick")
+parser.add_argument("--link-depth",
+                    type = int,
+                    default = 16,
+                    help = "The recursive depth when looking for links")
+up_desc = """The user name and password, separated by a /. Multiple user name
+and passwords can be added by separating them with a comma. If multiple user
+name and passwords are provided then the same test will be run sequentially
+using the given user in each case.
+"""
+parser.add_argument("--user-password",
+                    default = "admin@example.com/testing",
+                    help = up_desc
+                    )
+parser.add_argument("--keep-browser-open",
+                    help = "Keep the browser open once the tests have finished running",
+                    action='store_const',
+                    const = True)
+argsObj = parser.parse_args()
+args = argsObj.__dict__
 
 # Selenium WebDriver
 from selenium import webdriver
@@ -34,73 +159,93 @@ config.timeout = 5 # seconds
 config.url = base_url
 
 base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
+test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
-browser = config.browser = webdriver.Firefox()
-browser.implicitly_wait(config.timeout)
+if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
+    print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
+    exit()
 
-# Do we have any command-line arguments?
-args = sys.argv
-if args[1:]:
-    # The 1st argument is taken to be the test name:
-    test = args[1]
+config.verbose = args["verbose"]
+browser_open = False
+# @todo test with invalid class and methods passed as CLA
+if args["method"]:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    if args["class"]:
+        name = "%s.%s" % (args["class"], args["method"])
+    else:
+        name = args["method"]
+    suite = unittest.TestLoader().loadTestsFromName(args["method"],
+                                                    globals()[args["class"]]
+                                                   )
+elif args["class"]:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["class"]])
+elif args["suite"] == "smoke":
+    try:
+        from tests.smoke import *
+        broken_links = BrokenLinkTest()
+        broken_links.setDepth(args["link_depth"])
+        broken_links.setUser(args["user_password"])
+        suite = unittest.TestSuite()
+        suite.addTest(broken_links)
+    except NameError as msg:
+        from s3 import s3_debug
+        s3_debug("%s, unable to run the smoke tests." % msg)
+        pass
+elif args["suite"] == "complete":
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
+    suite = loadAllTests()
+    try:
+        from tests.smoke import *
+        broken_links = BrokenLinkTest()
+        broken_links.setDepth(args["link_depth"])
+        broken_links.setUser(args["user_password"])
+        suite.addTest(broken_links)
+    except NameError as msg:
+        from s3 import s3_debug
+        s3_debug("%s, unable to run the smoke tests." % msg)
+        pass
 else:
-    test = None
-
-# Shortcut
-loadTests = unittest.TestLoader().loadTestsFromTestCase
-
-if test:
-    # Run specified Test after logging in
-    # @ToDo: Each test should check whether it needs to login independently as they may wish to login using different credentials
-    # Maybe this could be bypassed for a test run within the suite by passing it an argument
-    
-    #login(account="admin")
-    print test
-    suite = loadTests(globals()[test])
-
-else:
+    browser = config.browser = webdriver.Firefox()
+    browser.implicitly_wait(config.timeout)
+    browser_open = True
     # Run all Tests
+    suite = loadAllTests()
 
-    # Create Organisation
-    suite = loadTests(Org_Organisation)
-    # Shortcut
-    addTests = suite.addTests
-    # Create Office
-    addTests(loadTests(org_create_office))
-    # Setup Staff
-    addTests(loadTests(hrm_setup_staff))
-    # Setup New Volunteer
-    addTests(loadTests(hrm_setup_volunteer))
-    # Setup Training Course
-    addTests(loadTests(hrm_setup_trainingcourse))
-    # Setup Training Event
-    #addTests(loadTests(hrm_setup_trainingevent))
-    # Inventory tests
-    addTests(loadTests(Logistics))
-    
-    # Create Project
-    addTests(loadTests(project_create))
+config.html = False
+if args["nohtml"]:
+    unittest.TextTestRunner(verbosity=config.verbose).run(suite)
+else:
+    try:
+        path = args["html_path"]
+        if args["html_name_date"]:
+            filename = "Sahana-Eden-%s.html" % current.request.now.date()
+        else:
+            filename = "Sahana-Eden-%s.html" % current.request.now
+        # Windows compatibility
+        filename = filename.replace(":", "-")
+        fullname = os.path.join(path,filename)
+        fp = file(fullname, "wb")
 
-    # Assign Staff to Organisation
-    #addTests(loadTests(hrm_assign_organisationstaff))
-    # Assign Staff to Office
-    #addTests(loadTests(hrm_assign_officestaff))
-    # Assign Staff to Warehouse
-    #addTests(loadTests(hrm_assign_warehousestaff))
-
-try:
-    import HTMLTestRunner
-    fp = file("Sahana-Eden.html", "wb")
-    runner = HTMLTestRunner.HTMLTestRunner(
-                                           stream=fp,
-                                           title="Sahana Eden",
-                                          )
-    runner.run(suite)
-except:
-    unittest.TextTestRunner(verbosity=2).run(suite)
+        config.html = True
+        from tests.runner import EdenHTMLTestRunner
+        runner = EdenHTMLTestRunner(
+                                    stream = fp,
+                                    title = "Sahana Eden",
+                                    verbosity = config.verbose,
+                                   )
+        runner.run(suite)
+    except ImportError:
+        config.html = False
+        unittest.TextTestRunner(verbosity=config.verbose).run(suite)
 
 # Cleanup
-browser.close()
-
-# END =========================================================================
+if browser_open and not args["keep_browser_open"]:
+    browser.close()

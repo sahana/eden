@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Resource Export Tools
+""" Resource Export Tools
 
     @see: U{B{I{S3XRC}} <http://eden.sahanafoundation.org/wiki/S3XRC>}
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
-    @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
-    @requires: U{B{I{xlwt}} <http://pypi.python.org/pypi/xlwt>}
-
-    @author: Dominic König <dominic[at]aidiq.com>
 
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -40,7 +35,6 @@ __all__ = ["S3Exporter"]
 
 from gluon import current
 from gluon.storage import Storage
-from gluon.contenttype import contenttype
 
 from s3codec import S3Codec
 
@@ -51,13 +45,7 @@ class S3Exporter(object):
     """
 
     def __init__(self):
-        """
-            Constructor
-
-            @param manager: the S3ResourceController
-
-            @todo 2.3: error message completion
-        """
+        """ Constructor """
 
         T = current.T
 
@@ -67,8 +55,17 @@ class S3Exporter(object):
             XLWT_ERROR = T("%(module)s not installed") % dict(module="xlwt"),
         )
 
-        self.xls = S3Codec.get_codec("xls").encode
-        self.pdf = S3Codec.get_codec("pdf").encode
+    # -------------------------------------------------------------------------
+    def xls(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("xls").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def pdf(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("pdf").encode
+        return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     def csv(self, resource):
@@ -82,14 +79,13 @@ class S3Exporter(object):
             @todo: implement audit
         """
 
-        db = current.db
         request = current.request
         response = current.response
-        tablename = resource.tablename
 
         if response:
             servername = request and "%s_" % request.env.server_name or ""
-            filename = "%s%s.csv" % (servername, tablename)
+            filename = "%s%s.csv" % (servername, resource.tablename)
+            from gluon.contenttype import contenttype
             response.headers["Content-Type"] = contenttype(".csv")
             response.headers["Content-disposition"] = "attachment; filename=%s" % filename
 
@@ -107,13 +103,13 @@ class S3Exporter(object):
 
             @note: export does not include components!
 
+            @ToDo: Deprecate (after modifying s3search json functions)
+
             @param resource: the resource to export
             @param start: index of the first record to export (for slicing)
             @param limit: maximum number of records to export (for slicing)
             @param fields: fields to include in the export (None for all fields)
         """
-
-        response = current.response
 
         if fields is None:
             fields = [f for f in resource.table if f.readable]
@@ -130,6 +126,7 @@ class S3Exporter(object):
         # Get the rows and return as json
         rows = resource.select(*fields, **attributes)
 
+        response = current.response
         if response:
             response.headers["Content-Type"] = "application/json"
 

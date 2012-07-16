@@ -31,6 +31,7 @@ __all__ = ["S3VehicleModel"]
 
 from gluon import *
 from gluon.storage import Storage
+
 from ..s3 import *
 
 # =============================================================================
@@ -50,14 +51,13 @@ class S3VehicleModel(S3Model):
 
         T = current.T
         db = current.db
-        s3 = current.response.s3
 
         asset_id = self.asset_asset_id
-        
-        NONE = current.messages.NONE
+
+        crud_strings = current.response.s3.crud_strings
 
         # These are Porto-specific Types
-        # @ToDo:Move to database table to allow prepop for different deployments
+        # @ToDo: Move to database table to allow prepop for different deployments
         vehicle_type_opts = {
             "VSAT": T("Rescue Vehicle Tactical Assistance"),
             "VLCI": T("Fire Fighter Light Vehicle"),
@@ -104,26 +104,25 @@ class S3VehicleModel(S3Model):
                                         label=T("Service Due"),
                                         comment=T("Mileage"),
                                         represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                                  Field("service_date", "date",
-                                        label=T("Service Due"),
-                                        comment=T("Date")),
-                                  Field("insurance_date", "date",
-                                        label=T("Insurance Renewal Due")),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_date("service_date",
+                                          label=T("Service Due")
+                                          ),
+                                  s3_date("insurance_date",
+                                          label=T("Insurance Renewal Due")
+                                          ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_VEHICLE_DETAILS = T("Add Vehicle Detail")
-        LIST_VEHICLE_DETAILS = T("List Vehicle Details")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_VEHICLE_DETAILS,
             title_display = T("Vehicle Details"),
-            title_list = LIST_VEHICLE_DETAILS,
+            title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
             title_search = T("Search Vehicle Details"),
             subtitle_create = T("Add Vehicle Details"),
-            subtitle_list = T("Vehicle Details"),
-            label_list_button = LIST_VEHICLE_DETAILS,
+            label_list_button = T("List Vehicle Details"),
             label_create_button = ADD_VEHICLE_DETAILS,
             label_delete_button = T("Delete Vehicle Details"),
             msg_record_created = T("Vehicle Details added"),
@@ -132,11 +131,12 @@ class S3VehicleModel(S3Model):
             msg_list_empty = T("No Vehicle Details currently defined"))
 
         vehicle_id = S3ReusableField("vehicle_id", table,
-                                      requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                      "vehicle_vehicle.id",
-                                                                      "%(name)s")),
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db,
+                                                              "vehicle_vehicle.id",
+                                                              "%(name)s")),
                                       represent = lambda id: \
-                                        (id and [db.vehicle_vehicle[id].name] or [NONE])[0],
+                                        (id and [db.vehicle_vehicle[id].name] or [current.messages.NONE])[0],
                                       label = T("Vehicle"),
                                       ondelete = "RESTRICT")
 
@@ -159,20 +159,18 @@ class S3VehicleModel(S3Model):
                                         label=T("Direction")),
                                   Field("speed",
                                         label=T("Speed")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_GPS = T("Add GPS data")
-        LIST_GPS = T("List GPS data")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_GPS,
             title_display = T("GPS data"),
-            title_list = LIST_GPS,
+            title_list = T("GPS data"),
             title_update = T("Edit GPS data"),
             title_search = T("Search GPS data"),
             subtitle_create = T("Add GPS data"),
-            subtitle_list = T("GPS data"),
-            label_list_button = LIST_GPS,
+            label_list_button = T("List GPS data"),
             label_create_button = ADD_GPS,
             label_delete_button = T("Delete GPS data"),
             msg_record_created = T("GPS data added"),
@@ -181,7 +179,7 @@ class S3VehicleModel(S3Model):
             msg_list_empty = T("No GPS data currently registered"))
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     vehicle_vehicle_id = vehicle_id,
@@ -206,15 +204,13 @@ class S3VehicleModel(S3Model):
             Set the current location from the latest GPS record
         """
 
-        db = current.db
-        s3db = current.s3db
-
         vars = form.vars
         lat = vars.lat
         lon = vars.lon
         if lat is not None and lon is not None:
             # Lookup the Asset Code
-            table = s3db.asset_asset
+            db = current.db
+            table = db.asset_asset
             vehicle = db(table.id == vars.id).select(table.number,
                                                      limitby=(0, 1)).first()
             if vehicle:
@@ -222,11 +218,10 @@ class S3VehicleModel(S3Model):
             else:
                 name = "vehicle_%i" % vars.id
             # Insert a record into the locations table
-            ltable = s3db.gis_location
+            ltable = db.gis_location
             location = ltable.insert(name=name, lat=lat, lon=lon)
             # Set the Current Location of the Asset to this Location
             # @ToDo: Currently we set the Base Location as Mapping doesn't support S3Track!
             db(table.id == vars.id).update(location_id=location)
-
 
 # END =========================================================================

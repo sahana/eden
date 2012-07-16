@@ -1,0 +1,88 @@
+"L1","L2","L2 KV:PSGC"
+"CAR [Cordillera Administrative Region]","Mountain Province",144400000
+"CAR [Cordillera Administrative Region]","Ifugao",142700000
+"CAR [Cordillera Administrative Region]","Benguet",141100000
+"CAR [Cordillera Administrative Region]","Abra",140100000
+"CAR [Cordillera Administrative Region]","Apayao",148100000
+"CAR [Cordillera Administrative Region]","Kalinga",143200000
+"REGION I [Ilocos Region]","La Union",13300000
+"REGION I [Ilocos Region]","Ilocos Norte",12800000
+"REGION I [Ilocos Region]","Ilocos Sur",12900000
+"REGION I [Ilocos Region]","Pangasinan",15500000
+"REGION II [Cagayan Valley]","Nueva Vizcaya",25000000
+"REGION II [Cagayan Valley]","Cagayan",21500000
+"REGION II [Cagayan Valley]","Isabela",23100000
+"REGION II [Cagayan Valley]","Quirino",25700000
+"REGION II [Cagayan Valley]","Batanes",20900000
+"REGION III [Central Luzon]","Bataan",30800000
+"REGION III [Central Luzon]","Zambales",37100000
+"REGION III [Central Luzon]","Tarlac",36900000
+"REGION III [Central Luzon]","Pampanga",35400000
+"REGION III [Central Luzon]","Bulacan",31400000
+"REGION III [Central Luzon]","Nueva Ecija",34900000
+"REGION III [Central Luzon]","Aurora",37700000
+"REGION IV-A [Calabarzon]","Rizal",45800000
+"REGION IV-A [Calabarzon]","Cavite",42100000
+"REGION IV-A [Calabarzon]","Laguna",43400000
+"REGION IV-A [Calabarzon]","Batangas",41000000
+"REGION IV-A [Calabarzon]","Quezon",45600000
+"REGION IV-B [Mimaropa]","Occidental Mindoro",175100000
+"REGION IV-B [Mimaropa]","Oriental Mindoro",175200000
+"REGION IV-B [Mimaropa]","Romblon",175900000
+"REGION IV-B [Mimaropa]","Palawan",175300000
+"REGION IV-B [Mimaropa]","Marinduque",174000000
+"REGION V [Bicol Region]","Catanduanes",52000000
+"REGION V [Bicol Region]","Camarines Norte",51600000
+"REGION V [Bicol Region]","Sorsogon",56200000
+"REGION V [Bicol Region]","Albay",50500000
+"REGION V [Bicol Region]","Masbate",54100000
+"REGION V [Bicol Region]","Camarines Sur",51700000
+"REGION VI [Western Visayas]","Capiz",61900000
+"REGION VI [Western Visayas]","Aklan",60400000
+"REGION VI [Western Visayas]","Antique",60600000
+"REGION VI [Western Visayas]","Negros Occidental",64500000
+"REGION VI [Western Visayas]","Iloilo",63000000
+"REGION VI [Western Visayas]","Guimaras",67900000
+"REGION VII [Central Visayas]","Negros Oriental",74600000
+"REGION VII [Central Visayas]","Cebu",72200000
+"REGION VII [Central Visayas]","Bohol",71200000
+"REGION VII [Central Visayas]","Siquijor",76100000
+"REGION VIII [Eastern Visayas]","Southern Leyte",86400000
+"REGION VIII [Eastern Visayas]","Eastern Samar",82600000
+"REGION VIII [Eastern Visayas]","Northern Samar",84800000
+"REGION VIII [Eastern Visayas]","Samar (Western Samar)",86000000
+"REGION VIII [Eastern Visayas]","Leyte",83700000
+"REGION VIII [Eastern Visayas]","Biliran",87800000
+"REGION IX [Zamboanga Peninsula]","Zamboanga Sibugay",98300000
+"REGION IX [Zamboanga Peninsula]","Zamboanga del Norte",97200000
+"REGION IX [Zamboanga Peninsula]","Zamboanga del Sur",97300000
+"REGION X [Northern Mindanao]","Misamis Occidental",104200000
+"REGION X [Northern Mindanao]","Bukidnon",101300000
+"REGION X [Northern Mindanao]","Lanao del Norte",103500000
+"REGION X [Northern Mindanao]","Misamis Oriental",104300000
+"REGION X [Northern Mindanao]","Camiguin",101800000
+"REGION XI [Davao Region]","Davao Oriental",112500000
+"REGION XI [Davao Region]","Compostela Valley",118200000
+"REGION XI [Davao Region]","Davao del Sur",112400000
+"REGION XI [Davao Region]","Davao del Norte",112300000
+"REGION XII [Soccsksargen]","South Cotabato",126300000
+"REGION XII [Soccsksargen]","Sultan Kudarat",126500000
+"REGION XII [Soccsksargen]","Cotabato (North Cotabato)",124700000
+"REGION XII [Soccsksargen]","Sarangani",128000000
+"REGION XIII [Caraga]","Agusan del Norte",160200000
+"REGION XIII [Caraga]","Agusan del Sur",160300000
+"REGION XIII [Caraga]","Surigao del Sur",166800000
+"REGION XIII [Caraga]","Surigao del Norte",166700000
+"REGION XIII [Caraga]","Dinagat Islands",168500000
+"ARMM [Autonomous Region in Muslim Mindanao]","Basilan",150700000
+"ARMM [Autonomous Region in Muslim Mindanao]","Tawi-Tawi",157000000
+"ARMM [Autonomous Region in Muslim Mindanao]","Shariff Kabunsuan",158400000
+"ARMM [Autonomous Region in Muslim Mindanao]","Sulu",156600000
+"ARMM [Autonomous Region in Muslim Mindanao]","Maguindanao",153800000
+"ARMM [Autonomous Region in Muslim Mindanao]","Lanao del Sur",153600000
+"NCR [National Capital Region]","NCR First District",133900000
+"NCR [National Capital Region]","NCR Second District",137400000
+"NCR [National Capital Region]","NCR Third District",137500000
+"NCR [National Capital Region]","NCR Fourth District",137600000
+"REGION XII [Soccsksargen]","Cotabato City",129800000
+"REGION IX [Zamboanga Peninsula]","City of Isabela",99700000

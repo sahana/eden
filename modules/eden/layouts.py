@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana-Eden GUI Layouts (HTML Renderers)
+""" Sahana Eden GUI Layouts (HTML Renderers)
 
     @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
@@ -26,12 +26,14 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 
-    @status: work in progress
     @todo: - complete layout implementations
            - render "selected" (flag in item)
 """
 
-__all__ = ["S3MainMenuLayout", "MM",
+__all__ = ["S3MainMenuDefaultLayout",
+           "S3OptionsMenuDefaultLayout",
+           "S3MenuSeparatorDefaultLayout",
+           "S3MainMenuLayout", "MM",
            "S3OptionsMenuLayout", "M",
            "S3MenuSeparatorLayout", "SEP",
            "S3BreadcrumbsLayout",
@@ -43,7 +45,7 @@ from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3MainMenuLayout(S3NavigationItem):
+class S3MainMenuDefaultLayout(S3NavigationItem):
     """ Application Main Menu Layout """
 
     @staticmethod
@@ -153,12 +155,8 @@ class S3MainMenuLayout(S3NavigationItem):
                     " %s" % _name,
                     _nowrap="nowrap"))
 
-# -----------------------------------------------------------------------------
-# Shortcut
-MM = S3MainMenuLayout
-
 # =============================================================================
-class S3OptionsMenuLayout(S3NavigationItem):
+class S3OptionsMenuDefaultLayout(S3NavigationItem):
     """ Controller Options Menu Layout """
 
     @staticmethod
@@ -205,12 +203,8 @@ class S3OptionsMenuLayout(S3NavigationItem):
         else:
             return None
 
-# -----------------------------------------------------------------------------
-# Shortcut
-M = S3OptionsMenuLayout
-
 # =============================================================================
-class S3MenuSeparatorLayout(S3NavigationItem):
+class S3MenuSeparatorDefaultLayout(S3NavigationItem):
     """ Simple menu separator """
 
     @staticmethod
@@ -221,8 +215,34 @@ class S3MenuSeparatorLayout(S3NavigationItem):
         else:
             return None
 
-# -----------------------------------------------------------------------------
-# Shortcut
+# =============================================================================
+# Import menu layouts from template (if present)
+#
+S3MainMenuLayout = S3MainMenuDefaultLayout
+S3OptionsMenuLayout = S3OptionsMenuDefaultLayout
+S3MenuSeparatorLayout = S3MenuSeparatorDefaultLayout
+
+application = current.request.application
+theme = current.deployment_settings.get_theme()
+
+layouts = "applications.%s.private.templates.%s.layouts" % (application, theme)
+try:
+    exec("import %s as deployment_layouts" % layouts)
+except:
+    pass
+else:
+    if "S3MainMenuLayout" in deployment_layouts.__dict__:
+        S3MainMenuLayout = deployment_layouts.S3MainMenuLayout
+    if "S3OptionsMenuLayout" in deployment_layouts.__dict__:
+        S3OptionsMenuLayout = deployment_layouts.S3OptionsMenuLayout
+    if "S3MenuSeparatorLayout" in deployment_layouts.__dict__:
+        S3MenuSeparatorLayout = deployment_layouts.S3MenuSeparatorLayout
+
+# =============================================================================
+# Shortcuts for menu construction
+#
+M = S3OptionsMenuLayout
+MM = S3MainMenuLayout
 SEP = S3MenuSeparatorLayout
 
 # =============================================================================
@@ -276,19 +296,24 @@ class S3AddResourceLink(S3NavigationItem):
         if info is None:
             info = title
 
-        # Fall back to label_create_button
+        if c is None:
+            # Fall back to current controller
+            c = current.request.controller
+
         if label is None:
+            # Fall back to label_create_button
             if t is None:
                 t = "%s_%s" % (c, f)
             label = S3CRUD.crud_string(t, "label_create_button")
 
-        return super(S3AddResourceLink, self).__init__(label, c=c, f=f, t=t,
-                                                m="create",
-                                                vars=vars,
-                                                info=info,
-                                                title=title,
-                                                tooltip=tooltip,
-                                                mandatory=True)
+        return super(S3AddResourceLink, self).__init__(label,
+                                                       c=c, f=f, t=t,
+                                                       m="create",
+                                                       vars=vars,
+                                                       info=info,
+                                                       title=title,
+                                                       tooltip=tooltip,
+                                                       mandatory=True)
 
     # -------------------------------------------------------------------------
     @staticmethod

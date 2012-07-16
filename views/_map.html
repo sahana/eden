@@ -1,0 +1,19 @@
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}
+ {{=XML(rheader)}}
+ </div>
+ <div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+<div><br /></div>
+<div id='map'>
+{{try:}}{{=map}}{{except:}}{{pass}}
+</div>
+</div>
+

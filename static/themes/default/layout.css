@@ -1,0 +1,66 @@
+@charset "UTF-8";
+
+/* Width of page */
+.swidth {
+	width: 640px;
+}
+
+/* Column container */
+.colmask {
+    position: relative;  /* This fixes the IE7 overflow hidden bug */
+    clear: both;
+    float: left;
+    width: 100%;         /* width of whole page */
+    overflow: hidden;    /* This chops off any overhanging divs */
+    z-index: 0;          /* This keeps drop down menus visible on maps */
+    margin-top: 42px;
+}
+
+/* common column settings */
+.col3left {
+    float: left;
+    width: 33%;
+    position: relative;
+}
+.col3mid, .col3right {
+    float: right;
+    width: 33%;
+    position: relative;
+}
+.col2left {
+    float: left;
+    width: 49%;
+    position: relative;
+}
+.col2right {
+    float: right;
+    width: 49%;
+    position: relative;
+}
+.col1, .col2, .col3 {
+    float: left;
+    position: relative;
+    padding: 0 0 3px 0;
+    overflow: hidden;
+}
+
+/* Full page settings */
+.fullpage {
+    background: #fff;    /* page background colour */
+    padding-top: 1px;
+    overflow: visible;
+}
+.fullpage .col1 {
+    width: 99%;         /* page width minus left and right padding */
+    left: 0.5%;         /* page left padding */
+    min-width: 800px;
+}
+
+.aside {
+    float:left;
+    width:200px;
+    /*margin-left: 100%;*/
+}
+.rightside {
+    margin-left:200px;
+}

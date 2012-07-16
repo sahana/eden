@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -34,7 +34,7 @@ OpenLayers.Layer = OpenLayers.Class({
     div: null,
 
     /**
-     * Property: opacity
+     * APIProperty: opacity
      * {Float} The layer's opacity. Float number between 0.0 and 1.0. Default
      * is 1.
      */
@@ -58,6 +58,21 @@ OpenLayers.Layer = OpenLayers.Class({
     alwaysInRange: null,   
 
     /**
+     * Constant: RESOLUTION_PROPERTIES
+     * {Array} The properties that are used for calculating resolutions
+     *     information.
+     */
+    RESOLUTION_PROPERTIES: [
+        'scales', 'resolutions',
+        'maxScale', 'minScale',
+        'maxResolution', 'minResolution',
+        'numZoomLevels', 'maxZoomLevel'
+    ],
+
+    /**
+     * APIProperty: events
+     * {<OpenLayers.Events>}
+     *
      * Register a listener for a particular event with the following syntax:
      * (code)
      * layer.events.register(type, obj, listener);
@@ -73,7 +88,6 @@ OpenLayers.Layer = OpenLayers.Class({
      * Supported map event types:
      * loadstart - Triggered when layer loading starts.
      * loadend - Triggered when layer loading ends.
-     * loadcancel - Triggered when layer loading is canceled.
      * visibilitychanged - Triggered when layer visibility is changed.
      * move - Triggered when layer moves (triggered with every mousemove
      *     during a drag).
@@ -86,23 +100,6 @@ OpenLayers.Layer = OpenLayers.Class({
      * removed - Triggered after the layer is removed from the map.  Listeners
      *     will receive an object with a *map* property referencing the map and
      *     a *layer* property referencing the layer.
-     */
-
-    /**
-     * Constant: RESOLUTION_PROPERTIES
-     * {Array} The properties that are used for calculating resolutions
-     *     information.
-     */
-    RESOLUTION_PROPERTIES: [
-        'scales', 'resolutions',
-        'maxScale', 'minScale',
-        'maxResolution', 'minResolution',
-        'numZoomLevels', 'maxZoomLevel'
-    ],
-
-    /**
-     * APIProperty: events
-     * {<OpenLayers.Events>}
      */
     events: null,
 
@@ -161,13 +158,6 @@ OpenLayers.Layer = OpenLayers.Class({
      */
     imageSize: null,
     
-    /**
-     * Property: imageOffset
-     * {<OpenLayers.Pixel>} For layers with a gutter, the image offset 
-     *     represents displacement due to the gutter.
-     */
-    imageOffset: null,
-
   // OPTIONS
 
     /** 
@@ -201,18 +191,32 @@ OpenLayers.Layer = OpenLayers.Class({
 
     /**
      * APIProperty: projection
-     * {<OpenLayers.Projection>} or {<String>} Set in the layer options to
-     *     override the default projection string this layer - also set maxExtent,
-     *     maxResolution, and units if appropriate. Can be either a string or
-     *     an <OpenLayers.Projection> object when created -- will be converted
-     *     to an object when setMap is called if a string is passed.  
+     * {<OpenLayers.Projection>} or {<String>} Specifies the projection of the layer.
+     *     Can be set in the layer options. If not specified in the layer options,
+     *     it is set to the default projection specified in the map,
+     *     when the layer is added to the map.
+     *     Projection along with default maxExtent and resolutions
+     *     are set automatically with commercial baselayers in EPSG:3857,
+     *     such as Google, Bing and OpenStreetMap, and do not need to be specified.
+     *     Otherwise, if specifying projection, also set maxExtent,
+     *     maxResolution or resolutions as appropriate.
+     *     When using vector layers with strategies, layer projection should be set
+     *     to the projection of the source data if that is different from the map default.
+     * 
+     *     Can be either a string or an <OpenLayers.Projection> object;
+     *     if a string is passed, will be converted to an object when
+     *     the layer is added to the map.
+     * 
      */
     projection: null,    
     
     /**
      * APIProperty: units
-     * {String} The layer map units.  Defaults to 'degrees'.  Possible values
+     * {String} The layer map units.  Defaults to null.  Possible values
      *     are 'degrees' (or 'dd'), 'm', 'ft', 'km', 'mi', 'inches'.
+     *     Normally taken from the projection.
+     *     Only required if both map and layers do not define a projection,
+     *     or if they define a projection which does not define units.
      */
     units: null,
 
@@ -238,7 +242,11 @@ OpenLayers.Layer = OpenLayers.Class({
     
     /**
      * APIProperty: maxExtent
-     * {<OpenLayers.Bounds>}  The center of these bounds will not stray outside
+     * {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
+     *     The maximum extent for the layer.  Defaults to null.
+     * 
+     *     The center of these bounds will not stray outside
      *     of the viewport extent during panning.  In addition, if
      *     <displayOutsideMaxExtent> is set to false, data will not be
      *     requested that falls completely outside of these bounds.
@@ -247,7 +255,9 @@ OpenLayers.Layer = OpenLayers.Class({
     
     /**
      * APIProperty: minExtent
-     * {<OpenLayers.Bounds>}
+     * {<OpenLayers.Bounds>|Array} If provided as an array, the array
+     *     should consist of four values (left, bottom, right, top).
+     *     The minimum extent for the layer.  Defaults to null.
      */
     minExtent: null,
     
@@ -255,8 +265,8 @@ OpenLayers.Layer = OpenLayers.Class({
      * APIProperty: maxResolution
      * {Float} Default max is 360 deg / 256 px, which corresponds to
      *     zoom level 0 on gmaps.  Specify a different value in the layer 
-     *     options if you are not using a geographic projection and 
-     *     displaying the whole world.
+     *     options if you are not using the default <OpenLayers.Map.tileSize>
+     *     and displaying the whole world.
      */
     maxResolution: null,
 
@@ -265,16 +275,6 @@ OpenLayers.Layer = OpenLayers.Class({
      * {Float}
      */
     minResolution: null,
-    
-    /**
-     * Property: resolution
-     * {Float} Current resolution that the layer is drawn in. This is
-     *     used to determine whether the zoom has changed when calling
-     *     <moveTo> from <redraw>. Subclasses may set this.resolution to
-     *     null prior to calling redraw to force passing zoomChanged
-     *     true to moveTo.
-     */
-    resolution: null,
 
     /**
      * APIProperty: numZoomLevels
@@ -309,20 +309,6 @@ OpenLayers.Layer = OpenLayers.Class({
      * #487 for more info.   
      */
     wrapDateLine: false,
-    
-    /**
-     * APIProperty: transitionEffect
-     * {String} The transition effect to use when the map is panned or
-     *     zoomed.  
-     *
-     * There are currently two supported values:
-     *  - *null* No transition effect (the default).
-     *  - *resize*  Existing tiles are resized on zoom to provide a visual
-     *    effect of the zoom having taken place immediately.  As the
-     *    new tiles become available, they are drawn over top of the
-     *    resized tiles.
-     */
-    transitionEffect: null,
     
     /**
      * Property: metadata
@@ -360,10 +346,6 @@ OpenLayers.Layer = OpenLayers.Class({
                 this.events.on(this.eventListeners);
             }
 
-        }
-
-        if (this.wrapDateLine) {
-            this.displayOutsideMaxExtent = true;
         }
     },
     
@@ -477,8 +459,18 @@ OpenLayers.Layer = OpenLayers.Class({
             this.options = {};
         }
         
-        // allow array for extents
         if (newOptions) {
+            // make sure this.projection references a projection object
+            if(typeof newOptions.projection == "string") {
+                newOptions.projection = new OpenLayers.Projection(newOptions.projection);
+            }
+            if (newOptions.projection) {
+                // get maxResolution, units and maxExtent from projection defaults if
+                // they are not defined already
+                OpenLayers.Util.applyDefaults(newOptions,
+                    OpenLayers.Projection.defaults[newOptions.projection.getCode()]);
+            }
+            // allow array for extents
             if (newOptions.maxExtent && !(newOptions.maxExtent instanceof OpenLayers.Bounds)) {
                 newOptions.maxExtent = new OpenLayers.Bounds(newOptions.maxExtent);
             }
@@ -492,12 +484,7 @@ OpenLayers.Layer = OpenLayers.Class({
 
         // add new options to this
         OpenLayers.Util.extend(this, newOptions);
-
-        // make sure this.projection references a projection object
-        if(typeof this.projection == "string") {
-            this.projection = new OpenLayers.Projection(this.projection);
-        }
-
+        
         // get the units from the projection, if we have a projection
         // and it it has units
         if(this.projection && this.projection.getUnits()) {
@@ -564,8 +551,7 @@ OpenLayers.Layer = OpenLayers.Class({
             var extent = this.getExtent();
 
             if (extent && this.inRange && this.visibility) {
-                var zoomChanged = this.resolution == null ||
-                              this.resolution !== this.map.getResolution();
+                var zoomChanged = true;
                 this.moveTo(extent, zoomChanged, false);
                 this.events.triggerEvent("moveend",
                     {"zoomChanged": zoomChanged});
@@ -590,7 +576,6 @@ OpenLayers.Layer = OpenLayers.Class({
             display = display && this.inRange;
         }
         this.display(display);
-        this.resolution = this.map.getResolution();
     },
 
     /**
@@ -646,8 +631,6 @@ OpenLayers.Layer = OpenLayers.Class({
             
             // deal with gutters
             this.setTileSize();
-
-            this.resolution = null;
         }
     },
     
@@ -694,7 +677,7 @@ OpenLayers.Layer = OpenLayers.Class({
     /**
      * APIMethod: setTileSize
      * Set the tile size based on the map size.  This also sets layer.imageSize
-     *     and layer.imageOffset for use by Tile.Image.
+     *     or use by Tile.Image.
      * 
      * Parameters:
      * size - {<OpenLayers.Size>}
@@ -711,8 +694,6 @@ OpenLayers.Layer = OpenLayers.Class({
           //                              this.name + ": layers with " +
           //                              "gutters need non-null tile sizes");
           //}
-            this.imageOffset = new OpenLayers.Pixel(-this.gutter, 
-                                                    -this.gutter); 
             this.imageSize = new OpenLayers.Size(tileSize.w + (2*this.gutter), 
                                                  tileSize.h + (2*this.gutter)); 
         }
@@ -1024,6 +1005,18 @@ OpenLayers.Layer = OpenLayers.Class({
             minResolution = Math.max(wRes, hRes);
         }
 
+        if(typeof maxResolution !== "number" &&
+           typeof minResolution !== "number" &&
+           this.maxExtent != null) {
+            // maxResolution for default grid sets assumes that at zoom
+            // level zero, the whole world fits on one tile.
+            var tileSize = this.map.getTileSize();
+            maxResolution = Math.max(
+                this.maxExtent.getWidth() / tileSize.w,
+                this.maxExtent.getHeight() / tileSize.h
+            );
+        }
+
         // determine numZoomLevels
         var maxZoomLevel = props.maxZoomLevel;
         var numZoomLevels = props.numZoomLevels;
@@ -1294,6 +1287,11 @@ OpenLayers.Layer = OpenLayers.Class({
             var childNodes = this.div.childNodes;
             for(var i = 0, len = childNodes.length; i < len; ++i) {
                 var element = childNodes[i].firstChild || childNodes[i];
+                var lastChild = childNodes[i].lastChild;
+                //TODO de-uglify this
+                if (lastChild && lastChild.nodeName.toLowerCase() === "iframe") {
+                    element = lastChild.parentNode;
+                }
                 OpenLayers.Util.modifyDOMElement(element, null, null, null, 
                                                  null, null, null, opacity);
             }

@@ -203,9 +203,15 @@
                 </xsl:call-template>
             </xsl:attribute>
 
-            <data field="osm_id">
-                <xsl:value-of select="@id"/>
-            </data>
+            <!-- Tag this record with the OSM ID -->
+            <resource name="gis_location_tag">
+                <data field="tag">
+                    <xsl:text>openstreetmap</xsl:text>
+                </data>
+                <data field="value">
+                    <xsl:value-of select="@id"/>
+                </data>
+            </resource>
 
             <!-- @ToDo: Is there a way of combining housenumber with street
                         name that will be recognizable across countries?

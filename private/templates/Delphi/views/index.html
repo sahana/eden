@@ -1,0 +1,38 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{try:}}
+<h2 align='center'>{{=title}}</h2>
+{{except:}}{{pass}}
+<div id='menu_box_center'>
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div id='login_box' class='menu_box'>
+  {{if not self_registration or registered:}}
+    <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+ </div>
+{{pass}}
+</div>
+</div>
+<div id='about'>
+ <ul>
+  <li><a href="/{{=appname}}/delphi/problem">View the Active Problems</a></li>
+ </ul>
+ <p>
+ {{=T("For more details on the Delphi Decision Maker, see the")}} <a href="http://www.slideshare.net/conniewhite/a-tutorial-on-the-delphi-decision-maker-sahana-eden" target="_blank">{{=T("Tutorial")}}</a>
+ </p>
+</div>

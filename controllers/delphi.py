@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if module not in deployment_settings.modules:
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
@@ -20,7 +20,7 @@ def index():
     # Simply redirect to the Problems REST controller
     redirect(URL(f="problem"))
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
 
     table = s3db.delphi_group
     groups = db(table.active == True).select()
@@ -101,16 +101,16 @@ def group():
         if r.interactive:
             if r.component:
                 tablename = r.component.tablename
-                list_fields = s3mgr.model.get_config(tablename,
-                                                     "list_fields")
+                list_fields = s3db.get_config(tablename,
+                                              "list_fields")
                 try:
                     list_fields.remove("group_id")
                 except:
                     pass
-                s3mgr.configure(tablename,
+                s3db.configure(tablename,
                                 list_fields=list_fields)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     rheader = group_rheader
     return s3_rest_controller(rheader=rheader)
@@ -136,8 +136,8 @@ def problem_rheader(r, tabs = []):
                 (T("Scale of Results"), "results"),
                ]
         # @ToDo: Replace this by Group Moderator
-        if s3_has_role("DelphiAdmin"):
-            tabs.append((T("Edit"), None))
+        #if s3_has_role("DelphiAdmin"):
+        tabs.append((T("Edit"), None))
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -190,44 +190,45 @@ def problem():
     table = s3db[tablename]
 
     # Custom Methods
-    s3mgr.model.set_method(module, resourcename,
-                           method="discuss",
-                           action=discuss)
+    set_method = s3db.set_method
+    set_method(module, resourcename,
+               method="discuss",
+               action=discuss)
 
     # Discussion can also be done at the Solution component level
-    s3mgr.model.set_method(module, resourcename,
-                           component_name="solution",
-                           method="discuss",
-                           action=discuss)
+    set_method(module, resourcename,
+               component_name="solution",
+               method="discuss",
+               action=discuss)
 
-    s3mgr.model.set_method(module, resourcename,
-                           method="vote",
-                           action=vote)
+    set_method(module, resourcename,
+               method="vote",
+               action=vote)
 
-    s3mgr.model.set_method(module, resourcename,
-                           method="results",
-                           action=results)
+    set_method(module, resourcename,
+               method="results",
+               action=results)
 
     # Filter to just Active Problems
-    response.s3.filter = (table.active == True)
+    s3.filter = (table.active == True)
 
     # @ToDo: Check for Group Moderators too
-    if not s3_has_role("DelphiAdmin"):
+    #if not s3_has_role("DelphiAdmin"):
         # Remove ability to create new Problems
-        s3mgr.configure(tablename,
-                        insertable=False)
+        #s3db.configure(tablename,
+        #                insertable=False)
 
     def prep(r):
         if r.interactive:
             if r.component and r.component_name == "solution":
                 r.component.table.modified_on.label = T("Last Updated")
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                response.s3.actions = [
+                s3.actions = [
                         dict(label=str(T("Solutions")),
                              _class="action-btn",
                              url=URL(args=["[id]", "solution"])),
@@ -236,15 +237,15 @@ def problem():
                              url=URL(args=["[id]", "vote"])),
                     ]
             elif r.component_name == "solution":
-                response.s3.actions = [
+                s3.actions = [
                         dict(label=str(T("Discuss")),
                              _class="action-btn",
                              url=URL(args=["solution", "[id]", "discuss"])),
                     ]
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
-    response.s3.dataTableResize = True
+    s3.dataTableResize = True
 
     rheader = problem_rheader
     return s3_rest_controller(rheader=rheader)
@@ -291,22 +292,21 @@ def vote(r, **attr):
         options.pop(v.solution_id)
 
     # Add Custom CSS from Static (cacheable)
-    response.s3.stylesheets.append("S3/delphi.css")
+    s3.stylesheets.append("S3/delphi.css")
 
     # Add Custom Javascript
     # Settings to be picked up by Static code
-    js = "".join(("""
-var problem_id = """, str(problem.id), """;
-S3.i18n.delphi_failed = '""", str(T("Failed!")), """';
-S3.i18n.delphi_saving = '""", str(T("Saving...")), """';
-S3.i18n.delphi_saved = '""", str(T("Saved.")), """';
-S3.i18n.delphi_vote = '""", str(T("Save Vote")), """';
-"""))
-    response.s3.js_global.append(js)
+    js = "".join((
+'''var problem_id=''', str(problem.id), '''
+S3.i18n.delphi_failed="''', str(T("Failed!")), '''"
+S3.i18n.delphi_saving="''', str(T("Saving...")), '''"
+S3.i18n.delphi_saved="''', str(T("Saved.")), '''"
+S3.i18n.delphi_vote="''', str(T("Save Vote")), '''"'''))
+    s3.js_global.append(js)
 
     # Static code which can be cached
-    response.s3.scripts.append(URL(c="static", f="scripts",
-                                   args=["S3", "s3.delphi.js"]))
+    s3.scripts.append(URL(c="static", f="scripts",
+                          args=["S3", "s3.delphi.js"]))
 
     response.view = "delphi/vote.html"
     return dict(rheader=rheader,
@@ -321,8 +321,9 @@ def save_vote():
         Function accessed by AJAX from vote() to save the results of a Vote
     """
 
-    problem_id = request.args(0)
-    if not problem_id:
+    try:
+        problem_id = request.args[0]
+    except:
         raise HTTP(400)
 
     ptable = s3db.delphi_problem
@@ -342,7 +343,7 @@ def save_vote():
     try:
         rankings = request.post_vars.keys()[0].split(",")
     except IndexError:
-        status = s3mgr.xml.json_message(False, 400, "No Options Ranked")
+        status = current.xml.json_message(False, 400, "No Options Ranked")
         raise HTTP(400, body=status)
 
     # Check the votes are valid
@@ -354,7 +355,7 @@ def save_vote():
         options.append(row.id)
     for ranked in rankings:
         if int(ranked) not in options:
-            status = s3mgr.xml.json_message(False, 400, "Option isn't valid!")
+            status = current.xml.json_message(False, 400, "Option isn't valid!")
             raise HTTP(400, body=status)
 
     # Convert to a format suitable for comparisons
@@ -431,7 +432,7 @@ def save_vote():
         vtable.insert(problem_id=problem_id, solution_id=ranked, rank=count)
         count += 1
 
-    status = s3mgr.xml.json_message(True, 200, "Vote saved")
+    status = current.xml.json_message(True, 200, "Vote saved")
     return status
 
 # -----------------------------------------------------------------------------
@@ -533,6 +534,7 @@ def online_variance(data):
         A numerically stable algorithm for calculating variance
         http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#On-line_algorithm
     """
+
     n = 0
     mean = 0
     M2 = 0
@@ -853,7 +855,8 @@ def results(r, **attr):
     n = len(solutions)
 
     # Canvas of 900x600
-    chart = s3chart(9, 6)
+    from s3chart import S3Chart
+    chart = S3Chart(9, 6)
     fig = chart.fig
     # Add Axes with padding of 10px for the labels (fractional left, bottom, width, height)
     ax = fig.add_axes([0.35, 0.1, 0.6, 0.8])
@@ -924,7 +927,7 @@ def results(r, **attr):
                     _class="delphi_wide")
 
     # Add Custom CSS from Static (cacheable)
-    response.s3.stylesheets.append("S3/delphi.css")
+    s3.stylesheets.append("S3/delphi.css")
 
     return dict(rheader=rheader,
                 num_voted=num_voted,
@@ -950,33 +953,32 @@ def discuss(r, **attr):
     rheader = problem_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-    response.s3.scripts.append(ckeditor)
+    s3.scripts.append(ckeditor)
     adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                   "jquery.js"])
-    response.s3.scripts.append(adapter)
+    s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-    js = "".join(("""
-S3.i18n.reply = '""", str(T("Reply")), """';
-var img_path = S3.Ap.concat('/static/img/jCollapsible/');
-var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
-function comment_reply(id) {
-    $('#delphi_comment_solution_id__row').hide();
-    $('#delphi_comment_solution_id__row1').hide();
-    $('#comment-title').html(S3.i18n.reply);
-    var editor = $('#delphi_comment_body').ckeditorGet();
-    editor.destroy();
-    $('#delphi_comment_body').ckeditor(ck_config);
-    $('#comment-form').insertAfter($('#comment-' + id));
-    $('#delphi_comment_parent').val(id);
-    var solution_id = $('#comment-' + id).attr('solution_id');
-    if (undefined == solution_id) {
-    } else {
-        $('#delphi_comment_solution_id').val(solution_id);
-    }
-}"""))
+    js = "".join((
+'''S3.i18n.reply="''', str(T("Reply")), '''"
+var img_path=S3.Ap.concat('/static/img/jCollapsible/')
+var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
+function comment_reply(id){
+ $('#delphi_comment_solution_id__row').hide()
+ $('#delphi_comment_solution_id__row1').hide()
+ $('#comment-title').html(S3.i18n.reply)
+ var ed = $('#delphi_comment_body').ckeditorGet()
+ ed.destroy()
+ $('#delphi_comment_body').ckeditor(ck_config)
+ $('#comment-form').insertAfter($('#comment-'+id))
+ $('#delphi_comment_parent').val(id)
+ var solution_id=$('#comment-'+id).attr('solution_id')
+ if(undefined!=solution_id){
+  $('#delphi_comment_solution_id').val(solution_id)
+ }
+}'''))
 
-    response.s3.js_global.append(js)
+    s3.js_global.append(js)
 
     response.view = "delphi/discuss.html"
     return dict(rheader=rheader,
@@ -1011,8 +1013,8 @@ def comment_parse(comment, comments, solution_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not solution_id and comment.solution_id:
@@ -1021,7 +1023,7 @@ def comment_parse(comment, comments, solution_id=None):
         solution_id = comment.solution_id
     else:
         header = author
-    thread = LI(DIV(s3_avatar_represent(comment.created_by),
+    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
                         DIV(XML(comment.body)),
@@ -1055,11 +1057,15 @@ def comment_parse(comment, comments, solution_id=None):
 def comments():
     """ Function accessed by AJAX from discuss() to handle Comments """
 
-    resourcename = request.args(0)
-    if not resourcename:
+    try:
+        resourcename = request.args[0]
+    except:
         raise HTTP(400)
 
-    id = request.args[1]
+    try:
+        id = request.args[1]
+    except:
+        raise HTTP(400)
 
     if resourcename == "problem":
         problem_id = id
@@ -1078,39 +1084,40 @@ def comments():
         raise HTTP(400)
 
     table = s3db.delphi_comment
-    table.problem_id.default = problem_id
-    table.problem_id.writable = table.problem_id.readable = False
+    field = table.problem_id
+    field.default = problem_id
+    field.writable = field.readable = False
+    sfield = table.solution_id
     if solution_id:
-        table.solution_id.default = solution_id
-        table.solution_id.writable = table.solution_id.readable = False
+        sfield.default = solution_id
+        sfield.writable = sfield.readable = False
     else:
-        table.solution_id.label = T("Related to Solution (optional)")
-        table.solution_id.requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                           "delphi_solution.id",
-                                                           "%(name)s",
-                                                           filterby="problem_id",
-                                                           filter_opts=[problem_id]
-                                                          ))
+        sfield.label = T("Related to Solution (optional)")
+        sfield.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db, "delphi_solution.id",
+                                      s3.delphi_solution_represent,
+                                      filterby="problem_id",
+                                      filter_opts=[problem_id]
+                                      ))
 
     # Form to add a new Comment
-    form = crud.create(table)
+    form = crud.create(table, formname="delphi_%s/%s" % (resourcename, id))
 
     # List of existing Comments
     if solution_id:
-        comments = db(table.solution_id == solution_id).select(table.id,
-                                                               table.parent,
-                                                               table.body,
-                                                               table.created_by,
-                                                               table.created_on)
+        comments = db(sfield == solution_id).select(table.id,
+                                                    table.parent,
+                                                    table.body,
+                                                    table.created_by,
+                                                    table.created_on)
     else:
-        comments = db(table.problem_id == problem_id).select(table.id,
-                                                             table.parent,
-                                                             table.solution_id,
-                                                             table.body,
-                                                             table.created_by,
-                                                             table.created_on)
+        comments = db(field == problem_id).select(table.id,
+                                                  table.parent,
+                                                  table.solution_id,
+                                                  table.body,
+                                                  table.created_by,
+                                                  table.created_on)
 
-    _user_table = s3db.auth_user
     output = UL(_id="comments")
     for comment in comments:
         if not comment.parent:
@@ -1119,16 +1126,15 @@ def comments():
             output.append(thread)
 
     # Also see the outer discuss()
-    script = "".join(("""
-$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false});
-$('#delphi_comment_parent__row1').hide();
-$('#delphi_comment_parent__row').hide();
-$('#delphi_comment_body').ckeditor(ck_config);
-$('#submit_record__row input').click(function(){$('#comment-form').hide();$('#delphi_comment_body').ckeditorGet().destroy();return true;});
-"""))
+    script = \
+'''$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false})
+$('#delphi_comment_parent__row1').hide()
+$('#delphi_comment_parent__row').hide()
+$('#delphi_comment_body').ckeditor(ck_config)
+$('#submit_record__row input').click(function(){$('#comment-form').hide();$('#delphi_comment_body').ckeditorGet().destroy();return true;})'''
 
     # No layout in this output!
-    #response.s3.jquery_ready.append(script)
+    #s3.jquery_ready.append(script)
 
     output = DIV(output,
                  DIV(H4(T("New Post"),
@@ -1139,6 +1145,5 @@ $('#submit_record__row input').click(function(){$('#comment-form').hide();$('#de
                  SCRIPT(script))
 
     return XML(output)
-
 
 # END =========================================================================

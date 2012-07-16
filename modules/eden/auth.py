@@ -41,10 +41,6 @@ class S3AuthModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
-        settings = current.deployment_settings
-
-        organisation_id = self.org_organisation_id
 
         # =============================================================================
         # Domain table
@@ -58,7 +54,7 @@ class S3AuthModel(S3Model):
         # If a user registers for an Organization & the domain doesn't match (or
         # isn't listed) then the approver gets the request
 
-        if settings.get_auth_registration_requests_organisation():
+        if current.deployment_settings.get_auth_registration_requests_organisation():
             ORG_HELP = T("If this field is populated then a user who specifies this Organization when signing up will be assigned as a Staff of this Organization unless their domain doesn't match the domain field.")
         else:
             ORG_HELP = T("If this field is populated then a user with the Domain specified will automatically be assigned as a Staff of this Organization")
@@ -68,7 +64,7 @@ class S3AuthModel(S3Model):
 
         tablename = "auth_organisation"
         table = self.define_table(tablename,
-                                  organisation_id(
+                                  self.org_organisation_id(
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Organization"),
                                                                       ORG_HELP))),
@@ -83,11 +79,11 @@ class S3AuthModel(S3Model):
                                         comment=DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Approver"),
                                                                       APPROVER_HELP))),
-                                  s3.comments(),
-                                  *s3.meta_fields())
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage()
        

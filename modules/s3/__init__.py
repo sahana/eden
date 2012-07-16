@@ -40,12 +40,12 @@
 # under the s3base namespace:
 
 # Basic Tools
-from s3tools import *
 from s3navigation import *
 
 # Model helpers
+from s3model import S3Model
 from s3fields import *
-from s3model import S3Model, S3MultiPath
+from s3resource import *
 
 # Authentication, Authorization, Accounting
 from s3aaa import *
@@ -57,9 +57,6 @@ from s3utils import *
 from s3validators import *
 from s3widgets import *
 
-# Test framework (currently unused)
-#from s3test import *
-
 # RESTful API
 from s3rest import *
 from s3method import *
@@ -68,8 +65,10 @@ from s3method import *
 from s3crud import *
 from s3search import *
 from s3report import *
-from s3pdf import S3PDF
+# Don't load S3PDF unless needed (very slow import with reportlab)
+#from s3pdf import S3PDF
 from s3import import *
+#from s3merge import *
 
 # GIS Mapping
 from s3gis import *
@@ -85,9 +84,6 @@ from s3sync import *
 
 # Asynchronous Tasks
 from s3task import *
-
-# Charting
-from s3chart import *
 
 # Codecs for data export/import
 from s3codec import *

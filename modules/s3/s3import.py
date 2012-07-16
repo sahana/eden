@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Resource Import Tools
-
-    @author: Graeme Foster <graeme[at]acm.org>
-    @author: Dominic König <dominic[at]aidiq.com>
+""" Resource Import Tools
 
     @copyright: 2011-12 (c) Sahana Software Foundation
     @license: MIT
@@ -51,16 +47,23 @@ except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
+from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
 from gluon.tools import callback
-import gluon.contrib.simplejson as simplejson
-from gluon.serializers import json
 
-from s3tools import SQLTABLES3
+from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
-from s3utils import s3_mark_required
+from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key
 
 DEBUG = False
 if DEBUG:
@@ -71,12 +74,9 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-
 class S3Importer(S3CRUD):
     """
         Transformable formats (XML, JSON, CSV) import handler
-
-        @status: work in progress
     """
 
     UPLOAD_TABLE_NAME = "s3_import_upload"
@@ -154,9 +154,6 @@ class S3Importer(S3CRUD):
 
         _debug("S3Importer.apply_method(%s)" % r)
 
-        db = current.db
-        manager = current.manager
-
         # Messages
         T = current.T
         messages = self.messages = Messages(T)
@@ -209,7 +206,6 @@ class S3Importer(S3CRUD):
         self.csv_extra_data = None
 
         # Environment
-        self.settings = manager.s3.crud
         self.controller = r.controller
         self.function = r.function
 
@@ -254,8 +250,8 @@ class S3Importer(S3CRUD):
 
         # If we have an upload ID, then get upload and import job
         self.upload_id = upload_id
-        query = self.upload_table.id==upload_id
-        self.upload_job = db(query).select(limitby=(0, 1)).first()
+        query = (self.upload_table.id == upload_id)
+        self.upload_job = current.db(query).select(limitby=(0, 1)).first()
         if self.upload_job:
             self.job_id = self.upload_job.job_id
         else:
@@ -279,7 +275,7 @@ class S3Importer(S3CRUD):
             if upload_id != None:
                 output = self.delete_job(upload_id)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
 
         return output
 
@@ -901,11 +897,10 @@ class S3Importer(S3CRUD):
                                                                 stylesheet
                                                                )
               )
-        request = self.request
-        response = current.response
-        resource = request.resource
 
         db = current.db
+        request = self.request
+        resource = request.resource
 
         # ---------------------------------------------------------------------
         # CSV
@@ -975,9 +970,9 @@ class S3Importer(S3CRUD):
         else:
             # Job created
             job_id = job.job_id
-            errors = current.manager.xml.collect_errors(job)
+            errors = current.xml.collect_errors(job)
             if errors:
-                response.s3.error_report = errors
+                current.response.s3.error_report = errors
             query = (self.upload_table.id == upload_id)
             result = db(query).update(job_id=job_id)
             # @todo: add check that result == 1, if not we are in error
@@ -994,8 +989,6 @@ class S3Importer(S3CRUD):
 
             @param file_format: the import source file format
         """
-
-        request = self.request
 
         if file_format == "csv":
             xslt_path = os.path.join(self.xslt_path, "s3csv")
@@ -1040,11 +1033,9 @@ class S3Importer(S3CRUD):
         _debug("S3Importer._commit_import_job(%s, %s)" % (upload_id, items))
 
         db = current.db
-        request = self.request
-        response = current.response
-        resource = request.resource
+        resource = self.request.resource
 
-        # load the items from the s3_import_item table
+        # Load the items from the s3_import_item table
         self.importDetails = dict()
 
         table = self.upload_table
@@ -1056,7 +1047,7 @@ class S3Importer(S3CRUD):
             return False
         else:
             job_id = row.job_id
-            response.s3.import_replace = row.replace_option
+            current.response.s3.import_replace = row.replace_option
 
         itemTable = S3ImportJob.define_item_table()
 
@@ -1104,12 +1095,11 @@ class S3Importer(S3CRUD):
 
         _debug("S3Importer._store_import_details(%s, %s)" % (job_id, key))
 
-        db = current.db
         itemTable = S3ImportJob.define_item_table()
 
         query = (itemTable.job_id == job_id)  & \
                 (itemTable.tablename == self.controller_tablename)
-        rows = db(query).select(itemTable.data, itemTable.error)
+        rows = current.db(query).select(itemTable.data, itemTable.error)
         items = [dict(data=row.data, error=row.error) for row in rows]
 
         self.importDetails[key] = items
@@ -1299,7 +1289,7 @@ class S3Importer(S3CRUD):
                           iTotalDisplayRecords = totalrows,
                           aaData = items)
 
-            output = json(result)
+            output = jsons(result)
 
         # ********************************************************************
         # html 'initial' call
@@ -1362,7 +1352,7 @@ class S3Importer(S3CRUD):
 
                 aadata.update(iTotalRecords=totalrows,
                               iTotalDisplayRecords=totalrows)
-                response.aadata = json(aadata)
+                response.aadata = jsons(aadata)
                 s3.start = 0
                 s3.limit = limit
             else: # No items in database
@@ -1420,7 +1410,7 @@ class S3Importer(S3CRUD):
         if rows:
             details.append(TBODY(rows))
         # Add error messages, if present
-        errors = current.manager.xml.collect_errors(element)
+        errors = current.xml.collect_errors(element)
         if errors:
             details.append(TFOOT(TR(TH("%s:" % T("Errors")),
                                    TD(UL([LI(e) for e in errors])))))
@@ -1576,7 +1566,6 @@ class S3Importer(S3CRUD):
             @param as_string: represent each ID as string
         """
 
-        db = current.db
         item_table = S3ImportJob.define_item_table()
         upload_table = self.upload_table
 
@@ -1584,7 +1573,7 @@ class S3Importer(S3CRUD):
                 (item_table.job_id == upload_table.job_id) & \
                 (item_table.tablename == self.controller_tablename)
 
-        rows = db(query).select(item_table.id)
+        rows = current.db(query).select(item_table.id)
         if as_string:
             items = [str(row.id) for row in rows]
         else:
@@ -1755,7 +1744,6 @@ class S3Importer(S3CRUD):
         return upload_table
 
 # =============================================================================
-
 class S3ImportItem(object):
     """ Class representing an import item (=a single record) """
 
@@ -1780,10 +1768,8 @@ class S3ImportItem(object):
             @param job: the import job this item belongs to
         """
 
-        manager = current.manager
-
         self.job = job
-        self.ERROR = manager.ERROR
+        self.ERROR = current.manager.ERROR
 
         # Locking and error handling
         self.lock = False
@@ -1861,9 +1847,9 @@ class S3ImportItem(object):
             @returns: True if successful, False if not (sets self.error)
         """
 
-        manager = current.manager
         db = current.db
-        xml = manager.xml
+        xml = current.xml
+        manager = current.manager
         validate = manager.validate
         s3db = current.s3db
 
@@ -1920,9 +1906,6 @@ class S3ImportItem(object):
         if self.id:
             return
 
-        manager = current.manager
-        model = manager.model
-        xml = manager.xml
         table = self.table
 
         if table is None:
@@ -1930,17 +1913,18 @@ class S3ImportItem(object):
         if self.original is not None:
             original = self.original
         else:
-            original = manager.original(table, self.data)
+            original = current.manager.original(table, self.data)
 
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            if xml.UID in original:
-                self.uid = original[xml.UID]
-                self.data.update({xml.UID:self.uid})
+            UID = current.xml.UID
+            if UID in original:
+                self.uid = original[UID]
+                self.data.update({UID:self.uid})
             self.method = self.METHOD.UPDATE
         else:
-            resolve = model.get_config(self.tablename, RESOLVER)
+            resolve = current.s3db.get_config(self.tablename, RESOLVER)
             if self.data and resolve:
                 resolve(self)
 
@@ -1952,8 +1936,8 @@ class S3ImportItem(object):
             Authorize the import of this item, sets self.permitted
         """
 
-        manager = current.manager
         db = current.db
+        manager = current.manager
         authorize = manager.permit
 
         self.permitted = False
@@ -1998,10 +1982,6 @@ class S3ImportItem(object):
             Validate this item (=record onvalidation), sets self.accepted
         """
 
-        manager = current.manager
-        model = manager.model
-        xml = manager.xml
-
         if self.accepted is not None:
             return self.accepted
         if self.data is None or not self.table:
@@ -2016,8 +1996,9 @@ class S3ImportItem(object):
         form.errors = Storage()
         tablename = self.tablename
         key = "%s_onvalidation" % self.method
-        onvalidation = model.get_config(tablename, key,
-                       model.get_config(tablename, "onvalidation"))
+        s3db = current.s3db
+        onvalidation = s3db.get_config(tablename, key,
+                       s3db.get_config(tablename, "onvalidation"))
         if onvalidation:
             try:
                 callback(onvalidation, form, tablename=tablename)
@@ -2025,6 +2006,7 @@ class S3ImportItem(object):
                 pass # @todo need a better handler here.
         self.accepted = True
         if form.errors:
+            error = current.xml.ATTRIBUTE.error
             for k in form.errors:
                 e = self.element.findall("data[@field='%s']" % k)
                 if not e:
@@ -2034,7 +2016,7 @@ class S3ImportItem(object):
                     form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
-                e.set(xml.ATTRIBUTE.error,
+                e.set(error,
                       str(form.errors[k]).decode("utf-8"))
             self.error = self.ERROR.VALIDATION_ERROR
             self.accepted = False
@@ -2049,10 +2031,10 @@ class S3ImportItem(object):
                                   (still reports errors)
         """
 
-        manager = current.manager
         db = current.db
-        xml = manager.xml
-        model = manager.model
+        s3db = current.s3db
+        xml = current.xml
+        manager = current.manager
         table = self.table
 
         # Check if already committed
@@ -2169,6 +2151,8 @@ class S3ImportItem(object):
                         return True
                 fields = data.keys()
                 for f in fields:
+                    if f not in this:
+                        continue
                     if isinstance(this[f], datetime):
                         if xml.as_utc(data[f]) == xml.as_utc(this[f]):
                             del data[f]
@@ -2226,10 +2210,12 @@ class S3ImportItem(object):
         elif self.method == self.METHOD.CREATE:
 
             # Do not apply field policy to UID and MCI
-            if xml.UID in data:
-                del data[xml.UID]
-            if xml.MCI in data:
-                del data[xml.MCI]
+            UID = xml.UID
+            if UID in data:
+                del data[UID]
+            MCI = xml.MCI
+            if MCI in data:
+                del data[MCI]
 
             for f in data:
                 policy = self._get_update_policy(f)
@@ -2239,10 +2225,10 @@ class S3ImportItem(object):
             if len(data) or self.components or self.references:
 
                 # Restore UID and MCI
-                if self.uid and xml.UID in table.fields:
-                    data.update({xml.UID:self.uid})
-                if xml.MCI in table.fields:
-                    data.update({xml.MCI:self.mci})
+                if self.uid and UID in table.fields:
+                    data.update({UID:self.uid})
+                if MCI in table.fields:
+                    data.update({MCI:self.mci})
 
                 # Insert the new record
                 try:
@@ -2283,7 +2269,7 @@ class S3ImportItem(object):
                 prefix, name = self.tablename.split("_", 1)
                 resource = manager.define_resource(prefix, name, id=self.id)
 
-                ondelete = model.get_config(self.tablename, "ondelete")
+                ondelete = s3db.get_config(self.tablename, "ondelete")
                 success = resource.delete(ondelete=ondelete,
                                           cascade=True)
                 if resource.error:
@@ -2310,12 +2296,12 @@ class S3ImportItem(object):
                               form=form,
                               record=self.id,
                               representation="xml")
-            model.update_super(table, form.vars)
+            s3db.update_super(table, form.vars)
             if self.method == self.METHOD.CREATE:
-                manager.auth.s3_set_record_owner(table, self.id)
+                current.auth.s3_set_record_owner(table, self.id)
             key = "%s_onaccept" % self.method
-            onaccept = model.get_config(tablename, key,
-                       model.get_config(tablename, "onaccept"))
+            onaccept = s3db.get_config(tablename, key,
+                       s3db.get_config(tablename, "onaccept"))
             if onaccept:
                 callback(onaccept, form, tablename=self.tablename)
 
@@ -2367,10 +2353,6 @@ class S3ImportItem(object):
             is not yet available, it will be scheduled for later update.
         """
 
-        manager = current.manager
-        db = current.db
-        s3db = current.s3db
-
         if not self.table:
             return
 
@@ -2390,22 +2372,17 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            fieldtype = str(self.table[fkey].type)
-            multiple = False
-            if fieldtype[:9] == "reference":
-                ktablename = fieldtype[10:]
-            elif fieldtype[:14] == "list:reference":
-                ktablename = fieldtype[15:]
-                multiple = True
-            # Recognize organisation_id in auth_user as foreign key:
-            elif self.tablename == "auth_user" and fkey == "organisation_id":
-                ktablename = "org_organisation"
-            else:
-                continue
+            ktablename, key, multiple = s3_get_foreign_key(self.table[fkey])
+            if not ktablename:
+                if self.tablename == "auth_user" and \
+                   fkey == "organisation_id":
+                    ktablename = "org_organisation"
+                else:
+                    continue
             if entry.tablename:
                 ktablename = entry.tablename
             try:
-                ktable = s3db[ktablename]
+                ktable = current.s3db[ktablename]
             except:
                 continue
 
@@ -2416,8 +2393,8 @@ class S3ImportItem(object):
                 if item:
                     fk = item.id
             if fk and pkey != "id":
-                row = db(ktable._id == fk).select(ktable[pkey],
-                                                  limitby=(0, 1)).first()
+                row = current.db(ktable._id == fk).select(ktable[pkey],
+                                                          limitby=(0, 1)).first()
                 if not row:
                     fk = None
                     continue
@@ -2451,9 +2428,9 @@ class S3ImportItem(object):
             @param value: the value of the foreign key
         """
 
-        db = current.db
         if not value or not self.table:
             return
+        db = current.db
         if self.id and self.permitted:
             fieldtype = str(self.table[field].type)
             if fieldtype.startswith("list:reference"):
@@ -2474,13 +2451,10 @@ class S3ImportItem(object):
             Store this item in the DB
         """
 
-        manager = current.manager
-        db = current.db
-        xml = manager.xml
-
         _debug("Storing item %s" % self)
         if item_table is None:
             return None
+        db = current.db
         query = item_table.item_id == self.item_id
         row = db(query).select(item_table.id, limitby=(0, 1)).first()
         if row:
@@ -2493,8 +2467,8 @@ class S3ImportItem(object):
                          record_uid = self.uid,
                          error = self.error)
         if self.element is not None:
-            element_str = xml.tostring(self.element,
-                                       xml_declaration=False)
+            element_str = current.xml.tostring(self.element,
+                                               xml_declaration=False)
             record.update(element=element_str)
         if self.data is not None:
             data = Storage()
@@ -2503,9 +2477,7 @@ class S3ImportItem(object):
                 if f not in table.fields:
                     continue
                 fieldtype = str(self.table[f].type)
-                if fieldtype == "id" or \
-                   fieldtype[:9] == "reference" or \
-                   fieldtype[:14] == "list:reference":
+                if fieldtype == "id" or s3_has_foreign_key(self.table[f]):
                     continue
                 data.update({f:self.data[f]})
             data_str = cPickle.dumps(data)
@@ -2524,7 +2496,7 @@ class S3ImportItem(object):
                                        tablename=entry.tablename,
                                        uid=str(entry.uid))
                 if store_entry is not None:
-                    ritems.append(simplejson.dumps(store_entry))
+                    ritems.append(json.dumps(store_entry))
         if ritems:
             record.update(ritems=ritems)
         citems = [c.item_id for c in self.components]
@@ -2549,10 +2521,7 @@ class S3ImportItem(object):
             @param row: the item table row
         """
 
-        manager = current.manager
-        xml = manager.xml
-        db = current.db
-        s3db = current.s3db
+        xml = current.xml
 
         self.item_id = row.item_id
         self.accepted = None
@@ -2570,29 +2539,30 @@ class S3ImportItem(object):
             self.mtime = data[xml.MTIME]
         if xml.MCI in data:
             self.mci = data[xml.MCI]
-        if xml.UID in data:
-            self.uid = data[xml.UID]
+        UID = xml.UID
+        if UID in data:
+            self.uid = data[UID]
         self.element = etree.fromstring(row.element)
         if row.citems:
             self.load_components = row.citems
         if row.ritems:
-            self.load_references = [simplejson.loads(ritem) for ritem in row.ritems]
+            self.load_references = [json.loads(ritem) for ritem in row.ritems]
         self.load_parent = row.parent
         try:
-            table = s3db[tablename]
+            table = current.s3db[tablename]
         except:
             self.error = self.ERROR.BAD_RESOURCE
             return False
         else:
             self.table = table
             self.tablename = tablename
-        original = manager.original(table, self.data)
+        original = current.manager.original(table, self.data)
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            if xml.UID in original:
-                self.uid = original[xml.UID]
-                self.data.update({xml.UID:self.uid})
+            if UID in original:
+                self.uid = original[UID]
+                self.data.update({UID:self.uid})
         self.error = row.error
         if self.error and not self.data:
             # Validation error
@@ -2632,13 +2602,8 @@ class S3ImportJob():
             @param onconflict: custom conflict resolver function
         """
 
-        db = current.db
-        s3db = current.s3db
-
-        xml = manager.xml
-
         self.error = None # the last error
-        self.error_tree = etree.Element(xml.TAG.root)
+        self.error_tree = etree.Element(current.xml.TAG.root)
 
         self.table = table
         self.tree = tree
@@ -2651,6 +2616,11 @@ class S3ImportJob():
 
         self.job_table = None
         self.item_table = None
+
+        self.count = 0 # total number of records imported
+        self.created = [] # IDs of created records
+        self.updated = [] # IDs of updated records
+        self.deleted = [] # IDs of deleted records
 
         # Import strategy
         self.strategy = strategy
@@ -2681,14 +2651,14 @@ class S3ImportJob():
                 query = jobtable.id == job_id
             else:
                 query = jobtable.job_id == job_id
-            row = db(query).select(limitby=(0, 1)).first()
+            row = current.db(query).select(limitby=(0, 1)).first()
             if not row:
                 raise SyntaxError("Job record not found")
             self.job_id = row.job_id
             if not self.table:
                 tablename = row.tablename
                 try:
-                    table = s3db[tablename]
+                    table = current.s3db[tablename]
                 except:
                     pass
         else:
@@ -2721,11 +2691,6 @@ class S3ImportJob():
                       including error attributes.
         """
 
-        manager = current.manager
-        model = manager.model
-        xml = manager.xml
-        db = current.db
-
         if element in self.elements:
             # element has already been added to this job
             return self.elements[element]
@@ -2750,8 +2715,10 @@ class S3ImportJob():
         else:
             # Now parse the components
             table = item.table
+            components = current.s3db.get_components(table, names=components)
 
-            components = model.get_components(table, names=components)
+            cnames = Storage()
+            cinfos = Storage()
             for alias in components:
                 component = components[alias]
                 pkey = component.pkey
@@ -2762,46 +2729,77 @@ class S3ImportJob():
                     ctable = component.table
                     fkey = component.fkey
                 ctablename = ctable._tablename
+                if ctablename in cnames:
+                    cnames[ctablename].append(alias)
+                else:
+                    cnames[ctablename] = [alias]
+                cinfos[(ctablename, alias)] = Storage(component = component,
+                                                      ctable = ctable,
+                                                      pkey = pkey,
+                                                      fkey = fkey,
+                                                      original = None,
+                                                      uid = None)
+            add_item = self.add_item
+            xml = current.xml
+            for celement in xml.components(element, names=cnames.keys()):
 
-                celements = xml.select_resources(element, ctablename)
-                if celements:
-                    original = None
-                    if not component.multiple:
-                        uid = None
-                        if item.id:
-                            query = (table.id == item.id) & \
-                                    (table[pkey] == ctable[fkey])
-                            original = db(query).select(ctable.ALL,
-                                                        limitby=(0, 1)).first()
-                            if original:
-                                uid = original.get(xml.UID, None)
-                        celements = [celements[0]]
-                        if uid:
-                            celements[0].set(xml.UID, uid)
+                # Get the component tablename
+                ctablename = celement.get(xml.ATTRIBUTE.name, None)
+                if not ctablename:
+                    continue
 
-                    # @todo: match to component_id
+                # Get the component alias (for disambiguation)
+                calias = celement.get(xml.ATTRIBUTE.alias, None)
+                if calias is None:
+                    if ctablename not in cnames:
+                        continue
+                    aliases = cnames[ctablename]
+                    if len(aliases) == 1:
+                        calias = aliases[0]
+                    else:
+                        # ambiguous components *must* use alias
+                        continue
+                if (ctablename, calias) not in cinfos:
+                    continue
+                else:
+                    cinfo = cinfos[(ctablename, calias)]
 
-                    for celement in celements:
-                        item_id = self.add_item(element=celement,
-                                                original=original,
-                                                parent=item,
-                                                joinby=(pkey, fkey))
-                        if item_id is None:
-                            item.error = self.error
-                            self.error_tree.append(deepcopy(item.element))
-                        else:
-                            citem = self.items[item_id]
-                            citem.parent = item
-                            item.components.append(citem)
+                component = cinfo.component
+                original = cinfo.original
+                ctable = cinfo.ctable
+                pkey = cinfo.pkey
+                fkey = cinfo.fkey
+                if not component.multiple:
+                    if cinfo.uid is not None:
+                        continue
+                    if original is None and item.id:
+                        query = (table.id == item.id) & \
+                                (table[pkey] == ctable[fkey])
+                        original = current.db(query).select(ctable.ALL,
+                                                            limitby=(0, 1)).first()
+                    if original:
+                        cinfo.uid = uid = original.get(xml.UID, None)
+                        celement.set(xml.UID, uid)
+                    cinfo.original = original
+
+                item_id = add_item(element=celement,
+                                   original=original,
+                                   parent=item,
+                                   joinby=(pkey, fkey))
+                if item_id is None:
+                    item.error = self.error
+                    self.error_tree.append(deepcopy(item.element))
+                else:
+                    citem = self.items[item_id]
+                    citem.parent = item
+                    item.components.append(citem)
 
             # Handle references
             table = item.table
             tree = self.tree
             if tree is not None:
-                rfields = filter(lambda f:
-                                 str(table[f].type)[:9] == "reference" or
-                                 str(table[f].type)[:14] == "list:reference",
-                                 table.fields)
+                fields = [table[f] for f in table.fields]
+                rfields = filter(s3_has_foreign_key, fields)
                 item.references = self.lookahead(element,
                                                  table=table,
                                                  fields=rfields,
@@ -2810,7 +2808,7 @@ class S3ImportJob():
                 for reference in item.references:
                     entry = reference.entry
                     if entry and entry.element is not None:
-                        item_id = self.add_item(element=entry.element)
+                        item_id = add_item(element=entry.element)
                         if item_id:
                             entry.update(item_id=item_id)
 
@@ -2842,10 +2840,13 @@ class S3ImportJob():
                               (will be filled in by this function)
         """
 
-        manager = current.manager
         db = current.db
         s3db = current.s3db
-        xml = manager.xml
+        xml = current.xml
+        import_uid = xml.import_uid
+        ATTRIBUTE = xml.ATTRIBUTE
+        TAG = xml.TAG
+        UID = xml.UID
         reference_list = []
 
         root = None
@@ -2856,7 +2857,7 @@ class S3ImportJob():
                 root = tree.getroot()
         references = element.findall("reference")
         for reference in references:
-            field = reference.get(xml.ATTRIBUTE.field, None)
+            field = reference.get(ATTRIBUTE.field, None)
             # Ignore references without valid field-attribute
             if not field or field not in fields:
                 continue
@@ -2876,9 +2877,9 @@ class S3ImportJob():
             except:
                 # Invalid tablename - skip
                 continue
-            tablename = reference.get(xml.ATTRIBUTE.resource, None)
+            tablename = reference.get(ATTRIBUTE.resource, None)
             # Ignore references to tables without UID field:
-            if xml.UID not in ktable.fields:
+            if UID not in ktable.fields:
                 continue
             # Fall back to key table name if tablename is not specified:
             if not tablename:
@@ -2890,13 +2891,13 @@ class S3ImportJob():
             if tablename == ktablename and ktable._id.name != "id":
                 continue
             # Get the foreign key
-            uids = reference.get(xml.UID, None)
-            attr = xml.UID
+            uids = reference.get(UID, None)
+            attr = UID
             if not uids:
-                uids = reference.get(xml.ATTRIBUTE.tuid, None)
-                attr = xml.ATTRIBUTE.tuid
+                uids = reference.get(ATTRIBUTE.tuid, None)
+                attr = ATTRIBUTE.tuid
             if uids and multiple:
-                uids = simplejson.loads(uids)
+                uids = json.loads(uids)
             elif uids:
                 uids = [uids]
 
@@ -2905,17 +2906,17 @@ class S3ImportJob():
 
             # Create a UID<->ID map
             id_map = Storage()
-            if attr == xml.UID and uids:
-                _uids = map(xml.import_uid, uids)
-                query = ktable[xml.UID].belongs(_uids)
+            if attr == UID and uids:
+                _uids = map(import_uid, uids)
+                query = ktable[UID].belongs(_uids)
                 records = db(query).select(ktable.id,
-                                           ktable[xml.UID])
-                id_map = dict([(r[xml.UID], r.id) for r in records])
+                                           ktable[UID])
+                id_map = dict([(r[UID], r.id) for r in records])
 
             if not uids:
                 # Anonymous reference: <resource> inside the element
-                expr = './/%s[@%s="%s"]' % (xml.TAG.resource,
-                                            xml.ATTRIBUTE.name,
+                expr = './/%s[@%s="%s"]' % (TAG.resource,
+                                            ATTRIBUTE.name,
                                             tablename)
                 relements = reference.xpath(expr)
                 if relements and not multiple:
@@ -2931,8 +2932,8 @@ class S3ImportJob():
                         entry = directory.get((tablename, attr, uid), None)
                     if not entry:
                         expr = ".//%s[@%s='%s' and @%s='%s']" % (
-                                    xml.TAG.resource,
-                                    xml.ATTRIBUTE.name,
+                                    TAG.resource,
+                                    ATTRIBUTE.name,
                                     tablename,
                                     attr,
                                     uid)
@@ -2942,7 +2943,7 @@ class S3ImportJob():
                             relements.append(e[0])
                         else:
                             # No element found, see if original record exists
-                            _uid = xml.import_uid(uid)
+                            _uid = import_uid(uid)
                             if _uid and _uid in id_map:
                                 _id = id_map[_uid]
                                 entry = Storage(tablename=tablename,
@@ -2961,8 +2962,8 @@ class S3ImportJob():
             # Create entries for all newly found elements
             for relement in relements:
                 uid = relement.get(attr, None)
-                if attr == xml.UID:
-                    _uid = xml.import_uid(uid)
+                if attr == UID:
+                    _uid = import_uid(uid)
                     id = _uid and id_map and id_map.get(_uid, None) or None
                 else:
                     _uid = None
@@ -3011,17 +3012,14 @@ class S3ImportJob():
             return False
         references = []
         for reference in item.references:
-            entry = reference.entry
-            if entry.item_id:
-                references.append(entry.item_id)
+            ritem_id = reference.entry.item_id
+            if ritem_id and ritem_id not in import_list:
+                references.append(ritem_id)
         for ritem_id in references:
-            if ritem_id in import_list:
-                continue
-            else:
-                item.lock = True
-                if self.resolve(ritem_id, import_list):
-                    import_list.append(ritem_id)
-                item.lock = False
+            item.lock = True
+            if self.resolve(ritem_id, import_list):
+                import_list.append(ritem_id)
+            item.lock = False
         return True
 
     # -------------------------------------------------------------------------
@@ -3033,8 +3031,7 @@ class S3ImportJob():
                                   (does still report the errors)
         """
 
-        manager = current.manager
-        xml = manager.xml
+        ATTRIBUTE = current.xml.ATTRIBUTE
 
         # Resolve references
         import_list = []
@@ -3042,9 +3039,16 @@ class S3ImportJob():
             self.resolve(item_id, import_list)
             if item_id not in import_list:
                 import_list.append(item_id)
-        imports = [self.items[_id] for _id in import_list]
         # Commit the items
-        for item in imports:
+        items = self.items
+        count = 0
+        created = []
+        cappend = created.append
+        updated = []
+        deleted = []
+        tablename = self.table._tablename
+        for item_id in import_list:
+            item = items[item_id]
             error = None
             success = item.commit(ignore_errors=ignore_errors)
             error = item.error
@@ -3052,11 +3056,24 @@ class S3ImportJob():
                 self.error = error
                 element = item.element
                 if element is not None:
-                    if not element.get(xml.ATTRIBUTE.error, False):
-                        element.set(xml.ATTRIBUTE.error, str(self.error))
+                    if not element.get(ATTRIBUTE.error, False):
+                        element.set(ATTRIBUTE.error, str(self.error))
                     self.error_tree.append(deepcopy(element))
                 if not ignore_errors:
                     return False
+            elif item.tablename == tablename:
+                count += 1
+                if item.id:
+                    if item.method == item.METHOD.CREATE:
+                        cappend(item.id)
+                    elif item.method == item.METHOD.UPDATE:
+                        updated.append(item.id)
+                    elif item.method == item.METHOD.DELETE:
+                        deleted.append(item.id)
+        self.count = count
+        self.created = created
+        self.updated = updated
+        self.deleted = deleted
         return True
 
     # -------------------------------------------------------------------------
@@ -3115,7 +3132,6 @@ class S3ImportJob():
             Store this job and all its items in the job table
         """
 
-        manager = current.manager
         db = current.db
 
         _debug("Storing Job ID=%s" % self.job_id)
@@ -3149,12 +3165,10 @@ class S3ImportJob():
             Reconstruct the element tree of this job
         """
 
-        manager = current.manager
-        xml = manager.xml
-
         if self.tree is not None:
             return tree
         else:
+            xml = current.xml
             root = etree.Element(xml.TAG.root)
             for item in self.items.values():
                 if item.element is not None and not item.parent:
@@ -3189,8 +3203,7 @@ class S3ImportJob():
         """
 
         db = current.db
-        manager = current.manager
-        xml = manager.xml
+        UID = current.xml.UID
 
         for item in self.items.values():
             for citem_id in item.load_components:
@@ -3215,15 +3228,15 @@ class S3ImportJob():
                     uid = ritem.get("uid", None)
                     tablename = ritem.get("tablename", None)
                     if tablename and uid:
-                        manager.load(tablename)
                         try:
-                            table = db[tablename]
+                            table = current.s3db[tablename]
                         except:
                             continue
-                        if xml.UID not in table.fields:
+                        if UID not in table.fields:
                             continue
-                        query = table[xml.UID] == uid
-                        row = db(query).select(table._id, limitby=(0, 1)).first()
+                        query = table[UID] == uid
+                        row = db(query).select(table._id,
+                                               limitby=(0, 1)).first()
                         if row:
                             _id = row[table._id.name]
                         else:
@@ -3240,4 +3253,4 @@ class S3ImportJob():
                 item.parent = self.items[item.load_parent]
                 item.load_parent = None
 
-# =============================================================================
+# END =========================================================================

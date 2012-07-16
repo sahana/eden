@@ -32,7 +32,7 @@
 $(function() {
     var plot;
     render_pie_chart = function(src, title, layer) {
-        plot = jQuery.jqplot ('chart', [src],
+        plot = jQuery.jqplot('chart', [src],
             {
                 seriesDefaults: {
                     renderer: $.jqplot.PieRenderer,
@@ -99,40 +99,77 @@ $(function() {
                         forceTickAt0: true
                     },
 //                     min: minzero,
-                    autoscale: true
+//                     autoscale: autoscale
+                    padMax: 1.2
                 }
             },
             title: layer + ' ' + title
         });
     };
     $('#pie_chart_rows').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_pie_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#pie_chart_cols').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_pie_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#vbar_chart_rows').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_vbar_chart(json_data['rows'], json_data['row_label'], json_data['layer_label']);
     });
     $('#vbar_chart_cols').click(function() {
-        $('#chart-container').show();
+        $('#chart-container').removeClass('hide');
         $('#chart').empty();
         render_vbar_chart(json_data['cols'], json_data['col_label'], json_data['layer_label']);
     });
     $('#hide-chart').click(function(){
-        $('#chart-container').hide();
+        $('#chart-container').addClass('hide');
     });
 
     // Toggle the report options
-    $('legend').click(function(){
+    $('#reportform legend').click(function(){
         $(this).siblings().toggle();
         $(this).children().toggle();
+    });
+
+    /*
+     * User can click on a magnifying glass in the cell to show
+     * the list of values for each cell layer
+     */
+    $('table#list tbody').on('click', 'a.report-cell-zoom', function(event) {
+        zoom = $(event.currentTarget);
+        cell = zoom.parent();
+
+        lists = cell.find('.report-cell-records');
+
+        if (lists.length > 0) {
+            lists.remove();
+            zoom.removeClass('opened');
+        }
+        else {
+            layers = cell.data('records');
+
+            if (layers) {
+                lists = $('<div/>').addClass('report-cell-records');
+
+                for (var layer=0, ln=layers.length; layer<ln; layer++) {
+                    var list = $('<ul/>');
+                    var records = layers[layer];
+
+                    for (var record=0, rn=records.length; record<rn; record++) {
+                        list.append('<li>' + json_data.cell_lookup_table[layer][records[record]] + '</li>');
+                    }
+                    lists.append(list)
+                }
+
+                cell.append(lists);
+                zoom.addClass('opened');
+            }
+        }
     });
 });
 

@@ -1,16 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
-module = "climate"
+module = request.controller
 resourcename = request.function
-
-# @todo: re-write this for new framework:
-
-
-#response.menu = s3_menu_dict[module]["menu"]
-#response.menu.append(s3.menu_help)
-#response.menu.append(s3.menu_auth)
-#if s3.menu_admin:
-    #response.menu.append(s3.menu_admin)
 
 ClimateDataPortal = local_import("ClimateDataPortal")
 SampleTable = ClimateDataPortal.SampleTable
@@ -25,9 +16,10 @@ def _map_plugin(**client_config):
         client_config = client_config
     )
 
+# -----------------------------------------------------------------------------
 def index():
     try:
-        module_name = deployment_settings.modules[module].name_nice
+        module_name = settings.modules[module].name_nice
     except:
         module_name = T("Climate")
 
@@ -42,19 +34,20 @@ def index():
     else:
         wms_browser = None
 
-    print_service = deployment_settings.get_gis_print_service()
+    print_service = settings.get_gis_print_service()
     if print_service:
         print_tool = {"url": print_service}
     else:
         print_tool = {}
 
-    if request.vars.get("zoom", None) is not None:
-        zoom = int(request.vars["zoom"])
+    vars = request.vars
+    if vars.get("zoom", None) is not None:
+        zoom = int(vars["zoom"])
     else:
         zoom = 7
 
-    if request.vars.get("coords", None) is not None:
-        lon, lat = map(float, request.vars["coords"].split(","))
+    if vars.get("coords", None) is not None:
+        lon, lat = map(float, vars["coords"].split(","))
     else:
         lon = 84.1
         lat = 28.5
@@ -63,12 +56,12 @@ def index():
         lon = lon,
         lat = lat,
         zoom = zoom,
-        toolbar = request.vars.get("display_mode", None) != "print",
+        toolbar = vars.get("display_mode", None) != "print",
         googleEarth = True,
         wms_browser = wms_browser, # dict
         plugins = [
             _map_plugin(
-                **request.vars
+                **vars
             )
         ]
     )
@@ -79,6 +72,7 @@ def index():
         map=gis_map
     )
 
+# -----------------------------------------------------------------------------
 def climate_overlay_data():
     kwargs = dict(request.vars)
 
@@ -104,12 +98,11 @@ def climate_overlay_data():
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
-        import gluon.contrib.simplejson as JSON
         try:
             data_path = _map_plugin().get_overlay_data(**arguments)
         # only DSL exception types should be raised here
         except DSL.DSLSyntaxError, syntax_error:
-            raise HTTP(400, JSON.dumps({
+            raise HTTP(400, json.dumps({
                 "error": "SyntaxError",
                 "lineno": syntax_error.lineno,
                 "offset": syntax_error.offset,
@@ -120,7 +113,7 @@ def climate_overlay_data():
             DSL.DimensionError,
             DSL.DSLTypeError
         ), exception:
-            raise HTTP(400, JSON.dumps({
+            raise HTTP(400, json.dumps({
                 "error": exception.__class__.__name__,
                 "analysis": str(exception)
             }))
@@ -130,6 +123,7 @@ def climate_overlay_data():
                 chunk_size=4096
             )
 
+# -----------------------------------------------------------------------------
 def climate_csv_location_data():
     kwargs = dict(request.vars)
 
@@ -155,7 +149,6 @@ def climate_csv_location_data():
     if errors:
         raise HTTP(400, "<br />".join(errors))
     else:
-        import gluon.contrib.simplejson as JSON
         data_path = _map_plugin().get_csv_location_data(**arguments)
         # only DSL exception types should be raised here
         return response.stream(
@@ -163,6 +156,7 @@ def climate_csv_location_data():
             chunk_size=4096
         )
 
+# -----------------------------------------------------------------------------
 def climate_chart():
     import gluon.contenttype
     data_image_file_path = _climate_chart(gluon.contenttype.contenttype(".png"))
@@ -171,10 +165,13 @@ def climate_chart():
         chunk_size=4096
     )
 
+# -----------------------------------------------------------------------------
 def _climate_chart(content_type):
+    """
+    """
+
     kwargs = dict(request.vars)
-    import gluon.contrib.simplejson as JSON
-    specs = JSON.loads(kwargs.pop("spec"))
+    specs = json.loads(kwargs.pop("spec"))
     def list_of(converter):
         def convert_list(choices):
             return map(converter, choices)
@@ -213,6 +210,7 @@ def _climate_chart(content_type):
         )
         return data_image_file_path
 
+# -----------------------------------------------------------------------------
 def climate_chart_download():
     data_image_file_path = _climate_chart("application/force-download")
     import os
@@ -225,31 +223,40 @@ def climate_chart_download():
         chunk_size=4096
     )
 
+# -----------------------------------------------------------------------------
 def chart_popup():
+    """ Custom View """
     return {}
 
+# -----------------------------------------------------------------------------
 def buy_data():
+    """ Custom View """
     return {}
 
+# -----------------------------------------------------------------------------
 def stations():
-    "return all station data in JSON format"
+    """
+        Return all station data in JSON format
+        - join the 4 tables assuming a common ID to link records
+    """
+
     stations_strings = []
     append = stations_strings.append
-    extend = stations_strings.extend
 
-    table = db.climate_place
-    for place_row in db(
-        (table.id == db.climate_place_elevation.id) &
-        (table.id == db.climate_place_station_id.id) &
-        (table.id == db.climate_place_station_name.id)
-    ).select(
-        table.id,
-        table.longitude,
-        table.latitude,
-        db.climate_place_elevation.elevation_metres,
-        db.climate_place_station_id.station_id,
-        db.climate_place_station_name.name
-    ):
+    table = s3db.climate_place
+    etable = s3db.climate_place_elevation
+    itable = s3db.climate_place_station_id
+    ntable = s3db.climate_place_station_name
+    query = (table.id == etable.id) & \
+            (table.id == itable.id) & \
+            (table.id == ntable.id)
+    rows = db(query).select(table.id,
+                            table.longitude,
+                            table.latitude,
+                            etable.elevation_metres,
+                            itable.station_id,
+                            ntable.name)
+    for place_row in rows:
         append(
             "".join((
                 "(", str(place_row.climate_place.id), ",{",
@@ -260,13 +267,17 @@ def stations():
         )
     return "[%s]" % ",".join(stations_strings)
 
+# -----------------------------------------------------------------------------
 def places():
+    """
+    """
+
     from datetime import datetime, timedelta
     response.headers["Expires"] = (
         datetime.now() + timedelta(days = 7)
     ).strftime("%a, %d %b %Y %H:%M:%S GMT") # not GMT, but can't find a way
     return response.stream(
-        open(_map_plugin().place_data(),"rb"),
+        open(_map_plugin().place_data(), "rb"),
         chunk_size=4096
     )
 
@@ -280,18 +291,21 @@ def station_parameter():
 
 # =============================================================================
 def purchase():
-    table = db.climate_purchase
+    """
+    """
+
+    table = s3db.climate_purchase
     if not auth.is_logged_in():
         redirect(URL(c = "default",
                      f = "user",
                      args = ["login"],
-                     vars = {"_next":URL(c ="climate",
-                                         f = "purchase")}))
+                     vars = {"_next":URL(c="climate",
+                                         f="purchase")}))
 
     if not s3_has_role(ADMIN):
         table.paid.writable = False
         table.price.writable = False
-        response.s3.filter = (db.climate_purchase.created_by == auth.user.id)
+        s3.filter = (table.created_by == auth.user.id)
 
     def prep(r):
         if not s3_has_role(ADMIN) and r.record and r.record.paid:
@@ -299,7 +313,7 @@ def purchase():
                 table[f].writable = False
 
         if r.method == "read":
-            response.s3.rfooter = DIV(
+            s3.rfooter = DIV(
                 T("Please make your payment in person at the DHM office, or by bank Transfer to:"),
                 TABLE(
                     TR("Bank Name","Nepal Rastra Bank"),
@@ -316,44 +330,35 @@ def purchase():
     def rheader(r):
         record = r.record
         if record and record.paid:
-            # these are the parameters to download the data export file
+            # These are the parameters to download the data export file
             # see models/climate.py for more details
-            return A(
-                "Download this data",
-                _href='/eden/climate/download_purchased_data?purchase_id=%(record_id)s'% {
-                    "record_id": record.id,
-                    "station_id": record.station_id,
-                    "parameter_id": record.parameter_id,
-                    "date_from": record.date_from,
-                    "date_to": record.date_to
-                },
-                _style="border:1px solid black; padding:0.5em; background-color:#0F0; color:black; text-decoration:none;"
-            )
+            return A("Download this data",
+                     _href=URL(c="download_purchased_data",
+                               vars={"purchase_id": record.id}),
+                     _style="border:1px solid black; padding:0.5em; background-color:#0F0; color:black; text-decoration:none;"
+                    )
         else:
             return None
 
-    response.s3.prep = prep
+    s3.prep = prep
 
     output = s3_rest_controller(rheader = rheader)
     output["addheader"] = T("Please enter the details of the data you wish to purchase")
     return output
 
+# -----------------------------------------------------------------------------
 def prices():
-    prices_table = db.climate_prices
+    """
+    """
+
     if not auth.is_logged_in():
-        redirect(
-            URL(
-                c = "default",
-                f = "user",
-                args = ["login"],
-                vars = {
-                    "_next": URL(
-                        c = "climate",
-                        f = "prices"
+        redirect(URL(c="default",
+                     f="user",
+                     args=["login"],
+                     vars = {"_next": URL(c="climate",
+                                          f="prices")}
                     )
-                }
-            )
-        )
+                )
     else:
         if s3_has_role(ADMIN):
             return s3_rest_controller()
@@ -364,7 +369,11 @@ def save_query():
     output = s3_rest_controller()
     return output
 
+# -----------------------------------------------------------------------------
 def request_image():
+    """
+    """
+
     from datetime import datetime, timedelta
     response.headers["Expires"] = (
         datetime.now() + timedelta(days = 7)
@@ -378,15 +387,15 @@ def request_image():
         open(
             _map_plugin().printable_map_image_file(
                 command = (
-                    request.env.applications_parent+"/applications/"+
-                    "eden/modules/webkit_url2png.py"
+                    request.env.applications_parent + "/applications/" +
+                    "%s/modules/webkit_url2png.py" % appname
                 ),
                 url_prefix = (
-                    "http://%(http_host)s/eden/%(controller)s"
+                    "http://%(http_host)s/%(appname)s/%(controller)s"
                 ) % dict(
-                    controller = request.controller,
-                    #application_name = request.application,
                     http_host = request.env.http_host, # includes port
+                    appname = appname,
+                    controller = request.controller,
                 ),
                 query_string = request.env.query_string,
                 width = int(vars["width"]),
@@ -397,23 +406,26 @@ def request_image():
         chunk_size=4096
     )
 
+# -----------------------------------------------------------------------------
 def download_purchased_data():
+    """
+    """
+
     purchase_id = request.vars["purchase_id"]
-    climate_purchase = db(
-        db.climate_purchase.id == purchase_id
-    ).select().first()
+    query = (s3db.climate_purchase.id == purchase_id)
+    climate_purchase = db(query).select(limitby=(0, 1)).first()
     if climate_purchase is not None and climate_purchase.paid:
         sample_table = SampleTable.with_id(climate_purchase.parameter_id)
         parameter_name = repr(sample_table)
         # climate_purchase.station_id is currently actually the place_id
         place_id = climate_purchase.station_id
-        station = db(
-            (db.climate_place_station_id.id == place_id) &
-            (db.climate_place_station_name.id == place_id)
-        ).select(
-            db.climate_place_station_name.name,
-            db.climate_place_station_id.station_id
-        ).first()
+        itable = s3db.climate_place_station_id
+        ntable = s3db.climate_place_station_name
+        query = (itable.id == place_id) & \
+                (ntable.id == place_id)
+        station = db(query).select(ntable.name,
+                                   itable.station_id,
+                                   limitby=(0, 1)).first()
 
         station_id = station.climate_place_station_id.station_id
         station_name = station.climate_place_station_name.name
@@ -438,7 +450,11 @@ def download_purchased_data():
     else:
         return
 
+# -----------------------------------------------------------------------------
 def get_years():
+    """
+    """
+
     from datetime import datetime, timedelta
     response.headers["Expires"] = (
         datetime.now() + timedelta(days = 7)
@@ -447,3 +463,5 @@ def get_years():
         open(_map_plugin().get_available_years(request.vars["dataset_name"]),"rb"),
         chunk_size=4096
     )
+
+# END =========================================================================

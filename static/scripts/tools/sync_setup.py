@@ -49,6 +49,7 @@ try:
     resources = [ os.environ["sync_resources_1"] ]
 except KeyError:
     resources = [
+                # Include all non-component resources
                 "pr_person",
                 "org_organisation",
                 "org_office",
@@ -70,12 +71,10 @@ except KeyError:
 # End of configuration options ================================================
 
 # Load models
-s3mgr.load("sync_config")
-
 if site_type == "active":
 
     # Settings
-    sync_config = db.sync_config
+    sync_config = s3db.sync_config
     config = Storage(proxy=proxy_url)
     record = db(sync_config.id!=None).select(sync_config.id, limitby=(0, 1)).first()
     if record:
@@ -136,7 +135,7 @@ if site_type == "active":
     if record:
         vars.update(user_id = record.user_id)
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now()
     then = now + datetime.timedelta(days=365)
     scheduler_task_id = current.s3task.schedule_task(task,
                                                      function_name=function_name,

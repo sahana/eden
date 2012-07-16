@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for
- * full list of contributors). Published under the Clear BSD license.
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -183,6 +183,20 @@ OpenLayers.Control.PinchZoom = OpenLayers.Class(OpenLayers.Control, {
 
             location.lon += resolution * ((size.w / 2) - zoomPixel.x);
             location.lat -= resolution * ((size.h / 2) - zoomPixel.y);
+
+            // Force a reflow before calling setCenter. This is to work
+            // around an issue occuring in iOS.
+            //
+            // See https://github.com/openlayers/openlayers/pull/351.
+            //
+            // Without a reflow setting the layer container div's top left
+            // style properties to "0px" - as done in Map.moveTo when zoom
+            // is changed - won't actually correctly reposition the layer
+            // container div.
+            //
+            // Also, we need to use a statement that the Google Closure
+            // compiler won't optimize away.
+            this.map.div.clientWidth = this.map.div.clientWidth;
 
             this.map.setCenter(location, zoom);
         }

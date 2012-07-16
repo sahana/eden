@@ -42,17 +42,15 @@ __all__ = ["S3Msg",
            "S3Compose"]
 
 import datetime
-import difflib
 import string
 import urllib
 from urllib2 import urlopen
 
-from gluon import current
+from gluon import current, redirect
 from gluon.html import *
-from gluon.http import redirect
 
 from s3crud import S3CRUD
-from s3utils import s3_debug,soundex
+from s3utils import s3_debug
 from s3validators import IS_ONE_OF, IS_ONE_OF_EMPTY
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
@@ -188,191 +186,56 @@ class S3Msg(object):
         # Explicitly commit DB operations when running from Cron
         db.commit()
         return True
-
+    
     # -------------------------------------------------------------------------
-    # Parser for inbound messages
-    # -----------------------------------------------------------------------------
     @staticmethod
-    def parse_message(message=""):
+    def parse_import(workflow, source):
         """
-            Parse Incoming Message according to keyword
-
-            @ToDo: Check for OpenGeoSMS
-                    - route SI to IRS
-
-            @ToDo: Allow this to be more easily customised by moving the
-                   routing logic to a separate file (ideally web configurable)
+           Parse Inbound Messages
         """
 
-        if not message:
-            return None
+        from s3parser import S3Parsing
 
-        T = current.T
         db = current.db
         s3db = current.s3db
-        s3mgr = current.manager
-
-        primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
-        contact_keywords = ["email", "mobile", "facility", "clinical",
-                            "security", "phone", "status", "hospital",
-                            "person", "organisation"]
-
-        pkeywords = primary_keywords+contact_keywords
-        keywords = string.split(message)
-        pquery = []
-        name = ""
+        ltable = s3db.msg_log
+        wtable = s3db.msg_workflow
+        otable = s3db.msg_outbox
+        ctable = s3db.pr_contact
+        
+        query = (wtable.workflow_task_id == workflow) & \
+                (wtable.source_task_id == source)
+        records = db(query).select(wtable.source_task_id)
         reply = ""
-        for word in keywords:
-            match = None
-            for key in pkeywords:
-                if soundex(key) == soundex(word):
-                    match = key
-                    break
-            if match:
-                pquery.append(match)
-            else:
-                name = word
-
-        # ---------------------------------------------------------------------
-        # Person Search [get name person phone email]
-        if "person" in pquery:
-
-            table = s3db.pr_person
-            rows = db(table.id > 0).select(table.pe_id,
-                                           table.first_name,
-                                           table.middle_name,
-                                           table.last_name)
+        for record in records:
+            query = (ltable.is_parsed == False) & \
+                    (ltable.inbound == True) & \
+                    (ltable.source_task_id == record.source_task_id)
+            rows = db(query).select()
+            
             for row in rows:
-                result = []
-                if (soundex(str(name)) == soundex(str(row.first_name))) or \
-                   (soundex(str(name)) == soundex(str(row.middle_name))) or \
-                   (soundex(str(name)) == soundex(str(row.last_name))):
-                    presult = dict(name = row.first_name, id = row.pe_id)
-                    result.append(presult)
-                    break
+                message = row.message
+                reply = S3Parsing.parser(workflow, message)
+                db(ltable.id == row.id).update(reply = reply,
+                                               is_parsed = True)
+                reply = ltable.insert(recipient = row.sender,
+                                      subject ="Parsed Reply",
+                                      message = reply)
+                try:
+                    email = row.sender.split("<")[1].split(">")[0]
+                    query = (ctable.contact_method == "EMAIL") & \
+                        (ctable.value == email) 
+                    pe_ids = db(query).select(ctable.pe_id)
+                except:
+                    raise ValueError("Email address not defined!")
+                
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        otable.insert(message_id = reply.id,
+                                      address = row.sender, pe_id = pe_id.pe_id)
+                db.commit()
 
-            if len(result) > 1:
-                return T("Multiple Matches")
-            if len(result) == 1:
-                reply = result[0]["name"]
-                table = s3db.pr_contact
-                if "email" in pquery:
-                    query = (table.pe_id == result[0]["id"]) & \
-                        (table.contact_method == "EMAIL")
-                    recipient = db(query).select(table.value,
-                                                 orderby = table.priority,
-                                                 limitby=(0, 1)).first()
-                    reply = "%s Email->%s" % (reply, recipient.value)
-                if "phone" in pquery:
-                    query = (table.pe_id == result[0]["id"]) & \
-                        (table.contact_method == "SMS")
-                    recipient = db(query).select(table.value,
-                                                 orderby = table.priority,
-                                                 limitby=(0, 1)).first()
-                    reply = "%s Mobile->%s" % (reply,
-                                               recipient.value)
-
-            if len(result) == 0:
-                return T("No Match")
-
-            return reply
-
-        # ---------------------------------------------------------------------
-        #  Hospital Search [example: get name hospital facility status ]
-        if "hospital" in pquery:
-            table = s3db.hms_hospital
-            rows = db(table.id > 0).select(table.id,
-                                           table.name,
-                                           table.aka1,
-                                           table.aka2)
-            for row in rows:
-                result = []
-                if (soundex(str(name)) == soundex(str(row.name))) or \
-                   (soundex(name) == soundex(str(row.aka1))) or \
-                   (soundex(name) == soundex(str(row.aka2))):
-                    result.append(row)
-                    break
-
-
-            if len(result) > 1:
-                return T("Multiple Matches")
-
-            if len(result) == 1:
-                hospital = db(table.id == result[0].id).select().first()
-                reply = "%s %s (%s) " % (reply, hospital.name,
-                                         T("Hospital"))
-                if "phone" in pquery:
-                    reply = reply + "Phone->" + str(hospital.phone_emergency)
-                if "facility" in pquery:
-                    reply = reply + "Facility status " + str(table.facility_status.represent(hospital.facility_status))
-                if "clinical" in pquery:
-                    reply = reply + "Clinical status " + str(table.clinical_status.represent(hospital.clinical_status))
-                if "security" in pquery:
-                    reply = reply + "Security status " + str(table.security_status.represent(hospital.security_status))
-
-            if len(result) == 0:
-                return T("No Match")
-
-            return reply
-
-        # ---------------------------------------------------------------------
-        # Organization search [example: get name organisation phone]
-        if "organisation" in pquery:
-            table = s3db.org_organisation
-            rows = db(table.id > 0).select(table.id,
-                                           table.name,
-                                           table.acronym)
-            for row in rows:
-                result = []
-                if (soundex(str(name)) == soundex(str(row.name))) or \
-                   (soundex(str(name)) == soundex(str(row.acronym))):
-                    result.append(row)
-                    break
-
-            if len(result) > 1:
-                return T("Multiple Matches")
-
-            if len(result) == 1:
-                organisation = db(table.id == result[0].id).select().first()
-                reply = "%s %s (%s) " % (reply, organisation.name,
-                                         T("Organization"))
-                if "phone" in pquery:
-                    reply = reply + "Phone->" + str(organisation.donation_phone)
-                if "office" in pquery:
-                    reply = reply + "Address->" + s3_get_db_field_value(tablename = "org_office",
-                                                                        fieldname = "address",
-                                                                        look_up_value = organisation.id)
-            if len(reply) == 0:
-                return T("No Match")
-
-            return reply
-
-        return "Please provide one of the keywords - person, hospital, organisation"
-
-
-
-    # =========================================================================
-    # Processing of Unparsed Messages
-    # =========================================================================
-    def process_log(self):
-        """
-            Processes the unparsed messages in msg_log
-        """
-
-        db = current.db
-        ltable = current.s3db.msg_log
-
-        query = (ltable.is_parsed == False) & \
-                (ltable.inbound == True)
-        rows = db(query).select()
-
-        for row in rows:
-            message = row.message
-            reply = self.parse_message(message)
-            db(ltable.id == row.id).update(reply = reply,is_parsed = True)
-
-        return
-
+        return    
 
     # =========================================================================
     # Outbound Messages
@@ -381,8 +244,11 @@ class S3Msg(object):
                 type = "SMS",
                 recipient_type = None,
                 recipient = None,
+                #hide = True,
+                subject = "",
                 message = "",
                 url = None,
+                formid = None,
                ):
         """
             Form to Compose a Message
@@ -393,24 +259,19 @@ class S3Msg(object):
                               - this can also be set by setting one of
                                 (in priority order, if multiple found):
                                 request.vars.pe_id
-                                request.vars.person_id
-                                request.vars.group_id
-                                request.vars.hrm_id
+                                request.vars.person_id @ToDo
+                                request.vars.group_id  @ToDo
+                                request.vars.hrm_id    @ToDo
+            @param subject: The default subject text (for Emails)
             @param message: The default message text
             @param url: Redirect to the specified URL() after message sent
+            @param formid: If set, allows multiple forms open in different tabs
         """
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
-        auth = current.auth
-        crud = current.crud
-        request = current.request
-        session = current.session
-        response = current.response
-        s3 = response.s3
-        vars = request.vars
+        vars = current.request.vars
 
+        s3db = current.s3db
         ltable = s3db.msg_log
         otable = s3db.msg_outbox
 
@@ -418,12 +279,14 @@ class S3Msg(object):
             url = URL(c="msg",
                       f="compose")
 
+        auth = current.auth
         if auth.is_logged_in() or auth.basic():
             pass
         else:
             redirect(URL(c="default", f="user", args="login",
                          vars={"_next" : url}))
 
+        ltable.subject.default = subject
         ltable.message.default = message
 
         otable.pr_message_method.default = type
@@ -436,6 +299,10 @@ class S3Msg(object):
         ltable.actioned.writable = ltable.actioned.readable = False
         ltable.actionable.writable = ltable.actionable.readable = False
         ltable.actioned_comments.writable = ltable.actioned_comments.readable = False
+        ltable.inbound.writable = ltable.inbound.readable = False
+        ltable.is_parsed.writable = ltable.is_parsed.readable = False
+        ltable.reply.writable = ltable.reply.readable = False
+        ltable.source_task_id.writable = ltable.source_task_id.readable = False
 
         ltable.subject.label = T("Subject")
         ltable.message.label = T("Message")
@@ -457,11 +324,14 @@ class S3Msg(object):
         if recipient:
             ltable.pe_id.default = recipient
             otable.pe_id.default = recipient
-            ltable.pe_id.requires = IS_ONE_OF_EMPTY(db, "pr_pentity.pe_id", multiple=True)
+            ltable.pe_id.requires = IS_ONE_OF_EMPTY(current.db,
+                                                    "pr_pentity.pe_id",
+                                                    multiple=True)
         else:
             if recipient_type:
                 # Filter by Recipient Type
-                otable.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
+                otable.pe_id.requires = IS_ONE_OF(current.db,
+                                                  "pr_pentity.pe_id",
                                                   orderby="instance_type",
                                                   filterby="instance_type",
                                                   filter_opts=(recipient_type,))
@@ -479,7 +349,7 @@ class S3Msg(object):
             """
 
             if not vars.pe_id:
-                session.error = T("Please enter the recipient(s)")
+                current.session.error = T("Please enter the recipient(s)")
                 redirect(url)
             if auth.user:
                 sender_pe_id = auth.user.pe_id
@@ -490,18 +360,19 @@ class S3Msg(object):
                                   vars.message,
                                   sender_pe_id,
                                   vars.pr_message_method):
-                # Trigger a Process Outbox
-                self.process_outbox(contact_method = vars.pr_message_method)
-                session.confirmation = T("Check outbox for the message status")
+                current.session.confirmation = T("Check outbox for the message status")
                 redirect(url)
             else:
-                session.error = T("Error in message")
+                current.session.error = T("Error in message")
                 redirect(url)
 
         # Source forms
+        crud = current.crud
         logform = crud.create(ltable,
-                              onvalidation = compose_onvalidation)
-        outboxform = crud.create(otable)
+                              onvalidation = compose_onvalidation,
+                              formname = "msg_log/%s" % formid)
+        outboxform = crud.create(otable,
+                                 formname = "msg_outbox/%s" % formid)
 
         # Shortcuts
         lcustom = logform.custom
@@ -510,10 +381,10 @@ class S3Msg(object):
         pe_row = TR(TD(LABEL("%s:" % ocustom.label.pe_id)),
                     _id="msg_outbox_pe_id__row")
         if recipient:
-            ocustom.widget.pe_id["_class"] = "hidden"
+            ocustom.widget.pe_id["_class"] = "hide"
             pe_row.append(TD(ocustom.widget.pe_id,
-                             s3.pr_pentity_represent(recipient,
-                                                     show_label=False)))
+                             s3db.pr_pentity_represent(recipient,
+                                                       show_label=False)))
         else:
             pe_row.append(TD(INPUT(_id="dummy", _class="ac_input", _size="50"),
                              ocustom.widget.pe_id))
@@ -557,15 +428,16 @@ class S3Msg(object):
 
         # Control the Javascript in static/scripts/S3/s3.msg.js
         if not recipient:
+            s3 = current.response.s3
             if recipient_type:
-                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search",
                                         vars={"type":recipient_type}))
             else:
-                s3.js_global.append("S3.msg_search_url = '%s';" % \
+                s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search"))
 
-            s3.jquery_ready.append("s3_msg_ac_pe_input();")
+            s3.jquery_ready.append('''s3_msg_ac_pe_input()''')
 
         # Default title
         # - can be overridden by the calling function
@@ -630,8 +502,9 @@ class S3Msg(object):
             except:
                 return False
 
-        # @ToDo: Process Outbox (once this can be done async)
-        # - or is this better to do in the wrapper script?
+        # Process OutBox async
+        current.s3task.async("msg_process_outbox",
+                             args=[pr_message_method])
 
         return True
 
@@ -1303,6 +1176,8 @@ class S3Msg(object):
 
         inbound_status_table = s3db.msg_inbound_email_status
         inbox_table = s3db.msg_email_inbox
+        log_table = s3db.msg_log
+        source_task_id = username
 
         # Read-in configuration from Database
         settings = db(s3db.msg_inbound_email_settings.username == username).select(limitby=(0, 1)).first()
@@ -1374,9 +1249,12 @@ class S3Msg(object):
                     subject = ""
                 # Parse out the 'Body'
                 textParts = msg.get_payload()
-                body = textParts[0].get_payload()
+                body = textParts[0]
                 # Store in DB
                 inbox_table.insert(sender=sender, subject=subject, body=body)
+                log_table.insert(sender=sender, subject=subject, message=body, \
+                                 source_task_id=source_task_id, inbound=True)
+                
                 if delete:
                     # Add it to the list of messages to delete later
                     dellist.append(number)
@@ -1444,9 +1322,13 @@ class S3Msg(object):
                             subject = ""
                         # Parse out the 'Body'
                         textParts = msg.get_payload()
-                        body = textParts[0].get_payload()
+                        body = textParts[0]
                         # Store in DB
                         inbox_table.insert(sender=sender, subject=subject, body=body)
+                        log_table.insert(sender=sender, subject=subject, \
+                                message=body, source_task_id=source_task_id, \
+                                inbound = True)
+                        
                         if delete:
                             # Add it to the list of messages to delete later
                             dellist.append(num)
@@ -1457,7 +1339,17 @@ class S3Msg(object):
                 typ, response = M.store(number, "+FLAGS", r"(\Deleted)")
             M.close()
             M.logout()
-
+    # =============================================================================
+    @staticmethod
+    def source_id(username):
+        """ Extracts the source_task_id from a given message. """
+        
+        db = current.db
+        table = db["scheduler_task"]
+        records = db(table.id > 0).select()
+        for record in records:
+            if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
+                return record.id
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """
@@ -1471,11 +1363,10 @@ class S3Compose(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        manager = current.manager
         if r.http in ("GET", "POST"):
             output = self.compose(r, **attr)
         else:
-            r.error(405, manager.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
@@ -1489,10 +1380,6 @@ class S3Compose(S3CRUD):
 
         T = current.T
         auth = current.auth
-        manager = current.manager
-        response = current.response
-        session = current.session
-        settings = current.deployment_settings
 
         url = r.url()
         self.url = url
@@ -1504,8 +1391,8 @@ class S3Compose(S3CRUD):
             redirect(URL(c="default", f="user", args="login",
                          vars={"_next" : url}))
 
-        if not settings.has_module("msg"):
-            session.error = T("Cannot send messages if Messaging module disabled")
+        if not current.deployment_settings.has_module("msg"):
+            current.session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
 
         #_vars = r.get_vars
@@ -1513,7 +1400,7 @@ class S3Compose(S3CRUD):
         self.recipients = None
         form = self._compose_form()
         # @ToDo: A 2nd Filter form
-        # if form.accepts(r.post_vars, session,
+        # if form.accepts(r.post_vars, current.session,
                         # formname="compose",
                         # keepvalues=True):
             # query, errors = self._process_filter_options(form)
@@ -1529,7 +1416,7 @@ class S3Compose(S3CRUD):
             #output = dict(items=items)
             output = dict(form=form)
         else:
-            r.error(501, manager.ERROR.BAD_METHOD)
+            r.error(501, current.manager.ERROR.BAD_METHOD)
 
         # Complete the page
         if representation == "html":
@@ -1550,8 +1437,8 @@ class S3Compose(S3CRUD):
             output["title"] = title
             #output["subtitle"] = subtitle
             #output["form"] = form
-            #response.view = self._view(r, "list_create.html")
-            response.view = self._view(r, "create.html")
+            #current.response.view = self._view(r, "list_create.html")
+            current.response.view = self._view(r, "create.html")
 
         return output
 
@@ -1591,8 +1478,6 @@ class S3Compose(S3CRUD):
                              vars.message,
                              sender_pe_id,
                              vars.pr_message_method):
-            # Trigger a Process Outbox
-            msg.process_outbox(contact_method = vars.pr_message_method)
             session.confirmation = T("Check outbox for the message status")
             redirect(url)
         else:

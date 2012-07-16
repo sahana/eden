@@ -1,0 +1,57 @@
+@charset "UTF-8";
+
+/*** Home Page ***/
+
+#news-window{
+    overflow: hidden;
+    position: absolute;
+    z-index: 999;
+    background: url(img/news_window_bg.png);
+    width: 190px;
+    top: 20px;
+    right: 20px;
+    padding: 10px;
+    border-right: 1px solid #989793;
+    border-bottom: 1px solid #989793;
+}
+#news-window h2{margin-top:5px;}
+#news-window ul{list-style:none;margin:0px;padding:0px;}
+#news-window .more-info,#news-window .open-window{display:block;padding-bottom:10px;float:right;color:#DC032E;font-style:italics;}
+#news-window li {margin:0 0 10px 0;padding:5px 0 30px 0px;border-bottom:1px solid #DBCCA8;}
+#news-window li h3 {clear:both;font-size:1em;line-height:1.25em;}
+#news-window li h3 a{color:#891735;}
+#news-window .close-window{display:block;background:url(img/close_but.png) no-repeat;width:10px;height:10px;text-indent:-99999px;}
+#news-window .open-window{display:none;margin-top:6px;}
+
+#map-home{
+    display: block;
+    background: url(img/map_bg.jpg) no-repeat;
+    width: 1024px;
+    height: 411px;
+}
+#map-home .map-tip{position:absolute;bottom:20px;left:35px;font-size:1em;}
+#map-home .map-tip:before{position:relative;top:6px;left:-1px;content:url(img/maptip_start.png);}
+#map-home .map-tip:after{position:relative;top:6px;right:-5px;content:url(img/maptip_end.png);}
+
+/*** Map ***/
+.marker {
+    position: absolute;
+    /* z-index: 1000; */ /* Don't want to go above the dropdown menus! */
+}
+.marker a{display:block;width:5px; height:5px;padding:5px;background:url(img/map_marker.png) center no-repeat;}
+.marker-window{display:none;position:absolute;width:200px;padding:0 10px 1px 5px;background:#dc032e;font-size:0.9em;color:#fff;border-bottom:2px solid #63594d;}
+.marker-window.left{top:17px;right:35px;}
+.marker-window.right{top:18px;left:37px;}
+.marker-window span{float:left;display:block;}
+.marker-plus{position:absolute;width:28px; height:30px;}
+.left .marker-plus{top:-11px;right:-28px;background:url(img/map_marker_plus_right.png) no-repeat;}
+.right .marker-plus{top:-11px;left:-28px;background:url(img/map_marker_plus_left.png) no-repeat;}
+
+.map-click {
+    display: block;
+    cursor: pointer;
+    position: relative;
+    width:1024px;
+    height: 394px;
+    text-indent:-9999px;
+}

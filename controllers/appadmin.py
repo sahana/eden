@@ -5,10 +5,12 @@
 """
 
 import os
+import copy
+import datetime
+import re
 from shutil import rmtree
 #import socket
-import datetime
-import copy
+
 import gluon.contenttype
 import gluon.fileutils
 
@@ -48,7 +50,7 @@ if not s3_has_role(ADMIN):
 # Load all models
 s3db.load_all_models()
 _tables = db.tables
-if deployment_settings.get_security_policy() not in (1, 2, 3, 4, 5, 6, 7, 8):
+if settings.get_security_policy() not in (1, 2, 3, 4, 5, 6, 7, 8):
     # Web2Py security
     db.auth_permission.table_name.requires = IS_IN_SET(_tables)
 #s3db.pr_pe_subscription.resource.requires = IS_IN_SET(_tables)
@@ -59,7 +61,7 @@ module = "admin"
 ignore_rw = True
 response.view = "admin/appadmin.html"
 #response.menu = [[T("design"), False, URL(a="admin", c="default", f="design",
-#                 args=[request.application])], [T("db"), False,
+#                 args=[appname])], [T("db"), False,
 #                 URL(f="index")], [T("state"), False,
 #                 URL(f="state")]]
 

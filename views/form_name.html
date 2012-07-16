@@ -1,8 +1,0 @@
-﻿<tr id="name">
-<td><label>{{=T("Name")}}</label></td>
-<td><input name="name" type="text" value="{{try:}}{{=resource.name}}{{except:}}{{pass}}" />
-<span class='req'>*</span>
-{{if customform.errors.name:}}
-  <div class="error" id="name__error">{{=customform.errors.name}}</div>
-{{pass}}
-</td></tr>

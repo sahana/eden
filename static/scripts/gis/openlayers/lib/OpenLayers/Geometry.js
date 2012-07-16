@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
  
 /**
@@ -176,7 +176,8 @@ OpenLayers.Geometry = OpenLayers.Class({
      * geometry.
      * 
      * Parameters:
-     * lonlat - {<OpenLayers.LonLat>} 
+     * lonlat - {<OpenLayers.LonLat>|Object} OpenLayers.LonLat or an
+     *     object with a 'lon' and 'lat' properties.
      * toleranceLon - {float} Optional tolerance in Geometric Coords
      * toleranceLat - {float} Optional tolerance in Geographic Coords
      * 

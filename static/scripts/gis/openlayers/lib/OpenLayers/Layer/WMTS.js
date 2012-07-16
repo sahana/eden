@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -106,6 +106,7 @@ OpenLayers.Layer.WMTS = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * 
      * Matrix properties:
      * identifier - {String} The matrix identifier (required).
+     * scaleDenominator - {Number} The matrix scale denominator.
      * topLeftCorner - {<OpenLayers.LonLat>} The top left corner of the 
      *     matrix.  Must be provided if different than the layer <tileOrigin>.
      * tileWidth - {Number} The tile width for the matrix.  Must be provided 
@@ -296,7 +297,7 @@ OpenLayers.Layer.WMTS = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * Method: moveTo
      * 
      * Parameters:
-     * bound - {<OpenLayers.Bounds>}
+     * bounds - {<OpenLayers.Bounds>}
      * zoomChanged - {Boolean} Tells when zoom has changed, as layers have to
      *     do some init work in that case.
      * dragging - {Boolean}
@@ -332,10 +333,7 @@ OpenLayers.Layer.WMTS = OpenLayers.Class(OpenLayers.Layer.Grid, {
      * Get the current index in the matrixIds array.
      */
     getIdentifier: function() {
-        return this.serverResolutions != null ?
-            OpenLayers.Util.indexOf(this.serverResolutions,
-                                    this.getServerResolution()) :
-            this.getServerZoom() + this.zoomOffset;
+        return this.getServerZoom();
     },
     
     /**

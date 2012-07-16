@@ -41,6 +41,7 @@ S3.Utf8 = {
     decode: function (utftext) {
         var string = '';
         var i = 0;
+        var c1, c2;
         var c = c1 = c2 = 0;
         while ( i < utftext.length ) {
             c = utftext.charCodeAt(i);
@@ -110,18 +111,13 @@ $(document).ready(function() {
     $('.confirmation').hide().slideDown('slow')
     $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
     $("input[type='checkbox'].delete").click(function() { if(this.checked) if(!confirm(S3.i18n.delete_confirmation)) this.checked=false; });
-    try { $('input.datetime').focus( function() {
-        Calendar.setup({
-            inputField: this.id, ifFormat: S3.i18n.datetime_format, showsTime: true, timeFormat: '24'
-        });
-    }); } catch(e) {};
 
     // T2 Layer
-    try { $('.zoom').fancyZoom( {
-        scaleImg: true,
-        closeOnClick: true,
-        directory: S3.Ap.concat('/static/media')
-    }); } catch(e) {};
+    //try { $('.zoom').fancyZoom( {
+    //    scaleImg: true,
+    //    closeOnClick: true,
+    //    directory: S3.Ap.concat('/static/media')
+    //}); } catch(e) {};
 
     // S3 Layer
     // dataTables' delete button
@@ -136,23 +132,6 @@ $(document).ready(function() {
             }
         });
     }
-
-    // Datepicker
-    $('input.date').datepicker({
-        changeMonth: true, changeYear: true,
-        //showOtherMonths: true, selectOtherMonths: true,
-        showOn: 'both',
-        buttonImage: S3.Ap.concat('/static/img/jquery-ui/calendar.gif'),
-        buttonImageOnly: true,
-        dateFormat: 'yy-mm-dd',
-        isRTL: S3.rtl
-     });
-
-    $('input.time').timepicker({
-        hourText: S3.i18n.hour,
-        minuteText: S3.i18n.minute,
-        defaultTime: ''
-    });
 
     // accept comma as thousands separator
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
@@ -180,20 +159,6 @@ $(document).ready(function() {
             },
         function() { $('ul', this).css('display', 'none');  }
     );
-
-    /*
-    // unused in new sidebar subnav
-    $('#subnav li').hover(
-        function() {
-                var popup_width = $(this).width()-2;
-                $('ul', this).css({
-                    'display': 'block',
-                    'width': popup_width.toString() + 'px'
-                });
-            },
-        function() { $('ul', this).css('display', 'none');  }
-    );
-    */
 
     // Colorbox Popups
     $('a.colorbox').attr('href', function(index, attr) {
@@ -712,7 +677,7 @@ function S3FilterFieldChange (setting) {
  * Add an Autocomplete to a field - used by S3AutocompleteWidget
  */
 
-S3.autocomplete = function(fieldname, module, resourcename, input, link, post_process, delay, min_length) {
+S3.autocomplete = function(fieldname, module, resourcename, input, filter, link, postprocess, delay, min_length) {
     var real_input = '#' + input;
     var dummy = 'dummy_' + input;
     var dummy_input = '#' + dummy;
@@ -722,10 +687,13 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
     }
 
     var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
+    if (filter != 'undefined') {
+        url += '&' + filter;
+    }
     if (link != 'undefined') {
         url += '&link=' + link;
     }
-    
+
     // Optional args
     if (postprocess == 'undefined') {
         var postprocess = '';
@@ -745,7 +713,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
         delay: delay,
         minLength: min_length,
         search: function(event, ui) {
-            $( '#' + dummy + '_throbber' ).removeClass('hidden').show();
+            $( '#' + dummy + '_throbber' ).removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
@@ -761,7 +729,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, link, post_pr
             $( real_input ).val( ui.item.id );
             $( real_input ).change();
             if (postprocess) {
-                postprocess();
+                eval(postprocess);
             }
             data.accept = true;
             return false;

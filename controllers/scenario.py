@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ def index():
 
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -26,7 +26,6 @@ def create():
     """ Redirect to scenario/create """
     redirect(URL(f="scenario", args="create"))
 
-
 # =============================================================================
 # Sceenarios
 # =============================================================================
@@ -34,13 +33,10 @@ def scenario():
 
     """ RESTful CRUD controller """
 
-    tablename = "scenario_scenario"
-
     # Load the Models
-    s3mgr.load(tablename)
-    table = db[tablename]
+    table = s3db.scenario_scenario
 
-    s3mgr.configure("gis_config",
+    s3db.configure("gis_config",
                     deletable=False)
 
     # Parse the Request
@@ -51,7 +47,7 @@ def scenario():
         s3.crud.submit_button = T("Assign")
 
     # Redirect to update view to open tabs
-    s3mgr.configure(table,
+    s3db.configure(table,
                     create_next = r.url(method="", id="[id]"))
 
     # Execute the request
@@ -64,16 +60,16 @@ def scenario():
         s3_action_buttons(r)
         if r.component:
             if r.component.name == "asset":
-                s3mgr.LABEL["DELETE"]=T("Remove")
+                s3mgr.LABEL["DELETE"] = T("Remove")
 
             elif r.component.name == "human_resource":
-                s3mgr.LABEL["DELETE"]=T("Remove")
+                s3mgr.LABEL["DELETE"] = T("Remove")
 
             elif r.component.name == "site":
-                s3mgr.LABEL["DELETE"]=T("Remove")
+                s3mgr.LABEL["DELETE"] = T("Remove")
 
             elif r.component.name == "task":
-                s3mgr.LABEL["DELETE"]=T("Remove")
+                s3mgr.LABEL["DELETE"] = T("Remove")
 
     return output
 
@@ -120,7 +116,7 @@ def person():
         else:
             s3mgr.show_ids = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller("pr", "person")
 
@@ -131,7 +127,7 @@ def asset():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("scenario_scenario")
+    table = s3db.scenario_asset
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -141,7 +137,7 @@ def asset():
     # Pre-Process
     if r.id and link:
         # Go back to the asset list of the scenario/event after removing the asset
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "asset"]))
@@ -183,7 +179,7 @@ def human_resource():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    table = s3db.scenario_human_resource
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -193,7 +189,7 @@ def human_resource():
     # Pre-Process
     if r.id and link:
         # Go back to the human_resource list of the scenario/event after removing the human_resource
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "human_resource"]))
@@ -206,10 +202,10 @@ def human_resource():
                          _href=r.url(method="update",
                                      representation="html"),
                          _target="_blank")
-            delete_btn=A(T("Remove this human resource from this scenario"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
+            delete_btn = A(T("Remove this human resource from this scenario"),
+                           _href=r.url(method="delete",
+                                       representation="html"),
+                           _class="delete-btn")
             # Switch to the other request
             hrm_id = r.record.human_resource_id
             r = s3base.S3Request(s3mgr,
@@ -235,7 +231,7 @@ def site():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("event_event")
+    table = s3db.scenario_site
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -245,7 +241,7 @@ def site():
     # Pre-Process
     if r.id and link:
         # Go back to the facility list of the scenario/event after removing the facility
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "site"]))
@@ -258,10 +254,10 @@ def site():
                          _href=r.url(method="update",
                                      representation="html"),
                          _target="_blank")
-            delete_btn=A(T("Remove this facility from this scenario"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
+            delete_btn = A(T("Remove this facility from this scenario"),
+                           _href=r.url(method="delete",
+                                       representation="html"),
+                           _class="delete-btn")
             # Switch to the other request
             site_id = r.record.site_id
             r = s3base.S3Request(s3mgr,
@@ -287,7 +283,7 @@ def task():
     """ RESTful CRUD controller """
 
     # Load the Models
-    s3mgr.load("project_task")
+    table = s3db.scenario_task
 
     # Parse the Request
     r = s3mgr.parse_request()
@@ -297,7 +293,7 @@ def task():
     # Pre-Process
     if r.id and link:
         # Go back to the task list of the scenario/event after removing the task
-        s3mgr.configure(r.tablename,
+        s3db.configure(r.tablename,
                         delete_next=URL(link,
                                         args=[r.record["%s_id" % link],
                                               "task"]))
@@ -310,10 +306,10 @@ def task():
                          _href=r.url(method="update",
                                      representation="html"),
                          _target="_blank")
-            delete_btn=A(T("Remove this task from this scenario"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
+            delete_btn = A(T("Remove this task from this scenario"),
+                           _href=r.url(method="delete",
+                                       representation="html"),
+                           _class="delete-btn")
             # Switch to the other request
             task_id = r.record.task_id
             r = s3base.S3Request(s3mgr,

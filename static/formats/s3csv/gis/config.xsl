@@ -22,7 +22,6 @@
          MaxLat...............float...........gis_config.max_lat
          MinLon...............float...........gis_config.min_lon
          MaxLon...............float...........gis_config.max_lon
-         Search Level.........string..........gis_config.search_level
          WMS Browser..........float...........gis_config.wmsbrowser_url
          
 
@@ -110,9 +109,6 @@
             <data field="min_lon"><xsl:value-of select="col[@field='MinLon']"/></data>
             <data field="max_lat"><xsl:value-of select="col[@field='MaxLat']"/></data>
             <data field="max_lon"><xsl:value-of select="col[@field='MaxLon']"/></data>
-            <xsl:if test="col[@field='Search Level']!=''">
-                <data field="search_level"><xsl:value-of select="col[@field='Search Level']"/></data>
-            </xsl:if>
             <xsl:if test="col[@field='WMS Browser']!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
             </xsl:if>

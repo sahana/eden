@@ -1,0 +1,32 @@
+@charset "UTF-8";
+
+/* Page Footer */
+#footer {
+    color: white;
+    background-color: #90AABC;
+    height: 40px;
+    width: 100%;
+}
+#footer .content {
+    vertical-align: middle;
+}
+#footer .content div {
+    float: left;
+}
+
+#footer .content div#menu_bottom {
+    float: right;
+}
+#iap{
+    font-size: 1.2em; 
+    padding: 12px 0 0 10px;
+} 
+#adb {
+    padding: 2px 0 0 10px;
+} 
+#unisdr {
+    padding: 6px 0 0 10px;
+}
+#adpc {
+ padding: 10px 0 0 10px;
+}

@@ -5,12 +5,10 @@
         xmlns:jr="http://openrosa.org/javarosa">
   <h:head>
     <h:title>{{try:}}{{=title}}{{except:}}{{pass}}</h:title>
-
     <model>
       <instance>
         {{=instance}}
       </instance>
-      
       {{try:}}{{for items in bindings:}}{{=XML(items)}}{{pass}}{{except:}}{{pass}}
       <itext>
       {{try:}}
@@ -18,15 +16,12 @@
       {{T.force(lang)}}
       {{=TAG["translation"](itext_list, _lang=lang)}}
       {{pass}}
-      {{T.force(response.s3.language)}}      
+      {{T.force(s3.language)}}      
       {{pass}}{{except:}}{{pass}}
       <!-- to keep things backward compatibile -->
       {{=TAG["translation"](itext_list, _lang="eng")}}
       </itext>
-      
     </model>
   </h:head>
-
   {{=controllers}}
-
 </h:html>

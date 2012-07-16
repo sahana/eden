@@ -5,7 +5,6 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 from gluon import current
-from s3 import s3_debug
 from .utils import *
 
 current.data["auth"] = {
@@ -24,7 +23,7 @@ current.data["auth"] = {
     }
 
 # -----------------------------------------------------------------------------
-def login(account="normal", nexturl=None):
+def login(reporter, account="normal", nexturl=None):
     """ Login to the system """
 
     config = current.test_config
@@ -41,7 +40,8 @@ def login(account="normal", nexturl=None):
         raise NotImplementedError
 
     # If the user is already logged in no need to do anything so return
-    if browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
+    if browser.page_source != None and \
+       browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
         # If the URL is different then move to the new URL
         if not browser.current_url.endswith(nexturl):
             url = "%s/%s" % (config.url, nexturl)
@@ -67,15 +67,15 @@ def login(account="normal", nexturl=None):
     try:
         elem = browser.find_element_by_xpath("//div[@class='confirmation']")
     except NoSuchElementException:
-        s3_debug("Login failed.. so registering account")
+        reporter("Login failed.. so registering account")
         # Try registering
-        register(account)
+        register(account, reporter)
     else:
-        s3_debug(elem.text)
+        reporter(elem.text)
         return True
-        
+
 # -----------------------------------------------------------------------------
-def logout():
+def logout(reporter):
     """ Logout """
 
     config = current.test_config
@@ -89,7 +89,7 @@ def logout():
     try:
         elem = browser.find_element_by_id("auth_menu_logout")
     except NoSuchElementException:
-        s3_debug("Logged-out already")
+        reporter("Logged-out already")
         return True
 
     elem.click()
@@ -100,11 +100,11 @@ def logout():
     except NoSuchElementException:
         assert 0, "Logout unsuccesful"
     else:
-        s3_debug(elem.text)
+        reporter(elem.text)
         return True
 
 # -----------------------------------------------------------------------------
-def register(account="normal"):
+def register(reporter, account="normal"):
     """ Register on the system """
 
     config = current.test_config
@@ -142,7 +142,7 @@ def register(account="normal"):
     except NoSuchElementException:
         assert 0, "Registration unsuccesful"
     else:
-        s3_debug(elem.text)
+        reporter(elem.text)
         return True
 
 # END =========================================================================

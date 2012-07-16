@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 
@@ -9,6 +9,7 @@
  * @requires OpenLayers/Handler/Click.js
  * @requires OpenLayers/Handler/Hover.js
  * @requires OpenLayers/Request.js
+ * @requires OpenLayers/Format/WMSGetFeatureInfo.js
  */
 
 /**
@@ -154,8 +155,17 @@ OpenLayers.Control.WMSGetFeatureInfo = OpenLayers.Class(OpenLayers.Control, {
      */
     hoverRequest: null,
     
-    /**
-     * Supported event types (in addition to those from <OpenLayers.Control>):
+    /** 
+     * APIProperty: events
+     * {<OpenLayers.Events>} Events instance for listeners and triggering
+     *     control specific events.
+     *
+     * Register a listener for a particular event with the following syntax:
+     * (code)
+     * control.events.register(type, obj, listener);
+     * (end)
+     *
+     * Supported event types (in addition to those from <OpenLayers.Control.events>):
      * beforegetfeatureinfo - Triggered before the request is sent.
      *      The event object has an *xy* property with the position of the 
      *      mouse click or hover event that triggers the request.
@@ -332,6 +342,7 @@ OpenLayers.Control.WMSGetFeatureInfo = OpenLayers.Class(OpenLayers.Control, {
             service: "WMS",
             version: firstLayer.params.VERSION,
             request: "GetFeatureInfo",
+            exceptions: firstLayer.params.EXCEPTIONS,
             bbox: this.map.getExtent().toBBOX(null,
                 firstLayer.reverseAxisOrder()),
             feature_count: this.maxFeatures,

@@ -1,5 +1,4 @@
-{{try:}}{{=H2(title)}}
-{{except:}}{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
@@ -9,23 +8,14 @@
 <div>
 {{pass}}
 <div id='map'></div>
-
 <div id='list-btn-add'>
-{{try:}}{{=add_btn}}
-{{except:}}{{pass}}
+{{try:}}{{=add_btn}}{{except:}}{{pass}}
 </div>
-
-{{try:}}{{=H3(subtitle)}}
-{{except:}}{{pass}}
 <div id='table-container'>
 {{include "formats.html"}}
 {{try:}}{{=items}}
 </div>
 {{except:}}{{pass}}
 </div>
-{{if response.s3.rfooter:}}
-  <div id='rfooter'>
-    {{=XML(response.s3.rfooter)}}
-  </div>
-{{pass}}
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}

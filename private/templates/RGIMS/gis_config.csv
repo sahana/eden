@@ -1,0 +1,2 @@
+"UUID","Name","OU","OU Type","Region","Default","Zoom","Lat","Lon","Projection","Symbology","MinLat","MaxLat","MinLon","MaxLon","WMS Browser"
+"SITE_DEFAULT","Default",,,"Philippines","Philippines",6,12.567606,122.419227,900913,"US",4,21,114,130,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"

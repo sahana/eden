@@ -1,0 +1,37 @@
+@charset "UTF-8";
+
+/* Project Analysis page */
+
+#analy_matrix_div,
+#analy_graph_div,
+#analy_map_div {
+    padding: 15px;
+	float: left;
+} 
+
+#analy_matrix_div {
+    width: 250px;				   
+}
+
+#analy_graph_div {
+    width: 260px;
+    border-left: 2px #F5902E solid;
+    border-right: 2px #F5902E solid;
+}
+
+#analy_map_div {
+    width: 250px;
+}
+
+#analy_matrix_div p,
+#analy_graph_div p,
+#analy_map_div p {
+    line-height: 100%;
+	margin-bottom: 10px;
+}
+
+#content #analy_matrix_div a,
+#content #analy_graph_div a,
+#content #analy_map_div a {
+    text-decoration: none;
+}

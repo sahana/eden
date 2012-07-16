@@ -241,7 +241,8 @@ class S3Trackable(object):
                         if TRACK_ID not in record or \
                            record[TRACK_ID] not in exclude:
                             location = trackable.get_location(timestmp=timestmp,
-                                                              exclude=exclude)
+                                                              exclude=exclude,
+                                                              _fields=_fields)
                     elif presence.location_id:
                         query = (ltable.id == presence.location_id)
                         if _filter is not None:

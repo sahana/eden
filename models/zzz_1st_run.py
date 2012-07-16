@@ -1,64 +1,153 @@
 # -*- coding: utf-8 -*-
 
 # 1st-run initialisation
-# designed to be called from Crontab's @reboot
-# however this isn't reliable (doesn't work on Win32 Service) so still in models for now...
 
-# Deployments can change settings live via appadmin
+# Set settings.base.prepopulate to 0 in Production
+# (to save 1x DAL hit every page).
+pop_list = settings.get_base_prepopulate()
+if pop_list == 0:
+    pop_list = []
+else:
+    table = db[auth.settings.table_group_name]
+    # The query used here takes 2/3 the time of .count().
+    if db(table.id > 0).select(table.id, limitby=(0, 1)).first():
+        pop_list = []
+    if not isinstance(pop_list, (list, tuple)):
+        pop_list = [pop_list]
+
 if len(pop_list) > 0:
+
+    # =========================================================================
+    # Populate default roles and permissions
+    #
 
     # Allow debug
     import sys
 
-    # Load all Models to ensure all DB tables present
-    s3db.load_all_models()
+    # Shortcuts
+    acl = auth.permission
+    sysroles = auth.S3_SYSTEM_ROLES
+    create_role = auth.s3_create_role
+    update_acls = auth.s3_update_acls
 
-    # Add core data as long as at least one populate setting is on
+    default_oacl = acl.READ|acl.UPDATE
 
-    if deployment_settings.get_auth_opt_in_to_email():
-        table = db.pr_group
-        for team in deployment_settings.get_auth_opt_in_team_list():
-            table.insert(name = team, group_type = 5)
+    # Do not remove or change order of these 5 definitions (System Roles):
+    create_role("Administrator",
+                "System Administrator - can access & make changes to any data",
+                uid=sysroles.ADMIN,
+                system=True, protected=True)
 
-    # Scheduled Tasks
-    if deployment_settings.has_module("msg"):
+    authenticated = create_role("Authenticated",
+                                "Authenticated - all logged-in users",
+                                # Authenticated users can see the Map
+                                dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
+                                # Note the owning role for locations is set to Authenticated
+                                # by default, so this controls the access that logged in
+                                # users have. (In general, tables do not have a default
+                                # owning role.)
+                                dict(c="gis", f="location", uacl=acl.READ|acl.CREATE, oacl=acl.ALL),
+                                # Authenticated users can only see/edit their own PR records
+                                dict(c="pr", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                dict(t="pr_person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                # But need to be able to add/edit addresses
+                                dict(c="pr", f="person", uacl=acl.CREATE, oacl=acl.READ|acl.UPDATE),
+                                # And access the Autocompletes
+                                dict(c="pr", f="person_search", uacl=acl.READ),
+                                dict(c="pr", f="pentity", uacl=acl.READ),
+                                dict(c="msg", f="search", uacl=acl.READ),
+                                # Authenticated  users can see the Supply Catalogue
+                                dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                                # HRM access is controlled to just HR Staff, except for:
+                                # Access to your own record
+                                # - requires security policy 4+
+                                dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
+                                dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
+                                dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                uid=sysroles.AUTHENTICATED,
+                                protected=True)
+
+    create_role("Anonymous",
+                "Unauthenticated users",
+                # Allow unauthenticated users to view the list of organisations
+                # so they can select an organisation when registering
+                dict(t="org_organisation", uacl=acl.READ, entity="any"),
+                uid=sysroles.ANONYMOUS,
+                protected=True)
+
+    # Primarily for Security Policy 2
+    create_role("Editor",
+                "Editor - can access & make changes to any unprotected data",
+                uid=sysroles.EDITOR,
+                system=True, protected=True)
+
+    # MapAdmin
+    map_admin = create_role("MapAdmin",
+                            "MapAdmin - allowed access to edit the MapService Catalogue",
+                            dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
+                            dict(c="gis", f="location", uacl=acl.ALL, oacl=acl.ALL),
+                            uid=sysroles.MAP_ADMIN,
+                            system=True, protected=True)
+
+    # OrgAdmin (policies 6, 7 and 8)
+    create_role("OrgAdmin",
+                "OrgAdmin - allowed to manage user roles for entity realms",
+                uid=sysroles.ORG_ADMIN,
+                system=True, protected=True)
+
+    # Enable shortcuts (needed by default.py)
+    system_roles = auth.get_system_roles()
+    ADMIN = system_roles.ADMIN
+    AUTHENTICATED = system_roles.AUTHENTICATED
+    ANONYMOUS = system_roles.ANONYMOUS
+    EDITOR = system_roles.EDITOR
+    MAP_ADMIN = system_roles.MAP_ADMIN
+    ORG_ADMIN = system_roles.ORG_ADMIN
+
+    # =========================================================================
+    # Configure Scheduled Tasks
+    #
+
+    if settings.has_module("msg"):
+
         # Send Messages from Outbox
         # SMS every minute
-        s3task.schedule_task("process_outbox",
+        s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"SMS"},
                              period=120,  # seconds
                              timeout=120, # seconds
                              repeats=0    # unlimited
                             )
         # Emails every 5 minutes
-        s3task.schedule_task("process_outbox",
+        s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"EMAIL"},
                              period=300,  # seconds
                              timeout=300, # seconds
                              repeats=0    # unlimited
                             )
-        # Inbound email
-        # To schedule reading inbound email, uncomment and substitute the
-        # username from the task definition for example-username. This example
-        # shows reading email every 15 minutes. Add one task for each email
-        # source.
-        #s3task.schedule_task("process_inbound_email",
-        #                     vars={"username":"example-username"},
-        #                     period=900,  # seconds
-        #                     timeout=300, # seconds
-        #                     repeats=0    # unlimited
-        #                    )
 
-        #Process the msg_log for unparsed messages.
-        #s3task.schedule_task("process_log",
-        #                     period=300,  # seconds
-        #                     timeout=300, # seconds
-        #                     repeats=0    # unlimited
-        #                     )
+    # =========================================================================
+    # Import PrePopulate data
+    #
+
+    # Override authorization
+    auth.override = True
+
+    # Load all Models to ensure all DB tables present
+    s3db.load_all_models()
+
+    if settings.get_auth_opt_in_to_email():
+        table = db.pr_group
+        for team in settings.get_auth_opt_in_team_list():
+            table.insert(name = team, group_type = 5)
+
+    # Synchronisation
+    db.sync_config.insert() # Defaults are fine
 
     # Person Registry
     tablename = "pr_person"
-    table = db[tablename]
+    # Add extra indexes on search fields
     # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
     field = "first_name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
@@ -67,119 +156,92 @@ if len(pop_list) > 0:
     field = "last_name"
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
-    # Synchronisation
-    table = db.sync_config
-    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-       table.insert()
-
-    # Incident Reporting System
-    if deployment_settings.has_module("irs"):
-        # Categories visible to ends-users by default
-        table = db.irs_icategory
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(code = "flood")
-            table.insert(code = "geophysical.landslide")
-            table.insert(code = "roadway.bridgeClosure")
-            table.insert(code = "roadway.roadwayClosure")
-            table.insert(code = "other.buildingCollapsed")
-            table.insert(code = "other.peopleTrapped")
-            table.insert(code = "other.powerFailure")
+    # GIS
+    # L0 Countries
+    resource = s3mgr.define_resource("gis", "location")
+    stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "gis", "location.xsl")
+    import_file = os.path.join(request.folder, "private", "templates", "default", "countries.csv")
+    File = open(import_file, "r")
+    resource.import_xml(File, format="csv", stylesheet=stylesheet)
+    db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
+    db.commit()
+    # Add extra index on search field
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    tablename = "gis_location"
+    field = "name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
     # Messaging Module
-    if deployment_settings.has_module("msg"):
+    if settings.has_module("msg"):
         # To read inbound email, set username (email address), password, etc.
         # here. Insert multiple records for multiple email sources.
-        table = db.msg_inbound_email_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(server = "imap.gmail.com",
-                         protocol = "imap",
-                         use_ssl = True,
-                         port = 993,
-                         username = "example-username",
-                         password = "password",
-                         delete_from_server = False
-            )
+        db.msg_inbound_email_settings.insert(server = "imap.gmail.com",
+                                             protocol = "imap",
+                                             use_ssl = True,
+                                             port = 993,
+                                             username = "example-username",
+                                             password = "password",
+                                             delete_from_server = False
+                                            )
         # Need entries for the Settings/1/Update URLs to work
-        table = db.msg_setting
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( outgoing_sms_handler = "WEB_API" )
-        table = db.msg_modem_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( modem_baud = 115200 )
-        table = db.msg_api_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( to_variable = "to" )
-        table = db.msg_smtp_to_sms_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( address="changeme" )
-        table = db.msg_tropo_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( token_messaging = "" )
-        table = db.msg_twitter_settings
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert( pin = "" )
+        db.msg_setting.insert( outgoing_sms_handler = "WEB_API" )
+        db.msg_modem_settings.insert( modem_baud = 115200 )
+        db.msg_api_settings.insert( to_variable = "to" )
+        db.msg_smtp_to_sms_settings.insert( address="changeme" )
+        db.msg_tropo_settings.insert( token_messaging = "" )
+        db.msg_twitter_settings.insert( pin = "" )
 
     # Budget Module
-    if deployment_settings.has_module("budget"):
-        table = db.budget_parameter
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert() # Only defaults are fine
+    if settings.has_module("budget"):
+        db.budget_parameter.insert() # Defaults are fine
 
-    # GIS Locations
-    tablename = "gis_location"
-    table = db[tablename]
-    if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-        # L0 Countries
-        import_file = os.path.join(request.folder,
-                                   "private",
-                                   "templates",
-                                   "default",
-                                   "countries.csv")
-        table.import_from_csv_file(open(import_file, "r")) #, id_map=True)
-        query = (db.auth_group.uuid == sysroles.MAP_ADMIN)
-        map_admin = db(query).select(db.auth_group.id,
-                                     limitby=(0, 1)).first().id
-        db(table.level == "L0").update(owned_by_group=map_admin)
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    field = "name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % \
-        (field, tablename, field))
+    # Climate Module
+    if settings.has_module("climate"):
+        s3db.climate_first_run()
+
+    # Incident Reporting System
+    if settings.has_module("irs"):
+        # Categories visible to ends-users by default
+        table = db.irs_icategory
+        table.insert(code = "flood")
+        table.insert(code = "geophysical.landslide")
+        table.insert(code = "roadway.bridgeClosure")
+        table.insert(code = "roadway.roadwayClosure")
+        table.insert(code = "other.buildingCollapsed")
+        table.insert(code = "other.peopleTrapped")
+        table.insert(code = "other.powerFailure")
 
     # Supply Module
-    if deployment_settings.has_module("supply"):
-        tablename = "supply_catalog"
-        table = db[tablename]
-        if not db(table.id > 0).select(table.id, limitby=(0, 1)).first():
-            table.insert(name = deployment_settings.get_supply_catalog_default() )
-
-    # Climate module
-    if deployment_settings.has_module("climate"):
-        climate_first_run()
+    if settings.has_module("supply"):
+        db.supply_catalog.insert(name = settings.get_supply_catalog_default() )
 
     # Ensure DB population committed when running through shell
     db.commit()
 
-    # -------------------------------------------------------------------------
-    # Prepopulate import (from CSV)
+    # =========================================================================
+    # PrePopulate import (from CSV)
+    #
 
-    # Override authorization
-    auth.override = True
+    # Create the bulk Importer object
+    bi = s3base.S3BulkImporter()
+
+    s3.import_role = bi.import_role
 
     # Disable table protection
     protected = s3mgr.PROTECTED
     s3mgr.PROTECTED = []
 
     # Additional settings for user table imports:
-    s3mgr.configure("auth_user",
+    s3db.configure("auth_user",
                     onaccept = lambda form: \
                         auth.s3_link_to_person(user=form.vars))
-    s3mgr.model.add_component("auth_membership", auth_user="user_id")
+    s3db.add_component("auth_membership", auth_user="user_id")
 
     # Allow population via shell scripts
     if not request.env.request_method:
         request.env.request_method = "GET"
 
-    _debug = deployment_settings.get_base_debug()
+    _debug = settings.get_base_debug()
 
     grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:
@@ -194,15 +256,7 @@ if len(pop_list) > 0:
             if os.path.exists(path):
                 bi.perform_tasks(path)
             else:
-                path = os.path.join(request.folder,
-                                    "private",
-                                    "templates",
-                                    "demo",
-                                    pop_setting)
-                if os.path.exists(path):
-                    bi.perform_tasks(path)
-                else:
-                    print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+                print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
         elif pop_setting == 1:
             # Populate with the default data
             path = os.path.join(request.folder,
@@ -253,26 +307,23 @@ if len(pop_list) > 0:
                                     (duration)
 
         elif pop_setting >= 20:
-            # Populate data for a deployment default demo
-            """
-                Read the demo_folders file and extract the folder for the specific demo
-            """
+            # Populate data for a template
+            # Read the folders.cfg file and extract the folder for the specific template
             file = os.path.join(request.folder,
                                 "private",
                                 "templates",
-                                "demo",
-                                "demo_folders.cfg")
+                                "folders.cfg")
             source = open(file, "r")
             values = source.readlines()
             source.close()
-            demo = ""
-            for demos in values:
+            template = ""
+            for templates in values:
                 # strip out the new line
-                demos = demos.strip()
-                if demos == "":
+                templates = templates.strip()
+                if templates == "":
                     continue
                 # split at the comma
-                details = demos.split(",")
+                details = templates.split(",")
                 if len(details) == 2:
                      # remove any spaces and enclosing double quote
                     index = details[0].strip('" ')
@@ -281,16 +332,15 @@ if len(pop_list) > 0:
                         path = os.path.join(request.folder,
                                             "private",
                                             "templates",
-                                            "demo",
                                             directory)
-                        demo = directory
+                        template = directory
                         if os.path.exists(path):
                             bi.perform_tasks(path)
                         else:
-                            print >> sys.stderr, "Unable to install demo %s no demo directory found" \
+                            print >> sys.stderr, "Unable to install template %s no template directory found" \
                                                     % index
-            if demo == "":
-                print >> sys.stderr, "Unable to install a demo with of an id '%s', please check 000_config and demo_folders.cfg" \
+            if template == "":
+                print >> sys.stderr, "Unable to install a template with of an id '%s', please check 000_config and folders.cfg" \
                                         % pop_setting
             else:
                 end = datetime.datetime.now()
@@ -298,12 +348,12 @@ if len(pop_list) > 0:
                 try:
                     # Python-2.7
                     duration = '{:.2f}'.format(duration.total_seconds()/60)
-                    print >> sys.stdout, "Installed demo '%s' completed in %s mins" % \
-                                            (demo, duration)
+                    print >> sys.stdout, "Installed template '%s' completed in %s mins" % \
+                                            (template, duration)
                 except AttributeError:
                     # older Python
-                    print >> sys.stdout, "Installed demo '%s' completed in %s" % \
-                                            (demo, duration)
+                    print >> sys.stdout, "Installed template '%s' completed in %s" % \
+                                            (template, duration)
         grandTotalEnd = datetime.datetime.now()
         duration = grandTotalEnd - grandTotalStart
         try:
@@ -328,3 +378,5 @@ if len(pop_list) > 0:
 
     # Restore view
     response.view = "default/index.html"
+
+# END =========================================================================

@@ -24,7 +24,7 @@
 module = request.controller
 resourcename = request.function
 
-if module not in deployment_settings.modules:
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -37,6 +37,8 @@ from gluon.sql import SQLCustomType
 person_id = s3db.pr_person_id
 location_id = s3db.gis_location_id
 organisation_id = s3db.org_organisation_id
+
+s3_datetime_format = settings.get_L10n_datetime_format()
 
 # Options
 building_area_inspected = {
@@ -220,16 +222,14 @@ table = db.define_table(tablename,
 
 # CRUD strings
 ADD_ASSESSMENT = T("Add Level 1 Assessment")
-LIST_ASSESSMENTS = T("List Level 1 Assessments")
 s3.crud_strings[tablename] = Storage(
     title_create = ADD_ASSESSMENT,
     title_display = T("Level 1 Assessment Details"),
-    title_list = LIST_ASSESSMENTS,
+    title_list = T("Level 1 Assessments"),
     title_update = T("Edit Level 1 Assessment"),
     title_search = T("Search Level 1 Assessments"),
     subtitle_create = T("Add New Level 1 Assessment"),
-    subtitle_list = T("Level 1 Assessments"),
-    label_list_button = LIST_ASSESSMENTS,
+    label_list_button = T("List Level 1 Assessments"),
     label_create_button = ADD_ASSESSMENT,
     label_delete_button = T("Delete Level 1 Assessment"),
     msg_record_created = T("Level 1 Assessment added"),
@@ -244,7 +244,7 @@ building_nzseel1_search = s3base.S3Search(
         field=["ticket_id"])
 
 # Set as default search method
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 search_method=building_nzseel1_search)
 # -------------------------------------------------------------------------
 
@@ -438,16 +438,14 @@ table = db.define_table(tablename,
 
 # CRUD strings
 ADD_ASSESSMENT = T("Add Level 2 Assessment")
-LIST_ASSESSMENTS = T("List Level 2 Assessments")
 s3.crud_strings[tablename] = Storage(
     title_create = ADD_ASSESSMENT,
     title_display = T("Level 2 Assessment Details"),
-    title_list = LIST_ASSESSMENTS,
+    title_list = T("Level 2 Assessments"),
     title_update = T("Edit Level 2 Assessment"),
     title_search = T("Search Level 2 Assessments"),
     subtitle_create = T("Add New Level 2 Assessment"),
-    subtitle_list = T("Level 2 Assessments"),
-    label_list_button = LIST_ASSESSMENTS,
+    label_list_button = T("List Level 2 Assessments"),
     label_create_button = ADD_ASSESSMENT,
     label_delete_button = T("Delete Level 2 Assessment"),
     msg_record_created = T("Level 2 Assessment added"),
@@ -462,7 +460,7 @@ building_nzseel2_search = s3base.S3Search(
         field=["ticket_id"])
 
 # Set as default search method
-s3mgr.configure(tablename,
+s3db.configure(tablename,
                 search_method=building_nzseel2_search)
 
 
@@ -492,7 +490,7 @@ def nzseel1():
     table.person_id.default = s3_logged_in_person()
 
     # Subheadings in forms:
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
         subheadings = {
@@ -567,7 +565,7 @@ def nzseel2():
     table.person_id.default = s3_logged_in_person()
 
     # Subheadings in forms:
-    s3mgr.configure(tablename,
+    s3db.configure(tablename,
         deletable=False,
         create_next = URL(module,resourcename, args="[id]"),
         subheadings = {

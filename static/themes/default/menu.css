@@ -1,0 +1,176 @@
+@charset "UTF-8";
+
+/* Main Navigation (S3MainMenu or modules menu) */
+#menu_modules {
+    position: absolute;
+    /* top: 255px; */
+    height: 36px;
+    background: #CACACA  url(../../img/BFTBmenu_back.png) repeat-x;
+    border-top: 1px solid #2a323f;
+    /* alternate gradient
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.08, rgb(52,58,69)),
+        color-stop(0.98, rgb(73,82,97)),
+        color-stop(0.99, rgb(88,96,108))
+    );
+    background-image: -moz-linear-gradient(
+        center bottom,
+        rgb(52,58,69) 8%,
+        rgb(73,82,97) 98%,
+        rgb(88,96,108) 99%
+    );
+    */
+    padding-top: 0;
+    z-index: 25;
+    min-width: 800px;
+    width: 100%;
+    /* width: 1280px; */
+}
+#modulenav {
+    position: relative;
+    margin: 0;
+    padding-right: 0.7%;
+}
+#modulenav,
+#modulenav li,
+#modulenav ul {
+    list-style: none;
+}
+#modulenav a {
+    text-decoration: none;
+}
+#modulenav a:hover {
+    color: #fff;
+    background: none;
+}
+#modulenav li {
+    float: left;
+    position: relative;
+    text-align: left;
+    cursor: default;
+    border-width: 1px 0;
+}
+#modulenav li li a {
+    display: block;
+    font-weight: normal;
+    padding: 5px 5px 5px 5px;
+}
+#modulenav li li a:hover {
+    background: #414a59;
+    color: #fff;
+}
+
+.submenu {
+    z-index: 9999;
+}
+
+/* Menu Buttons */
+#modulenav li div {
+    text-align: center;
+    background: url(../../img/BFTBmenu_side.png) right 10px no-repeat;
+    text-shadow: 0 1px 1px #58606c;
+}
+#modulenav li div a{
+    color: #fff;
+    display: inline-block;
+    padding: 8px 10px 5px 15px;
+}
+#modulenav li div.hovered,
+#modulenav li div:hover {
+    background: #3177bc url(../../img/BFTBmenu_hilight.png) repeat-x;
+    /* alternate gradient
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.08, rgb(63,109,184)),
+        color-stop(0.98, rgb(92,155,204)),
+        color-stop(0.99, rgb(126,176,216))
+    );
+    background-image: -moz-linear-gradient(
+        center bottom,
+        rgb(63,109,184) 8%,
+        rgb(92,155,204) 98%,
+        rgb(126,176,216) 99%
+    );
+    */
+}
+
+/* Menu Popups */
+#modulenav li ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    /* top: 255; */
+    left: 0;
+    font-weight: normal;
+    text-align: left;
+    background: #fff;
+    border: #dedede 1px solid;
+    border-radius: 5px;
+    box-shadow: 1px 1px 5px #232a34;
+}
+#modulenav li>ul {
+    top: auto;
+    left: auto;
+}
+#modulenav li li {
+/*     display: inline-block; */
+    display: block;
+    float: none;
+    border: 0;
+    vertical-align: middle;
+}
+#modulenav li:hover ul {
+    display: block;
+}
+#modulenav li.over ul {
+    display: block;
+}
+
+/* Side Menu (S3OptionsMenu) */
+#menu_options {
+    margin: 6px 0 0 0;
+    /*padding:5px;*/
+    background: #e7ebed;
+    /*border: 1px solid #bbb;*/
+    border-radius: 0 5px 5px 0;
+    overflow: auto;
+}
+
+#subnav li, #subnav ul li {
+    list-style: none;
+    clear: both;
+}
+#subnav div a {
+    display: block;
+    padding: 5px;
+    background :#37404c;
+    font-weight: bold;
+}
+#subnav ul li {
+    border-bottom: 1px solid #b4c0c7;
+}
+
+#subnav ul li a{
+    display: block;
+    padding: 2px 2px 3px 10px;
+    text-decoration: none;
+}
+#subnav div a{
+    color: white;
+    font-size: 1.05em;
+    text-decoration: none;
+}
+#subnav div a:hover{
+    background: #112038;
+    color: white;
+}
+
+.menu_separator hr {
+    width: 90%;
+    height: 1px;
+}

@@ -31,12 +31,15 @@ __all__ = ["S3AssetModel",
            "asset_rheader",
            "asset_types",
            "asset_log_status",
-          ]
+           "asset_controller",
+           ]
 
 from gluon import *
 from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
+
 from ..s3 import *
+from layouts import S3AddResourceLink
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
 ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
@@ -95,10 +98,8 @@ class S3AssetModel(S3Model):
         db = current.db
         auth = current.auth
         request = current.request
-        s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -119,11 +120,9 @@ class S3AssetModel(S3Model):
 
         # Shortcuts
         add_component = self.add_component
-        comments = s3.comments
         configure = self.configure
-        crud_strings = s3.crud_strings
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        meta_fields = s3.meta_fields
         super_link = self.super_link
 
         #--------------------------------------------------------------------------
@@ -175,13 +174,13 @@ class S3AssetModel(S3Model):
                                    label = T("Supplier")),
                              Field("purchase_date", "date",
                                    label = T("Purchase Date"),
-                                   requires = IS_NULL_OR(IS_DATE(format = s3_date_format)),
+                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
                                    represent = s3_date_represent,
                                    widget = S3DateWidget()),
                              Field("purchase_price", "double",
-                                   default=0.00,
+                                   #default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
-                             currency_type("purchase_currency"),
+                             s3_currency("purchase_currency"),
                              # Base Location, which should always be a Site & set via Log
                              location_id(readable=False,
                                          writable=False),
@@ -190,22 +189,20 @@ class S3AssetModel(S3Model):
                                        readable=False,
                                        writable=False,
                                        comment=self.pr_person_comment(child="assigned_to_id")),
-                             comments(),
-                             *(s3.address_fields() + meta_fields()))
+                             s3_comments(),
+                             *(s3_address_fields() + s3_meta_fields()))
 
         # CRUD strings
         ADD_ASSET = T("Add Asset")
-        LIST_ASSET = T("List Assets")
         crud_strings[tablename] = Storage(
             title_create = ADD_ASSET,
             title_display = T("Asset Details"),
-            title_list = LIST_ASSET,
+            title_list =  T("Assets"),
             title_update = T("Edit Asset"),
             title_search = T("Search Assets"),
             title_upload = T("Import Assets"),
             subtitle_create = T("Add New Asset"),
-            subtitle_list = T("Assets"),
-            label_list_button = LIST_ASSET,
+            label_list_button =  T("List Assets"),
             label_create_button = ADD_ASSET,
             label_delete_button = T("Delete Asset"),
             msg_record_created = T("Asset added"),
@@ -214,7 +211,7 @@ class S3AssetModel(S3Model):
             msg_list_empty = T("No Assets currently registered"))
 
         # Reusable Field
-        asset_id = S3ReusableField("asset_id", db.asset_asset,
+        asset_id = S3ReusableField("asset_id", table,
                                    sortby="number",
                                    requires = IS_NULL_OR(IS_ONE_OF(db,
                                                                    "asset_asset.id",
@@ -222,6 +219,8 @@ class S3AssetModel(S3Model):
                                                                    sort=True)),
                                    represent = self.asset_represent,
                                    label = T("Asset"),
+                                   comment = S3AddResourceLink(c="asset", f="asset",
+                                                tooltip=T("If you don't see the asset in the list, you can add a new one by clicking link 'Add Asset'.")),
                                    ondelete = "CASCADE")
 
         table.virtualfields.append(AssetVirtualFields())
@@ -241,14 +240,16 @@ class S3AssetModel(S3Model):
                                 "comments",
                             ]
                       ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="asset_search_L1",
                         field="L1",
+                        location_level="L1",
                         cols = 3
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="asset_search_L2",
                         field="L2",
+                        location_level="L2",
                         cols = 3
                     ),
                     S3SearchLocationWidget(
@@ -261,38 +262,35 @@ class S3AssetModel(S3Model):
                         label=T("Category"),
                         cols = 3
                     ),
-                    # S3SearchOptionsWidget(
-                    #     name="asset_search_weight",
-                    #     field="weight",
-                    #     label=T("Weight"),
-                    #     cols = 3
-                    # ),
             ))
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
                          (T("Facility/Site"), "site"),
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
-                        ]
+                         "L1",
+                         "L2",
+                         ]
 
         # Resource Configuration
         configure(tablename,
-                  super_entity=("supply_item_entity", "sit_trackable"),
+                  create_next = URL(c="asset", f="asset",
+                                    args=["[id]"]),
+                  super_entity = ("supply_item_entity", "sit_trackable"),
                   search_method=asset_search,
-                        report_options=Storage(
-                            search=[
-                                S3SearchLocationHierarchyWidget(
+                  report_options=Storage(
+                        search=[
+                                S3SearchOptionsWidget(
                                     name="asset_search_L1",
                                     field="L1",
+                                    location_level="L1",
                                     cols = 3
                                 ),
-                                S3SearchLocationHierarchyWidget(
+                                S3SearchOptionsWidget(
                                     name="asset_search_L2",
                                     field="L2",
+                                    location_level="L2",
                                     cols = 3
                                 ),
                                 S3SearchOptionsWidget(
@@ -302,11 +300,11 @@ class S3AssetModel(S3Model):
                                     cols = 3
                                 ),
                             ],
-                            rows=report_fields,
-                            cols=report_fields,
-                            facts=report_fields,
-                            methods=["count", "list"],
-                            defaults=Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        facts=report_fields,
+                        methods=["count", "list"],
+                        defaults=Storage(
                                 aggregate="count",
                                 cols="L1",
                                 fact="number",
@@ -326,7 +324,6 @@ class S3AssetModel(S3Model):
                                #"L2",
                                #"L3",
                                "comments",
-                               #"weight",
                                ])
 
         # Log as component of Assets
@@ -432,8 +429,8 @@ class S3AssetModel(S3Model):
                                        default = auth.s3_logged_in_person(),   # or the previous owner if passed on directly (e.g. to successor in their post)
                                        comment = self.pr_person_comment(child="by_person_id"),
                                       ),
-                             comments(),
-                             *meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         table.site_id.label = T("Facility/Site")
         table.site_id.readable = True
@@ -445,34 +442,31 @@ class S3AssetModel(S3Model):
                                                        T("Enter some characters to bring up a list of possible matches")),
 
                                      ),
-                                 SCRIPT("""
-$(document).ready(function() {
-    S3FilterFieldChange({
-        'FilterField':   'organisation_id',
-        'Field':         'site_id',
-        'FieldPrefix':   'org',
-        'FieldResource': 'site',
-        'FieldID'      : 'site_id',
-    });
-});""")
+                                 SCRIPT(
+'''$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'organisation_id',
+  'Field':'site_id',
+  'FieldPrefix':'org',
+  'FieldResource':'site',
+  'FieldID':'site_id',
+ })
+})''')
                                  )
 
-
         # CRUD strings
-        ADD_ASSIGN = T("New Asset Log Entry") # Change Label?
-        LIST_ASSIGN = T("Asset Log")
+        ADD_ASSIGN = T("New Entry in Asset Log")
         crud_strings[tablename] = Storage(
             title_create = ADD_ASSIGN,
             title_display = T("Asset Log Details"),
-            title_list = LIST_ASSIGN,
+            title_list = T("Asset Log"),
             title_update = T("Edit Asset Log Entry"),
             title_search = T("Search Asset Log"),
             subtitle_create = ADD_ASSIGN,
-            subtitle_list = T("Asset Log"),
-            label_list_button = LIST_ASSIGN,
+            label_list_button = T("Asset Log"),
             label_create_button = ADD_ASSIGN,
             label_delete_button = T("Delete Asset Log Entry"),
-            msg_record_created = T("Asset Log Entry created"), # Change Label?
+            msg_record_created = T("Entry added to Asset Log"),
             msg_record_modified = T("Asset Log Entry updated"),
             msg_record_deleted = T("Asset Log Entry deleted"),
             msg_list_empty = T("Asset Log Empty"))
@@ -497,7 +491,7 @@ $(document).ready(function() {
                    )
 
         # ---------------------------------------------------------------------
-        # Pass variables back to global scope (response.s3.*)
+        # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     asset_asset_id = asset_id,
@@ -522,15 +516,13 @@ $(document).ready(function() {
         """
         """
 
+        if not id:
+            return current.messages.NONE
+
         db = current.db
-        s3db = current.s3db
-
-        messages = current.messages
-        NONE = messages.NONE
-
-        table = s3db.asset_asset
-        itable = s3db.supply_item
-        btable = s3db.supply_brand
+        table = db.asset_asset
+        itable = db.supply_item
+        btable = db.supply_brand
         query = (table.id == id) & \
                 (itable.id == table.item_id)
         r = db(query).select(table.number,
@@ -538,7 +530,7 @@ $(document).ready(function() {
                              btable.name,
                              left = btable.on(itable.brand_id == btable.id),
                              limitby=(0, 1)).first()
-        if r:
+        try:
             represent = "%s (%s" % (r.asset_asset.number,
                                     r.supply_item.name)
             if r.supply_brand.name:
@@ -546,8 +538,8 @@ $(document).ready(function() {
                                          r.supply_brand.name)
             else:
                 represent = "%s)" % represent
-        else:
-            represent = NONE
+        except:
+            represent = current.messages.UNKNOWN_OPT
         return represent
 
     # -------------------------------------------------------------------------
@@ -557,7 +549,6 @@ $(document).ready(function() {
         """
 
         request = current.request
-        s3 = current.response.s3
 
         status = int(request.post_vars.get("status", 0))
         type = request.get_vars.get("type", None)
@@ -573,65 +564,71 @@ $(document).ready(function() {
         """
         """
 
-        db = current.db
-        s3db = current.s3db
         request = current.request
-        s3 = current.response.s3
-        tracker = S3Tracker()
-
-        ltable = s3db.asset_log
+        status = request.vars.pop("status", None)
+        if not status:
+            # e.g. Import or Record merger
+            return
 
         vars = form.vars
-        query = (ltable.id == vars.id)
-        asset_id = db(query).select(ltable.asset_id,
-                                    limitby=(0, 1)).first().asset_id
+        status = int(vars.status or status)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.asset_log
+        asset = db(ltable.id == vars.id).select(ltable.asset_id,
+                                                limitby=(0, 1)).first()
+        if asset:
+            asset_id = asset.asset_id
+        else:
+            return
         current_log = asset_get_current_log(asset_id)
 
-        status = int(vars.status or request.vars.status)
-        request.get_vars.pop("status", None)
         type = request.get_vars.pop("type", None)
-        vars.datetime = vars.datetime.replace(tzinfo=None)
 
-        if vars.datetime and \
-            (not current_log.datetime or \
-             current_log.datetime <= vars.datetime):
-            # This is a current assignment
-            atable = s3db.asset_asset
-            asset_tracker = tracker(atable, asset_id)
+        thistime = vars.get("datetime", None)
+        if thistime and not current_log.datetime:
+            thistime = thistime.replace(tzinfo=None)
+            if current_log.datetime <= thistime:
+                # This is a current assignment
+                atable = s3db.asset_asset
+                tracker = S3Tracker()
+                asset_tracker = tracker(atable, asset_id)
 
-            if status == ASSET_LOG_SET_BASE:
-                # Set Base Location
-                asset_tracker.set_base_location(tracker(s3db.org_site,
-                                                        vars.site_id))
-                # Populate the address fields
-                s3.address_update(atable, asset_id)
-            if status == ASSET_LOG_ASSIGN:
-                if type == "person":#
-                    if vars.check_in_to_person:
-                        asset_tracker.check_in(s3db.pr_person, vars.person_id,
-                                               timestmp = vars.datetime)
-                    else:
-                        asset_tracker.set_location(vars.person_id,
-                                                   timestmp = vars.datetime)
-                    # Update main record for component
-                    query = (atable.id == asset_id)
-                    db(query).update(assigned_to_id=vars.person_id)
+                if status == ASSET_LOG_SET_BASE:
+                    # Set Base Location
+                    asset_tracker.set_base_location(tracker(s3db.org_site,
+                                                            vars.site_id))
+                    # Populate the address fields
+                    s3_address_update(atable, asset_id)
+                elif status == ASSET_LOG_ASSIGN:
+                    if type == "person":#
+                        if vars.check_in_to_person:
+                            asset_tracker.check_in(s3db.pr_person, vars.person_id,
+                                                   timestmp = thistime)
+                        else:
+                            asset_tracker.set_location(vars.person_id,
+                                                       timestmp = thistime)
+                        # Update main record for component
+                        db(atable.id == asset_id).update(
+                                                    assigned_to_id=vars.person_id
+                                                )
 
-                elif type == "site":
-                    asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = vars.datetime)
-                elif type == "organisation":
-                    #if vars.site_or_location == SITE:
-                    asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                           timestmp = vars.datetime)
-                    #if vars.site_or_location == LOCATION:
-                    #    asset_tracker.set_location(vars.location_id,
-                    #                               timestmp = vars.datetime)
+                    elif type == "site":
+                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                               timestmp = thistime)
+                    elif type == "organisation":
+                        #if vars.site_or_location == SITE:
+                        asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                               timestmp = thistime)
+                        #if vars.site_or_location == LOCATION:
+                        #    asset_tracker.set_location(vars.location_id,
+                        #                               timestmp = thistime)
 
-            if status == ASSET_LOG_RETURN:
-                # Set location to base location
-                asset_tracker.set_location(asset_tracker,
-                                           timestmp = vars.datetime)
+                elif status == ASSET_LOG_RETURN:
+                    # Set location to base location
+                    asset_tracker.set_location(asset_tracker,
+                                               timestmp = thistime)
         return
 
 
@@ -644,11 +641,9 @@ $(document).ready(function() {
 
         T = current.T
         db = current.db
-        s3db = current.s3db
         request = current.request
-        s3 = current.response.s3
 
-        table = s3db.asset_log
+        table = db.asset_log
 
         if r.record:
             asset = Storage(r.record)
@@ -684,7 +679,7 @@ $(document).ready(function() {
                                                filterby = "organisation_id",
                                                filter_opts = [current_log.organisation_id])
 
-        crud_strings = s3.crud_strings.asset_log
+        crud_strings = current.response.s3.crud_strings.asset_log
         if status == ASSET_LOG_SET_BASE:
             crud_strings.subtitle_create = T("Set Base Facility/Site")
             crud_strings.msg_record_created = T("Base Facility/Site Set")
@@ -769,24 +764,21 @@ def asset_get_current_log(asset_id):
     """
     """
 
-    db = current.db
-    s3db = current.s3db
-
-    table = s3db.asset_log
+    table = current.s3db.asset_log
     query = ( table.asset_id == asset_id ) & \
             ( table.cancel == False ) & \
             ( table.deleted == False )
     # Get the log with the maximum time
-    asset_log = db(query).select(table.id,
-                                 table.status,
-                                 table.datetime,
-                                 table.cond,
-                                 table.person_id,
-                                 table.organisation_id,
-                                 table.site_id,
-                                 #table.location_id,
-                                 orderby = ~table.datetime,
-                                 limitby=(0, 1)).first()
+    asset_log = current.db(query).select(table.id,
+                                         table.status,
+                                         table.datetime,
+                                         table.cond,
+                                         table.person_id,
+                                         table.organisation_id,
+                                         table.site_id,
+                                         #table.location_id,
+                                         orderby = ~table.datetime,
+                                         limitby=(0, 1)).first()
     if asset_log:
         return Storage(datetime = asset_log.datetime,
                        person_id = asset_log.person_id,
@@ -835,8 +827,8 @@ def asset_rheader(r):
                 func = "asset"
 
             # @ToDo: Check permissions before displaying buttons
-            
-            
+
+
             asset_action_btns = [ A( T("Set Base Facility/Site"),
                                      _href = URL(f=func,
                                                  args = [record.id, "log", "create"],
@@ -930,13 +922,6 @@ def asset_rheader(r):
 class AssetVirtualFields:
     """ Virtual fields as dimension classes for reports """
 
-    def weight(self):
-        """
-        This is just a dummy field to help test S3Resource filters and S3Search
-        """
-        import random
-        return random.randint(1, 10)
-
     def site(self):
         # The site of the asset
         try:
@@ -955,5 +940,54 @@ class AssetVirtualFields:
             if site:
                 return s3db.org_site_represent(site, show_link=False)
         return current.messages.NONE
+
+# =============================================================================
+def asset_controller():
+    """ RESTful CRUD controller """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            s3_address_hide(r.table)
+        if r.component_name == "log":
+            s3db.asset_log_prep(r)
+            #if r.method == "update":
+                # We don't want to exclude fields in update forms
+                #pass
+            #elif r.method != "read":
+                # Don't want to see in Create forms
+                # inc list_create (list_fields over-rides)
+                #table = r.component.table
+                #table.returned.readable = table.returned.writable = False
+                #table.returned_status.readable = table.returned_status.writable = False
+                # Process Base Site
+                #s3db.configure(table._tablename,
+                #                onaccept=asset_transfer_onaccept)
+        #else:
+            # @ToDo: Add Virtual Fields to the List view for 'Currently assigned to' & 'Current Location'
+
+        return True
+    s3.prep = prep
+
+    # Post-processor
+    def postp(r, output):
+        if r.method != "import":
+            S3CRUD.action_buttons(r, deletable=False)
+            #if not r.component:
+                #s3.actions.append({"url" : URL(c="asset", f="asset",
+                #                               args = ["[id]", "log", "create"],
+                #                               vars = {"status" : eden.asset.asset_log_status["ASSIGN"],
+                #                                       "type" : "person"}),
+                #                   "_class" : "action-btn",
+                #                   "label" : str(T("Assign"))})
+        return output
+    s3.postp = postp
+
+    output = current.rest_controller("asset", "asset",
+                                     rheader=s3db.asset_rheader)
+    return output
 
 # END =========================================================================

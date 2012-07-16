@@ -2,8 +2,6 @@
 
 """ Sahana Eden Person Registry Model
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -30,7 +28,8 @@
 """
 
 __all__ = ["HospitalDataModel",
-           "hms_hospital_rheader"]
+           "hms_hospital_rheader"
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -49,7 +48,8 @@ class HospitalDataModel(S3Model):
              "hms_ctc_capability",
              "hms_image",
              "hms_resources",
-             "hms_hospital_id"]
+             "hms_hospital_id"
+             ]
 
     def model(self):
 
@@ -59,7 +59,6 @@ class HospitalDataModel(S3Model):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        currency_type = s3.currency_type
         person_id = self.pr_person_id
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
@@ -71,10 +70,11 @@ class HospitalDataModel(S3Model):
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
-        super_link = self.super_link
-        define_table = self.define_table
-        configure = self.configure
         add_component = self.add_component
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Hospitals
@@ -336,21 +336,20 @@ class HospitalDataModel(S3Model):
                              Field("access_status",
                                    label = T("Road Conditions")),
 
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
-        LIST_HOSPITALS = T("List Hospitals")
         ADD_HOSPITAL = T("Add Hospital")
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = ADD_HOSPITAL,
             title_display = T("Hospital Details"),
-            title_list = LIST_HOSPITALS,
+            title_list = T("Hospitals"),
             title_update = T("Edit Hospital"),
             title_search = T("Find Hospital"),
+            title_map = T("Map of Hospitals"),
             subtitle_create = T("Add New Hospital"),
-            subtitle_list = T("Hospitals"),
-            label_list_button = LIST_HOSPITALS,
+            label_list_button = T("List Hospitals"),
             label_create_button = ADD_HOSPITAL,
             label_delete_button = T("Delete Hospital"),
             msg_record_created = T("Hospital information added"),
@@ -412,12 +411,13 @@ class HospitalDataModel(S3Model):
                                                     title=T("Hospital"),
                                                     tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Add Hospital'."))
 
-        hospital_id = S3ReusableField("hospital_id", db.hms_hospital,
+        hospital_id = S3ReusableField("hospital_id", table,
                                       sortby="name",
-                                      requires = IS_NULL_OR(IS_ONE_OF(db, "hms_hospital.id", "%(name)s")),
-                                      represent = lambda id: \
-                                                  (id and [db(db.hms_hospital.id == id).select(db.hms_hospital.name,
-                                                                                               limitby=(0, 1)).first().name] or ["None"])[0],
+                                      requires = IS_NULL_OR(
+                                                    IS_ONE_OF(db, "hms_hospital.id",
+                                                              self.hms_hospital_represent
+                                                              )),
+                                      represent = self.hms_hospital_represent,
                                       label = T("Hospital"),
                                       comment = hms_hospital_id_comment,
                                       ondelete = "RESTRICT")
@@ -455,17 +455,16 @@ class HospitalDataModel(S3Model):
                                     requires = IS_NULL_OR(s3_phone_requires)),
                               Field("skype", label = T("Skype ID")),
                               Field("website", label=T("Website")),
-                              *s3.meta_fields())
+                              *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Contact"),
             title_display = T("Contact Details"),
             title_list = T("Contacts"),
             title_update = T("Edit Contact"),
             title_search = T("Search Contacts"),
             subtitle_create = T("Add New Contact"),
-            subtitle_list = T("Contacts"),
             label_list_button = T("List Contacts"),
             label_create_button = T("Add Contact"),
             msg_record_created = T("Contact information added"),
@@ -519,18 +518,17 @@ class HospitalDataModel(S3Model):
                                    label = T("Deaths/24hrs"),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
                              Field("comment", length=128),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Activity Report"),
             title_display = T("Activity Report"),
             title_list = T("Activity Reports"),
             title_update = T("Update Activity Report"),
             title_search = T("Search Activity Report"),
             subtitle_create = T("Add Activity Report"),
-            subtitle_list = T("Activity Reports"),
-            label_list_button = T("List Reports"),
+            label_list_button = T("List Activity Reports"),
             label_create_button = T("Add Report"),
             label_delete_button = T("Delete Report"),
             msg_record_created = T("Report added"),
@@ -607,19 +605,18 @@ class HospitalDataModel(S3Model):
                                    requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
                                    label = T("Additional Beds / 24hrs"),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # Field configuration
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Bed Type"),
             title_display = T("Bed Capacity"),
             title_list = T("Bed Capacity"),
             title_update = T("Update Unit"),
             title_search = T("Search Units"),
             subtitle_create = T("Add Unit"),
-            subtitle_list = T("Bed Capacity per Unit"),
             label_list_button = T("List Units"),
             label_create_button = T("Add Unit"),
             label_delete_button = T("Delete Unit"),
@@ -681,17 +678,16 @@ class HospitalDataModel(S3Model):
                                    label = T("Psychiatrics/Pediatric")),
                              Field("obgy", "boolean", default=False,
                                    label = T("Obstetrics/Gynecology")),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Service Profile"),
             title_display = T("Services Available"),
             title_list = T("Services Available"),
             title_update = T("Update Service Profile"),
             title_search = T("Search Service Profiles"),
             subtitle_create = T("Add Service Profile"),
-            subtitle_list = T("Services Available"),
             label_list_button = T("List Service Profiles"),
             label_create_button = T("Add Service Profile"),
             label_delete_button = T("Delete Service Profile"),
@@ -776,8 +772,8 @@ class HospitalDataModel(S3Model):
                                    label = T("Current problems, categories")),
                              Field("problem_details", "text",
                                    label = T("Current problems, details")),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # Field configuration
         table.modified_on.label = T("Last updated on")
@@ -786,15 +782,14 @@ class HospitalDataModel(S3Model):
         table.modified_by.readable = True
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Add Cholera Treatment Capability Information"),
             title_display = T("Cholera Treatment Capability"),
             title_list = T("Cholera Treatment Capability"),
             title_update = T("Update Cholera Treatment Capability Information"),
             title_search = T("Search Status"),
             subtitle_create = T("Add Status"),
-            subtitle_list = T("Current Status"),
-            label_list_button = T("List Status"),
+            label_list_button = T("List Statuses"),
             label_create_button = T("Add Status"),
             label_delete_button = T("Delete Status"),
             msg_record_created = T("Status added"),
@@ -821,18 +816,17 @@ class HospitalDataModel(S3Model):
                              Field("type"),
                              Field("description"),
                              Field("quantity"),
-                             s3.comments(),
-                             *s3.meta_fields())
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD Strings
-        s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_create = T("Report Resource"),
             title_display = T("Resource Details"),
             title_list = T("Resources"),
             title_update = T("Edit Resource"),
             title_search = T("Search Resources"),
             subtitle_create = T("Add New Resource"),
-            subtitle_list = T("Resources"),
             label_list_button = T("List Resources"),
             label_create_button = T("Add Resource"),
             label_delete_button = T("Delete Resource"),
@@ -863,23 +857,39 @@ class HospitalDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def hms_hospital_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.hms_hospital
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hms_bed_capacity_onvalidation(form):
         """ Bed Capacity Validation """
 
         db = current.db
-        s3db = current.s3db
-        T = current.T
-
-        htable = s3db.hms_hospital
-        ctable = s3db.hms_bed_capacity
-
+        htable = db.hms_hospital
+        ctable = db.hms_bed_capacity
         hospital_id = ctable.hospital_id.update
         bed_type = form.vars.bed_type
         query = (ctable.hospital_id == hospital_id) & \
                 (ctable.bed_type == bed_type)
-        row = db(query).select(ctable.id, limitby=(0, 1)).first()
+        row = db(query).select(ctable.id,
+                               limitby=(0, 1)).first()
         if row and str(row.id) != request.post_vars.id:
-            form.errors["bed_type"] = T("Bed type already registered")
+            form.errors["bed_type"] = current.T("Bed type already registered")
         elif "unit_id" not in form.vars:
             query = htable.id == hospital_id
             hospital = db(query).select(htable.uuid,
@@ -892,20 +902,18 @@ class HospitalDataModel(S3Model):
     def hms_bed_capacity_onaccept(form):
         """ Updates the number of total/available beds of a hospital """
 
-        db = current.db
-        s3db = current.s3db
-
         if isinstance(form, Row):
             formvars = form
         else:
             formvars = form.vars
 
-        ctable = s3db.hms_bed_capacity
-        htable = s3db.hms_hospital
-
+        db = current.db
+        ctable = db.hms_bed_capacity
+        htable = db.hms_hospital
         query = ((ctable.id == formvars.id) &
                  (htable.id == ctable.hospital_id))
-        hospital = db(query).select(htable.id, limitby=(0, 1))
+        hospital = db(query).select(htable.id,
+                                    limitby=(0, 1))
 
         if hospital:
             hospital = hospital.first()
@@ -926,13 +934,12 @@ class HospitalDataModel(S3Model):
     def hms_activity_onaccept(form):
 
         db = current.db
-        s3db = current.s3db
-
-        atable = s3db.hms_activity
-        htable = s3db.hms_hospital
+        atable = db.hms_activity
+        htable = db.hms_hospital
         query = ((atable.id == form.vars.id) & \
                  (htable.id == atable.hospital_id))
-        hospital = db(query).select(htable.id, htable.modified_on,
+        hospital = db(query).select(htable.id,
+                                    htable.modified_on,
                                     limitby=(0, 1)).first()
         timestmp = form.vars.date
         if hospital and hospital.modified_on < timestmp:
@@ -942,13 +949,10 @@ class HospitalDataModel(S3Model):
 def hms_hospital_rheader(r, tabs=[]):
     """ Page header for component resources """
 
-    T = current.T
-    response = current.response
-    s3 = response.s3
-    s3db = current.s3db
-
     rheader = None
     if r.representation == "html":
+        T = current.T
+        s3db = current.s3db
         tablename, record = s3_rheader_resource(r)
         if tablename == "hms_hospital" and record:
             hospital = record
@@ -961,9 +965,11 @@ def hms_hospital_rheader(r, tabs=[]):
                         "ctc_capability"), # @ToDo: make this a deployment_setting?
                         (T("Activity Report"), "activity"),
                         (T("Images"), "image"),
-                        (T("Staff"), "human_resource")]
+                        (T("Staff"), "human_resource"),
+                        (T("Assign Staff"), "human_resource_site"),
+                        ]
                 try:
-                    tabs = tabs + s3.req_tabs(r)
+                    tabs = tabs + s3db.req_tabs(r)
                 except:
                     pass
                 try:

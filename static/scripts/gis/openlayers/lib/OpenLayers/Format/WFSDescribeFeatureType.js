@@ -1,11 +1,14 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
  * @requires OpenLayers/Format/XML.js
- *
+ * @requires OpenLayers/Format/OGCExceptionReport.js
+ */
+ 
+/**
  * Class: OpenLayers.Format.WFSDescribeFeatureType
  * Read WFS DescribeFeatureType response
  * 
@@ -145,8 +148,8 @@ OpenLayers.Format.WFSDescribeFeatureType = OpenLayers.Class(
      * Reads restriction defined in the child nodes of a restriction element
      * 
      * Parameters:
-     * node {DOMElement} - the node to parse
-     * obj {Object} - the object that receives the read result
+     * node - {DOMElement} the node to parse
+     * obj - {Object} the object that receives the read result
      */
     readRestriction: function(node, obj) {
         var children = node.childNodes;
@@ -185,8 +188,13 @@ OpenLayers.Format.WFSDescribeFeatureType = OpenLayers.Class(
             data = data.documentElement;
         }
         var schema = {};
-        this.readNode(data, schema);
-        
+        if (data.nodeName.split(":").pop() === 'ExceptionReport') {
+            // an exception must have occurred, so parse it
+            var parser = new OpenLayers.Format.OGCExceptionReport();
+            schema.error = parser.read(data);
+        } else {
+            this.readNode(data, schema);
+        }
         return schema;
     },
     

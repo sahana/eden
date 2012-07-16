@@ -9,18 +9,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
 def index():
     """ Dashboard """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,
@@ -35,7 +35,7 @@ def index():
                                        vars={"module":module}),
                              _class="action-btn"))
             else:
-                item = _item.body
+                item = XML(_item.body)
         elif s3_has_role(ADMIN):
             item = DIV(H2(module_name),
                        A(T("Edit"),
@@ -44,7 +44,9 @@ def index():
                          _class="action-btn"))
 
     if not item:
-        item = H2(module_name)
+        #item = H2(module_name)
+        # Just redirect to the list of Posts
+        redirect(URL(f="post"))
 
     # tbc
     report = ""
@@ -75,7 +77,7 @@ def series():
             # Titles do show up
             table.name.comment = ""
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
@@ -88,16 +90,16 @@ def blog():
 
     # Pre-process
     def prep(r):
-        s3mgr.configure(r.tablename, listadd=False)
+        s3db.configure(r.tablename, listadd=False)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
         if r.record:
             response.view = "cms/blog.html"
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller("cms", "series")
     return output
@@ -110,23 +112,38 @@ def post():
     table = s3db[tablename]
 
     # Filter out those posts which are parts of a series
-    response.s3.filter = (table.series_id == None)
+    s3.filter = (table.series_id == None)
 
     _module = request.get_vars.get("module", None)
     if _module:
         table.module.default = _module
         table.module.readable = table.module.writable = False
         table.name.default = "%s Home Page" % _module
-        table.name.readable = table.name.writable = False
+        _crud = s3.crud_strings[tablename]
+        _crud.title_create = T("New Page")
+        _crud.title_update = T("Edit Page")
         url = URL(c=_module, f="index")
-        s3mgr.configure(tablename,
+        s3db.configure(tablename,
                         create_next = url,
                         update_next = url)
+    else:
+        page = request.get_vars.get("page", None)
+        if page:
+            table.module.readable = table.module.writable = False
+            table.name.default = page
+            table.name.readable = table.name.writable = False
+            _crud = s3.crud_strings[tablename]
+            _crud.title_create = T("New Page")
+            _crud.title_update = T("Edit Page")
+            url = URL(c="default", f="index", vars={"page":page})
+            s3db.configure(tablename,
+                            create_next = url,
+                            update_next = url)
 
     # Custom Method to add Comments
-    s3mgr.model.set_method(module, resourcename,
-                           method="discuss",
-                           action=discuss)
+    s3db.set_method(module, resourcename,
+                    method="discuss",
+                    action=discuss)
 
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
@@ -139,43 +156,43 @@ def page():
 
     # Pre-process
     def prep(r):
-        s3mgr.configure(r.tablename, listadd=False)
+        s3db.configure(r.tablename, listadd=False)
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
         if r.record:
             output = {"item": r.record.body}
+            current.menu.options = None
             response.view = "cms/page.html"
             if r.record.replies:
                 ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-                response.s3.scripts.append(ckeditor)
+                s3.scripts.append(ckeditor)
                 adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                               "jquery.js"])
-                response.s3.scripts.append(adapter)
+                s3.scripts.append(adapter)
 
                 # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-                js = "".join(("""
-S3.i18n.reply = '""", str(T("Reply")), """';
-var img_path = S3.Ap.concat('/static/img/jCollapsible/');
-var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
-function comment_reply(id) {
-    $('#cms_comment_post_id__row').hide();
-    $('#cms_comment_post_id__row1').hide();
-    $('#comment-title').html(S3.i18n.reply);
-    var editor = $('#cms_comment_body').ckeditorGet();
-    editor.destroy();
-    $('#cms_comment_body').ckeditor(ck_config);
-    $('#comment-form').insertAfter($('#comment-' + id));
-    $('#cms_comment_parent').val(id);
-    var post_id = $('#comment-' + id).attr('post_id');
-    $('#cms_comment_post_id').val(post_id);
-}"""))
+                js = "".join((
+'''S3.i18n.reply="''', str(T("Reply")), '''"
+var img_path=S3.Ap.concat('/static/img/jCollapsible/')
+var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
+function comment_reply(id){
+ $('#cms_comment_post_id__row').hide()
+ $('#cms_comment_post_id__row1').hide()
+ $('#comment-title').html(S3.i18n.reply)
+ $('#cms_comment_body').ckeditorGet().destroy()
+ $('#cms_comment_body').ckeditor(ck_config)
+ $('#comment-form').insertAfter($('#comment-'+id))
+ $('#cms_comment_parent').val(id)
+ var post_id = $('#comment-'+id).attr('post_id')
+ $('#cms_comment_post_id').val(post_id)
+}'''))
 
-                response.s3.js_global.append(js)
+                s3.js_global.append(js)
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller("cms", "post")
     return output
@@ -192,30 +209,29 @@ def discuss(r, **attr):
     rheader = s3db.cms_rheader(r)
 
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-    response.s3.scripts.append(ckeditor)
+    s3.scripts.append(ckeditor)
     adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                   "jquery.js"])
-    response.s3.scripts.append(adapter)
+    s3.scripts.append(adapter)
 
     # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
-    js = "".join(("""
-S3.i18n.reply = '""", str(T("Reply")), """';
-var img_path = S3.Ap.concat('/static/img/jCollapsible/');
-var ck_config = {toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'};
-function comment_reply(id) {
-    $('#cms_comment_post_id__row').hide();
-    $('#cms_comment_post_id__row1').hide();
-    $('#comment-title').html(S3.i18n.reply);
-    var editor = $('#cms_comment_body').ckeditorGet();
-    editor.destroy();
-    $('#cms_comment_body').ckeditor(ck_config);
-    $('#comment-form').insertAfter($('#comment-' + id));
-    $('#cms_comment_parent').val(id);
-    var post_id = $('#comment-' + id).attr('post_id');
-    $('#cms_comment_post_id').val(post_id);
-}"""))
+    js = "".join((
+'''S3.i18n.reply="''', str(T("Reply")), '''"
+var img_path=S3.Ap.concat('/static/img/jCollapsible/')
+var ck_config={toolbar:[['Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Smiley','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}
+function comment_reply(id){
+ $('#cms_comment_post_id__row').hide()
+ $('#cms_comment_post_id__row1').hide()
+ $('#comment-title').html(S3.i18n.reply)
+ $('#cms_comment_body').ckeditorGet().destroy()
+ $('#cms_comment_body').ckeditor(ck_config)
+ $('#comment-form').insertAfter($('#comment-'+id))
+ $('#cms_comment_parent').val(id)
+ var post_id=$('#comment-'+id).attr('post_id')
+ $('#cms_comment_post_id').val(post_id)
+}'''))
 
-    response.s3.js_global.append(js)
+    s3.js_global.append(js)
 
     response.view = "cms/discuss.html"
     return dict(rheader=rheader,
@@ -249,18 +265,17 @@ def comment_parse(comment, comments, post_id=None):
             user = row[utable._tablename]
             username = s3_fullname(person)
             email = user.email.strip().lower()
-            import md5
-            hash = md5.new(email).hexdigest()
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
             url = "http://www.gravatar.com/%s" % hash
             author = B(A(username, _href=url, _target="top"))
     if not post_id and comment.post_id:
-        s3mgr.load("cms_post")
-        post = "re: %s" % db.cms_post[comment.post_id].name
+        post = "re: %s" % s3db.cms_post[comment.post_id].name
         header = DIV(author, " ", post)
         post_id = comment.post_id
     else:
         header = author
-    thread = LI(DIV(s3_avatar_represent(comment.created_by),
+    thread = LI(DIV(s3base.s3_avatar_represent(comment.created_by),
                     DIV(DIV(header,
                             _class="comment-header"),
                         DIV(XML(comment.body)),
@@ -324,16 +339,19 @@ def comments():
             output.append(thread)
 
     # Also see the outer discuss()
-    script = "".join(("""
-$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false});
-$('#cms_comment_parent__row1').hide();
-$('#cms_comment_parent__row').hide();
-$('#cms_comment_body').ckeditor(ck_config);
-$('#submit_record__row input').click(function(){$('#comment-form').hide();$('#cms_comment_body').ckeditorGet().destroy();return true;});
-"""))
+    script = \
+'''$('#comments').collapsible({xoffset:'-5',yoffset:'50',imagehide:img_path+'arrow-down.png',imageshow:img_path+'arrow-right.png',defaulthide:false})
+$('#cms_comment_parent__row1').hide()
+$('#cms_comment_parent__row').hide()
+$('#cms_comment_body').ckeditor(ck_config)
+$('#submit_record__row input').click(function(){
+ $('#comment-form').hide()
+ $('#cms_comment_body').ckeditorGet().destroy()
+ return true
+})'''
 
     # No layout in this output!
-    #response.s3.jquery_ready.append(script)
+    #s3.jquery_ready.append(script)
 
     output = DIV(output,
                  DIV(H4(T("New Post"),
@@ -374,6 +392,7 @@ def posts():
                              limitby=(0, recent))
 
     output = UL(_id="comments")
+    import hashlib
     for post in posts:
         author = B(T("Anonymous"))
         if post.created_by:
@@ -393,13 +412,12 @@ def posts():
                 user = row[utable._tablename]
                 username = s3_fullname(person)
                 email = user.email.strip().lower()
-                import md5
-                hash = md5.new(email).hexdigest()
+                hash = hashlib.md5(email).hexdigest()
                 url = "http://www.gravatar.com/%s" % hash
                 author = B(A(username, _href=url, _target="top"))
         header = H4(post.name)
         if post.avatar:
-            avatar = s3_avatar_represent(post.created_by)
+            avatar = s3base.s3_avatar_represent(post.created_by)
         else:
             avatar = ""
         row = LI(DIV(avatar,
@@ -416,6 +434,5 @@ def posts():
         output.append(row)
 
     return XML(output)
-
 
 # END =========================================================================

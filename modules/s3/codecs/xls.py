@@ -36,7 +36,6 @@ except:
     from StringIO import StringIO
 
 from gluon import *
-from gluon import current
 from gluon.storage import Storage
 from gluon.contenttype import contenttype
 try:
@@ -49,7 +48,6 @@ except ImportError:
 from ..s3codec import S3Codec
 
 # =============================================================================
-
 class S3XLS(S3Codec):
     """
         Simple Microsoft Excel format codec
@@ -86,23 +84,18 @@ class S3XLS(S3Codec):
             @param report_groupby: a Field object of the field to group the records by
         """
 
-        manager = current.manager
-        request = current.request
-        response = current.response
-        s3 = response.s3
-
+        s3 = current.response.s3
 
         # List fields
         if not list_fields:
             fields = resource.readable_fields()
             list_fields = [f.name for f in fields if f != "id"]
-        indices = manager.model.indices
+        indices = self.indices
         list_fields = [f for f in list_fields if f not in indices]
 
-        # Filter and orderby
+        # Filter
         if s3.filter is not None:
             resource.add_filter(s3.filter)
-        orderby = report_groupby
 
         # Retrieve the resource contents
         table = resource.table
@@ -112,20 +105,33 @@ class S3XLS(S3Codec):
         name = "title_list"
         tablename = resource.tablename
         crud_strings = s3.crud_strings.get(tablename, s3.crud_strings)
-        not_found = s3.crud_strings.get(name, request.function)
+        not_found = s3.crud_strings.get(name, current.request.function)
         title = str(crud_strings.get(name, not_found))
 
+        # Only include fields that can be read.
+        # - doesn't work with virtual fields and anyway list_fields should override readable
+        #headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
         headers = [f.label for f in lfields if f.show]
         # Doesn't work with Virtual Fields
         #types = [f.field.type for f in lfields if f.show]
         types = []
         for f in lfields:
             if f.show:
-                try:
+                if f.field:
                     types.append(f.field.type)
-                except:
+                else:
                     # Virtual Field
                     types.append("string")
+
+        orderby = report_groupby
+        if not orderby:
+            # @ToDo: Some central function (where does HRM List get it's orderby from?)
+            if "person_id" in list_fields:
+                orderby = "pr_person.first_name"
+                list_fields.append("person_id$first_name")
+            elif "organisation_id" in list_fields:
+                orderby = "org_organisation.name"
+                list_fields.append("organisation_id$name")
 
         items = resource.sqltable(fields=list_fields,
                                   start=None,
@@ -170,6 +176,8 @@ class S3XLS(S3Codec):
         except ImportError:
             current.session.error = self.ERROR.XLRD_ERROR
             redirect(URL(extension=""))
+        # The xlwt library supports a maximum of 182 character in a single cell 
+        max_cell_size = 182
 
         # Get the attributes
         title = attr.get("title")
@@ -185,16 +193,15 @@ class S3XLS(S3Codec):
             (title, types, headers, items) = self.extractResource(data_source,
                                                                   list_fields,
                                                                   report_groupby)
-
+        if len(headers) != len(items):
+            import sys
+            print >> sys.stderr, "modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
+            print >> sys.stderr, list_fields
         if report_groupby != None:
             if isinstance(report_groupby, Field):
                 groupby_label = report_groupby.label
             else:
                 groupby_label = report_groupby
-
-        # Environment
-        request = current.request
-        response = current.response
 
         # Date/Time formats from L10N deployment settings
         settings = current.deployment_settings
@@ -207,8 +214,8 @@ class S3XLS(S3Codec):
 
         # Create the workbook and a sheet in it
         book = xlwt.Workbook(encoding="utf-8")
-        # Length of the title Needs to be fixed...
-        sheet1 = book.add_sheet(str(title[0:10]))
+        # The spreadsheet doesn't like a / in the sheet name, so replace any with a space
+        sheet1 = book.add_sheet(str(title.replace("/"," ")))
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
@@ -250,6 +257,9 @@ class S3XLS(S3Codec):
         # Initialize counters
         rowCnt = 0
         colCnt = 0
+
+        # Environment
+        request = current.request
 
         # Title row
         totalCols = len(headers)-1
@@ -293,10 +303,12 @@ class S3XLS(S3Codec):
                 style = styleEven
             else:
                 style = styleOdd
-            for label in headers:
-                represent = item[colCnt]
+            for represent in item:
+                label = headers[colCnt]
                 if type(represent) is not str:
                     represent = unicode(represent)
+                if len(represent) > max_cell_size:
+                    represent = represent[:max_cell_size]
                 # Strip away markup from representation
                 try:
                     markup = etree.XML(str(represent))
@@ -390,6 +402,7 @@ class S3XLS(S3Codec):
         # Response headers
         filename = "%s_%s.xls" % (request.env.server_name, str(title))
         disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition
 

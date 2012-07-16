@@ -187,13 +187,18 @@ def getFiles(configDict, configFile = None):
     ## Import file source code
     ## TODO: Do import when we walk the directories above?
     for filepath in allFiles:
-        print "Importing: %s" % filepath
-        filekey = filepath.replace("\\", "/").split("/")[0]
+        #print "Importing: %s" % filepath
+        if "\\" in filepath:
+            filekey = filepath.replace("\\", "/").split("/")[0]
+        elif "/" in filepath:
+            filekey = filepath.split("/")[0]
+        else:
+            filekey = "."
         fullpath = os.path.join(configDict[filekey], filepath)
         content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
         files[filepath] = SourceFile(filepath, content) # TODO: Chop path?
 
-    print
+    #print
 
     from toposortmf import toposort
 
@@ -205,7 +210,7 @@ def getFiles(configDict, configFile = None):
         nodes = []
         routes = []
         ## Resolve the dependencies
-        print "Resolution pass %s... " % resolution_pass
+        #print "Resolution pass %s... " % resolution_pass
         resolution_pass += 1 
 
         for filepath, info in files.items():
@@ -217,8 +222,13 @@ def getFiles(configDict, configFile = None):
             for filepath in dependencyLevel:
                 order.append(filepath)
                 if not files.has_key(filepath):
-                    print "Importing: %s" % filepath
-                    filekey = filepath.replace("\\", "/").split("/")[0]
+                    #print "Importing: %s" % filepath
+                    if "\\" in filepath:
+                        filekey = filepath.replace("\\", "/").split("/")[0]
+                    elif "/" in filepath:
+                        filekey = filepath.split("/")[0]
+                    else:
+                        filekey = "."
                     fullpath = os.path.join(configDict[filekey], filepath)
                     content = open(fullpath, "U").read() # TODO: Ensure end of line @ EOF?
                     files[filepath] = SourceFile(filepath, content) # TODO: Chop path?
@@ -233,12 +243,12 @@ def getFiles(configDict, configFile = None):
         except:
             complete = False
         
-        print    
+        #print    
 
 
     ## Move forced first and last files to the required position
     if cfg:
-        print "Re-ordering files..."
+        #print "Re-ordering files..."
         order = cfg.forceFirst + [item
                      for item in order
                      if ((item not in cfg.forceFirst) and
@@ -255,17 +265,17 @@ def run (files, order, outputFilename = None):
 
     for fp in order:
         f = files[fp]
-        print "Exporting: ", f.filepath
+        #print "Exporting: ", f.filepath
         result.append(HEADER % f.filepath)
         source = f.source
         result.append(source)
         if not source.endswith("\n"):
             result.append("\n")
 
-    print "\nTotal files merged: %d " % len(files)
+    #print "\nTotal files merged: %d " % len(files)
 
     if outputFilename:
-        print "\nGenerating: %s" % (outputFilename)
+        #print "\nGenerating: %s" % (outputFilename)
         open(outputFilename, "w").write("".join(result))
     return "".join(result)
 

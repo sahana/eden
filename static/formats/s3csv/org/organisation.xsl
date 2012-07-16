@@ -12,7 +12,7 @@
 
          all of the following are for the branch, unless the branch field is empty:
          Acronym.................org_organisation
-         Type....................org_organisation
+         Type....................org_organisation_type
          Sector..................org_sector
          Region..................org_organisation
          Country.................org_organisation (ISO Code)
@@ -27,32 +27,26 @@
     <xsl:include href="../../xml/countries.xsl"/>
     <xsl:include href="../../xml/commons.xsl"/>
 
-    <!-- Organisation types, see modules/eden/org.py -->
-    <org:type code="1">Government</org:type>
-    <org:type code="2">Embassy</org:type>
-    <org:type code="3">International NGO</org:type>
-    <org:type code="4">Donor</org:type>
-    <org:type code="6">National NGO</org:type>
-    <org:type code="7">UN</org:type>
-    <org:type code="8">International Organization</org:type>
-    <org:type code="9">Military</org:type>
-    <org:type code="10">Private</org:type>
-    <org:type code="11">Intergovernmental Organization</org:type>
-    <org:type code="12">Institution</org:type>
-    <org:type code="13">Red Cross / Red Crescent</org:type>
-
     <!-- Indexes for faster processing -->
+    <xsl:key name="organisation_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
+            <!-- Organisation Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_type',
+                                                                       col[@field='Type'])[1])]">
+                <xsl:call-template name="OrganisationType" />
+            </xsl:for-each>
+
             <!-- Branches -->
             <xsl:apply-templates select="table/row"/>
 
             <!-- Top-level Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation',
+                                                                       col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName">
                         <xsl:value-of select="col[@field='Organisation']/text()"/>
@@ -114,12 +108,12 @@
                 <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
             </xsl:if>
             
-            <xsl:variable name="typename" select="col[@field='Type']"/>
-            <xsl:if test="$typename!=''">
-                <xsl:variable name="typecode" select="document('')//org:type[text()=normalize-space($typename)]/@code"/>
-                <xsl:if test="$typecode">
-                    <data field="type"><xsl:value-of select="$typecode"/></data>
-                </xsl:if>
+            <xsl:if test="col[@field='Type']!=''">
+                <reference field="organisation_type_id" resource="org_organisation_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('OrgType:', col[@field='Type'])"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <xsl:if test="col[@field='Country']!=''">
@@ -176,6 +170,19 @@
 
         </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="OrganisationType">
+        <xsl:if test="col[@field='Type']!=''">
+            <resource name="org_organisation_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('OrgType:', col[@field='Type'])"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="col[@field='Type']"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

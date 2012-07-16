@@ -158,6 +158,13 @@
                                                  col[@field='Email'])"/>
                 </xsl:attribute>
             </reference>
+            <reference field="course_id" resource="hrm_course">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Course']"/>
+                </xsl:attribute>
+            </reference>
+            <data field="date"><xsl:value-of select="col[@field='Start']"/></data>
+            <data field="hours"><xsl:value-of select="col[@field='Hours']"/></data>
         </resource>
 
     </xsl:template>

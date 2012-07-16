@@ -48,7 +48,6 @@ class S3SupportModel(S3Model):
     def model(self):
 
         T = current.T
-        s3 = current.response.s3
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # -------------------------------------------------------------------------
@@ -85,20 +84,18 @@ class S3SupportModel(S3Model):
                                   Field("actions", "text",
                                         label = T("Actions"),
                                         comment = T("Actions taken as a result of this request.")),
-                                  *s3.meta_fields())
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_REQUEST = T("New Support Request")
-        LIST_REQUESTS = T("List Support Requests")
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_REQUEST,
             title_display = T("Request Details"),
-            title_list = LIST_REQUESTS,
+            title_list = T("Support Requests"),
             title_update = T("Edit Request"),
             title_search = T("Search Support Requests"),
             subtitle_create = T("Add New Request"),
-            subtitle_list = T("Support Requests"),
-            label_list_button = LIST_REQUESTS,
+            label_list_button = T("List Support Requests"),
             label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Request added"),

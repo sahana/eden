@@ -1,6 +1,6 @@
 /* Copyright (c) 2006-2012 by OpenLayers Contributors (see authors.txt for 
- * full list of contributors). Published under the Clear BSD license.  
- * See http://svn.openlayers.org/trunk/openlayers/license.txt for the
+ * full list of contributors). Published under the 2-clause BSD license.
+ * See license.txt in the OpenLayers distribution or repository for the
  * full text of the license. */
 
 /**
@@ -64,8 +64,24 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
      * APIProperty: extractAttributes
      * {Boolean} Extract attributes from KML.  Default is true.
      *           Extracting styleUrls requires this to be set to true
+     *           Note that currently only Data and SimpleData 
+     *           elements are handled.
      */
     extractAttributes: true,
+    
+    /**
+     * APIProperty: kvpAttributes
+     * {Boolean} Only used if extractAttributes is true.
+     *           If set to true, attributes will be simple
+     *           key-value pairs, compatible with other formats,
+     *           Any displayName elements will be ignored.
+     *           If set to false, attributes will be objects,
+     *           retaining any displayName elements, but not
+     *           compatible with other formats. Any CDATA in
+     *           displayName will be read in as a string value.
+     *           Default is false.
+     */
+    kvpAttributes: false,
     
     /**
      * Property: extractStyles
@@ -295,8 +311,7 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
 
     /**
      * Method: parseStyles
-     * Looks for <Style> nodes in the data and parses them
-     * Also parses <StyleMap> nodes, but only uses the 'normal' key
+     * Parses <Style> nodes
      * 
      * Parameters: 
      * nodes    - {Array} of {DOMElement} data to read/parse.
@@ -508,10 +523,10 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
 
                 case "balloonstyle":
                     var balloonStyle = OpenLayers.Util.getXmlNodeValue(
-                                            styleTypeNode);
+                                            styleTypeNode.getElementsByTagName("text")[0]);
                     if (balloonStyle) {
                         style["balloonStyle"] = balloonStyle.replace(
-                                       this.regExes.straightBracket, "${$1}");
+                                       this.regExes.straightBracket, "{$1}");
                     }
                     break;
                 case "labelstyle":
@@ -542,8 +557,7 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
 
     /**
      * Method: parseStyleMaps
-     * Looks for <Style> nodes in the data and parses them
-     * Also parses <StyleMap> nodes, but only uses the 'normal' key
+     * Parses <StyleMap> nodes, but only uses the 'normal' key
      * 
      * Parameters: 
      * nodes    - {Array} of {DOMElement} data to read/parse.
@@ -1028,32 +1042,44 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
             child = children[i];
             if(child.nodeType == 1) {
                 grandchildren = child.childNodes;
-                if(grandchildren.length >= 1 && grandchildren.length <= 3) {
-                    var grandchild;
+                var name = (child.prefix) ?
+                        child.nodeName.split(":")[1] :
+                        child.nodeName;
+                if(grandchildren.length >= 1) {
+                    var grandchild, value;
                     switch (grandchildren.length) {
                         case 1:
                             grandchild = grandchildren[0];
+                            if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
+                                value = OpenLayers.Util.getXmlNodeValue(grandchild);
+                                if (value) {
+                                    value = value.replace(this.regExes.trimSpace, "");
+                                }
+                            }
                             break;
                         case 2:
                             var c1 = grandchildren[0];
                             var c2 = grandchildren[1];
                             grandchild = (c1.nodeType == 3 || c1.nodeType == 4) ?
                                 c1 : c2;
+                            if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
+                                value = OpenLayers.Util.getXmlNodeValue(grandchild);
+                                if (value) {
+                                    value = value.replace(this.regExes.trimSpace, "");
+                                }
+                            }
                             break;
-                        case 3:
                         default:
-                            grandchild = grandchildren[1];
+                            // Assume this is HTML - we want all nodes
+                            value = "";
+                            for(var j=0, len=grandchildren.length; j<len; ++j) {
+                                grandchild = grandchildren[j];
+                                value += OpenLayers.Util.getXmlNodeValue(grandchild); 
+                            }
                             break;
                     }
-                    if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
-                        var name = (child.prefix) ?
-                                child.nodeName.split(":")[1] :
-                                child.nodeName;
-                        var value = OpenLayers.Util.getXmlNodeValue(grandchild);
-                        if (value) {
-                            value = value.replace(this.regExes.trimSpace, "");
-                            attributes[name] = value;
-                        }
+                    if (value) {
+                        attributes[name] = value;
                     }
                 } 
             }
@@ -1078,12 +1104,16 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
             var valueNode = data.getElementsByTagName("value");
             if (valueNode.length) {
                 ed['value'] = this.getChildValue(valueNode[0]);
-            }    
-            var nameNode = data.getElementsByTagName("displayName");
-            if (nameNode.length) {
-                ed['displayName'] = this.getChildValue(nameNode[0]);
             }
-            attributes[key] = ed;
+            if (this.kvpAttributes) {
+                attributes[key] = ed['value'];
+            } else {
+                var nameNode = data.getElementsByTagName("displayName");
+                if (nameNode.length) {
+                    ed['displayName'] = this.getChildValue(nameNode[0]);
+                }
+                attributes[key] = ed;
+            } 
         }
         var simpleDataNodes = node.getElementsByTagName("SimpleData");
         for (i = 0, len = simpleDataNodes.length; i < len; i++) {
@@ -1091,8 +1121,12 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
             data = simpleDataNodes[i];
             key = data.getAttribute("name");
             ed['value'] = this.getChildValue(data);
-            ed['displayName'] = key;
-            attributes[key] = ed;
+            if (this.kvpAttributes) {
+                attributes[key] = ed['value'];
+            } else {
+                ed['displayName'] = key;
+                attributes[key] = ed;
+            }
         }
         
         return attributes;    
@@ -1188,8 +1222,8 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
     createPlacemarkXML: function(feature) {        
         // Placemark name
         var placemarkName = this.createElementNS(this.kmlns, "name");
-        var name = feature.style && feature.style.label ? feature.style.label :
-                   feature.attributes.name || feature.id;
+        var label = (feature.style && feature.style.label) ? feature.style.label : feature.id;
+        var name = feature.attributes.name || label;
         placemarkName.appendChild(this.createTextNode(name));
 
         // Placemark description
@@ -1209,7 +1243,14 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
         var geometryNode = this.buildGeometryNode(feature.geometry);
         placemarkNode.appendChild(geometryNode);        
         
-        // TBD - deal with remaining (non name/description) attributes.
+        // output attributes as extendedData
+        if (feature.attributes) {
+            var edNode = this.buildExtendedData(feature.attributes);
+            if (edNode) {
+                placemarkNode.appendChild(edNode);
+            }
+        }
+        
         return placemarkNode;
     },    
 
@@ -1440,5 +1481,48 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
         return point.x + "," + point.y;                     
     },
 
+    /**
+     * Method: buildExtendedData
+     *
+     * Parameters:
+     * attributes - {Object}
+     *
+     * Returns
+     * {DOMElement} A KML ExtendedData node or {null} if no attributes.
+     */
+    buildExtendedData: function(attributes) {
+        var extendedData = this.createElementNS(this.kmlns, "ExtendedData");
+        for (var attributeName in attributes) {
+            // empty, name, description, styleUrl attributes ignored
+            if (attributes[attributeName] && attributeName != "name" && attributeName != "description" && attributeName != "styleUrl") {
+                var data = this.createElementNS(this.kmlns, "Data");
+                data.setAttribute("name", attributeName);
+                var value = this.createElementNS(this.kmlns, "value");
+                if (typeof attributes[attributeName] == "object") {
+                    // cater for object attributes with 'value' properties
+                    // other object properties will output an empty node
+                    if (attributes[attributeName].value) {
+                        value.appendChild(this.createTextNode(attributes[attributeName].value));
+                    }
+                    if (attributes[attributeName].displayName) {
+                        var displayName = this.createElementNS(this.kmlns, "displayName");
+                        // displayName always written as CDATA
+                        displayName.appendChild(this.getXMLDoc().createCDATASection(attributes[attributeName].displayName));
+                        data.appendChild(displayName);
+                    }
+                } else {
+                    value.appendChild(this.createTextNode(attributes[attributeName]));
+                }
+                data.appendChild(value);
+                extendedData.appendChild(data);
+            }
+        }
+        if (this.isSimpleContent(extendedData)) {
+            return null;
+        } else {
+            return extendedData;
+        }
+    },
+    
     CLASS_NAME: "OpenLayers.Format.KML" 
 });

@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -15,7 +15,7 @@ def index():
 
     """ Custom View """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -87,15 +87,19 @@ def ireport():
                     #dtable.url.readable = dtable.url.writable = False
                     dtable.person_id.readable = dtable.person_id.writable = False
                 elif r.component_name == "human_resource":
+                    if not r.component_id:
+                        # Hide fields from create forms (list_fields override)
+                        htable = s3db.irs_ireport_human_resource
+                        htable.response.readable = htable.response.writable = False
+                        htable.reply.readable = htable.reply.writable = False
                     s3.crud.submit_button = T("Assign")
                     s3.crud_strings["irs_ireport_human_resource"] = Storage(
                         title_create = T("Assign Human Resource"),
                         title_display = T("Human Resource Details"),
-                        title_list = T("List Assigned Human Resources"),
+                        title_list = T("Human Resource Assignments"),
                         title_update = T("Edit Human Resource"),
                         title_search = T("Search Assigned Human Resources"),
                         subtitle_create = T("Assign New Human Resource"),
-                        subtitle_list = T("Human Resource Assignments"),
                         label_list_button = T("List Assigned Human Resources"),
                         label_create_button = T("Assign Human Resource"),
                         label_delete_button = T("Remove Human Resource from this incident"),
@@ -108,11 +112,10 @@ def ireport():
                     s3.crud_strings["irs_ireport_vehicle"] = Storage(
                         title_create = T("Assign Vehicle"),
                         title_display = T("Vehicle Details"),
-                        title_list = T("List Assigned Vehicles"),
+                        title_list = T("Vehicle Assignments"),
                         title_update = T("Edit Vehicle Assignment"),
                         title_search = T("Search Vehicle Assignments"),
                         subtitle_create = T("Add New Vehicle Assignment"),
-                        subtitle_list = T("Vehicle Assignments"),
                         label_list_button = T("List Vehicle Assignments"),
                         label_create_button = T("Add Vehicle Assignment"),
                         label_delete_button = T("Remove Vehicle from this incident"),

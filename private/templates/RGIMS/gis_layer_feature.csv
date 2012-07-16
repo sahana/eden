@@ -1,0 +1,4 @@
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
+"Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.type=NONE,1,2,3,4&office.obsolete=False",,,,,"False",
+"Warehouses","All Active Warehouses","inv","warehouse","US","office","Building","Warehouse","name/organisation_id","office.obsolete=False","type",5,,,"False",
+"Stock Items","Used for Search Results","inv","inv_item","US",,,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,,"False","False"

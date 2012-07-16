@@ -24,8 +24,7 @@ def config():
     resourcename = "config"
 
     # Get the record ID of the first and only record
-    s3mgr.load("sync_config")
-    table = db.sync_config
+    table = s3db.sync_config
     record = db().select(table.id, limitby=(0, 1)).first()
     if not record:
         record_id = table.insert()
@@ -51,7 +50,7 @@ def repository():
             (T("Log"), "log")
            ]
 
-    s3mgr.model.set_method("sync", "repository",
+    s3db.set_method("sync", "repository",
                            method="register",
                            action=s3mgr.sync)
 

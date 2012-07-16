@@ -7,12 +7,10 @@
 """
 
 module = request.controller
+resourcename = request.function
 
-if module not in deployment_settings.modules:
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
-
-# Load Models
-s3mgr.load("dvi_body")
 
 # -----------------------------------------------------------------------------
 def s3_menu_postp():
@@ -20,7 +18,7 @@ def s3_menu_postp():
     menu_selected = []
     body_id = s3mgr.get_session("dvi", "body")
     if body_id:
-        body = db.dvi_body
+        body = s3db.dvi_body
         query = (body.id == body_id)
         record = db(query).select(body.id, body.pe_label,
                                   limitby=(0,1)).first()
@@ -37,7 +35,7 @@ def s3_menu_postp():
             )
     person_id = s3mgr.get_session("pr", "person")
     if person_id:
-        person = db.pr_person
+        person = s3db.pr_person
         query = (person.id == person_id)
         record = db(query).select(person.id, limitby=(0, 1)).first()
         if record:
@@ -56,14 +54,14 @@ def index():
     """ Module's Home Page """
 
     try:
-        module_name = deployment_settings.modules[module].name_nice
+        module_name = settings.modules[module].name_nice
     except:
         module_name = T("Disaster Victim Identification")
 
-    table = db.dvi_body
+    table = s3db.dvi_body
     total = db(table.deleted == False).count()
 
-    itable = db.dvi_identification
+    itable = s3db.dvi_identification
     query = (table.deleted == False) & \
             (itable.pe_id == table.pe_id) & \
             (itable.deleted == False) & \
@@ -82,9 +80,7 @@ def index():
 def recreq():
     """ Recovery Requests List """
 
-    resourcename = request.function
-
-    table = db.dvi_recreq
+    table = s3db.dvi_recreq
     table.person_id.default = s3_logged_in_person()
 
     def prep(r):
@@ -94,16 +90,15 @@ def recreq():
             table.bodies_recovered.readable = False
             table.bodies_recovered.writable = False
         return True
-    response.s3.prep = prep
-    output = s3_rest_controller()
+    s3.prep = prep
 
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
 def morgue():
     """ Morgue Registry """
 
-    resourcename = request.function
     morgue_tabs = [(T("Morgue Details"), ""),
                    (T("Bodies"), "body")]
 
@@ -116,8 +111,6 @@ def morgue():
 # -----------------------------------------------------------------------------
 def body():
     """ Dead Bodies Registry """
-
-    resourcename = request.function
 
     gender_opts = s3db.pr_gender_opts
     gender_opts[1] = T("unknown")
@@ -132,9 +125,9 @@ def body():
         ids = db(query).select(itable.pe_id)
         ids = [i.pe_id for i in ids]
         if ids:
-            response.s3.filter = (~(btable.pe_id.belongs(ids)))
+            s3.filter = (~(btable.pe_id.belongs(ids)))
 
-    s3mgr.configure("dvi_body", main="pe_label", extra="gender")
+    s3db.configure("dvi_body", main="pe_label", extra="gender")
 
     ntable = s3db.pr_note
     ntable.status.readable = False
@@ -160,24 +153,22 @@ def body():
 def person():
     """ Missing Persons Registry (Match Finder) """
 
-    resourcename = request.function
-
+    table = s3db.pr_person
     s3.crud_strings["pr_person"].update(
         title_display = T("Missing Person Details"),
         title_list = T("Missing Persons"),
-        subtitle_list = T("List of Missing Persons"),
         label_list_button = T("List Missing Persons"),
         msg_list_empty = T("No Persons found"),
         msg_no_match = T("No Persons currently reported missing"))
 
-    s3mgr.configure("pr_group_membership",
+    s3db.configure("pr_group_membership",
                     list_fields=["id",
                                  "group_id",
                                  "group_head",
                                  "description"
                                 ])
 
-    s3mgr.configure("pr_person",
+    s3db.configure("pr_person",
                     listadd=False,
                     editable=False,
                     deletable=False,
@@ -200,18 +191,22 @@ def person():
                 query = dvi_match_query(body_id)
                 r.resource.add_filter(query)
                 s3.crud_strings["pr_person"].update(
-                    subtitle_list = T("Candidate Matches for Body %s" % label),
+                    #subtitle_list = T("Candidate Matches for Body %s" % label),
                     msg_no_match = T("No matching records found"))
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
-    db.pr_person.missing.readable = False
-    db.pr_person.missing.writable = False
-    db.pr_person.missing.default = True
+    field = table.missing
+    field.readable = False
+    field.writable = False
+    field.default = True
+
+    table.age_group.readable = True
+    table.age_group.writable = True
 
     # Show only missing persons in list views
     if len(request.args) == 0:
-        response.s3.filter = (db.pr_person.missing == True)
+        s3.filter = (db.pr_person.missing == True)
 
     mpr_tabs = [
                 (T("Missing Report"), "missing_report"),
@@ -241,9 +236,9 @@ def dvi_match_query(body_id):
         @param body_id: the dvi_body record ID
     """
 
-    ptable = db.pr_person
-    ntable = db.pr_note
-    btable = db.dvi_body
+    ptable = s3db.pr_person
+    ntable = s3db.pr_note
+    btable = s3db.dvi_body
 
     query = ((ptable.deleted == False) &
             (ptable.missing == True) &

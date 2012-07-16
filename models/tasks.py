@@ -7,7 +7,9 @@
 tasks = {}
 
 # -----------------------------------------------------------------------------
-def download_kml(record_id, filename, user_id=None):
+# GIS
+# -----------------------------------------------------------------------------
+def gis_download_kml(record_id, filename, user_id=None):
     """
         Download a KML file
             - will normally be done Asynchronously if there is a worker alive
@@ -23,13 +25,32 @@ def download_kml(record_id, filename, user_id=None):
     result = gis.download_kml(record_id, filename)
     return result
 
-tasks["download_kml"] = download_kml
+tasks["gis_download_kml"] = gis_download_kml
 
 # -----------------------------------------------------------------------------
-if deployment_settings.has_module("msg"):
+def gis_update_location_tree(feature, user_id=None):
+    """
+        Update the Location Tree for a feature
+            - will normally be done Asynchronously if there is a worker alive
+
+        @param feature: the feature (in JSON format)
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task
+    feature = json.loads(feature)
+    result = gis.update_location_tree(feature)
+    return result
+
+tasks["gis_update_location_tree"] = gis_update_location_tree
+
+# -----------------------------------------------------------------------------
+if settings.has_module("msg"):
 
     # -------------------------------------------------------------------------
-    def process_outbox(contact_method, user_id=None):
+    def msg_process_outbox(contact_method, user_id=None):
         """
             Process Outbox
                 - will normally be done Asynchronously if there is a worker alive
@@ -44,10 +65,10 @@ if deployment_settings.has_module("msg"):
         result = msg.process_outbox(contact_method)
         return result
 
-    tasks["process_outbox"] = process_outbox
+    tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
-    def process_inbound_email(username):
+    def msg_process_inbound_email(username, user_id):
         """
             Poll an inbound email source.
 
@@ -58,19 +79,19 @@ if deployment_settings.has_module("msg"):
         result = msg.fetch_inbound_email(username)
         return result
 
-    tasks["process_inbound_email"] = process_inbound_email
+    tasks["msg_process_inbound_email"] = msg_process_inbound_email
 
-    # -------------------------------------------------------------------------
-    def process_log():
+    # -----------------------------------------------------------------------------
+    def msg_parse_workflow(workflow, source, user_id):
         """
-            Processes the msg_log for unparsed messages.
+        Processes the msg_log for unparsed messages.
         """
         # Run the Task
-        result = msg.process_log()
+        result = msg.parse_import(workflow, source)
         return result
+        
+    tasks["msg_parse_workflow"] = msg_parse_workflow
     
-    tasks["process_log"] = process_log
-
 # -----------------------------------------------------------------------------
 def sync_synchronize(repository_id, user_id=None, manual=False):
     """
@@ -110,8 +131,15 @@ tasks["sync_synchronize"] = sync_synchronize
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks
-response.s3.tasks = tasks
+s3.tasks = tasks
 s3task = s3base.S3Task()
 current.s3task = s3task
+
+# -----------------------------------------------------------------------------
+# Reusable field for scheduler task links
+scheduler_task_id = S3ReusableField("scheduler_task_id",
+                                    "reference %s" % s3base.S3Task.TASK_TABLENAME,
+                                    ondelete="CASCADE")
+s3.scheduler_task_id = scheduler_task_id
 
 # END =========================================================================

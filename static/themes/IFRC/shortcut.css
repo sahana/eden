@@ -1,0 +1,53 @@
+@charset "UTF-8";
+
+/*** Misc ***/
+.small {
+    font-size:.75em !important;
+}
+.red {
+    color: #dc032e;
+}
+.marron{
+    color: #891735;
+}
+
+/* For modern browsers */
+.cf:before,
+.cf:after {
+    content: "";
+    display: table;
+}
+
+.cf:after {
+    clear: both;
+}
+
+/* For IE 6/7 (trigger hasLayout) */
+.cf {
+    zoom: 1;
+}
+
+/* Hide for both screenreaders and browsers
+   css-discuss.incutio.com/wiki/Screenreader_Visibility */
+.hide {
+    display: none;
+    visibility: hidden;
+}
+
+/* CSS floats */
+.fleft {
+    float: left !important;
+}
+.fright {
+    float: right !important;
+}
+/* Text aligns */
+.tacenter {
+    text-align: center !important;
+}
+.taleft {
+    text-align: left !important;
+}
+.taright {
+    text-align: right !important;
+}

@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if module not in deployment_settings.modules:
+if not deployment_settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ def index():
                                        vars={"module":module}),
                              _class="action-btn"))
             else:
-                item = _item.body
+                item = XML(_item.body)
         elif s3_has_role(ADMIN):
             item = DIV(H2(module_name),
                        A(T("Edit"),

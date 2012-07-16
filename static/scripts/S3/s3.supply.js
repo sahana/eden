@@ -191,7 +191,8 @@ $(document).ready(function() {
 	/**
      * Code to switch between location & site widgets
 	 * @ToDo: Find a better way to show/hide location widget
-	 
+	 */
+    /*
 	$('[name="site_or_location"]').change(function() {
 		if ($('#asset_log_site_or_location').length == 1) {
 			$('[id^="asset_log_site_id__row"]').hide();
@@ -266,9 +267,10 @@ $(document).ready(function() {
 		}
 	});
 	*/
-	/* Populate Site & Org Based on Person */
+	/** Populate Site & Org Based on Person
 	/* @ToDo: have this only select the correct site - and not disable the field
-	$('#asset_log_person_id').change( function() {
+     */
+	/*$('#asset_log_person_id').change( function() {
 		// Cancel previous request
 		try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
 		

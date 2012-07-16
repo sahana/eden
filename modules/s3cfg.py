@@ -32,8 +32,9 @@
 
 __all__ = ["S3Config"]
 
-from gluon import current
+from gluon import current, URL
 from gluon.storage import Storage
+
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 class S3Config(Storage):
@@ -50,43 +51,70 @@ class S3Config(Storage):
         self.frontpage = Storage()
         self.frontpage.rss = []
         self.fin = Storage()
-        self.gis = Storage()
-        self.osm = Storage()    # Backwards-compatiblity, deprecate soon
-        self.mail = Storage()
-        self.twitter = Storage()
         self.L10n = Storage()
-        self.options = Storage()
-        self.security = Storage()
         self.aaa = Storage()
-        self.ui = Storage()
-        self.req = Storage()
-        self.inv = Storage()
-        self.org = Storage()
-        self.supply = Storage()
-        self.hrm = Storage()
-        self.project = Storage()
+        self.mail = Storage()
+        self.msg = Storage()
+        self.options = Storage()
         self.save_search = Storage()
+        self.security = Storage()
+        self.ui = Storage()
+        self.cap = Storage()
+        self.gis = Storage()
+        self.hrm = Storage()
+        self.inv = Storage()
+        self.irs = Storage()
+        self.org = Storage()
+        self.proc = Storage()
+        self.project = Storage()
+        self.req = Storage()
+        self.supply = Storage()
 
-        T = current.T
+    # -------------------------------------------------------------------------
+    # Template
+    def get_template(self):
+        """
+            Which deployment template to use for config.py, parser.py, menus.py, etc
+            http://eden.sahanafoundation.org/wiki/BluePrint/Templates
+        """
+        return self.base.get("template", "default")
 
-        # These are copied from modules/s3/s3aaa.py
-        self.aaa.acl =  Storage(CREATE = 0x0001,
-                                READ   = 0x0002,
-                                UPDATE = 0x0004,
-                                DELETE = 0x0008,
-                                ALL = 0x000F    # CREATE | READ | UPDATE | DELETE
-                                )
-        self.CURRENCIES = {
-            "USD" :T("United States Dollars"),
-            "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds"),
-            "CHF" :T("Swiss Francs")
-        }
+    def exec_template(self, path):
+        """
+            Execute the template
+        """
+        #from gluon.compileapp import build_environment
+        from gluon.fileutils import read_file
+        from gluon.restricted import restricted
+        #environment = build_environment(request, response, session)
+        code = read_file(path)
+        #restricted(code, environment, layer=path)
+        restricted(code, layer=path)
+        return
+
+    # -------------------------------------------------------------------------
+    # Theme
+    def get_theme(self):
+        """
+            Which templates folder to use for views/layout.html
+        """
+        return self.base.get("theme", "default")
+
+    # -------------------------------------------------------------------------
+    def is_cd_version(self):
+        """
+            Whether we're running from a non-writable CD
+        """
+        return self.base.get("cd_version", False)
 
     # -------------------------------------------------------------------------
     # Auth settings
     def get_auth_hmac_key(self):
+        """
+            salt to encrypt passwords - normally randmosied during 1st run
+        """
         return self.auth.get("hmac_key", "akeytochange")
+
     def get_auth_facebook(self):
         """
             Read the FaceBook OAuth settings
@@ -98,9 +126,11 @@ class S3Config(Storage):
             return dict(id=id, secret=secret)
         else:
             return False
+
     def get_auth_gmail_domains(self):
         """ List of domains which can use GMail SMTP for Authentication """
         return self.auth.get("gmail_domains", [])
+
     def get_auth_google(self):
         """
             Read the Google OAuth settings
@@ -112,8 +142,13 @@ class S3Config(Storage):
             return dict(id=id, secret=secret)
         else:
             return False
+
     def get_auth_openid(self):
+        """ Use OpenID for Authentication """
         return self.auth.get("openid", False)
+    def get_auth_login_next(self):
+        """ Which page to go to after login """
+        return self.auth.get("login_next", URL(c="default", f="index"))
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
@@ -155,24 +190,28 @@ class S3Config(Storage):
             organisation_id = None
         return organisation_id
     def get_auth_registration_requests_image(self):
-        " Have the registration form request an Image "
+        """ Have the registration form request an Image """
         return self.auth.get("registration_requests_image", False)
     def get_auth_registration_roles(self):
-        " The list of role UUIDs to assign to newly-registered users "
+        """ The list of role UUIDs to assign to newly-registered users """
         return self.auth.get("registration_roles", [])
     def get_auth_registration_volunteer(self):
-        " Redirect the newly-registered user to their volunteer details page "
+        """ Redirect the newly-registered user to their volunteer details page """
         return self.auth.get("registration_volunteer", False)
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", True)
+    def get_auth_record_approval(self):
+        """ Use record approval (False by default) """
+        return self.auth.get("record_approval", False)
+    def get_auth_record_approver_role(self):
+        """ UID of the record approver role """
+        return self.auth.get("record_approver_role", "APPROVER")
 
-    # @ToDo: Deprecate
-    def get_aaa_default_uacl(self):
-        return self.aaa.get("default_uacl", self.aaa.acl.READ)
-    def get_aaa_default_oacl(self):
-        return self.aaa.get("default_oacl", self.aaa.acl.READ |
-                                            self.aaa.acl.UPDATE)
     def get_aaa_role_modules(self):
+        """
+            Which modules are includes in the Role Manager
+            - to assign discrete permissions to via UI
+        """
         T = current.T
         return self.aaa.get("role_modules", OrderedDict([
             ("staff", "Staff"),
@@ -185,6 +224,9 @@ class S3Config(Storage):
             ("irs", "Incidents")
         ]))
     def get_aaa_access_levels(self):
+        """
+            Access levels for the Role Manager UI
+        """
         T = current.T
         return self.aaa.get("access_levels", OrderedDict([
             ("reader", "Reader"),
@@ -265,9 +307,16 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Finance settings
-    # @ToDo: Make these customisable per User/Facility
+    # @ToDo: Make these customisable per Organisation
+    # => Move to a Table like hrm_course
     def get_fin_currencies(self):
-        return self.fin.get("currencies", self.CURRENCIES)
+        T = current.T
+        currencies = {
+            "EUR" :T("Euros"),
+            "GBP" :T("Great British Pounds"),
+            "USD" :T("United States Dollars"),
+        }
+        return self.fin.get("currencies", currencies)
     def get_fin_currency_default(self):
         return self.fin.get("currency_default", "USD") # Dollars
     def get_fin_currency_writable(self):
@@ -427,35 +476,6 @@ class S3Config(Storage):
         return self.L10n.get("thousands_separator", False)
 
     # -------------------------------------------------------------------------
-    # Messaging
-    # -------------------------------------------------------------------------
-    # Mail settings
-    def get_mail_server(self):
-        return self.mail.get("server", "127.0.0.1:25")
-    def get_mail_server_login(self):
-        return self.mail.get("login", False)
-    def get_mail_server_tls(self):
-        """
-            Does the Mail Server use TLS?
-             - default Debian is False
-             - GMail is True
-        """
-        return self.mail.get("tls", False)
-    def get_mail_sender(self):
-        return self.mail.get("sender", "sahana@your.org")
-    def get_mail_approver(self):
-        return self.mail.get("approver", "useradmin@your.org")
-    def get_mail_limit(self):
-        """ A daily limit to the number of messages which can be sent """
-        return self.mail.get("limit", None)
-
-    # Twitter settings
-    def get_twitter_oauth_consumer_key(self):
-        return self.twitter.get("oauth_consumer_key", "")
-    def get_twitter_oauth_consumer_secret(self):
-        return self.twitter.get("oauth_consumer_secret", "")
-
-    # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
@@ -484,7 +504,7 @@ class S3Config(Storage):
         return self.options.get("terms_of_service", False)
 
     # -------------------------------------------------------------------------
-    # UI/Workflow Settings
+    # UI Settings
     def get_ui_navigate_away_confirm(self):
         return self.ui.get("navigate_away_confirm", True)
     def get_ui_confirm(self):
@@ -494,10 +514,19 @@ class S3Config(Storage):
                 http://code.google.com/p/selenium/issues/detail?id=1604
         """
         return self.ui.get("confirm", True)
+
     def get_ui_autocomplete(self):
         """ Currently Unused """
         return self.ui.get("autocomplete", False)
+    def get_ui_read_label(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
+        return self.ui.get("read_label", "Open")
     def get_ui_update_label(self):
+        """
+            Label for buttons in list views which lead to a Read-opnly 'Display' view
+        """
         return self.ui.get("update_label", "Open")
     def get_ui_cluster(self):
         """ UN-style deployment? """
@@ -531,8 +560,320 @@ class S3Config(Storage):
         """ Display social media Buttons in the footer? """
         return self.ui.get("social_buttons", False)
 
+    # =========================================================================
+    # Messaging
     # -------------------------------------------------------------------------
+    # Mail settings
+    def get_mail_server(self):
+        return self.mail.get("server", "127.0.0.1:25")
+    def get_mail_server_login(self):
+        return self.mail.get("login", False)
+    def get_mail_server_tls(self):
+        """
+            Does the Mail Server use TLS?
+             - default Debian is False
+             - GMail is True
+        """
+        return self.mail.get("tls", False)
+    def get_mail_sender(self):
+        return self.mail.get("sender", "sahana@your.org")
+    def get_mail_approver(self):
+        return self.mail.get("approver", "useradmin@your.org")
+    def get_mail_limit(self):
+        """ A daily limit to the number of messages which can be sent """
+        return self.mail.get("limit", None)
+
+    # -------------------------------------------------------------------------
+    # Parser
+    def get_msg_parser(self):
+        """
+            Which template folder to use to load parser.py
+        """
+        return self.msg.get("parser", "default")
+
+    # -------------------------------------------------------------------------
+    # Twitter
+    def get_msg_twitter_oauth_consumer_key(self):
+        return self.twitter.get("oauth_consumer_key", "")
+    def get_msg_twitter_oauth_consumer_secret(self):
+        return self.twitter.get("oauth_consumer_secret", "")
+
+    # -------------------------------------------------------------------------
+    # Save Search and Subscription
+    def get_save_search_widget(self):
+        """
+            Enable the Saved Search widget
+        """
+        return self.save_search.get("widget", True)
+
+    # =========================================================================
     # Modules
+
+    # -------------------------------------------------------------------------
+    # Alert
+    def get_cap_identifier_prefix(self):
+        return self.cap.get("identifier_prefix", "")
+
+    def get_cap_identifier_suffix(self):
+        return self.cap.get("identifier_suffix", "")
+
+    def get_cap_languages(self):
+        """
+            Languages for cap info. This gets filled in the drop-down for
+            selecting languages. These values should conform to RFC 3066.
+
+            For a full list of languages and their codes, see:
+                http://www.i18nguy.com/unicode/language-identifiers.html
+        """
+
+        return self.cap.get("languages",
+                             OrderedDict([
+                                ("ar", "العربية"),
+                                ("en", "English"),
+                                ("fr", "Français"),
+                                ("pt", "Português"),
+                                ("ru", "русский"),
+                                ("es", "Español")
+                            ]))
+
+    # -------------------------------------------------------------------------
+    # Human Resource Management
+    def get_hrm_email_required(self):
+        """
+            If set to True then Staff & Volunteers require an email address
+        """
+        return self.hrm.get("email_required", True)
+
+    def get_hrm_deletable(self):
+        """
+            If set to True then HRM records are deletable rather than just being able to be marked as obsolete
+        """
+        return self.hrm.get("deletable", False)
+
+    def get_hrm_show_staff(self):
+        """
+            If set to True then show 'Staff' options when HRM enabled
+            - needs a separate setting as vol requires hrm, but we may only wish to show Volunteers
+        """
+        return self.hrm.get("show_staff", True)
+
+    def get_hrm_skill_types(self):
+        """
+            If set to True then Skill Types are exposed to the UI
+            - each skill_type needs it's own set of competency levels
+            If set to False then Skill Types are hidden from the UI
+            - all skills use the same skill_type & hence the same set of competency levels
+        """
+        return self.hrm.get("skill_types", False)
+
+    def get_hrm_staff_experience(self):
+        """
+            Whether to use Experience for Staff &, if so, which table to use
+            - options are: False, "experience"
+        """
+        return self.hrm.get("staff_experience", "experience")
+
+    def get_hrm_vol_experience(self):
+        """
+            Whether to use Experience for Volunteers &, if so, which table to use
+            - options are: False, "experience" or "programme"
+        """
+        return self.hrm.get("vol_experience", "programme")
+
+    def get_hrm_show_organisation(self):
+        """
+            Whether Human Resource representations should include the Organisation
+        """
+        return self.hrm.get("show_organisation", False)
+
+    def get_hrm_use_teams(self):
+        """
+            Whether Human Resources should use Teams
+        """
+        return self.hrm.get("use_teams", True)
+
+    def get_hrm_use_credentials(self):
+        """
+            Whether Human Resources should use Credentials
+        """
+        return self.hrm.get("use_credentials", True)
+
+    def get_hrm_use_education(self):
+        """
+            Whether Human Resources should show Education
+        """
+        return self.hrm.get("use_education", False)
+
+    # -------------------------------------------------------------------------
+    # Inventory Management Settings
+    #
+    def get_inv_collapse_tabs(self):
+        return self.inv.get("collapse_tabs", True)
+
+    def get_inv_item_status(self):
+        """
+            Item Statuses which can also be Sent Shipment Types
+        """
+        T = current.T
+        return self.inv.get("item_status", {
+                0: current.messages.NONE,
+                1: T("Dump"),
+                2: T("Sale"),
+                3: T("Reject"),
+                4: T("Surplus")
+           })
+
+    def get_inv_shipment_name(self):
+        """
+            Get the name of Shipments
+            - currently supported options are:
+            * shipment
+            * order
+        """
+        return self.inv.get("shipment_name", "shipment")
+
+    def get_inv_shipment_types(self):
+        """
+            Shipment types which are common to both Send & Receive
+        """
+        return self.inv.get("shipment_type", {
+                0 : current.messages.NONE,
+                11: current.T("Internal"),
+            })
+
+    def get_inv_send_types(self):
+        """
+            Shipment types which are just for Send
+        """
+        return self.inv.get("send_type", {
+                21: current.T("Distribution"),
+            })
+
+    def get_inv_recv_types(self):
+        """
+            Shipment types which are just for Receive
+        """
+        T = current.T
+        return self.inv.get("recv_type", {
+                31: T("Other Warehouse"),
+                32: T("Local Donation"),
+                33: T("Foreign Donation"),
+                34: T("Local Purchases"),
+                35: T("Confiscated Goods from Bureau Of Customs")
+           })
+
+    def get_inv_send_form_name(self):
+        return self.inv.get("send_form_name", "Waybill")
+    def get_inv_send_ref_field_name(self):
+        return self.inv.get("send_ref_field_name", "Waybill Number")
+    def get_inv_send_shortname(self):
+        return self.inv.get("send_shortname", "WB")
+    def get_inv_recv_form_name(self):
+        return self.inv.get("recv_form_name", "Goods Received Note")
+    def get_inv_recv_shortname(self):
+        return self.inv.get("recv_shortname", "GRN")
+
+    # -------------------------------------------------------------------------
+    # IRS
+    def get_irs_vehicle(self):
+        """
+            Use Vehicles to respond to Incident Reports
+        """
+        return self.irs.get("vehicle", False)
+
+    # -------------------------------------------------------------------------
+    # Organisation
+    def get_org_site_code_len(self):
+        return self.org.get("site_code_len", 10)
+
+    # -------------------------------------------------------------------------
+    # Proc
+    def get_proc_form_name(self):
+        return self.proc.get("form_name", "Purchase Order")
+    def get_proc_shortname(self):
+        return self.proc.get("form_name", "PO")
+
+    # -------------------------------------------------------------------------
+    # Projects
+    def get_project_mode_3w(self):
+        """
+            Enable 3W mode in the projects module
+        """
+        return self.project.get("mode_3w", False)
+
+    def get_project_mode_task(self):
+        """
+            Enable Tasks mode in the projects module
+        """
+        return self.project.get("mode_task", False)
+
+    def get_project_mode_drr(self):
+        """
+            Enable DRR extensions in the projects module
+        """
+        return self.project.get("mode_drr", False)
+
+    def get_project_activities(self):
+        """
+            Use Activities in Projects
+        """
+        return self.project.get("activities", False)
+
+    def get_project_codes(self):
+        """
+            Use Codes in Projects
+        """
+        return self.project.get("codes", False)
+
+    def get_project_community(self):
+        """
+            Label project_location as 'Community'
+        """
+        return self.project.get("community", False)
+
+    def get_project_milestones(self):
+        """
+            Use Milestones in Projects
+        """
+        return self.project.get("milestones", False)
+
+    def get_project_sectors(self):
+        """
+            Use Sectors in Projects
+        """
+        return self.project.get("sectors", True)
+
+    def get_project_theme_percentages(self):
+        """
+            Use Theme Percentages in Projects
+        """
+        return self.project.get("theme_percentages", False)
+
+    def get_project_multiple_budgets(self):
+        """
+            Use Multiple Budgets in Projects
+        """
+        return self.project.get("multiple_budgets", False)
+
+    def get_project_multiple_organisations(self):
+        """
+            Use Multiple Organisations in Projects
+        """
+        return self.project.get("multiple_organisations", False)
+
+    def get_project_organisation_roles(self):
+        T = current.T
+        return self.project.get("organisation_roles", {
+                1: T("Lead Implementer"), # T("Host National Society")
+                2: T("Partner"), # T("Partner National Society")
+                3: T("Donor"),
+                4: T("Customer"), # T("Beneficiary")?
+                5: T("Supplier"), # T("Beneficiary")?
+            })
+
+    def get_project_organisation_lead_role(self):
+        return self.project.get("organisation_lead_role", 1)
+
     # -------------------------------------------------------------------------
     # Request Settings
     def get_req_type_inv_label(self):
@@ -572,158 +913,9 @@ class S3Config(Storage):
         return self.req.get("req_shortname", "REQ")
 
     # -------------------------------------------------------------------------
-    # Inventory Management Setting
-    def get_inv_collapse_tabs(self):
-        return self.inv.get("collapse_tabs", True)
-    def get_inv_shipment_name(self):
-        """
-            Get the name of Shipments
-            - currently supported options are:
-            * shipment
-            * order
-        """
-        return self.inv.get("shipment_name", "shipment")
-    def get_inv_shipment_types(self):
-        T = current.T
-        return self.inv.get("shipment_types", {
-                          0: current.messages.NONE,
-                          1: T("Other Warehouse"),
-                          2: T("Local Donation"),
-                          3: T("Foreign Donation"),
-                          4: T("Local Purchases"),
-                          #5: T("Confiscated Goods")
-                        })
-    def get_send_form_name(self):
-        return self.inv.get("send_form_name", "Waybill")
-    def get_send_ref_field_name(self):
-        return self.inv.get("send_ref_field_name", "Waybill Number")
-    def get_send_shortname(self):
-        return self.inv.get("send_shortname", "WB")
-    def get_recv_form_name(self):
-        return self.inv.get("recv_form_name", "Goods Received Note")
-    def get_recv_shortname(self):
-        return self.inv.get("recv_shortname", "GRN")
-
-    # -------------------------------------------------------------------------
     # Supply
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Other Items")
-
-    # -------------------------------------------------------------------------
-    # Organsiation
-    def get_org_site_code_len(self):
-        return self.org.get("site_code_len", 10)
-
-    # -------------------------------------------------------------------------
-    # Human Resource Management
-    def get_hrm_email_required(self):
-        """
-            If set to True then Staff & Volunteers require an email address
-        """
-        return self.hrm.get("email_required", True)
-
-    def get_hrm_deletable(self):
-        """
-            If set to True then HRM records are deletable rather than just being able to be marked as obsolete
-        """
-        return self.hrm.get("deletable", False)
-
-    def get_hrm_show_staff(self):
-        """
-            If set to True then HRM module exposes the Staff resource
-        """
-        return self.hrm.get("show_staff", True)
-
-    def get_hrm_show_vols(self):
-        """
-            If set to True then HRM module exposes the Volunteer resource
-        """
-        return self.hrm.get("show_vols", True)
-
-    def get_hrm_skill_types(self):
-        """
-            If set to True then Skill Types are exposed to the UI
-            - each skill_type needs it's own set of competency levels
-            If set to False then Skill Types are hidden from the UI
-            - all skills use the same skill_type & hence the same set of competency levels
-        """
-        return self.hrm.get("skill_types", False)
-
-    def get_hrm_experience(self):
-        """
-            Which table to use for showing the experience of HRs
-            - currently supported options are:
-                * experience (default)
-                * programme (used by IFRC)
-        """
-        return self.hrm.get("experience", "experience")
-
-    # -------------------------------------------------------------------------
-    # Project Tracking
-    def get_project_mode_3w(self):
-        """
-            Enable 3W mode in the projects module
-        """
-        return self.project.get("mode_3w", False)
-    def get_project_mode_task(self):
-        """
-            Enable Tasks mode in the projects module
-        """
-        return self.project.get("mode_task", False)
-    def get_project_mode_drr(self):
-        """
-            Enable DRR mode in the projects module
-        """
-        return self.project.get("mode_drr", False)
-    def get_project_codes(self):
-        """
-            Use Codes in Projects
-        """
-        return self.project.get("codes", False)
-    def get_project_milestones(self):
-        """
-            Use Milestones in Projects
-        """
-        return self.project.get("milestones", False)
-    def get_project_sectors(self):
-        """
-            Use Sectors in Projects
-        """
-        return self.project.get("sectors", True)
-    def get_project_theme_percentages(self):
-        """
-            Use Theme Percentages in Projects
-        """
-        return self.project.get("theme_percentages", False)
-    def get_project_multiple_budgets(self):
-        """
-            Use Multiple Budgets in Projects
-        """
-        return self.project.get("multiple_budgets", False)
-    def get_project_multiple_organisations(self):
-        """
-            Use Multiple Organisations in Projects
-        """
-        return self.project.get("multiple_organisations", False)
-    def get_project_organisation_roles(self):
-        T = current.T
-        return self.project.get("organisation_roles", {
-                1: T("Lead Implementer"), # T("Host National Society")
-                2: T("Partner"), # T("Partner National Society")
-                3: T("Donor"),
-                4: T("Customer"), # T("Beneficiary")?
-                5: T("Supplier"), # T("Beneficiary")?
-            })
-    def get_project_organisation_lead_role(self):
-        return self.project.get("organisation_lead_role", 1)
-
-    # -------------------------------------------------------------------------
-    # Save Search and Subscription
-    def get_save_search_widget(self):
-        """
-            Enable the Saved Search widget
-        """
-        return self.save_search.get("widget", True)
 
     # -------------------------------------------------------------------------
     # Active modules list

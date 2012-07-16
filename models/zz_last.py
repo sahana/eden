@@ -4,7 +4,13 @@
     Final actions before running controllers
 """
 
+# Pass Theme to Compiler
+s3.theme = settings.get_theme()
+
 if auth.permission.format in ("html"):
+
+    # Should we use Content-Delivery Networks?
+    s3.cdn = settings.get_base_cdn()
 
     # Compose the options menu
     controller = request.controller

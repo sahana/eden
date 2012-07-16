@@ -9,9 +9,9 @@
 {{inputBoxList.append(TR(TD(T("PDF File")), TD(INPUT(_type="file", _name="pdffile", _class="required")), TD(DIV(_class="tooltip", _title="Comments|Upload a single PDF file which contains all the pages of the form in ascending order."))))}}
 {{pass}}
 {{=DIV(FORM(INPUT(_type="hidden", _name="formuuid", _value=formuuid), INPUT(_type="hidden", _name="numpages", _value=numpages), INPUT(_type="hidden", _name="uploadformat", _value=uploadformat), TABLE(inputBoxList, TR(TD(),TD(INPUT(_type="submit"),_style="text-align:right;"))), _action=posturl, _method="post", _class="cmxform", _id="pageuploadForm"),_id="rheader")}}
-<script type="text/javascript" src="/eden/static/scripts/S3/jquery.validate.js"></script>
+<script type="text/javascript" src="/{{=appname}}/static/scripts/jquery.validate.js"></script>
 <script type="text/javascript">
-    $(document).ready(function(){
-	$("#pageuploadForm").validate();
-    });
+$(document).ready(function(){
+    $('#pageuploadForm').validate();
+});
 </script>

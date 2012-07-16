@@ -1,0 +1,26 @@
+@charset "UTF-8";
+
+/* Footer */
+
+#footer {
+    margin: 0 auto;
+    clear: both;
+    float: left;
+    width: 100%;
+    text-align: center;
+    border-top: #fff 1px solid;
+}
+#poweredby {
+    float: right;
+    margin-right: 20px;
+}
+#poweredby a {
+    color: #2A485D;
+    text-decoration: none;
+
+}
+#dswd {
+    color: #171C1C; 
+    font-family: Arial,Helvetica,Sans-Serif; 
+    font-size: 11px; 
+}

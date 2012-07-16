@@ -114,7 +114,8 @@
 
     <column name="Country">
         <label>country</label>
-        <label>ISO2</label>
+        <!-- breaks countries.csv import
+        <label>ISO2</label>-->
         <label>L0</label>
         <label>ADM0_NAME</label>
     </column>

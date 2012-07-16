@@ -47,23 +47,18 @@ class OCRDataModel(S3Model):
 
     def model(self):
 
-        T = current.T
-        db = current.db
-        request = current.request
-        s3 = current.response.s3
+        #T = current.T
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        NONE = current.messages.NONE
+        #messages = current.messages
+        #UNKNOWN_OPT = messages.UNKNOWN_OPT
+        #NONE = messages.NONE
 
         define_table = self.define_table
-        configure = self.configure
-        add_component = self.add_component
 
         # Upload folders
-        metadata_folder = os.path.join(request.folder,
-                                       "uploads", "ocr_meta")
-        payload_folder = os.path.join(request.folder,
-                                      "uploads", "ocr_payload")
+        folder = current.request.folder
+        metadata_folder = os.path.join(folder, "uploads", "ocr_meta")
+        payload_folder = os.path.join(folder, "uploads", "ocr_payload")
 
         # =====================================================================
         # OCR Meta Data
@@ -83,7 +78,7 @@ class OCRDataModel(S3Model):
                                    notnull=True,
                                    unique=True),
                              Field("pages", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Payload
@@ -98,7 +93,7 @@ class OCRDataModel(S3Model):
                                    uploadfolder=payload_folder),
                              Field("page_number", "integer",
                                    notnull=True),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Form Status
@@ -116,7 +111,7 @@ class OCRDataModel(S3Model):
                              Field("job_uuid",
                                    unique=True),
                              Field("job_has_errors", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Field Crops
@@ -134,7 +129,7 @@ class OCRDataModel(S3Model):
                                    uploadfolder=payload_folder),
                              Field("value"),
                              Field("sequence", "integer"),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR XML Data
@@ -150,15 +145,13 @@ class OCRDataModel(S3Model):
                              Field("form_uuid",
                                    notnull=True,
                                    default=""),
-                             *s3.meta_fields())
+                             *s3_meta_fields())
 
 # =============================================================================
 def ocr_buttons(r):
     """ Generate 'Print PDF' button in the view """
 
-    settings = current.deployment_settings
-
-    if not settings.has_module("ocr"):
+    if not current.deployment_settings.has_module("ocr"):
         return ""
 
     if r.component:
@@ -175,7 +168,7 @@ def ocr_buttons(r):
     UPLOAD = T("Upload Scanned OCR Form")
     DOWNLOAD = T("Download OCR-able PDF Form")
 
-    _style = "height: 10px; float: right; padding: 3px;"
+    _style = "height:10px;float:right;padding:3px;"
 
     output = DIV(
 

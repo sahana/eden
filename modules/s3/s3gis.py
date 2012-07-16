@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    GIS Module
-
-    @version: 0.9.0
+""" GIS Module
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
@@ -33,24 +30,19 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS", "GoogleGeocoder", "YahooGeocoder"]
+__all__ = ["GIS", "S3Map", "GoogleGeocoder", "YahooGeocoder"]
 
 import os
 import re
 import sys
-import copy
 #import logging
-import math             # Needed for greatCircleDistance
-#import random          # Needed when feature_queries are passed in without a name
 import urllib           # Needed for urlencoding
 import urllib2          # Needed for quoting & error handling on fetch
-import Cookie           # Needed for Sessions on Internal KML feeds
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
 from datetime import timedelta  # Needed for Feed Refresh checks
-import zipfile          # Needed to unzip KMZ files
 
 try:
     from lxml import etree # Needed to follow NetworkLinks
@@ -60,25 +52,27 @@ except ImportError:
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
+# Here are dependencies listed for reference:
+#from gluon import current
+#from gluon.html import *
+#from gluon.http import HTTP, redirect
 from gluon.dal import Rows
 from gluon.storage import Storage, Messages
-from gluon.tools import fetch
-import gluon.contrib.simplejson as json
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3method import S3Method
+from s3fields import s3_all_meta_field_names
+from s3search import S3Search
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname
-
-SHAPELY = False
-try:
-    import shapely
-    import shapely.geometry
-    from shapely.wkt import loads as wkt_loads
-    SHAPELY = True
-except ImportError:
-    s3_debug("WARNING: %s: Shapely GIS library not installed" % __name__)
+from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
 
 DEBUG = False
 if DEBUG:
@@ -231,15 +225,10 @@ GPS_SYMBOLS = [
 # -----------------------------------------------------------------------------
 class GIS(object):
     """
-        GIS functions
+        GeoSpatial functions
     """
 
     def __init__(self):
-        settings = current.deployment_settings
-        if not current.db is not None:
-            raise RuntimeError, "Database must not be None"
-        if not current.auth is not None:
-            raise RuntimeError, "Undefined authentication controller"
         messages = current.messages
         #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
         messages.centroid_error = "Shapely library not functional, so can't find centroid! Install Geos & Shapely for Line/Polygon support"
@@ -249,24 +238,10 @@ class GIS(object):
         messages.lon_empty = "Invalid: Longitude can't be empty if Latitude specified!"
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
-        self.gps_symbols = GPS_SYMBOLS
         self.DEFAULT_SYMBOL = "White Dot"
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4"]
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
-        self.region_level_keys = ["L0", "L1", "L2", "L3", "L4", "GR"]
-        # Info for countries. These will be filled in once the gis_location
-        # table is available and populated with L0 countries.
-        # countries and site countries are lists (or Rows) of Storage, ordered
-        # by country name. Each element contains L0 location id (key "id"),
-        # country code (key "code"), and name (key "name").
-        self.countries = None  # id, code, and name for all countries
-        self.site_countries = None  # same for this site's countries
-        # These will be OrderedDicts of id or code vs. country name.
-        self.countries_by_id = None
-        self.countries_by_code = None
-        self.site_countries_by_id = None
-        self.site_countries_by_code = None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -278,6 +253,11 @@ class GIS(object):
             return "%s(...)" % wkt[0:wkt.index("(")]
         else:
             return wkt
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gps_symbols():
+        return GPS_SYMBOLS
 
     # -------------------------------------------------------------------------
     def download_kml(self, record_id, filename):
@@ -294,12 +274,10 @@ class GIS(object):
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
 
-        db = current.db
-
         layer = KMLLayer()
 
         query = (layer.table.id == record_id)
-        record = db(query).select(limitby=(0, 1)).first()
+        record = current.db(query).select(limitby=(0, 1)).first()
         url = record.url
 
         cachepath = layer.cachepath
@@ -362,6 +340,8 @@ class GIS(object):
             Designed as a helper function for download_kml()
         """
 
+        from gluon.tools import fetch
+
         response = current.response
         public_url = current.deployment_settings.get_base_public_url()
 
@@ -375,6 +355,7 @@ class GIS(object):
             local = True
         if local:
             # Keep Session for local URLs
+            import Cookie
             cookie = Cookie.SimpleCookie()
             cookie[response.session_id_name] = response.session_id
             current.session._unlock(response)
@@ -386,7 +367,6 @@ class GIS(object):
             except urllib2.HTTPError:
                 warning = "HTTPError"
                 return warning
-
         else:
             try:
                 file = fetch(url)
@@ -401,6 +381,7 @@ class GIS(object):
         if file[:2] == "PK":
             # Unzip
             fp = StringIO(file)
+            import zipfile
             myfile = zipfile.ZipFile(fp)
             files = myfile.infolist()
             main = None
@@ -500,29 +481,101 @@ class GIS(object):
 
         import math
 
+        # shortcuts
+        cos = math.cos
+        sin = math.sin
+
         delta_lon = lon_start - lon_end
-        bearing = math.atan2( math.sin(delta_lon) * math.cos(lat_end),
-                             (math.cos(lat_start) * math.sin(lat_end)) - \
-                             (math.sin(lat_start) * math.cos(lat_end) * math.cos(delta_lon)) )
+        bearing = math.atan2(sin(delta_lon) * cos(lat_end),
+                             (cos(lat_start) * sin(lat_end)) - \
+                             (sin(lat_start) * cos(lat_end) * cos(delta_lon))
+                             )
         # Convert to a compass bearing
         bearing = (bearing + 360) % 360
 
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=[]):
+    def get_bounds(self, features=[], parent=None):
         """
-            Calculate the Bounds of a list of Features
+            Calculate the Bounds of a list of Point Features
             e.g. When a map is displayed that focuses on a collection of points,
                  the map is zoomed to show just the region bounding the points.
             e.g. To use in GPX export for correct zooming
 `
             Ensure a minimum size of bounding box, and that the points
             are inset from the border.
-            @ToDo: Optimised Geospatial routines rather than this crude hack
+
+            @param features: A list of point features
+            @param parent: A location_id to provide a polygonal bounds suitable
+                           for validating child locations
         """
 
-        #
+        if parent:
+            table = current.s3db.gis_location
+            db = current.db
+            parent = db(table.id == parent).select(table.level,
+                                                   table.name,
+                                                   table.parent,
+                                                   table.path,
+                                                   table.lon,
+                                                   table.lat,
+                                                   table.lon_min,
+                                                   table.lat_min,
+                                                   table.lon_max,
+                                                   table.lat_max).first()
+            if parent.lon_min is None or \
+               parent.lon_max is None or \
+               parent.lat_min is None or \
+               parent.lat_max is None or \
+               parent.lon == parent.lon_min or \
+               parent.lon == parent.lon_max or \
+               parent.lat == parent.lat_min or \
+               parent.lat == parent.lat_max:
+                # This is unsuitable - try higher parent
+                if parent.level == "L1":
+                    if parent.parent:
+                        # We can trust that L0 should have the data from prepop
+                        L0 = db(table.id == parent.parent).select(table.name,
+                                                                  table.lon_min,
+                                                                  table.lat_min,
+                                                                  table.lon_max,
+                                                                  table.lat_max).first()
+                        return L0.lat_min, L0.lon_min, L0.lat_max, L0.lon_max, L0.name
+                if parent.path:
+                    path = parent.path
+                else:
+                    path = self.update_location_tree(dict(id=parent))
+                path_list = map(int, path.split("/"))
+                rows = db(table.id.belongs(path_list)).select(table.level,
+                                                              table.name,
+                                                              table.lat,
+                                                              table.lon,
+                                                              table.lon_min,
+                                                              table.lat_min,
+                                                              table.lon_max,
+                                                              table.lat_max,
+                                                              orderby=table.level)
+                row_list = rows.as_list()
+                row_list.reverse()
+                ok = False
+                for row in row_list:
+                    if row["lon_min"] is not None and row["lon_max"] is not None and \
+                       row["lat_min"] is not None and row["lat_max"] is not None and \
+                       row["lon"] != row["lon_min"] != row["lon_max"] and \
+                       row["lat"] != row["lat_min"] != row["lat_max"]:
+                        ok = True
+                        break
+
+                if ok:
+                    # This level is suitable
+                    return row["lat_min"], row["lon_min"], row["lat_max"], row["lon_max"], row["name"]
+            else:
+                # This level is suitable
+                return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
+               
+            return -90, -180, 90, 180, None
+
         # Minimum Bounding Box
         # - gives a minimum width and height in degrees for the region shown.
         # Without this, a map showing a single point would not show any extent around that point.
@@ -546,6 +599,7 @@ class GIS(object):
             except (AttributeError, KeyError):
                 simple = False
 
+            # @ToDo: Optimised Geospatial routines rather than this crude hack
             for feature in features:
 
                 try:
@@ -586,20 +640,25 @@ class GIS(object):
             min_lat -= bbox_inset
             max_lat += bbox_inset
 
-            # Check that we're still within overall bounds
-            # - seems unnecessary?
-            #min_lon = max(config.min_lon, min_lon)
-            #min_lat = max(config.min_lat, min_lat)
-            #max_lon = min(config.max_lon, max_lon)
-            #max_lat = min(config.max_lat, max_lat)
-
         else:
             # no features
             config = self.get_config()
-            min_lon = config.min_lon or -180
-            max_lon = config.max_lon or 180
-            min_lat = config.min_lat or -90
-            max_lat = config.max_lat or 90
+            if config.min_lat is not None:
+                min_lat = config.min_lat
+            else:
+                min_lat = -90
+            if config.min_lon is not None:
+                min_lon = config.min_lon
+            else:
+                min_lon = -180
+            if config.max_lat is not None:
+                max_lat = config.max_lat
+            else:
+                max_lat = 90
+            if config.max_lon is not None:
+                max_lon = config.max_lon
+            else:
+                max_lon = 180
 
         return dict(min_lon=min_lon, min_lat=min_lat,
                     max_lon=max_lon, max_lat=max_lat)
@@ -613,14 +672,12 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-
-        query = (table.id == feature_id)
-        feature = db(query).select(table.id,
-                                   table.name,
-                                   table.level,
-                                   table.path,
-                                   table.parent,
-                                   limitby=(0, 1)).first()
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.name,
+                                                    table.level,
+                                                    table.path,
+                                                    table.parent,
+                                                    limitby=(0, 1)).first()
 
         return feature
 
@@ -643,7 +700,6 @@ class GIS(object):
 
         db = current.db
         table = db.gis_location
-
         query = (table.deleted == False)
         if level:
             query = query & (table.level == level)
@@ -678,11 +734,6 @@ class GIS(object):
             update_location_tree to get the path.
         """
 
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
-
         if not feature or "path" not in feature or "parent" not in feature:
             feature = self._lookup_parent_path(feature_id)
 
@@ -690,7 +741,7 @@ class GIS(object):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(feature_id, feature.parent)
+                path = self.update_location_tree(feature)
 
             path_list = map(int, path.split("/"))
             if len(path_list) == 1:
@@ -706,9 +757,12 @@ class GIS(object):
                 return reverse_path
 
             # Retrieve parents - order in which they're returned is arbitrary.
+            s3db = current.s3db
+            table = s3db.gis_location
             query = (table.id.belongs(reverse_path))
-            fields = [table.id, table.name, table.code, table.level, table.lat, table.lon]
-            unordered_parents = db(query).select(cache=cache, *fields)
+            fields = [table.id, table.name, table.level, table.lat, table.lon]
+            unordered_parents = current.db(query).select(cache=s3db.cache,
+                                                         *fields)
 
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
@@ -751,7 +805,7 @@ class GIS(object):
             results = {}
 
         id = feature_id
-        # if we don't have a feature or a feature id return the empty dict
+        # if we don't have a feature or a feature id return the dict as-is
         if not feature_id and not feature:
             return results
         if not feature_id and "path" not in feature and "parent" in feature:
@@ -766,7 +820,7 @@ class GIS(object):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(id, feature.parent)
+                path = self.update_location_tree(feature)
 
             # Get ids of ancestors at each level.
             if feature.parent:
@@ -810,81 +864,6 @@ class GIS(object):
         return results
 
     # -------------------------------------------------------------------------
-    def get_parents_of_level(self, locations, level):
-        """
-            Given a list of gis_location.ids, return a list of the Parents of
-            the given Level (Lx)
-
-            - used by S3Report
-        """
-
-        output = []
-
-        if not locations or not level:
-            return output
-
-        while locations:
-            # Recursively pull out good records & try parents agaian
-            (newoutput, locations) = self._get_parents_of_level(locations, level)
-            for id in newoutput:
-                output.append(id)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _get_parents_of_level(locations, level):
-        """
-            Given a list of gis_location.ids, return a list of the Parents of
-            the given Level (Lx)
-
-            - helper functions used by get_parents_of_level() to handle recursion
-        """
-
-        output = []
-
-        if not locations or not level:
-            return output
-
-        # Read the records from the database
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-        query = (table.id.belongs(locations))
-        rows = db(query).select(table.id,
-                                table.level,
-                                table.parent,
-                                table.path)
-
-        tryagain = []
-
-        for row in rows:
-            _level = row.level
-            if _level == level:
-                # We're already at the right level, pass it back
-                output.append(row.id)
-            elif _level[1:] > level[1:]:
-                # We're already too high, skip
-                continue
-            else:
-                # Try the Path
-                path = row.path
-                if path:
-                    ids = path.split("/")
-                    # Ignore this one!
-                    ids.remove(str(row.id))
-                    for id in ids:
-                        if id not in tryagain:
-                            tryagain.append(int(id))
-                else:
-                    # Try the Parent
-                    parent = row.parent
-                    if parent and parent not in tryagain:
-                        tryagain.append(parent)
-
-        return (output, tryagain)
-
-    # -------------------------------------------------------------------------
     def update_table_hierarchy_labels(self, tablename=None):
         """
             Re-set table options that depend on location_hierarchy
@@ -892,17 +871,15 @@ class GIS(object):
             Only update tables which are already defined
         """
 
-        T = current.T
-        db = current.db
-
         levels = ["L1", "L2", "L3", "L4"]
         labels = self.get_location_hierarchy()
 
+        db = current.db
         if tablename and tablename in db:
             # Update the specific table which has just been defined
             table = db[tablename]
             if tablename == "gis_location":
-                labels["L0"] = T("Country")
+                labels["L0"] = current.T("Country")
                 table.level.requires = \
                     IS_NULL_OR(IS_IN_SET(labels))
             else:
@@ -960,6 +937,7 @@ class GIS(object):
 
         session = current.session
         s3 = current.response.s3
+        all_meta_field_names = s3_all_meta_field_names()
 
         # If an id has been supplied, try it first. If it matches what's in
         # response, there's no work to do.
@@ -970,7 +948,6 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-
         ctable = s3db.gis_config
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
@@ -1038,7 +1015,7 @@ class GIS(object):
                                         left=left,
                                         orderby=ctable.pe_type)
                 cache["ids"] = []
-                exclude = list(s3.all_meta_field_names)
+                exclude = list(all_meta_field_names)
                 append = exclude.append
                 for fieldname in ["delete_record", "update_record",
                                   "pe_path",
@@ -1062,15 +1039,15 @@ class GIS(object):
                         marker = row["gis_marker"]
                         for key in ["image", "height", "width"]:
                             cache["marker_%s" % key] = marker[key] if key in marker else None
-                    if "base" not in cache:
-                        # Default Base Layer?
-                        query = (ltable.config_id == config.id) & \
-                                (ltable.base == True) & \
-                                (ltable.enabled == True)
-                        base = db(query).select(ltable.layer_id,
-                                                limitby=(0, 1)).first()
-                        if base:
-                            cache["base"] = base.layer_id
+                    #if "base" not in cache:
+                    #    # Default Base Layer?
+                    #    query = (ltable.config_id == config.id) & \
+                    #            (ltable.base == True) & \
+                    #            (ltable.enabled == True)
+                    #    base = db(query).select(ltable.layer_id,
+                    #                            limitby=(0, 1)).first()
+                    #    if base:
+                    #        cache["base"] = base.layer_id
                 # Add NULL values for any that aren't defined, to avoid KeyErrors
                 for key in ["epsg", "units", "maxResolution", "maxExtent",
                             "marker_image", "marker_height", "marker_width",
@@ -1098,7 +1075,7 @@ class GIS(object):
             cache["ids"] = [config_id]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
-            fields = filter(lambda key: key not in s3.all_meta_field_names,
+            fields = filter(lambda key: key not in all_meta_field_names,
                             config)
             for key in fields:
                 cache[key] = config[key]
@@ -1107,15 +1084,15 @@ class GIS(object):
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker else None
             # Default Base Layer?
-            query = (ltable.config_id == config_id) & \
-                    (ltable.base == True) & \
-                    (ltable.enabled == True)
-            base = db(query).select(ltable.layer_id,
-                                    limitby=(0, 1)).first()
-            if base:
-                cache["base"] = base.layer_id
-            else:
-                cache["base"] = None
+            #query = (ltable.config_id == config_id) & \
+            #        (ltable.base == True) & \
+            #        (ltable.enabled == True)
+            #base = db(query).select(ltable.layer_id,
+            #                        limitby=(0, 1)).first()
+            #if base:
+            #    cache["base"] = base.layer_id
+            #else:
+            #    cache["base"] = None
 
         # Store the values
         s3.gis.config = cache
@@ -1140,46 +1117,11 @@ class GIS(object):
         return gis.config
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def set_default_location(location, level=None):
-        """
-            Set the default location
-
-            @param: location - either name or ID
-            @param: level - useful to distinguish Names (ignored for IDs)
-        """
-
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        try:
-            # ID?
-            id = int(location)
-        except:
-            # name
-            query = (table.name == location)
-            if level:
-                query = query & (table.level == level)
-            _location = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
-            if _location:
-                id = _location.id
-            else:
-                s3_debug("S3GIS: Location cannot be set as defaut", location)
-                return
-
-        table = s3db.gis_config
-        query = (table.uuid == "SITE_DEFAULT")
-        db(query).update(default_location_id=id)
-
-    # -------------------------------------------------------------------------
     def get_location_hierarchy(self, level=None, location=None):
         """
             Returns the location hierarchy and it's labels
 
             @param: level - a specific level for which to lookup the label
-                            (this use is to be discouraged, especially for the early runs as the result won't be cached)
             @param: location - the location_id to lookup the location for
                                currently only the actual location is supported
                                @ToDo: Do a search of parents to allow this
@@ -1204,19 +1146,14 @@ class GIS(object):
 
         db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
 
-        if level:
-            fields = [table.uuid,
-                      table[level]]
-        else:
-            fields = [table.uuid,
-                      table.L1,
-                      table.L2,
-                      table.L3,
-                      table.L4,
-                      table.L5]
+        fields = [table.uuid,
+                  table.L1,
+                  table.L2,
+                  table.L3,
+                  table.L4,
+                  table.L5]
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
@@ -1233,6 +1170,8 @@ class GIS(object):
             rows.exclude(filter)
         elif not rows:
             # prepop hasn't run yet
+            if level:
+                return level
             levels = OrderedDict()
             hierarchy_level_keys = self.hierarchy_level_keys
             for key in hierarchy_level_keys:
@@ -1260,7 +1199,10 @@ class GIS(object):
             if not _location:
                 # Cache the value
                 self.hierarchy_levels = levels
-            return levels
+            if level:
+                return levels[level]
+            else:
+                return levels
 
     # -------------------------------------------------------------------------
     def get_strict_hierarchy(self, location=None):
@@ -1270,9 +1212,7 @@ class GIS(object):
             @param: location - the location_id of the record to check
         """
 
-        db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
 
         # Read the system default
@@ -1281,9 +1221,9 @@ class GIS(object):
         if location:
             # Try the Location's Country, but ensure we have the fallback available in a single query
             query = query | (table.location_id == self.get_parent_country(location))
-        rows = db(query).select(table.uuid,
-                                table.strict_hierarchy,
-                                cache=s3db.cache)
+        rows = current.db(query).select(table.uuid,
+                                        table.strict_hierarchy,
+                                        cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
@@ -1313,10 +1253,10 @@ class GIS(object):
             Get the current hierarchy levels plus non-hierarchy levels.
         """
 
-        T = current.T
         all_levels = OrderedDict()
         all_levels.update(self.get_location_hierarchy())
-        all_levels["GR"] = T("Location Group")
+        #T = current.T
+        #all_levels["GR"] = T("Location Group")
         #all_levels["XX"] = T("Imported")
 
         if level:
@@ -1349,11 +1289,8 @@ class GIS(object):
 
         country = self.get_parent_country(id)
 
-        db = current.db
         s3db = current.s3db
-
         table = s3db.gis_hierarchy
-
         fieldname = "edit_%s" % level
 
         # Read the system default
@@ -1361,8 +1298,8 @@ class GIS(object):
         if country:
             # Try the Location's Country, but ensure we have the fallback available in a single query
             query = query | (table.location_id == country)
-        rows = db(query).select(table[fieldname],
-                                cache=s3db.cache)
+        rows = current.db(query).select(table[fieldname],
+                                        cache=s3db.cache)
         if len(rows) > 1:
             # Remove the Site Default
             filter = lambda row: row.uuid == "SITE_DEFAULT"
@@ -1373,61 +1310,61 @@ class GIS(object):
         return edit
 
     # -------------------------------------------------------------------------
-    def get_countries(self, key_type="id"):
+    @staticmethod
+    def get_countries(key_type="id"):
         """
             Returns country code or L0 location id versus name for all countries.
+
+            The lookup is cached in the session
 
             If key_type is "code", these are returned as an OrderedDict with
             country code as the key.  If key_type is "id", then the location id
             is the key.  In all cases, the value is the name.
         """
 
-        settings = current.deployment_settings
+        session = current.session
+        if "gis" not in session:
+            session.gis = Storage()
+        gis = session.gis
 
-        cached = False
-        if settings.countries:
-            # This may have been changed since the initial config
-            cached = False
-        elif self.countries:
+        if gis.countries_by_id:
             cached = True
+        else:
+            cached = False
 
         if not cached:
-            db = current.db
-            _location = "gis_location" in db and db.gis_location
-            if not _location:
-                # Called before gis_location is in db
-                return None
-
-            query = (_location.level == "L0")
-            _countries = settings.get_gis_countries()
-            if _countries:
-                query = query & (_location.code.belongs(_countries))
-            countries = db(query).select(_location.id,
-                                         _location.code,
-                                         _location.name,
-                                         orderby=_location.name)
+            s3db = current.s3db
+            table = s3db.gis_location
+            ttable = s3db.gis_location_tag
+            query = (table.level == "L0") & \
+                    (ttable.tag == "ISO2") & \
+                    (ttable.location_id == table.id)
+            countries = current.db(query).select(table.id,
+                                                 table.name,
+                                                 ttable.value,
+                                                 orderby=table.name)
             if not countries:
                 return []
 
             countries_by_id = OrderedDict()
             countries_by_code = OrderedDict()
             for row in countries:
-                countries_by_id[row.id] = row.name
-                countries_by_code[row.code] = row.name
+                location = row["gis_location"]
+                countries_by_id[location.id] = location.name
+                countries_by_code[row["gis_location_tag"].value] = location.name
 
-            # Don't expose these while they're being built. Set countries last
-            # so it can be used to tell when all exist.
-            self.countries_by_id = countries_by_id
-            self.countries_by_code = countries_by_code
-            self.countries = countries
+            # Cache in the session
+            gis.countries_by_id = countries_by_id
+            gis.countries_by_code = countries_by_code
 
         if key_type == "id":
-            return self.countries_by_id
+            return gis.countries_by_id
         else:
-            return self.countries_by_code
+            return gis.countries_by_code
 
     # -------------------------------------------------------------------------
-    def get_country(self, key, key_type="id"):
+    @staticmethod
+    def get_country(key, key_type="id"):
         """
             Returns country name for given code or id from L0 locations.
 
@@ -1436,11 +1373,11 @@ class GIS(object):
         """
 
         if key:
-            if self.countries or self.get_countries(key_type):
+            if current.gis.get_countries(key_type):
                 if key_type == "id":
-                    return self.countries_by_id[key]
+                    return current.session.gis.countries_by_id[key]
                 else:
-                    return self.countries_by_code[key]
+                    return current.session.gis.countries_by_code[key]
 
         return None
 
@@ -1451,22 +1388,21 @@ class GIS(object):
 
             @param: location: the location or id to search for
             @param: key_type: whether to return an id or code
+
+            @ToDo: Optimise to not use try/except
         """
 
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
 
         try:
             # location is passed as integer (location_id)
-            query = (table.id == location)
-            location = db(query).select(table.id,
-                                        table.path,
-                                        table.code,
-                                        table.level,
-                                        limitby=(0, 1),
-                                        cache=cache).first()
+            table = s3db.gis_location
+            location = db(table.id == location).select(table.id,
+                                                       table.path,
+                                                       table.level,
+                                                       limitby=(0, 1),
+                                                       cache=s3db.cache).first()
         except:
             # location is passed as record
             pass
@@ -1475,19 +1411,34 @@ class GIS(object):
             if key_type == "id":
                 return location.id
             elif key_type == "code":
-                return location.code
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.location_id == location.id)
+                tag = db(query).select(ttable.value,
+                                       limitby=(0, 1)).first()
+                try:
+                    return tag.value
+                except:
+                    return None
         else:
-            parents = self.get_parents(location.id, feature=location)
+            parents = self.get_parents(location.id,
+                                       feature=location)
             if parents:
                 for row in parents:
                     if row.level == "L0":
                         if key_type == "id":
                             return row.id
                         elif key_type == "code":
-                            return row.code
-
+                            ttable = s3db.gis_location_tag
+                            query = (ttable.tag == "ISO2") & \
+                                    (ttable.location_id == row.id)
+                            tag = db(query).select(ttable.value,
+                                                   limitby=(0, 1)).first()
+                            try:
+                                return tag.value
+                            except:
+                                return None
         return None
-
 
     # -------------------------------------------------------------------------
     def get_default_country(self, key_type="id"):
@@ -1510,13 +1461,17 @@ class GIS(object):
             Returns a gluon.sql.Rows of Features within a Polygon.
             The Polygon can be either a WKT string or the ID of a record in the
             gis_location table
+
+            Currently unused.
+            @ToDo: Optimise to not use try/except
         """
+
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
 
         db = current.db
         s3db = current.s3db
-        session = current.session
-        T = current.T
-        locations = db.gis_location
+        locations = s3db.gis_location
 
         try:
             location_id = int(location)
@@ -1579,10 +1534,11 @@ class GIS(object):
         if lon_min is None:
             # We have no BBOX so go straight to the full geometry check
             for row in features:
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:
@@ -1592,7 +1548,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value=row.id
@@ -1608,10 +1564,11 @@ class GIS(object):
             for row in features.find(lambda row: in_bbox(row)):
                 # Search within this subset with a full geometry check
                 # Uses Shapely.
-                wkt = row.gis_location.wkt
+                _location = row.gis_location
+                wkt = _location.wkt
                 if wkt is None:
-                    lat = row.gis_location.lat
-                    lon = row.gis_location.lon
+                    lat = _location.lat
+                    lon = _location.lon
                     if lat is not None and lon is not None:
                         wkt = self.latlon_to_wkt(lat, lon)
                     else:
@@ -1621,7 +1578,7 @@ class GIS(object):
                     if shape.intersects(polygon):
                         # Save Record
                         output.records.append(row)
-                except shapely.geos.ReadingError:
+                except ReadingError:
                     s3_debug(
                         "Error reading wkt of location with id",
                         value = row.id,
@@ -1633,7 +1590,11 @@ class GIS(object):
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
+            
+            Unused
         """
+
+        import math
 
         db = current.db
         settings = current.deployment_settings
@@ -1821,40 +1782,18 @@ class GIS(object):
 
             used by display_feature() in gis controller
 
-            @param feature_id: the feature ID (int) or UUID (str)
+            @param feature_id: the feature ID
             @param filter: Filter out results based on deployment_settings
         """
 
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        if isinstance(feature_id, int):
-            query = (table.id == feature_id)
-        elif isinstance(feature_id, str):
-            query = (table.uuid == feature_id)
-        else:
-            # Bail out
-            return None
-
-        feature = db(query).select(table.id,
-                                   table.lat,
-                                   table.lon,
-                                   limitby=(0, 1)).first()
-
-        #query = (table.deleted == False)
-        #settings = current.deployment_settings
-        #if filter and not settings.get_gis_display_l0():
-            # @ToDo: This query looks wrong. Does it intend to exclude both
-            # L0 and no level? Because it's actually a no-op. If location is
-            # L0 then first term is false, but there is a level so the 2nd
-            # term is also false, so the combination is false, same as the
-            # 1st term alone. If the level isn't L0, the first term is true,
-            # so the 2nd is irrelevant and probably isn't even evaluated, so
-            # the combination is same as the 1st term alone.
-            # @ToDo And besides, it the L0 lon, lat is all we have, isn't it
-            # better to use that than nothing?
-            #query = query & ((table.level != "L0") | (table.level == None))
+        table = db.gis_location
+        feature = db(table.id == feature_id).select(table.id,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.parent,
+                                                    table.path,
+                                                    limitby=(0, 1)).first()
 
         # Zero is an allowed value, hence explicit test for None.
         if "lon" in feature and "lat" in feature and \
@@ -1863,7 +1802,7 @@ class GIS(object):
 
         else:
             # Step through ancestors to first with lon, lat.
-            parents = self.get_parents(feature.id)
+            parents = self.get_parents(feature.id, feature=feature)
             if parents:
                 lon = lat = None
                 for row in parents:
@@ -1876,92 +1815,126 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_marker():
+    def get_marker(controller=None,
+                   function=None,
+                   ):
         """
-            Returns the default Marker
-            - called by S3XML.gis_encode()
+            Returns a Marker dict
+            - called by S3REST: S3Resource.export_tree() for non-geojson resources
+            - called by S3Search
         """
 
-        return Marker().as_dict()
+        marker = None
+        if controller and function:
+            # Lookup marker in the gis_feature table
+            db = current.db
+            s3db = current.s3db
+            ftable = s3db.gis_layer_feature
+            ltable = s3db.gis_layer_symbology
+            mtable = s3db.gis_marker
+            try:
+                symbology_id = current.response.s3.gis.config.symbology_id
+            except:
+                # Config not initialised yet
+                config = current.gis.get_config()
+                symbology_id = config.symbology_id
+            query = (ftable.controller == controller) & \
+                    (ftable.function == function) & \
+                    (ftable.id == ltable.layer_id) & \
+                    (ltable.symbology_id == symbology_id) & \
+                    (ltable.marker_id == mtable.id)
+            marker = db(query).select(mtable.image,
+                                      mtable.height,
+                                      mtable.width,
+                                      ltable.gps_marker).first()
+            if marker:
+                _marker = marker["gis_marker"]
+                marker = dict(image=_marker.image,
+                              height=_marker.height,
+                              width=_marker.width,
+                              gps_marker=marker["gis_layer_symbology"].gps_marker
+                              )
+
+        if not marker:
+            # Default
+            marker = Marker().as_dict()
+
+        return marker
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_marker_and_popup(layer_id=None, # Used by S3REST: S3Resource.export_tree()
-                             resource=None, # Used by S3REST & S3Search
-                             record=None    # Used by S3Search: search_interactive()
-                            ):
+    def get_locations_and_popups(resource,
+                                 layer_id=None
+                                 ):
         """
-            Returns the marker, popup_fields and popup_label for a Map Layer
+            Returns the locations and popup tooltips for a Map Layer
+            e.g. Feature Layers or Search results (Feature Resources)
 
-            Used by S3REST: S3Resource.export_tree():
-            @param: layer_id - db.gis_layer_feature.id
-            @param: resource - S3Resource instance
-
-            Used by S3Search: search_interactive():
-            @param: resource - S3Resource instance
-            @param: record - the record for a resource
+            Called by S3REST: S3Resource.export_tree()
+            @param: resource - S3Resource instance (required)
+            @param: layer_id - db.gis_layer_feature.id (Feature Layers only)
         """
+
+        if DEBUG:
+            start = datetime.datetime.now()
 
         db = current.db
         s3db = current.s3db
+        request = current.request
+        gis = current.gis
+
+        format = current.auth.permission.format
 
         ftable = s3db.gis_layer_feature
-        ltable = s3db.gis_layer_symbology
-        mtable = s3db.gis_marker
 
-        try:
-            symbology_id = current.response.s3.gis.config.symbology_id
-        except:
-            # Config not initialised yet
-            config = current.gis.get_config()
-            symbology_id = config.symbology_id
+        layer = None
 
         if layer_id:
             # Feature Layer called by S3REST: S3Resource.export_tree()
-            if DEBUG:
-                start = datetime.datetime.now()
-            query = (ftable.id == layer_id) & \
-                    (ftable.layer_id == ltable.layer_id) & \
-                    (ltable.marker_id == mtable.id) & \
-                    (ltable.symbology_id == symbology_id)
-            layer = db(query).select(mtable.image,
-                                     ltable.gps_marker,
-                                     ftable.controller,
-                                     ftable.function,
-                                     ftable.trackable,
+            query = (ftable.id == layer_id)
+            layer = db(query).select(ftable.trackable,
                                      ftable.polygons,
                                      ftable.popup_label,
                                      ftable.popup_fields,
                                      limitby=(0, 1)).first()
 
-            if layer:
-                marker = layer.gis_marker.image
-                gps_marker = layer.gis_layer_symbology.gps_marker
-                frow = layer.gis_layer_feature
-                popup_label = frow.popup_label
-                popup_fields = frow.popup_fields
-                trackable = frow.trackable
-                polygons = frow.polygons
-                controller = frow.controller or resource.prefix
-                function = frow.function or resource.name
-            else:
-                marker = None
-                gps_marker = None
-                popup_label = ""
-                popup_fields = "name"
-                trackable = False
-                polygons = False
-                controller = resource.prefix
-                function = resource.name
+        else:
+            # e.g. Search results loaded as a Feature Resource layer
+            query = (ftable.controller == request.controller) & \
+                    (ftable.function == request.function)
 
-            popup_url = URL(controller, function).split(".", 1)[0]
+            layers = db(query).select(ftable.trackable,
+                                      ftable.polygons,
+                                      ftable.popup_label,
+                                      ftable.popup_fields,
+                                      )
+            if len(layers) > 1:
+                # We can't provide details for the whole layer, but need to do a per-record check
+                # Suggest creating separate controllers to avoid this problem
+                return None
+            elif layers:
+                layer = layers.first()
 
-            table = resource.table
-            tablename = resource.tablename
+        if layer:
+            popup_label = layer.popup_label
+            popup_fields = layer.popup_fields
+            trackable = layer.trackable
+            polygons = layer.polygons
+        else:
+            popup_label = ""
+            popup_fields = "name"
+            trackable = False
+            polygons = False
 
+        table = resource.table
+        tablename = resource.tablename
+
+        tooltips = {}
+        if format == "geojson":
             # Build the Popup Tooltips now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
-            if popup_label:
+            label_off = request.vars.get("label_off", None)
+            if popup_label and not label_off:
                 _tooltip = "(%s)" % current.T(popup_label)
             else:
                 _tooltip = ""
@@ -1972,31 +1945,40 @@ class GIS(object):
             if popup_fields:
                 represents = {}
                 for fieldname in popup_fields:
-                    try:
+                    if fieldname in table:
                         field = table[fieldname]
-                    except:
-                        # This field isn't in the table
-                        popup_fields.remove(fieldname)
-                    else:
                         _represents = GIS.get_representation(field, resource)
                         represents[fieldname] = _represents
+                    else:
+                        # Assume a virtual field
+                        represents[fieldname] = None
 
-            tooltips = {}
             for record in resource:
                 tooltip = _tooltip
                 if popup_fields:
                     first = True
                     for fieldname in popup_fields:
-                        value = record[fieldname]
+                        try:
+                            value = record[fieldname]
+                        except KeyError:
+                            continue
+                        if not value:
+                            continue
+                        field_reps = represents[fieldname]
+                        if field_reps:
+                            try:
+                                represent = field_reps[value]
+                            except:
+                                # list:string
+                                represent = field_reps[str(value)]
+                        else:
+                            # Virtual Field
+                            represent = value
                         if first:
-                            tooltip = "%s %s" % (represents[fieldname][value], tooltip)
+                            tooltip = "%s %s" % (represent, tooltip)
                             first = False
                         elif value:
-                            try:
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][value])
-                            except:
-                                # list: type
-                                tooltip = "%s<br />%s" % (tooltip, represents[fieldname][str(value)])
+                            tooltip = "%s<br />%s" % (tooltip, represent)
 
                 tooltips[record.id] = tooltip
 
@@ -2009,188 +1991,109 @@ class GIS(object):
                 query = (ftable.id == layer_id)
                 layer_name = db(query).select(ftable.name,
                                               limitby=(0, 1)).first().name
-                _debug("marker/tooltip lookup of layer %s completed in %s seconds" % \
+                _debug("tooltip lookup of layer %s completed in %s seconds" % \
                         (layer_name, duration))
 
-            # Lookup the LatLons now so that it can be done as a single
-            # query rather than per record
-            if DEBUG:
-                start = datetime.datetime.now()
-            latlons = {}
-            if trackable:
-                # Use S3Track
-                ids = resource._ids
-                try:
-                    tracker = S3Trackable(table, record_id=ids)
-                except SyntaxError:
-                    # This table isn't trackable
-                    pass
-                else:
-                    gtable = s3db.gis_location
-                    _latlons = tracker.get_location(_fields=[gtable.lat,
-                                                             gtable.lon])
-                    index = 0
-                    for id in ids:
-                        latlons[id] = (_latlons[index].lat, _latlons[index].lon)
-                        index += 1
+        # Lookup the LatLons now so that it can be done as a single
+        # query rather than per record
+        if DEBUG:
+            start = datetime.datetime.now()
+        latlons = {}
+        wkts = {}
+        geojsons = {}
+        gtable = s3db.gis_location
+        if trackable:
+            # Use S3Track
+            ids = resource._ids
+            try:
+                tracker = S3Trackable(table, record_id=ids)
+            except SyntaxError:
+                # This table isn't trackable
+                pass
+            else:
+                _latlons = tracker.get_location(_fields=[gtable.lat,
+                                                         gtable.lon])
+                index = 0
+                for id in ids:
+                    _location = _latlons[index]
+                    latlons[id] = (_location.lat, _location.lon)
+                    index += 1
 
-            # @ToDo: Support Polygons in Feature Layers
-            #elif polygons:
-            if not latlons:
-                gtable = s3db.gis_location
-                if "location_id" in table.fields:
-                    query = (table.id.belongs(resource._ids)) & \
-                            (table.location_id == gtable.id)
-                elif "site_id" in table.fields:
-                    stable = s3db.org_site
-                    query = (table.id.belongs(resource._ids)) & \
-                            (table.site_id == stable.id) & \
-                            (stable.location_id == gtable.id)
+        if not latlons:
+            if "location_id" in table.fields:
+                query = (table.id.belongs(resource._ids)) & \
+                        (table.location_id == gtable.id)
+            elif "site_id" in table.fields:
+                stable = s3db.org_site
+                query = (table.id.belongs(resource._ids)) & \
+                        (table.site_id == stable.site_id) & \
+                        (stable.location_id == gtable.id)
+            else:
+                # Can't display this resource on the Map
+                return None
+
+            if polygons:
+                if current.deployment_settings.get_gis_spatialdb():
+                    if format == "geojson":
+                        # Do the Simplify & GeoJSON direct from the DB
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+                        for row in rows:
+                            geojsons[row[tablename].id] = row["gis_location"].geojson
+                    else:
+                        # Do the Simplify direct from the DB
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(0.001).st_astext().with_alias("wkt"))
+                        for row in rows:
+                            wkts[row[tablename].id] = row["gis_location"].wkt
                 else:
-                    # Can't display this resource on the Map
-                    return None
+                    rows = db(query).select(table.id,
+                                            gtable.wkt)
+                    if format == "geojson":
+                        for row in rows:
+                            # Simplify the polygon to reduce download size
+                            geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                            if geojson:
+                                geojsons[row[tablename].id] = geojson
+                    else:
+                        for row in rows:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(row["gis_location"].wkt)
+                            if wkt:
+                                wkts[row[tablename].id] = wkt
+
+            else:
+                # Points
                 rows = db(query).select(table.id,
+                                        gtable.path,
                                         gtable.lat,
                                         gtable.lon)
                 for row in rows:
-                    latlons[row[tablename].id] = (row["gis_location"].lat, row["gis_location"].lon)
+                    _location = row["gis_location"]
+                    latlons[row[tablename].id] = (_location.lat, _location.lon)
 
-            _latlons = {}
-            _latlons[tablename] = latlons
+        _latlons = {}
+        _latlons[tablename] = latlons
+        _wkts = {}
+        _wkts[tablename] = wkts
+        _geojsons = {}
+        _geojsons[tablename] = geojsons
 
-            if DEBUG:
-                end = datetime.datetime.now()
-                duration = end - start
-                duration = '{:.2f}'.format(duration.total_seconds())
-                _debug("latlons lookup of layer %s completed in %s seconds" % \
-                        (layer_name, duration))
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("latlons lookup of layer %s completed in %s seconds" % \
+                    (layer_name, duration))
 
-            return dict(marker = marker,
-                        gps_marker = gps_marker,
-                        latlons = _latlons,
-                        tooltips = tooltips,
-                        popup_label = popup_label,
-                        popup_url = popup_url,
-                        )
-
-        elif resource:
-            # Search results called by S3Search: search_interactive()
-            # @ToDo: Refactor to return tooltips instead of popup_fields
-            def get_layers(tablename):
-                (module, resourcename) = tablename.split("_", 1)
-                query = (ftable.module == module) & \
-                        (ftable.resource == resourcename) & \
-                        (ftable.layer_id == ltable.layer_id)
-
-                left = [
-                        mtable.on((ltable.marker_id == mtable.id) & \
-                                  (ltable.symbology_id == symbology_id))
-                        ]
-
-                layers = db(query).select(mtable.image,
-                                          mtable.height,
-                                          mtable.width,
-                                          #ltable.gps_marker,
-                                          ftable.filter_field,
-                                          ftable.filter_value,
-                                          ftable.popup_label,
-                                          ftable.popup_fields,
-                                          left=left)
-                return layers
-
-            tablename = resource.tablename
-            layers = current.cache.ram("%s_marker" % tablename,
-                                       lambda: get_layers(tablename),
-                                       time_expire=60)
-            if not record and len(layers) > 1:
-                # We can't provide details for the whole table, but need to do a per-record check
-                return None
-            for row in layers:
-                frow = row.gis_layer_feature
-                if not record or not frow.filter_field:
-                    # We only have 1 row
-                    marker = row.gis_marker
-                    if not marker.image:
-                        # Use Default Marker
-                        marker = Marker().as_dict()
-                    return dict(marker = marker,
-                                #gps_marker = row.gis_layer_symbology.gps_marker,
-                                popup_label = frow.popup_label,
-                                popup_fields = frow.popup_fields,
-                                )
-                # Check if the record matches the filter
-                if str(record[frow.filter_field]) == frow.filter_value:
-                    marker = row.gis_marker
-                    if not marker.image:
-                        # Use Default Marker
-                        marker = Marker().as_dict()
-                    return dict(marker = marker,
-                                #gps_marker = row.gis_layer_symbology.gps_marker,
-                                popup_label = frow.popup_label,
-                                popup_fields = frow.popup_fields,
-                                )
-            # No Feature Layer defined or
-            # Row doesn't match any of the filters
-            # Default Marker
-            marker = Marker().as_dict()
-            return dict(marker = marker,
-                        #gps_marker = row.gis_layer_symbology.gps_marker,
-                        popup_label = tablename or "",
-                        popup_fields = None,
-                        )
-
-        else:
-            s3_debug("gis.get_marker_and_popup", "Invalid arguments")
-            return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_popup_tooltip(table, record, popup_label, popup_fields):
-        """
-            Returns the HTML popup_tooltip for a Map feature
-
-            Was used by S3XML.gis_encode()
-            Still used by S3Search: search_interactive()
-
-            @param: table
-            @param: record
-            @param: popup_label
-            @param: popup_fields
-        """
-
-        if popup_label:
-            tooltip = "(%s)" % current.T(popup_label)
-        else:
-            tooltip = ""
-
-        if popup_fields:
-            popup_fields = popup_fields.split("/")
-            fieldname = popup_fields[0]
-            try:
-                value = record[fieldname]
-                if value:
-                    field = table[fieldname]
-                    represent = GIS.get_representation(field, value=value)
-                    tooltip = "%s %s" % (represent, tooltip)
-            except:
-                # This field isn't in the table
-                pass
-        else:
-            popup_fields = []
-
-        for fieldname in popup_fields:
-            try:
-                if fieldname != popup_fields[0]:
-                    value = record[fieldname]
-                    if value:
-                        field = table[fieldname]
-                        represent = GIS.get_representation(field, value=value)
-                        tooltip = "%s<br />%s" % (tooltip, represent)
-            except:
-                # This field isn't in the table
-                pass
-
-        return tooltip
+        # Used by S3XML's gis_encode()
+        return dict(latlons = _latlons,
+                    wkts = _wkts,
+                    geojsons = _geojsons,
+                    tooltips = tooltips,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2200,7 +2103,7 @@ class GIS(object):
         """
             Return a quick representation for a Field based on it's value
             - faster than field.represent(value)
-            Used by get_popup_tooltip()
+            Used by get_locations_and_popup()
 
             @ToDo: Move out of S3GIS
         """
@@ -2228,7 +2131,7 @@ class GIS(object):
                 elif tablename == "org_office":
                     for value in values:
                         represents[value] = s3db.org_office_type_opts.get(value, "")
-            elif field.type[:9] == "reference":
+            elif s3_has_foreign_key(field, m2m=False):
                 tablename = field.type[10:]
                 if tablename == "pr_person":
                     represents = s3_fullname(values)
@@ -2277,7 +2180,7 @@ class GIS(object):
                     represent = cache.ram("office_type_%s" % value,
                                           lambda: s3db.org_office_type_opts.get(value, ""),
                                           time_expire=60)
-            elif field.type[:9] == "reference":
+            elif s3_has_foreign_key(field, m2m=False):
                     tablename = field.type[10:]
                     if tablename == "pr_person":
                         # Unlikely to be the same person in multiple popups so no value to caching
@@ -2308,12 +2211,54 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def get_theme_geojson(resource):
+        """
+            Lookup Theme Layer polygons once per layer and not per-record
+
+            Called by S3REST: S3Resource.export_tree()
+        """
+
+        db = current.db
+        s3db = current.s3db
+        tablename = "gis_theme_data"
+        table = s3db.gis_theme_data
+        gtable = s3db.gis_location
+        query = (table.id.belongs(resource._ids)) & \
+                (table.location_id == gtable.id)
+
+        geojsons = {}
+        if current.deployment_settings.get_gis_spatialdb():
+            # Do the Simplify & GeoJSON direct from the DB
+            rows = db(query).select(table.id,
+                                    gtable.the_geom.st_simplify(0.001).st_asgeojson(precision=4).with_alias("geojson"))
+            for row in rows:
+                geojsons[row[tablename].id] = row["gis_location"].geojson
+        else:
+            rows = db(query).select(table.id,
+                                    gtable.wkt)
+            gis = current.gis
+            for row in rows:
+                # Simplify the polygon to reduce download size
+                geojson = gis.simplify(row["gis_location"].wkt, output="geojson")
+                if geojson:
+                    geojsons[row[tablename].id] = geojson
+
+            _geojsons = {}
+            _geojsons[tablename] = geojsons
+
+            # return 'locations'
+            return dict(geojsons = _geojsons)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def greatCircleDistance(lat1, lon1, lat2, lon2, quick=True):
         """
             Calculate the shortest distance (in km) over the earth's sphere between 2 points
             Formulae from: http://www.movable-type.co.uk/scripts/latlong.html
             (NB We should normally use PostGIS functions, where possible, instead of this query)
         """
+
+        import math
 
         # shortcuts
         cos = math.cos
@@ -2347,7 +2292,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
-                           source="gadm",
+                           source="gadmv1",
                            countries=[],
                            levels=["L0", "L1", "L2"]
                           ):
@@ -2362,32 +2307,49 @@ class GIS(object):
                            defaults to all 3 supported levels
         """
 
-        if source != "gadm":
+        if source == "gadmv1":
+            try:
+                from osgeo import ogr
+            except:
+                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                return
+
+            if "L0" in levels:
+                self.import_gadm1_L0(ogr, countries=countries)
+            if "L1" in levels:
+                self.import_gadm1(ogr, "L1", countries=countries)
+            if "L2" in levels:
+                self.import_gadm1(ogr, "L2", countries=countries)
+
+            s3_debug("All done!")
+
+        elif source == "gadmv1":
+            try:
+                from osgeo import ogr
+            except:
+                s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
+                return
+
+            if "L0" in levels:
+                self.import_gadm2(ogr, "L0", countries=countries)
+            if "L1" in levels:
+                self.import_gadm2(ogr, "L1", countries=countries)
+            if "L2" in levels:
+                self.import_gadm2(ogr, "L2", countries=countries)
+
+            s3_debug("All done!")
+
+        else:
             s3_debug("Only GADM is currently supported")
             return
-
-        try:
-            from osgeo import ogr
-        except:
-            s3_debug("Unable to import ogr. Please install python-gdal bindings: GDAL-1.8.1+")
-            return
-
-        if "L0" in levels:
-            self.import_gadm_L0(ogr, countries=countries)
-        if "L1" in levels:
-            self.import_gadm(ogr, "L1", countries=countries)
-        if "L2" in levels:
-            self.import_gadm(ogr, "L2", countries=countries)
-
-        s3_debug("All done!")
 
         return
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def import_gadm_L0(ogr, countries=[]):
+    def import_gadm1_L0(ogr, countries=[]):
         """
-           Import L0 Admin Boundaries into the Locations table from GADM
+           Import L0 Admin Boundaries into the Locations table from GADMv1
            - designed to be called from import_admin_areas()
            - assumes that basic prepop has been done, so that no new records need to be created
 
@@ -2399,6 +2361,7 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         layer = {
             "url" : "http://gadm.org/data/gadm_v1_lev0_shp.zip",
@@ -2433,6 +2396,7 @@ class GIS(object):
         fileName = layer["zipfile"]
         if not os.path.isfile(fileName):
             # Download the file
+            from gluon.tools import fetch
             url = layer["url"]
             s3_debug("Downloading %s" % url)
             try:
@@ -2447,6 +2411,7 @@ class GIS(object):
 
         # Unzip it
         s3_debug("Unzipping %s" % layerName)
+        import zipfile
         myfile = zipfile.ZipFile(fp)
         for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
             fileName = "%s.%s" % (layerName, ext)
@@ -2483,7 +2448,9 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     pass
                 else:
-                    query = (table.code == code)
+                    query = (table.id == ttable.location_id) & \
+                            (ttable.tag == "ISO2") & \
+                            (ttable.value == code)
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
                         gis_feature_type = 2
@@ -2498,12 +2465,19 @@ class GIS(object):
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
                     code2 = feat.GetField(code2Field)
-                    area = feat.GetField("Shape_Area")
+                    #area = feat.GetField("Shape_Area")
                     try:
+                        id = db(query).select(table.id,
+                                              limitby=(0, 1)).first().id
+                        query = (table.id == id)
                         db(query).update(gis_feature_type=gis_feature_type,
-                                         wkt=wkt,
-                                         code2=code2,
-                                         area=area)
+                                         wkt=wkt)
+                        ttable.insert(location_id = id,
+                                      tag = "ISO3",
+                                      value = code2)
+                        #ttable.insert(location_id = location_id,
+                        #              tag = "area",
+                        #              value = area)
                     except db._adapter.driver.OperationalError, exception:
                         s3_debug(exception)
 
@@ -2521,9 +2495,9 @@ class GIS(object):
         return
 
     # -------------------------------------------------------------------------
-    def import_gadm(self, ogr, level="L1", countries=[]):
+    def import_gadm1(self, ogr, level="L1", countries=[]):
         """
-            Import L1 Admin Boundaries into the Locations table from GADM
+            Import L1 Admin Boundaries into the Locations table from GADMv1
             - designed to be called from import_admin_areas()
             - assumes a fresh database with just Countries imported
 
@@ -2533,21 +2507,19 @@ class GIS(object):
                                defaults to all countries
         """
 
-        db = current.db
-        s3db = current.s3db
-        cache = s3db.cache
-        table = s3db.gis_location
-
         if level == "L1":
             layer = {
                 "url" : "http://gadm.org/data/gadm_v1_lev1_shp.zip",
                 "zipfile" : "gadm_v1_lev1_shp.zip",
                 "shapefile" : "gadm1_lev1",
                 "namefield" : "NAME_1",
-                "codefield" : "ID_1",   # This field is used to uniquely identify the L1 for updates
-                "code2field" : "ISO",   # This field is used to uniquely identify the L0 for parenting the L1s
+                # Uniquely identify the L1 for updates
+                "sourceCodeField" : "ID_1",
+                "edenCodeField" : "GADM1",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L0",
-                "parentCode" : "code2"
+                "parentSourceCodeField" : "ISO",
+                "parentEdenCodeField" : "ISO3",
             }
         elif level == "L2":
             layer = {
@@ -2555,18 +2527,28 @@ class GIS(object):
                 "zipfile" : "gadm_v1_lev2_shp.zip",
                 "shapefile" : "gadm_v1_lev2",
                 "namefield" : "NAME_2",
-                "codefield" : "ID_2",    # This field is used to uniquely identify the L2 for updates
-                "code2field" : "ID_1",   # This field is used to uniquely identify the L1 for parenting the L2s
+                # Uniquely identify the L2 for updates
+                "sourceCodeField" : "ID_2",
+                "edenCodeField" : "GADM2",
+                # Uniquely identify the L0 for parenting the L1s
                 "parent" : "L1",
-                "parentCode" : "code"
+                "parentSourceCodeField" : "ID_1",
+                "parentEdenCodeField" : "GADM1",
             }
         else:
             s3_debug("Level %s not supported!" % level)
             return
 
-
-        import shutil
         import csv
+        import shutil
+        import zipfile
+
+        db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
+        table = s3db.gis_location
+        ttable = s3db.gis_location_tag
+
         csv.field_size_limit(2**20 * 100)  # 100 megs
 
         # Not all the data is encoded like this
@@ -2618,6 +2600,7 @@ class GIS(object):
         fileName = layer["zipfile"]
         if not os.path.isfile(fileName):
             # Download the file
+            from gluon.tools import fetch
             url = layer["url"]
             s3_debug("Downloading %s" % url)
             try:
@@ -2651,30 +2634,29 @@ class GIS(object):
         nGroupTransactions = 200
         nFIDToFetch = ogr.NullFID
         inputFileName = "%s.shp" % layerName
-        inputDS = ogr.Open( inputFileName, False )
+        inputDS = ogr.Open(inputFileName, False)
         outputFileName = "CSV"
         outputDriver = ogr.GetDriverByName("CSV")
-        outputDS = outputDriver.CreateDataSource( outputFileName, options = [] )
+        outputDS = outputDriver.CreateDataSource(outputFileName, options=[])
         # GADM only has 1 layer/source
         inputLayer = inputDS.GetLayer(0)
         inputFDefn = inputLayer.GetLayerDefn()
         # Create the output Layer
-        outputLayer = outputDS.CreateLayer( layerName )
+        outputLayer = outputDS.CreateLayer(layerName)
         # Copy all Fields
         papszFieldTypesToString = []
         inputFieldCount = inputFDefn.GetFieldCount()
-        panMap = [ -1 for i in range(inputFieldCount) ]
+        panMap = [-1 for i in range(inputFieldCount)]
         outputFDefn = outputLayer.GetLayerDefn()
         nDstFieldCount = 0
         if outputFDefn is not None:
             nDstFieldCount = outputFDefn.GetFieldCount()
         for iField in range(inputFieldCount):
             inputFieldDefn = inputFDefn.GetFieldDefn(iField)
-            oFieldDefn = ogr.FieldDefn( inputFieldDefn.GetNameRef(),
-                                        inputFieldDefn.GetType() )
-            oFieldDefn.SetWidth( inputFieldDefn.GetWidth() )
-            oFieldDefn.SetPrecision( inputFieldDefn.GetPrecision() )
-
+            oFieldDefn = ogr.FieldDefn(inputFieldDefn.GetNameRef(),
+                                       inputFieldDefn.GetType())
+            oFieldDefn.SetWidth(inputFieldDefn.GetWidth())
+            oFieldDefn.SetPrecision(inputFieldDefn.GetPrecision())
             # The field may have been already created at layer creation
             iDstField = -1;
             if outputFDefn is not None:
@@ -2685,77 +2667,57 @@ class GIS(object):
                 # now that we've created a field, GetLayerDefn() won't return NULL
                 if outputFDefn is None:
                     outputFDefn = outputLayer.GetLayerDefn()
-
                 panMap[iField] = nDstFieldCount
                 nDstFieldCount = nDstFieldCount + 1
-
         # Transfer features
         nFeaturesInTransaction = 0
         iSrcZField = -1
-
         inputLayer.ResetReading()
-
         if nGroupTransactions > 0:
             outputLayer.StartTransaction()
-
         while True:
             poDstFeature = None
-
             if nFIDToFetch != ogr.NullFID:
-
                 # Only fetch feature on first pass.
                 if nFeaturesInTransaction == 0:
                     poFeature = inputLayer.GetFeature(nFIDToFetch)
                 else:
                     poFeature = None
-
             else:
                 poFeature = inputLayer.GetNextFeature()
-
             if poFeature is None:
                 break
-
             nParts = 0
             nIters = 1
-
             for iPart in range(nIters):
                 nFeaturesInTransaction = nFeaturesInTransaction + 1
                 if nFeaturesInTransaction == nGroupTransactions:
                     outputLayer.CommitTransaction()
                     outputLayer.StartTransaction()
                     nFeaturesInTransaction = 0
-
-                poDstFeature = ogr.Feature( outputLayer.GetLayerDefn() )
-
-                if poDstFeature.SetFromWithMap( poFeature, 1, panMap ) != 0:
-
+                poDstFeature = ogr.Feature(outputLayer.GetLayerDefn())
+                if poDstFeature.SetFromWithMap(poFeature, 1, panMap) != 0:
                     if nGroupTransactions > 0:
                         outputLayer.CommitTransaction()
-
                     s3_debug("Unable to translate feature %d from layer %s" % (poFeature.GetFID() , inputFDefn.GetName() ))
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
                 poDstGeometry = poDstFeature.GetGeometryRef()
                 if poDstGeometry is not None:
-
                     if nParts > 0:
                         # For -explodecollections, extract the iPart(th) of the geometry
                         poPart = poDstGeometry.GetGeometryRef(iPart).Clone()
                         poDstFeature.SetGeometryDirectly(poPart)
                         poDstGeometry = poPart
-
                 if outputLayer.CreateFeature( poDstFeature ) != 0 and not bSkipFailures:
                     if nGroupTransactions > 0:
                         outputLayer.RollbackTransaction()
                     # Revert back to the working directory as before.
                     os.chdir(old_working_directory)
                     return
-
         if nGroupTransactions > 0:
             outputLayer.CommitTransaction()
-
         # Cleanup
         outputDS.Destroy()
         inputDS.Destroy()
@@ -2774,7 +2736,7 @@ class GIS(object):
             os.chdir(old_working_directory)
             return
 
-        lyr = ds.GetLayerByName( layerName )
+        lyr = ds.GetLayerByName(layerName)
 
         lyr.ResetReading()
 
@@ -2783,33 +2745,36 @@ class GIS(object):
         rows = latin_dict_reader(open("%s.csv" % layerName))
 
         nameField = layer["namefield"]
-        codeField = layer["codefield"]
-        code2Field = layer["code2field"]
+        sourceCodeField = layer["sourceCodeField"]
+        edenCodeField = layer["edenCodeField"]
+        parentSourceCodeField = layer["parentSourceCodeField"]
         parentLevel = layer["parent"]
-        parentCodeField = table[layer["parentCode"]]
+        parentEdenCodeField = layer["parentEdenCodeField"]
+        parentCodeQuery = (ttable.tag == parentEdenCodeField)
         count = 0
         for row in rows:
             # Read Attributes
             feat = lyr[count]
 
-            code2 = feat.GetField(code2Field)
+            parentCode = feat.GetField(parentSourceCodeField)
             query = (table.level == parentLevel) & \
-                    (parentCodeField == code2)
+                    parentCodeQuery & \
+                    (ttable.value == parentCode)
             parent = db(query).select(table.id,
-                                      table.code,
+                                      ttable.value,
                                       limitby=(0, 1),
                                       cache=cache).first()
             if not parent:
                 # Skip locations for which we don't have a valid parent
-                #s3_debug("Skipping - cannot find parent with code2: %s" % code2)
+                s3_debug("Skipping - cannot find parent with key: %s, value: %s" % (parentEdenCodeField, parentCode))
                 count += 1
                 continue
 
             if countries:
                 # Skip the countries which we're not interested in
                 if level == "L1":
-                    if parent.code not in countries:
-                        #s3_debug("Skipping %s as not in countries list" % parent.code)
+                    if parent["gis_location_tag"].value not in countries:
+                        #s3_debug("Skipping %s as not in countries list" % parent["gis_location_tag"].value)
                         count += 1
                         continue
                 else:
@@ -2823,7 +2788,7 @@ class GIS(object):
             name = row.pop(nameField)
             name.encode("utf8")
 
-            code = feat.GetField(codeField)
+            code = feat.GetField(sourceCodeField)
             area = feat.GetField("Shape_Area")
 
             geom = feat.GetGeometryRef()
@@ -2831,14 +2796,18 @@ class GIS(object):
                 if geom.GetGeometryType() == ogr.wkbPoint:
                     lat = geom.GetX()
                     lon = geom.GetY()
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=1,
-                                 lat=lat,
-                                 lon=lon,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=1,
+                                      lat=lat,
+                                      lon=lon,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
                 else:
                     wkt = geom.ExportToWkt()
                     if wkt.startswith("LINESTRING"):
@@ -2853,13 +2822,17 @@ class GIS(object):
                         gis_feature_type = 6
                     elif wkt.startswith("GEOMETRYCOLLECTION"):
                         gis_feature_type = 7
-                    table.insert(name=name,
-                                 level=level,
-                                 gis_feature_type=gis_feature_type,
-                                 wkt=wkt,
-                                 parent=parent.id,
-                                 code=code,
-                                 area=area)
+                    id = table.insert(name=name,
+                                      level=level,
+                                      gis_feature_type=gis_feature_type,
+                                      wkt=wkt,
+                                      parent=parent.id)
+                    ttable.insert(location_id = id,
+                                  tag = edenCodeField,
+                                  value = code)
+                    # ttable.insert(location_id = id,
+                                  # tag = "area",
+                                  # value = area)
             else:
                 s3_debug("No geometry\n")
 
@@ -2874,8 +2847,170 @@ class GIS(object):
         try:
             self.update_location_tree()
         except MemoryError:
-            # If doing all L2s, it can break memory limits - how can we avoid this?
+            # If doing all L2s, it can break memory limits
+            # @ToDo: Check now that we're doing by level
             s3_debug("Memory error when trying to update_location_tree()!")
+
+        db.commit()
+
+        # Revert back to the working directory as before.
+        os.chdir(old_working_directory)
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_gadm2(ogr, level="L0", countries=[]):
+        """
+            Import Admin Boundaries into the Locations table from GADMv2
+            - designed to be called from import_admin_areas()
+            - assumes that basic prepop has been done, so that no new L0 records need to be created
+
+            @param ogr - The OGR Python module
+            @param level - The OGR Python module
+            @param countries - List of ISO2 countrycodes to download data for
+                               defaults to all countries
+
+            @ToDo: Complete this
+                - not currently possible to get all data from the 1 file easily
+                - no ISO2
+                - needs updating for gis_location_tag model
+                - only the lowest available levels accessible
+                - use GADMv1 for L0, L1, L2 & GADMv2 for specific lower?
+        """
+
+        if level == "L0":
+            codeField = "ISO2"   # This field is used to uniquely identify the L0 for updates
+            code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
+        elif level == "L1":
+            nameField = "NAME_1"
+            codeField = "ID_1"   # This field is used to uniquely identify the L1 for updates
+            code2Field = "ISO"   # This field is used to uniquely identify the L0 for parenting the L1s
+            parent = "L0"
+            parentCode = "code2"
+        elif level == "L2":
+            nameField = "NAME_2"
+            codeField = "ID_2"   # This field is used to uniquely identify the L2 for updates
+            code2Field = "ID_1"  # This field is used to uniquely identify the L1 for parenting the L2s
+            parent = "L1"
+            parentCode = "code"
+        else:
+            s3_debug("Level %s not supported!" % level)
+            return
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
+
+        url = "http://gadm.org/data2/gadm_v2_shp.zip"
+        zipfile = "gadm_v2_shp.zip"
+        shapefile = "gadm2"
+
+        # Copy the current working directory to revert back to later
+        old_working_directory = os.getcwd()
+
+        # Create the working directory
+        if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp/GADMv2 as a cache
+            TEMP = os.path.join(os.getcwd(), "temp")
+        else:
+            import tempfile
+            TEMP = tempfile.gettempdir()
+        tempPath = os.path.join(TEMP, "GADMv2")
+        try:
+            os.mkdir(tempPath)
+        except OSError:
+            # Folder already exists - reuse
+            pass
+
+        # Set the current working directory
+        os.chdir(tempPath)
+
+        layerName = shapefile
+
+        # Check if file has already been downloaded
+        fileName = zipfile
+        if not os.path.isfile(fileName):
+            # Download the file
+            from gluon.tools import fetch
+            s3_debug("Downloading %s" % url)
+            try:
+                file = fetch(url)
+            except urllib2.URLError, exception:
+                s3_debug(exception)
+                return
+            fp = StringIO(file)
+        else:
+            s3_debug("Using existing file %s" % fileName)
+            fp = open(fileName)
+
+        # Unzip it
+        s3_debug("Unzipping %s" % layerName)
+        import zipfile
+        myfile = zipfile.ZipFile(fp)
+        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+            fileName = "%s.%s" % (layerName, ext)
+            file = myfile.read(fileName)
+            f = open(fileName, "w")
+            f.write(file)
+            f.close()
+        myfile.close()
+
+        # Use OGR to read Shapefile
+        s3_debug("Opening %s.shp" % layerName)
+        ds = ogr.Open("%s.shp" % layerName)
+        if ds is None:
+            s3_debug("Open failed.\n")
+            return
+
+        lyr = ds.GetLayerByName(layerName)
+
+        lyr.ResetReading()
+
+        for feat in lyr:
+            code = feat.GetField(codeField)
+            if not code:
+                # Skip the entries which aren't countries
+                continue
+            if countries and code not in countries:
+                # Skip the countries which we're not interested in
+                continue
+
+            geom = feat.GetGeometryRef()
+            if geom is not None:
+                if geom.GetGeometryType() == ogr.wkbPoint:
+                    pass
+                else:
+                    ## FIXME
+                    ##query = (table.code == code)
+                    wkt = geom.ExportToWkt()
+                    if wkt.startswith("LINESTRING"):
+                        gis_feature_type = 2
+                    elif wkt.startswith("POLYGON"):
+                        gis_feature_type = 3
+                    elif wkt.startswith("MULTIPOINT"):
+                        gis_feature_type = 4
+                    elif wkt.startswith("MULTILINESTRING"):
+                        gis_feature_type = 5
+                    elif wkt.startswith("MULTIPOLYGON"):
+                        gis_feature_type = 6
+                    elif wkt.startswith("GEOMETRYCOLLECTION"):
+                        gis_feature_type = 7
+                    code2 = feat.GetField(code2Field)
+                    area = feat.GetField("Shape_Area")
+                    try:
+                        ## FIXME
+                        db(query).update(gis_feature_type=gis_feature_type,
+                                         wkt=wkt)
+                                         #code2=code2,
+                                         #area=area
+                    except db._adapter.driver.OperationalError, exception:
+                        s3_debug(exception)
+
+            else:
+                s3_debug("No geometry\n")
+
+        # Close the shapefile
+        ds.Destroy()
 
         db.commit()
 
@@ -2901,12 +3036,17 @@ class GIS(object):
 
         import codecs
 
+        from shapely.geometry import point
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
         db = current.db
         s3db = current.s3db
         cache = s3db.cache
         request = current.request
         settings = current.deployment_settings
         table = s3db.gis_location
+        ttable = s3db.gis_location_tag
 
         url = "http://download.geonames.org/export/dump/" + country + ".zip"
 
@@ -2923,6 +3063,7 @@ class GIS(object):
 
         if not cached:
             # Download File
+            from gluon.tools import fetch
             try:
                 f = fetch(url)
             except (urllib2.URLError,):
@@ -2938,6 +3079,7 @@ class GIS(object):
             if f[:2] == "PK":
                 # Unzip
                 fp = StringIO(f)
+                import zipfile
                 myfile = zipfile.ZipFile(fp)
                 try:
                     # Python 2.6+ only :/
@@ -3027,17 +3169,12 @@ class GIS(object):
             modification_date = line.split("\t")
 
             if feature_code == fc:
-                # @ToDo: Agree on a global repository for UUIDs:
-                # http://eden.sahanafoundation.org/wiki/UserGuidelinesGISData#UUIDs
-                import uuid
-                uuid = "geo.sahanafoundation.org/" + uuid.uuid4()
-
                 # Add WKT
                 lat = float(lat)
                 lon = float(lon)
                 wkt = self.latlon_to_wkt(lat, lon)
 
-                shape = shapely.geometry.point.Point(lon, lat)
+                shape = point.Point(lon, lat)
 
                 # Add Bounds
                 lon_min = lon_max = lon
@@ -3061,24 +3198,23 @@ class GIS(object):
                             parent = row.id
                             # Should be just a single parent
                             break
-                    except shapely.geos.ReadingError:
+                    except ReadingError:
                         s3_debug("Error reading wkt of location with id", row.id)
 
                 # Add entry to database
-                table.insert(uuid=uuid,
-                             geonames_id=geonames_id,
-                             source="geonames",
-                             name=name,
-                             level=level,
-                             parent=parent,
-                             lat=lat,
-                             lon=lon,
-                             wkt=wkt,
-                             lon_min=lon_min,
-                             lon_max=lon_max,
-                             lat_min=lat_min,
-                             lat_max=lat_max)
-
+                new_id = table.insert(name=name,
+                                      level=level,
+                                      parent=parent,
+                                      lat=lat,
+                                      lon=lon,
+                                      wkt=wkt,
+                                      lon_min=lon_min,
+                                      lon_max=lon_max,
+                                      lat_min=lat_min,
+                                      lat_max=lat_max)
+                ttable.insert(location_id=new_id,
+                              tag="geonames",
+                              value=geonames_id)
             else:
                 continue
 
@@ -3130,8 +3266,14 @@ class GIS(object):
             geom_type = GEOM_TYPES["point"]
             bbox = (lon, lat, lon, lat)
         else:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                SHAPELY = True
+            except:
+                SHAPELY = False
+
             if SHAPELY:
-                shape = shapely.wkt.loads(wkt)
+                shape = wkt_loads(wkt)
                 centroid = shape.centroid
                 lat = centroid.y
                 lon = centroid.x
@@ -3150,73 +3292,775 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
-    def update_location_tree(self, location_id=None, parent_id=None):
+    def update_location_tree(self, feature=None):
         """
-            Update the Tree for GIS Locations:
-            @author: Aravind Venkatesan and Ajay Kumar Sreenivasan from NCSU
-            @summary: Using Materialized path for each node in the tree
-            http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
-            Do a lazy update of a database that does not have location paths.
-            For convenience of get_parents, return the path.
+            Update GIS Locations' Materialized path, Lx locations & Lat/Lon
+
+            @param feature: a feature dict to update the tree for
+            - if not provided then update the whole tree
+
+            returns the path of the feature
+
+            Called onaccept for locations (async, where-possible)
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-
-        if location_id:
-            if parent_id:
-                query = (table.id == parent_id)
-                parent = db(query).select(table.parent,
-                                          table.path).first()
-            # It is Somebody Else's Problem (see Douglas Adams) to assure that
-            # parent_id points to an actual location.  We just protect ourselves
-            # in case they didn't.
-            if parent_id and parent:
-                if parent.path:
-                    # Parent has a path.
-                    path = "%s/%s" % (str(parent.path), str(location_id))
-                elif parent.parent:
-                    parent_path = self.update_location_tree(parent_id,
-                                                            parent.parent)
-                    # Ok, *now* the parent has a path.
-                    path = "%s/%s" % (str(parent_path), str(location_id))
-                else:
-                    # Parent has no parent.
-                    path = "%s/%s" % (str(parent_id), str(location_id))
-            else:
-                path = str(location_id)
-
-            db(table.id == location_id).update(path=path)
-
-            return path
-
-        else:
+        if not feature:
             # Do the whole database
-            query = (table.id > 0)
-            features = db(query).select(table.id,
-                                        table.gis_feature_type,
-                                        table.lat,
-                                        table.lon,
-                                        table.wkt,
-                                        table.parent)
-            for feature in features:
-                self.update_location_tree(feature.id, feature.parent)
-                # Also do the Bounds/Centroids/WKT
-                form = Storage()
-                form.vars = feature
-                form.errors = Storage()
-                self.wkt_centroid(form)
-                _vars = form.vars
-                if "lat_max" in _vars:
-                    db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
-                                                      lat = _vars.lat,
-                                                      lon = _vars.lon,
-                                                      wkt = _vars.wkt,
-                                                      lat_max = _vars.lat_max,
-                                                      lat_min = _vars.lat_min,
-                                                      lon_min = _vars.lon_min,
-                                                      lon_max = _vars.lon_max)
+            # Do in chunks to save memory and also do in correct order
+            db = current.db
+            table = db.gis_location
+            fields = [table.id, table.name, table.gis_feature_type,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.wkt, table.inherited,
+                      table.path, table.parent]
+            update_location_tree = self.update_location_tree
+            wkt_centroid = self.wkt_centroid
+            for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
+                features = db(table.level == level).select(*fields)
+                for feature in features:
+                    feature["level"] = level
+                    update_location_tree(feature)
+                    # Also do the Bounds/Centroid/WKT
+                    form = Storage()
+                    form.vars = feature
+                    form.errors = Storage()
+                    wkt_centroid(form)
+                    _vars = form.vars
+                    if "lat_max" in _vars:
+                        db(table.id == feature.id).update(gis_feature_type = _vars.gis_feature_type,
+                                                          lat = _vars.lat,
+                                                          lon = _vars.lon,
+                                                          wkt = _vars.wkt,
+                                                          lat_max = _vars.lat_max,
+                                                          lat_min = _vars.lat_min,
+                                                          lon_min = _vars.lon_min,
+                                                          lon_max = _vars.lon_max)
+            return
+
+        id = "id" in feature and str(feature["id"])
+        if not id:
+            # Nothing we can do
+            raise ValueError
+
+        # L0
+        db = current.db
+        table = db.gis_location
+        name = feature.get("name", False)
+        level = feature.get("level", False)
+        path = feature.get("path", False)
+        L0 = feature.get("L0", False)
+        if level == "L0":
+            if name:
+                if path == id and L0 == name:
+                    # No action required
+                    return path
+                else:
+                    db(table.id == id).update(L0=name,
+                                              path=id)
+            else:
+                # Look this up
+                feature = db(table.id == id).select(table.name,
+                                                    table.path,
+                                                    table.L0,
+                                                    limitby=(0, 1)).first()
+                if feature:
+                    name = feature["name"]
+                    path = feature["path"]
+                    L0 = feature["L0"]
+                    if path == id and L0 == name:
+                        # No action required
+                        return path
+                    else:
+                        db(table.id == id).update(L0=name,
+                                                  path=id)
+            return id
+
+        # L1
+        parent = feature.get("parent", False)
+        L1 = feature.get("L1", False)
+        lat = feature.get("lat", False)
+        lon = feature.get("lon", False)
+        inherited = feature.get("inherited", None)
+        if level == "L1":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+
+            if parent:
+                _path = "%s/%s" % (parent, id)
+                _L0 = db(table.id == parent).select(table.name,
+                                                    table.lat,
+                                                    table.lon,
+                                                    limitby=(0, 1),
+                                                    cache=current.s3db.cache).first()
+                L0_name = _L0.name
+                L0_lat = _L0.lat
+                L0_lon = _L0.lon
+            else:
+                _path = id
+                L0_name = None
+                L0_lat = None
+                L0_lon = None
+
+            if path == _path and L1 == name and L0 == L0_name:
+                if inherited and lat == L0_lat and lon == L0_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=L0_lat,
+                                              lon=L0_lon)
+            elif inherited and lat == L0_lat and lon == L0_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name)
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name,
+                                          inherited=True,
+                                          lat=L0_lat,
+                                          lon=L0_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # L2
+        L2 = feature.get("L2", False)
+        if level == "L2":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+
+            if parent:
+                Lx = db(table.id == parent).select(table.name,
+                                                   table.level,
+                                                   table.parent,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L1":
+                    L1_name = Lx.name
+                    _parent = Lx.parent
+                    if _parent:
+                        _path = "%s/%s/%s" % (_parent, parent, id)
+                        L0_name = db(table.id == _parent).select(table.name,
+                                                                 limitby=(0, 1),
+                                                                 cache=current.s3db.cache).first().name
+                    else:
+                        _path = "%s/%s" % (parent, id)
+                        L0_name = None
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L2 == name and L0 == L0_name and \
+                                                L1 == L1_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # L3
+        L3 = feature.get("L3", False)
+        if level == "L3":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False or L3 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    table.L3,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+                L3 = feature.L3
+
+            if parent:
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
+                                                   table.level,
+                                                   table.L0,
+                                                   table.L1,
+                                                   table.path,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L2":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.name
+                    _path = Lx.path
+                    if _path and L0_name and L1_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                elif Lx.level == "L1":
+                    L0_name = Lx.L0
+                    L1_name = Lx.name
+                    L2_name = None
+                    _path = Lx.path
+                    if _path and L0_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                    L2_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                L2_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L3 == name and L0 == L0_name and \
+                                 L1 == L1_name and L2 == L2_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+            
+        # L4
+        L4 = feature.get("L4", False)
+        if level == "L4":
+            if name is False or lat is False or lon is False or inherited is None or \
+               parent is False or path is False or L0 is False or L1 is False or \
+                                                   L2 is False or L3 is False or \
+                                                   L4 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.name,
+                                                    table.parent,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.inherited,
+                                                    table.L0,
+                                                    table.L1,
+                                                    table.L2,
+                                                    table.L3,
+                                                    table.L4,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                parent = feature.parent
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                inherited = feature.inherited
+                L0 = feature.L0
+                L1 = feature.L1
+                L2 = feature.L2
+                L3 = feature.L3
+                L4 = feature.L4
+
+            if parent:
+                Lx = db(table.id == parent).select(table.id,
+                                                   table.name,
+                                                   table.level,
+                                                   table.L0,
+                                                   table.L1,
+                                                   table.L2,
+                                                   table.path,
+                                                   table.lat,
+                                                   table.lon,
+                                                   limitby=(0, 1),
+                                                   cache=current.s3db.cache).first()
+                if Lx.level == "L3":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+                    L3_name = Lx.name
+                    _path = Lx.path
+                    if _path and L0_name and L1_name and L2_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.L2,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                        L2_name = Lx.L2
+                elif Lx.level == "L2":
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.name
+                    L3_name = None
+                    _path = Lx.path
+                    if _path and L0_name and L1_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.L1,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                        L1_name = Lx.L1
+                elif Lx.level == "L1":
+                    L0_name = Lx.L0
+                    L1_name = Lx.name
+                    L2_name = None
+                    L3_name = None
+                    _path = Lx.path
+                    if _path and L0_name:
+                        _path = "%s/%s" % (_path, id)
+                    else:
+                        # This feature needs to be updated
+                        _path = self.update_location_tree(Lx)
+                        _path = "%s/%s" % (_path, id)
+                        # Query again
+                        Lx = db(table.id == parent).select(table.L0,
+                                                           table.lat,
+                                                           table.lon,
+                                                           limitby=(0, 1),
+                                                           cache=current.s3db.cache).first()
+                        L0_name = Lx.L0
+                elif Lx.level == "L0":
+                    _path = "%s/%s" % (parent, id)
+                    L0_name = Lx.name
+                    L1_name = None
+                    L2_name = None
+                    L3_name = None
+                else:
+                    raise ValueError
+                Lx_lat = Lx.lat
+                Lx_lon = Lx.lon
+            else:
+                _path = id
+                L0_name = None
+                L1_name = None
+                L2_name = None
+                L3_name = None
+                Lx_lat = None
+                Lx_lon = None
+
+            if path == _path and L4 == name and L0 == L0_name and \
+                                 L1 == L1_name and L2 == L2_name and \
+                                 L3 == L3_name:
+                if inherited and lat == Lx_lat and lon == Lx_lon:
+                    # No action required
+                    return path
+                elif inherited or lat is None or lon is None:
+                    db(table.id == id).update(inherited=True,
+                                              lat=Lx_lat,
+                                              lon=Lx_lon)
+            elif inherited and lat == Lx_lat and lon == Lx_lon:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name,
+                                          )
+                return _path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name,
+                                          inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+            else:
+                db(table.id == id).update(path=_path,
+                                          L0=L0_name,
+                                          L1=L1_name,
+                                          L2=L2_name,
+                                          L3=L3_name,
+                                          L4=name)
+            # Ensure that any locations which inherit their latlon from this one get updated
+            query = (table.parent == id) and \
+                    (table.inherited == True)
+            fields = [table.id, table.name, table.path, table.parent,
+                      table.L0, table.L1, table.L2, table.L3, table.L4,
+                      table.lat, table.lon, table.inherited]
+            rows = db(query).select(*fields)
+            for row in rows:
+                self.update_location_tree(row)
+            return _path
+
+        # @ToDo: L5
+
+        # Specific Location
+        # - or unspecified (which we should avoid happening)
+        if name is False or lat is False or lon is False or inherited is None or \
+           parent is False or path is False or L0 is False or L1 is False or \
+                                               L2 is False or L3 is False or \
+                                               L4 is False:
+            # Get the whole feature
+            feature = db(table.id == id).select(table.name,
+                                                table.parent,
+                                                table.path,
+                                                table.lat,
+                                                table.lon,
+                                                table.inherited,
+                                                table.L0,
+                                                table.L1,
+                                                table.L2,
+                                                table.L3,
+                                                table.L4,
+                                                limitby=(0, 1)).first()
+            name = feature.name
+            parent = feature.parent
+            path = feature.path
+            lat = feature.lat
+            lon = feature.lon
+            inherited = feature.inherited
+            L0 = feature.L0
+            L1 = feature.L1
+            L2 = feature.L2
+            L3 = feature.L3
+            L4 = feature.L4
+
+        if parent:
+            Lx = db(table.id == parent).select(table.id,
+                                               table.name,
+                                               table.level,
+                                               table.L0,
+                                               table.L1,
+                                               table.L2,
+                                               table.L3,
+                                               table.path,
+                                               table.lat,
+                                               table.lon,
+                                               limitby=(0, 1),
+                                               cache=current.s3db.cache).first()
+            if Lx.level == "L4":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.L2
+                L3_name = Lx.L3
+                L4_name = Lx.name
+                _path = Lx.path
+                if _path and L0_name and L1_name and L2_name and L3_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.L2,
+                                                       table.L3,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+                    L3_name = Lx.L3
+            elif Lx.level == "L3":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.L2
+                L3_name = Lx.name
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name and L1_name and L2_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.L2,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+                    L2_name = Lx.L2
+            elif Lx.level == "L2":
+                L0_name = Lx.L0
+                L1_name = Lx.L1
+                L2_name = Lx.name
+                L3_name = None
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name and L1_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.L1,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+                    L1_name = Lx.L1
+            elif Lx.level == "L1":
+                L0_name = Lx.L0
+                L1_name = Lx.name
+                L2_name = None
+                L3_name = None
+                L4_name = None
+                _path = Lx.path
+                if _path and L0_name:
+                    _path = "%s/%s" % (_path, id)
+                else:
+                    # This feature needs to be updated
+                    _path = self.update_location_tree(Lx)
+                    _path = "%s/%s" % (_path, id)
+                    # Query again
+                    Lx = db(table.id == parent).select(table.L0,
+                                                       table.lat,
+                                                       table.lon,
+                                                       limitby=(0, 1),
+                                                       cache=current.s3db.cache).first()
+                    L0_name = Lx.L0
+            elif Lx.level == "L0":
+                _path = "%s/%s" % (parent, id)
+                L0_name = Lx.name
+                L1_name = None
+                L2_name = None
+                L3_name = None
+                L4_name = None
+            else:
+                raise ValueError
+            Lx_lat = Lx.lat
+            Lx_lon = Lx.lon
+        else:
+            _path = id
+            L0_name = None
+            L1_name = None
+            L2_name = None
+            L3_name = None
+            L4_name = None
+            Lx_lat = None
+            Lx_lon = None
+
+        if path == _path and L0 == L0_name and \
+                             L1 == L1_name and L2 == L2_name and \
+                             L3 == L3_name and L4 == L4_name:
+            if inherited and lat == Lx_lat and lon == Lx_lon:
+                # No action required
+                return path
+            elif inherited or lat is None or lon is None:
+                db(table.id == id).update(inherited=True,
+                                          lat=Lx_lat,
+                                          lon=Lx_lon)
+        elif inherited and lat == Lx_lat and lon == Lx_lon:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name,
+                                      )
+        elif inherited or lat is None or lon is None:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name,
+                                      inherited=True,
+                                      lat=Lx_lat,
+                                      lon=Lx_lon)
+        else:
+            db(table.id == id).update(path=_path,
+                                      L0=L0_name,
+                                      L1=L1_name,
+                                      L2=L2_name,
+                                      L3=L3_name,
+                                      L4=L4_name)
+        return _path
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3234,8 +4078,33 @@ class GIS(object):
         messages = current.messages
         vars = form.vars
 
-        if vars.wkt:
+        if vars.gis_feature_type == "1":
+            # Point
+            if (vars.lon is None and vars.lat is None) or \
+             (vars.lon == "" and vars.lat == ""):
+                # No Geometry available
+                # Don't clobber existing records (e.g. in Prepop)
+                #vars.gis_feature_type = "0"
+                # Cannot create WKT, so Skip
+                return
+            elif vars.lat is None or vars.lat == "":
+                form.errors["lat"] = messages.lat_empty
+            elif vars.lon is None or vars.lon == "":
+                form.errors["lon"] = messages.lon_empty
+            else:
+                vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
+                if "lon_min" not in vars or vars.lon_min is None:
+                    vars.lon_min = vars.lon
+                if "lon_max" not in vars or vars.lon_max is None:
+                    vars.lon_max = vars.lon
+                if "lat_min" not in vars or vars.lat_min is None:
+                    vars.lat_min = vars.lat
+                if "lat_max" not in vars or vars.lat_max is None:
+                    vars.lat_max = vars.lat
+
+        elif vars.wkt:
             # Parse WKT for LineString, Polygon, etc
+            from shapely.wkt import loads as wkt_loads
             try:
                 shape = wkt_loads(vars.wkt)
             except:
@@ -3274,6 +4143,10 @@ class GIS(object):
             except:
                 form.errors.gis_feature_type = messages.centroid_error
 
+            if current.deployment_settings.get_gis_spatialdb():
+                # Also populate the spatial field
+                vars.the_geom = vars.wkt
+
         elif (vars.lon is None and vars.lat is None) or \
              (vars.lon == "" and vars.lat == ""):
             # No Geometry available
@@ -3290,12 +4163,14 @@ class GIS(object):
                 form.errors["lon"] = messages.lon_empty
             else:
                 vars.wkt = "POINT(%(lon)s %(lat)s)" % vars
-                vars.lon_min = vars.lon_max = vars.lon
-                vars.lat_min = vars.lat_max = vars.lat
-
-        if vars.wkt and current.deployment_settings.get_gis_spatialdb():
-            # Also populate the spatial field
-            vars.the_geom = vars.wkt
+                if "lon_min" not in vars or vars.lon_min is None:
+                    vars.lon_min = vars.lon
+                if "lon_max" not in vars or vars.lon_max is None:
+                    vars.lon_max = vars.lon
+                if "lat_min" not in vars or vars.lat_min is None:
+                    vars.lat_min = vars.lat
+                if "lat_max" not in vars or vars.lat_max is None:
+                    vars.lat_max = vars.lat
 
         return
 
@@ -3305,8 +4180,8 @@ class GIS(object):
         """
             Returns a query of all Locations inside the given bounding box
         """
-        s3db = current.s3db
-        table = s3db.gis_location
+
+        table = current.s3db.gis_location
         query = (table.lat_min <= lat_max) & \
                 (table.lat_max >= lat_min) & \
                 (table.lon_min <= lon_max) & \
@@ -3314,18 +4189,21 @@ class GIS(object):
         return query
 
     # -------------------------------------------------------------------------
-    def get_features_by_bbox(self, lon_min, lat_min, lon_max, lat_max):
+    @staticmethod
+    def get_features_by_bbox(lon_min, lat_min, lon_max, lat_max):
         """
             Returns Rows of Locations whose shape intersects the given bbox.
         """
-        db = current.db
-        return db(self.query_features_by_bbox(lon_min,
-                                              lat_min,
-                                              lon_max,
-                                              lat_max)).select()
+
+        query = current.gis.query_features_by_bbox(lon_min,
+                                                   lat_min,
+                                                   lon_max,
+                                                   lat_max)
+        return current.db(query).select()
 
     # -------------------------------------------------------------------------
-    def _get_features_by_shape(self, shape):
+    @staticmethod
+    def get_features_by_shape(shape):
         """
             Returns Rows of locations which intersect the given shape.
 
@@ -3333,22 +4211,24 @@ class GIS(object):
             @ToDo: provide an option to use PostGIS/Spatialite
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
-        in_bbox = self.query_features_by_bbox(*shape.bounds)
+        from shapely.geos import ReadingError
+        from shapely.wkt import loads as wkt_loads
+
+        table = current.s3db.gis_location
+        in_bbox = current.gis.query_features_by_bbox(*shape.bounds)
         has_wkt = (table.wkt != None) & (table.wkt != "")
 
-        for loc in db(in_bbox & has_wkt).select():
+        for loc in current.db(in_bbox & has_wkt).select():
             try:
                 location_shape = wkt_loads(loc.wkt)
                 if location_shape.intersects(shape):
                     yield loc
-            except shapely.geos.ReadingError:
+            except ReadingError:
                 s3_debug("Error reading wkt of location with id", loc.id)
 
     # -------------------------------------------------------------------------
-    def _get_features_by_latlon(self, lat, lon):
+    @staticmethod
+    def get_features_by_latlon(lat, lon):
         """
             Returns a generator of locations whose shape intersects the given LatLon.
 
@@ -3356,25 +4236,24 @@ class GIS(object):
             @todo: provide an option to use PostGIS/Spatialite
         """
 
-        point = shapely.geometry.point.Point(lon, lat)
-        return self._get_features_by_shape(point)
+        from shapely.geometry import point
+
+        return current.gis.get_features_by_shape(point.Point(lon, lat))
 
     # -------------------------------------------------------------------------
-    def _get_features_by_feature(self, feature):
+    @staticmethod
+    def get_features_by_feature(feature):
         """
             Returns all Locations whose geometry intersects the given feature.
 
             Relies on Shapely.
             @ToDo: provide an option to use PostGIS/Spatialite
         """
-        shape = wkt_loads(feature.wkt)
-        return self.get_features_by_shape(shape)
 
-    # -------------------------------------------------------------------------
-    if SHAPELY:
-        get_features_by_shape = _get_features_by_shape
-        get_features_by_latlon = _get_features_by_latlon
-        get_features_by_feature = _get_features_by_feature
+        from shapely.wkt import loads as wkt_loads
+
+        shape = wkt_loads(feature.wkt)
+        return current.gis.get_features_by_shape(shape)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3385,9 +4264,15 @@ class GIS(object):
             If shapely is present, and a location has wkt, bounds of the geometry
             are used.  Otherwise, the (lat, lon) are used as bounds.
         """
+
+        try:
+            from shapely.wkt import loads as wkt_loads
+            SHAPELY = True
+        except:
+            SHAPELY = False
+
         db = current.db
-        s3db = current.s3db
-        table = s3db.gis_location
+        table = current.s3db.gis_location
 
         # Query to find all locations without bounds set
         no_bounds = (table.lon_min == None) & \
@@ -3424,7 +4309,7 @@ class GIS(object):
     def simplify(wkt, tolerance=0.001, preserve_topology=True, output="wkt"):
         """
             Simplify a complex Polygon
-            - NB This uses Python, better performance will be gaiend by doing
+            - NB This uses Python, better performance will be gained by doing
                  this direct from the database if you are using PostGIS:
             ST_Simplify() is available as
             db(query).select(table.the_geom.st_simplify(tolerance).st_astext().with_alias('wkt')).first().wkt
@@ -3434,6 +4319,8 @@ class GIS(object):
                    - requires patching modules/geojson?
         """
 
+        from shapely.wkt import loads as wkt_loads
+
         try:
             # Enable C-based speedups available from 1.2.10+
             from shapely import speedups
@@ -3441,7 +4328,10 @@ class GIS(object):
         except:
             s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
-        shape = wkt_loads(wkt)
+        try:
+            shape = wkt_loads(wkt)
+        except:
+            return None
         simplified = shape.simplify(tolerance, preserve_topology)
         if output == "wkt":
             output = simplified.to_wkt()
@@ -3467,6 +4357,7 @@ class GIS(object):
                   add_polygon_active = False,
                   features = [],
                   feature_queries = [],
+                  feature_resources = [],
                   wms_browser = {},
                   catalogue_layers = False,
                   legend = False,
@@ -3495,10 +4386,10 @@ class GIS(object):
             @param width: Width of viewport (if not provided then the default deployment setting is used)
             @param bbox: default Bounding Box of viewport (if not provided then the Lat/Lon/Zoom are used) (Dict):
                 {
-                "max_lat" : float,
-                "max_lon" : float,
-                "min_lat" : float,
-                "min_lon" : float
+                 "max_lat" : float,
+                 "max_lon" : float,
+                 "min_lat" : float,
+                 "min_lon" : float
                 }
             @param lat: default Latitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
             @param lon: default Longitude of viewport (if not provided then the default setting from the Map Service Catalogue is used)
@@ -3510,25 +4401,36 @@ class GIS(object):
             @param add_polygon_active: Whether the DrawFeature control should be active by default
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
                 [{
-                    lat: lat,
-                    lon: lon
+                  "lat": lat,
+                  "lon": lon
                 }]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
                 [{
-                 name   : "MyLabel",    # A string: the label for the layer
-                 query  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
-                                        # Extra fields can be added for 'popup_url', 'popup_label' & either
-                                        # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
-                 active : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
-                 marker : None          # Optional: A per-Layer marker query or marker_id for the icon used to display the feature
-                 opacity : 1            # Optional
-                 cluster_distance       # Optional
-                 cluster_threshold      # Optional
+                  "name"   : T("MyLabel"), # A string: the label for the layer
+                  "query"  : query,        # A gluon.sql.Rows of gis_locations, which can be from a simple query or a Join.
+                                           # Extra fields can be added for 'popup_url', 'popup_label' & either
+                                           # 'marker' (url/height/width) or 'shape' (with optional 'colour' & 'size')
+                  "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  "marker" : None,         # Optional: A per-Layer marker query or marker_id for the icon used to display the feature
+                  "opacity" : 1,           # Optional
+                  "cluster_distance",      # Optional
+                  "cluster_threshold"      # Optional
+                }]
+            @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
+                [{
+                  "name"   : T("MyLabel"), # A string: the label for the layer
+                  "id"     : "search",     # A string: the id for the layer (for manipulation by JavaScript)
+                  "url"    : "/eden/module/resource.geojson?filter", # A URL to load the resource
+                  "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  "marker" : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
+                  "opacity" : 1,           # Optional
+                  "cluster_distance",      # Optional
+                  "cluster_threshold"      # Optional
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {
-                name: string,           # Name for the Folder in LayerTree
-                url: string             # URL of GetCapabilities
+                 "name": T("MyLabel"),     # Name for the Folder in LayerTree
+                 "url": string             # URL of GetCapabilities
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
@@ -3540,14 +4442,14 @@ class GIS(object):
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal' (default), 'mgrs' (MGRS), False (off)
             @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
                 {
-                url: string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
-                mapTitle: string        # Title for the Printed Map (optional)
-                subTitle: string        # subTitle for the Printed Map (optional)
+                 "url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
+                 "mapTitle": string,       # Title for the Printed Map (optional)
+                 "subTitle": string        # subTitle for the Printed Map (optional)
                 }
             @param mgrs: Use the MGRS Control to select PDFs
                 {
-                name: string,           # Name for the Control
-                url: string             # URL of PDF server
+                 "name": string,           # Name for the Control
+                 "url": string             # URL of PDF server
                 }
                 @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html
             @param window: Have viewport pop out of page into a resizable window
@@ -3565,6 +4467,7 @@ class GIS(object):
         response = current.response
         if not response.warning:
             response.warning = ""
+        s3 = response.s3
         session = current.session
         T = current.T
         db = current.db
@@ -3692,7 +4595,7 @@ class GIS(object):
 
         # JS Loader
         html_append(SCRIPT(_type="text/javascript",
-                           _src=URL(c="static", f="scripts/S3/yepnope.1.5.4-min.js")))
+                           _src=URL(c="static", f="scripts/yepnope.1.5.4-min.js")))
 
         scripts = []
         scripts_append = scripts.append
@@ -3710,7 +4613,7 @@ class GIS(object):
                 script = URL(c="static", f=script)
                 scripts_append(script)
 
-        debug = session.s3.debug
+        debug = s3.debug
         if debug:
             if projection not in (900913, 4326):
                 add_javascript("scripts/gis/proj4js/lib/proj4js-combined.js")
@@ -4120,7 +5023,7 @@ S3.gis.layers_feature_queries = new Array();"""
         for layer in feature_queries:
             counter = counter + 1
             name = str(layer["name"])
-            name_safe = re.sub("\W", "_", name) # ???
+            name_safe = re.sub("\W", "_", name)
 
             # Lat/Lon via Join or direct?
             try:
@@ -4199,32 +5102,21 @@ S3.gis.layers_feature_queries = new Array();"""
             if "marker" in layer:
                 # per-Layer Marker
                 marker = layer["marker"]
-                try:
-                    # row
-                    marker_url = URL(c="static", f="img",
-                                     args=["markers", marker.image])
-                    marker_height = marker.height
-                    marker_width = marker.width
-                except:
-                    # integer (marker_id)
+                if isinstance(marker, int):
+                    # integer (marker_id) not row
                     query = (mtable.id == marker)
                     marker = db(query).select(mtable.image,
                                               mtable.height,
                                               mtable.width,
                                               limitby=(0, 1),
                                               cache=cache).first()
-                    if marker:
-                        marker_url = URL(c="static", f="img",
-                                         args=["markers", marker.image])
-                        marker_height = marker.height
-                        marker_width = marker.width
-                    else:
-                        marker_url = ""
-                if marker_url:
+                if marker:
                     markerLayer = """,
     "marker_url": "%s",
     "marker_height": %i,
-    "marker_width": %i""" % (marker_url, marker_height, marker_width)
+    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+                else:
+                    markerLayer = ""
 
             if "opacity" in layer and layer["opacity"] != 1:
                 opacity = """,
@@ -4249,13 +5141,86 @@ S3.gis.layers_feature_queries[%i] = {
     "url": "%s"%s%s%s%s%s
 }
 """ % (counter,
-        name,
-        url,
-        visibility,
-        markerLayer,
-        opacity,
-        cluster_distance,
-        cluster_threshold)
+       name,
+       url,
+       visibility,
+       markerLayer,
+       opacity,
+       cluster_distance,
+       cluster_threshold)
+
+        # ---------------------------------------------------------------------
+        # Feature Resources
+        #
+        #   REST URLs to back-end resources
+        #
+        if feature_resources:
+            layers_feature_resources = """
+S3.gis.layers_feature_resources = new Array();"""
+            counter = -1
+        else:
+            layers_feature_resources = ""
+        for layer in feature_resources:
+            counter = counter + 1
+            name = str(layer["name"])
+            id = str(layer["id"])
+            id = re.sub("\W", "_", id)
+
+            # URL to retrieve the data
+            url = layer["url"]
+            # Optimise the query & & tell back-end not to add the type to the tooltips
+            options = "components=None&maxdepth=0&references=location_id&fields=name&label_off=1"
+            if "?" in url:
+                url = "%s&%s" % (url, options)
+            else:
+                url = "%s?%s" % (url, options)
+
+            if "active" in layer and not layer["active"]:
+                visibility = """,
+    "visibility": false"""
+            else:
+                visibility = ""
+
+            if "opacity" in layer and layer["opacity"] != 1:
+                opacity = """,
+    "opacity": %.1f""" % layer["opacity"]
+            else:
+                opacity = ""
+            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
+                cluster_distance = """,
+    "cluster_distance": %i""" % layer["cluster_distance"]
+            else:
+                cluster_distance = ""
+            if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
+                cluster_threshold = """,
+    "cluster_threshold": %i""" % layer["cluster_threshold"]
+            else:
+                cluster_threshold = ""
+
+            if "marker" in layer:
+                marker = layer["marker"]
+                markerLayer = """,
+    "marker_image": "%s",
+    "marker_height": %i,
+    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+            else:
+                markerLayer = ""
+            # Generate JS snippet to pass to static
+            layers_feature_resources += """
+S3.gis.layers_feature_resources[%i] = {
+    "name": "%s",
+    "id": "%s",
+    "url": "%s"%s%s%s%s%s
+}
+""" % (counter,
+       name,
+       id,
+       url,
+       visibility,
+       markerLayer,
+       opacity,
+       cluster_distance,
+       cluster_threshold)
 
         if catalogue_layers:
             # Add all Layers from the Catalogue
@@ -4280,33 +5245,35 @@ S3.gis.layers_feature_queries[%i] = {
             ]
         else:
             # Add just the default Base Layer
-            response.s3.gis.base = True
+            s3.gis.base = True
             layer_types = []
-            base = config["base"]
-            if base:
-                ltable = s3db.gis_layer_entity
-                query = (ltable.id == base)
-                layer = db(query).select(ltable.instance_type,
-                                         limitby=(0, 1)).first()
-                if layer:
-                    layer_type = layer.instance_type
-                    if layer_type == "gis_layer_openstreetmap":
-                        layer_types = [OSMLayer]
-                    elif layer_type == "gis_layer_google":
-                        # NB v3 doesn't work when initially hidden
-                        layer_types = [GoogleLayer]
-                    elif layer_type == "gis_layer_arcrest":
-                        layer_types = [ArcRESTLayer]
-                    elif layer_type == "gis_layer_bing":
-                        layer_types = [BingLayer]
-                    elif layer_type == "gis_layer_tms":
-                        layer_types = [TMSLayer]
-                    elif layer_type == "gis_layer_wms":
-                        layer_types = [WMSLayer]
-                    elif layer_type == "gis_layer_xyz":
-                        layer_types = [XYZLayer]
-                    elif layer_type == "gis_layer_empty":
-                        layer_types = [EmptyLayer]
+            ltable = s3db.gis_layer_config
+            etable = s3db.gis_layer_entity
+            query = (etable.id == ltable.layer_id) & \
+                    (ltable.config_id == config["id"]) & \
+                    (ltable.base == True) & \
+                    (ltable.enabled == True)
+            layer = db(query).select(etable.instance_type,
+                                     limitby=(0, 1)).first()
+            if layer:
+                layer_type = layer.instance_type
+                if layer_type == "gis_layer_openstreetmap":
+                    layer_types = [OSMLayer]
+                elif layer_type == "gis_layer_google":
+                    # NB v3 doesn't work when initially hidden
+                    layer_types = [GoogleLayer]
+                elif layer_type == "gis_layer_arcrest":
+                    layer_types = [ArcRESTLayer]
+                elif layer_type == "gis_layer_bing":
+                    layer_types = [BingLayer]
+                elif layer_type == "gis_layer_tms":
+                    layer_types = [TMSLayer]
+                elif layer_type == "gis_layer_wms":
+                    layer_types = [WMSLayer]
+                elif layer_type == "gis_layer_xyz":
+                    layer_types = [XYZLayer]
+                elif layer_type == "gis_layer_empty":
+                    layer_types = [EmptyLayer]
             if not layer_types:
                 layer_types = [EmptyLayer]
 
@@ -4329,8 +5296,7 @@ S3.gis.layers_feature_queries[%i] = {
                         else:
                             add_javascript(script, ready=ready)
             except Exception, exception:
-                error = "%s not shown: %s" % (LayerType.__name__,
-                                                           exception)
+                error = "%s not shown: %s" % (LayerType.__name__, exception)
                 if debug:
                     raise HTTP(500, error)
                 else:
@@ -4338,7 +5304,7 @@ S3.gis.layers_feature_queries[%i] = {
 
         # WMS getFeatureInfo
         # (loads conditionally based on whether queryable WMS Layers have been added)
-        if response.s3.gis.get_feature_info:
+        if s3.gis.get_feature_info:
             getfeatureinfo = """S3.i18n.gis_get_feature_info = '%s';
 S3.i18n.gis_feature_info = '%s';
 """ % (T("Get Feature Info"),
@@ -4387,6 +5353,7 @@ S3.i18n.gis_feature_info = '%s';
             "S3.gis.marker_default_width = %i;\n" % marker_default.width,
             osm_auth,
             layers_feature_queries,
+            layers_feature_resources,
             _features,
             layers_config,
             # i18n Labels
@@ -4466,7 +5433,6 @@ class Marker(object):
 
     def __init__(self, id=None, layer_id=None):
 
-        db = current.db
         s3db = current.s3db
         mtable = s3db.gis_marker
         marker = None
@@ -4474,11 +5440,11 @@ class Marker(object):
         if id:
             # Lookup the Marker details from it's ID
             query = (mtable.id == id)
-            marker = db(query).select(mtable.image,
-                                      mtable.height,
-                                      mtable.width,
-                                      limitby=(0, 1),
-                                      cache=s3db.cache).first()
+            marker = current.db(query).select(mtable.image,
+                                              mtable.height,
+                                              mtable.width,
+                                              limitby=(0, 1),
+                                              cache=s3db.cache).first()
         elif layer_id:
             # Check if we have a Marker for this Layer
             config = current.gis.get_config()
@@ -4486,10 +5452,10 @@ class Marker(object):
             query = (ltable.layer_id == layer_id) & \
                     (ltable.symbology_id == config.symbology_id) & \
                     (ltable.marker_id == mtable.id)
-            marker = db(query).select(mtable.image,
-                                      mtable.height,
-                                      mtable.width,
-                                      limitby=(0, 1)).first()
+            marker = current.db(query).select(mtable.image,
+                                              mtable.height,
+                                              mtable.width,
+                                              limitby=(0, 1)).first()
         if not marker:
             # Default Marker
             if not config:
@@ -4555,11 +5521,11 @@ class Layer(object):
 
     def __init__(self):
 
-        self.sublayers = []
-        append = self.sublayers.append
+        sublayers = []
+        append = sublayers.append
         self.scripts = []
 
-        s3 = current.response.s3
+        gis = current.response.s3.gis
         s3db = current.s3db
         s3_has_role = current.auth.s3_has_role
 
@@ -4570,17 +5536,18 @@ class Layer(object):
         ltable = s3db.gis_layer_config
 
         fields = table.fields
-        metafields = s3.all_meta_field_names
+        metafields = s3_all_meta_field_names()
         fields = [table[f] for f in fields if f not in metafields]
-        fields.append(ltable.enabled)
-        fields.append(ltable.visible)
-        fields.append(ltable.base)
-        fields.append(ltable.style)
-        fields.append(ctable.pe_type)
+        fappend = fields.append
+        fappend(ltable.enabled)
+        fappend(ltable.visible)
+        fappend(ltable.base)
+        fappend(ltable.style)
+        fappend(ctable.pe_type)
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.config_id == ctable.id) & \
-                (ltable.config_id.belongs(s3.gis.config.ids))
-        if s3.gis.base == True:
+                (ltable.config_id.belongs(gis.config.ids))
+        if gis.base == True:
             # Only show the default base layer
             if self.tablename == "gis_layer_empty":
                 # Show even if disabled (as fallback)
@@ -4591,6 +5558,8 @@ class Layer(object):
         rows = current.db(query).select(orderby=ctable.pe_type,
                                         *fields)
         layer_ids = []
+        lappend = layer_ids.append
+        SubLayer = self.SubLayer
         # Flag to show whether we've set the default baselayer
         # (otherwise a config higher in the hierarchy can overrule one lower down)
         base = True
@@ -4601,7 +5570,7 @@ class Layer(object):
             if layer_id in layer_ids:
                 continue
             # Add layer to list of checked
-            layer_ids.append(layer_id)
+            lappend(layer_id)
             # Check if layer is enabled
             _config = _record["gis_layer_config"]
             if not _config.enabled:
@@ -4623,7 +5592,11 @@ class Layer(object):
                 # SubLayers handled differently
                 append(record)
             else:
-                append(self.SubLayer(record))
+                append(SubLayer(record))
+
+        # Alphasort layers
+        # - client will only sort within their type: s3.gis.layers.js
+        self.sublayers = sorted(sublayers, key=lambda row: row.name)
 
     # -------------------------------------------------------------------------
     def as_javascript(self):
@@ -4873,27 +5846,27 @@ class FeatureLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def __init__(self, record):
-            record_module = record.module
+            record_module = record.controller or record.module # Backwards-compatibility
             self.skip = False
             if record_module is not None:
                 if record_module not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
                 if not current.auth.permission.has_permission("read",
-                                                              c=record.module,
-                                                              f=record.resource):
+                                                              c=record_module,
+                                                              f=record.function or record.resource):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
-                raise Exception("FeatureLayer Record '%s' has no module" % record.name)
+                raise Exception("FeatureLayer Record '%s' has no controller" % record.name)
             super(FeatureLayer.SubLayer, self).__init__(record)
 
         def as_dict(self):
             if self.skip:
                 # Skip layer
                 return
-            controller = self.controller or self.module
-            function = self.function or self.resource
+            controller = self.controller or self.module # Backwards-compatibility
+            function = self.function or self.resource   # Backwards-compatibility
             url = "%s.geojson?layer=%i&components=None&maxdepth=0&references=location_id&fields=name" % \
                 (URL(controller, function), self.id)
             if self.filter:
@@ -4965,8 +5938,6 @@ class GeoRSSLayer(Layer):
             db = current.db
             request = current.request
             response = current.response
-            session = current.session
-            public_url = current.deployment_settings.get_base_public_url()
             cachetable = self.cachetable
 
             url = self.url
@@ -4983,6 +5954,7 @@ class GeoRSSLayer(Layer):
                     download = False
             if download:
                 # Download layer to the Cache
+                from gluon.tools import fetch
                 # @ToDo: Call directly without going via HTTP
                 # @ToDo: Make this async by using S3Task (also use this for the refresh time)
                 fields = ""
@@ -4990,14 +5962,15 @@ class GeoRSSLayer(Layer):
                     fields = "&data_field=%s" % self.data
                 if self.image:
                     fields = "%s&image_field=%s" % (fields, self.image)
-                _url = "%s%s/update.georss?fetchurl=%s%s" % (public_url,
+                _url = "%s%s/update.georss?fetchurl=%s%s" % (current.deployment_settings.get_base_public_url(),
                                                              URL(c="gis", f="cache_feed"),
                                                              url,
                                                              fields)
                 # Keep Session for local URLs
+                import Cookie
                 cookie = Cookie.SimpleCookie()
                 cookie[response.session_id_name] = response.session_id
-                session._unlock(response)
+                current.session._unlock(response)
                 try:
                     # @ToDo: Need to commit to not have DB locked with SQLite?
                     fetch(_url, cookie=cookie)
@@ -5059,7 +6032,7 @@ class GoogleLayer(Layer):
             T = current.T
             epsg = (Projection().epsg == 900913)
             apikey = current.deployment_settings.get_gis_api_google()
-            debug = current.session.s3.debug
+            debug = current.response.s3.debug
             add_script = self.scripts.append
 
             output = {}
@@ -5106,8 +6079,8 @@ class GoogleLayer(Layer):
                 # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
                 add_script("http://maps.google.com/maps?file=api&v=2&key=%s" % apikey)
             else:
-                # v3 API
-                add_script("http://maps.google.com/maps/api/js?v=3.6&sensor=false")
+                # v3 API (3.7 is frozen, 3.8 release & 3.9 is nightly)
+                add_script("http://maps.google.com/maps/api/js?v=3.7&sensor=false")
                 if "StreetviewButton" in output:
                     # Streetview doesn't work with v2 API
                     output["StreetviewButton"] = str(T("Click where you want to open Streetview"))
@@ -5278,7 +6251,7 @@ class KMLLayer(Layer):
 
                 if download:
                     # Download file (async, if workers alive)
-                    current.s3task.async("download_kml",
+                    current.s3task.async("gis_download_kml",
                                          args=[self.id, filename])
                     if cached:
                         db(query).update(modified_on=request.utcnow)
@@ -5324,11 +6297,11 @@ class OSMLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-        
+
             if Projection().epsg != 900913:
                 # Cannot display OpenStreetMap layers unless we're using the Spherical Mercator Projection
                 return {}
-            
+
             output = {
                     "id": self.layer_id,
                     "name": self.safe_name,
@@ -5460,11 +6433,9 @@ class WMSLayer(Layer):
     def __init__(self):
         super(WMSLayer, self).__init__()
         if self.sublayers:
-            debug = current.session.s3.debug
-            add_script = self.scripts.append
-            if debug:
+            if current.response.s3.debug:
                 # Non-debug has this included within GeoExt.js
-                add_script("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
+                self.scripts.append("scripts/gis/gxp/plugins/WMSGetFeatureInfo.js")
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
@@ -5534,53 +6505,197 @@ class XYZLayer(Layer):
 
 
 # =============================================================================
-class S3MAP(S3Method):
+class S3Map(S3Search):
     """
-        Class to generate a Map
+        Class to generate a Map with a Search form above it
 
-        Currently unused
-
-        A typical implementation would be as follows:
-            exporter = s3base.S3MAP()
-            return exporter(xrequest, **attr)
-
-        This class supports a set of Features, typically called from the icon
-        shown in a search
-                For example inv/warehouse
-
-        For specialist calls a S3MAP() object will need to be created.
-        See the apply_method() for ideas on how to create a map,
-        but as a minimum the following structure is required:
-
-            _map = S3MAP()
-            #_map.newDocument(_map.defaultTitle(resource))
+        @ToDo: Allow .configure() to override normal search_method with one
+               for map (like report)
     """
 
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Apply CRUD methods
+            Entry point to apply search method to S3Requests
 
             @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
-                         The attributes that it knows about are:
-                         * componentname
-                         * formname
-                         * list_fields
-
-            @returns: output object to send to the view
+            @param attr: request attributes
         """
 
+        output = dict()
+
+        search = self.resource.search
+        if r.component and self != search:
+            output = search(r, **attr)
+
+        # Save search
+        elif "save" in r.vars :
+            r.interactive = False
+            output = self.save_search(r, **attr)
+
+        # Interactive or saved search
+        elif "load" in r.vars or r.interactive and \
+             search._S3Search__interactive:
+                # Put shortcuts where other methods expect them
+                self.advanced = search.advanced
+                # We want advanced open by default
+                #self.simple = search.simple
+                output = self.search_interactive(r, **attr)
+
+        if not output:
+            # Not supported
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def search_interactive(self, r, **attr):
+        """
+            Interactive search
+
+            @param r: the S3Request instance
+            @param attr: request parameters
+
+            @ToDo: Reload Map Layer by AJAX rather than doing a full-page refresh
+            @ToDo: Static JS to resize page to bounds when layer is loaded
+            @ToDo: Refactor components common to parent class
+        """
+
+        T = current.T
+        session = current.session
+
+        table = self.table
+
+        if "location_id" in table or \
+           "site_id" in table:
+           # ok
+           pass
+        else:
+            session.error = T("This resource cannot be displayed on the map!")
+            redirect(r.url(method="search"))
+
+        # Get environment
+        request = self.request
+        response = current.response
+        resource = self.resource
+        db = current.db
+        s3db = current.s3db
         gis = current.gis
+        tablename = self.tablename
 
-        # @ToDo: Deprecate gis controller's display_feature() & display_features()
-        # @ToDo: Build feature query
-        # @ToDo: Move to GeoJSON?
-        feature_queries = []
+        # Initialize the form
+        form = DIV(_class="search_form form-container")
 
-        # Can this also be an Ext popup for consistency?
-        #  request.vars to control map options
-        output = gis.show_map(feature_queries=feature_queries)
+        # Figure out which set of form values to use
+        # POST > GET > session > unfiltered
+        if r.http == "POST":
+            # POST
+            form_values = r.post_vars
+        else:
+            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
+            if url_options:
+                # GET
+                form_values = url_options
+            else:
+                session_options = session.s3.search_options
+                if session_options and tablename in session_options:
+                    # session
+                    session_options = session_options[tablename]
+                else:
+                    # unfiltered
+                    session_options = Storage()
+                form_values = session_options
 
+        # Build the search forms
+        simple_form, advanced_form = self.build_forms(r, form_values)
+
+        # Check for Load Search
+        if "load" in r.get_vars:
+            search_id = r.get_vars.get("load", None)
+            if not search_id:
+                r.error(400, current.manager.ERROR.BAD_RECORD)
+            r.post_vars = r.vars
+            search_table = s3db.pr_save_search
+            _query = (search_table.id == search_id)
+            record = current.db(_query).select(record.search_vars,
+                                               limitby=(0, 1)).first()
+            if not record:
+                r.error(400, current.manager.ERROR.BAD_RECORD)
+            s_vars = cPickle.loads(record.search_vars)
+            r.post_vars = Storage(s_vars["criteria"])
+            r.http = "POST"
+
+        # Process the search forms
+        query, errors = self.process_forms(r,
+                                           simple_form,
+                                           advanced_form,
+                                           form_values)
+        if not errors:
+            resource.add_filter(query)
+            search_vars = dict(simple=False,
+                               advanced=True,
+                               criteria=form_values)
+        else:
+            search_vars = dict()
+
+        if response.s3.simple_search:
+            form.append(DIV(_id="search-mode", _mode="simple"))
+        else:
+            form.append(DIV(_id="search-mode", _mode="advanced"))
+
+        # Save Search Widget
+        if session.auth and \
+           current.deployment_settings.get_save_search_widget():
+            save_search = self.save_search_widget(r, search_vars, **attr)
+        else:
+            save_search = DIV()
+
+        # Complete the output form
+        if simple_form is not None:
+            simple_form.append(save_search)
+            form.append(simple_form)
+        if advanced_form is not None:
+            advanced_form.append(save_search)
+            form.append(advanced_form)
+
+        # Add a map for search results
+        # (this same map is also used by the Map Search Widget, if-present)
+        # Build URL to load the features onto the map
+        if query:
+            vars = query.serialize_url(resource=resource)
+        else:
+            vars = None
+        url = URL(extension="geojson",
+                  args=None,
+                  vars=vars)
+        feature_resources = [{
+                "name"   : T("Search Results"),
+                "id"     : "search_results",
+                "url"    : url,
+                "active" : True,
+                "marker" : gis.get_marker(request.controller, request.function)
+            }]
+        map = gis.show_map(
+                            feature_resources=feature_resources,
+                            catalogue_layers=True,
+                            legend=True,
+                            toolbar=True,
+                            collapsed=True,
+                            search = True,
+                            )
+        # Title
+        title = self.crud_string(tablename, "title_map")
+
+        # View
+        response.view = self._view(r, "map.html")
+
+        # RHeader gets added later in S3Method()
+
+        output = dict(
+                    title = title,
+                    form = form,
+                    map = map,
+                )
         return output
 
 # =============================================================================
@@ -5617,6 +6732,8 @@ class GoogleGeocoder(Geocoder):
     # -------------------------------------------------------------------------
     def get_json(self):
         " Returns the output in JSON format "
+
+        from gluon.tools import fetch
         url = self.url
         page = fetch(url)
         return page
@@ -5638,6 +6755,8 @@ class YahooGeocoder(Geocoder):
     # -------------------------------------------------------------------------
     def get_xml(self):
         " Return the output in XML format "
+
+        from gluon.tools import fetch
         url = self.url
         page = fetch(url)
         return page
