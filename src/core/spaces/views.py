@@ -213,9 +213,11 @@ def create_space(request):
             for ef in ef_uncommited:
                 ef.space = space
                 ef.save()
+
             # We add the created spaces to the user allowed spaces
-    
-            space.admins.add(request.user)
+            # space.admins.add(request.user)
+            space_form.save_m2m()
+            
             return redirect('/spaces/' + space.url)
     
     return render_to_response('spaces/space_form.html',
@@ -345,7 +347,8 @@ def edit_space(request, space_url):
                 for ef in ef_uncommited:
                     ef.space = space
                     ef.save()
-            
+                
+                form.save_m2m()
                 messages.success(request, _('Space edited successfully'))
                 return redirect('/spaces/' + space.url + '/')
 
@@ -629,8 +632,8 @@ class AddEvent(FormView):
 
     def get_context_data(self, **kwargs):
         context = super(AddEvent, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space,
-            url=self.kwargs['space_url'])
+        place =  get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = place
         context['user_is_admin'] = (self.request.user in place.admins.all()
             or self.request.user in place.mods.all()
             or self.request.user.is_staff or self.request.user.is_superuser) 
@@ -693,8 +696,8 @@ class EditEvent(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super(EditEvent, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space,
-            url=self.kwargs['space_url'])
+        place =  get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = place
         context['user_is_admin'] = (self.request.user in place.admins.all()
             or self.request.user in place.mods.all()
             or self.request.user.is_staff or self.request.user.is_superuser) 
