@@ -40,6 +40,7 @@ from django.template.response import TemplateResponse
 from core.spaces.models import Space
 from apps.ecidadania.voting.models import *
 from apps.ecidadania.voting.forms import *
+from apps.ecidadania.proposals.models import *
 
 @permission_required('voting.add_poll')
 def AddPoll(request, space_url):
@@ -236,10 +237,18 @@ class ViewVoting(DetailView):
     def get_context_data(self, **kwargs):
 
         """
-        Get extra context data for the ViewPost view.
+        Get extra context data for the ViewVoting view.
         """
         context = super(ViewVoting, self).get_context_data(**kwargs)
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        voting = Voting.objects.get(pk=self.kwargs['voting_id'])
+        all_proposals = Proposal.objects.all()
+        proposalsets = voting.proposalsets.all()
+        proposals = voting.proposals.all()
+        context['proposalsets'] = proposalsets
+        context['proposals'] = proposals
+        context['all_proposals'] = all_proposals
+
         return context
 
 class EditVoting(UpdateView):

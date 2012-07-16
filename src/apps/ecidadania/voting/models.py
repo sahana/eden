@@ -90,7 +90,7 @@ class Voting(models.Model):
 
     proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
 
-    proposals = models.ManyToManyField(Proposal, blank = True, null=True, limit_choices_to = {'merged': False})
+    proposals = models.ManyToManyField(Proposal, blank = True, null=True, limit_choices_to = {'proposalset__isnull': True})
 
     @models.permalink
     def get_absolute_url(self):
