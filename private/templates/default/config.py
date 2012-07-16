@@ -651,4 +651,9 @@ settings.modules = OrderedDict([
     #       restricted = False,
     #       module_type = 10
     #   )),
+    ("translate",Storage(
+                name_nice = T("Translation Functionality"),
+                #description = "Selective translation of strings based on module.",
+                module_type = None,
+                ))
 ])

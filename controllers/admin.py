@@ -721,6 +721,11 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 
 def translate():
 
+    """
+        Controller to enable selection of modules for translation
+        and updating the language file with uploaded translations
+    """
+
     if not request.vars.opt:
         return dict()
 
@@ -731,11 +736,6 @@ def translate():
     opt = request.vars.opt
     # Creating a custom form
     form = FORM()
-
-    def prep(r):
-        if r.interactive:
-            if r.method == "create":
-                return True
 
     def postp(r, output):
 
@@ -751,7 +751,7 @@ def translate():
                 # If only one module is selected
                 if type(form.request_vars.module_list)==str:
                     modlist.append(form.request_vars.module_list)
-                # If multile modules are selected
+                # If multiple modules are selected
                 else:
                     modlist = form.request_vars.module_list
                 # Obtaining the language file from the language code
@@ -787,7 +787,7 @@ def translate():
 
             div = DIV()
             div.append(table)
-            div.append(TR(TD("Language code: "),TD(INPUT(_type='text',_name = 'code'))))
+            div.append(TR(TD(T("Language code: ")),TD(INPUT(_type='text',_name = 'code'))))
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)
@@ -797,7 +797,6 @@ def translate():
 
         return output
 
-    response.s3.prep = prep
     response.s3.postp = postp
     # Refering to the translate_language table defined in modules/eden/translate.py
     output = s3_rest_controller("translate", "language")
