@@ -41,7 +41,8 @@ class S3DocumentLibrary(S3Model):
 
     names = ["doc_entity",
              "doc_document",
-             "doc_image"]
+             "doc_image",
+            ]
 
     def model(self):
 
@@ -89,6 +90,7 @@ class S3DocumentLibrary(S3Model):
         table = define_table(tablename,
                              super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
+                             super_link("source_id", "doc_source_entity"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
                                    notnull=True,
@@ -221,11 +223,6 @@ class S3DocumentLibrary(S3Model):
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
 
-        # ---------------------------------------------------------------------
-        # Pass model-global names to response.s3
-        #
-        return Storage()
-
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if the module is disabled """
@@ -315,6 +312,54 @@ class S3DocumentLibrary(S3Model):
                 form.errors["file"] = "%s %s" % \
                                       (T("This file already exists on the server as"), doc_name)
         return
+
+# =============================================================================
+class S3DocumentSource(S3Model):
+
+    names = ["doc_source_entity",
+             "doc_source"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        # Shortcuts
+        add_component = self.add_component
+        define_table = self.define_table
+        super_link = self.super_link
+        # ---------------------------------------------------------------------
+        # Document-source entities
+        #
+        source_types = Storage(pr_pentity=T("Person"),
+                               doc_document=T("Document"),
+                               flood_gauge=T("Flood Gauge"),
+                               survey_series=T("Survey"))
+
+        tablename = "doc_source_entity"
+        doc_source_entity = self.super_entity(tablename,
+                                              "source_id",
+                                              source_types
+                                             )
+        # Components
+        add_component("doc_source", doc_source_entity=self.super_key(doc_source_entity))
+
+        # ---------------------------------------------------------------------
+        # Document-source details
+        #
+        tablename = "doc_source"
+        doc_entity = define_table(tablename,
+                                  super_link("source_id", "doc_source_entity"),
+                                  Field("name"),
+                                  Field("reliability"),
+                                  Field("review"),
+                                 )
+
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage()
+
 
 # =============================================================================
 def doc_image_represent(filename):
