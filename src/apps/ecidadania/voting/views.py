@@ -185,3 +185,113 @@ def vote(request, poll_id, space_url):
         selected_choice.votes += 1
         selected_choice.save()
         return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
+
+class AddVoting(FormView):
+
+    """
+    Create a new voting process. Only registered users belonging to a concrete group
+    are allowed to create voting processes.
+
+    versionadded: 0.1
+
+    :parameters: space_url
+    :context: get_place
+    """
+    form_class = VotingForm
+    template_name = 'voting/voting_form.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return '/spaces/' + self.space.url + '/'
+
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.author = self.request.user
+        form_uncommited.space = self.space
+        form_uncommited.save()
+        return super(AddVoting, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(AddVoting, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = self.space
+        return context
+
+    @method_decorator(permission_required('voting.add_voting'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddVoting, self).dispatch(*args, **kwargs)
+
+class ViewVoting(DetailView):
+
+    """
+    View a specific voting process.
+    """
+    context_object_name = 'voting'
+    template_name = 'voting/voting_detail.html'
+
+    def get_object(self):
+        return Voting.objects.get(pk=self.kwargs['voting_id'])
+
+    def get_context_data(self, **kwargs):
+
+        """
+        Get extra context data for the ViewPost view.
+        """
+        context = super(ViewVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
+
+class EditVoting(UpdateView):
+
+    """
+    Edit an existent voting process.
+
+    :parameters: space_url, voting_id
+    :context: get_place
+    """
+    model = Voting
+    template_name = 'voting/voting_form.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return '/spaces/' + self.space.url
+
+    def get_object(self):
+        cur_voting = get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+        return cur_voting
+
+    def get_context_data(self, **kwargs):
+        context = super(EditVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
+
+    @method_decorator(permission_required('voting.edit_voting'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditVoting, self).dispatch(*args, **kwargs)
+
+class DeleteVoting(DeleteView):
+
+    """
+    Delete an existent voting process. Voting process deletion is only reserved to spaces
+    administrators or site admins.
+    """
+    context_object_name = "get_place"
+
+    def get_success_url(self):
+        space = self.kwargs['space_url']
+        return '/spaces/%s' % (space)
+
+    def get_object(self):
+        return get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+
+    def get_context_data(self, **kwargs):
+
+        """
+        Get extra context data for the ViewVoting view.
+        """
+        context = super(DeleteVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
+
+

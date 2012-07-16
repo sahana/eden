@@ -57,7 +57,7 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from helpers.cache import get_or_insert_object_in_cache
-from apps.ecidadania.voting.models import Poll
+from apps.ecidadania.voting.models import Poll, Voting
 #
 # RSS FEED
 #
@@ -300,6 +300,7 @@ class ViewSpaceIndex(DetailView):
             or self.request.user in place.mods.all()
             or self.request.user.is_staff or self.request.user.is_superuser) 
         context['polls'] = Poll.objects.filter(space=place.id)
+        context['votings'] = Voting.objects.filter(space=place.id)
         return context
         
 

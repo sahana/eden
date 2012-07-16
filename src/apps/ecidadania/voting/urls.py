@@ -30,7 +30,7 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
 
         url(_(r'^list/$'), ListPolls.as_view(), name='list-polls'),
 
-        url(_(r'^add/$'), AddPoll, name='add-poll'),
+        url(_(r'^addpoll/$'), AddPoll, name='add-poll'),
         
         url(_(r'^(?P<poll_id>\d+)/delete/$'), DeletePoll.as_view(), name='delete-poll'),
         
@@ -39,6 +39,13 @@ urlpatterns = patterns('apps.ecidadania.voting.views',
         url(_(r'^(?P<pk>\d+)/$'), DetailView.as_view(model = Poll, template_name ='voting/poll_detail.html'), name='view-poll'),
         url(_(r'^(?P<poll_id>\d+)/vote/$'), 'vote'),
 
+        url(_(r'^addvoting/$'), AddVoting.as_view(), name='add-voting'),
+
+        url(_(r'^(?P<voting_id>\d+)/deletevoting/$'), DeleteVoting.as_view(), name='delete-voting'),
+
+        url(_(r'^(?P<voting_id>\d+)/editvoting/$'), EditVoting.as_view(), name='edit-voting'),
+
+        url(r'^(?P<voting_id>\d+)', ViewVoting.as_view(), name='view-voting'),
 )
 
 
