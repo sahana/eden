@@ -189,6 +189,16 @@ class S3Config(Storage):
         else:
             organisation_id = None
         return organisation_id
+    def get_auth_registration_pending(self):
+        """ Message someone gets when they register & they need approving """
+        return self.auth.get("registration_pending",
+            "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
+                self.get_mail_approver())
+    def get_auth_registration_pending_approval(self):
+        """ Message someone gets when they register & they need approving """
+        return self.auth.get("registration_pending_approval",
+            "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s). You will get a notification by email when your account is activated." % \
+                self.get_mail_approver())
     def get_auth_registration_requests_image(self):
         """ Have the registration form request an Image """
         return self.auth.get("registration_requests_image", False)

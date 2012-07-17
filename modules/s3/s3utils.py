@@ -872,7 +872,7 @@ $('#regform').validate({
   first_name:{
    required:true
   },''', mobile, '''
-  email: {
+  email:{
    required:true,
    email:true
   },''', org1, '''
@@ -885,7 +885,7 @@ $('#regform').validate({
   }
  },
  messages:{
-  firstname:"''', str(T("Enter your firstname")), '''",
+  first_name:"''', str(T("Enter your first name")), '''",
   password:{
    required:"''', str(T("Provide a password")), '''"
   },

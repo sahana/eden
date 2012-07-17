@@ -322,7 +322,6 @@ $('#%s').click(function(){
                         requires = field.requires
                       )
 
-
 # =============================================================================
 class S3UploadWidget(UploadWidget):
     """
@@ -385,18 +384,19 @@ class S3AutocompleteWidget(FormWidget):
                  module,
                  resourcename,
                  fieldname = "name",
-                 # REST filter
-                 filter = "",
+                 filter = "",       # REST filter
                  link_filter = "",
+                 #new_items = False, # Whether to make this a combo box
                  post_process = "",
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 delay = 450,       # milliseconds
+                 min_length = 2):   # Increase this for large deployments
 
         self.module = module
         self.resourcename = resourcename
         self.fieldname = fieldname
         self.filter = filter
         self.link_filter = link_filter
+        #self.new_items = new_items
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
@@ -419,7 +419,7 @@ class S3AutocompleteWidget(FormWidget):
         dummy_input = "dummy_%s" % real_input
 
         # Script defined in static/scripts/S3/S3.js
-        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)\n''' % \
+        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)''' % \
             (self.fieldname, self.module, self.resourcename, real_input, self.filter,
              self.link_filter, self.post_process, self.delay, self.min_length)
 
@@ -453,7 +453,6 @@ class S3AutocompleteWidget(FormWidget):
                         INPUT(**attr),
                         requires = field.requires
                       )
-
 
 # =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
@@ -558,12 +557,14 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     def __init__(self,
                  post_process = "",
                  default_from_profile = False,
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 new_items = False, # Whether to make this a combo box
+                 delay = 450,       # milliseconds
+                 min_length = 2):   # Increase this for large deployments
 
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
+        self.new_items = new_items
         self.default_from_profile = default_from_profile
 
     def __call__(self, field, value, **attributes):
@@ -583,8 +584,10 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             value,
             attributes,
             transform_value = transform_value,
+            new_items = self.new_items,
+            tablename = "org_organisation",
             source = repr(
-                URL(c="org", f="organisation",
+                URL(c="org", f="org_search",
                     args="search.json",
                     vars={"filter":"~"})
             )
@@ -1138,6 +1141,8 @@ def S3GenericAutocompleteTemplate(post_process,
                                   name_getter = "function(item){return item.name}",
                                   id_getter = "function(item){return item.id}",
                                   transform_value = lambda value: value,
+                                  new_items = False,    # Allow new items
+                                  tablename = None,     # Needed if new_items=True
                                   ):
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
@@ -1188,7 +1193,12 @@ $('#%(dummy_input)s').autocomplete({
  }
 }).data('autocomplete')._renderItem=function(ul,item){
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+get_name(item)+'</a>').appendTo(ul)
-}
+}''' % locals(),
+'''
+$('#%(dummy_input)s').blur(function(){
+ $('#%(real_input)s').val($('#%(dummy_input)s').val())
+})''' % locals() if new_items else
+'''
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()

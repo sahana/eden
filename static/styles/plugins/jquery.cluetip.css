@@ -24,7 +24,7 @@ div.ui-cluetip {
   width: 43px;
   height: 11px;
   position: absolute;
-  background-image: url(images/wait.gif);
+  background-image: url(../../img/jquery.cluetip/wait.gif);
 }
 .cluetip-arrows {
   display: none;
@@ -87,15 +87,15 @@ div.cluetip-default .cluetip-arrows {
   background: transparent none;
 }
 div.clue-right-default .cluetip-arrows {
-  background-image: url(images/darrowleft.gif);
+  background-image: url(../../img/jquery.cluetip/darrowleft.gif);
 }
 div.clue-left-default .cluetip-arrows {
-  background-image: url(images/darrowright.gif);
+  background-image: url(../../img/jquery.cluetip/darrowright.gif);
   left: 100%;
   margin-right: -11px;
 }
 div.clue-top-default .cluetip-arrows {
-  background-image: url(images/darrowdown.gif);
+  background-image: url(../../img/jquery.cluetip/darrowdown.gif);
   top: 100%;
   left: 50%;
   margin-left: -11px;
@@ -103,7 +103,7 @@ div.clue-top-default .cluetip-arrows {
   height: 11px;
 }
 div.clue-bottom-default .cluetip-arrows {
-  background-image: url(images/darrowup.gif);
+  background-image: url(../../img/jquery.cluetip/darrowup.gif);
   top: -11px;
   left: 50%;
   margin-left: -11px;
@@ -145,15 +145,15 @@ div.cluetip-jtip .cluetip-arrows {
   background: transparent none;
 }
 div.clue-right-jtip .cluetip-arrows {
-  background-image: url(images/arrowleft.gif);
+  background-image: url(../../img/jquery.cluetip/arrowleft.gif);
 }
 div.clue-left-jtip .cluetip-arrows {
-  background-image: url(images/arrowright.gif);
+  background-image: url(../../img/jquery.cluetip/arrowright.gif);
   left: 100%;
   margin-right: -11px;
 }
 div.clue-top-jtip .cluetip-arrows {
-  background-image: url(images/arrowdown.gif);
+  background-image: url(../../img/jquery.cluetip/arrowdown.gif);
   top: 100%;
   left: 50%;
   width: 22px;
@@ -161,7 +161,7 @@ div.clue-top-jtip .cluetip-arrows {
   margin-left: -11px;
 }
 div.clue-bottom-jtip .cluetip-arrows {
-  background-image: url(images/arrowup.gif);
+  background-image: url(../../img/jquery.cluetip/arrowup.gif);
   top: -11px;
   left: 50%;
   width: 22px;

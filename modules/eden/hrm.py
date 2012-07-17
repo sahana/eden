@@ -627,13 +627,14 @@ class S3HRSiteModel(S3Model):
             record = db(ltable.id == id).select(ltable.deleted_fk,
                                                 limitby=(0, 1)).first()
 
-            deleted_fks = json.loads(record.deleted_fk)
-            human_resource_id = deleted_fks["human_resource_id"]
-            db(table.id == human_resource_id).update(
-                                                    location_id=None,
-                                                    site_id=None,
-                                                    site_contact=False
-                                                    )
+            if record:
+                deleted_fks = json.loads(record.deleted_fk)
+                human_resource_id = deleted_fks["human_resource_id"]
+                db(table.id == human_resource_id).update(
+                                                        location_id=None,
+                                                        site_id=None,
+                                                        site_contact=False
+                                                        )
         else:
             human_resource_id = form.vars.human_resource_id
 

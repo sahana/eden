@@ -2,8 +2,8 @@
 
 from os import path
 
-from gluon import current
-from gluon.html import *
+from gluon import *
+from s3 import *
 
 # =============================================================================
 def INPUT_BTN(**attributes):
@@ -21,9 +21,7 @@ class index():
 
     def __call__(self):
 
-        T = current.T
         request = current.request
-        appname = request.application
         response = current.response
 
         response.title = current.deployment_settings.get_system_name()
@@ -35,6 +33,9 @@ class index():
         except IOError:
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        T = current.T
+        appname = request.application
 
         home_img = IMG(_src="/%s/static/themes/DRRPP/img/home_img.jpg" % appname,
                        _id="home_img")
@@ -246,5 +247,261 @@ class index():
                     map_img = map_img,
                     graph_img = graph_img,
                     )
+
+# =============================================================================
+class register():
+    """ Custom Registration Page """
+
+    def __call__(self):
+
+        request = current.request
+        response = current.response
+
+        view = path.join(request.folder, "private", "templates",
+                         "DRRPP", "views", "register.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        T = current.T
+        auth = current.auth
+        _settings = auth.settings
+
+        # Default the profile language to the one currently active
+        table = _settings.table_user
+        table.language.default = T.accepted_language
+
+        # Combo box for Organisation
+        table.organisation_id.widget = S3OrganisationAutocompleteWidget(new_items=True)
+        table.organisation_id.requires = IS_COMBO_BOX("org_organisation",
+                                                      current.s3db.org_organisation_id.attr.requires),
+
+        # Custom onaccept to process custom fields
+        _settings.register_onaccept = register_onaccept
+
+        # Build the registration form
+        form = auth()
+        form.attributes["_id"] = "regform"
+
+        # Set the formstyle
+        _form = form[0]
+        _form[-1] = TR(TD(_class="w2p_fl"),
+                       TD(_class="w2p_fc"),
+                       TD(INPUT_BTN(_type="submit",
+                                    _value=T("Register")),
+                          _class="w2p_fw"),
+                       _id="submit_record_row"
+                       )
+        _form[0] = TR(TD(SPAN(" *", _class="req"),
+                         _class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("First Name")),
+                               _id="auth_user_first_name__label",
+                               _for="auth_user_first_name"),
+                         _class="w2p_fc"),
+                      TD(INPUT(_id="auth_user_first_name",
+                               _class="string",
+                               _type="text",
+                               _name="first_name",
+                               _size="62"),
+                         _class="w2p_fw"),
+                      _id="auth_user_first_name_row"
+                      )
+        _form[1] = TR(TD(SPAN(" *", _class="req"),
+                         _class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("Last Name")),
+                               _id="auth_user_last_name__label",
+                               _for="auth_user_last_name"),
+                         _class="w2p_fc"),
+                      TD(INPUT(_id="auth_user_last_name",
+                               _class="string",
+                               _type="text",
+                               _name="last_name",
+                               _size="62"),
+                         _class="w2p_fw"),
+                      _id="auth_user_last_name_row"
+                      )
+        _form[2] = TR(TD(_class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("Organization")),
+                               _id="auth_user_organisation_id__label",
+                               _for="auth_user_organisation_id"),
+                         _class="w2p_fc"),
+                      TD(form.custom.widget.organisation_id,
+                         _class="w2p_fw"),
+                      _id="auth_user_organisation_id_row"
+                      )
+        _form[3] = TR(TD(SPAN(" *", _class="req"),
+                         _class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("E-Mail")),
+                               _id="auth_user_email__label",
+                               _for="auth_user_email"),
+                         _class="w2p_fc"),
+                      TD(INPUT(_id="auth_user_email",
+                               _class="string",
+                               _type="text",
+                               _name="email",
+                               _size="62"),
+                         _class="w2p_fw"),
+                      _id="auth_user_email_row"
+                      )
+        _form[4] = TR(TD(SPAN(" *", _class="req"),
+                         _class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("Password")),
+                               _id="auth_user_password__label",
+                               _for="auth_user_password"),
+                         _class="w2p_fc"),
+                      TD(INPUT(_id="auth_user_password",
+                               _type="password",
+                               _name="password",
+                               _class="password",
+                               ),
+                         _class="w2p_fw"),
+                      _id="auth_user_password_row"
+                      )
+        _form[5] = TR(TD(SPAN(" *", _class="req"),
+                         _class="w2p_fl"),
+                      TD(LABEL(DIV("%s: " % T("Verify Password")),
+                               _id="auth_user_password_two__label",
+                               _for="auth_user_password_two"),
+                         _class="w2p_fc"),
+                      TD(INPUT(_id="auth_user_password_two",
+                               _type="password",
+                               _name="password_two",
+                               _class="password",
+                               ),
+                         _class="w2p_fw"),
+                      _id="auth_user_password_two_row"
+                      )
+
+        # Add custom fields
+        append = _form[2].append
+        append(
+                TR(TD(SPAN(" *", _class="req"),
+                      _class="w2p_fl"),
+                   TD(LABEL(DIV("%s: " % T("Role")),
+                            _id="auth_user_position__label",
+                            _for="auth_user_position"),
+                      _class="w2p_fc"),
+                   TD(SELECT(OPTION(_value=""),
+                             OPTION(T("Practitioner"),
+                                    _value="1"),
+                             OPTION(T("Consultant"),
+                                    _value="2"),
+                             OPTION(T("Researcher"),
+                                    _value="3"),
+                             OPTION(T("Academic"),
+                                    _value="4"),
+                             OPTION(T("Student"),
+                                    _value="5"),
+                             _name="position",
+                             _id="auth_user_position",
+                             _class="integer"
+                             ),
+                      _class="w2p_fw"),
+                   _id="auth_user_position_row"
+                   )
+            )
+        append(
+                TR(TD(SPAN(" *", _class="req"),
+                      DIV(_rel="If you do not specify an organisation, please enter your reason for using the DRR Project Portal.",
+                          _class="labeltip"),
+                      _class="w2p_fl"),
+                   TD(LABEL(DIV("%s: " % T("Reason")),
+                            _id="auth_user_reason__label",
+                            _for="auth_user_reason"),
+                      _class="w2p_fc"),
+                   TD(TEXTAREA(_id="auth_user_reason",
+                               _class="text",
+                               _name="reason",
+                               _rows="10",
+                               _cols="50",
+                               ),
+                      _class="w2p_fw"),
+                   _id="auth_user_reason_row"
+                   )
+            )
+
+        # Add client-side validation
+        s3 = response.s3
+        appname = request.application
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)
+            s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
+        else:
+            s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)
+            s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
+        s3.jquery_ready.append("".join(('''
+$('#regform').validate({
+ errorClass:'req',
+ rules:{
+  first_name:{
+   required:true
+  },
+  last_name:{
+   required:true
+  },
+  position:{
+   required:true,
+  },
+  reason:{
+   required:true,
+  },
+  email:{
+   required:true,
+   email:true
+  },
+  password:{
+   required:true
+  },
+  password_two:{
+   required:true,
+   equalTo:'.password:first'
+  }
+ },
+ messages:{
+  first_name:"''', str(T("Enter your first name")), '''",
+  last_name:"''', str(T("Enter your last name")), '''",
+  position:"''', str(T("Select your role")), '''",
+  reason:"''', str(T("Enter a reason")), '''",
+  password:{
+   required:"''', str(T("Provide a password")), '''"
+  },
+  password_two:{
+   required:"''', str(T("Repeat your password")), '''",
+   equalTo:"''', str(T("Enter the same password as above")), '''"
+  },
+  email:{
+   required:"''', str(T("Please enter a valid email address")), '''",
+   email:"''', str(T("Please enter a valid email address")), '''"
+  }
+ },
+ errorPlacement:function(error,element){
+  error.appendTo(element.parent())
+ },
+ submitHandler:function(form){
+  form.submit()
+ }
+})
+$('.password:first').pstrength({minchar:''', str(_settings.password_min_length), ''',minchar_label:"''', str(T("The minimum number of characters is ")), '''"})
+$('.labeltip').cluetip({activation:'hover',position:'mouse',sticky:false,showTitle:false,local:true})''')))
+
+        response.title = T("DRRPP - Register")
+
+        return dict(form=form)
+
+# -----------------------------------------------------------------------------
+def register_onaccept(form):
+    """ Tasks to be performed after a new user registers """
+
+    # Add newly-registered users to Person Registry, add 'Authenticated' role
+    # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
+    person_id = current.auth.s3_register(form)
+
+    # @ToDo: process Custom Fields
+    # Position
+    # Reason
+    
 
 # END =========================================================================
