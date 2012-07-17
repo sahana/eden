@@ -56,7 +56,7 @@ class TranslateGetFiles:
             mod_files = os.listdir(cont_dir)
 
             for f in mod_files:
-                if f[0] != '.':
+                if f[0] != ".":
                     mod.append(f[:-3])
 
             return mod
@@ -117,7 +117,7 @@ class TranslateGetFiles:
                         # If file is inside /eden/models and file name is
                         # of the form var_module.py, remove the "var_" prefix
                         elif base_dir == "models" and "_" in base:
-                            base = base.split('_')[1]
+                            base = base.split("_")[1]
 
                     # If base refers to a module, append to corresponding list
                     if base in self.d.keys():
@@ -140,7 +140,7 @@ class TranslateAPI:
             base_dir = os.path.join(os.getcwd(), "applications",\
                                    current.request.application)
             self.grp = TranslateGetFiles()
-            self.grp.group_files(base_dir, '', 0)
+            self.grp.group_files(base_dir, "", 0)
 
         #------------------------------------------------------------------
         def get_modules(self):
@@ -229,10 +229,10 @@ class TranslateParseFiles:
             self.tflag = 0       # To indicate we are currently inside T(...)
             self.mflag = 0       # To indicate we are currently inside M(...)
             self.bracket = 0     # Acts as a counter for parenthesis in T(...)
-            self.outstr = ''     # Collects all the data inside T(...)
-            self.class_name = '' # Stores the current class name
-            self.func_name = ''  # Stores the current function name
-            self.mod_name = ''   # Stores module that the string may belong to
+            self.outstr = ""     # Collects all the data inside T(...)
+            self.class_name = "" # Stores the current class name
+            self.func_name = ""  # Stores the current function name
+            self.mod_name = ""   # Stores module that the string may belong to
             self.findent = -1    # Stores indentation level in menus.py
 
         #----------------------------------------------------------------------
@@ -300,14 +300,14 @@ class TranslateParseFiles:
                         if token.tok_name[id] == "LPAR":
                             self.bracket+=1
                             if self.bracket>1:
-                                self.outstr += '('
+                                self.outstr += "("
 
                         elif token.tok_name[id] == "RPAR":
                             self.bracket-=1
                             # If it's not the last ')' of 'T()',
                             # append to outstr
                             if self.bracket>0:
-                                self.outstr += ')'
+                                self.outstr += ")"
 
                             # If it's the last ')', add string to list
                             else:
@@ -319,7 +319,7 @@ class TranslateParseFiles:
                                       self.mod_name == spmod) or \
                                      (self.func_name == spmod):
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=''
+                                self.outstr=""
                                 self.tflag=0
 
                         # If we are inside 'T()', append value to outstr
@@ -362,27 +362,27 @@ class TranslateParseFiles:
                         if token.tok_name[id] == "LPAR":
                             self.bracket+=1
                             if self.bracket>1:
-                                self.outstr += '('
+                                self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
                             self.bracket-=1
                             if self.bracket>0:
-                                self.outstr += ')'
+                                self.outstr += ")"
                             else:
                                 # If core module is requested
                                 if spmod == "core":
 
                                     # If extracted data doesn't belong
                                     # to any other module, append to list
-                                    if '_' not in self.func_name or \
-                                   self.func_name.split('_')[1] not in modlist:
+                                    if "_" not in self.func_name or \
+                                   self.func_name.split("_")[1] not in modlist:
                                         strings.append((entry[2], self.outstr))
 
                                 # If 'module' in  'get_module_variable()'
                                 # is the requested module, append to list
-                                elif '_' in self.func_name and \
-                                self.func_name.split('_')[1] == spmod:
+                                elif "_" in self.func_name and \
+                                self.func_name.split("_")[1] == spmod:
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=''
+                                self.outstr=""
                                 self.tflag=0
                         elif self.bracket>0:
                             self.outstr += value
@@ -426,7 +426,7 @@ class TranslateParseFiles:
                             self.findent = level
                             self.fflag = 1
                         else:
-                            self.func_name = ''
+                            self.func_name = ""
 
                     # If current element is 'T', set sflag
                     elif token.tok_name[id] == "NAME" and value == "T":
@@ -443,18 +443,18 @@ class TranslateParseFiles:
                         if token.tok_name[id] == "LPAR":
                             self.bracket+=1
                             if self.bracket>1:
-                                self.outstr += '('
+                                self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
                             self.bracket-=1
                             if self.bracket>0:
-                                self.outstr += ')'
+                                self.outstr += ")"
                             else:
 
                                 # If the requested module is 'core' and
                                 # extracted data doesn't lie inside the
                                 # S3OptionsMenu class, append it to list
                                 if spmod == "core":
-                                    if self.func_name == '':
+                                    if self.func_name == "":
                                         strings.append((entry[2], self.outstr))
 
                                 # If the function name (in S3OptionsMenu class)
@@ -462,7 +462,7 @@ class TranslateParseFiles:
                                 # then append it to list
                                 elif self.func_name == spmod:
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=''
+                                self.outstr=""
                                 self.tflag=0
                         elif self.bracket>0:
                             self.outstr += value
@@ -479,7 +479,7 @@ class TranslateParseFiles:
                             # append it to list
                             if token.tok_name[id] == "STRING":
                                 if spmod == "core":
-                                    if self.func_name == '':
+                                    if self.func_name == "":
                                         strings.append((entry[2], value))
                                 elif self.func_name == spmod:
                                     strings.append((entry[2], value))
@@ -518,14 +518,14 @@ class TranslateParseFiles:
                         if token.tok_name[id] == "LPAR":
                             self.bracket+=1
                             if self.bracket>1:
-                                self.outstr += '('
+                                self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
                             self.bracket-=1
                             if self.bracket>0:
-                                self.outstr += ')'
+                                self.outstr += ")"
                             else:
                                 strings.append((entry[2], self.outstr))
-                                self.outstr=''
+                                self.outstr=""
                                 self.tflag=0
 
                         elif self.bracket>0:
@@ -570,7 +570,7 @@ class TranslateReadFiles:
             # Read all contents of file
             fileContent = file.read()
             # Remove CL-RF and NOEOL characters
-            fileContent = fileContent.replace("\r", "") + '\n'
+            fileContent = fileContent.replace("\r", "") + "\n"
 
             P = TranslateParseFiles()
 
@@ -606,18 +606,20 @@ class TranslateReadFiles:
             final_strings = []
             settings = current.deployment_settings
             for (loc, s) in strings:
-                if s[0]!='"' and "settings." in s:
+                if s[0]!='"' and s[0]!="'" and "settings." in s:
 
                     # Converting the call to a standard form
                     s = s.replace("current.deployment_settings", "settings")
-                    s = s.replace("()", '')
-                    l = s.split('.')
+                    s = s.replace("()", "")
+                    l = s.split(".")
                     obj = settings
 
                     #Getting the actual value
                     for atr in l[1:]:
                         obj = getattr(obj, atr)()
                     s=obj
+                elif s[0]!='"' and s[0]!="'":
+                    print fileName+"#"+str(loc),s
                 final_strings.append((loc, s))
 
             return final_strings
@@ -632,7 +634,7 @@ class TranslateReadFiles:
 
             file = open(fileName)
             fileContent = file.read()
-            fileContent = fileContent.replace("\r", '') + '\n'
+            fileContent = fileContent.replace("\r", "") + "\n"
             tmpstr=[]
 
             # Creating a parse tree list
@@ -657,7 +659,7 @@ class TranslateReadFiles:
             """ Function to read a csv file and return a list of rows """
 
             data = []
-            transReader = csv.reader(open(fileName, 'rb'))
+            transReader = csv.reader(open(fileName, "rb"))
             for row in transReader:
                 data.append(row)
             return data
@@ -694,18 +696,18 @@ class StringsToExcel:
 
             """
                 Function to club all the duplicate strings into one row
-                with ';' separated locations
+                with ";" separated locations
             """
 
             uniq = {}
 
             for (loc, data) in Strings:
-                uniq[data] = ''
+                uniq[data] = ""
 
             for (loc, data) in Strings:
 
-                if uniq[data] != '':
-                    uniq[data] = uniq[data] + ';' + loc
+                if uniq[data] != "":
+                    uniq[data] = uniq[data] + ";" + loc
                 else:
                     uniq[data] = loc
 
@@ -731,21 +733,21 @@ class StringsToExcel:
 
             # Defining spreadsheet properties
             wbk = xlwt.Workbook("utf-8")
-            sheet = wbk.add_sheet('Translate')
+            sheet = wbk.add_sheet("Translate")
             style = xlwt.XFStyle()
             font = xlwt.Font()
-            font.name = 'Times New Roman'
+            font.name = "Times New Roman"
             style.font = font
 
-            sheet.write(0, 0, 'location', style)
-            sheet.write(0, 1, 'source', style)
-            sheet.write(0, 2, 'target', style)
+            sheet.write(0, 0, "location", style)
+            sheet.write(0, 1, "source", style)
+            sheet.write(0, 2, "target", style)
 
             row_num = 1
 
             # Writing the data to spreadsheet
             for (loc, d1, d2) in Strings:
-                d2 = d2.decode('string-escape').decode("utf-8")
+                d2 = d2.decode("string-escape").decode("utf-8")
                 sheet.write(row_num, 0, loc, style)
                 sheet.write(row_num, 1, d1, style)
                 sheet.write(row_num, 2, d2, style)
@@ -776,7 +778,7 @@ class StringsToExcel:
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
-                translated and call the 'create_spreadsheet()' method
+                translated and call the "create_spreadsheet()" method
             """
 
             base_dir = os.path.join(os.getcwd(), "applications", \
@@ -820,7 +822,7 @@ class StringsToExcel:
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))
                 else:
-                    Strings.append((l, s, ''))
+                    Strings.append((l, s, ""))
 
             return self.create_spreadsheet(Strings)
 
@@ -835,7 +837,7 @@ class CsvToWeb2py:
             """ Function to write a list of rows into a csv file """
 
             # Quoting all the elements while writing
-            transWriter = csv.writer(open(fileName, 'wb'), delimiter=' ',\
+            transWriter = csv.writer(open(fileName, "wb"), delimiter=" ",\
                                      quotechar='"', quoting = csv.QUOTE_ALL)
             transWriter.writerow(["location", "source", "target"])
             for row in data:
@@ -864,19 +866,19 @@ class CsvToWeb2py:
                 data = R.read_csvfile(f)
                 for row in data:
                     if row[1] in d.keys():
-                        if d[row[1]][1] == '':
+                        if d[row[1]][1] == "":
                             d[row[1]] = (row[0], row[2])
                     else:
                         d[row[1]] = (row[0], row[2])
 
             # If strings are to be merged with existing .py file
-            if option == '-m':
+            if option == "-m":
                 data = R.read_w2pfile(w2pfilename)
                 for row in data:
                     tmprow = (row[0][1:-1], row[1][1:-1])
-                    row = (tmprow[0], tmprow[1].decode('string-escape'))
+                    row = (tmprow[0], tmprow[1].decode("string-escape"))
                     if row[0] not in d.keys():
-                        d[row[0]] = ('', row[1])
+                        d[row[0]] = ("", row[1])
 
             # Created a list of sorted tuples
             # (location, original string, translated string)
