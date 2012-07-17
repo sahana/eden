@@ -74,11 +74,11 @@ def s3_debug(message, value=None):
     try:
         output = "S3 Debug: %s" % str(message)
         if value:
-            "%s: %s" % (output, str(value))
+            output = "%s: %s" % (output, str(value))
     except:
         output = u"S3 Debug: %s" % unicode(message)
         if value:
-            u"%s: %s" % (output, unicode(value))
+            output = u"%s: %s" % (output, unicode(value))
 
     print >> sys.stderr, output
 
