@@ -451,7 +451,9 @@ class S3HRModel(S3Model):
         """
         human_resource_id = S3ReusableField("human_resource_id", "integer",
                                             readable=False, writable=False)
-        return Storage(hrm_human_resource_id = human_resource_id)
+        return Storage(
+                hrm_human_resource_id = human_resource_id
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod

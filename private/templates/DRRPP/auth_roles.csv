@@ -2,6 +2,7 @@
 "ANONYMOUS","Anonymous",,"project",,,"READ",,,,,,,
 "ANONYMOUS","Anonymous",,"org","org_search",,"READ",,,,,,,"Custom Controller to allow access via JSON for AC during Registration"
 "ANONYMOUS","Anonymous",,,,"org_organisation","READ|CREATE",,,,,,,"Allow new users to create orgs during registration"
+"ANONYMOUS","Anonymous",,"gis",,,"READ",,,,,,,
 "ANONYMOUS","Anonymous",,"gis","layer_arcrest",,"READ|CREATE",,,,,,,
 "ANONYMOUS","Anonymous",,"gis","layer_bing",,"READ",,,,,,,
 "ANONYMOUS","Anonymous",,"gis","layer_coordinate",,"READ",,,,,,,
