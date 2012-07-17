@@ -1041,6 +1041,9 @@ class S3Msg(object):
 
         # Initialize Twitter API
         twitter_settings = self.get_twitter_api()
+        if not twitter_settings:
+            # Abort
+            return False
         tweepy = self.tweepy
 
         twitter_api = None
@@ -1086,6 +1089,9 @@ class S3Msg(object):
 
         # Initialize Twitter API
         twitter_settings = self.get_twitter_api()
+        if not twitter_settings:
+            # Abort
+            return False
         tweepy = self.tweepy
 
         twitter_api = None

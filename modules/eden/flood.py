@@ -68,6 +68,7 @@ class S3FloodModel(S3Model):
                                    label=T("Name")),
                              Field("code",
                                    label=T("Code")),
+                             #super_link("source_id", "doc_source_entity"),
                              self.gis_location_id(),
                              Field("url",
                                    label = T("URL"),
