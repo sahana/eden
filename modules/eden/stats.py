@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-
 """ Sahana Eden Stats Model
 
-    @copyright: 2012-2012 (c) Sahana Software Foundation
+    @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -30,12 +29,14 @@
 
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
+           "stats_parameter_represent",
            ]
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+
 # =============================================================================
 class S3StatsModel(S3Model):
     """
@@ -46,69 +47,70 @@ class S3StatsModel(S3Model):
              "stats_data",
              "stats_aggregate",
              "stats_param_id",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
         db = current.db
 
-        location_id = self.gis_location_id
-
-        # Shortcuts
-
-        super_entity = self.super_entity
         define_table = self.define_table
+        location_id = self.gis_location_id
+        super_entity = self.super_entity
 
         #----------------------------------------------------------------------
         # The super entity - stats_parameter
         #
-        sp_types = Storage(vulnerability_indicator = T("Vulnerability"),
+        sp_types = Storage(
+                           vulnerability_indicator = T("Vulnerability Indicator"),
                            stats_demographic = T("Demographic"),
-                           survey_question_type = T("Survey"),
-                           project_beneficary_type = T("Project"),
-                           climate_parameter = T("Climate"),
+                           #survey_question_type = T("Survey Question Type"),
+                           #project_beneficary_type = T("Project Beneficiary Type"),
+                           #climate_parameter = T("Climate Parameter"),
                           )
+
         tablename = "stats_parameter"
-        table = super_entity(tablename,
-                             "parameter_id",
+        table = super_entity(tablename, "parameter_id",
                              sp_types,
                              Field("name",
-                                   label = T("Statistic Name")),
+                                   label = T("Name")),
                              Field("description",
-                                   label = T("Statistic Description")),
-                            )
+                                   label = T("Description")),
+                             )
 
         # Reusable Field
         param_id = S3ReusableField("parameter_id", table,
-                                    sortby="name",
-                                    requires = IS_NULL_OR(
-                                               IS_ONE_OF(current.db, "stats_parameter.parameter_id",
-                                                         orderby="stats_parameter.name",
-                                                         sort=True)),
-                                    label = T("Statistics Parameter"),
-                                    ondelete = "CASCADE")
+                                   sortby="name",
+                                   requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                        stats_parameter_represent,
+                                                        orderby="stats_parameter.name",
+                                                        sort=True),
+                                   represent = stats_parameter_represent,
+                                   label = T("Statistics Parameter"),
+                                   ondelete = "CASCADE"
+                                   )
 
         #----------------------------------------------------------------------
         # The super entity - stats_data
         #
-        sd_types = Storage(vulnerability_data = T("Vulnerability"),
-                           stats_demographic_data = T("Demographic"),
-                           survey_answer = T("Survey"),
-                           project_beneficary = T("Project"),
-                           climate_data = T("Climate"),
-                          )
+        sd_types = Storage(
+                           vulnerability_data = T("Vulnerability Data"),
+                           stats_demographic_data = T("Demographic Data"),
+                           #survey_answer = T("Survey Answer"),
+                           #project_beneficary = T("Project Beneficiary"),
+                           #climate_data = T("Climate Data"),
+                           )
+
         tablename = "stats_data"
         table = super_entity(tablename,
                              "data_id",
                              sd_types,
                              param_id(),
                              location_id(),
+                             Field("value", "double"),
                              self.doc_source_id(),
-                             Field("value",
-                                   "double",
-                                   ),
-                            )
+                             # Time to come
+                             )
 
         #----------------------------------------------------------------------
         # Stats Aggregated data
@@ -117,12 +119,12 @@ class S3StatsModel(S3Model):
         table = define_table(tablename,
                              param_id(),
                              location_id(),
-                             Field("start_date", "date",
-                                   label = T("Start Date"),
-                                   ),
-                             Field("end_date", "date",
-                                   label = T("End Date"),
-                                   ),
+                             #Field("start_date", "date",
+                             #      label = T("Start Date"),
+                             #      ),
+                             #Field("end_date", "date",
+                             #      label = T("End Date"),
+                             #      ),
                              Field("min", "double",
                                    label = T("Minimum"),
                                   ),
@@ -145,20 +147,24 @@ class S3StatsModel(S3Model):
                              #      label = T("Variance"),
                              #     ),
                              *s3_meta_fields()
-                            )
+                             )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage(stats_param_id = param_id)
+        return Storage(
+                stats_param_id = param_id
+            )
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if the module is disabled """
+
         param_id = S3ReusableField("parameter_id", "integer",
                                     readable=False,
                                     writable=False
                                    )
+
         return Storage(stats_param_id = param_id)
 
 # =============================================================================
@@ -169,14 +175,16 @@ class S3StatsDemographicModel(S3Model):
 
     names = ["stats_demographic",
              "stats_demographic_data",
-            ]
+             ]
 
     def model(self):
 
         T = current.T
-        # Shortcuts
+        db = current.db
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        stats_param_id  = self.stats_param_id
         super_link = self.super_link
 
         #----------------------------------------------------------------------
@@ -186,16 +194,33 @@ class S3StatsDemographicModel(S3Model):
         table = define_table(tablename,
                              super_link("parameter_id", "stats_parameter"),
                              Field("name",
-                                   label = T("Demographic Name")),
-                             Field("description",
-                                   label = T("Demographic Description")),
-                             s3_comments(),
+                                   label = T("Name")),
+                             s3_comments("description",
+                                         label = T("Description")),
                              *s3_meta_fields()
                             )
 
-        self.configure(tablename,
-                       super_entity = "stats_parameter",
-                      )
+        # CRUD Strings
+        ADD_DEMOGRAPHIC = T("Add Demographic")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_DEMOGRAPHIC,
+            title_display = T("Demographic Details"),
+            title_list = T("Demographics"),
+            title_update = T("Edit Demographic"),
+            title_search = T("Search Demographics"),
+            title_upload = T("Import Demographic"),
+            subtitle_create = T("Add New Demographic"),
+            label_list_button = T("List Demographics"),
+            label_create_button = ADD_DEMOGRAPHIC,
+            msg_record_created = T("Demographic added"),
+            msg_record_modified = T("Demographic updated"),
+            msg_record_deleted = T("Demographic deleted"),
+            msg_list_empty = T("No demographics currently defined"))
+
+        configure(tablename,
+                  super_entity = "stats_parameter",
+                  deduplicate = self.stats_demographic_duplicate,
+                  )
 
         #----------------------------------------------------------------------
         # Demographic Data
@@ -203,18 +228,42 @@ class S3StatsDemographicModel(S3Model):
         tablename = "stats_demographic_data"
         table = define_table(tablename,
                              super_link("data_id", "stats_data"),
-                             stats_param_id(),
+                             self.stats_param_id(
+                                    label=T("Demographic"),
+                                    requires = IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                         stats_parameter_represent,
+                                                         filterby="instance_type",
+                                                         filter_opts=["stats_demographic"],
+                                                         orderby="stats_parameter.name",
+                                                         sort=True)
+                                ),
                              self.gis_location_id(),
-                             Field("value",
-                                   "double",
-                                   label = T("Demographic Value")),
-                             s3_comments(),
+                             Field("value", "double",
+                                   label = T("Value")),
+                             self.doc_source_id(),
                              *s3_meta_fields()
-                            )
+                             )
 
-        self.configure(tablename,
-                       super_entity = "stats_data",
-                      )
+        # CRUD Strings
+        ADD_DATA = T("Add Demographic Data")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_DATA,
+            title_display = T("Demographic Data Details"),
+            title_list = T("Demographic Data"),
+            title_update = T("Edit Demographic Data"),
+            title_search = T("Search Demographic Data"),
+            title_upload = T("Import Demographic Data"),
+            subtitle_create = T("Add New Demographic Data"),
+            label_list_button = T("List Demographic Data"),
+            label_create_button = ADD_DATA,
+            msg_record_created = T("Demographic Data added"),
+            msg_record_modified = T("Demographic Data updated"),
+            msg_record_deleted = T("Demographic Data deleted"),
+            msg_list_empty = T("No demographic data currently defined"))
+
+        configure(tablename,
+                  super_entity = "stats_data",
+                  )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
@@ -226,7 +275,40 @@ class S3StatsDemographicModel(S3Model):
         """ Safe defaults if the module is disabled """
 
         return Storage()
-# =============================================================================
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def stats_demographic_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "stats_demographic":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+# =============================================================================
+def stats_parameter_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.name
+
+    db = current.db
+    table = db.stats_parameter
+    r = db(table._id == id).select(table.name,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # END =========================================================================

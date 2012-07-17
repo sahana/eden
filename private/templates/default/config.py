@@ -531,30 +531,30 @@ settings.modules = OrderedDict([
            #audit_read = True,     # Can enable Audit for just an individual module here
            #audit_write = True
        )),
-    ("mpr", Storage(
-           name_nice = T("Missing Person Registry"),
-           #description = "Helps to report and search for missing persons",
-           restricted = True,
-           module_type = 10,
-       )),
     ("dvr", Storage(
            name_nice = T("Disaster Victim Registry"),
            #description = "Allow affected individuals & households to register to receive compensation and distributions",
            restricted = True,
            module_type = 10,
        )),
-    ("stats", Storage(
-            name_nice = T("Statistics"),
-            #description = "Manages statistics",
-            restricted = True,
-            module_type = None,
-        )),
-    ("vulnerability", Storage(
-            name_nice = T("Vulnerability"),
-            #description = "Manages vulnerability indicators",
-            restricted = True,
-            module_type = None,
-        )),
+    #("mpr", Storage(
+    #       name_nice = T("Missing Person Registry"),
+    #       #description = "Helps to report and search for missing persons",
+    #       restricted = True,
+    #       module_type = 10,
+    #   )),
+    #("stats", Storage(
+    #        name_nice = T("Statistics"),
+    #        #description = "Manages statistics",
+    #        restricted = True,
+    #        module_type = None,
+    #    )),
+    #("vulnerability", Storage(
+    #        name_nice = T("Vulnerability"),
+    #        #description = "Manages vulnerability indicators",
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
     #("scenario", Storage(
     #        name_nice = T("Scenarios"),
     #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
