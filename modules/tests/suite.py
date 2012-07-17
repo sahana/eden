@@ -96,6 +96,8 @@ parser.add_argument("--html-path",
                     default = ""
                    )
 parser.add_argument("--html-name-date",
+                    action='store_const',
+                    const=True,
                     help = "Include just the date in the name of the HTML report."
                    )
 suite_desc = """This will execute a standard testing schedule. The valid values
