@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Assets Model
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+""" Sahana Eden Stats Model
+
+    @copyright: 2012-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -44,6 +45,7 @@ class S3StatsModel(S3Model):
     names = ["stats_parameter",
              "stats_data",
              "stats_aggregate",
+             "stats_param_id",
             ]
 
     def model(self):
@@ -54,7 +56,7 @@ class S3StatsModel(S3Model):
         location_id = self.gis_location_id
 
         # Shortcuts
-        
+
         super_entity = self.super_entity
         super_key = self.super_key
         super_link = self.super_link
@@ -78,7 +80,16 @@ class S3StatsModel(S3Model):
                              Field("description",
                                    label = T("Statistic Description")),
                             )
-        sp_id = super_key(table)
+
+        # Reusable Field
+        param_id = S3ReusableField("parameter_id", table,
+                                    sortby="name",
+                                    requires = IS_NULL_OR(
+                                               IS_ONE_OF(current.db, "stats_parameter.parameter_id",
+                                                         orderby="stats_parameter.name",
+                                                         sort=True)),
+                                    label = T("Statistics Parameter"),
+                                    ondelete = "CASCADE")
 
         #----------------------------------------------------------------------
         # The super entity - stats_data
@@ -93,52 +104,64 @@ class S3StatsModel(S3Model):
         table = super_entity(tablename,
                              "data_id",
                              sd_types,
-                             super_link("sp_id", "stats_parameter"),
+                             param_id(),
                              location_id(),
-#                             super_link("source_id", "doc_source_entity"),
+                             self.doc_source_id(),
                              Field("value",
                                    "double",
                                    ),
                             )
-        sd_id = super_key(table)
 
         #----------------------------------------------------------------------
         # Stats Aggregated data
         #
         tablename = "stats_aggregate"
         table = define_table(tablename,
-                             super_link("sp_id", "stats_parameter"),
+                             param_id(),
                              location_id(),
-                             Field("start_date",
-                                   "date",
+                             Field("start_date", "date",
+                                   label = T("Start Date"),
                                    ),
-                             Field("end_date",
-                                   "date",
+                             Field("end_date", "date",
+                                   label = T("End Date"),
                                    ),
-                             Field("min",
-                                   "double",
+                             Field("min", "double",
+                                   label = T("Minimum"),
                                   ),
-                             Field("max",
-                                   "double",
+                             Field("max", "double",
+                                   label = T("Maximum"),
                                   ),
-                             Field("mean",
-                                   "double",
+                             Field("mean", "double",
+                                   label = T("Mean"),
                                   ),
-                             Field("median",
-                                   "double",
+                             Field("median", "double",
+                                   label = T("Median"),
                                   ),
-                             Field("mean_ad",
+                             Field("mean_ad", "double",
                                    label = T("Mean Absolute Deviation"),
-                                   "double",
                                   ),
-                             Field("std",
+                             Field("std", "double",
                                    label = T("Standard Deviation"),
-                                   "double",
                                   ),
-                             Field("variance",
-                                   "double",
+                             Field("variance", "double",
+                                   label = T("Variance"),
                                   ),
+                             *s3_meta_fields()
                             )
+
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage(stats_param_id = param_id)
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if the module is disabled """
+        param_id = S3ReusableField("parameter_id", "integer",
+                                    readable=False,
+                                    writable=False
+                                   )
+        return Storage(stats_param_id = param_id)
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
@@ -153,11 +176,9 @@ class S3StatsDemographicModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-
-        location_id = self.gis_location_id
         # Shortcuts
         define_table = self.define_table
+        stats_param_id  = self.stats_param_id
         super_link = self.super_link
 
         #----------------------------------------------------------------------
@@ -165,7 +186,7 @@ class S3StatsDemographicModel(S3Model):
         #
         tablename = "stats_demographic"
         table = define_table(tablename,
-                             super_link("sp_id", "stats_parameter"),
+                             super_link("parameter_id", "stats_parameter"),
                              Field("name",
                                    label = T("Demographic Name")),
                              Field("description",
@@ -179,9 +200,9 @@ class S3StatsDemographicModel(S3Model):
         #
         tablename = "stats_demographic_data"
         table = define_table(tablename,
-                             super_link("sp_id", "stats_parameter"),
-                             super_link("sd_id", "stats_data"),
-                             location_id(),
+                             super_link("data_id", "stats_data"),
+                             stats_param_id(),
+                             self.gis_location_id(),
                              Field("value",
                                    "double",
                                    label = T("Demographic Value")),
@@ -189,6 +210,16 @@ class S3StatsDemographicModel(S3Model):
                              *s3_meta_fields()
                             )
 
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if the module is disabled """
+
+        return Storage()
 # =============================================================================
 
 

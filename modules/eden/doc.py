@@ -28,7 +28,9 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "doc_image_represent"]
+           "doc_image_represent",
+           "S3DocumentSourceModel",
+          ]
 
 import os
 
@@ -90,7 +92,7 @@ class S3DocumentLibrary(S3Model):
         table = define_table(tablename,
                              super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
-                             super_link("source_id", "doc_source_entity"),
+                             #super_link("source_id", "doc_source_entity"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
                                    notnull=True,
@@ -222,6 +224,10 @@ class S3DocumentLibrary(S3Model):
         configure(tablename,
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage()
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -314,15 +320,16 @@ class S3DocumentLibrary(S3Model):
         return
 
 # =============================================================================
-class S3DocumentSource(S3Model):
+
+class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
+             "doc_source_id",
              "doc_source"]
 
     def model(self):
 
         T = current.T
-        db = current.db
 
         # Shortcuts
         add_component = self.add_component
@@ -337,29 +344,45 @@ class S3DocumentSource(S3Model):
                                survey_series=T("Survey"))
 
         tablename = "doc_source_entity"
-        doc_source_entity = self.super_entity(tablename,
-                                              "source_id",
-                                              source_types
-                                             )
+
+        table = self.super_entity(tablename,
+                                  "source_id",
+                                  source_types
+                                 )
+        # Reusable Field
+        source_id = S3ReusableField("source_id", table,
+                                    requires = IS_NULL_OR(
+                                               IS_ONE_OF(current.db, "doc_source_entity.source_id")),
+                                    label = T("Document Source"),
+                                    ondelete = "CASCADE")
         # Components
-        add_component("doc_source", doc_source_entity=self.super_key(doc_source_entity))
+        add_component("doc_source", doc_source_entity=self.super_key(table))
 
         # ---------------------------------------------------------------------
         # Document-source details
         #
         tablename = "doc_source"
         doc_entity = define_table(tablename,
-                                  super_link("source_id", "doc_source_entity"),
+                                  source_id(),
                                   Field("name"),
                                   Field("reliability"),
                                   Field("review"),
+                                  *s3_meta_fields()
                                  )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage()
+        return Storage(doc_source_id = source_id)
 
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if the module is disabled """
+        source_id = S3ReusableField("source_id", "integer",
+                                    readable=False,
+                                    writable=False
+                                   )
+        return Storage(doc_source_id = source_id)
 
 # =============================================================================
 def doc_image_represent(filename):

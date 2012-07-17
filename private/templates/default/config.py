@@ -543,6 +543,18 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
+    ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
+    ("vulnerability", Storage(
+            name_nice = T("Vulnerability"),
+            #description = "Manages vulnerability indicators",
+            restricted = True,
+            module_type = None,
+        )),
     #("scenario", Storage(
     #        name_nice = T("Scenarios"),
     #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
