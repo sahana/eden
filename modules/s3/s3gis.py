@@ -573,7 +573,7 @@ class GIS(object):
             else:
                 # This level is suitable
                 return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
-               
+
             return -90, -180, 90, 180, None
 
         # Minimum Bounding Box
@@ -1133,7 +1133,7 @@ class GIS(object):
 
         if not location and _levels:
             # Use cached value
-            if level:
+            if level and level in _levels:
                 return _levels[level]
             else:
                 return _levels
@@ -1590,7 +1590,7 @@ class GIS(object):
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
-            
+
             Unused
         """
 
@@ -3692,7 +3692,7 @@ class GIS(object):
             for row in rows:
                 self.update_location_tree(row)
             return _path
-            
+
         # L4
         L4 = feature.get("L4", False)
         if level == "L4":
