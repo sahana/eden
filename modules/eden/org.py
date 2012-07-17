@@ -980,7 +980,7 @@ class S3OrganisationTypeTagModel(S3Model):
                                   self.org_organisation_type_id(),
                                   # key is a reserved word in MySQL
                                   Field("tag", label=T("Key")),
-                                  Field("value", label=("Value")),
+                                  Field("value", label=T("Value")),
                                   s3_comments(),
                                   *s3_meta_fields())
 

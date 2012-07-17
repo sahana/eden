@@ -31,9 +31,10 @@ __all__ = ["S3ScenarioModel",
            "S3ScenarioAssetModel",
            "S3ScenarioHRModel",
            "S3ScenarioMapModel",
+           "S3ScenarioOrganisationModel",
            "S3ScenarioSiteModel",
            "S3ScenarioTaskModel",
-        ]
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -64,11 +65,12 @@ class S3ScenarioModel(S3Model):
         # ---------------------------------------------------------------------
         # Scenarios
         #
-        #  Scenarios are Templates for Events to plan what resources are required
+        #  Scenarios are Templates for Incidents to plan what resources are required
         #
 
         tablename = "scenario_scenario"
         table = self.define_table(tablename,
+                                  self.event_incident_type_id(),
                                   Field("name", notnull=True,
                                         length=64,    # Mayon compatiblity
                                         label=T("Name")),
@@ -78,7 +80,7 @@ class S3ScenarioModel(S3Model):
         self.configure(tablename,
                        # Open Map Config to set the default Location
                        create_next=URL(args=["[id]", "config"]),
-                       deduplicate=self.scenario_scenario_duplicate,
+                       deduplicate=self.scenario_duplicate,
                        )
 
         # CRUD strings
@@ -89,6 +91,7 @@ class S3ScenarioModel(S3Model):
             title_list = T("Scenarios"),
             title_update = T("Edit Scenario"),
             title_search = T("Search Scenarios"),
+            title_upload = T("Import Scenarios"),
             subtitle_create = T("Add New Scenario"),
             label_list_button = T("List Scenarios"),
             label_create_button = ADD_SCENARIO,
@@ -137,6 +140,16 @@ class S3ScenarioModel(S3Model):
         add_component("scenario_site",
                       scenario_scenario="scenario_id")
 
+        # Organisations
+        add_component("org_organisation",
+                      scenario_scenario=Storage(
+                                    link="scenario_organisation",
+                                    joinby="scenario_id",
+                                    key="organisation_id",
+                                    actuate="embed",
+                                    autocomplete="name",
+                                    autodelete=False))
+
         # Map Config as a component of Scenarios
         add_component("gis_config",
                       scenario_scenario=Storage(
@@ -152,12 +165,10 @@ class S3ScenarioModel(S3Model):
                                       sortby="name",
                                       requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "scenario_scenario.id",
-                                                              "%(name)s",
+                                                              self.scenario_represent,
                                                               orderby="scenario_scenario.name",
                                                               sort=True)),
-                                      represent = lambda id: \
-                                        (id and [db(db.scenario_scenario.id == id).select(db.scenario_scenario.name,
-                                                                                          limitby=(0, 1)).first().name] or [current.messages.NONE])[0],
+                                      represent = self.scenario_represent,
                                       label = T("Scenario"),
                                       ondelete = "SET NULL",
                                       # Comment these to use a Dropdown & not an Autocomplete
@@ -188,41 +199,51 @@ class S3ScenarioModel(S3Model):
                                                    writable=False),
         )
 
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------
     @staticmethod
-    def scenario_scenario_duplicate(job):
+    def scenario_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.scenario_scenario
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def scenario_duplicate(item):
         """
-          This callback will be called when importing records
-          it will look to see if the record being imported is a duplicate.
-
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
-
-          If the record is a duplicate then it will set the job method to update
-
-          Rules for finding a duplicate:
-           - If the name exists then it's a duplicate
+            Deduplication of Scenarios
         """
 
-        if job.tablename == "scenario_scenario":
-            table = job.table
-            if "name" in job.data:
-                name = job.data.name
-            else:
-                return
+        if item.tablename != "scenario_scenario":
+            return
 
-            query = (table.name == name)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+        data = item.data
+        name = data.get("name", None)
+
+        table = item.table
+        query = (table.name == name)
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ScenarioAssetModel(S3Model):
     """
-        Scenario Asset Model
+        Link Assets to Scenarios
     """
 
     names = ["scenario_asset"]
@@ -257,7 +278,7 @@ class S3ScenarioAssetModel(S3Model):
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset removed"),
-            msg_list_empty = T("No Assets currently registered in this scenario"))
+            msg_list_empty = T("No assets currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -267,7 +288,7 @@ class S3ScenarioAssetModel(S3Model):
 # =============================================================================
 class S3ScenarioHRModel(S3Model):
     """
-        Scenario Human Resources Model
+        Link Human Resources (Staff/Volunteers) to Scenarios
     """
 
     names = ["scenario_human_resource"]
@@ -309,7 +330,7 @@ class S3ScenarioHRModel(S3Model):
 # =============================================================================
 class S3ScenarioMapModel(S3Model):
     """
-        Scenario Map Model
+        Link Map Configs to Scenarios
     """
 
     names = ["scenario_config"]
@@ -350,9 +371,53 @@ class S3ScenarioMapModel(S3Model):
         return Storage()
 
 # =============================================================================
+class S3ScenarioOrganisationModel(S3Model):
+    """
+        Link Organisations to Scenarios
+        - people to keep informed
+        - people to mobilise
+    """
+
+    names = ["scenario_organisation"]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Organisations
+        # @ToDo: Search Widget
+
+        tablename = "scenario_organisation"
+        table = self.define_table(tablename,
+                                  self.scenario_scenario_id(),
+                                  self.org_organisation_id(),
+                                  *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Organization"),
+            title_display = T("Organization Details"),
+            title_list = T("Organizations"),
+            title_update = T("Edit Organization"),
+            title_search = T("Search Organizations"),
+            subtitle_create = T("Add New Organization"),
+            label_list_button = T("List Organizations"),
+            label_create_button = T("Add Organization"),
+            label_delete_button = T("Remove Organization from this scenario"),
+            msg_record_created = T("Organization added"),
+            msg_record_modified = T("Organization updated"),
+            msg_record_deleted = T("Organization removed"),
+            msg_list_empty = T("No organizations currently registered in this scenario"))
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3db.*)
+        #
+        return Storage()
+
+# =============================================================================
 class S3ScenarioSiteModel(S3Model):
     """
-        Scenario Facility Model
+        Link Sites (Facilities) to Scenarios
     """
 
     names = ["scenario_site"]
@@ -371,8 +436,6 @@ class S3ScenarioSiteModel(S3Model):
                                   self.org_site_id,
                                   *s3_meta_fields())
 
-        table.site_id.readable = table.site_id.writable = True
-
         current.response.s3.crud_strings[tablename] = Storage(
             title_create = T("Add Facility"),
             title_display = T("Facility Details"),
@@ -386,7 +449,7 @@ class S3ScenarioSiteModel(S3Model):
             msg_record_created = T("Facility added"),
             msg_record_modified = T("Facility updated"),
             msg_record_deleted = T("Facility removed"),
-            msg_list_empty = T("No Facilities currently registered in this scenario"))
+            msg_list_empty = T("No facilities currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
@@ -396,7 +459,9 @@ class S3ScenarioSiteModel(S3Model):
 # =============================================================================
 class S3ScenarioTaskModel(S3Model):
     """
-        Scenario Tasks Model
+        Link Tasks to Scenarios
+
+        @ToDo: Task Templates (like CAP Templates)
     """
 
     names = ["scenario_task"]
@@ -429,7 +494,7 @@ class S3ScenarioTaskModel(S3Model):
             msg_record_created = T("Task added"),
             msg_record_modified = T("Task updated"),
             msg_record_deleted = T("Task removed"),
-            msg_list_empty = T("No Tasks currently registered in this scenario"))
+            msg_list_empty = T("No tasks currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)

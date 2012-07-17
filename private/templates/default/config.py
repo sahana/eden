@@ -555,15 +555,15 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    #("scenario", Storage(
-    #        name_nice = T("Scenarios"),
-    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
     #("event", Storage(
     #        name_nice = T("Events"),
     #        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
+    #("scenario", Storage(
+    #        name_nice = T("Scenarios"),
+    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
     #        restricted = True,
     #        module_type = 10,
     #    )),

@@ -1134,7 +1134,10 @@ class GIS(object):
         if not location and _levels:
             # Use cached value
             if level:
-                return _levels[level]
+                if level in _levels:
+                    return _levels[level]
+                else:
+                    return level
             else:
                 return _levels
 

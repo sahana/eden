@@ -7,18 +7,18 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,
@@ -50,19 +50,26 @@ def index():
     response.view = "index.html"
     return dict(item=item, report=report)
 
+# -----------------------------------------------------------------------------
 def zone():
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
 def zone_type():
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
 def staff():
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
 def staff_type():
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
 def essential():
     table = s3db.hrm_human_resource
     s3.filter = (table.essential == True)
     return s3_rest_controller("hrm", "human_resource")
+
+# END =========================================================================

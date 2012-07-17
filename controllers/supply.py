@@ -18,7 +18,7 @@ def index():
         Application Home page
     """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -67,10 +67,8 @@ def item_category():
 def item_pack():
     """ RESTful CRUD controller """
 
-    tablename = "%s_%s" % (module, resourcename)
-
-    s3db.configure(tablename,
-                    listadd=False)
+    s3db.configure("supply_item_pack",
+                   listadd=False)
 
     return s3_rest_controller()
 
