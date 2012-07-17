@@ -155,6 +155,7 @@ class S3PersonEntity(S3Model):
 
         tablename = "pr_pentity"
         table = super_entity(tablename, "pe_id", pe_types,
+                             #super_link("source_id", "doc_source_entity"),
                              Field("type"),
                              Field("pe_label", length=128))
 
