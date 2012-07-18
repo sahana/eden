@@ -39,9 +39,12 @@ NOTE: This module requires python 2.5 or higher.
 #    try:
 #        from django.utils import simplejson as jsonlib
 try:
-    import gluon.contrib.simplejson as jsonlib
+    import json as jsonlib # try stdlib (Python 2.6)
 except ImportError:
-    import json as jsonlib
+    try:
+        import simplejson as jsonlib # try external module
+    except:
+        import gluon.contrib.simplejson as jsonlib # fallback to pure-Python module
 
 import logging
 

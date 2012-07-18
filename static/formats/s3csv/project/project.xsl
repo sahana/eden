@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+    xmlns:project="http://eden.sahanafoundation.org/project">
 
     <!-- **********************************************************************
          Projects - CSV Import Stylesheet
@@ -13,6 +14,7 @@
          Description..........string..........Project short description
          Objectives...........string..........Project objectives
          Comments.............string..........Project comments
+         Status...............string..........Project status
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
          Countries............comma-sep list..List of country names or ISO codes
@@ -40,6 +42,11 @@
     <xsl:variable name="SectorPrefix" select="'Sector:'"/>
     <xsl:variable name="HazardPrefix" select="'Hazard:'"/>
     <xsl:variable name="ThemePrefix" select="'Theme:'"/>
+
+    <!-- Status opts, see modules/eden/project.py -->
+    <project:status-opt code="1">Proposed</project:status-opt>
+    <project:status-opt code="2">Current</project:status-opt>
+    <project:status-opt code="3">Completed</project:status-opt>
 
     <!-- ****************************************************************** -->
     <xsl:key name="orgs"
@@ -91,6 +98,13 @@
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             <xsl:if test="col[@field='Objectives']!=''">
                 <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
+            </xsl:if>
+
+            <!-- Status -->
+            <xsl:variable name="typename" select="col[@field='Status']"/>
+            <xsl:variable name="typecode" select="document('')//project:status-opt[text()=normalize-space($typename)]/@code"/>
+            <xsl:if test="$typecode">
+                <data field="status"><xsl:value-of select="$typecode"/></data>
             </xsl:if>
 
             <!-- HFAs -->

@@ -64,6 +64,9 @@ def loadAllTests():
     
     # Create a Category
     addTests(loadTests(CreateCategory))
+    
+    # Create Members
+    addTests(loadTests(CreateMember))
 
     return suite
 

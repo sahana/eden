@@ -5,3 +5,4 @@ from inv import *
 from asset import *
 from project import *
 from smoke import *
+from member import *
