@@ -620,6 +620,10 @@ class S3TrackingModel(S3Model):
         define_table = self.define_table
         set_method = self.set_method
 
+        is_logged_in = auth.is_logged_in
+        permitted_facilities = auth.permitted_facilities
+        user = auth.user
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_string_represent = lambda str: str if str else NONE
@@ -653,12 +657,14 @@ class S3TrackingModel(S3Model):
                                        comment = self.pr_person_comment(child="sender_id")),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
-                             # @ToDo: We really need to be able to filter this by permitted_facilities
                              self.super_link("site_id", "org_site",
                                               label = T("From Facility"),
-                                              default = auth.user.site_id if auth.is_logged_in() else None,
+                                              filterby = "site_id",
+                                              filter_opts = permitted_facilities(redirect_on_error=False),
+                                              default = user.site_id if is_logged_in() else None,
                                               readable = True,
                                               writable = True,
+                                              empty = False,
                                               represent = org_site_represent,
                                               #widget = S3SiteAutocompleteWidget(),
                                               ),
@@ -816,9 +822,12 @@ class S3TrackingModel(S3Model):
                              self.super_link("site_id", "org_site",
                                               label = T("By Facility"),
                                               ondelete = "SET NULL",
-                                              default = auth.user.site_id if auth.is_logged_in() else None,
+                                              filterby = "site_id",
+                                              filter_opts = permitted_facilities(redirect_on_error=False),
+                                              default = user.site_id if is_logged_in() else None,
                                               readable = True,
                                               writable = True,
+                                              empty = False,
                                               represent = org_site_represent,
                                               #widget = S3SiteAutocompleteWidget(),
                                               ),
@@ -923,8 +932,7 @@ class S3TrackingModel(S3Model):
         # Reusable Field
         recv_id = S3ReusableField("recv_id", table, sortby="date",
                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db,
-                                                          "inv_recv.id",
+                                                IS_ONE_OF(db, "inv_recv.id",
                                                           self.inv_recv_represent,
                                                           orderby="inv_recv.date",
                                                           sort=True)),
@@ -1056,7 +1064,9 @@ class S3TrackingModel(S3Model):
         table = define_table(tablename,
                              Field("site_id", "reference org_site",
                                     label = T("By Facility"),
-                                    default = auth.user.site_id if auth.is_logged_in() else None,
+                                    filterby = "site_id",
+                                    filter_opts = permitted_facilities(redirect_on_error=False),
+                                    default = user.site_id if is_logged_in() else None,
                                     readable = True,
                                     writable = True,
                                     widget = S3SiteAutocompleteWidget(),

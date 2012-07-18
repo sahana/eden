@@ -832,3 +832,19 @@ table.report td {
 .ui-datepicker-trigger {
 	margin-left: 3px;
 }
+
+.resizable-textarea .grippie {
+    /*-moz-border-bottom-colors: none;
+    -moz-border-image: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;*/
+    background: url(../../img/grippie.png) no-repeat scroll center 2px #EEEEEE;
+    border-color: #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-style: solid;
+    border-width: 0 1px 1px;
+    cursor: s-resize;
+    height: 9px;
+    overflow: hidden;
+}

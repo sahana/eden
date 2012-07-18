@@ -9,7 +9,7 @@
 
     NB
         Need WEB2PY_PATH environment variable to be defined (e.g. /etc/profile)
-        Tasks need to be defined outside conditional model loads
+        Tasks need to be defined outside conditional model loads (e.g. models/tasks.py)
         Avoid passing state into the async call as state may change before the message is executed (race condition)
 
     Old screencast: http://www.vimeo.com/27478796

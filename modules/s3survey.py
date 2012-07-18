@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Custom UI Widgets used by the survey application
+"""  Custom UI Widgets used by the survey application
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT

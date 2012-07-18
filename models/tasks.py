@@ -84,7 +84,7 @@ if settings.has_module("msg"):
     # -----------------------------------------------------------------------------
     def msg_parse_workflow(workflow, source, user_id):
         """
-        Processes the msg_log for unparsed messages.
+            Processes the msg_log for unparsed messages.
         """
         # Run the Task
         result = msg.parse_import(workflow, source)
@@ -128,6 +128,30 @@ def sync_synchronize(repository_id, user_id=None, manual=False):
     return s3base.S3SyncLog.SUCCESS
 
 tasks["sync_synchronize"] = sync_synchronize
+
+# -----------------------------------------------------------------------------
+def maintenance(period="daily"):
+    """
+        Run all maintenance tasks which should be done daily
+        - these are read from the template
+    """
+
+    mod = "applications.%s.private.templates.%s.maintenance as maintenance" % \
+                    (appname, settings.get_template())
+    try:
+        exec("import %s" % mod)
+    except ImportError, e:
+        # No Custom Maintenance available, use the default
+        exec("import applications.%s.private.templates.default.maintenance as maintenance" % appname)
+
+    if period == "daily":
+        result = maintenance.Daily()()
+    else:
+        result = "NotImplementedError"
+
+    return result
+
+tasks["maintenance"] = maintenance
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks
