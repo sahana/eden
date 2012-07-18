@@ -57,11 +57,12 @@ class AddProposal(FormView):
     
     def get_success_url(self):
         return '/spaces/' + self.kwargs['space_url']
-    
+        
     def form_valid(self, form):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         form_uncommited = form.save(commit=False)
-        form_uncommited.proposalset = self.kwargs['p_set']
+        if int(self.kwargs['p_set']) != 0:
+            form_uncommited.proposalset = get_object_or_404(ProposalSet, pk=self.kwargs['p_set'])
         form_uncommited.space = self.space
         form_uncommited.author = self.request.user
         form_uncommited.save()
@@ -70,7 +71,9 @@ class AddProposal(FormView):
     def get_context_data(self, **kwargs):
         context = super(AddProposal, self).get_context_data(**kwargs)
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        self.field = ProposalField.objects.filter(proposalset=self.kwargs['p_set'])
         context['get_place'] = self.space
+        context['form_field'] = [f_name.field_name for f_name in self.field]
         return context
         
     def dispatch(self, *args, **kwargs):
