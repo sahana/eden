@@ -49,6 +49,11 @@ class Post(models.Model):
     def __unicode__(self):
         return self.post_title
 
+    def comment_count(self) :
+        ct = ContentType.objects.get_for_model(Post)
+        obj_pk = self.id
+        return Comment.objects.filter(content_type=ct,object_pk=obj_pk).count()
+
     def set_tags(self, tags):
         Tag.objects.update_tags(self, tags)
 
