@@ -55,7 +55,8 @@ This template shows the help_text automatically if found in the data models.
                 {% endif %}
             </div>
         </div>
-
+        <hr />
+            If you what to create independent proposals <a href="{{ get_place.get_absolute_url }}proposal/add/0/">Click here</a>
         <hr />
         <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
         <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Create' %}" />
