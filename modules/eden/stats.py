@@ -176,9 +176,12 @@ class S3StatsModel(S3Model):
         """
            When a stats_data record is created then the related stats_aggregate
            fields need to be updated so that the results are kept up to date.
+
+           This is done async as this can take some time
         """
+
         location_id = form.vars.location_id
-        parents = gis.get_parents(location_id)
+        parents = current.gis.get_parents(location_id)
         for location in parents:
             # calculate the aggregates for this location
             # @todo For the location get each child location
