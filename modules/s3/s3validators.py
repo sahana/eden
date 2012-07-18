@@ -331,7 +331,6 @@ class IS_HTML_COLOUR(IS_MATCH):
                 ):
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$", error_message)
 
-
 # =============================================================================
 regex1 = re.compile("[\w_]+\.[\w_]+")
 regex2 = re.compile("%\((?P<name>[^\)]+)\)s")

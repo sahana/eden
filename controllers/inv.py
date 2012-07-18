@@ -27,7 +27,7 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def office():
     """
         Required to ensure the tabs work from req_match
@@ -190,19 +190,6 @@ def warehouse():
     return output
 
 # =============================================================================
-def incoming():
-    """ Incoming Shipments """
-
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_incoming()
-
-# =============================================================================
-def req_match():
-    """ Match Requests """
-
-    return s3db.req_match()
-
-# =============================================================================
 def inv_item():
     """ REST Controller """
 
@@ -241,6 +228,7 @@ def inv_item():
                                       (T("Category"), "item_category"),
                                       "quantity",
                                       "pack_value",
+                                      #(T("Total Value"), "total_value"),
                                       ]
                        )
 
@@ -1676,7 +1664,7 @@ def recv_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def send_item_json():
     """
     """
@@ -1706,12 +1694,25 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
-#==============================================================================
+# -----------------------------------------------------------------------------
 def kit():
     return s3_rest_controller()
 
-#==============================================================================
+# -----------------------------------------------------------------------------
 def facility():
     return s3_rest_controller("org")
+
+# -----------------------------------------------------------------------------
+def incoming():
+    """ Incoming Shipments """
+
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return inv_incoming()
+
+# -----------------------------------------------------------------------------
+def req_match():
+    """ Match Requests """
+
+    return s3db.req_match()
 
 # END =========================================================================

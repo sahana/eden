@@ -653,6 +653,7 @@ class S3TrackingModel(S3Model):
                                        comment = self.pr_person_comment(child="sender_id")),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
+                             # @ToDo: We really need to be able to filter this by permitted_facilities
                              self.super_link("site_id", "org_site",
                                               label = T("From Facility"),
                                               default = auth.user.site_id if auth.is_logged_in() else None,
@@ -809,20 +810,18 @@ class S3TrackingModel(S3Model):
 
         tablename = "inv_recv"
         table = define_table(tablename,
-                             Field("site_id", "reference org_site", notnull = True,
-                                   label=T("By Facility"),
-                                   ondelete = "SET NULL",
-                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                   readable = True,
-                                   writable = True,
-                                   #widget = S3SiteAutocompleteWidget(),
-                                   requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
-                                                        sort=True,
-                                                        ),
-                                   represent=org_site_represent
-                                   ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             # @ToDo: We really need to be able to filter this by permitted_facilities
+                             self.super_link("site_id", "org_site",
+                                              label = T("By Facility"),
+                                              ondelete = "SET NULL",
+                                              default = auth.user.site_id if auth.is_logged_in() else None,
+                                              readable = True,
+                                              writable = True,
+                                              represent = org_site_represent,
+                                              #widget = S3SiteAutocompleteWidget(),
+                                              ),
                              Field("type", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(recv_type_opts)),
                                    represent = lambda opt: \
@@ -847,6 +846,7 @@ class S3TrackingModel(S3Model):
                                                                    T("Will be filled automatically when the Shipment has been Received"))
                                                  )
                                    ),
+                             # This is a reference, not a super-link, so we can override
                              Field("from_site_id", "reference org_site",
                                    label = T("From Facility"),
                                    ondelete = "SET NULL",
@@ -3034,7 +3034,6 @@ class InvItemVirtualFields:
                     ]
 
     def total_value(self):
-        """ Year/Month of the start date of the training event """
         try:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
             # Need real numbers to use for Report calculations
