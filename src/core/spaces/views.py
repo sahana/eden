@@ -256,9 +256,9 @@ class ViewSpaceIndex(DetailView):
             return space_object
 
         # Check if the user is in the admitted user groups of the space
-        if self.request.user in space_object.users \
-        or self.request.user in space_object.admins \
-        or self.request.user in space_object.mods:
+        if self.request.user in space_object.users.all() \
+        or self.request.user in space_object.admins.all() \
+        or self.request.user in space_object.mods.all():
             return space_object
 
         # If the user does not meet any of the conditions, it's not allowed to
