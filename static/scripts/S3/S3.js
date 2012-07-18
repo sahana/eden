@@ -75,6 +75,7 @@ S3.addTooltips = function() {
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
+    $('label[title]').cluetip({splitTitle: '|', showTitle:false});
     $('.tooltipbody').cluetip({activation: 'hover', sticky: false, splitTitle: '|', showTitle: false});
     var tipCloseText = '<img src="' + S3.Ap.concat('/static/img/cross2.png') + '" alt="close" />';
     $('.stickytip').cluetip( {
@@ -741,6 +742,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, filter, link,
             .append( '<a>' + item[fieldname] + '</a>' )
             .appendTo( ul );
     };
+    // @ToDo: Do this only if new_items=False
     $(dummy_input).blur(function() {
         if (!$(dummy_input).val()) {
             $(real_input).val('');

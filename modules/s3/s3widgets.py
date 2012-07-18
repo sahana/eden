@@ -59,6 +59,8 @@ __all__ = ["S3HiddenWidget",
            "S3InvBinWidget",
            "s3_comments_widget",
            "s3_richtext_widget",
+           "s3_checkboxes_widget",
+           "s3_grouped_checkboxes_widget"
            ]
 
 import datetime
@@ -320,7 +322,6 @@ $('#%s').click(function(){
                         requires = field.requires
                       )
 
-
 # =============================================================================
 class S3UploadWidget(UploadWidget):
     """
@@ -383,18 +384,19 @@ class S3AutocompleteWidget(FormWidget):
                  module,
                  resourcename,
                  fieldname = "name",
-                 # REST filter
-                 filter = "",
+                 filter = "",       # REST filter
                  link_filter = "",
+                 #new_items = False, # Whether to make this a combo box
                  post_process = "",
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 delay = 450,       # milliseconds
+                 min_length = 2):   # Increase this for large deployments
 
         self.module = module
         self.resourcename = resourcename
         self.fieldname = fieldname
         self.filter = filter
         self.link_filter = link_filter
+        #self.new_items = new_items
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
@@ -417,7 +419,7 @@ class S3AutocompleteWidget(FormWidget):
         dummy_input = "dummy_%s" % real_input
 
         # Script defined in static/scripts/S3/S3.js
-        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)\n''' % \
+        js_autocomplete = '''S3.autocomplete('%s','%s','%s','%s','%s','%s',\"%s\",%s,%s)''' % \
             (self.fieldname, self.module, self.resourcename, real_input, self.filter,
              self.link_filter, self.post_process, self.delay, self.min_length)
 
@@ -451,7 +453,6 @@ class S3AutocompleteWidget(FormWidget):
                         INPUT(**attr),
                         requires = field.requires
                       )
-
 
 # =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
@@ -556,12 +557,14 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     def __init__(self,
                  post_process = "",
                  default_from_profile = False,
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 new_items = False, # Whether to make this a combo box
+                 delay = 450,       # milliseconds
+                 min_length = 2):   # Increase this for large deployments
 
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
+        self.new_items = new_items
         self.default_from_profile = default_from_profile
 
     def __call__(self, field, value, **attributes):
@@ -581,8 +584,10 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             value,
             attributes,
             transform_value = transform_value,
+            new_items = self.new_items,
+            tablename = "org_organisation",
             source = repr(
-                URL(c="org", f="organisation",
+                URL(c="org", f="org_search",
                     args="search.json",
                     vars={"filter":"~"})
             )
@@ -1136,6 +1141,8 @@ def S3GenericAutocompleteTemplate(post_process,
                                   name_getter = "function(item){return item.name}",
                                   id_getter = "function(item){return item.id}",
                                   transform_value = lambda value: value,
+                                  new_items = False,    # Allow new items
+                                  tablename = None,     # Needed if new_items=True
                                   ):
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
@@ -1186,7 +1193,12 @@ $('#%(dummy_input)s').autocomplete({
  }
 }).data('autocomplete')._renderItem=function(ul,item){
  return $('<li></li>').data('item.autocomplete',item).append('<a>'+get_name(item)+'</a>').appendTo(ul)
-}
+}''' % locals(),
+'''
+$('#%(dummy_input)s').blur(function(){
+ $('#%(real_input)s').val($('#%(dummy_input)s').val())
+})''' % locals() if new_items else
+'''
 $('#%(dummy_input)s').blur(function(){
  if(!$('#%(dummy_input)s').val()){
   $('#%(real_input)s').val('').change()
@@ -2398,21 +2410,26 @@ class CheckboxesWidgetS3(OptionsWidget):
         values = [str(v) for v in values]
 
         attr = OptionsWidget._attributes(field, {}, **attributes)
-        attr["_class"] = "checkboxes-widget-s3" # need to
+        attr["_class"] = "checkboxes-widget-s3"
 
         requires = field.requires
         if not isinstance(requires, (list, tuple)):
             requires = [requires]
-        if requires:
-            if hasattr(requires[0], "options"):
-                options = requires[0].options()
-            else:
-                raise SyntaxError, "widget cannot determine options of %s" \
-                    % field
+
+        if hasattr(requires[0], "options"):
+            options = requires[0].options()
+        else:
+            raise SyntaxError, "widget cannot determine options of %s" \
+                % field
 
         options = [(k, v) for k, v in options if k != ""]
+
+        options_help = attributes.get("options_help", {})
+        input_index = attributes.get("start_at", 0)
+
         opts = []
         cols = attributes.get("cols", 1)
+
         totals = len(options)
         mods = totals % cols
         rows = totals / cols
@@ -2429,16 +2446,21 @@ class CheckboxesWidgetS3(OptionsWidget):
 
         for r_index in range(rows):
             tds = []
+
             for k, v in options[r_index * cols:(r_index + 1) * cols]:
-                field_id = "id-%s-%s" % (field.name, k)
+                input_id = "id-%s-%s" % (field.name, input_index)
+                option_help = options_help.get(str(k), "")
+
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
-                                    _id=field_id,
+                                    _id=input_id,
                                     requires=attr.get("requires", None),
                                     hideerror=True,
                                     _value=k,
                                     value=(str(k) in values)),
-                              LABEL(v, _for=field_id)))
+                              LABEL(v, _for=input_id, _title=option_help)))
+
+                input_index += 1
             opts.append(TR(tds))
 
         if opts:
@@ -3237,6 +3259,257 @@ def s3_richtext_widget(field, value):
                     _class="richtext %s" % (field.type),
                     value=value,
                     requires=field.requires)
+
+
+# =============================================================================
+def s3_grouped_checkboxes_widget(field,
+                                 field_value,
+                                 size=20,
+                                 **attributes):
+    """
+        Displays checkboxes for each value in the table column "field".
+        If there are more than "size" options, they are grouped by the
+        first letter of their label.
+
+        @type field: Field
+        @param field: Field (or Storage) object
+
+        @type value: dict
+        @param value: current value from the form field
+
+        @type size: int
+        @param size: number of input elements for each group
+    """
+    import locale
+
+    requires = field.requires
+    if not isinstance(requires, (list, tuple)):
+        requires = [requires]
+
+    if hasattr(requires[0], "options"):
+        options = requires[0].options()
+    else:
+        raise SyntaxError, "widget cannot determine options of %s" \
+            % field
+
+    options = [(k, v) for k, v in options if k != ""]
+
+    total = len(options)
+
+    if total == 0:
+        T = current.T
+        opts.append(TR(TD(SPAN(T("no options available"),
+                               _class="no-options-available"),
+                          INPUT(_type="hide",
+                                _name=field.name,
+                                _value=None))))
+
+    if total > size:
+        #Options are put into groups of "size"
+
+        #letters = [u"A", u"Z"] # ToDo: localisation?
+        letters = []
+        letters_options = {}
+
+        for value, label in options:
+            letter = label and label[0]
+
+            if letter:
+                letter = str(letter.upper())
+
+                if letter not in letters_options:
+                    letters.append(letter)
+                    letters_options[letter] = [(value, label)]
+                else:
+                    letters_options[letter].append((value, label))
+
+        widget = DIV(_class=attributes.pop("_class",
+                                           "s3-grouped-checkboxes-widget"))
+
+        input_index = 0
+        group_index = 0
+        group_options = []
+
+        from_letter = u"A"
+        to_letter = letters[0]
+        letters.sort(locale.strcoll)
+
+        for letter in letters:
+            if from_letter is None:
+                from_letter = letter
+
+            group_options += letters_options.get(letter, [])
+
+            count = len(group_options)
+
+            if count >= size or letter == letters[-1]:
+                if letter == letters[-1]:
+                    to_letter = u"Z"
+                else:
+                    to_letter = letter
+
+                # Are these options for a single letter or a range?
+                if to_letter != from_letter:
+                    group_label = "%s - %s" % (from_letter, to_letter)
+                else:
+                    group_label = from_letter
+
+                widget.append(DIV(group_label,
+                                  _id="%s-group-label-%s" % (field.name,
+                                                             group_index),
+                                  _class="s3-grouped-checkboxes-widget-label"))
+
+                group_field = field
+                group_field.requires = IS_IN_SET(group_options,
+                                                 multiple=True)
+
+                letter_widget = s3_checkboxes_widget(group_field,
+                                                     field_value,
+                                                     start_at_id=input_index,
+                                                     **attributes)
+
+                widget.append(letter_widget)
+
+                input_index += count
+                group_index += 1
+                group_options = []
+                from_letter = None
+
+    else:
+        # not enough options to form groups
+
+        try:
+            widget = s3_checkboxes_widget(field, field_value, **attributes)
+        except:
+            # some versions of gluon/sqlhtml.py don't support non-integer keys
+            if s3_debug:
+                raise
+            else:
+                return None
+
+    return widget
+
+
+# =============================================================================
+def s3_checkboxes_widget(field,
+                         value,
+                         cols=1,
+                         start_at_id=0,
+                         help_field=None,
+                         **attributes):
+    """
+        Display checkboxes for each value in the table column "field".
+
+        @type cols: int
+        @param cols: spread the input elements into "cols" columns
+
+        @type start_at_id: int
+        @param start_at_id: start input element ids at this number
+
+        @type help_text: string
+        @param help_text: field name string pointing to the field
+                          containing help text for each option
+    """
+
+    values = not isinstance(value,(list,tuple)) and [value] or value
+    values = [str(v) for v in values]
+
+    if "_class" not in attributes:
+        attributes["_class"] = "s3-checkboxes-widget"
+
+    requires = field.requires
+    if not isinstance(requires, (list, tuple)):
+        requires = [requires]
+
+    if hasattr(requires[0], "options"):
+        options = requires[0].options()
+    else:
+        raise SyntaxError, "widget cannot determine options of %s" % field
+
+    help_text = Storage()
+
+    if help_field:
+        ftype = str(field.type)
+
+        if ftype[:9] == "reference":
+            ktablename = ftype[10:]
+        elif ftype[:14] == "list:reference":
+            ktablename = ftype[15:]
+        else:
+            # not a reference - no expand
+            # option text = field representation
+            ktablename = None
+
+
+        if ktablename is not None:
+            if "." in ktablename:
+                ktablename, pkey = ktablename.split(".", 1)
+            else:
+                pkey = None
+
+            ktable = current.s3db[ktablename]
+
+            if pkey is None:
+                pkey = ktable._id.name
+
+            lookup_field = help_field
+
+            if lookup_field in ktable.fields:
+                query = ktable[pkey].belongs([k for k, v in options])
+                rows = current.db(query).select(ktable[pkey], ktable[lookup_field])
+
+                for row in rows:
+                    help_text[str(row[ktable[pkey]])] = row[ktable[lookup_field]]
+            else:
+                # Error => no comments available
+                pass
+        else:
+            # No lookup table => no comments available
+            pass
+
+
+    options = [(k, v) for k, v in options if k != ""]
+    options = sorted(options, key=lambda option: s3_unicode(option[1]).lower())
+
+    input_index = start_at_id
+    rows = []
+    count = len(options)
+    mods = count % cols
+    num_of_rows = count / cols
+    if mods:
+        num_of_rows += 1
+
+    for r in range(num_of_rows):
+        cells = []
+
+        for k, v in options[r * cols:(r + 1) * cols]:
+            input_id = "id-%s-%s" % (field.name, str(input_index))
+
+            title = help_text.get(str(k), None)
+            if title:
+                label_attr = dict(_title=title)
+            else:
+                label_attr = {}
+
+            cells.append(TD(INPUT(_type="checkbox",
+                                  _name=field.name,
+                                  _id=input_id,
+                                  hideerror=True,
+                                  _value=k,
+                                  value=(k in values)),
+                            LABEL(v,
+                                  _for=input_id,
+                                  **label_attr)))
+
+            input_index += 1
+
+        rows.append(TR(cells))
+
+    if rows:
+        rows[-1][0][0]["hideerror"] = False
+
+    return TABLE(*rows, **attributes)
+
 
 # =============================================================================
 class S3SliderWidget(FormWidget):

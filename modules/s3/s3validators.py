@@ -49,10 +49,11 @@ __all__ = ["single_phone_number_pattern",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
            "IS_SITE_SELECTOR",
-           "IS_ADD_PERSON_WIDGET",
            "IS_ACL",
+           "IS_ADD_PERSON_WIDGET",
+           "IS_COMBO_BOX",
+           "IS_IN_SET_LAZY",
            "QUANTITY_INV_ITEM",
-           "IS_IN_SET_LAZY"
            ]
 
 import re
@@ -1823,6 +1824,58 @@ class IS_ACL(IS_IN_SET):
                 acl |= flag
 
         return (acl, None)
+
+# =============================================================================
+class IS_COMBO_BOX(Validator):
+    """
+        Designed for use with an Autocomplete.
+        - catches any new entries & creates the appropriate record
+        @ToDo: Audit
+    """
+
+    def __init__(self,
+                 tablename,
+                 requires,  # The normal validator
+                 error_message = None,
+                ):
+        self.tablename = tablename
+        self.requires = requires
+        self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        if not value:
+            # Do the normal validation
+            return self.requires(value)
+        elif isinstance(value, int):
+            # If this is an ID then this is an update form
+            # @ToDo: Can we assume that?
+
+            # Do the normal validation
+            return self.requires(value)
+        else:
+            # Name => create form
+            tablename = self.tablename
+            db = current.db
+            table = db[tablename]
+
+            # Test for duplicates
+            query = (table.name == value)
+            r = db(query).select(table.id,
+                                 limitby=(0, 1)).first()
+            if r:
+                # Use Existing record
+                value = r.id
+                return (value, None)
+            if not current.auth.s3_has_permission("create", table):
+                return (None, current.auth.messages.access_denied)
+            value = table.insert(name=value)
+            # onaccept
+            onaccept = current.s3db.get_config(tablename, "onaccept")
+            if onaccept:
+                onaccept(form=Storage(vars=Storage(id=value)))
+            return (value, None)
 
 # =============================================================================
 class QUANTITY_INV_ITEM(object):

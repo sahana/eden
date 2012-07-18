@@ -6,7 +6,7 @@
 import unittest
 
 from gluon import current
-from s3.s3widgets import S3OptionsMatrixWidget
+from s3.s3widgets import S3OptionsMatrixWidget, s3_checkboxes_widget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # =============================================================================
@@ -417,7 +417,130 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
                                          ),
                                     )
                                  )
-        self.assertEqual(str(self.widget(self.field, self.value)), str(expected_result))
+        self.assertEqual(str(self.widget(self.field, self.value)),
+                         str(expected_result))
+
+
+# =============================================================================
+class TestS3CheckboxesWidget(unittest.TestCase):
+    """
+        Test s3_checkboxes_widget
+    """
+
+    def setUp(self):
+        pass
+
+    def testWidget(self):
+        # Test the widget method
+        field = Storage(name="f",
+                        type="list:reference t_able",
+                        requires=IS_IN_SET({1:"One", 2:"Two"},
+                                           multiple=True))
+
+        widget = s3_checkboxes_widget(field,
+                                      [])
+        self.assertEqual(str(widget),
+                         str(TABLE(TR(TD(INPUT(_id="id-f-0",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="1"),
+                                         LABEL("One",
+                                               _for="id-f-0"))),
+                                   TR(TD(INPUT(_id="id-f-1",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="2"),
+                                         LABEL("Two",
+                                               _for="id-f-1"))),
+                                   _class="s3-checkboxes-widget")))
+
+        widget = s3_checkboxes_widget(field,
+                                      [1,])
+        self.assertEqual(str(widget),
+                         str(TABLE(TR(TD(INPUT(_id="id-f-0",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="1",
+                                               value=True),
+                                         LABEL("One",
+                                               _for="id-f-0"))),
+                                   TR(TD(INPUT(_id="id-f-1",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="2"),
+                                         LABEL("Two",
+                                               _for="id-f-1"))),
+                                   _class="s3-checkboxes-widget")))
+
+        widget = s3_checkboxes_widget(field,
+                                      [1,],
+                                      cols=2,
+                                      start_at_id=5,
+                                      _class="myclass")
+        self.assertEqual(str(widget),
+                         str(TABLE(TR(TD(INPUT(_id="id-f-5",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="1",
+                                               value=True),
+                                         LABEL("One",
+                                               _for="id-f-5")),
+                                      TD(INPUT(_id="id-f-6",
+                                               _name="f",
+                                               _type="checkbox",
+                                               _value="2"),
+                                         LABEL("Two",
+                                               _for="id-f-6"))),
+                                   _class="myclass")))
+
+
+# =============================================================================
+class TestS3GroupedCheckboxesWidget(unittest.TestCase):
+    """
+        Test s3_checkboxes_widget
+    """
+
+    def setUp(self):
+        pass
+
+    def testWidget(self):
+        # Test the widget method
+        field = Storage(name="f",
+                        type="list:reference t_able",
+                        requires=IS_IN_SET({1:"One", 2:"Two"},
+                                           multiple=True))
+
+        # default options
+        widget = s3_grouped_checkboxes_widget(field, [])
+        self.assertEqual(str(widget),
+                         str(s3_checkboxes_widget(field, [])))
+
+        # small group size
+        widget = s3_grouped_checkboxes_widget(field,
+                                              [],
+                                              size=1)
+
+        f1 = Storage(name="f",
+                        type="list:reference t_able",
+                        requires=IS_IN_SET({1:"One"},
+                                           multiple=True))
+        f2 = Storage(name="f",
+                        type="list:reference t_able",
+                        requires=IS_IN_SET({2:"Two"},
+                                           multiple=True))
+        self.assertEqual(str(widget),
+                         str(TAG[""](DIV(DIV("A - O",
+                                             _class="s3-grouped-checkboxes-widget-label",
+                                             _id="f-group-label-0"),
+                                         s3_checkboxes_widget(f1,
+                                                              []),
+                                         DIV("T - Z",
+                                             _class="s3-grouped-checkboxes-widget-label",
+                                             _id="f-group-label-1"),
+                                         s3_checkboxes_widget(f2,
+                                                              [],
+                                                              start_at_id=1),
+                                         _class="s3-grouped-checkboxes-widget"))))
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -435,7 +558,9 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        TestS3OptionsMatrixWidget
+        TestS3OptionsMatrixWidget,
+        TestS3CheckboxesWidget,
+        TestS3GroupedCheckboxesWidget,
     )
 
 # END ========================================================================

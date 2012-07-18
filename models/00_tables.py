@@ -43,12 +43,14 @@ import eden.project
 import eden.req
 import eden.scenario
 import eden.security
+import eden.stats
 import eden.supply
 import eden.support
 import eden.survey
 import eden.sync
 import eden.vehicle
 import eden.vol
+import eden.vulnerability
 
 # =============================================================================
 # Make available for S3Models

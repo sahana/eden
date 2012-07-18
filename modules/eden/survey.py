@@ -1611,6 +1611,7 @@ class S3SeriesModel(S3Model):
                                        represent = s3_date_represent,
                                        widget = S3DateWidget(),
                                        default=None),
+                                 #self.super_link("source_id", "doc_source_entity"),
                                  *s3_meta_fields())
 
         # CRUD Strings

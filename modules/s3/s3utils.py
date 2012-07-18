@@ -74,11 +74,11 @@ def s3_debug(message, value=None):
     try:
         output = "S3 Debug: %s" % str(message)
         if value:
-            "%s: %s" % (output, str(value))
+            output = "%s: %s" % (output, str(value))
     except:
         output = u"S3 Debug: %s" % unicode(message)
         if value:
-            u"%s: %s" % (output, unicode(value))
+            output = u"%s: %s" % (output, unicode(value))
 
     print >> sys.stderr, output
 
@@ -872,7 +872,7 @@ $('#regform').validate({
   first_name:{
    required:true
   },''', mobile, '''
-  email: {
+  email:{
    required:true,
    email:true
   },''', org1, '''
@@ -885,7 +885,7 @@ $('#regform').validate({
   }
  },
  messages:{
-  firstname:"''', str(T("Enter your firstname")), '''",
+  first_name:"''', str(T("Enter your first name")), '''",
   password:{
    required:"''', str(T("Provide a password")), '''"
   },
