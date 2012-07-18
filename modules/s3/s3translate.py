@@ -39,7 +39,7 @@ class TranslateGetFiles:
 
             # Directories which are not required to be searched
             self.rest_dirs = ["languages", "deployment-templates", "docs",
-            "tests", "test", ".git", "TranslationFunctionality", "private"]
+            "tests", "test", ".git", "TranslationFunctionality"]
 
         #----------------------------------------------------------------------
         def get_module_list(self):
@@ -82,6 +82,7 @@ class TranslateGetFiles:
 
             for f in files:
                 curFile = os.path.join(currentDir, f)
+                baseFile = os.path.basename(curFile)
                 if os.path.isdir(curFile):
 
                      # If the current directory is /eden/views,
@@ -92,8 +93,8 @@ class TranslateGetFiles:
                     else:
                         self.group_files(curFile, curmod, vflag)
 
-                elif (curFile.endswith("test.py") or \
-                      curFile.endswith("tests.py")) == False:
+                elif (baseFile == "test.py" or \
+                      baseFile == "tests.py") == False:
 
                     # If in /eden/views, categorize by parent directory name
                     if vflag==1:
@@ -103,7 +104,8 @@ class TranslateGetFiles:
                     # belonging to various modules
                     elif curFile.endswith("/eden/modules/eden/menus.py") or \
                          curFile.endswith("/eden/modules/s3cfg.py") or \
-                         curFile.endswith("/eden/models/000_config.py"):
+                         baseFile == "000_config.py" or \
+                         baseFile == "config.py":
                         base = "special"
                     else:
                         # Removing '.py'
@@ -253,7 +255,7 @@ class TranslateParseFiles:
         #----------------------------------------------------------------------
         def parseConfig(self, spmod, strings, entry, modlist):
 
-            """ Function to extract the strings from 000_config.py """
+            """ Function to extract strings from config.py / 000_config.py """
 
             if isinstance(entry, list):
                 id = entry[0]
@@ -274,7 +276,8 @@ class TranslateParseFiles:
                     # Set flag to store the module name from
                     # deployment_settings.module_name
                     elif token.tok_name[id] == "NAME" and \
-                         value == "deployment_settings":
+                         (value == "deployment_settings" or \
+                          value == "settings"):
                         self.fflag = 1
 
                     # To get module name from deployment_setting.modules list
@@ -598,7 +601,8 @@ class TranslateReadFiles:
                     for element in stList:
                         P.parseS3cfg(spmod, strings, element, modlist)
 
-                elif fileName.endswith("/eden/models/000_config.py") == True:
+                elif os.path.basename(fileName) == "000_config.py" or \
+                     os.path.basename(fileName) == "config.py":
                     for element in stList:
                         P.parseConfig(spmod, strings, element, modlist)
 
@@ -619,7 +623,7 @@ class TranslateReadFiles:
                         obj = getattr(obj, atr)()
                     s=obj
                 elif s[0]!='"' and s[0]!="'":
-                    print fileName+"#"+str(loc),s
+                    print fileName+"#"+str(loc), s
                 final_strings.append((loc, s))
 
             return final_strings
