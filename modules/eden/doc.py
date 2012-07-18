@@ -147,6 +147,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  super_entity = "doc_source_entity",
                   onvalidation=self.document_onvalidation)
 
         # ---------------------------------------------------------------------

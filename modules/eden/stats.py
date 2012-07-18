@@ -112,6 +112,9 @@ class S3StatsModel(S3Model):
                              # Time to come
                              )
 
+        self.configure("stats_data",
+                        onaccept = self.stats_data_onaccept,
+                        )
         #----------------------------------------------------------------------
         # Stats Aggregated data
         #
@@ -167,6 +170,24 @@ class S3StatsModel(S3Model):
 
         return Storage(stats_param_id = param_id)
 
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_data_onaccept(form):
+        """
+           When a stats_data record is created then the related stats_aggregate
+           fields need to be updated so that the results are kept up to date.
+        """
+        location_id = form.vars.location_id
+        parents = gis.get_parents(location_id)
+        for location in parents:
+            # calculate the aggregates for this location
+            # @todo For the location get each child location
+             
+            # @todo get a list of all the records at each location
+            
+            # @todo store each record in a dict grouped by indicator
+            pass
+        
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
     """
