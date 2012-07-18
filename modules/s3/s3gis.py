@@ -1134,7 +1134,10 @@ class GIS(object):
         if not location and _levels:
             # Use cached value
             if level:
-                return _levels[level]
+                if level in _levels:
+                    return _levels[level]
+                else:
+                    return level
             else:
                 return _levels
 
@@ -4650,79 +4653,79 @@ class GIS(object):
 
         # Toolbar
         if toolbar:
-            toolbar = "S3.gis.toolbar = true;\n"
+            toolbar = '''S3.gis.toolbar=true\n'''
         else:
             toolbar = ""
 
         # @ToDo: Could we get this automatically?
         if location_selector:
-            loc_select = "S3.gis.loc_select = true;\n"
+            loc_select = '''S3.gis.loc_select=true\n'''
         else:
             loc_select = ""
 
         # MGRS PDF Browser
         if mgrs:
-            mgrs_name = "S3.gis.mgrs_name = '%s';\n" % mgrs["name"]
-            mgrs_url = "S3.gis.mgrs_url = '%s';\n" % mgrs["url"]
+            mgrs_name = '''S3.gis.mgrs_name='%s'\n''' % mgrs["name"]
+            mgrs_url = '''S3.gis.mgrs_url='%s'\n''' % mgrs["url"]
         else:
             mgrs_name = ""
             mgrs_url = ""
 
         # Legend panel
         if legend:
-            legend = "S3.i18n.gis_legend = '%s';\n" % T("Legend")
+            legend = '''S3.i18n.gis_legend='%s'\n''' % T("Legend")
         else:
             legend = ""
 
         # Draw Feature Controls
         if add_feature:
             if add_feature_active:
-                draw_feature = "S3.gis.draw_feature = 'active';\n"
+                draw_feature = '''S3.gis.draw_feature='active'\n'''
             else:
-                draw_feature = "S3.gis.draw_feature = 'inactive';\n"
+                draw_feature = '''S3.gis.draw_feature='inactive'\n'''
         else:
             draw_feature = ""
 
         if add_polygon:
             if add_polygon_active:
-                draw_polygon = "S3.gis.draw_polygon = 'active';\n"
+                draw_polygon = '''S3.gis.draw_polygon='active'\n'''
             else:
-                draw_polygon = "S3.gis.draw_polygon = 'inactive';\n"
+                draw_polygon = '''S3.gis.draw_polygon='inactive'\n'''
         else:
             draw_polygon = ""
 
         authenticated = ""
         config_id = ""
         if auth.is_logged_in():
-            authenticated = "S3.auth = true;\n"
+            authenticated = '''S3.auth=true\n'''
             if MAP_ADMIN or \
                (config.pe_id == auth.user.pe_id):
                 # Personal config or MapAdmin, so enable Save Button for Updates
-                config_id = "S3.gis.config_id = %i;\n" % config.id
+                config_id = '''S3.gis.config_id=%i\n''' % config.id
 
         # Upload Layer
         if settings.get_gis_geoserver_password():
-            upload_layer = "S3.i18n.gis_uploadlayer = 'Upload Shapefile';\n"
+            upload_layer = '''S3.i18n.gis_uploadlayer='Upload Shapefile'\n'''
             add_javascript("scripts/gis/gxp/FileUploadField.js")
             add_javascript("scripts/gis/gxp/widgets/LayerUploadPanel.js")
         else:
             upload_layer = ""
 
         # Layer Properties
-        layer_properties = "S3.i18n.gis_properties = 'Layer Properties';\n"
+        layer_properties = '''S3.i18n.gis_properties='Layer Properties'\n'''
 
         # Search
         if search:
-            search = "S3.i18n.gis_search = '%s';\n" % T("Search location in Geonames")
-            #"S3.i18n.gis_search_no_internet = '%s';" % T("Geonames.org search requires Internet connectivity!")
+            search = '''S3.i18n.gis_search='%s'\n''' % T("Search location in Geonames")
+            #'''S3.i18n.gis_search_no_internet="%s"''' % T("Geonames.org search requires Internet connectivity!")
         else:
             search = ""
 
         # WMS Browser
         if wms_browser:
-            wms_browser_name = "S3.gis.wms_browser_name = '%s';\n" % wms_browser["name"]
+            wms_browser_name = '''S3.gis.wms_browser_name='%s'\n''' % wms_browser["name"]
             # urlencode the URL
-            wms_browser_url = "S3.gis.wms_browser_url = '%s';\n" % urllib.quote(wms_browser["url"])
+            wms_browser_url = '''S3.gis.wms_browser_url='%s'\n''' % urllib.quote(wms_browser["url"])
         else:
             wms_browser_name = ""
             wms_browser_url = ""
@@ -4731,14 +4734,14 @@ class GIS(object):
         if not mouse_position:
             mouse_position = ""
         elif mouse_position == "mgrs":
-            mouse_position = "S3.gis.mouse_position = 'mgrs';\n"
+            mouse_position = '''S3.gis.mouse_position='mgrs'\n'''
         else:
-            mouse_position = "S3.gis.mouse_position = true;\n"
+            mouse_position = '''S3.gis.mouse_position=true\n'''
 
         # OSM Authoring
         if config.osm_oauth_consumer_key and \
            config.osm_oauth_consumer_secret:
-            osm_auth = "S3.gis.osm_oauth = '%s';\n" % T("Zoom in closer to Edit OpenStreetMap layer")
+            osm_auth = '''S3.gis.osm_oauth='%s'\n''' % T("Zoom in closer to Edit OpenStreetMap layer")
         else:
             osm_auth = ""
 
@@ -4938,36 +4941,36 @@ class GIS(object):
         s3_gis_window = ""
         s3_gis_windowHide = ""
         if not closable:
-            s3_gis_windowNotClosable = "S3.gis.windowNotClosable = true;\n"
+            s3_gis_windowNotClosable = '''S3.gis.windowNotClosable=true\n'''
         else:
             s3_gis_windowNotClosable = ""
         if window:
-            s3_gis_window = "S3.gis.window = true;\n"
+            s3_gis_window = '''S3.gis.window=true\n'''
             if window_hide:
-                s3_gis_windowHide = "S3.gis.windowHide = true;\n"
+                s3_gis_windowHide = '''S3.gis.windowHide=true\n'''
 
         if maximizable:
-            maximizable = "S3.gis.maximizable = true;\n"
+            maximizable = '''S3.gis.maximizable=true\n'''
         else:
-            maximizable = "S3.gis.maximizable = false;\n"
+            maximizable = '''S3.gis.maximizable=false\n'''
 
         # Collapsed
         if collapsed:
-            collapsed = "S3.gis.west_collapsed = true;\n"
+            collapsed = '''S3.gis.west_collapsed=true\n'''
         else:
             collapsed = ""
 
         # Bounding Box
         if bbox:
             # Calculate from Bounds
-            center = """S3.gis.lat, S3.gis.lon;
-S3.gis.bottom_left = [%f, %f];
-S3.gis.top_right = [%f, %f];
-""" % (bbox["min_lon"], bbox["min_lat"], bbox["max_lon"], bbox["max_lat"])
+            center = '''S3.gis.lat,S3.gis.lon
+S3.gis.bottom_left=[%f,%f]
+S3.gis.top_right=[%f,%f]
+''' % (bbox["min_lon"], bbox["min_lat"], bbox["max_lon"], bbox["max_lat"])
         else:
-            center = """S3.gis.lat = %s;
-S3.gis.lon = %s;
-""" % (lat, lon)
+            center = '''S3.gis.lat=%s
+S3.gis.lon=%s
+''' % (lat, lon)
 
         ########
         # Layers
@@ -4980,7 +4983,7 @@ S3.gis.lon = %s;
         # Duplicate Features to go across the dateline?
         # @ToDo: Action this again (e.g. for DRRPP)
         if settings.get_gis_duplicate_features():
-            duplicate_features = "S3.gis.duplicate_features = true;"
+            duplicate_features = '''S3.gis.duplicate_features=true'''
         else:
             duplicate_features = ""
 
@@ -4992,16 +4995,16 @@ S3.gis.lon = %s;
         #
         _features = ""
         if features:
-            _features = "S3.gis.features = new Array();\n"
+            _features = '''S3.gis.features=new Array()\n'''
             counter = -1
             for feature in features:
                 counter = counter + 1
                 if feature["lat"] and feature["lon"]:
                     # Generate JS snippet to pass to static
-                    _features += """S3.gis.features[%i] = {
-    lat: %f,
-    lon: %f
-}\n""" % (counter,
+                    _features += '''S3.gis.features[%i]={
+ lat:%f,
+ lon:%f
+}\n''' % (counter,
           feature["lat"],
           feature["lon"])
 
@@ -5014,8 +5017,8 @@ S3.gis.lon = %s;
         #   Localisation of name/popup_label
         #
         if feature_queries:
-            layers_feature_queries = """
-S3.gis.layers_feature_queries = new Array();"""
+            layers_feature_queries = '''
+S3.gis.layers_feature_queries=new Array()'''
             counter = -1
             mtable = s3db.gis_marker
         else:
@@ -5093,8 +5096,8 @@ S3.gis.layers_feature_queries = new Array();"""
                      created_by)
 
             if "active" in layer and not layer["active"]:
-                visibility = """,
-    "visibility": false"""
+                visibility = ''',
+ "visibility":false'''
             else:
                 visibility = ""
 
@@ -5111,36 +5114,36 @@ S3.gis.layers_feature_queries = new Array();"""
                                               limitby=(0, 1),
                                               cache=cache).first()
                 if marker:
-                    markerLayer = """,
-    "marker_url": "%s",
-    "marker_height": %i,
-    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+                    markerLayer = ''',
+ "marker_url":"%s",
+ "marker_height":%i,
+ "marker_width":%i''' % (marker["image"], marker["height"], marker["width"])
                 else:
                     markerLayer = ""
 
             if "opacity" in layer and layer["opacity"] != 1:
-                opacity = """,
-    "opacity": %.1f""" % layer["opacity"]
+                opacity = ''',
+ "opacity":%.1f''' % layer["opacity"]
             else:
                 opacity = ""
             if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
-                cluster_distance = """,
-    "cluster_distance": %i""" % layer["cluster_distance"]
+                cluster_distance = ''',
+ "cluster_distance":%i''' % layer["cluster_distance"]
             else:
                 cluster_distance = ""
             if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
-                cluster_threshold = """,
-    "cluster_threshold": %i""" % layer["cluster_threshold"]
+                cluster_threshold = ''',
+ "cluster_threshold":%i''' % layer["cluster_threshold"]
             else:
                 cluster_threshold = ""
 
             # Generate JS snippet to pass to static
-            layers_feature_queries += """
-S3.gis.layers_feature_queries[%i] = {
-    "name": "%s",
-    "url": "%s"%s%s%s%s%s
+            layers_feature_queries += '''
+S3.gis.layers_feature_queries[%i]={
+ "name":"%s",
+ "url":"%s"%s%s%s%s%s
 }
-""" % (counter,
+''' % (counter,
        name,
        url,
        visibility,
@@ -5155,8 +5158,8 @@ S3.gis.layers_feature_queries[%i] = {
         #   REST URLs to back-end resources
         #
         if feature_resources:
-            layers_feature_resources = """
-S3.gis.layers_feature_resources = new Array();"""
+            layers_feature_resources = '''
+S3.gis.layers_feature_resources=new Array()'''
             counter = -1
         else:
             layers_feature_resources = ""
@@ -5176,43 +5179,43 @@ S3.gis.layers_feature_resources = new Array();"""
                 url = "%s?%s" % (url, options)
 
             if "active" in layer and not layer["active"]:
-                visibility = """,
-    "visibility": false"""
+                visibility = ''',
+ "visibility":false'''
             else:
                 visibility = ""
 
             if "opacity" in layer and layer["opacity"] != 1:
-                opacity = """,
-    "opacity": %.1f""" % layer["opacity"]
+                opacity = ''',
+ "opacity":%.1f''' % layer["opacity"]
             else:
                 opacity = ""
             if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
-                cluster_distance = """,
-    "cluster_distance": %i""" % layer["cluster_distance"]
+                cluster_distance = ''',
+ "cluster_distance":%i''' % layer["cluster_distance"]
             else:
                 cluster_distance = ""
             if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
-                cluster_threshold = """,
-    "cluster_threshold": %i""" % layer["cluster_threshold"]
+                cluster_threshold = ''',
+ "cluster_threshold":%i''' % layer["cluster_threshold"]
             else:
                 cluster_threshold = ""
 
             if "marker" in layer:
                 marker = layer["marker"]
-                markerLayer = """,
-    "marker_image": "%s",
-    "marker_height": %i,
-    "marker_width": %i""" % (marker["image"], marker["height"], marker["width"])
+                markerLayer = ''',
+ "marker_image":"%s",
+ "marker_height":%i,
+ "marker_width":%i''' % (marker["image"], marker["height"], marker["width"])
             else:
                 markerLayer = ""
             # Generate JS snippet to pass to static
-            layers_feature_resources += """
-S3.gis.layers_feature_resources[%i] = {
-    "name": "%s",
-    "id": "%s",
-    "url": "%s"%s%s%s%s%s
+            layers_feature_resources += '''
+S3.gis.layers_feature_resources[%i]={
+ "name":"%s",
+ "id":"%s",
+ "url":"%s"%s%s%s%s%s
 }
-""" % (counter,
+''' % (counter,
        name,
        id,
        url,
@@ -5305,9 +5308,9 @@ S3.gis.layers_feature_resources[%i] = {
         # WMS getFeatureInfo
         # (loads conditionally based on whether queryable WMS Layers have been added)
         if s3.gis.get_feature_info:
-            getfeatureinfo = """S3.i18n.gis_get_feature_info = '%s';
-S3.i18n.gis_feature_info = '%s';
-""" % (T("Get Feature Info"),
+            getfeatureinfo = '''S3.i18n.gis_get_feature_info="%s"
+S3.i18n.gis_feature_info="%s"
+''' % (T("Get Feature Info"),
        T("Feature Info"))
         else:
             getfeatureinfo = ""
@@ -5320,7 +5323,7 @@ S3.i18n.gis_feature_info = '%s';
         # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
         config_script = "".join((
             authenticated,
-            "S3.public_url = '%s';\n" % public_url,  # Needed just for GoogleEarthPanel
+            '''S3.public_url='%s'\n''' % public_url,  # Needed just for GoogleEarthPanel
             config_id,
             s3_gis_window,
             s3_gis_windowHide,
@@ -5329,17 +5332,17 @@ S3.i18n.gis_feature_info = '%s';
             collapsed,
             toolbar,
             loc_select,
-            "S3.gis.map_height = %i;\n" % map_height,
-            "S3.gis.map_width = %i;\n" % map_width,
-            "S3.gis.zoom = %i;\n" % (zoom or 1),
+            '''S3.gis.map_height=%i\n''' % map_height,
+            '''S3.gis.map_width=%i\n''' % map_width,
+            '''S3.gis.zoom=%i\n''' % (zoom or 1),
             center,
-            "S3.gis.projection = '%i';\n" % projection,
-            "S3.gis.units = '%s';\n" % units,
-            "S3.gis.maxResolution = %f;\n" % maxResolution,
-            "S3.gis.maxExtent = [%s];\n" % maxExtent,
-            "S3.gis.numZoomLevels = %i;\n" % numZoomLevels,
-            "S3.gis.max_w = %i;\n" % settings.get_gis_marker_max_width(),
-            "S3.gis.max_h = %i;\n" % settings.get_gis_marker_max_height(),
+            '''S3.gis.projection='%i'\n''' % projection,
+            '''S3.gis.units='%s'\n''' % units,
+            '''S3.gis.maxResolution=%f\n'''% maxResolution,
+            '''S3.gis.maxExtent=[%s]\n''' % maxExtent,
+            '''S3.gis.numZoomLevels=%i\n''' % numZoomLevels,
+            '''S3.gis.max_w=%i\n''' % settings.get_gis_marker_max_width(),
+            '''S3.gis.max_h=%i\n''' % settings.get_gis_marker_max_height(),
             mouse_position,
             duplicate_features,
             wms_browser_name,
@@ -5348,9 +5351,9 @@ S3.i18n.gis_feature_info = '%s';
             mgrs_url,
             draw_feature,
             draw_polygon,
-            "S3.gis.marker_default = '%s';\n" % marker_default.image,
-            "S3.gis.marker_default_height = %i;\n" % marker_default.height,
-            "S3.gis.marker_default_width = %i;\n" % marker_default.width,
+            '''S3.gis.marker_default='%s'\n''' % marker_default.image,
+            '''S3.gis.marker_default_height=%i\n''' % marker_default.height,
+            '''S3.gis.marker_default_width=%i\n''' % marker_default.width,
             osm_auth,
             layers_feature_queries,
             layers_feature_resources,
@@ -5362,30 +5365,30 @@ S3.i18n.gis_feature_info = '%s';
             getfeatureinfo,             # Presence of labels turns feature on
             upload_layer,               # Presence of label turns feature on
             layer_properties,           # Presence of label turns feature on
-            "S3.i18n.gis_requires_login = '%s';\n" % T("Requires Login"),
-            "S3.i18n.gis_base_layers = '%s';\n" % T("Base Layers"),
-            "S3.i18n.gis_overlays = '%s';\n" % T("Overlays"),
-            "S3.i18n.gis_layers = '%s';\n" % T("Layers"),
-            "S3.i18n.gis_draft_layer = '%s';\n" % T("Draft Features"),
-            "S3.i18n.gis_cluster_multiple = '%s';\n" % T("There are multiple records at this location"),
-            "S3.i18n.gis_loading = '%s';\n" % T("Loading"),
-            "S3.i18n.gis_length_message = '%s';\n" % T("The length is"),
-            "S3.i18n.gis_area_message = '%s';\n" % T("The area is"),
-            "S3.i18n.gis_length_tooltip = '%s';\n" % T("Measure Length: Click the points along the path & end with a double-click"),
-            "S3.i18n.gis_area_tooltip = '%s';\n" % T("Measure Area: Click the points around the polygon & end with a double-click"),
-            "S3.i18n.gis_zoomfull = '%s';\n" % T("Zoom to maximum map extent"),
-            "S3.i18n.gis_zoomout = '%s';\n" % T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle"),
-            "S3.i18n.gis_zoomin = '%s';\n" % T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle"),
-            "S3.i18n.gis_pan = '%s';\n" % T("Pan Map: keep the left mouse button pressed and drag the map"),
-            "S3.i18n.gis_navPrevious = '%s';\n" % T("Previous View"),
-            "S3.i18n.gis_navNext = '%s';\n" % T("Next View"),
-            "S3.i18n.gis_geoLocate = '%s';\n" % T("Zoom to Current Location"),
-            "S3.i18n.gis_draw_feature = '%s';\n" % T("Add Point"),
-            "S3.i18n.gis_draw_polygon = '%s';\n" % T("Add Polygon"),
-            "S3.i18n.gis_save = '%s';\n" % T("Save: Default Lat, Lon & Zoom for the Viewport"),
-            "S3.i18n.gis_potlatch = '%s';\n" % T("Edit the OpenStreetMap data for this area"),
+            '''S3.i18n.gis_requires_login='%s'\n''' % T("Requires Login"),
+            '''S3.i18n.gis_base_layers='%s'\n''' % T("Base Layers"),
+            '''S3.i18n.gis_overlays='%s'\n''' % T("Overlays"),
+            '''S3.i18n.gis_layers='%s'\n''' % T("Layers"),
+            '''S3.i18n.gis_draft_layer='%s'\n''' % T("Draft Features"),
+            '''S3.i18n.gis_cluster_multiple='%s'\n''' % T("There are multiple records at this location"),
+            '''S3.i18n.gis_loading='%s'\n''' % T("Loading"),
+            '''S3.i18n.gis_length_message='%s'\n''' % T("The length is"),
+            '''S3.i18n.gis_area_message='%s'\n''' % T("The area is"),
+            '''S3.i18n.gis_length_tooltip='%s'\n''' % T("Measure Length: Click the points along the path & end with a double-click"),
+            '''S3.i18n.gis_area_tooltip='%s'\n''' % T("Measure Area: Click the points around the polygon & end with a double-click"),
+            '''S3.i18n.gis_zoomfull='%s'\n''' % T("Zoom to maximum map extent"),
+            '''S3.i18n.gis_zoomout='%s'\n''' % T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle"),
+            '''S3.i18n.gis_zoomin='%s'\n''' % T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle"),
+            '''S3.i18n.gis_pan='%s'\n''' % T("Pan Map: keep the left mouse button pressed and drag the map"),
+            '''S3.i18n.gis_navPrevious='%s'\n''' % T("Previous View"),
+            '''S3.i18n.gis_navNext='%s'\n''' % T("Next View"),
+            '''S3.i18n.gis_geoLocate='%s'\n''' % T("Zoom to Current Location"),
+            '''S3.i18n.gis_draw_feature='%s'\n''' % T("Add Point"),
+            '''S3.i18n.gis_draw_polygon='%s'\n''' % T("Add Polygon"),
+            '''S3.i18n.gis_save='%s'\n''' % T("Save: Default Lat, Lon & Zoom for the Viewport"),
+            '''S3.i18n.gis_potlatch='%s'\n''' % T("Edit the OpenStreetMap data for this area"),
             # For S3LocationSelectorWidget
-            "S3.i18n.gis_current_location = '%s';\n" % T("Current Location"),
+            '''S3.i18n.gis_current_location='%s'\n''' % T("Current Location"),
         ))
         html_append(SCRIPT(config_script))
 
@@ -5409,17 +5412,17 @@ S3.i18n.gis_feature_info = '%s';
 
         script = "','".join(scripts)
         if ready:
-            ready = """%s
-S3.gis.show_map();""" % ready
+            ready = '''%s
+S3.gis.show_map()''' % ready
         else:
             ready = "S3.gis.show_map();"
         # Tell YepNope to load all our scripts asynchronously & then run the callback
-        script = """yepnope({
-    load: ['%s'],
-    complete: function() {
-        %s
-    }
-});""" % (script, ready)
+        script = '''yepnope({
+ load:['%s'],
+ complete:function(){
+  %s
+ }
+})''' % (script, ready)
 
         html_append(SCRIPT(script))
 
@@ -5620,7 +5623,7 @@ class Layer(object):
             layer_type_json = json.dumps(sublayer_dicts,
                                          sort_keys=True,
                                          indent=4)
-            return "%s = %s\n" % (self.js_array, layer_type_json)
+            return '''%s=%s\n''' % (self.js_array, layer_type_json)
         else:
             return None
 
@@ -5766,10 +5769,7 @@ class BingLayer(Layer):
         if output:
             result = json.dumps(output, indent=4, sort_keys=True)
             if result:
-                return "%s = %s\n" % (
-                    self.js_array,
-                    result
-                )
+                return '''%s=%s\n''' % (self.js_array, result)
 
         return None
 
@@ -5797,7 +5797,7 @@ class CoordinateLayer(Layer):
                 visibility = "true"
             else:
                 visibility = "false"
-            output = "S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s};" % \
+            output = '''S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s}''' % \
                 (name_safe, visibility, sublayer.layer_id)
             return output
         else:
@@ -5828,7 +5828,7 @@ class EmptyLayer(Layer):
                 base = ",base:true"
             else:
                 base = ""
-            output = "S3.gis.EmptyLayer={name:'%s',id:%s%s};\n" % \
+            output = '''S3.gis.EmptyLayer={name:'%s',id:%s%s}\n''' % \
                 (name_safe, sublayer.layer_id, base)
             return output
         else:
@@ -6042,7 +6042,7 @@ class GoogleLayer(Layer):
                 if sublayer.type == "earth":
                     output["Earth"] = str(T("Switch to 3D"))
                     add_script("http://www.google.com/jsapi?key=%s" % apikey)
-                    add_script(SCRIPT("try{google && google.load('earth','1');}catch(e){};", _type="text/javascript"))
+                    add_script(SCRIPT('''try{google && google.load('earth','1')}catch(e){}''', _type="text/javascript"))
                     if debug:
                         # Non-debug has this included within GeoExt.js
                         add_script("scripts/gis/gxp/widgets/GoogleEarthPanel.js")
@@ -6104,10 +6104,7 @@ class GoogleLayer(Layer):
         if output:
             result = json.dumps(output, indent=4, sort_keys=True)
             if result:
-                return "%s = %s\n" % (
-                    self.js_array,
-                    result
-                )
+                return '''%s=%s\n''' % (self.js_array, result)
 
         return None
 
@@ -6165,9 +6162,9 @@ class JSLayer(Layer):
         if sublayers:
             output = "function addJSLayers() {"
             for sublayer in sublayers:
-                output = "%s\n%s" % (output,
-                                     sublayer.code)
-            output = "%s\n}" % output
+                output = '''%s\n%s''' % (output,
+                                         sublayer.code)
+            output = '''%s\n}''' % output
             return output
         else:
             return None

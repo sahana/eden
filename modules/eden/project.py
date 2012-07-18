@@ -102,7 +102,8 @@ class S3ProjectModel(S3Model):
         sector_id = self.org_sector_id
         human_resource_id = self.hrm_human_resource_id
 
-        NONE = current.messages.NONE
+        messages = current.messages
+        NONE = messages.NONE
 
         settings = current.deployment_settings
         mode_3w = settings.get_project_mode_3w()
@@ -165,11 +166,12 @@ class S3ProjectModel(S3Model):
                                                                   sort=True,
                                                                   multiple=True)),
                                          represent = lambda opt, row=None: \
-                                            multiref_represent(opt, "project_theme"),
+                                             multiref_represent(opt, "project_theme"),
                                          ondelete = "RESTRICT",
                                          widget = lambda f, v: \
-                                            CheckboxesWidgetS3.widget(f, v,
-                                                                      cols=3)
+                                             s3_grouped_checkboxes_widget(f, v,
+                                                                          cols=3,
+                                                                          help_field="comments")
                                         )
 
         # Projects
@@ -205,11 +207,12 @@ class S3ProjectModel(S3Model):
                                                                   sort=True,
                                                                   multiple=True)),
                                           represent = lambda opt, row=None: \
-                                            multiref_represent(opt, "project_hazard"),
+                                              multiref_represent(opt, "project_hazard"),
                                           ondelete = "RESTRICT",
-                                          widget = lambda f, v: \
-                                            CheckboxesWidgetS3.widget(f, v,
-                                                                      cols=3)
+                                          widget=lambda f, v: \
+                                              s3_grouped_checkboxes_widget(f, v,
+                                                                           cols=3,
+                                                                           help_field="comments")
                                           )
 
         # ---------------------------------------------------------------------
@@ -225,6 +228,12 @@ class S3ProjectModel(S3Model):
             5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
         }
 
+        project_status_opts = {
+            1: T("Proposed"),
+            2: T("Current"),
+            3: T("Completed"),
+        }
+    
         tablename = "project_project"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -248,6 +257,11 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
+                             Field("status", "integer",
+                                   label = T("Status"),
+                                   requires = IS_IN_SET(project_status_opts),
+                                   represent = lambda opt: \
+                                    project_status_opts.get(opt, messages.UNKNOWN_OPT)),
                              # NB There is additional client-side validation for start/end date in the Controller
                              s3_date("start_date",
                                      label = T("Start Date")
@@ -368,6 +382,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_hazard",
                         label = T("Hazard"),
                         field = "multi_hazard_id",
+                        help_field="comments",
                         cols = 4
                     ))
         if not theme_percentages:
@@ -375,6 +390,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_theme",
                         label = T("Theme"),
                         field = "multi_theme_id",
+                        help_field="comments",
                         cols = 4
                     ))
         if mode_drr:

@@ -467,6 +467,18 @@ $(function() {
             )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        req_ref = S3ReusableField("req_ref", "string",
+                                  readable=False, writable=False)
+        return Storage(
+                req_req_ref = req_ref
+            )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_create_form_mods():
         """
@@ -971,7 +983,6 @@ $(document).ready(function(){
 })'''),
                                         )
 
-
         self.configure(tablename,
                        super_entity="supply_item_entity",
                        onaccept=req_item_onaccept,
@@ -999,6 +1010,17 @@ $(document).ready(function(){
         return Storage(
                 req_item_id = req_item_id,
                 req_item_represent = self.req_item_represent,
+            )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+        req_item_id = S3ReusableField("req_item_id", "integer",
+                                      readable=False, writable=False)
+        return Storage(
+                req_item_id = req_item_id
             )
 
     # -------------------------------------------------------------------------

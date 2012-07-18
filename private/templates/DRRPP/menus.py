@@ -62,12 +62,10 @@ class S3MainMenu(default.S3MainMenu):
                     MT("Login", c="default", f="user", m="login",
                        _id="auth_menu_login",
                        vars=dict(_next=login_next), **attr),
-                    MT("Register", c="default", f="user", args="register",
-                       vars=dict(_next=login_next),
-                       check=self_registration),
+                    MT("Register", c="default", f="index", args="register"),
                     MT("About", c="default", f="about"),
                     MT("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
-                    MT("Contact", url="mailto:admin@drrprojects.net"),
+                    MT("Contact", c="default", f="index", args="contact"),
                 )
         else:
             # Logged-in
@@ -81,7 +79,7 @@ class S3MainMenu(default.S3MainMenu):
                     MT("Logout", c="default", f="user", args="logout", _id="auth_menu_logout"),
                     MT("About", c="default", f="about"),
                     MT("User Manual", c="static", f="DRR_Portal_User_Manual.pdf"),
-                    MT("Contact", url="mailto:admin@drrprojects.net"),
+                    MT("Contact", c="default", f="index", args="contact"),
                 )
 
         return menu_top

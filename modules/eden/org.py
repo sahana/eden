@@ -260,6 +260,10 @@ class S3OrganisationModel(S3Model):
                                             tooltip=help),
                                 ondelete = "SET NULL")
 
+        configure(tablename,
+                  deduplicate = self.organisation_type_duplicate,
+                  )
+
         # Tags as component of Organisation Types
         add_component("org_organisation_type_tag",
                       org_organisation_type=dict(joinby="organisation_type_id",
@@ -768,6 +772,21 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def organisation_type_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "org_organisation_type":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def org_organisation_type_represent(id, row=None):
         """ FK representation """
 
@@ -961,7 +980,7 @@ class S3OrganisationTypeTagModel(S3Model):
                                   self.org_organisation_type_id(),
                                   # key is a reserved word in MySQL
                                   Field("tag", label=T("Key")),
-                                  Field("value", label=("Value")),
+                                  Field("value", label=T("Value")),
                                   s3_comments(),
                                   *s3_meta_fields())
 
@@ -1185,6 +1204,7 @@ class S3FacilityModel(S3Model):
         T = current.T
         db = current.db
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -1216,6 +1236,10 @@ class S3FacilityModel(S3Model):
             msg_record_modified = T("Facility Type updated"),
             msg_record_deleted = T("Facility Type deleted"),
             msg_list_empty = T("No Facility Types currently registered"))
+
+        configure(tablename,
+                  deduplicate = self.org_facility_type_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Facilities (generic)
@@ -1272,15 +1296,30 @@ class S3FacilityModel(S3Model):
             msg_record_deleted = T("Facility deleted"),
             msg_list_empty = T("No Facilities currently registered"))
 
-        self.configure(tablename,
-                       super_entity="org_site"
-                       )
+        configure(tablename,
+                  super_entity="org_site"
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_type_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "org_facility_type":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1405,12 +1444,31 @@ class S3RoomModel(S3Model):
                                   comment = room_comment,
                                   ondelete = "SET NULL")
 
+        self.configure(tablename,
+                       deduplicate = self.org_room_duplicate,
+                       )
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
                     org_room_id = room_id,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_room_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "org_room":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2072,20 +2130,13 @@ def org_office_controller():
                     comment=T("Search for office by text."),
                     field=["name", "comments", "email"]
                   ),
-                  # S3SearchOptionsWidget(
-                    # name="office_search_org",
-                    # label=T("Organization"),
-                    # comment=T("Search for office by organization."),
-                    # field="organisation_id",
-                    # represent = %(name)s,
-                    # cols = 3
-                  # ),
-                  S3SearchOrgHierarchyWidget(
+                  S3SearchOptionsWidget(
                     name="office_search_org",
                     label=T("Organization"),
                     comment=T("Search for office by organization."),
                     field="organisation_id",
-                    represent ="%(name)s",
+                    represent = "%(name)s",
+                    cols = 3
                   ),
                   S3SearchOptionsWidget(
                     name="office_search_location",

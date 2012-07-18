@@ -419,9 +419,12 @@ class S3SupplyModel(S3Model):
                       ),
                    ],
 
-            defaults=Storage(cols="category_id",
+            defaults=Storage(
+                             rows="name",
+                             cols="category_id",
                              fact="brand_id",
-                             aggregate="count"),
+                             aggregate="count",
+                            ),
             hide_comments=True,
         )
         item_search = S3Search(advanced=report_options.get("search"))

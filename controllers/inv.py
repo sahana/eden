@@ -27,7 +27,7 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def office():
     """
         Required to ensure the tabs work from req_match
@@ -190,19 +190,6 @@ def warehouse():
     return output
 
 # =============================================================================
-def incoming():
-    """ Incoming Shipments """
-
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_incoming()
-
-# =============================================================================
-def req_match():
-    """ Match Requests """
-
-    return s3db.req_match()
-
-# =============================================================================
 def inv_item():
     """ REST Controller """
 
@@ -241,6 +228,7 @@ def inv_item():
                                       (T("Category"), "item_category"),
                                       "quantity",
                                       "pack_value",
+                                      #(T("Total Value"), "total_value"),
                                       ]
                        )
 
@@ -508,7 +496,7 @@ def send():
                                "return_quantity",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                                "comments",
                               ]
             elif record.status == SHIP_STATUS_RETURNING:
@@ -523,7 +511,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                               ]
             else:
                 list_fields = ["id",
@@ -536,7 +524,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                               ]
             s3db.configure("inv_track_item",
                             list_fields=list_fields,
@@ -1549,9 +1537,11 @@ def adj():
                                              "adj_item",
                                              adj_item_id,
                                              "update"]))
-                    elif "site" in request.vars:
-                        table.site_id.writable = True
-                        table.site_id.default = request.vars.site
+                    else:
+                        table.comments.default = "Complete Stock Adjustment"
+                        if "site" in request.vars:
+                            table.site_id.writable = True
+                            table.site_id.default = request.vars.site
         return True
     s3.prep = prep
 
@@ -1676,7 +1666,7 @@ def recv_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def send_item_json():
     """
     """
@@ -1706,12 +1696,25 @@ def send_item_json():
     response.headers["Content-Type"] = "application/json"
     return json_str
 
-#==============================================================================
+# -----------------------------------------------------------------------------
 def kit():
     return s3_rest_controller()
 
-#==============================================================================
+# -----------------------------------------------------------------------------
 def facility():
     return s3_rest_controller("org")
+
+# -----------------------------------------------------------------------------
+def incoming():
+    """ Incoming Shipments """
+
+    # Defined in the Model for use from Multiple Controllers for unified menus
+    return inv_incoming()
+
+# -----------------------------------------------------------------------------
+def req_match():
+    """ Match Requests """
+
+    return s3db.req_match()
 
 # END =========================================================================

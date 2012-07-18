@@ -451,7 +451,9 @@ class S3HRModel(S3Model):
         """
         human_resource_id = S3ReusableField("human_resource_id", "integer",
                                             readable=False, writable=False)
-        return Storage(hrm_human_resource_id = human_resource_id)
+        return Storage(
+                hrm_human_resource_id = human_resource_id
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -627,13 +629,14 @@ class S3HRSiteModel(S3Model):
             record = db(ltable.id == id).select(ltable.deleted_fk,
                                                 limitby=(0, 1)).first()
 
-            deleted_fks = json.loads(record.deleted_fk)
-            human_resource_id = deleted_fks["human_resource_id"]
-            db(table.id == human_resource_id).update(
-                                                    location_id=None,
-                                                    site_id=None,
-                                                    site_contact=False
-                                                    )
+            if record:
+                deleted_fks = json.loads(record.deleted_fk)
+                human_resource_id = deleted_fks["human_resource_id"]
+                db(table.id == human_resource_id).update(
+                                                        location_id=None,
+                                                        site_id=None,
+                                                        site_contact=False
+                                                        )
         else:
             human_resource_id = form.vars.human_resource_id
 
@@ -1572,15 +1575,15 @@ class S3HRSkillModel(S3Model):
         # Users can add their own but these are confirmed only by specific roles
         #
 
+        participant_id_comment = self.pr_person_comment(
+                                    T("Participant"),
+                                    T("Type the first few characters of one of the Participant's names."),
+                                    child="person_id")
         tablename = "hrm_training"
         table = define_table(tablename,
                              #@ToDo: Create a way to add new people to training as staff/volunteers
                              person_id(empty=False,
-                                       comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Participant"),
-                                                            T("Start typing the Participant's name.")
-                                                            )
-                                          )
+                                       comment = participant_id_comment,
                                 ),
                              # Just used when created from participation in an Event
                              Field("training_event_id", db.hrm_training_event,
@@ -4040,7 +4043,7 @@ def hrm_rheader(r, tabs=[]):
 
                 # Already formatted as HTML
                 active = TD(record.active)
-                
+
                 row1 = TR(TH("%s:" % T("Programme")),
                           record.programme,
                           TH("%s:" % T("Active?")),
