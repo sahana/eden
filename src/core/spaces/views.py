@@ -57,7 +57,7 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from helpers.cache import get_or_insert_object_in_cache
-from apps.ecidadania.voting.models import Poll, Voting
+from apps.ecidadania.voting.models import Poll
 #
 # RSS FEED
 #
@@ -302,7 +302,6 @@ class ViewSpaceIndex(DetailView):
             or self.request.user in place.mods.all()
             or self.request.user.is_staff or self.request.user.is_superuser) 
         context['polls'] = Poll.objects.filter(space=place.id)
-        context['votings'] = Voting.objects.filter(space=place.id)
         return context
         
 
@@ -628,6 +627,8 @@ class AddEvent(FormView):
         form_uncommited.event_author = self.request.user
         form_uncommited.space = self.space
         form_uncommited.save()
+        form.save_m2m()
+
         return super(AddEvent, self).form_valid(form) 
 
     def get_context_data(self, **kwargs):
@@ -694,6 +695,13 @@ class EditEvent(UpdateView):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
         return '/spaces/' + self.space.name
     
+    def form_valid(self, form):
+        form_uncommited = form.save(commit=False)
+        form_uncommited.save()
+        form.save_m2m()
+
+        return super(EditEvent, self).form_valid(form)
+
     def get_context_data(self, **kwargs):
         context = super(EditEvent, self).get_context_data(**kwargs)
         place =  get_object_or_404(Space, url=self.kwargs['space_url'])
