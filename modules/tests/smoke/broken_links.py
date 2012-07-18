@@ -89,7 +89,7 @@ class BrokenLinkTest(Web2UnitTest):
                     self.b.submit("Login")
                     # If login is successful then should be redirected to the homepage
                     return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except mechanize.ControlNotFoundError:
+            except mechanize._form.ControlNotFoundError:
                 pass
         return False
 
@@ -167,7 +167,7 @@ class BrokenLinkTest(Web2UnitTest):
                 self.brokenLinks[index_url] = (http_code,url)
             try:
                 links = self.b._browser.links()
-            except mechanize.BrowserStateError:
+            except mechanize._mechanize.BrowserStateError:
                 continue # not html so unable to extract links
             for link in (links):
                 url = link.absolute_url

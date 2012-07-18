@@ -1575,15 +1575,15 @@ class S3HRSkillModel(S3Model):
         # Users can add their own but these are confirmed only by specific roles
         #
 
+        participant_id_comment = self.pr_person_comment(
+                                    T("Participant"),
+                                    T("Type the first few characters of one of the Participant's names."),
+                                    child="person_id")
         tablename = "hrm_training"
         table = define_table(tablename,
                              #@ToDo: Create a way to add new people to training as staff/volunteers
                              person_id(empty=False,
-                                       comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("Participant"),
-                                                            T("Start typing the Participant's name.")
-                                                            )
-                                          )
+                                       comment = participant_id_comment,
                                 ),
                              # Just used when created from participation in an Event
                              Field("training_event_id", db.hrm_training_event,

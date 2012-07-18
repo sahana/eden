@@ -30,7 +30,7 @@ from tests import *
 #import unittest, re, time
 
 class AddStaffToWarehouse(SeleniumUnitTest):
-    def test_hrm007_add_staff_to_warhouse(self):
+    def test_hrm007_add_staff_to_warehouse(self):
         """
             @case: HRM007
             @description: Add a premade made staff to a Warehouse
@@ -38,8 +38,18 @@ class AddStaffToWarehouse(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        self.login(account="admin", nexturl="inv/warehouse/4/human_resource")
-        self.browser.find_element_by_id("select_from_registry").click()
+        config = self.config
+        browser = self.browser
+        self.login(account="admin", nexturl="inv/warehouse/")
+        self.dt_filter("Lospalos Warehouse")
+        self.dt_action()
+        url = browser.current_url
+        url_parts = url.split("/")
+        try:
+            wh_id = int(url_parts[-2])
+        except:
+            wh_id = int(url_parts[-1])
+        browser.get("%s/inv/warehouse/n/%s/human_resource_site" % (config.url, wh_id))
         
         self.create("hrm_human_resource", 
                     [

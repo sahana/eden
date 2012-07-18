@@ -496,7 +496,7 @@ def send():
                                "return_quantity",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                                "comments",
                               ]
             elif record.status == SHIP_STATUS_RETURNING:
@@ -511,7 +511,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                               ]
             else:
                 list_fields = ["id",
@@ -524,7 +524,7 @@ def send():
                                "bin",
                                "owner_org_id",
                                "supply_org_id",
-                               "item_status",
+                               "inv_item_status",
                               ]
             s3db.configure("inv_track_item",
                             list_fields=list_fields,
@@ -1537,9 +1537,11 @@ def adj():
                                              "adj_item",
                                              adj_item_id,
                                              "update"]))
-                    elif "site" in request.vars:
-                        table.site_id.writable = True
-                        table.site_id.default = request.vars.site
+                    else:
+                        table.comments.default = "Complete Stock Adjustment"
+                        if "site" in request.vars:
+                            table.site_id.writable = True
+                            table.site_id.default = request.vars.site
         return True
     s3.prep = prep
 
