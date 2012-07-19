@@ -640,13 +640,18 @@ $(function() {
             @ToDo: Roll these up like inv_tabs in inv.py
         """
 
-        if current.deployment_settings.has_module("req") and \
-            current.auth.s3_has_permission("read", "req_req"):
-            return [
-                    (T("Requests"), "req"),
-                    (T("Match Requests"), "req_match/"),
-                    (T("Commit"), "commit")
-                    ]
+        s3_has_permission = current.auth.s3_has_permission
+        settings = current.deployment_settings
+        if settings.has_module("req") and \
+            s3_has_permission("read", "req_req"):
+            tabs= [(T("Requests"), "req")]
+            if s3_has_permission("read", "req_req",
+                                 c=current.request.controller,
+                                 f="req_match"):
+                tabs.append((T("Match Requests"), "req_match/"))
+            if settings.get_req_use_commit():
+                tabs.append((T("Commit"), "commit"))
+            return tabs
         else:
             return []
 

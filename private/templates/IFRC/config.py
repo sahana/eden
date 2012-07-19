@@ -66,6 +66,7 @@ settings.ui.cluster = True
 settings.ui.camp = True
 
 settings.req.req_type = ["Stock"]
+#settings.req.use_commit = False
 
 settings.inv.collapse_tabs = True
 
