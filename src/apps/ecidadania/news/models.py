@@ -49,7 +49,7 @@ class Post(models.Model):
     def __unicode__(self):
         return self.post_title
 
-    def comment_count(self) :
+    def comment_count(self):
         ct = ContentType.objects.get_for_model(Post)
         obj_pk = self.id
         return Comment.objects.filter(content_type=ct,object_pk=obj_pk).count()

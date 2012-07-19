@@ -263,8 +263,13 @@
                                     </ul>
                                 {% endif %}
                             {% endif %}
-                            <h4>{% trans "Highlighted news" %}</h4>
+                            <h4>{% trans "Most viewed" %}</h4>
                             <h4>{% trans "Most commented" %}</h4>
+                                {% for c in mostcommented %}
+                                    <ul class="unstyled">
+                                        <li><a href="{% url 'view-post' get_place.url c %}">{{ c }}</a></li>
+                                    </ul>
+                                {% endfor %}
                             <h4>{% trans "View monthly archive" %}</h4>
                             <ul class="unstyled">
                                 <li><a href="{% url 'list-space-news' get_place.url %}">{% trans "News archive" %}</a></li>

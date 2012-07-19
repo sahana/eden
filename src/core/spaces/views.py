@@ -47,6 +47,8 @@ from django.template import RequestContext
 from django.contrib.syndication.views import Feed
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
+from django.contrib.comments.models import Comment
+from django.db.models import Count
 
 # e-cidadania data models
 from core.spaces.models import Space, Entity, Document, Event, Intent
@@ -283,6 +285,14 @@ class ViewSpaceIndex(DetailView):
         # databass
         place_url = self.kwargs['space_url']
         place = get_or_insert_object_in_cache(Space, place_url, url=place_url)
+        posts_by_score = Comment.objects.filter(is_public=True) \
+            .values('object_pk').annotate(score=Count('id')).order_by('-score')
+        post_ids = [int(obj['object_pk']) for obj in posts_by_score]
+        top_posts = Post.objects.filter(space=place.id).in_bulk(post_ids)
+
+        o_list = Comment.objects.annotate(ocount=Count('object_pk'))
+        print o_list
+
         context['entities'] = Entity.objects.filter(space=place.id)
         context['documents'] = Document.objects.filter(space=place.id)
         context['proposalsets'] = ProposalSet.objects.filter(space=place.id)
@@ -290,6 +300,10 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-pub_date')
         context['publication'] = Post.objects.filter(space=place.id) \
                                                     .order_by('-pub_date')[:10]
+        context['mostcommented'] = top_posts
+        # context['mostcommented'] = sorted(o_list,
+        #     key=lambda k: k['ocount'])[:10]
+        # print sorted(o_list, key=lambda k: k['ocount'])[:10]
         context['page'] = StaticPage.objects.filter(show_footer=True) \
                                                     .order_by('-order')
         context['messages'] = messages.get_messages(self.request)
