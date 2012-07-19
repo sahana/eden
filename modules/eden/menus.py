@@ -651,16 +651,22 @@ class S3OptionsMenu(object):
         return M()(
                     M("Scenarios", c="scenario", f="scenario")(
                         M("New", m="create"),
+                        M("Import", m="import", p="create"),
                         M("View All"),
                     ),
                     M("Events", c="event", f="event")(
                         M("New", m="create"),
-                        M("View All")
+                        M("View All"),
                     ),
-                    M("Incidents", c="incident", f="event")(
+                    M("Incidents", c="event", f="incident")(
                         M("New", m="create"),
-                        M("View All")
-                    )
+                        M("View All"),
+                    ),
+                    M("Incident Types", c="event", f="incident_type")(
+                        M("New", m="create"),
+                        M("Import", m="import", p="create"),
+                        M("View All"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1515,7 +1521,7 @@ class S3OptionsMenu(object):
 
         return M(c="req")(
                     M("Requests", f="req")(
-                        M("Add Request", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("List All Requested Items", f="req_item"),
                         M("List All Requested Skills", f="req_skill",
@@ -1524,6 +1530,24 @@ class S3OptionsMenu(object):
                     ),
                     M("Commitments", f="commit", check=use_commit)(
                         M("List All")
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    def stats(self):
+        """ Statistics """
+
+        return M(c="stats")(
+                    M("Demographics", f="demographic")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Demographic Data", f="demographic_data")(
+                        M("New", m="create"),
+                        M("Import", m="import"),
+                        M("List All"),
+                        #M("Search", m="search"),
                     ),
                 )
 
@@ -1549,6 +1573,24 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    def vulnerability(self):
+        """ Vulnerability """
+
+        return M(c="vulnerability")(
+                    M("Indicators", f="indicator")(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Data", f="data")(
+                        M("New", m="create"),
+                        M("Import", m="import"),
+                        M("List All"),
+                        #M("Search", m="search"),
                     ),
                 )
 

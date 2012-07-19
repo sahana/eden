@@ -77,18 +77,37 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
                          str(SPAN(T("No options available"),
                                   _class="no-options-available")))
 
-        # Test the widget method with a virtual field and custom options
+        # Test widget with virtual field and one option.
+        # Should return no-options message.
         widget = S3SearchOptionsWidget("virtual_field",
                                        options={1:"One"})
         output = widget.widget(self.resource, {})
         self.assertEqual(str(output),
-                         str(TABLE(TR(TD(LABEL(INPUT(_name="human_resource_search_select_virtual_field",
-                                                     _type="checkbox",
-                                                     _value="1"),
-                                               "One"))),
-                                   _class="generic-widget",
-                                   _id="None_human_resource_search_select_virtual_field",
-                                   _name="human_resource_search_select_virtual_field")))
+                         str(SPAN(T("No options available"),
+                                  _class="no-options-available")))
+
+        # Test widget with virtual field and multiple options.
+        widget = S3SearchOptionsWidget("virtual_field",
+                                       options={1:"One", 2:"Two"})
+        output = widget.widget(self.resource, {})
+        self.assertEqual(str(output),
+                         str(TABLE(TR(TD(INPUT(_name="human_resource_search_select_virtual_field",
+                                               _id="id-human_resource_search_select_virtual_field-0",
+                                               _type="checkbox",
+                                               _value="1"),
+                                         LABEL("One",
+                                               _for="id-human_resource_search_select_virtual_field-0"),
+                                         ),
+                                      ),
+                                   TR(TD(INPUT(_name="human_resource_search_select_virtual_field",
+                                               _id="id-human_resource_search_select_virtual_field-1",
+                                               _type="checkbox",
+                                               _value="2"),
+                                         LABEL("Two",
+                                               _for="id-human_resource_search_select_virtual_field-1")
+                                         )
+                                      ),
+                                   _class="s3-checkboxes-widget")))
 
 # =============================================================================
 class TestS3SearchMinMaxWidget(unittest.TestCase):

@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ def index():
 
     """ Module's Home Page """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -26,15 +26,10 @@ def create():
     """ Redirect to event/create """
     redirect(URL(f="event", args="create"))
 
-# =============================================================================
-# Events
-# =============================================================================
+# -----------------------------------------------------------------------------
 def event():
-
     """
         RESTful CRUD controller
-
-        An Event is an instantiation of a template
     """
 
     # Pre-process
@@ -46,20 +41,50 @@ def event():
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
                         s3db.req_create_form_mods()
-                elif r.component.name == "config":
+
+            elif r.method != "update" and r.method != "read":
+                # Create or ListCreate
+                r.table.closed.writable = r.table.closed.readable = False
+
+            elif r.method == "update":
+                # Can't change details after event activation
+                r.table.exercise.writable = False
+                r.table.exercise.comment = None
+                r.table.zero_hour.writable = False
+
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller(rheader=event_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
+def incident():
+    """
+        RESTful CRUD controller
+    """
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component:
+                if r.component.name == "config":
                     s3db.configure("gis_config",
-                                    deletable=False)
+                                   deletable=False)
                     s3.crud.submit_button = T("Update")
                 elif r.component.name == "human_resource":
                     s3db.configure("event_human_resource",
-                                    list_fields=["human_resource_id"])
+                                   list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
+                    s3mgr.LABEL["DELETE"]=T("Remove")
                 elif r.component.name == "asset":
                     s3db.configure("event_asset",
-                                    list_fields=["asset_id"])
+                                   list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
+                    s3mgr.LABEL["DELETE"]=T("Remove")
                 else:
                     s3.crud.submit_button = T("Assign")
+                    s3mgr.LABEL["DELETE"]=T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -73,40 +98,25 @@ def event():
                 r.table.zero_hour.writable = False
 
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-process
     def postp(r, output):
 
         if r.interactive:
             if r.component:
-                if r.component.name == "asset":
-                    s3mgr.LABEL["DELETE"]=T("Remove")
-
-                elif r.component.name == "human_resource":
-                    s3mgr.LABEL["DELETE"]=T("Remove")
-                    if "msg" in deployment_settings.modules:
-                        update_url = URL(c="hrm", f="human_resource", args=["[id]"])
-                        s3mgr.crud.action_buttons(r, update_url=update_url)
-                        s3mgr.crud.action_button(url = URL(f="compose",
-                                                           vars = {"hrm_id": "[id]"}),
-                                                 _class = "action-btn",
-                                                 label = str(T("Send Notification")))
-
-                elif r.component.name == "site":
-                    s3mgr.LABEL["DELETE"]=T("Remove")
-
-                elif r.component.name == "task":
-                    s3mgr.LABEL["DELETE"]=T("Remove")
-
-                elif r.component.name == "activity":
-                    s3mgr.LABEL["DELETE"]=T("Remove")
-
+                if r.component.name == "human_resource":
+                    update_url = URL(c="hrm", f="human_resource", args=["[id]"])
+                    s3.crud.action_buttons(r, update_url=update_url)
+                    if "msg" in settings.modules:
+                        s3.crud.action_button(url = URL(f="compose",
+                                                        vars = {"hrm_id": "[id]"}),
+                                              _class = "action-btn",
+                                              label = str(T("Send Notification")))
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
-    output = s3_rest_controller("event", resourcename,
-                                rheader=event_rheader)
+    output = s3_rest_controller(rheader=event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -120,18 +130,8 @@ def event_rheader(r):
         if r.name == "event":
             # Event Controller
             tabs = [(T("Event Details"), None)]
-            if deployment_settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
-            if deployment_settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
-            if deployment_settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Facilities"), "site"))
-            if deployment_settings.has_module("req"):
+            if settings.has_module("req"):
                 tabs.append((T("Requests"), "req"))
-            #if deployment_settings.has_module("project"):
-            #    tabs.append((T("Activities"), "activity"))
-            tabs.append((T("Map Configuration"), "config"))
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             event = r.record
@@ -154,9 +154,42 @@ def event_rheader(r):
                                     TR(closed),
                                     ), rheader_tabs)
 
+        if r.name == "incident":
+            # Incident Controller
+            tabs = [(T("Incident Details"), None)]
+            if deployment_settings.has_module("project"):
+                tabs.append((T("Tasks"), "task"))
+            if deployment_settings.has_module("hrm"):
+                tabs.append((T("Human Resources"), "human_resource"))
+            if deployment_settings.has_module("asset"):
+                tabs.append((T("Assets"), "asset"))
+            tabs.append((T("Facilities"), "site"))
+            tabs.append((T("Map Configuration"), "config"))
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            record = r.record
+            if record:
+                if record.exercise:
+                    exercise = TH(T("EXERCISE"))
+                else:
+                    exercise = TH()
+                if record.closed:
+                    closed = TH(T("CLOSED"))
+                else:
+                    closed = TH()
+                rheader = DIV(TABLE(TR(exercise),
+                                    TR(TH("%s: " % T("Name")),
+                                       record.name),
+                                       TH("%s: " % T("Comments")),
+                                       record.comments,
+                                    TR(TH("%s: " % T("Zero Hour")),
+                                       record.zero_hour),
+                                    TR(closed),
+                                    ), rheader_tabs)
+
     return rheader
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def person():
     """ Person controller for AddPersonWidget """
 
@@ -167,16 +200,12 @@ def person():
         else:
             s3mgr.show_ids = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller("pr", "person")
 
-# =============================================================================
-# Messaging
-# =============================================================================
-
+# -----------------------------------------------------------------------------
 def compose():
-
     """ Send message to people/teams """
 
     vars = request.vars
@@ -223,216 +252,6 @@ def compose():
 
     output["title"] = title
     response.view = "msg/compose.html"
-    return output
-
-# =============================================================================
-# Components - no longer needed with new link-table support?
-# =============================================================================
-def asset():
-    """ RESTful CRUD controller """
-
-    # Load the Models
-    s3db.table("event_event")
-
-    # Parse the Request
-    r = s3mgr.parse_request()
-
-    link = request.vars.get("link", None)
-
-    # Pre-Process
-    if r.id and link:
-        # Go back to the asset list of the scenario/event after removing the asset
-        s3db.configure(r.tablename,
-                        delete_next=URL(link,
-                                        args=[r.record["%s_id" % link],
-                                              "asset"]))
-
-    edit_btn = None
-    if link:
-        if r.method in ("update", None) and r.id:
-            # Store the edit & delete buttons
-            edit_btn = A(T("Edit"),
-                         _href=r.url(method="update",
-                                     representation="html"),
-                         _target="_blank")
-            delete_btn=A(T("Remove this asset from this event"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
-            # Switch to the other request
-            asset_id = r.record.asset_id
-            r = s3base.S3Request(s3mgr,
-                                 c="asset", f="asset",
-                                 args=[str(asset_id)],
-                                 extension=auth.permission.format)
-    # Execute the request
-    output = r()
-
-    # Post-Process
-    s3_action_buttons(r)
-
-    # Restore the edit & delete buttons with the correct ID
-    if r.representation == "plain" and edit_btn:
-        output.update(edit_btn=edit_btn)
-    elif r.interactive and "delete_btn" in output:
-        output.update(delete_btn=delete_btn)
-
-    return output
-
-# -----------------------------------------------------------------------------
-def human_resource():
-    """ RESTful CRUD controller """
-
-    # Load the Models
-    s3db.table("event_event")
-
-    # Parse the Request
-    r = s3mgr.parse_request()
-
-    link = request.vars.get("link", None)
-
-    # Pre-Process
-    if r.id and link:
-        # Go back to the human_resource list of the scenario/event after removing the human_resource
-        s3db.configure(r.tablename,
-                        delete_next=URL(link,
-                                        args=[r.record["%s_id" % link],
-                                              "human_resource"]))
-
-    edit_btn = None
-    if link:
-        if r.method in ("update", None) and r.id:
-            # Store the edit & delete buttons
-            edit_btn = A(T("Edit"),
-                         _href=r.url(method="update",
-                                     representation="html"),
-                         _target="_blank")
-            delete_btn=A(T("Remove this human resource from this event"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
-            # Switch to the other request
-            hrm_id = r.record.human_resource_id
-            r = s3base.S3Request(s3mgr,
-                                 c="hrm", f="human_resource",
-                                 args=[str(hrm_id)],
-                                 extension=auth.permission.format)
-    # Execute the request
-    output = r()
-
-    # Post-Process
-    s3_action_buttons(r)
-
-    # Restore the edit & delete buttons with the correct ID
-    if r.representation == "plain" and edit_btn:
-        output.update(edit_btn=edit_btn)
-    elif r.interactive and "delete_btn" in output:
-        output.update(delete_btn=delete_btn)
-
-    return output
-
-# -----------------------------------------------------------------------------
-def site():
-    """ RESTful CRUD controller """
-
-    # Load the Models
-    s3db.table("event_event")
-
-    # Parse the Request
-    r = s3mgr.parse_request()
-
-    link = request.vars.get("link", None)
-
-    # Pre-Process
-    if r.id and link:
-        # Go back to the facility list of the scenario/event after removing the facility
-        s3db.configure(r.tablename,
-                        delete_next=URL(link,
-                                        args=[r.record["%s_id" % link],
-                                              "site"]))
-
-    edit_btn = None
-    if link:
-        if r.method in ("update", None) and r.id:
-            # Store the edit & delete buttons
-            edit_btn = A(T("Edit"),
-                         _href=r.url(method="update",
-                                     representation="html"),
-                         _target="_blank")
-            delete_btn=A(T("Remove this facility from this event"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
-            # Switch to the other request
-            site_id = r.record.site_id
-            r = s3base.S3Request(s3mgr,
-                                 c="org", f="site",
-                                 args=[str(site_id)],
-                                 extension=auth.permission.format)
-    # Execute the request
-    output = r()
-
-    # Post-Process
-    s3_action_buttons(r)
-
-    # Restore the edit & delete buttons with the correct ID
-    if r.representation == "plain" and edit_btn:
-        output.update(edit_btn=edit_btn)
-    elif r.interactive and "delete_btn" in output:
-        output.update(delete_btn=delete_btn)
-
-    return output
-
-# -----------------------------------------------------------------------------
-def task():
-    """ RESTful CRUD controller """
-
-    # Load the Models
-    s3db.table("event_event")
-
-    # Parse the Request
-    r = s3mgr.parse_request()
-
-    link = request.vars.get("link", None)
-
-    # Pre-Process
-    if r.id and link:
-        # Go back to the task list of the scenario/event after removing the task
-        s3db.configure(r.tablename,
-                        delete_next=URL(link,
-                                        args=[r.record["%s_id" % link],
-                                              "task"]))
-
-    edit_btn = None
-    if link:
-        if r.method in ("update", None) and r.id:
-            # Store the edit & delete buttons
-            edit_btn = A(T("Edit"),
-                         _href=r.url(method="update",
-                                     representation="html"),
-                         _target="_blank")
-            delete_btn=A(T("Remove this task from this event"),
-                         _href=r.url(method="delete",
-                                     representation="html"),
-                         _class="delete-btn")
-            # Switch to the other request
-            task_id = r.record.task_id
-            r = s3base.S3Request(s3mgr,
-                                 c="project", f="task",
-                                 args=[str(task_id)],
-                                 extension=auth.permission.format)
-    # Execute the request
-    output = r()
-
-    # Post-Process
-    s3_action_buttons(r)
-
-    # Restore the edit & delete buttons with the correct ID
-    if r.representation == "plain" and edit_btn:
-        output.update(edit_btn=edit_btn)
-    elif r.interactive and "delete_btn" in output:
-        output.update(delete_btn=delete_btn)
-
     return output
 
 # END =========================================================================

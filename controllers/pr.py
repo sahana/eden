@@ -103,7 +103,6 @@ def index():
     response.title = module_name
     return output
 
-
 # -----------------------------------------------------------------------------
 def person():
     """ RESTful CRUD controller """

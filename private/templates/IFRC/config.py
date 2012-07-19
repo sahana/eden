@@ -66,6 +66,7 @@ settings.ui.cluster = True
 settings.ui.camp = True
 
 settings.req.req_type = ["Stock"]
+#settings.req.use_commit = False
 
 settings.inv.collapse_tabs = True
 
@@ -245,4 +246,16 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
+    ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
+    ("vulnerability", Storage(
+            name_nice = T("Vulnerability"),
+            #description = "Manages vulnerability indicators",
+            restricted = True,
+            module_type = 10,
+        )),
 ])

@@ -467,6 +467,18 @@ $(function() {
             )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        req_ref = S3ReusableField("req_ref", "string",
+                                  readable=False, writable=False)
+        return Storage(
+                req_req_ref = req_ref
+            )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_create_form_mods():
         """
@@ -628,13 +640,18 @@ $(function() {
             @ToDo: Roll these up like inv_tabs in inv.py
         """
 
-        if current.deployment_settings.has_module("req") and \
-            current.auth.s3_has_permission("read", "req_req"):
-            return [
-                    (T("Requests"), "req"),
-                    (T("Match Requests"), "req_match/"),
-                    (T("Commit"), "commit")
-                    ]
+        s3_has_permission = current.auth.s3_has_permission
+        settings = current.deployment_settings
+        if settings.has_module("req") and \
+            s3_has_permission("read", "req_req"):
+            tabs= [(T("Requests"), "req")]
+            if s3_has_permission("read", "req_req",
+                                 c=current.request.controller,
+                                 f="req_match"):
+                tabs.append((T("Match Requests"), "req_match/"))
+            if settings.get_req_use_commit():
+                tabs.append((T("Commit"), "commit"))
+            return tabs
         else:
             return []
 
@@ -971,7 +988,6 @@ $(document).ready(function(){
 })'''),
                                         )
 
-
         self.configure(tablename,
                        super_entity="supply_item_entity",
                        onaccept=req_item_onaccept,
@@ -999,6 +1015,17 @@ $(document).ready(function(){
         return Storage(
                 req_item_id = req_item_id,
                 req_item_represent = self.req_item_represent,
+            )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+        req_item_id = S3ReusableField("req_item_id", "integer",
+                                      readable=False, writable=False)
+        return Storage(
+                req_item_id = req_item_id
             )
 
     # -------------------------------------------------------------------------

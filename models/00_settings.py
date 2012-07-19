@@ -196,10 +196,8 @@ _messages.reset_password = "%s %s/default/user/reset_password/%s %s" % \
 _messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
 # Require Admin approval for self-registered users
 _settings.registration_requires_approval = settings.get_auth_registration_requires_approval()
-_messages.registration_pending = "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
-    settings.get_mail_approver()
-_messages.registration_pending_approval = "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s).You will get a notification by email when your account is activated." % \
-    settings.get_mail_approver()
+_messages.registration_pending = settings.get_auth_registration_pending()
+_messages.registration_pending_approval = settings.get_auth_registration_pending_approval()
 
 _messages["approve_user"] = \
 """Your action is required to approve a New User for %(system_name)s:

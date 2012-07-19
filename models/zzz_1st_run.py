@@ -118,14 +118,22 @@ if len(pop_list) > 0:
                              period=120,  # seconds
                              timeout=120, # seconds
                              repeats=0    # unlimited
-                            )
+                             )
         # Emails every 5 minutes
         s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"EMAIL"},
                              period=300,  # seconds
                              timeout=300, # seconds
                              repeats=0    # unlimited
-                            )
+                             )
+
+    # Daily maintenance
+    s3task.schedule_task("maintenance",
+                         vars={"period":"daily"},
+                         period=86400, # seconds, so 1/day
+                         timeout=600,  # seconds
+                         repeats=0     # unlimited
+                         )
 
     # =========================================================================
     # Import PrePopulate data

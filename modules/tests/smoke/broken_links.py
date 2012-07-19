@@ -89,11 +89,20 @@ class BrokenLinkTest(Web2UnitTest):
                     self.b.submit("Login")
                     # If login is successful then should be redirected to the homepage
                     return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except mechanize.ControlNotFoundError:
+            except mechanize._form.ControlNotFoundError:
                 pass
         return False
 
     def runTest(self):
+        """
+            Test to find all exposed links and check the http code returned.
+
+            This test doesn't run any javascript so some false positives
+            will be found.
+
+            The test can also display an histogram depicting the number of
+            links found at each depth.
+        """
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
@@ -112,11 +121,11 @@ class BrokenLinkTest(Web2UnitTest):
             url_visited = "%d urls" % len(to_visit)
             to_visit = self.visit(to_visit, depth)
             self.linkDepth.append(len(to_visit))
-            msg = "Visited %s in %.3f seconds, %d more urls found" % (url_visited, time()-visit_start, len(to_visit))
+            msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
             self.reporter(msg)
             if self.config.verbose == 2:
                 if self.stdout.isatty(): # terminal should support colour
-                    msg = "Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (url_visited, time()-visit_start, len(to_visit))
+                    msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
                 print >> self.stdout, msg
         finish = time()
         self.report()
@@ -158,7 +167,7 @@ class BrokenLinkTest(Web2UnitTest):
                 self.brokenLinks[index_url] = (http_code,url)
             try:
                 links = self.b._browser.links()
-            except mechanize.BrowserStateError:
+            except mechanize._mechanize.BrowserStateError:
                 continue # not html so unable to extract links
             for link in (links):
                 url = link.absolute_url

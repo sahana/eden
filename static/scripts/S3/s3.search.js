@@ -178,10 +178,10 @@ $(document).ready(function() {
         Hide all the expanding/collapsing letter widgets that don't have
         any options selected
     */
-    $('.search_select_letter_label').each(function() {
+    $('.search_select_letter_label,.s3-grouped-checkboxes-widget-label').each(function() {
         widget = $(this).next();
         if ($(':checked', widget).length < 1) {
-            widget.hide();
+            widget.toggleClass('hide');
         }
         else {
             $(this).toggleClass('expanded');
@@ -192,7 +192,7 @@ $(document).ready(function() {
             Listen for click events on the expanding/collapsing letter widgets
         */
         var div = $(this)
-        div.next('table').toggle();
+        div.next('table').toggleClass('hide');
         div.toggleClass('expanded');
     });
 

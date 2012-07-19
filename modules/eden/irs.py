@@ -29,7 +29,8 @@
 
 __all__ = ["S3IRSModel",
            "S3IRSResponseModel",
-           "irs_rheader"]
+           "irs_rheader"
+           ]
 
 try:
     import json # try stdlib (Python 2.6)
@@ -240,12 +241,15 @@ class S3IRSModel(S3Model):
         table = define_table(tablename,
                              super_link("sit_id", "sit_situation"),
                              super_link("doc_id", "doc_entity"),
-                             Field("name", label = T("Short Description"),
+                             Field("name",
+                                   label = T("Short Description"),
                                    requires = IS_NOT_EMPTY()),
-                             Field("message", "text", label = T("Message"),
+                             Field("message", "text",
+                                   label = T("Message"),
                                    represent = lambda text: \
                                        s3_truncate(text, length=48, nice=True)),
-                             Field("category", label = T("Category"),
+                             Field("category",
+                                   label = T("Category"),
                                    # The full set available to Admins & Imports/Exports
                                    # (users use the subset by over-riding this in the Controller)
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
