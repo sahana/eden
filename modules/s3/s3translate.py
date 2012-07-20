@@ -171,23 +171,29 @@ class TranslateAPI:
                 return []
 
             strings = []
-            tmpstr = []
 
             R = TranslateReadFiles()
 
             for f in fileList:
+
+                tmpstr = []
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, "ALL", self.grp.modlist)
-                    for s in tmpstr:
-                        strings.append((f+":"+str(s[0]), s[1]))
+                elif f.endswith(".html") == True:
+                    tmpstr = R.read_html(f)
+                for s in tmpstr:
+                    strings.append((f+":"+str(s[0]), s[1]))
 
             # Handling "special" files separately
             fileList = self.grp.d["special"]
             for f in fileList:
+
+                tmpstr=[]
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, module, self.grp.modlist)
-                    for s in tmpstr:
-                        strings.append((f+":"+str(s[0]), s[1]))
+                for s in tmpstr:
+                    strings.append((f+":"+str(s[0]), s[1]))
+
             return strings
 
         #----------------------------------------------------------------------
@@ -202,16 +208,21 @@ class TranslateAPI:
                 return []
 
             R = TranslateReadFiles()
+            strings = []
+            tmpstr = []
 
             if filename.endswith(".py") == True:
-                strings = []
                 tmpstr = R.findstr(filename, "ALL", self.grp.modlist)
-                for s in tmpstr:
-                    strings.append((filename+":"+str(s[0]), s[1]))
-                return strings
+            elif filename.endswith(".html") == True:
+                tmpstr = R.read_html(filename)
             else:
                 print "Please enter a '.py' file path"
                 return []
+
+            for s in tmpstr:
+                strings.append((filename+":"+str(s[0]), s[1]))
+            return strings
+
 
 #==============================================================================
 
@@ -622,11 +633,40 @@ class TranslateReadFiles:
                     for atr in l[1:]:
                         obj = getattr(obj, atr)()
                     s=obj
-                elif s[0]!='"' and s[0]!="'":
-                    print fileName+"#"+str(loc), s
+                #elif s[0]!='"' and s[0]!="'":
+                #    print fileName+"#"+str(loc), s
                 final_strings.append((loc, s))
 
             return final_strings
+
+        #----------------------------------------------------------------------
+        def read_html(self, filename):
+
+            """
+               Function to read and extract strings from html files
+               using regular expressions
+            """
+
+            import re
+
+            PY_STRING_LITERAL_RE = r'(?<=[^\w]T\()(?P<name>'\
+                               + r"[uU]?[rR]?(?:'''(?:[^']|'{1,2}(?!'))*''')|"\
+                               + r"(?:'(?:[^'\\]|\\.)*')|"\
+                               + r'(?:"""(?:[^"]|"{1,2}(?!"))*""")|'\
+                               + r'(?:"(?:[^"\\]|\\.)*"))'
+            regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
+
+            html_file = open(filename)
+            linecount = 0
+            strings = []
+
+            for line in html_file:
+                linecount += 1
+                occur = regex_trans.findall(line)
+                for s in occur:
+                    strings.append((linecount, s))
+
+            return strings
 
         #----------------------------------------------------------------------
         def read_w2pfile(self, fileName):
