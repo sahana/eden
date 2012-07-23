@@ -243,7 +243,7 @@
                                     {% endif %}
                                 </h2>
                                 {% get_comment_count for news as comment_count %}
-                                <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
+                                <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | {{ news.views }} {% trans "views" %} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
                                 {{ news.post_message|safe }}
                                 <div style="margin-bottom:30px;"></div>
                             {% empty %}
@@ -264,6 +264,11 @@
                                 {% endif %}
                             {% endif %}
                             <h4>{% trans "Most viewed" %}</h4>
+                                {% for p in mostviewed %}
+                                    <ul class="unstyled">
+                                        <li><a href="{% url 'view-post' get_place.url p.id %}">{{ p.post_title }}</a></li>
+                                    </ul>
+                                {% endfor %}
                             <h4>{% trans "Most commented" %}</h4>
                                 {% for c in mostcommented %}
                                     <ul class="unstyled">

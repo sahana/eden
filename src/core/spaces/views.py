@@ -299,7 +299,9 @@ class ViewSpaceIndex(DetailView):
         context['proposals'] = Proposal.objects.filter(space=place.id) \
                                                     .order_by('-pub_date')
         context['publication'] = Post.objects.filter(space=place.id) \
-                                                    .order_by('-pub_date')[:10]
+                                                    .order_by('-pub_date')[:5]
+        context['mostviewed'] = Post.objects.filter(space=place.id) \
+                                                    .order_by('views')[:5]
         context['mostcommented'] = top_posts
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
