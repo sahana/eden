@@ -107,6 +107,9 @@ def hospital():
             table.access_status.comment =  DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Road Conditions"),
                                   T("Describe the condition of the roads to your hospital."))))
+            
+            if r.id:
+                table.obsolete.readable = table.obsolete.writable = True
 
             if r.component:
                 if r.component.name == "inv_item" or \

@@ -630,5 +630,8 @@ $('#submit_record__row input').click(function(){
                  SCRIPT(script))
 
     return XML(output)
-
+# -----------------------------------------------------------------------------
+def organisation():
+    current.request.get_vars["organisation.organisation_type_id$name"] = "Bilateral,Government,Intergovernmental,NGO,UN agency"
+    return s3db.org_organisation_controller()
 # END =========================================================================
