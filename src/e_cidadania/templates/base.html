@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load cache %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es-ES" xml:lang="es-ES">
 	<head>
@@ -30,7 +31,10 @@
 
 	</head>
 	<body>
+
+        {% get_current_language as LANGUAGE_CODE %}
     
+        {% cache 500 base_cache_block_1 LANGUAGE_CODE request.user.username %}
         <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
@@ -41,6 +45,7 @@
                 </div>
             </div>
         </div>
+        {% endcache %}
         
         {% if messages %}
             {% for message in messages %}
