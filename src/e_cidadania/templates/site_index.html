@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load cache %}
 
+{% get_current_language as LANGUAGE_CODE %}
+
+{% cache cache_timeout index_cache_block_1 LANGUAGE_CODE %}
 {% block title %}{% trans "e-cidadania" %}{% endblock %}
 
 {% block logo %}{% endblock %}
@@ -8,6 +12,7 @@
 {% block space %}
     <a class="brand" href="{% url 'site-index' %}">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
 {% endblock %}
+{% endcache %}
 
 {% block content %}
 
