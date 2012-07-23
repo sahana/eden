@@ -126,7 +126,7 @@
                 var js, fjs = d.getElementsByTagName(s)[0];
                 if (d.getElementById(id)) {return;}
                     js = d.createElement(s); js.id = id;
-                    js.src = "//connect.facebook.net/es_ES/all.js#xfbml=1";
+                    js.src = "//connect.facebook.net/es/all.js#xfbml=1";
                     fjs.parentNode.insertBefore(js, fjs);
                     }(document, 'script', 'facebook-jssdk'));
             </script>
@@ -136,7 +136,7 @@
             <!-- Google Plus -->
             <g:plusone size="tall" href="http://ecidadania.org"></g:plusone>
             <script type="text/javascript">
-                window.___gcfg = {lang: 'es'};
+                window.___gcfg = {lang: '{{ LANGUAGE_CODE }}'};
                 (function() {
                     var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
                     po.src = 'https://apis.google.com/js/plusone.js';
@@ -156,7 +156,7 @@
             <!-- End Identi.ca -->
 
             <!-- Twitter -->
-            <a href="https://twitter.com/ecidadaniafloss" class="twitter-share-button" date-url="http://ecidadania.org" data-counturl="http://ecidadania.org" data-count="vertical" data-lang="es">{% trans "Tweet" %}</a>
+            <a href="https://twitter.com/ecidadaniafloss" class="twitter-share-button" date-url="http://ecidadania.org" data-counturl="http://ecidadania.org" data-count="vertical" data-lang="{{ LANGUAGE_CODE }}">{% trans "Tweet" %}</a>
             <script src="//platform.twitter.com/widgets.js" type="text/javascript"></script>
             <!-- End Twitter -->
                 
