@@ -14,6 +14,7 @@ function fncPrepItem(data){
 		}
 	}
 };
+// ============================================================================
 function fncRepresentItem(record, PrepResult) {
 	if (record.quantity == 1) {
 		return record.name 
@@ -21,58 +22,83 @@ function fncRepresentItem(record, PrepResult) {
 		return record.name + ' (' + record.quantity + ' x ' + PrepResult + ')'
 	}
 }
+// ============================================================================
+// Displays the number of items available in an inventory
+function InvItemPackIDChange() {     
+	// Cancel previous request
+  	try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
 
-$(document).ready(function() {
-	// =========================================================================
-	// Displays the number of items available in an inventory
-    function InvItemPackIDChange() {     
-    	// Cancel previous request
-      	try {S3.JSONRequest[$(this).attr('id')].abort()} catch(err) {};
+    $('#TotalQuantity').remove();   
+    if ($('[name = "inv_item_id"]').length > 0) {
+        id = $('[name = "inv_item_id"]').val()
+    }
+    else if  ($('[name = "send_inv_item_id"]').length > 0) {
+        id = $('[name = "send_inv_item_id"]').val()
+    }
+//Following condition removed since it doesn't appear to be correct
+//the ajax call is looking for the number of items in stock, but
+//this is the supply catalogue id - not an id related to an inventory
+//    else if  ($('[name = "item_id"]').length > 0) {
+//        id = $('[name = "item_id"]').val()
+//    }
+    else
+        return;
 
-        $('#TotalQuantity').remove();   
-        if ($('[name = "inv_item_id"]').length > 0) {
-            id = $('[name = "inv_item_id"]').val()
-        }
-        else if  ($('[name = "send_inv_item_id"]').length > 0) {
-            id = $('[name = "send_inv_item_id"]').val()
-        }
-// Following condition removed since it doesn't appear to be correct
-// the ajax call is looking for the number of items in stock, but
-// this is the supply catalogue id - not an id related to an inventory
-//        else if  ($('[name = "item_id"]').length > 0) {
-//            id = $('[name = "item_id"]').val()
-//        }
-        else
-            return;
-
-        var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
-        if ($('#inv_quantity_ajax_throbber').length == 0 ) {
-        	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
+    var url = S3.Ap.concat('/inv/inv_item_quantity/' + id);
+    if ($('#inv_quantity_ajax_throbber').length == 0 ) {
+    	$('[name = "quantity"]').after('<div id="inv_quantity_ajax_throbber" class="ajax_throbber" style="float:right"/>'); 
+    }
+    
+    // Save JSON Request by element id
+    S3.JSONRequest[$(this).attr('id')] = $.getJSON(url, function(data) {
+        // @ToDo: Error Checking
+        var InvQuantity = data.inv_inv_item.quantity; 
+        var InvPackQuantity = data.supply_item_pack.quantity; 
+        
+        var PackName = $('[name = "item_pack_id"] option:selected').text();
+        var re = /\(([0-9]*)\sx/;
+        var RegExpResult = re.exec(PackName);
+        if (RegExpResult == null) {
+        	var PackQuantity = 1
+        } else {
+        	var PackQuantity = RegExpResult[1]
         }
         
-	    // Save JSON Request by element id
-        S3.JSONRequest[$(this).attr('id')] = $.getJSON(url, function(data) {
-            // @ToDo: Error Checking
-            var InvQuantity = data.inv_inv_item.quantity; 
-            var InvPackQuantity = data.supply_item_pack.quantity; 
-            
-            var PackName = $('[name = "item_pack_id"] option:selected').text();
-            var re = /\(([0-9]*)\sx/;
-            var RegExpResult = re.exec(PackName);
-            if (RegExpResult == null) {
-            	var PackQuantity = 1
-            } else {
-            	var PackQuantity = RegExpResult[1]
-            }
-            
-            var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
-                            
-            TotalQuantity = '<span id = "TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + S3.i18n.in_inv + ')</span>';
-            $('#inv_quantity_ajax_throbber').remove();
-            $('[name = "quantity"]').after(TotalQuantity);
-        });
-    };
+        var Quantity = (InvQuantity * InvPackQuantity) / PackQuantity;
+                        
+        TotalQuantity = '<span id = "TotalQuantity"> / ' + Quantity.toFixed(2) + ' ' + PackName + ' (' + S3.i18n.in_inv + ')</span>';
+        $('#inv_quantity_ajax_throbber').remove();
+        $('[name = "quantity"]').after(TotalQuantity);
+    });
+};
+//============================================================================
+//Displays the number of items available in an inventory
+function InvRecvTypeChange() {
+	var RecvType = $("#inv_recv_type").val()
+	if (RecvType != undefined) {
+		if ( RecvType == 11) { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
+			// Internal Shipment 
+			$('[id^="inv_recv_from_site_id__row"]').show();
+			$('[id^="inv_recv_organisation_id__row"]').hide();
+		} else if ( RecvType >= 32) { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
+			// External Shipment 
+			$('[id^="inv_recv_from_site_id__row"]').hide();
+			$('[id^="inv_recv_organisation_id__row"]').show();
+		} else { // @ToDo: pass this value instead of hardcoding it base on s3cfg.py 
+			// External Shipment 
+			$('[id^="inv_recv_from_site_id__row"]').hide();
+			$('[id^="inv_recv_organisation_id__row"]').hide();
+		}
+		
+	}
+};
+//=============================================================================
+$(document).ready(function() {
+    // ========================================================================
     $('#inv_track_item_item_pack_id').change(InvItemPackIDChange);
+    InvRecvTypeChange();
+    $('#inv_recv_type').change(InvRecvTypeChange);
+    // ========================================================================
 /**
     // Item ID Field
     // Assets don't use Packs, so skip
@@ -325,3 +351,5 @@ $(document).ready(function() {
 		}
 	});*/
 });
+// ============================================================================
+

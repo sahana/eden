@@ -61,13 +61,13 @@ settings.fin.currencies = {
 settings.gis.display_L0 = True
 
 # Enable this for a UN-style deployment
-settings.ui.cluster = True
+settings.ui.cluster = False
 # Enable this to use the label 'Camp' instead of 'Shelter'
 settings.ui.camp = True
 
 settings.req.req_type = ["Stock"]
 
-settings.inv.collapse_tabs = True
+settings.inv.collapse_tabs = False
 
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10

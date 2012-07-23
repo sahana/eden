@@ -148,6 +148,8 @@ def cr_shelter_prep(r):
         r.resource.add_filter(s3db.pr_presence.closed == False)
 
     if r.interactive:
+        if r.id:
+            s3db.cr_shelter.obsolete.readable = s3db.cr_shelter.obsolete.writable = True
         if r.component:
             if r.component.name == "inv_item" or \
                r.component.name == "recv" or \
