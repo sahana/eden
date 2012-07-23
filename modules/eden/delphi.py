@@ -375,7 +375,7 @@ class S3DelphiModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def delphi_problem_represent(id, row=None, showlink=False,
+    def delphi_problem_represent(id, row=None, show_link=False,
                                  solutions=True):
         """ FK representation """
 
@@ -389,7 +389,7 @@ class S3DelphiModel(S3Model):
             return current.messages.NONE
 
         try:
-            if showlink:
+            if show_link:
                 if solutions:
                     url = URL(c="delphi", f="problem", args=[row.id, "solution"])
                 else:
