@@ -44,7 +44,7 @@ class S3DocumentLibrary(S3Model):
     names = ["doc_entity",
              "doc_document",
              "doc_image",
-            ]
+             ]
 
     def model(self):
 
@@ -66,32 +66,38 @@ class S3DocumentLibrary(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        super_key = self.super_key
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
+        entity_types = Storage(
+                               asset_asset=T("Asset"),
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
                                project_task=T("Task"),
-                               hms_hospital=T("Hospital"))
+                               hms_hospital=T("Hospital"),
+                               )
 
         tablename = "doc_entity"
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)
 
         # Components
-        add_component("doc_document", doc_entity=self.super_key(doc_entity))
-        add_component("doc_image", doc_entity=self.super_key(doc_entity))
+        add_component("doc_document", doc_entity=super_key(doc_entity))
+        add_component("doc_image", doc_entity=super_key(doc_entity))
 
         # ---------------------------------------------------------------------
         # Documents
         #
         tablename = "doc_document"
         table = define_table(tablename,
+                             # Component not instance
                              super_link("site_id", "org_site"),
+                             # Component not instance
                              super_link("doc_id", doc_entity),
+                             # Instance
                              super_link("source_id", "doc_source_entity"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
@@ -166,8 +172,10 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = define_table(tablename,
+                             # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
+                             # Component not instance
                              super_link("doc_id", doc_entity),
                              Field("file", "upload", autodelete=True,
                                    requires = IS_NULL_OR(

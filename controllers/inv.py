@@ -177,7 +177,7 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % csv_template
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.inv_warehouse_rheader,
+                                rheader=s3db.org_rheader,
                                 csv_template = csv_template,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
