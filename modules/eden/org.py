@@ -2135,14 +2135,15 @@ def org_organisation_controller():
                 # Hide/show host role after project selection in embed-widget
                 tn = r.link.tablename
                 s3db.configure(tn,
-                               post_process="hide_host_role($('#%s').val());")
+                               post_process='''hide_host_role($('#%s').val())''')
                 s3.scripts.append("/%s/static/scripts/S3/s3.hide_host_role.js" % \
                     current.request.application)
                 
-            #If a filers is being applied to the Organisations, change the CRUD Strings accordingly
+            # If a filter is being applied to the Organisations, change the CRUD Strings accordingly
             type_filter = current.request.get_vars["organisation.organisation_type_id$name"]
             if type_filter:
-                type_crud_strings = { "Red Cross / Red Crescent" : 
+                type_crud_strings = { "Red Cross / Red Crescent" :
+                                       # @ToDo: IFRC isn't an NS?
                                        Storage( title_create = T("Add National Society"),
                                                 title_display = T("National Society Details"),
                                                 title_list = T("Red Cross & Red Crescent National Societies"),
@@ -2158,7 +2159,7 @@ def org_organisation_controller():
                                                 msg_record_deleted = T("National Society deleted"),
                                                 msg_list_empty = T("No Red Cross & Red Crescent National Societies currently registered")
                                                 ),
-                                     "Supplier" : 
+                                     "Supplier" :
                                        Storage( title_create = T("Add Supplier"),
                                                 title_display = T("Supplier Details"),
                                                 title_list = T("Suppliers"),
@@ -2174,7 +2175,7 @@ def org_organisation_controller():
                                                 msg_record_deleted = T("Supplier deleted"),
                                                 msg_list_empty = T("No Suppliers currently registered")
                                                 ),
-                                     "Bilateral,Government,Intergovernmental,NGO,UN agency" : 
+                                     "Bilateral,Government,Intergovernmental,NGO,UN agency" :
                                        Storage( title_create = T("Add Partner Organisation"),
                                                 title_display = T("Partner Organisation Details"),
                                                 title_list = T("Partner Organisations"),

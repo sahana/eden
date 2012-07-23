@@ -142,8 +142,8 @@ def staff():
 
                 table = r.table
                 table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (T("Facility"),
-                                                                     T("The site where this position is based."),
+                                                _title="%s|%s|%s" % (T("Office/Warehouse/Facility"),
+                                                                     T("The facility where this position is based."),
                                                                      T("Enter some characters to bring up a list of possible matches."))))
                 table.status.writable = False
                 table.status.readable = False

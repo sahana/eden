@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 "uid","role"," description","controller","function","table","uacl","oacl","org","facility","hidden","system","protected","Notes"
 "AUTHENTICATED","Authenticated",,"org",,,"READ",,,,,,,
 "AUTHENTICATED","Authenticated",,"pr","pentity",,"READ",,,,,,,

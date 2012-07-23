@@ -176,7 +176,7 @@ class S3HRModel(S3Model):
                                         ),
                                   *s3_meta_fields())
         
-        table.site_id.label = T("Office/Warehouse") 
+        table.site_id.label = T("Office/Warehouse/Facility") 
 
         crud_strings["hrm_staff"] = Storage(
             title_create = T("Add Staff Member"),
