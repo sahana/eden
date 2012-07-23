@@ -335,7 +335,13 @@ class HospitalDataModel(S3Model):
                                                                 UNKNOWN_OPT)),
                              Field("access_status",
                                    label = T("Road Conditions")),
-
+                             Field("obsolete", "boolean",
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
+                                     (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                   default = False,
+                                   readable = False,
+                                   writable = False),
                              s3_comments(),
                              *s3_meta_fields())
 

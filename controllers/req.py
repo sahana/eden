@@ -63,12 +63,6 @@ def req():
                                                                         "site":s3db.org_site_represent(site_id, show_link=False)
                                                                         })
 
-    default_type = request.vars.default_type
-    if default_type:
-        type_field = req_table.type
-        type_field.default = int(default_type)
-        type_field.writable = False
-
     def prep(r):
 
         s3db.req_prep(r)

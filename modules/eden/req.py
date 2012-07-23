@@ -189,7 +189,7 @@ class S3RequestModel(S3Model):
                                   Field("purpose", "text",
                                         label=T("Purpose")), # Donations: What will the Items be used for?; People: Task Details
                                   Field("date_required", "datetime",
-                                        label = T("Date Needed BY"),
+                                        label = T("Date Needed By"),
                                         requires = [IS_EMPTY_OR(
                                                     #IS_UTC_DATETIME_IN_RANGE(
                                                     IS_DATE_IN_RANGE(
@@ -503,10 +503,10 @@ $(function() {
             Function to be called from REST prep functions
              - main module & components (sites)
         """
-        if not r.component:
+        if not r.component or r.component.name =="req":
             table = current.db.req_req
             default_type = table.type.default
-            if table.type.default:
+            if default_type:
                 req_submit_button = {1:T("Save and add Items"),
                                      3:T("Save and add People")}
                 current.manager.s3.crud.submit_button = req_submit_button[default_type]
@@ -806,12 +806,13 @@ $(function() {
             db(rrtable.id == id).update(req_ref = code)
         # Configure the next page to go to based on the request type
         tablename = "req_req"
-        if "default_type" in request.get_vars:
-            type = request.get_vars.default_type
+        
+        if s3db.req_req.type.default:
+            type = s3db.req_req.type.default
         else:
-            type = form.vars.type
+            type = int(form.vars.type)
 
-        if type == "1" and settings.has_module("inv"):
+        if type == 1 and settings.has_module("inv"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -819,7 +820,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_item"]))
-        elif type == "2" and settings.has_module("asset"):
+        elif type == 2 and settings.has_module("asset"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -827,7 +828,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_asset"]))
-        elif type == "3" and settings.has_module("hrm"):
+        elif type == 3 and settings.has_module("hrm"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -835,7 +836,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_skill"]))
-        #elif type == "4" and settings.has_module("cr"):
+        #elif type == 4 and settings.has_module("cr"):
         #    s3db.configure(tablename,
         #                   create_next = URL(c="req",
         #                                     f="req",

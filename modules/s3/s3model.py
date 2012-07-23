@@ -800,6 +800,8 @@ class S3Model(object):
                    sort=True,
                    filterby=None,
                    filter_opts=None,
+                   not_filterby=None,
+                   not_filter_opts=None,
                    groupby=None,
                    widget=None,
                    empty=True,
@@ -838,7 +840,9 @@ class S3Model(object):
                                  sort=sort,
                                  groupby=groupby,
                                  filterby=filterby,
-                                 filter_opts=filter_opts)
+                                 filter_opts=filter_opts,
+                                 not_filterby=not_filterby,
+                                 not_filter_opts=not_filter_opts,)
             if empty:
                 requires = IS_EMPTY_OR(requires)
 
