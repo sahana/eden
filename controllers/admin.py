@@ -749,7 +749,7 @@ def translate():
         # If 1st workflow, i.e selecting the modules for translation is selected
         if opt == "1":
 
-            if form.accepts(request.vars, session):
+            if r.http == "POST" and form.accepts(request.vars, session):
 
                 modlist = []
                 # If only one module is selected
@@ -768,24 +768,26 @@ def translate():
 
             # Creating a form with checkboxes for list of modules
             A = TranslateAPI()
-            m = A.get_modules()
-            m.sort()
-            l = len(m)
+            modlist = A.get_modules()
+            modlist.sort()
+            modcount = len(modlist)
 
             table = TABLE(_width="55%")
             table.append(BR())
 
-            # Displaying three modules per row so as to utilize the page completely
+            NO_OF_COLUMNS = 3
+
+            # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
             num = 0
-            max_rows = int(ceil(l/3.0))
+            max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
 
             while num < max_rows:
-                row = TR(TD(num+1), TD(m[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num])))
-                for c in range(1,3):
-                    if num + c*max_rows < l:
+                row = TR(TD(num+1), TD(modlist[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=modlist[num])))
+                for c in range(1, NO_OF_COLUMNS):
+                    if num + c*max_rows < modcount:
                         row.append(TD(num+1+c*max_rows))
-                        row.append(TD(m[num+c*max_rows]))
-                        row.append(TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=m[num+c*max_rows])))
+                        row.append(TD(modlist[num+c*max_rows]))
+                        row.append(TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=modlist[num+c*max_rows])))
                 num += 1
                 table.append(row)
 

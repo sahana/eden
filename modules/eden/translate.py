@@ -4,7 +4,7 @@
 
     @author: Vivek Hamirwasia <vivsmart[at]gmail[dot]com>
 
-    @copyright: 2009-2012 (c) Sahana Software Foundation
+    @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -15,8 +15,10 @@
     copies of the Software, and to permit persons to whom the
     Software is furnished to do so, subject to the following
     conditions:
+
     The above copyright notice and this permission notice shall be
     included in all copies or substantial portions of the Software.
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -32,8 +34,6 @@ __all__ = ["S3TranslateModel"]
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from eden.layouts import S3AddResourceLink
-import os
 
 # =============================================================================
 
@@ -43,12 +43,8 @@ class S3TranslateModel(S3Model):
 
     def model(self):
 
-        db = current.db
         T = current.T
-
         s3 = current.response.s3
-        s3db = current.s3db
-        settings = current.deployment_settings
 
         tablename = "translate_language"
 
@@ -88,6 +84,7 @@ class S3TranslateModel(S3Model):
 
         """ Receive the uploaded csv file """
 
+        import os
         from ..s3.s3translate import CsvToWeb2py
 
         base_dir = os.path.join(os.getcwd(), "applications",\

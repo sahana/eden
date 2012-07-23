@@ -1,4 +1,33 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+""" Translation API
+
+    @author: Vivek Hamirwasia <vivsmart[at]gmail[dot]com>
+
+    @copyright: 2012 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
 
 import os
 import sys
@@ -6,14 +35,130 @@ import parser
 import symbol
 import token
 import csv
-from subprocess import call
 from gluon import current
 
-try:
-    from cStringIO import StringIO    # Faster, where available
-except:
-    from StringIO import StringIO
+"""
+    List of classes with description :
 
+
+    TranslateAPI        : API class to retreive strings and files by module
+
+    TranslateGetFiles   : Class to traverse the eden directory and categorize
+                          files based on module
+
+    TranslateParseFiles : Class to parse python code using its parse tree and
+                          obtain the required strings and data
+
+    TranslateReadFiles  : Class to open a file, read its contents and when
+                          required,build a parse tree to obtain a list of
+                          strings by calling methods from TranslateParseFiles
+
+    StringsToExcel      : Class which obtains strings for translation based
+                          on given modules, adds existing translations from
+                          corresponding language file to this list, and then
+                          converts the list to a spreadsheet for translators
+
+    CsvToWeb2py         : Class which reads a list of csv files containing
+                          translations, merges translations in these files and
+                          updates existing language file with new translations
+"""
+
+# =============================================================================
+
+class TranslateAPI:
+
+        """
+            API class for the Translation module to get
+            files,modules and strings individually
+        """
+
+        def __init__(self):
+
+            base_dir = os.path.join(os.getcwd(), "applications",\
+                                   current.request.application)
+            self.grp = TranslateGetFiles()
+            self.grp.group_files(base_dir, "", 0)
+
+        #------------------------------------------------------------------
+        def get_modules(self):
+            return self.grp.modlist
+
+        #------------------------------------------------------------------
+        def get_files_by_module(self, module):
+
+            """ Return a list of files corresponding to a module """
+
+            if module in self.grp.d.keys():
+                return self.grp.d[module]
+            else:
+                print "Module '%s' doesn't exist!" %module
+                return []
+
+        #--------------------------------------------------------------------
+        def get_strings_by_module(self, module):
+
+            """ Return a list of strings corresponding to a module """
+
+            if module in self.grp.d.keys():
+                fileList = self.grp.d[module]
+            else:
+                print "Module '%s' doesn't exist!" %module
+                return []
+
+            strings = []
+
+            R = TranslateReadFiles()
+
+            for f in fileList:
+
+                tmpstr = []
+                if f.endswith(".py") == True:
+                    tmpstr = R.findstr(f, "ALL", self.grp.modlist)
+                elif f.endswith(".html") == True:
+                    tmpstr = R.read_html(f)
+                for s in tmpstr:
+                    strings.append((f+":"+str(s[0]), s[1]))
+
+            # Handling "special" files separately
+            fileList = self.grp.d["special"]
+            for f in fileList:
+
+                tmpstr=[]
+                if f.endswith(".py") == True:
+                    tmpstr = R.findstr(f, module, self.grp.modlist)
+                for s in tmpstr:
+                    strings.append((f+":"+str(s[0]), s[1]))
+
+            return strings
+
+        #----------------------------------------------------------------------
+        def get_strings_by_file(self, filename):
+
+            """ Return a list of strings in a given file """
+
+            if os.path.isfile(filename):
+                filename = os.path.abspath(filename)
+            else:
+                print  "'%s' is not a valid file path!"%filename
+                return []
+
+            R = TranslateReadFiles()
+            strings = []
+            tmpstr = []
+
+            if filename.endswith(".py") == True:
+                tmpstr = R.findstr(filename, "ALL", self.grp.modlist)
+            elif filename.endswith(".html") == True:
+                tmpstr = R.read_html(filename)
+            else:
+                print "Please enter a '.py' file path"
+                return []
+
+            for s in tmpstr:
+                strings.append((filename+":"+str(s[0]), s[1]))
+            return strings
+
+#==============================================================================
 
 class TranslateGetFiles:
 
@@ -21,13 +166,20 @@ class TranslateGetFiles:
 
         def __init__(self):
 
-            """Set up dictionary with files grouped by modules"""
+            """
+                Set up a dictionary to hold files belonging to a particular
+                module with the module name as the key. Files which contain
+                strings belonging to more than one module are grouped under
+                the "special" key.
+            """
 
+            # The dictionary described above
             self.d = {}
-            self.rest_dirs = []
+
             # Retrieve a list of eden modules
             self.modlist = self.get_module_list()
 
+            # Initializing to an empty list for each key
             for m in self.modlist:
                 self.d[m] = []
 
@@ -127,102 +279,6 @@ class TranslateGetFiles:
                     # else append it to "core" files list
                     else:
                         self.d["core"].append(curFile)
-
-#==============================================================================
-
-class TranslateAPI:
-
-        """
-            API class for the Translation module to get
-            files,modules and strings individually
-        """
-
-        def __init__(self):
-
-            base_dir = os.path.join(os.getcwd(), "applications",\
-                                   current.request.application)
-            self.grp = TranslateGetFiles()
-            self.grp.group_files(base_dir, "", 0)
-
-        #------------------------------------------------------------------
-        def get_modules(self):
-            return self.grp.modlist
-
-        #------------------------------------------------------------------
-        def get_files_by_module(self, module):
-
-            """ Return a list of files corresponding to a module """
-
-            if module in self.grp.d.keys():
-                return self.grp.d[module]
-            else:
-                print "Module '%s' doesn't exist!" %module
-                return []
-
-        #--------------------------------------------------------------------
-        def get_strings_by_module(self, module):
-
-            """ Return a list of strings corresponding to a module """
-
-            if module in self.grp.d.keys():
-                fileList = self.grp.d[module]
-            else:
-                print "Module '%s' doesn't exist!" %module
-                return []
-
-            strings = []
-
-            R = TranslateReadFiles()
-
-            for f in fileList:
-
-                tmpstr = []
-                if f.endswith(".py") == True:
-                    tmpstr = R.findstr(f, "ALL", self.grp.modlist)
-                elif f.endswith(".html") == True:
-                    tmpstr = R.read_html(f)
-                for s in tmpstr:
-                    strings.append((f+":"+str(s[0]), s[1]))
-
-            # Handling "special" files separately
-            fileList = self.grp.d["special"]
-            for f in fileList:
-
-                tmpstr=[]
-                if f.endswith(".py") == True:
-                    tmpstr = R.findstr(f, module, self.grp.modlist)
-                for s in tmpstr:
-                    strings.append((f+":"+str(s[0]), s[1]))
-
-            return strings
-
-        #----------------------------------------------------------------------
-        def get_strings_by_file(self, filename):
-
-            """ Return a list of strings in a given file """
-
-            if os.path.isfile(filename):
-                filename = os.path.abspath(filename)
-            else:
-                print  "'%s' is not a valid file path!"%filename
-                return []
-
-            R = TranslateReadFiles()
-            strings = []
-            tmpstr = []
-
-            if filename.endswith(".py") == True:
-                tmpstr = R.findstr(filename, "ALL", self.grp.modlist)
-            elif filename.endswith(".html") == True:
-                tmpstr = R.read_html(filename)
-            else:
-                print "Please enter a '.py' file path"
-                return []
-
-            for s in tmpstr:
-                strings.append((filename+":"+str(s[0]), s[1]))
-            return strings
-
 
 #==============================================================================
 
@@ -573,16 +629,16 @@ class TranslateReadFiles:
             """
 
             try:
-                file = open(fileName)
+                f = open(fileName)
             except:
                 path = os.path.split(__file__)[0]
                 fileName = os.path.join(path, fileName)
                 try:
-                    file = open(fileName)
+                    f = open(fileName)
                 except:
                     return
             # Read all contents of file
-            fileContent = file.read()
+            fileContent = f.read()
             # Remove CL-RF and NOEOL characters
             fileContent = fileContent.replace("\r", "") + "\n"
 
@@ -676,8 +732,8 @@ class TranslateReadFiles:
                 return a list of translation string pairs
             """
 
-            file = open(fileName)
-            fileContent = file.read()
+            f = open(fileName)
+            fileContent = f.read()
             fileContent = fileContent.replace("\r", "") + "\n"
             tmpstr=[]
 
@@ -772,6 +828,10 @@ class StringsToExcel:
 
             import xlwt
             from gluon.contenttype import contenttype
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
 
             response = current.response
 
@@ -894,6 +954,8 @@ class CsvToWeb2py:
                 Function to merge multiple translated csv files into one
                 and then merge/overwrite the existing w2p language file
             """
+
+            from subprocess import call
 
             base_dir = os.path.join(os.getcwd(), "applications",\
                                    current.request.application)
