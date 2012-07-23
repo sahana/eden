@@ -108,6 +108,7 @@ class ViewProposal(DetailView):
                 self.get_position = i
         context['get_place'] = current_space
         context['support_votes_count'] = support_votes_count[int(self.get_position)].support_votes__count
+        context['location'] = Proposal.objects.get(pk=self.kwargs['prop_id'])
         return context
 
 
