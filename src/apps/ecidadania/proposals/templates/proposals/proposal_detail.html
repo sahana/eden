@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block extrajs %}
+    <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
     <script type="text/javascript">
         function upvote(proposal) {
             var request = $.ajax({
@@ -48,7 +49,19 @@
                 });
             })
          }
+
+    function showmap(){
+         map = new OpenLayers.Map("proposalmap");
+         var mapnik         = new OpenLayers.Layer.OSM();
+         var fromProjection = new OpenLayers.Projection("EPSG:4326");   
+         var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
+         var position       = new OpenLayers.LonLat({{location.latitude}},{{location.longitude}}).transform( fromProjection, toProjection);
+         var zoom           = 15;
+         map.addLayer(mapnik);
+         map.setCenter(position, zoom ); 
+    }
     </script>
+    
 {% endblock %}
 
 {% block space %}
@@ -68,6 +81,8 @@
                     <div class="proposal-title">{{ proposal.title }}</div>
                     <div class="proposal-message">{{ proposal.description|safe }}</div>
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
+                    <button onclick="showmap();" class="btn btn-small">Map</button>
+                    <div style="width:400px; height:350px;" id="proposalmap"></div>
                 </div>
             </div>
 
