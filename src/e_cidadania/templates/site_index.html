@@ -44,6 +44,7 @@
 
 {% block freewidth %}
 
+{% cache cache_timeout index_cache_block_3 LANGUAGE_CODE %}
 <div class="indexblock one">
     <div class="row indexrow">
         <p style="font-size: 2em;line-height:30px;font-weight: bold;color:#FEFEFE;">{% trans "Features" %}</p>
@@ -72,6 +73,7 @@
 
     </div>
 </div>
+{% endcache %}
 
 <div class="indexblock two">
     <div class="row indexrow">
@@ -122,6 +124,7 @@
     </div>
 </div>
 
+{% cache cache_timeout index_cache_block_4 LANGUAGE_CODE %}
 <div class="indexblock three">
     <div class="row indexrow">
         <div class="span12">
@@ -173,6 +176,7 @@
         </div>
     </div>
 </div>
+{% endcache %}
     
 {% endblock %}
 
