@@ -14,6 +14,9 @@
 {% endblock %}
 {% endcache %}
 
+{% with user.is_anonymous as user_is_anonymous %}
+
+{% cache cache_timeout index_cache_block_2 LANGUAGE_CODE  user_is_anonymous %}
 {% block content %}
 
 <div class="row" style="margin-top: -80px;">
@@ -23,7 +26,7 @@
         <h3 class="lead">e-cidadania provides a free service for making participative democracy
             through debates, proposals, voting systems... with automated reports of
             the process, file repositositories, RSS feeds...</h3>
-        {% if user.is_anonymous %}
+        {% if user_is_anonymous %}
         <div style="margin-left:60px;">
             <a href="{% url 'signup' %}" class="btn btn-success btn-large">{% trans "Sign up <i>-it's free!-</i>" %}</a> {% trans "or" %} <a href="{% url 'login' %}" class="btn btn-primary btn-large">{% trans "Log in" %}</a>
         </div>
@@ -35,6 +38,9 @@
 </div>
 
 {% endblock %}
+{% endcache %}
+
+{% endwith %}
 
 {% block freewidth %}
 
