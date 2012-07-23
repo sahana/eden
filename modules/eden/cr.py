@@ -221,6 +221,13 @@ class S3CampDataModel(S3Model):
                                 Field("source",
                                       label = T("Source")),
                                 s3_comments(),
+                                Field("obsolete", "boolean",
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
+                                     (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                   default = False,
+                                   readable = False,
+                                   writable = False),
                                 *s3_meta_fields())
 
         # CRUD strings

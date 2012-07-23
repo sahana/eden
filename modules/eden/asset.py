@@ -104,7 +104,6 @@ class S3AssetModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
         organisation_represent = self.org_organisation_represent
-        site_id = self.org_site_id
         room_id = self.org_room_id
         item_id = self.supply_item_entity_id
         supply_item_id = self.supply_item_id
@@ -268,7 +267,7 @@ class S3AssetModel(S3Model):
                          "number",
                          (T("Category"), "item_id$item_category_id"),
                          (T("Item"), "item_id"),
-                         (T("Facility/Site"), "site"),
+                         (T("Office/Warehouse/Facility"), "site"),
                          "L1",
                          "L2",
                          ]
@@ -341,7 +340,7 @@ class S3AssetModel(S3Model):
         # Asset Log
         #
 
-        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Facility/Site Set"),
+        asset_log_status_opts = {ASSET_LOG_SET_BASE : T("Base Office/Warehouse/Facility Set"),
                                  ASSET_LOG_ASSIGN   : T("Assigned"),
                                  ASSET_LOG_RETURN   : T("Returned"),
                                  ASSET_LOG_CHECK    : T("Checked"),
@@ -376,7 +375,7 @@ class S3AssetModel(S3Model):
                                    "datetime",
                                    label = T("Date"),
                                    default=request.utcnow,
-                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME()),
+                                   requires = IS_UTC_DATETIME(),
                                    widget = S3DateTimeWidget(),
                                    represent = s3_date_represent,
                                    ),
@@ -399,7 +398,8 @@ class S3AssetModel(S3Model):
                                    readable = False,
                                    writable = False),
                              organisation_id(readable = False,
-                                             writable = False),      # This is the Organisation to whom the loan is made
+                                             writable = False,
+                                             widget = None),      # This is the Organisation to whom the loan is made
                              #Field("site_or_location",
                              #      "integer",
                              #      requires = IS_NULL_OR(IS_IN_SET(site_or_location_opts)),
@@ -407,7 +407,35 @@ class S3AssetModel(S3Model):
                              #          site_or_location_opts.get(opt, UNKNOWN_OPT),
                              #      widget = RadioWidget.widget,
                              #      label = T("Facility or Location")),
-                             site_id,
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             self.super_link("site_id", "org_site",
+                                              label = T("Warehouse/Facility/Office"),
+                                              filterby = "site_id",
+                                              filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                              not_filterby = "obsolete",
+                                              not_filter_opts = [True],
+                                              #default = user.site_id if is_logged_in() else None,
+                                              readable = True,
+                                              writable = True,
+                                              empty = False,
+                                              represent = self.org_site_represent,
+                                              #widget = S3SiteAutocompleteWidget(),
+                                              comment = SCRIPT(
+'''$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'organisation_id',
+  'Field':'site_id',
+  'FieldPrefix':'org',
+  'FieldResource':'site',
+  'FieldID':'site_id',
+  'fncRepresent': function(record, PrepResult) {
+                      var InstanceTypeNice = %(instance_type_nice)s;
+                      return record.name + " (" + InstanceTypeNice[record.instance_type] + ")";
+                  }
+ })
+})''' % dict(instance_type_nice = auth.org_site_types)),
+                                              ),
                              room_id(),
                              #location_id(),
                              Field("cancel", #
@@ -431,28 +459,6 @@ class S3AssetModel(S3Model):
                                       ),
                              s3_comments(),
                              *s3_meta_fields())
-
-        table.site_id.label = T("Facility/Site")
-        table.site_id.readable = True
-        table.site_id.writable = True
-        table.site_id.widget = None
-        table.site_id.label = T("Facility/Site")
-        table.site_id.comment = (DIV(_class="tooltip",
-                                     _title="%s|%s" % (T("Facility/Site"),
-                                                       T("Enter some characters to bring up a list of possible matches")),
-
-                                     ),
-                                 SCRIPT(
-'''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'organisation_id',
-  'Field':'site_id',
-  'FieldPrefix':'org',
-  'FieldResource':'site',
-  'FieldID':'site_id',
- })
-})''')
-                                 )
 
         # CRUD strings
         ADD_ASSIGN = T("New Entry in Asset Log")
@@ -585,50 +591,48 @@ class S3AssetModel(S3Model):
         current_log = asset_get_current_log(asset_id)
 
         type = request.get_vars.pop("type", None)
+        log_time = current_log.datetime
+        current_time = vars.get("datetime", None).replace(tzinfo=None)
+        if log_time <= current_time:
+            # This is a current assignment
+            atable = s3db.asset_asset
+            tracker = S3Tracker()
+            asset_tracker = tracker(atable, asset_id)
 
-        thistime = vars.get("datetime", None)
-        if thistime and not current_log.datetime:
-            thistime = thistime.replace(tzinfo=None)
-            if current_log.datetime <= thistime:
-                # This is a current assignment
-                atable = s3db.asset_asset
-                tracker = S3Tracker()
-                asset_tracker = tracker(atable, asset_id)
-
-                if status == ASSET_LOG_SET_BASE:
-                    # Set Base Location
-                    asset_tracker.set_base_location(tracker(s3db.org_site,
-                                                            vars.site_id))
-                    # Populate the address fields
-                    s3_address_update(atable, asset_id)
-                elif status == ASSET_LOG_ASSIGN:
-                    if type == "person":#
-                        if vars.check_in_to_person:
-                            asset_tracker.check_in(s3db.pr_person, vars.person_id,
+            if status == ASSET_LOG_SET_BASE:
+                # Set Base Location
+                asset_tracker.set_base_location(tracker(s3db.org_site,
+                                                        vars.site_id))
+                # Populate the address fields
+                s3_address_update(atable, asset_id)
+            elif status == ASSET_LOG_ASSIGN:
+                if type == "person":#
+                    if vars.check_in_to_person:
+                        asset_tracker.check_in(s3db.pr_person, vars.person_id,
+                                               timestmp = thistime)
+                    else:
+                        asset_tracker.set_location(vars.person_id,
                                                    timestmp = thistime)
-                        else:
-                            asset_tracker.set_location(vars.person_id,
-                                                       timestmp = thistime)
-                        # Update main record for component
-                        db(atable.id == asset_id).update(
-                                                    assigned_to_id=vars.person_id
-                                                )
+                    # Update main record for component
+                    db(atable.id == asset_id).update(
+                                                assigned_to_id=vars.person_id
+                                            )
 
-                    elif type == "site":
-                        asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                               timestmp = thistime)
-                    elif type == "organisation":
-                        #if vars.site_or_location == SITE:
-                        asset_tracker.check_in(s3db.org_site, vars.site_id,
-                                               timestmp = thistime)
-                        #if vars.site_or_location == LOCATION:
-                        #    asset_tracker.set_location(vars.location_id,
-                        #                               timestmp = thistime)
+                elif type == "site":
+                    asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                           timestmp = thistime)
+                elif type == "organisation":
+                    #if vars.site_or_location == SITE:
+                    asset_tracker.check_in(s3db.org_site, vars.site_id,
+                                           timestmp = thistime)
+                    #if vars.site_or_location == LOCATION:
+                    #    asset_tracker.set_location(vars.location_id,
+                    #                               timestmp = thistime)
 
-                elif status == ASSET_LOG_RETURN:
-                    # Set location to base location
-                    asset_tracker.set_location(asset_tracker,
-                                               timestmp = thistime)
+            elif status == ASSET_LOG_RETURN:
+                # Set location to base location
+                asset_tracker.set_location(asset_tracker,
+                                           timestmp = thistime)
         return
 
 

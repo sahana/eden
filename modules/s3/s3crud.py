@@ -1152,7 +1152,7 @@ class S3CRUD(S3Method):
                         request.post_vars[pkey] = record_id
 
             # Add asterisk to labels of required fields
-            mark_required = self._config("mark_required")
+            mark_required = self._config("mark_required", default = [])
             labels, required = s3_mark_required(table, mark_required)
             if required:
                 # Show the key if there are any required fields.
