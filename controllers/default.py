@@ -49,7 +49,7 @@ def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
 
     # Add newly-registered users to Person Registry, add 'Authenticated' role
-    # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
+    # If Organisation is provided, then add HRM record
     person_id = auth.s3_register(form)
 
     if form.vars.organisation_id and not settings.get_hrm_show_staff():

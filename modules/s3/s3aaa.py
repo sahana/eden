@@ -269,7 +269,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
-                    #s3_comments(),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -307,7 +307,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
-                    #s3_comments(),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
