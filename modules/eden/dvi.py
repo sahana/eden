@@ -163,6 +163,13 @@ class S3DVIModel(S3Model):
                              Field("description",
                                    label = T("Description")),
                              location_id(),
+                             Field("obsolete", "boolean",
+                                label = T("Obsolete"),
+                                represent = lambda bool: \
+                                  (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                default = False,
+                                readable = False,
+                                writable = False),
                              *s3_meta_fields())
 
         # Reusable Field

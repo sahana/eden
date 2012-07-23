@@ -748,7 +748,7 @@ class S3Config(Storage):
         """
         return self.inv.get("shipment_type", {
                 0 : current.messages.NONE,
-                11: current.T("Internal"),
+                11: current.T("Internal Shipment"),
             })
 
     def get_inv_send_types(self):
@@ -765,11 +765,10 @@ class S3Config(Storage):
         """
         T = current.T
         return self.inv.get("recv_type", {
-                31: T("Other Warehouse"),
-                32: T("Local Donation"),
-                33: T("Foreign Donation"),
-                34: T("Local Purchases"),
-                35: T("Confiscated Goods from Bureau Of Customs")
+                #31: T("Other Warehouse"), Same as Internal Shipment
+                32: T("Donation"),
+                #33: T("Foreign Donation"),
+                34: T("Purchase"),
            })
 
     def get_inv_send_form_name(self):
