@@ -37,7 +37,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Home", c="default", f="index"),
             MM("Project List", c="project", f="project"),
             MM("Project Analysis", c="project", f="analysis"),
-            MM("Regional Organizations", "project", f="organisation"),
+            MM("Regional Organizations", c="default", f="index", args="organisations"),
             MM("DRR Frameworks", c="project", f="framework"),
             MM("My Page", c="default", f="index", args="mypage"),
         ]

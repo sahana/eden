@@ -698,6 +698,7 @@ class S3Request(object):
         components = component_name
         if components is None:
             components = cnames
+
         self.resource = manager.define_resource(self.prefix,
                                                 self.name,
                                                 id=self.id,
@@ -1025,6 +1026,7 @@ class S3Request(object):
             self.custom_action = s3db.get_method(self.prefix, self.name,
                                                           component_name=self.component_name,
                                                           method=self.method)
+
         # Method handling
         http = self.http
         handler = None

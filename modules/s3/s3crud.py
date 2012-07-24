@@ -937,6 +937,8 @@ class S3CRUD(S3Method):
             distinct = r.method == "search"
 
             # Get the master query for SSPag
+            # FixMe: don't use session to store filters; also causes resource
+            # filters to be discarded
             if session.s3.filter is not None:
                 resource.build_query(filter=s3.filter,
                                      vars=session.s3.filter)

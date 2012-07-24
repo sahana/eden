@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3OrganisationModel",
+           "S3OrganisationVirtualFields",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3FacilityModel",
@@ -353,6 +354,8 @@ class S3OrganisationModel(S3Model):
                              s3_comments(),
                              #document_id(), # Better to have multiple Documents on a Tab
                              *s3_meta_fields())
+
+        table.virtualfields.append(S3OrganisationVirtualFields())
 
         # CRUD strings
         ADD_ORGANIZATION = T("Add Organization")
@@ -953,6 +956,27 @@ class S3OrganisationModel(S3Model):
         if record:
             current.s3db.pr_update_affiliations(table, record)
         return
+
+
+# =============================================================================
+class S3OrganisationVirtualFields:
+    """ Virtual fields for the org_organisation table """
+
+    def address(self):
+        """ Fetch the address of an office """
+        from eden.gis import gis_location_represent
+        db = current.db
+
+        query = (db.org_office.deleted != True) & \
+                (db.org_office.organisation_id == self.org_organisation.id) & \
+                (db.org_office.location_id == db.gis_location.id)
+        row = db(query).select(db.gis_location.id).first()
+
+        if row:
+            return gis_location_represent(row.id)
+        else:
+            return None
+
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):
