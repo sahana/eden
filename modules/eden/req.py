@@ -806,11 +806,13 @@ $(function() {
             db(rrtable.id == id).update(req_ref = code)
         # Configure the next page to go to based on the request type
         tablename = "req_req"
-        
+
         if s3db.req_req.type.default:
             type = s3db.req_req.type.default
-        else:
+        elif "type" in form.vars:
             type = int(form.vars.type)
+        else:
+            return
 
         if type == 1 and settings.has_module("inv"):
             s3db.configure(tablename,
