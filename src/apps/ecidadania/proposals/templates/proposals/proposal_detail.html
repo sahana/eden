@@ -87,7 +87,7 @@
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
                     {% if location.latitude and location.longitude %}
                         <button onclick="showmap();" class="btn btn-small">Map</button>
-                        <div style="width:400px; height:350px;" id="proposalmap"></div>
+                        <div id="proposalmap" class="map"></div>
                     {% endif %}    
                 </div>
             </div>
