@@ -7,8 +7,6 @@
 tasks = {}
 
 # -----------------------------------------------------------------------------
-# GIS
-# -----------------------------------------------------------------------------
 def gis_download_kml(record_id, filename, user_id=None):
     """
         Download a KML file
@@ -46,52 +44,6 @@ def gis_update_location_tree(feature, user_id=None):
 
 tasks["gis_update_location_tree"] = gis_update_location_tree
 
-# -----------------------------------------------------------------------------
-if settings.has_module("msg"):
-
-    # -------------------------------------------------------------------------
-    def msg_process_outbox(contact_method, user_id=None):
-        """
-            Process Outbox
-                - will normally be done Asynchronously if there is a worker alive
-
-            @param contact_method: one from s3msg.MSG_CONTACT_OPTS
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-        # Run the Task
-        result = msg.process_outbox(contact_method)
-        return result
-
-    tasks["msg_process_outbox"] = msg_process_outbox
-
-    # -------------------------------------------------------------------------
-    def msg_process_inbound_email(username, user_id):
-        """
-            Poll an inbound email source.
-
-            @param username: email address of the email source to read from.
-            This uniquely identifies one inbound email task.
-        """
-        # Run the Task
-        result = msg.fetch_inbound_email(username)
-        return result
-
-    tasks["msg_process_inbound_email"] = msg_process_inbound_email
-
-    # -----------------------------------------------------------------------------
-    def msg_parse_workflow(workflow, source, user_id):
-        """
-            Processes the msg_log for unparsed messages.
-        """
-        # Run the Task
-        result = msg.parse_import(workflow, source)
-        return result
-        
-    tasks["msg_parse_workflow"] = msg_parse_workflow
-    
 # -----------------------------------------------------------------------------
 def sync_synchronize(repository_id, user_id=None, manual=False):
     """
@@ -152,6 +104,93 @@ def maintenance(period="daily"):
     return result
 
 tasks["maintenance"] = maintenance
+
+
+# -----------------------------------------------------------------------------
+if settings.has_module("msg"):
+
+    # -------------------------------------------------------------------------
+    def msg_process_outbox(contact_method, user_id=None):
+        """
+            Process Outbox
+                - will normally be done Asynchronously if there is a worker alive
+
+            @param contact_method: one from s3msg.MSG_CONTACT_OPTS
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task
+        result = msg.process_outbox(contact_method)
+        return result
+
+    tasks["msg_process_outbox"] = msg_process_outbox
+
+    # -------------------------------------------------------------------------
+    def msg_process_inbound_email(username, user_id):
+        """
+            Poll an inbound email source.
+
+            @param username: email address of the email source to read from.
+            This uniquely identifies one inbound email task.
+        """
+        # Run the Task
+        result = msg.fetch_inbound_email(username)
+        return result
+
+    tasks["msg_process_inbound_email"] = msg_process_inbound_email
+
+    # -----------------------------------------------------------------------------
+    def msg_parse_workflow(workflow, source, user_id):
+        """
+            Processes the msg_log for unparsed messages.
+        """
+        # Run the Task
+        result = msg.parse_import(workflow, source)
+        return result
+        
+    tasks["msg_parse_workflow"] = msg_parse_workflow
+    
+# -----------------------------------------------------------------------------
+if settings.has_module("stats"):
+
+    def stats_update_aggregate_location(root_location_id, parameter_id, user_id=None):
+        """
+            Update the stats_aggregate table for the given location and parameter
+
+            @param root_location_id: the id of the location
+            @param paramerter_id: the parameter for which the stats are being updated
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task
+        result = s3db.stats_update_aggregate_location(root_location_id, parameter_id)
+        return result
+
+    tasks["stats_update_aggregate_location"] = stats_update_aggregate_location
+
+# -----------------------------------------------------------------------------
+if settings.has_module("vulnerability"):
+
+    def vulnerability_update_resilence(root_location_id, user_id=None):
+        """
+            Update the resilience parameter on the stats_aggregate table
+            for the given location
+
+            @param root_location_id: the id of the location
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task
+        result = s3db.vulnerability_resilence(root_location_id)
+        return result
+
+    tasks["vulnerability_update_resilence"] = vulnerability_update_resilence
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks

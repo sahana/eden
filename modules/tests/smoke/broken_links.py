@@ -89,7 +89,9 @@ class BrokenLinkTest(Web2UnitTest):
                     self.b.submit("Login")
                     # If login is successful then should be redirected to the homepage
                     return self.b.get_url()[len(self.homeURL):] == "/default/index"
-            except mechanize._form.ControlNotFoundError:
+            except:
+                # This should be a mechanize.ControlNotFoundError, but
+                # for some unknown reason that isn't caught on Windows or Mac
                 pass
         return False
 
@@ -111,22 +113,23 @@ class BrokenLinkTest(Web2UnitTest):
     def visitLinks(self):
         url = self.homeURL
         to_visit = [url]
-        self.linkDepth.append(len(to_visit))
         start = time()
         for depth in range(self.maxDepth):
             if len(to_visit) == 0:
                 break
+            self.linkDepth.append(len(to_visit))
             self.totalLinks += len(to_visit)
             visit_start = time()
             url_visited = "%d urls" % len(to_visit)
             to_visit = self.visit(to_visit, depth)
-            self.linkDepth.append(len(to_visit))
             msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
             self.reporter(msg)
             if self.config.verbose == 2:
                 if self.stdout.isatty(): # terminal should support colour
                     msg = "%.2d Visited \033[1;32m%s\033[0m in %.3f seconds, \033[1;31m%d\033[0m more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
                 print >> self.stdout, msg
+        if len(to_visit) > 0:
+            self.linkDepth.append(len(to_visit))
         finish = time()
         self.report()
         self.reporter("Finished took %.3f seconds" % (finish - start))
@@ -145,30 +148,41 @@ class BrokenLinkTest(Web2UnitTest):
             self.model_url[model] = [(url, depth, parent)]
     
     def visit(self, url_list, depth):
+        repr_list = [".pdf", ".xls", ".rss", ".kml"]
         to_visit = []
         for visited_url in url_list:
             index_url = visited_url[len(self.homeURL):]
+            # Find out if the page can be visited
+            open_novisit = False
+            for repr in repr_list:
+                if repr in index_url:
+                    open_novisit = True
+                    break
             try:
-                self.b.go(visited_url)
-            except Exception as e:
-                try:
-                    # If the page is not an html then we shouldn't really visit it
-                    # @todo put a check in earlier for the representation
+                if open_novisit:
                     self.b._journey("open_novisit", visited_url)
-                    print "%s: %s" % (self.b.get_code(), visited_url)
-                except Exception as e:
-                    import traceback
-                    print traceback.format_exc()
-                    self.brokenLinks[index_url] = ("-","Exception raised")
-                    continue
+                else:
+                    self.b.go(visited_url)
+            except Exception as e:
+                import traceback
+                print traceback.format_exc()
+                self.brokenLinks[index_url] = ("-","Exception raised")
+                continue
             http_code = self.b.get_code()
             if http_code != 200:
                 url = "<a href=%s target=\"_blank\">URL</a>" % (visited_url)
                 self.brokenLinks[index_url] = (http_code,url)
+            links = []
             try:
-                links = self.b._browser.links()
-            except mechanize._mechanize.BrowserStateError:
-                continue # not html so unable to extract links
+                if self.b._browser.viewing_html():
+                    links = self.b._browser.links()
+                else:
+                    continue
+            except Exception as e:
+                import traceback
+                print traceback.format_exc()
+                self.brokenLinks[index_url] = ("-","Exception raised")
+                continue
             for link in (links):
                 url = link.absolute_url
                 if url.find(self.url_ticket) != -1:
@@ -252,13 +266,14 @@ class BrokenLinkTest(Web2UnitTest):
         self.reporter("Analysis of link depth")
         fig = Figure(figsize=(4, 2.5))
         # Draw a histogram
-        width = 0.9 / len(self.linkDepth)
-        rect = [0.0, 0.0, 1.0, 1.0]
+        width = 0.9
+        rect = [0.12, 0.08, 0.9, 0.85]
         ax = fig.add_axes(rect)
-        left = []
-        for cnt in range(len(self.linkDepth)):
-            left.append(width*cnt)    # the x locations for the bars
+        left = arange(len(self.linkDepth))
         plot = ax.bar(left, self.linkDepth, width=width)
+        # Add the x axis labels
+        ax.set_xticks(left+(width*0.5))
+        ax.set_xticklabels(left)
 
         chart = StringIO()
         canvas = self.FigureCanvas(fig)

@@ -799,21 +799,21 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if settings.get_req_use_req_number() and not rrtable[id].req_ref:
-            code = s3db.inv_get_shipping_code(current.deployment_settings.get_req_shortname(),
+            code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
                                               rrtable[id].site_id,
                                               rrtable.req_ref,
                                              )
             db(rrtable.id == id).update(req_ref = code)
+
         # Configure the next page to go to based on the request type
         tablename = "req_req"
 
-        if s3db.req_req.type.default:
-            type = s3db.req_req.type.default
+        if rrtable.type.default:
+            type = rrtable.type.default
         elif "type" in form.vars:
             type = int(form.vars.type)
         else:
-            return
-
+            type = 1
         if type == 1 and settings.has_module("inv"):
             s3db.configure(tablename,
                            create_next = URL(c="req",

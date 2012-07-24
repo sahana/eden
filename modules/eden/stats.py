@@ -107,9 +107,11 @@ class S3StatsModel(S3Model):
                              sd_types,
                              param_id(),
                              location_id(),
-                             Field("value", "double"),
+                             Field("value", "double",
+                                   label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
-                             # Time to come
                              )
 
         self.configure("stats_data",
@@ -122,12 +124,12 @@ class S3StatsModel(S3Model):
         table = define_table(tablename,
                              param_id(),
                              location_id(),
-                             #Field("start_date", "date",
-                             #      label = T("Start Date"),
-                             #      ),
-                             #Field("end_date", "date",
-                             #      label = T("End Date"),
-                             #      ),
+                             Field("date", "date",
+                                   label = T("Start Date"),
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End Date"),
+                                   ),
                              Field("min", "double",
                                    label = T("Minimum"),
                                   ),
@@ -156,7 +158,8 @@ class S3StatsModel(S3Model):
         # Pass model-global names to response.s3
         #
         return Storage(
-                stats_param_id = param_id
+                stats_param_id = param_id,
+                stats_update_aggregate_location = self.stats_update_aggregate_location,
             )
 
     # -------------------------------------------------------------------------
@@ -164,8 +167,8 @@ class S3StatsModel(S3Model):
         """ Safe defaults if the module is disabled """
 
         param_id = S3ReusableField("parameter_id", "integer",
-                                    readable=False,
-                                    writable=False
+                                   readable=False,
+                                   writable=False
                                    )
 
         return Storage(stats_param_id = param_id)
@@ -181,16 +184,91 @@ class S3StatsModel(S3Model):
         """
 
         location_id = form.vars.location_id
+        if location_id is None:
+            return
+
+        parameter_id = form.vars.parameter_id
         parents = current.gis.get_parents(location_id)
+        async = current.s3task.async
         for location in parents:
-            # calculate the aggregates for this location
-            # @todo For the location get each child location
-             
-            # @todo get a list of all the records at each location
-            
-            # @todo store each record in a dict grouped by indicator
-            pass
-        
+            # calculate the aggregates for each parent
+            async("stats_update_aggregate_location",
+                  args = [location.id, parameter_id])
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_update_aggregate_location(location_id, parameter_id):
+        """
+           Calculates the stats_aggregate for a specific parameter at a
+           specific location.
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Get all the child locations
+        child_locations = current.gis.get_children(location_id)
+        child_ids = []
+        append = child_ids.append
+        for row in child_locations:
+            append(row.id)
+
+        # Get the most recent stats_data record for each location
+        table = s3db.stats_data
+        query = (table.location_id.belongs(child_ids)) & \
+                (table.parameter_id == parameter_id) & \
+                (table.deleted != True)
+        rows = db(query).select(table.date,
+                                table.value,
+                                table.date.max(),
+                                groupby=table.location_id,
+                                )
+        if len(rows) == 0:
+            return
+        sum = 0
+        num_list = []
+        append = num_list.append
+        start_date = rows[0].stats_data.date
+        for row in rows:
+            _data = row.stats_data
+            if _data.date > start_date:
+                start_date = _data.date
+            value = _data.value
+            append(value)
+            sum += value
+        num_list.sort()
+        count = len(num_list)
+        mean = float(sum) / count
+        min = num_list[0]
+        max = num_list[count - 1]
+        if count % 2 == 0:
+            median = float(num_list[count / 2] + num_list[count / 2 - 1]) / 2.0
+        else:
+            median = num_list[count / 2]
+
+        # Add the value to the database
+        agg_table = s3db.stats_aggregate
+        query = (agg_table.location_id == location_id) & \
+                (agg_table.parameter_id == parameter_id)
+        exists = db(query).select(agg_table.id,
+                                  limitby=(0, 1)).first()
+        if exists:
+            db(query).update(min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             date = start_date
+                             )
+        else:
+            agg_table.insert(parameter_id = parameter_id,
+                             location_id = location_id,
+                             min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             date = start_date,
+                             )
+
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
     """
@@ -222,7 +300,7 @@ class S3StatsDemographicModel(S3Model):
                              s3_comments("description",
                                          label = T("Description")),
                              *s3_meta_fields()
-                            )
+                             )
 
         # CRUD Strings
         ADD_DEMOGRAPHIC = T("Add Demographic")
@@ -264,6 +342,8 @@ class S3StatsDemographicModel(S3Model):
                              self.gis_location_id(),
                              Field("value", "double",
                                    label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
                              *s3_meta_fields()
                              )
