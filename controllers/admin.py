@@ -749,7 +749,7 @@ def translate():
         # If 1st workflow, i.e selecting the modules for translation is selected
         if opt == "1":
 
-            if r.http == "POST" and form.accepts(request.vars, session):
+            if form.accepts(request.vars, session):
 
                 modlist = []
                 # If only one module is selected
@@ -758,6 +758,19 @@ def translate():
                 # If multiple modules are selected
                 else:
                     modlist = form.request_vars.module_list
+
+                # If no module is selected
+                if modlist is None:
+                    modlist = []
+
+                # If "Select All" option is chosen
+                if "all" in modlist:
+                    A = TranslateAPI()
+                    modlist = A.get_modules()
+
+                # Appending the "core" module in all cases
+                modlist.append("core")
+
                 # Obtaining the language file from the language code
                 code = form.request_vars.code + ".py"
 
@@ -772,9 +785,10 @@ def translate():
             modlist.sort()
             modcount = len(modlist)
 
-            table = TABLE(_width="55%")
+            table = TABLE(_class="translation_module_table")
             table.append(BR())
 
+            # Setting number of columns in the form
             NO_OF_COLUMNS = 3
 
             # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
@@ -782,18 +796,22 @@ def translate():
             max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
 
             while num < max_rows:
-                row = TR(TD(num+1), TD(modlist[num]), TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=modlist[num])))
+                row = TR(TD(num+1), TD(modlist[num]), TD(INPUT(_type="checkbox", _name="module_list", _value=modlist[num])))
                 for c in range(1, NO_OF_COLUMNS):
                     if num + c*max_rows < modcount:
                         row.append(TD(num+1+c*max_rows))
                         row.append(TD(modlist[num+c*max_rows]))
-                        row.append(TD(INPUT(_type = 'checkbox', _name = 'module_list', _value=modlist[num+c*max_rows])))
+                        row.append(TD(INPUT(_type = "checkbox", _name="module_list", _value=modlist[num+c*max_rows])))
                 num += 1
                 table.append(row)
 
+            table.append(BR())
+            row = TR(TD("Select all"), TD(INPUT(_type="checkbox", _name="module_list", _value="all" )))
+            table.append(row)
+
             div = DIV()
             div.append(table)
-            div.append(TR(TD(T("Language code: ")),TD(INPUT(_type='text',_name = 'code'))))
+            div.append(TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code"))))
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)

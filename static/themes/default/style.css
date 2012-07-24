@@ -178,3 +178,8 @@ div.question-container {
     overflow: auto;
 }
 
+/* Translation Functionality */
+
+table.translation_module_table {
+   width : 55%;
+}
