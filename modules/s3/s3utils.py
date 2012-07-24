@@ -1388,9 +1388,6 @@ class SQLTABLES3(SQLTABLE):
                  columns=None,
                  th_link="",
                  **attributes):
-        """
-            @todo: docstring?
-        """
 
         # reverted since it causes errors (admin/user & manual importing of req/req/import)
         # super(SQLTABLES3, self).__init__(**attributes)
@@ -1512,9 +1509,11 @@ class SQLTABLES3(SQLTABLE):
             tbody.append(TR(_class=_class, *row))
         components.append(TBODY(*tbody))
 
-
 # =============================================================================
 class S3SQLTable(object):
+    """
+    """
+
     DEFAULT_PAGE_SIZE = 25
 
     def __init__(self, cols, rows, **kwargs):
@@ -1533,8 +1532,12 @@ class S3SQLTable(object):
             if key[0] == "_":
                 self.html_attributes[key] = value
 
+    # -------------------------------------------------------------------------
     @classmethod
     def from_resource(cls, resource, cols, limit=None, orderby=None, **kwargs):
+        """
+        """
+
         from s3resource import S3FieldSelector
         T = current.T
 
@@ -1550,26 +1553,26 @@ class S3SQLTable(object):
             else:
                 field = None
 
-            if 'label' not in col:
+            if "label" not in col:
                 if field is None:
-                    col['label'] = " ".join([w.capitalize() for w in col['name'].split(".")[-1].split("_")])
+                    col["label"] = " ".join([w.capitalize() for w in col["name"].split(".")[-1].split("_")])
                 else:
-                    col['label'] = field.label
+                    col["label"] = field.label
 
-            if 'type' not in col:
+            if "type" not in col:
                 if field is None:
-                    col['type'] = "string"
+                    col["type"] = "string"
                 else:
-                    col['type'] = str(field.type)
+                    col["type"] = str(field.type)
 
-            if orderby and str(orderby) == col['name']:
+            if orderby and str(orderby) == col["name"]:
                 orderby_field = field # can't order by virtual fields?
 
         # rows
         rows = None
 
         if limit is None or limit > 0:
-            fields = [col['name'] for col in cols]
+            fields = [col["name"] for col in cols]
             rows = resource.sqltable(fields=fields,
                                      start=None,
                                      limit=limit,
@@ -1579,27 +1582,28 @@ class S3SQLTable(object):
         if rows:
             # values from rows
             r_rows = [] # rendered rows
+            represent = current.manager.represent
             for row in rows:
                 r_row = {} # rendered row
                 for col in cols:
                     try:
-                        lf = S3FieldSelector(col['name']).resolve(resource)
+                        lf = S3FieldSelector(col["name"]).resolve(resource)
                     except:
                         # invalid field selector
-                        r_row[col['name']] = ''
+                        r_row[col["name"]] = ""
                         continue
 
                     try:
-                        value = S3FieldSelector.extract(resource, row, col['name'])
+                        value = S3FieldSelector.extract(resource, row, col["name"])
                     except:
                         # field not found in row
                         value = None
 
                     field = lf.field
                     if field is not None:
-                        r_row[col['name']] = current.manager.represent(field, value)
+                        r_row[col["name"]] = represent(field, value)
                     else:
-                        r_row[col['name']] = s3_unicode(value)
+                        r_row[col["name"]] = s3_unicode(value)
 
                 r_rows.append(r_row)
             rows = r_rows
@@ -1608,7 +1612,11 @@ class S3SQLTable(object):
 
         return cls(cols, rows, **kwargs)
 
+    # -------------------------------------------------------------------------
     def html(self):
+        """
+        """
+
         T = current.T
 
         # Columns
@@ -1628,7 +1636,7 @@ class S3SQLTable(object):
                     if cell_value is None:
                         cell_value = ""
                 else:
-                    cell_value = ''
+                    cell_value = ""
 
                 # some values are HTML, wrap in XML()
                 html_cells.append(TD(XML(cell_value)))
@@ -1656,12 +1664,15 @@ class S3SQLTable(object):
 
         return html_table
 
+    # -------------------------------------------------------------------------
     def xml(self):
         return s3_unicode(self.html())
 
-
 # =============================================================================
 class S3DataTable(S3SQLTable):
+    """
+    """
+
     def __init__(self, cols, rows, **kwargs):
         super(S3DataTable, self).__init__(cols, rows, **kwargs)
 
@@ -1673,12 +1684,14 @@ class S3DataTable(S3SQLTable):
         self.options = kwargs.get("options")
         self.total_rows = kwargs.get("total_rows")
 
+    # -------------------------------------------------------------------------
     @classmethod
     def from_resource(cls, resource, cols, **kwargs):
         """
             @param page_size: number of rows to display per page
             @param limit: number of rows to fetch from the database
         """
+
         options = kwargs.pop("options", {})
         page_size = kwargs.pop("page_size", None)
         limit = kwargs.pop("limit", None)
@@ -1692,17 +1705,17 @@ class S3DataTable(S3SQLTable):
             options["bServerSide"] = True
             limit = page_size
 
-        if 'bulk_actions' in kwargs:
-            cols.insert(0, {'name': 'id',
-                            'label': '',
-                            'type': 'int',
-                            'bSortable': False})
-        elif 'row_actions' in kwargs:
-            cols.insert(0, {'name': 'id',
-                            'label': '',
-                            'type': 'int',
-                            'bSortable': False,
-                            'bVisible': False})
+        if "bulk_actions" in kwargs:
+            cols.insert(0, {"name": "id",
+                            "label": "",
+                            "type": "int",
+                            "bSortable": False})
+        elif "row_actions" in kwargs:
+            cols.insert(0, {"name": "id",
+                            "label": "",
+                            "type": "int",
+                            "bSortable": False,
+                            "bVisible": False})
 
         table = super(S3DataTable, cls).from_resource(resource, cols, limit, **kwargs)
 
@@ -1716,15 +1729,17 @@ class S3DataTable(S3SQLTable):
 
         return table
 
+    # -------------------------------------------------------------------------
     def xml(self):
-        T = current.T
-        # dataTable initialisation options
+        """
+        """
 
+        # dataTable initialisation options
         if self.page_size:
             self.options["iDisplayLength"] = self.page_size
             self.options["iDeferLoading"] = self.total_rows
 
-        # page size drop-down
+        # Page size drop-down
         aLengthMenu = set([
             (25, 25),
             (50, 50),
@@ -1736,42 +1751,40 @@ class S3DataTable(S3SQLTable):
         self.options["aLengthMenu"] = aLengthMenu
 
         if self.row_actions:
-            self.cols.append({'name': '',
-                              'label': '',
-                              'type': None,
-                              'mDataProp': None,
-                              'bSortable': False})
+            self.cols.append({"name": "",
+                              "label": "",
+                              "type": None,
+                              "mDataProp": None,
+                              "bSortable": False})
 
         html_table = super(S3DataTable, self).html()
 
-        self.options['aoColumns'] = []
+        self.options["aoColumns"] = []
         for col in self.cols:
             dt_col = {
-                'sName': col['name'],
-                'sType': col['type']
+                "sName": col["name"],
+                "sType": col["type"]
             }
             dt_col.update(col)
-            dt_col['name'] = None
-            del dt_col['label']
-            self.options['aoColumns'].append(dt_col)
+            dt_col["name"] = None
+            del dt_col["label"]
+            self.options["aoColumns"].append(dt_col)
 
-        html_script = SCRIPT("""
-            if (S3.dataTablesInstances == undefined) {
-                S3.dataTablesInstances = new Array();
-            }
-            S3.dataTablesInstances.push({
-                'options': %s,
-                'row_actions': %s,
-                'bulk_actions': %s
-            });
-            S3.i18n.all='%s';
-        """ % (json.dumps(self.options),
-               self.row_actions,
-               self.bulk_actions,
-               T("All")))
+        html_script = SCRIPT(
+'''if(S3.dataTablesInstances==undefined){
+ S3.dataTablesInstances=new Array()
+}
+S3.dataTablesInstances.push({
+ 'options':%s,
+ 'row_actions':%s,
+ 'bulk_actions':%s
+})
+S3.i18n.all="%s"''' % (json.dumps(self.options),
+                       self.row_actions,
+                       self.bulk_actions,
+                       current.T("All")))
 
         return s3_unicode(TAG[""](html_table, html_script))
-
 
 # =============================================================================
 class S3BulkImporter(object):

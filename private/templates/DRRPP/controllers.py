@@ -2,7 +2,16 @@
 
 from os import path
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import *
+from gluon.storage import Storage
 from s3 import *
 
 # =============================================================================
@@ -620,32 +629,43 @@ class contact():
         response.title = "Contact | DRR Project Portal"
         return dict(form=form)
 
-
 # =============================================================================
 class organisations():
+    """
+    """
 
     def __call__(self):
+
         from gluon.storage import Storage
         from s3 import S3FieldSelector
 
         T = current.T
-        #request = current.request
-        appname = current.request.application
-        #response = current.response
+        request = current.request
+        response = current.response
+
+        response.title = "DRR Projects Portal - Regional Organizations"
+        view = path.join(request.folder, "private", "templates",
+                         "DRRPP", "views", "organisations.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         tables = []
-        table = current.request.vars.get("table", None)
+        table = request.vars.get("table", None)
 
         # URL format breaks the REST controller conventions
-        current.request.args.pop()
+        request.args.pop()
 
-        if table is None or table=="regional":
+        if table is None or table == "regional":
             s3request, field_list = self._regional()
 
             if table is None:
                 tables.append(self._table("regional", s3request.resource, field_list))
 
-        if table is None or table=="groups":
+        if table is None or table == "groups":
             s3request, field_list = self._groups()
 
             if table is None:
@@ -656,19 +676,15 @@ class organisations():
                                    list_fields = field_list)
             return s3request()
 
-        view = path.join(current.request.folder,
-                         "private",
-                         "templates",
-                         "DRRPP",
-                         "views",
-                         "organisations.html")
-        current.response.view = open(view, "rb")
-
         return dict(tables=tables,
-                    appname=current.request.application)
+                    appname=request.application)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def _regional():
+        """
+        """
+
         from s3 import S3FieldSelector
         T = current.T
 
@@ -691,8 +707,12 @@ class organisations():
         ]
         return (s3request, field_list)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def _groups():
+        """
+        """
+
         from s3 import S3FieldSelector
         T = current.T
 
@@ -702,7 +722,6 @@ class organisations():
         f = (S3FieldSelector("project.id") != None) & \
             (S3FieldSelector("organisation_type_id$name").anyof(["Committees / Mechanism / Forum"]))
         s3request.resource.add_filter(f)
-
 
         field_list = [
             "id",
@@ -715,11 +734,13 @@ class organisations():
         ]
         return (s3request, field_list)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def _table(name, resource, field_list, limit=10, orderby="name"):
-        from json import dumps
+        """
+        """
+
         from s3 import S3FieldSelector
-        from gluon.storage import Storage
         T = current.T
 
         fields = []
@@ -763,7 +784,7 @@ class organisations():
         if rows is None:
             rows = []
 
-        options = dumps({
+        options = json.dumps({
             "iDisplayLength": limit,
             "iDeferLoading": len(resource.load()),
             "bProcessing": True,
@@ -776,7 +797,7 @@ class organisations():
                 }
             ],
             "aoColumns": [{"sName": col["name"]} for col in cols],
-            "sDom": 'frltpi',
+            "sDom": "frltpi",
         })
 
         table = Storage(
@@ -787,4 +808,5 @@ class organisations():
         )
 
         return table
+
 # END =========================================================================
