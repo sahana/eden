@@ -303,7 +303,8 @@ footer {
     margin-bottom: 5px;
 }
 
-.map {
+
+.map, #proposalmap {
     width: 400px;
     height: 350px;
 }
