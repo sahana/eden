@@ -50,6 +50,9 @@
             })
          }
 
+     </script>
+     {% if location.latitude and location.longitude %}
+     <script type="text/javascript">
     function showmap(){
          map = new OpenLayers.Map("proposalmap");
          var mapnik         = new OpenLayers.Layer.OSM();
@@ -58,10 +61,11 @@
          var position       = new OpenLayers.LonLat({{location.latitude}},{{location.longitude}}).transform( fromProjection, toProjection);
          var zoom           = 15;
          map.addLayer(mapnik);
-         map.setCenter(position, zoom ); 
-    }
+         map.setCenter(position, zoom );
+         $("div.span10 button").attr('disabled', 'disabled'); 
+    }    
     </script>
-    
+    {% endif %}
 {% endblock %}
 
 {% block space %}
@@ -81,8 +85,10 @@
                     <div class="proposal-title">{{ proposal.title }}</div>
                     <div class="proposal-message">{{ proposal.description|safe }}</div>
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
-                    <button onclick="showmap();" class="btn btn-small">Map</button>
-                    <div style="width:400px; height:350px;" id="proposalmap"></div>
+                    {% if location.latitude and location.longitude %}
+                        <button onclick="showmap();" class="btn btn-small">Map</button>
+                        <div style="width:400px; height:350px;" id="proposalmap"></div>
+                    {% endif %}    
                 </div>
             </div>
 
