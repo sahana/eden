@@ -63,7 +63,7 @@
                     <div class="proposal-message">{{ proposal.description|safe }}</div>
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
                     {% if location.latitude and location.longitude %}
-                        <a href="#" class="btn btn-small showmap">{% trans "Map" %}</a>
+                        <button class="btn btn-small showmap">{% trans "Show/hide map" %}</button>
                         <div id="proposalmap" class="map"></div>
                     {% endif %}    
                 </div>
@@ -82,10 +82,11 @@
         var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
         //var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
         var position       = new OpenLayers.LonLat({{ proposal.longitude }}, {{ proposal.latitude }}).transform( fromProjection, toProjection);
-        var zoom           = 18;
+        var zoom           = 17;
         map.addLayer(mapnik);
         map.setCenter(position, zoom);
-        $('a.showmap').click(function() {
+        $('#proposalmap').hide();
+        $('button.showmap').click(function() {
             $('#proposalmap').toggle('fast');
         })
     </script>
