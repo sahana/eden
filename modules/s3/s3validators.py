@@ -517,14 +517,14 @@ class IS_ONE_OF_EMPTY(Validator):
                 else:
                     labels = map(lambda r: r[self.kfield], records)
             self.labels = labels
-            
+
             if labels and self.sort:
                 orig_labels = self.labels
                 orig_theset = self.theset
-                
+
                 labels = []
                 theset = []
-                
+
                 for label in orig_labels:
                     try:
                         labels.append(label.flatten())
@@ -1519,9 +1519,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                               limitby=(0, 1)).first()
 
                     # Add contact information as provided
-                    ctable.insert(pe_id=person.pe_id,
-                                  contact_method="EMAIL",
-                                  value=_vars.email)
+                    if _vars.email:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="EMAIL",
+                                      value=_vars.email)
                     if _vars.mobile_phone:
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
