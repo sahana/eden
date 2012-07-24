@@ -2975,11 +2975,11 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
     return pe_str
 
 # =============================================================================
-def pr_person_represent(person_id, showlink=False):
+def pr_person_represent(person_id, show_link=False):
     """
         Represent a Person in option fields or list views
 
-        @param showlink: whether to make the output into a hyperlink
+        @param show_link: whether to make the output into a hyperlink
     """
 
     if not person_id:
@@ -2990,7 +2990,7 @@ def pr_person_represent(person_id, showlink=False):
         name = current.cache.ram("pr_person_%s" % person_id,
                                  lambda: s3_fullname(person_id),
                                  time_expire=60)
-    if showlink:
+    if show_link:
         # @ToDo: Use pr controller for other usecases
         name = A(name,
                  _href = URL(c="hrm", f="person", args=[person_id]))

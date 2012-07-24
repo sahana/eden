@@ -269,7 +269,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
-                    #s3_comments(),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -307,7 +307,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
-                    #s3_comments(),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -5058,7 +5058,7 @@ class S3RoleManager(S3Method):
                                            _name="role_desc",
                                            _rows="4"),
                                   "")
-            key_row = P(T("* Required Fields"), _class="red")
+            key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
             # Prepare ACL forms -----------------------------------------------

@@ -496,13 +496,17 @@ def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
 
     # Add newly-registered users to Person Registry, add 'Authenticated' role
-    # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
+    # If Organisation is provided, then add HRM record
     person_id = current.auth.s3_register(form)
 
-    # @ToDo: process Custom Fields
-    # Position
-    # Reason
-    
+    # Process Custom Fields
+    vars = form.request_vars
+    position = vars.get("position", "")
+    reason = vars.get("reason", "")
+    id = form.vars.id
+    db = current.db
+    table = db.auth_user
+    db(table.id==form.vars.id).update(comments = "%s | %s" % (position, reason))
 
 # =============================================================================
 class contact():

@@ -116,6 +116,7 @@ class S3HRModel(S3Model):
                                     requires=IS_ADD_PERSON_WIDGET(),
                                     comment=None
                                     ),
+                                  self.org_site_id,
                                   Field("type", "integer",
                                         requires = IS_IN_SET(hrm_type_opts,
                                                              zero=None),
@@ -167,7 +168,6 @@ class S3HRModel(S3Model):
                                         readable=False,
                                         writable=False
                                         ),
-                                  self.org_site_id,
                                   Field("site_contact", "boolean",
                                         label = T("Facility Contact"),
                                         represent = lambda opt: \
@@ -175,6 +175,8 @@ class S3HRModel(S3Model):
                                              T("Yes"))[opt == True],
                                         ),
                                   *s3_meta_fields())
+        
+        table.site_id.label = T("Office/Warehouse/Facility") 
 
         crud_strings["hrm_staff"] = Storage(
             title_create = T("Add Staff Member"),
@@ -2683,7 +2685,7 @@ class S3HRProgrammeModel(S3Model):
         table = define_table(tablename,
                              self.pr_person_id(
                                represent = lambda id: \
-                                   self.pr_person_represent(id, showlink=True)
+                                   self.pr_person_represent(id, show_link=True)
                                ),
                              programme_id(),
                              s3_date(future=0),

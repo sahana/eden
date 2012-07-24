@@ -90,7 +90,7 @@
             </xsl:for-each>
 
             <!-- Generate subcategories -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('subcategory', substring(col[@field='item code']/text(),1,4))[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('subcategory', substring(col[@field='item code']/text(),1,3))[1])]">
                 <xsl:variable name="id" select="substring(col[@field='item code']/text(),1,4)"/>
                 <xsl:variable name="category_code" select="substring(col[@field='item code']/text(),2,4)"/>
                 <xsl:variable name="parent_category_code" select="substring(col[@field='item code']/text(),1,1)"/>

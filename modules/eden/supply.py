@@ -937,7 +937,8 @@ S3FilterFieldChange({
         item_category_id = id
         while item_category_id:
             query = (table.id == item_category_id)
-            r = db(query).select(table.code,
+            r = db(query).select(table.catalog_id,
+                                 table.code,
                                  table.name,
                                  table.parent_item_category_id,
                                  # left = table.on(table.id == table.parent_item_category_id), Doesn't work
@@ -959,8 +960,15 @@ S3FilterFieldChange({
 
             # Feed the loop
             item_category_id = r.parent_item_category_id
+            
+        catalog = s3_get_db_field_value(tablename = "supply_catalog",
+                                        fieldname = "name",
+                                        look_up_value = r.catalog_id)
 
-        return represent
+        if catalog:
+            return "%s > %s" % (catalog, represent)
+        else:
+            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1531,7 +1539,7 @@ class item_entity_virtualfields:
                 return current.messages.NONE
         elif record.comments:
             comments = s3_comments_represent(record.comments,
-                                             showlink=False)
+                                             show_link=False)
         else:
             comments = current.messages.NONE
         return A(comments,

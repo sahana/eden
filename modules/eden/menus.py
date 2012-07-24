@@ -1042,6 +1042,12 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
+                    M("Suppliers", c="inv", f="supplier")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
                     M("Facilities", c="inv", f="facility")(
                         M("New", m="create"),
                         M("List All"),
@@ -1396,7 +1402,13 @@ class S3OptionsMenu(object):
                         M("List All Community Contacts", f="community_contact"),
                         M("Search Community Contacts", f="community_contact",
                           m="search"),
-                     )
+                     ),
+                    M("Partner Orgnisations",  f="organisation")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", m="import", p="create"),
+                    ),
                     )
             else:
                 menu(

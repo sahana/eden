@@ -54,6 +54,12 @@ def site_org_json():
 # -----------------------------------------------------------------------------
 def facility():
     """ RESTful CRUD controller """
+    
+    # Pre-processor
+    def prep(r):
+        if r.interactive and r.method == "update":
+                table.obsolete.readable = table.obsolete.writable = True
+    s3.prep = prep
 
     # remove CRUD generated buttons in the tabs
     s3db.configure("inv_inv_item",

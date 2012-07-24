@@ -80,17 +80,15 @@ settings.project.mode_drr = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project
-settings.project.multiple_budgets = True
+#settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to customise
-#settings.project.organisation_roles = {
-#    1: T("Host National Society"),
-#    2: T("Partner National Society"),
-#    3: T("Donor"),
-#    #4: T("Customer"), # T("Beneficiary")?
-#    5: T("Partner")
-#}
+settings.project.organisation_roles = {
+    1: T("Lead Organization"),
+    2: T("Partner Organization"),
+    3: T("Donor"),
+}
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

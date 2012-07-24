@@ -33,7 +33,7 @@ def office():
         Required to ensure the tabs work from req_match
     """
     return warehouse()
-
+# -----------------------------------------------------------------------------
 def warehouse():
     """
         RESTful CRUD controller
@@ -104,15 +104,8 @@ def warehouse():
     def prep(r):
         if r.tablename == "org_office": # and r.interactive:
 
-            if r.method != "read":
-                # Don't want to see in Create forms
-                # inc list_create (list_fields over-rides)
-                r.table.obsolete.writable = False
-                r.table.obsolete.readable = False
-                #s3base.s3_address_hide(table)
-                # Process Base Location
-                #s3db.configure(table._tablename,
-                #                onaccept=address_onaccept)
+            if r.id:
+                table.obsolete.readable = table.obsolete.writable = True
 
             if r.component:
                 if r.component.name == "inv_item":
@@ -177,7 +170,7 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % csv_template
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.inv_warehouse_rheader,
+                                rheader=s3db.org_rheader,
                                 csv_template = csv_template,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
@@ -188,7 +181,10 @@ def warehouse():
     if "add_btn" in output:
         del output["add_btn"]
     return output
-
+# -----------------------------------------------------------------------------
+def supplier():
+    current.request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    return s3db.org_organisation_controller()
 # =============================================================================
 def inv_item():
     """ REST Controller """
@@ -1702,7 +1698,7 @@ def kit():
 
 # -----------------------------------------------------------------------------
 def facility():
-    return s3_rest_controller("org")
+    return s3_rest_controller("org", rheader = s3db.org_facility_rheader)
 
 # -----------------------------------------------------------------------------
 def incoming():
