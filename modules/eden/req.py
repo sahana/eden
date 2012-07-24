@@ -809,8 +809,10 @@ $(function() {
         
         if s3db.req_req.type.default:
             type = s3db.req_req.type.default
-        else:
+        elif form.vars.type:
             type = int(form.vars.type)
+        else:
+            type = 1
 
         if type == 1 and settings.has_module("inv"):
             s3db.configure(tablename,

@@ -107,9 +107,11 @@ class S3StatsModel(S3Model):
                              sd_types,
                              param_id(),
                              location_id(),
-                             Field("value", "double"),
+                             Field("value", "double",
+                                   label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
-                             # Time to come
                              )
 
         self.configure("stats_data",
@@ -122,12 +124,12 @@ class S3StatsModel(S3Model):
         table = define_table(tablename,
                              param_id(),
                              location_id(),
-                             #Field("start_date", "date",
-                             #      label = T("Start Date"),
-                             #      ),
-                             #Field("end_date", "date",
-                             #      label = T("End Date"),
-                             #      ),
+                             Field("date", "date",
+                                   label = T("Start Date"),
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End Date"),
+                                   ),
                              Field("min", "double",
                                    label = T("Minimum"),
                                   ),
@@ -156,7 +158,8 @@ class S3StatsModel(S3Model):
         # Pass model-global names to response.s3
         #
         return Storage(
-                stats_param_id = param_id
+                stats_param_id = param_id,
+                stats_update_aggregate_location = self.stats_update_aggregate_location,
             )
 
     # -------------------------------------------------------------------------
@@ -179,18 +182,84 @@ class S3StatsModel(S3Model):
 
            This is done async as this can take some time
         """
-
         location_id = form.vars.location_id
+        parameter_id = form.vars.parameter_id
+        if location_id == None:
+            return
         parents = current.gis.get_parents(location_id)
         for location in parents:
-            # calculate the aggregates for this location
-            # @todo For the location get each child location
-             
-            # @todo get a list of all the records at each location
-            
-            # @todo store each record in a dict grouped by indicator
-            pass
-        
+            # calculate the aggregates for each parent
+            current.s3task.async("stats_update_aggregate_location",
+                                 args = [location.id, parameter_id]
+                                 )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_update_aggregate_location(location_id, parameter_id):
+        """
+           Calculates the stats_aggregate for a specific parameter at a
+           specific location.
+        """
+        db = current.db
+        # get all the child locations
+        child_locations = current.gis.get_children(location_id)
+        child_ids = []
+        for row in child_locations:
+            child_ids.append(row.id)
+        # get the most recent stats_data record for each location
+        table = current.s3db.stats_data
+        query = (table.location_id.belongs(child_ids) & \
+                 (table.parameter_id == parameter_id) & \
+                 (table.deleted != True)
+                 )
+        rows = db(query).select(table.date,
+                                table.value,
+                                table.date.max(),
+                                groupby=table.location_id,
+                                )
+        if len(rows) == 0:
+            return
+        sum = 0
+        num_list = []
+        start_date = rows[0].stats_data.date
+        for row in rows:
+            if row.stats_data.date > start_date:
+                start_date = row.stats_data.date
+            value = row.stats_data.value
+            num_list.append(value)
+            sum += value
+        num_list.sort()
+        count = len(num_list)
+        mean = float(sum)/count
+        min = num_list[0]
+        max = num_list[count-1]
+        if count % 2 == 0:
+            median = float(num_list[count/2] + num_list[count/2-1])/2.0
+        else:
+            median = num_list[count/2]
+        # Add the value to the database
+        agg_table = current.s3db.stats_aggregate
+        query = ((agg_table.location_id == location_id) & \
+                 (agg_table.parameter_id == parameter_id)
+                )
+        rows = db(query).select(limitby=(0, 1)).first()
+        if rows:
+            db(query).update(min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             date = start_date
+                             )
+        else:
+            agg_table.insert(parameter_id = parameter_id,
+                             location_id = location_id,
+                             min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             date = start_date,
+                             )
+
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
     """
@@ -264,6 +333,8 @@ class S3StatsDemographicModel(S3Model):
                              self.gis_location_id(),
                              Field("value", "double",
                                    label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
                              *s3_meta_fields()
                              )

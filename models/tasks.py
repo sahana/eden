@@ -46,6 +46,44 @@ def gis_update_location_tree(feature, user_id=None):
 
 tasks["gis_update_location_tree"] = gis_update_location_tree
 
+
+# -----------------------------------------------------------------------------
+# Stats
+# -----------------------------------------------------------------------------
+def stats_update_aggregate_location(root_location_id, parameter_id, user_id=None):
+    """
+        Update the stats_aggregate table for the given location and parameter
+
+        @param root_location_id: the id of the location
+        @param paramerter_id: the parameter for which the stats are being updated
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task
+    result = s3db.stats_update_aggregate_location(root_location_id, parameter_id)
+    return result
+
+tasks["stats_update_aggregate_location"] = stats_update_aggregate_location
+# -----------------------------------------------------------------------------
+
+def vulnerability_update_resilence(root_location_id, user_id=None):
+    """
+        Update the resilience parameter on the stats_aggregate table
+        for the given location
+
+        @param root_location_id: the id of the location
+        @param user_id: calling request's auth.user.id or None
+    """
+    if user_id:
+        # Authenticate
+        auth.s3_impersonate(user_id)
+    # Run the Task
+    result = s3db.vulnerability_resilence(root_location_id)
+    return result
+
+tasks["vulnerability_update_resilence"] = vulnerability_update_resilence
 # -----------------------------------------------------------------------------
 if settings.has_module("msg"):
 

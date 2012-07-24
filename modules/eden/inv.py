@@ -3000,9 +3000,12 @@ class S3AdjustModel(S3Model):
                                             table.new_quantity,
                                             table.item_pack_id,
                                             limitby=(0, 1)).first()
+            changed_quantity = 0
+            if row.new_quantity and row.old_quantity:
+                changed_quantity = row.new_quantity - row.old_quantity
             repr = "%s:%s %s" % (table.item_id.represent(row.item_id,
                                                          show_link = show_link),
-                                 (row.new_quantity - row.old_quantity),
+                                 changed_quantity,
                                  table.item_pack_id.represent(row.item_pack_id),
                                  )
             if show_link:
