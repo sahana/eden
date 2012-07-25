@@ -767,9 +767,8 @@ def translate():
                 if "all" in modlist:
                     A = TranslateAPI()
                     modlist = A.get_modules()
-
-                # Appending the "core" module in all cases
-                modlist.append("core")
+                    if "core" in form.request_vars.module_list:
+                        modlist.append("core")
 
                 # Obtaining the language file from the language code
                 code = form.request_vars.code + ".py"
@@ -805,13 +804,17 @@ def translate():
                 num += 1
                 table.append(row)
 
-            table.append(BR())
-            row = TR(TD("Select all"), TD(INPUT(_type="checkbox", _name="module_list", _value="all" )))
-            table.append(row)
-
             div = DIV()
             div.append(table)
-            div.append(TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code"))))
+            div.append(BR())
+            row = TR(TD(T("Include core files")), TD(INPUT(_type="checkbox", _name="module_list", _value="core", _checked="yes")))
+            div.append(row)
+            div.append(BR())
+            row = TR(TD(T("Select all modules")), TD(INPUT(_type="checkbox", _name="module_list", _value="all")))
+            div.append(row)
+            div.append(BR())
+            row = TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code")))
+            div.append(row)
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)

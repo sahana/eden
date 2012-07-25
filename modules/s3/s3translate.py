@@ -956,6 +956,7 @@ class CsvToWeb2py:
             """
 
             from subprocess import call
+            from tempfile import NamedTemporaryFile
 
             base_dir = os.path.join(os.getcwd(), "applications",\
                                    current.request.application)
@@ -993,11 +994,13 @@ class CsvToWeb2py:
                 data.append([d[k][0], k, d[k][1]])
 
             # Create intermediate csv file
-            csvfilename = w2pfilename[:-2] + "csv"
+            f = tempfile.NamedTemporaryFile(delete=False)
+            csvfilename = f.name + ".csv"
             self.write_csvfile(csvfilename, data)
 
             # Convert the csv file to intermediate po file
-            pofilename = w2pfilename[:-2] + "po"
+            g = tempfile.NamedTemporaryFile(delete=False)
+            pofilename = g.name + ".po"
             call(["csv2po", "-i", csvfilename, "-o", pofilename])
 
             # Convert the po file to w2p language file
