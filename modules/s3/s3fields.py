@@ -817,6 +817,11 @@ def s3_date(name="date", **attr):
         del attr["future"]
     else:
         future = None
+    if "required" in attr:
+        required = attr["required"]
+        del attr["required"]
+    else:
+        required = None
 
     if "default" in attr and attr["default"] == "now":
         attr["default"] = current.request.utcnow

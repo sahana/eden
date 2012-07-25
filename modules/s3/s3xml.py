@@ -1869,7 +1869,10 @@ class S3XML(S3Codec):
                         e = encoding
                         break
         try:
-            reader = csv.DictReader(utf_8_encode(source),
+            import StringIO
+            if not isinstance(source, StringIO.StringIO):
+                source = utf_8_encode(source)
+            reader = csv.DictReader(source,
                                     delimiter=delimiter,
                                     quotechar=quotechar)
             for r in reader:

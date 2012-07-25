@@ -1,0 +1,170 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!-- Consider adding a manifest.appcache: h5bp.com/d/Offline -->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
+  <meta name="description" content="">
+  <!-- Mobile viewport optimized: h5bp.com/viewport -->
+  <meta name="viewport" content="width=device-width">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=0;" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <!-- <link rel="stylesheet" href="/{{=appname}}/static/styles/S3/stats.css"> --->
+  <style>
+  /* round corners of layer switcher, and make it transparent */
+  .olControlLayerSwitcher .layersDiv {
+      border-radius: 10px 0 0 10px;
+      opacity: 0.75;
+      filter: alpha(opacity=75);
+  }
+  </style>
+ 
+{{if s3.debug:}}
+ {{include "s3_include_debug.html"}}
+ {{=s3base.s3_include_debug(css = False)}}
+{{else:}}
+ {{include "s3_include_min.html"}}
+{{pass}}
+<!-- To be Removed --->
+<link  href="/{{=appname}}/static/styles/jquery-ui/jquery-ui-1.8.21.custom.css" rel="stylesheet" type="text/css">
+<!-- Minify these files --->
+<link href="/{{=appname}}/static/styles/S3/stats.css" rel="stylesheet" type="text/css" />
+<link href="/{{=appname}}/static/styles/jquery-ui/jquery.ui.selectmenu.css" rel="stylesheet" type="text/css" />
+
+
+<!-- Are these needed?
+<link href="/{{=appname}}/static/styles/jquery-ui/jquery.ui.base.css" rel="stylesheet" type="text/css" />
+<link href="/{{=appname}}/static/styles/jquery-ui/jquery.ui.core.css" rel="stylesheet" type="text/css" />
+ --->
+ 
+<script src="/{{=appname}}/static/scripts/S3/s3.stats.js"></script>
+
+<!-- Include these in the Sahana Eden framework? --->
+<script src="/{{=appname}}/static/scripts/TypeHelpers.js"></script>
+<script src="/{{=appname}}/static/scripts/web2py/modernizr-2.5.3.min.js"></script>
+
+<script type="text/javascript">//<![CDATA[
+{{include "l10n.js"}}
+S3.Ap='/{{=appname}}'
+//]]></script>
+
+<!-- Already included through Sahana Eden 
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="js/libs/jquery.ui.selectmenu.js"></script>
+ --->
+
+<!-- Not Required
+  <link rel="stylesheet" href="css/jquery-ui-1.8.21.custom.css" type="text/css">
+--->
+<!--[if lte IE 6]>
+<style>
+    div.popup{ width:182px; }
+    #browseOtherRegions ul li label{ width:70px; }
+    .ui-selectmenu-item-icon, .ui-icon { margin-left:-18px; }
+    .ui-selectmenu-menu li.ui-selectmenu-hasIcon a, .ui-selectmenu-hasIcon .ui-selectmenu-status{ margin-left:20px; }
+    #drawerSpacer{ height:80px; }
+    #drawerInside{ top:-30px; margin-bottom:-30px; }
+    .indicatorRange .medianDot{ top:1px; }
+    #indicator{ margin-left:11px; }
+    #chartLabel1{ margin-left:29px; }
+</style>
+
+<![endif]-->
+<!--[if lt IE 8]>
+<style>
+    #BackToHome{ background-image: none; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src=/{{=appname}}/static/img/stats/backtoRMSarrow.png, sizingMethod='crop'); }
+    .visRange{ background-image:url("/{{=appname}}/static/img/stats/baseLine1pxPng8.png"); background-position:5px 50%; background-repeat:repeat-x; }
+    
+</style>
+<![endif]-->
+</head>
+<body>
+  <!--[if lt IE 7]>
+    <section class="chromeframe">
+        <div class="innerchromeframe">
+            <p>Your browser is <strong>ancient!</strong> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> for a better experience of this site.</p>
+            <div class="closechromeframe">I don't like browsers that run faster, with greater reliability.</div>
+        </div>
+    </section>
+  <![endif]-->
+
+  <div role="main" id="vulnerability">
+    <header>
+        <a id="BackToHome" href="/{{=appname}}/default/index" title="Back to RMS">BACK TO RMS</a>
+        <div id="breadcrumbs">
+            <p>You are viewing: </p><a href="javascript:globalView();"><div id="globalBreadCrumb"></div></a><span id="l0_breadcrumb"> &raquo; Vietnam</span><span id="l1_breadcrumb"> &raquo; Phu Yen</span><span id="l2_breadcrumb"> &raquo; District Name</span><span id="l3_breadcrumb"> &raquo; Commune Name</span><span id="l4_breadcrumb"> &raquo; L4 Location Name</span><span id="l5_breadcrumb"> &raquo; L5 Location Name</span>
+        </div>
+        <nav>
+            <div id="dataTopBar">
+                <img src="/{{=appname}}/static/img/stats/dropdownArrowPng8.png" alt="View Data Submission Options" />
+                <a href="/{{=appname}}/static/img/stats/temp/submitData_CSV_submission.jpeg" id="defaultDataLink" class="data" title="Submit Data">SUBMIT DATA</a>
+                <div class="topHidden" id="dataOptions">
+                    <a href="/{{=appname}}/static/img/stats/temp/submitData_CSV_submission.jpeg" title="Submit Indicators">INDICATORS</a>
+                    <a href="/{{=appname}}/static/img/stats/temp/submitData_CSV_submission.jpeg" title="Other Data">OTHER DATA</a>
+                </div>
+            </div>
+            <div id="reportsTopBar">
+                <img src="/{{=appname}}/static/img/stats/dropdownArrowPng8.png" alt="View Reports Options" />
+                <a href="#reports" id="defaultReportsLink" class="reports" title="Reports">REPORTS</a>
+                <div class="topHidden" id="reportsOptions">
+                    <a href="#reports" title="Approve Reports">APPROVE REPORTS</a>
+                    <a href="/{{=appname}}/static/img/stats/temp/Reports_allReports_approvalPending.jpeg" title="VCA Reports">VCA REPORTS</a>
+                    <a href="/{{=appname}}/static/img/stats/temp/Reports_allReports_approvalPending.jpeg" title="Other Reports">OTHER REPORTS</a>
+                </div>
+            </div>              
+        </nav>
+    </header>
+    {{include}}
+  </div>  <!-- End of vulnerability div -->
+    <div id="lightbox"></div>
+    <section id="calculationView">
+        <div class="closePanel"></div>
+        <h3>ABOUT CALCULATIONS</h3>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt.</p>
+        <p>Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lrem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget conimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum.
+    </section>
+    <section id="photoPanel">
+        <section class="leftBar">
+            <img class="activeImage" src="/{{=appname}}/static/img/stats/temp/map1thumb.jpg" alt="Map Hoa Tam thumbnail" />
+            <img src="/{{=appname}}/static/img/stats/temp/map2thumb.jpg" alt="Map 2 thumbnail" />
+            <img src="/{{=appname}}/static/img/stats/temp/streetphoto.jpg" alt="Random photo" />
+        </section>
+        <section class="photoPane">
+            <div class="closePanel"></div>
+            <img src="/{{=appname}}/static/img/stats/temp/map1.jpg" alt="Map of Hoa Tam submitted by Tina Pham" />
+            <div class="photoCaption">
+                <div class="photoNumber">1 of 3</div>
+                <div class="photoDescription">Map Hoa Tam submitted by Tina Pham</div>
+                <a href="/{{=appname}}/static/img/stats/temp/map1.jpg" title="Download Map Hoa Tam">Download</a>
+            </div>
+        </section>
+    </section>
+    <section id="reportsSection">
+        <section id="reportsHeader">
+            <h2>REPORTS</h2>
+            <div class="activeReports">ALL REPORTS</div>
+        </section>
+        <section id="reportFilters">
+            
+        </section>
+    </section>
+  <section id="analysis"></section>
+  <footer>
+
+  </footer>
+  <!-- Asynchronous Google Analytics snippet. Change UA-XXXXX-X to be your site's ID.
+       mathiasbynens.be/notes/async-analytics-snippet -->
+  <script>
+    var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+  </script>
+</body>
+</html>

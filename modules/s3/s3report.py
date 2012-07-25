@@ -633,8 +633,16 @@ class S3Report:
         # Get the fields ------------------------------------------------------
         #
         s3db = current.s3db
+        # avoid the need to explicitly define report_fields or report_fields 
+        # This can be an issue if any of the rows/cols fields are not in list_fields
+        # Or list_fields is not defined
+        report_options = s3db.get_config(resource.tablename, "report_options")
+        if report_options:
+            row_column_fields = list(set(report_options.get("rows",[]) + report_options.get("cols",[])))
+        else:
+            row_column_fields = None
         fields = s3db.get_config(resource.tablename, "report_fields",
-                 s3db.get_config(resource.tablename, "list_fields"))
+                                 row_column_fields)
         self._get_fields(fields=fields)
 
         # Retrieve the records --------------------------------------------------

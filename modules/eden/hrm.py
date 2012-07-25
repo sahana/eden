@@ -103,20 +103,22 @@ class S3HRModel(S3Model):
             2: T("obsolete")
         }
 
+        organisation_label = current.deployment_settings.get_hrm_organisation_label()
+
         tablename = "hrm_human_resource"
         table = self.define_table(tablename,
                                   self.super_link("track_id", "sit_trackable"),
-                                  self.org_organisation_id(
+                                  self.org_organisation_id(label = organisation_label,
                                     widget=S3OrganisationAutocompleteWidget(
                                         default_from_profile=True),
                                     empty=False
                                     ),
+                                  self.org_site_id,
                                   self.pr_person_id(
                                     widget=S3AddPersonWidget(controller="hrm"),
                                     requires=IS_ADD_PERSON_WIDGET(),
                                     comment=None
                                     ),
-                                  self.org_site_id,
                                   Field("type", "integer",
                                         requires = IS_IN_SET(hrm_type_opts,
                                                              zero=None),
@@ -132,7 +134,7 @@ class S3HRModel(S3Model):
                                         #readable=False,
                                         #writable=False,
                                         label=T("Staff ID")),
-                                  self.hrm_job_role_id(label=T("Job Title")),
+                                  self.hrm_job_role_id(),
                                   Field("department",
                                         #readable = False,
                                         #writable = False,
@@ -466,7 +468,7 @@ class S3HRModel(S3Model):
         return S3SearchSimpleWidget(
                     name = "human_resource_search_simple_%s" % type,
                     label = T("Name"),
-                    comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+                    comment = T("You can search by role or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
                     field = ["person_id$first_name",
                              "person_id$middle_name",
                              "person_id$last_name",
@@ -538,7 +540,7 @@ class S3HRModel(S3Model):
             # This allows only one HR record per person and organisation,
             # if multiple HR records of the same person with the same org
             # are desired, then this needs an additional criteria in the
-            # query (e.g. job title, or type):
+            # query (e.g. job role, or type):
 
             table = item.table
 
@@ -2561,7 +2563,8 @@ class S3HRExperienceModel(S3Model):
                                     widget = S3OrganisationAutocompleteWidget(
                                                 default_from_profile=True)
                                     ),
-                                  Field("job_title", label=T("Job Title")),
+                                  #Field("job_title", label=T("Job Title")),
+                                  self.hrm_job_role_id(),
                                   s3_date("start_date",
                                           label=T("Start Date"),
                                           ),
@@ -3334,7 +3337,7 @@ def hrm_map_popup(r):
     append(TR(TD(B("%s:" % T("Name"))),
               TD(s3_fullname(r.record.person_id))))
 
-    # Job Title
+    # Job Role
     if r.record.job_role_id:
         append(TR(TD(B("%s:" % r.table.job_role_id.label)),
                   TD(r.table.job_role_id.represent(r.record.job_role_id))))
@@ -4043,11 +4046,18 @@ def hrm_rheader(r, tabs=[]):
                                 programme_hours_month += hours
 
                 # Already formatted as HTML
-                active = TD(record.active)
+                active_tooltip = SPAN(_class="tooltip",
+                                      _title="%s|%s" % (
+                                         T("Active"),
+                                         T("A volunteer is active if they've participates in over 8 hours of Programmes and Trainings per month in the last year")
+                                         ),
+                                      _style="display:inline-block"
+                                      )
 
+                active = TD(record.active)  
                 row1 = TR(TH("%s:" % T("Programme")),
                           record.programme,
-                          TH("%s:" % T("Active?")),
+                          TH("%s:" % T("Active"), active_tooltip),
                           active
                           )
                 row2 = TR(TH("%s:" % T("Programme Hours (Month)")),
