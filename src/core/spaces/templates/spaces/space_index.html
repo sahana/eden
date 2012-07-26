@@ -165,7 +165,7 @@
                 <div class="tab-pane" id="voting">
                     <div class="row">
                         <div class="span8">
-                             <h4>Polls</h4>
+                            <h4>Polls</h4>
                             {% for poll in polls %}
                                 <h4 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
                                     {% if user_is_admin %}
@@ -181,12 +181,11 @@
                                         {% endif %}
                                     {% endif %}                             
                                 </h4>
-                             {% empty %}
-                                There are no polls in this space.
                             {% endfor %}
-                            <h4>Voting processes</h4>
-                            {% for voting in votings %}
+                            <h4>Voting</h4>
+                                                  {% for voting in votings %}
                                 <h4 class="posttitle"><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a>
+                                    adfasda
                                     {% if user_is_admin %}
                                        {% if perms.voting.change_voting %}
                                             <a href="{% url 'edit-voting' get_place.url voting.id %}">
@@ -200,10 +199,7 @@
                                         {% endif %}
                                     {% endif %}                             
                                 </h4>
-                              {% empty%}
-                                There are no voting processes in this space.
                             {% endfor %}
-
                         </div>
                         <div class="span4 space-sidebar">
                             {% if user_is_admin %}
@@ -213,6 +209,17 @@
                                         <li><a href="{% url 'add-poll' get_place.url %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new poll' %}" title="{% trans 'Add new poll' %}"/>{% trans 'Add new poll' %}
                                         </a></li>
+                                    </ul>
+                                {% endif %}
+                            {% endif %}
+                            <ul class="unstyled">
+                                <h4>{% trans "Actions" %}</h4>
+                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List polls" %}</a></li>
+                            </ul>
+                                                       {% if user_is_admin %}
+                                {% if perms.voting.add_voting %}
+                                    <h4>{% trans "Administration" %}</h4>
+                                    <ul class="unstyled">
                                         <li><a href="{% url 'add-voting' get_place.url %}">
                                             <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new voting process' %}" title="{% trans 'Add new voting process' %}"/>{% trans 'Add new voting process' %}
                                         </a></li>
@@ -221,9 +228,16 @@
                             {% endif %}
                             <ul class="unstyled">
                                 <h4>{% trans "Actions" %}</h4>
-                                <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List polls" %}</a></li>
                                 <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List voting" %}</a></li>
-                            </ul>
+                            </ul>:q
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="span8">
+
+                        </div>
+                        <div class="span4">
+ 
                         </div>
                     </div>
                 </div>
