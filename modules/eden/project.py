@@ -2429,6 +2429,9 @@ class S3ProjectDRRPPModel(S3Model):
                         requires=IS_ONE_OF(db, "project_project.id",
                                            project_project_represent_no_link)
                         ),
+                     Field("parent_project",
+                           label = T("Parent Project"),
+                           ),
                      Field("duration", "integer",
                            label = T("Duration (months)"),
                            ),

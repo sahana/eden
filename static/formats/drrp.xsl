@@ -49,9 +49,14 @@
         <xsl:variable name="ContactName" select="data[@field='contact_name']"/>
         <xsl:variable name="ContactEmail" select="data[@field='contact_email']"/>
         <xsl:variable name="ContactPhone" select="data[@field='contact_phone']"/>
+        <xsl:variable name="HFA" select="data[@field='hfa_ids']/@value"/>
+        <xsl:variable name="RFA" select="data[@field='rfa_ids']/@value"/>
 
         <resource name="project_project">
 
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="@uuid"/>
+            </xsl:attribute>
             <xsl:attribute name="created_on">
                 <xsl:value-of select="@created_on"/>
             </xsl:attribute>
@@ -65,8 +70,8 @@
                 <xsl:value-of select="@modified_by"/>
             </xsl:attribute>
 
-            <data field="code"><xsl:value-of select="data[@field='short_title']"/></data>
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
+            <data field="code"><xsl:value-of select="data[@field='short_title']"/></data>
             <data field="description"><xsl:value-of select="data[@field='description']"/></data>
             <data field="start_date"><xsl:value-of select="data[@field='start_date']/@value"/></data>
             <data field="end_date"><xsl:value-of select="data[@field='end_date']/@value"/></data>
@@ -75,12 +80,19 @@
             <data field="objectives"><xsl:value-of select="data[@field='objectives']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='comments']"/></data>
             <data field="status"><xsl:value-of select="data[@field='status_id']/@value"/></data>
-            <data field="hfa"><xsl:value-of select="data[@field='hfa_ids']/@value"/></data>
+            <data field="hfa">
+                [<xsl:value-of select="translate(substring($HFA, 2, string-length($HFA) - 2), '|', ',')"/>]
+            </data>
 
             <resource name="project_drrpp">
+                <xsl:if test="data[@field='parent_project']!='None'">
+                    <data field="parent_project"><xsl:value-of select="data[@field='parent_project']"/></data>
+                </xsl:if>
                 <data field="duration"><xsl:value-of select="data[@field='duration']"/></data>
                 <data field="outputs"><xsl:value-of select="data[@field='outputs']"/></data>
-                <data field="rfa"><xsl:value-of select="data[@field='rfa_ids']/@value"/></data>
+                <data field="rfa">
+                    [<xsl:value-of select="translate(substring($RFA, 2, string-length($RFA) - 2), '|', ',')"/>]
+                </data>
             </resource>
 
             <xsl:if test="$ContactOrganisation!='' and $ContactName!=''">
@@ -160,6 +172,9 @@
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$ContactOrganisation"/>
                 </xsl:attribute>
+
+                <data field="name"><xsl:value-of select="reference[@field='contact_organisation_id']"/></data>
+
                 <xsl:if test="$ContactName!=''">
                     <resource name="hrm_human_resource">
                         <xsl:attribute name="tuid">
@@ -237,8 +252,10 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_group']">
 
+        <xsl:variable name="OrgName" select="data[@field='name']"/>
+
         <resource name="org_organisation">
-            <data field="name"><xsl:value-of select="data[@field='name']"/></data>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
             <data field="acronym"><xsl:value-of select="data[@field='acronym']"/></data>
             <data field="year"><xsl:value-of select="data[@field='year']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
@@ -248,6 +265,14 @@
             </reference>
 
             <resource name="org_office">
+                <xsl:choose>
+                    <xsl:when test="string-length($OrgName) &gt; 64">
+                        <data field="name"><xsl:value-of select="substring($OrgName, 0, 64)"/></data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <data field="name"><xsl:value-of select="$OrgName"/></data>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <reference field="location_id" resource="gis_location">
                     <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
                 </reference>
@@ -380,6 +405,11 @@
             <xsl:when test="$arg='output'">
                 <resource name="project_output">
                     <data field="name"><xsl:value-of select="$item"/></data>
+                    <reference field="project_id" resource="project_project">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="reference[@field='project_id']/@uuid"/>
+                        </xsl:attribute>
+                    </reference>
                 </resource>
             </xsl:when>
         </xsl:choose>
