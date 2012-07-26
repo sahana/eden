@@ -167,7 +167,7 @@ class S3AssetModel(S3Model):
                                    label = T("Type")),
                              Field("sn",
                                    label = T("Serial Number")),
-                             # @ToDo: Switch to using proc_supplier
+                             # @ToDo: Switch to using org_organisation filtered to suppliers
                              #supplier_id(),
                              Field("supplier",
                                    label = T("Supplier")),

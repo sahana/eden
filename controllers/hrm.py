@@ -114,7 +114,7 @@ def staff():
                    (T("Certificates"), "certificate"),
                    (T("Contract End Date"), "end_date"),
                    "status",
-                  ]
+                   ]
     s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
     if "expiring" in request.get_vars:
         s3.filter = s3.filter & \
@@ -128,8 +128,8 @@ def staff():
                                             "search_method")
     human_resource_search.advanced.pop(1)
     s3db.configure(tablename,
-                    list_fields = list_fields,
-                    search_method = human_resource_search)
+                   list_fields = list_fields,
+                   search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:

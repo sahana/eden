@@ -56,7 +56,8 @@ class S3DVIModel(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
         datetime_represent = S3DateTime.datetime_represent
 
         configure = self.configure

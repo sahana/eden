@@ -23,6 +23,15 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="s3xrc">
+        <xsl:for-each select="//resource[@name='drrpp_framework']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_group']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_output']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_project']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
@@ -62,10 +71,17 @@
             <data field="start_date"><xsl:value-of select="data[@field='start_date']/@value"/></data>
             <data field="end_date"><xsl:value-of select="data[@field='end_date']/@value"/></data>
             <data field="budget"><xsl:value-of select="data[@field='total_funding']/@value"/></data>
+            <data field="currency">USD</data>
             <data field="objectives"><xsl:value-of select="data[@field='objectives']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='comments']"/></data>
             <data field="status"><xsl:value-of select="data[@field='status_id']/@value"/></data>
             <data field="hfa"><xsl:value-of select="data[@field='hfa_ids']/@value"/></data>
+
+            <resource name="project_drrpp">
+                <data field="duration"><xsl:value-of select="data[@field='duration']"/></data>
+                <data field="outputs"><xsl:value-of select="data[@field='outputs']"/></data>
+                <data field="rfa"><xsl:value-of select="data[@field='rfa_ids']/@value"/></data>
+            </resource>
 
             <xsl:if test="$ContactOrganisation!='' and $ContactName!=''">
                 <reference field="human_resource_id" resource="hrm_human_resource">
@@ -89,25 +105,31 @@
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='impl_org_dummy']"/></xsl:with-param>
-                <xsl:with-param name="listsep">;</xsl:with-param>
+                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">impl_org</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='funding_dummy']"/></xsl:with-param>
-                <xsl:with-param name="listsep">;</xsl:with-param>
+                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">donor</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="data[@field='hazard_ids']"/></xsl:with-param>
+                <xsl:with-param name="list"><xsl:value-of select="data[@field='output_dummy']"/></xsl:with-param>
                 <xsl:with-param name="listsep">;</xsl:with-param>
+                <xsl:with-param name="arg">output</xsl:with-param>
+            </xsl:call-template>
+
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="data[@field='hazard_ids']"/></xsl:with-param>
+                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">hazard</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='theme_ids']"/></xsl:with-param>
-                <xsl:with-param name="listsep">;</xsl:with-param>
+                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">theme</xsl:with-param>
             </xsl:call-template>
 
@@ -118,7 +140,7 @@
                         <xsl:variable name="CountryCodes">
                             <xsl:call-template name="splitList">
                                 <xsl:with-param name="arg">countrycode</xsl:with-param>
-                                <xsl:with-param name="listsep">;</xsl:with-param>
+                                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                                 <xsl:with-param name="list">
                                     <xsl:value-of select="$Countries"/>
                                 </xsl:with-param>
@@ -198,6 +220,57 @@
             </xsl:if>
         </xsl:if>
         
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_framework']">
+
+        <resource name="project_framework">
+            <data field="name"><xsl:value-of select="data[@field='name']"/></data>
+            <data field="description"><xsl:value-of select="data[@field='description']"/></data>
+            <data field="time_frame"><xsl:value-of select="data[@field='time_frame']"/></data>
+            <!-- @ToDo: doc_document -->
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_group']">
+
+        <resource name="org_organisation">
+            <data field="name"><xsl:value-of select="data[@field='name']"/></data>
+            <data field="acronym"><xsl:value-of select="data[@field='acronym']"/></data>
+            <data field="year"><xsl:value-of select="data[@field='year']"/></data>
+            <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
+
+            <reference field="organisation_type_id" resource="org_organisation_type">
+                <data field="name"><xsl:value-of select="data[@field='type']"/></data>
+            </reference>
+
+            <resource name="org_office">
+                <reference field="location_id" resource="gis_location">
+                    <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
+                </reference>
+            </resource>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_output']">
+
+        <resource name="project_output">
+            <data field="name"><xsl:value-of select="data[@field='output']"/></data>
+            <xsl:choose>
+                <xsl:when test="data[@field='status']='Proposed'">
+                    <data field="status">1</data>
+                </xsl:when>
+                <xsl:when test="data[@field='status']='Achieved'">
+                    <data field="status">2</data>
+                </xsl:when>
+            </xsl:choose>
+        </resource>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -303,9 +376,13 @@
                     </reference>
                 </resource>
             </xsl:when>
+            <!-- Outputs -->
+            <xsl:when test="$arg='output'">
+                <resource name="project_output">
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
         </xsl:choose>
     </xsl:template>
-
-    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

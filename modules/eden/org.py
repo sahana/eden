@@ -284,7 +284,7 @@ class S3OrganisationModel(S3Model):
                                    length=128,           # Mayon Compatibility
                                    label = T("Name")),
                              # http://hxl.humanitarianresponse.info/#abbreviation
-                             Field("acronym", length=8,
+                             Field("acronym", length=16,
                                    label = T("Acronym"),
                                    represent = lambda val: val or "",
                                    comment = DIV(_class="tooltip",
@@ -1060,7 +1060,7 @@ class S3SiteModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                          (bool and [T("Obsolete")] or [current.messages.NONE])[0],
                                         default = False,
                                         readable = False,
                                         writable = False),
@@ -1316,7 +1316,7 @@ class S3FacilityModel(S3Model):
                              Field("obsolete", "boolean",
                                    label = T("Obsolete"),
                                    represent = lambda bool: \
-                                     (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                     (bool and [T("Obsolete")] or [current.messages.NONE])[0],
                                    default = False,
                                    readable = False,
                                    writable = False),

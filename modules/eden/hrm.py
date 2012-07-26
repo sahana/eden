@@ -378,7 +378,7 @@ class S3HRModel(S3Model):
                          (T("Training"), "course"),
                          "location_id$L1",
                          "location_id$L2",
-                        ]
+                         ]
 
         # Redirect to the Details tabs after creation
         if controller == "vol" or \
@@ -390,13 +390,13 @@ class S3HRModel(S3Model):
             hrm_url = None
 
         self.configure(tablename,
-                        super_entity = "sit_trackable",
-                        deletable = current.deployment_settings.get_hrm_deletable(),
-                        search_method = human_resource_search,
-                        onaccept = hrm_human_resource_onaccept,
-                        ondelete = self.hrm_human_resource_ondelete,
-                        deduplicate = self.hrm_human_resource_duplicate,
-                        report_options = Storage(
+                       super_entity = "sit_trackable",
+                       deletable = current.deployment_settings.get_hrm_deletable(),
+                       search_method = human_resource_search,
+                       onaccept = hrm_human_resource_onaccept,
+                       ondelete = self.hrm_human_resource_ondelete,
+                       deduplicate = self.hrm_human_resource_duplicate,
+                       report_options = Storage(
                             search=[
                                   S3SearchOptionsWidget(
                                     name="human_resource_search_org",
@@ -431,10 +431,10 @@ class S3HRModel(S3Model):
                                              cols="course",
                                              fact="person_id",
                                              aggregate="count")
-                         ),
-                        create_next = hrm_url,
-                        update_next = hrm_url,
-                        )
+                       ),
+                       create_next = hrm_url,
+                       update_next = hrm_url,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass model-global names to s3db.*
@@ -471,8 +471,8 @@ class S3HRModel(S3Model):
                              "person_id$middle_name",
                              "person_id$last_name",
                              "job_role_id$name",
-                            ]
-                  )
+                             ]
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3241,7 +3241,6 @@ def hrm_active(person_id):
             months += (extra_months - 3)
 
     # Average monthly hours
-    #average = (training_hours + programme_hours)/months
     average = programme_hours / months
 
     # Active?

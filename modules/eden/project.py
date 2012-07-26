@@ -33,6 +33,7 @@ __all__ = ["S3ProjectModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectFrameworkModel",
            "S3ProjectThemeModel",
+           "S3ProjectDRRPPModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
@@ -150,9 +151,9 @@ class S3ProjectModel(S3Model):
                                    sortby = "name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_theme.id",
-                                                          self.project_theme_represent,
+                                                          project_theme_represent,
                                                           sort=True)),
-                                   represent = self.project_theme_represent,
+                                   represent = project_theme_represent,
                                    ondelete = "RESTRICT")
 
         # Multiple for theme_percentages=False
@@ -162,7 +163,7 @@ class S3ProjectModel(S3Model):
                                          sortby = "name",
                                          requires = IS_NULL_OR(
                                                         IS_ONE_OF(db, "project_theme.id",
-                                                                  self.project_theme_represent,
+                                                                  project_theme_represent,
                                                                   sort=True,
                                                                   multiple=True)),
                                          represent = lambda opt, row=None: \
@@ -349,7 +350,6 @@ class S3ProjectModel(S3Model):
             msg_list_empty = T("No Projects currently registered"))
 
         # Search Method
-
         advanced = [S3SearchSimpleWidget(
                         name = "project_search_text_advanced",
                         label = T("Description"),
@@ -528,6 +528,13 @@ class S3ProjectModel(S3Model):
 
         # Themes
         add_component("project_theme_percentage", project_project="project_id")
+
+        # DRRPP
+        if settings.get_template() == "DRRPP":
+            add_component("project_drrpp",
+                          project_project=Storage(joinby="project_id",
+                                                  multiple = False))
+            add_component("project_output", project_project="project_id")
 
         # ---------------------------------------------------------------------
         # Project Human Resources
@@ -902,25 +909,6 @@ class S3ProjectModel(S3Model):
 
         db = current.db
         table = db.project_hazard
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_theme_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.project_theme
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
@@ -2088,21 +2076,19 @@ class S3ProjectActivityModel(S3Model):
 
         if item.tablename != "project_activity":
             return
-        table = item.table
-        duplicate = None
         data = item.data
         if "project_id" in data and "name" in data:
             # Match activity by project_id and name
             project_id = data.project_id
             name = data.name
+            table = item.table
             query = (table.project_id == project_id) & \
                     (table.name == name)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-        return
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
@@ -2125,7 +2111,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         self.define_table(tablename,
                           self.project_project_id(requires=IS_ONE_OF(current.db,
                                                    "project_project.id",
-                                                   project_project_represent)),
+                                                   project_project_represent_no_link)),
                           Field("year", "integer", notnull=True,
                                 default=None, # make it current year
                                 requires=IS_INT_IN_RANGE(1950, 3000),
@@ -2176,8 +2162,6 @@ class S3ProjectAnnualBudgetModel(S3Model):
 class S3ProjectFrameworkModel(S3Model):
     """
         Project Framework Model
-
-        This model holds project frameworks
     """
 
     names = ["project_framework",
@@ -2328,11 +2312,11 @@ class S3ProjectThemeModel(S3Model):
         self.define_table(tablename,
                           self.project_project_id(
                             requires=IS_ONE_OF(db, "project_project.id",
-                                               "%(name)s")
+                                               project_project_represent_no_link)
                             ),
                           self.project_theme_id(
                             requires=IS_ONE_OF(db, "project_theme.id",
-                                               "%(name)s")
+                                               project_theme_represent)
                             ),
                           Field("percentage", "integer",
                                 label = T("Percentage"),
@@ -2409,6 +2393,151 @@ class S3ProjectThemeModel(S3Model):
         table = current.s3db.project_location
         query = (table.project_id == project_id)
         db(query).update(multi_theme_percentage_id = percentages)
+
+# =============================================================================
+class S3ProjectDRRPPModel(S3Model):
+    """
+        Models for DRR Project Portal extensions
+    """
+
+    names = ["project_drrpp",
+             "project_output",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        project_id = self.project_project_id
+
+        # RFA
+        project_rfa_opts = {
+            1: T("RFA1: Governance-Organisational, Institutional, Policy and Decision Making Framework"),
+            2: T("RFA2: Knowledge, Information, Public Awareness and Education"),
+            3: T("RFA3: Analysis and Evaluation of Hazards, Vulnerabilities and Elements at Risk"),
+            4: T("RFA4: Planning for Effective Preparedness, Response and Recovery"),
+            5: T("RFA5: Effective, Integrated and People-Focused Early Warning Systems"),
+            6: T("RFA6: Reduction of Underlying Risk Factors"),
+        }
+
+        tablename = "project_drrpp"
+        define_table(tablename,
+                     project_id(
+                        requires=IS_ONE_OF(db, "project_project.id",
+                                           project_project_represent_no_link)
+                        ),
+                     Field("duration", "integer",
+                           label = T("Duration (months)"),
+                           ),
+                     Field("rfa", "list:integer",
+                           label = T("RFA Priorities"),
+                           requires = IS_NULL_OR(IS_IN_SET(project_rfa_opts,
+                                                           multiple = True)),
+                           represent = self.rfa_opts_represent,
+                           widget = CheckboxesWidgetS3.widget,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("RFA Priorities"),
+                                                           T("Applicable to projects in Pacific countries only")))),
+                     Field("outputs", "text",
+                           label = "%s (Old - do NOT use)" % T("Outputs"),
+                           readable = False,
+                           writable = False,
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_display = T("DRRPP Extensions"),
+            title_update = T("Edit DRRPP Extensions"),
+        )
+
+        project_output_status_opts = {
+            1: T("Proposed"),
+            2: T("Achieved"),
+        }
+
+        tablename = "project_output"
+        define_table(tablename,
+                     project_id(
+                        requires=IS_ONE_OF(db, "project_project.id",
+                                           project_project_represent_no_link)
+                        ),
+                     Field("name",
+                           label = T("Output"),
+                           ),
+                     Field("status", "integer",
+                           label = T("Status"),
+                           requires = IS_NULL_OR(
+                                        IS_IN_SET(project_output_status_opts)
+                                        ),
+                           represent = lambda opt: \
+                            project_output_status_opts.get(opt,
+                                                           current.messages.NONE),
+                           ),
+                     *s3_meta_fields()
+                     )
+
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Output"),
+            title_display = T("Output"),
+            title_list = T("Outputs"),
+            title_update = T("Edit Output"),
+            subtitle_create = T("Add New Output"),
+            label_list_button = T("List Outputs"),
+            label_create_button = T("New Output"),
+            msg_record_created = T("Output added"),
+            msg_record_modified = T("Output updated"),
+            msg_record_deleted = T("Output removed"),
+            msg_list_empty = T("No outputs found")
+        )
+
+        # Pass variables back to global scope (s3db.*)
+        return dict(
+            project_rfa_opts = project_rfa_opts,
+        )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def rfa_opts_represent(opt, row=None):
+        """ Option representation """
+
+        NONE = current.messages.NONE
+
+        project_rfa_opts = current.response.s3.project_rfa_opts
+
+        opts = opt
+        if isinstance(opt, int):
+            opts = [opt]
+        elif not isinstance(opt, (list, tuple)):
+            return NONE
+        vals = [str(project_rfa_opts.get(o, NONE)) for o in opts]
+        return ", ".join(vals)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_output_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "project_output":
+            return
+        data = item.data
+        name = data.get("name", None)
+        project_id = data.get("project_id", None)
+        if name and project_id:
+            table = item.table
+            query = (table.project_id == project_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectTaskModel(S3Model):
@@ -3527,6 +3656,24 @@ def project_project_represent(id, row=None, show_link=True):
         return A(repr, _href = URL(c="project",
                                    f="project",
                                    args=[id]))
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def project_theme_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+
+    db = current.db
+    table = db.project_theme
+    r = db(table.id == id).select(table.name,
+                                  limitby = (0, 1)).first()
+    try:
+        return r.name
     except:
         return current.messages.UNKNOWN_OPT
 
