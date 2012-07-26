@@ -29,6 +29,9 @@
         <xsl:for-each select="//resource[@name='drrpp_group']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_organisation']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_output']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
@@ -38,6 +41,26 @@
         <xsl:for-each select="//resource[@name='org_organisation']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
+            <data field="name">Committees/Mechanism/Forum</data>
+        </resource>
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">OrgType:Network</xsl:attribute>
+            <data field="name">Network</data>
+        </resource>
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">OrgType:Regional Organisation</xsl:attribute>
+            <data field="name">Regional Organisation</data>
+        </resource>
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">OrgType:Regional Office</xsl:attribute>
+            <data field="name">Regional Office</data>
+        </resource>
+        <resource name="org_organisation_type">
+            <xsl:attribute name="tuid">OrgType:Regional Center</xsl:attribute>
+            <data field="name">Regional Center</data>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -253,6 +276,7 @@
     <xsl:template match="resource[@name='drrpp_group']">
 
         <xsl:variable name="OrgName" select="data[@field='name']"/>
+        <xsl:variable name="OrgType" select="data[@field='type']/@value"/>
 
         <resource name="org_organisation">
             <data field="name"><xsl:value-of select="$OrgName"/></data>
@@ -261,7 +285,58 @@
             <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
 
             <reference field="organisation_type_id" resource="org_organisation_type">
-                <data field="name"><xsl:value-of select="data[@field='type']"/></data>
+                <xsl:choose>
+                    <xsl:when test="$OrgType=5">
+                        <xsl:attribute name="tuid">OrgType:Network</xsl:attribute>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </reference>
+
+            <resource name="org_office">
+                <xsl:choose>
+                    <xsl:when test="string-length($OrgName) &gt; 64">
+                        <data field="name"><xsl:value-of select="substring($OrgName, 0, 64)"/></data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <data field="name"><xsl:value-of select="$OrgName"/></data>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <reference field="location_id" resource="gis_location">
+                    <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
+                </reference>
+            </resource>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_organisation']">
+
+        <xsl:variable name="OrgName" select="data[@field='name']"/>
+        <xsl:variable name="OrgType" select="data[@field='type']/@value"/>
+
+        <resource name="org_organisation">
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+            <data field="acronym"><xsl:value-of select="data[@field='acronym']"/></data>
+            <data field="website"><xsl:value-of select="data[@field='website']"/></data>
+            <data field="year"><xsl:value-of select="data[@field='year']"/></data>
+            <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
+
+            <reference field="organisation_type_id" resource="org_organisation_type">
+                <xsl:choose>
+                    <xsl:when test="$OrgType=1">
+                        <xsl:attribute name="tuid">OrgType:Regional Office</xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test="$OrgType=2">
+                        <xsl:attribute name="tuid">OrgType:Regional Organisation</xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test="$OrgType=3">
+                        <xsl:attribute name="tuid">OrgType:Regional Center</xsl:attribute>
+                    </xsl:when>
+                </xsl:choose>
             </reference>
 
             <resource name="org_office">
