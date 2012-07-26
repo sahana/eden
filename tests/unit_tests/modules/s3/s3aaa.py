@@ -11,6 +11,66 @@ from gluon import current
 from s3.s3aaa import S3EntityRoleManager
 
 # =============================================================================
+class S3RoleTests(unittest.TestCase):
+    """
+        Example how one could easily prepare a complex resource
+        in order to test permissions
+    """
+
+    def setUp(self):
+
+        xmlstr = """
+<s3xml>
+   <resource name="org_organisation" uuid="TESTORGA">
+     <data field="name">Org-A</data>
+     <resource name="org_office" uuid="TESTOFFICEA">
+       <data field="name">Office-A</data>
+       <resource name="inv_inv_item" uuid="TESTITEMA">
+         <reference field="item_id" resource="supply_item" uuid="TESTSUPPLYITEMA"/>
+         <data field="quantity">10</data>
+       </resource>
+     </resource>
+   </resource>
+   <resource name="supply_item" uuid="TESTSUPPLYITEMA">
+     <data field="name">Item-A</data>
+   </resource>
+</s3xml>"""
+        from lxml import etree
+        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        auth.override = True
+        resource = s3mgr.define_resource("org", "organisation")
+        success = resource.import_xml(self.xmltree)
+
+    def testImport(self):
+
+        resource = s3mgr.define_resource("org", "organisation", uid="TESTORGA")
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        record = resource._rows[0]
+        self.assertEqual(record.name, "Org-A")
+
+        resource = s3mgr.define_resource("org", "office", uid="TESTOFFICEA")
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        record = resource._rows[0]
+        self.assertEqual(record.name, "Office-A")
+
+        resource = s3mgr.define_resource("inv", "inv_item", uid="TESTITEMA")
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        record = resource._rows[0]
+        self.assertEqual(record.quantity, 10)
+
+        resource = s3mgr.define_resource("supply", "item", uid="TESTSUPPLYITEMA")
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        record = resource._rows[0]
+        self.assertEqual(record.name, "Item-A")
+
+    def tearDown(self):
+        db.rollback()
+
+# =============================================================================
 class S3AuthTests(unittest.TestCase):
     """ S3Auth Tests """
 
@@ -3066,6 +3126,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
+        #S3RoleTests,
         S3AuthTests,
         S3PermissionTests,
         S3HasPermissionTests,
