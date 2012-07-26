@@ -630,8 +630,38 @@ class contact():
         return dict(form=form)
 
 # =============================================================================
+class about():
+    """
+        Custom About page
+    """
+
+    def __call__(self):
+        return "tbc"
+
+# =============================================================================
+class analysis():
+    """
+        Custom page for Project Analysis
+    """
+
+    def __call__(self):
+        return "tbc"
+
+# =============================================================================
+class mypage():
+    """
+        Custom page for a User to manage their Saved Search & Subscriptions
+    """
+
+    def __call__(self):
+        return "tbc"
+
+# =============================================================================
 class organisations():
     """
+        Custom page to show 2 dataTables on a single page:
+        * Regional Organisations
+        * Committees, Forums, Mechanism, Meetings and Networks
     """
 
     def __call__(self):
@@ -692,7 +722,9 @@ class organisations():
                                                   "organisation",
                                                   extension="aadata")
         f = (S3FieldSelector("project.id") != None) & \
-            (S3FieldSelector("organisation_type_id$name").anyof(["Regional Organisation"]))
+            (S3FieldSelector("organisation_type_id$name").anyof(["Regional Organisation",
+                                                                 "Regional Office",
+                                                                 "Regional Center"]))
         s3request.resource.add_filter(f)
 
         field_list = [
@@ -720,7 +752,8 @@ class organisations():
                                                   "organisation",
                                                   extension="aadata")
         f = (S3FieldSelector("project.id") != None) & \
-            (S3FieldSelector("organisation_type_id$name").anyof(["Committees / Mechanism / Forum"]))
+            (S3FieldSelector("organisation_type_id$name").anyof(["Committees/Mechanism/Forum",
+                                                                 "Network"]))
         s3request.resource.add_filter(f)
 
         field_list = [

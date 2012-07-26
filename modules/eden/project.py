@@ -416,33 +416,46 @@ class S3ProjectModel(S3Model):
             create_next = URL(c="project", f="project",
                               args=["[id]"])
 
-        list_fields = ["id"]
-        append = list_fields.append
-        if use_codes:
-            append("code")
-        append("name")
-        if multi_orgs:
+        if settings.get_template() == "DRRPP":
+            table.name.label = T("Project Title")
             table.virtualfields.append(S3ProjectOrganisationVirtualFields())
-            LEAD_ROLE = settings.get_project_organisation_lead_role()
-            append((settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"))
+            list_fields = ["id",
+                           "name",
+                           "start_date",
+                           "countries_id",
+                           "multi_hazard_id",
+                           (T("Lead Organization"), "organisation"),
+                           # @ToDo:
+                           #(T("Donor(s)"), "donors"),
+                           ]
         else:
-            append("organisation_id")
-        if use_sectors:
-            append("sector_id")
-        if mode_3w:
-            append("countries_id")
-        if mode_drr:
-            append("multi_hazard_id")
-            append("hfa")
-        if not theme_percentages:
-            append("multi_theme_id")
-        if multi_orgs:
-            append((T("Total Funding Amount"), "total_organisation_amount"))
-        if multi_budgets:
-            table.virtualfields.append(S3ProjectBudgetVirtualFields())
-            append((T("Total Annual Budget"), "total_annual_budget"))
-        append("start_date")
-        append("end_date")
+            list_fields = ["id"]
+            append = list_fields.append
+            if use_codes:
+                append("code")
+            append("name")
+            if multi_orgs:
+                table.virtualfields.append(S3ProjectOrganisationVirtualFields())
+                LEAD_ROLE = settings.get_project_organisation_lead_role()
+                append((settings.get_project_organisation_roles()[LEAD_ROLE], "organisation"))
+            else:
+                append("organisation_id")
+            if use_sectors:
+                append("sector_id")
+            if mode_3w:
+                append("countries_id")
+            if mode_drr:
+                append("multi_hazard_id")
+                #append("hfa")
+            if not theme_percentages:
+                append("multi_theme_id")
+            if multi_orgs:
+                append((T("Total Funding Amount"), "total_organisation_amount"))
+            if multi_budgets:
+                table.virtualfields.append(S3ProjectBudgetVirtualFields())
+                append((T("Total Annual Budget"), "total_annual_budget"))
+            append("start_date")
+            append("end_date")
 
         report_fields = list_fields
 
@@ -2429,6 +2442,9 @@ class S3ProjectDRRPPModel(S3Model):
                         requires=IS_ONE_OF(db, "project_project.id",
                                            project_project_represent_no_link)
                         ),
+                     Field("parent_project",
+                           label = T("Parent Project"),
+                           ),
                      Field("duration", "integer",
                            label = T("Duration (months)"),
                            ),
@@ -3687,12 +3703,13 @@ def multiref_represent(opts, tablename, represent_string = "%(name)s"):
         @param represent_string: format string to represent the records
     """
 
-    DEFAULT = ""
+    if not opts:
+        return current.messages.NONE
 
     s3db = current.s3db
     table = s3db.table(tablename, None)
     if table is None:
-        return DEFAULT
+        return current.messages.NONE
 
     if not isinstance(opts, (list, tuple)):
         opts = [opts]
@@ -3708,7 +3725,7 @@ def multiref_represent(opts, tablename, represent_string = "%(name)s"):
     if len(opts) > 1:
         vals = ", ".join(vals)
     else:
-        vals = len(vals) and vals[0] or DEFAULT
+        vals = len(vals) and vals[0] or current.messages.NONE
 
     return vals
 
