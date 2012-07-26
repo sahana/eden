@@ -40,12 +40,38 @@ class S3Parsing(object):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def parser(workflow, message = "", source=""):
+    def parser(workflow, message = "", sender=""):
         """
            Parsing Workflow Filter.
            Called by parse_import() in s3msg.py.
         """
         settings = current.deployment_settings
+	auth = current.auth
+	session = current.session
+	s3db = current.s3db
+	
+	stable = s3db.msg_sessions
+	check_login = AuthParse().parse_login
+	check_session = AuthParse().is_session_alive
+	
+	is_session_alive = check_session(sender)
+	if is_session_alive:
+	    email = is_session_alive
+	    auth.s3_impersonate(email)
+	else:
+	    if check_login(message, sender):
+		(email,password) = check_login(message, sender)
+		auth.login_bare(email,password)
+		expiration = session.auth["expiration"]
+		stable.insert(email = email, expiration_time = expiration, \
+		              sender = sender)
+		return "Authenticated!"
+	    else:
+		return "Either your session has expired or you have not \
+authenticated your request yet!Please authenticate by sending a message with \
+your login details.e.g. login your@domain.com mypassword"
+	
+	
         import sys
         parser = settings.get_msg_parser()
         application = current.request.application
@@ -64,6 +90,84 @@ class S3Parsing(object):
         for parser in parse_opts:
             if parser == workflow:
                 result = getattr(S3Parsing, parser)
-                return result(message, source)
+                return result(message, sender)
+
+# =============================================================================
+class AuthParse(object): 
+    """
+       Parser Authorising Framework.
+    """
+
+    # ---------------------------------------------------------------------
+    
+    @staticmethod
+    def parse_login(message="", sender=""):
+	"""
+	    Function to call to authenticate a login request
+	"""
+    
+	if not message:
+	    return None
+	
+	T = current.T
+	db = current.db
+	s3db = current.s3db
+	session = current.session
+	auth = current.auth
+	request = current.request
+	import string
+	
+	auth.define_tables()
+	login_bare = auth.login_bare
+	
+	words = string.split(message)
+	login = False
+	email = ""
+	password = ""
+	reply = ""
+	
+	if "LOGIN" in [word.upper() for word in words]:
+	    login = True 
+	if len(words) == 2 and login:
+	    password = words[1]
+	elif len(words) == 3 and login:
+	    email = words[1]
+	    password = words[2]
+	if login:    
+	    if password and not email:
+		email = sender
+	    return email, password
+	else:
+	    return False
+	
+    # ---------------------------------------------------------------------
+    
+    @staticmethod
+    def is_session_alive(sender=""):
+	"""
+	    Function to check alive sessions from the same sender (if any)
+	"""
+	
+	db = current.db
+	s3db = current.s3db
+	stable = s3db.msg_sessions
+	request = current.request
+	email = ""
+	
+	query = (stable.deleted == False) & (stable.is_expired == False)
+	records = db(query).select()
+	for record in records:
+	    if record.sender == sender:
+		time = record.created_datetime
+		time = time - request.utcnow
+		time = time.total_seconds()
+		if time < record.expiration_time:
+		    email = record.email
+		    break
+		else:
+		    record.update(is_expired = True) 
+	
+	
+	return email
 
 # END =========================================================================

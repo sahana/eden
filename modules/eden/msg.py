@@ -657,7 +657,8 @@ class S3ParsingModel(S3Model):
         Message Parsing Model
     """
 
-    names = ["msg_workflow"]
+    names = ["msg_workflow",
+             "msg_sessions"]
 
     def model(self):
 
@@ -703,7 +704,34 @@ class S3ParsingModel(S3Model):
 
                                                              zero=None)), 
                                   *s3_meta_fields())
+        # ---------------------------------------------------------------------
+        # user_opts contains the available users.
+        utable = self.auth_user
+        user_opts = []
+        append = user_opts.append
+        records = current.db(utable.deleted == False).select(utable.email)
+        for record in records:
+            append(record.email)
 
+        tablename = "msg_sessions"
+        table = self.define_table(tablename,
+                                  Field("email",
+                                        label = T("Login Username"),
+                                        requires = IS_IN_SET(user_opts,
+                                                             zero = None)),
+                                  Field("created_datetime","datetime",
+                                        label = T("When was session created?"),
+                                        default = current.request.utcnow),
+                                  Field("expiration_time", "integer",
+                                        label = T("Session Expiration Time")),
+                                  Field("is_expired","boolean",
+                                        label = T("Expired Session?"),
+                                        default = False),
+                                  Field("sender",
+                                        label = T("Authentication Request Sender")),
+                                  *s3_meta_fields())
+                                  
+        
         return Storage()
     # -------------------------------------------------------------------------
     @staticmethod
