@@ -698,6 +698,7 @@ class S3Request(object):
         components = component_name
         if components is None:
             components = cnames
+
         self.resource = manager.define_resource(self.prefix,
                                                 self.name,
                                                 id=self.id,
@@ -1025,6 +1026,7 @@ class S3Request(object):
             self.custom_action = s3db.get_method(self.prefix, self.name,
                                                           component_name=self.component_name,
                                                           method=self.method)
+
         # Method handling
         http = self.http
         handler = None
@@ -1246,6 +1248,14 @@ class S3Request(object):
             if _vars["show_urls"].lower() == "false":
                 manager.show_urls = False
 
+        # Maxbounds (default: False)
+        maxbounds = False
+        if "maxbounds" in _vars:
+            if _vars["maxbounds"].lower() == "true":
+                maxbounds = True
+        if r.representation == "gpx":
+            maxbounds = True
+
         # Components of the master resource (tablenames)
         if "mcomponents" in _vars:
             mcomponents = _vars["mcomponents"]
@@ -1328,6 +1338,7 @@ class S3Request(object):
                                        rcomponents=rcomponents,
                                        stylesheet=stylesheet,
                                        as_json=as_json,
+                                       maxbounds=maxbounds,
                                        **args)
         # Transformation error?
         if not output:

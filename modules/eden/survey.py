@@ -1611,6 +1611,7 @@ class S3SeriesModel(S3Model):
                                        represent = s3_date_represent,
                                        widget = S3DateWidget(),
                                        default=None),
+                                 #self.super_link("source_id", "doc_source_entity"),
                                  *s3_meta_fields())
 
         # CRUD Strings
@@ -2192,9 +2193,10 @@ $('#chart_btn').click(function(){
                                          "query": response_locations,
                                          "active": True })
                 if bounds == {}:
-                    bounds = (gis.get_bounds(response_locations))
+                    bounds = (gis.get_bounds(features=response_locations))
                 else:
-                    new_bounds = gis.get_bounds(response_locations)
+                    new_bounds = gis.get_bounds(features=response_locations)
+                    # Where is merge_bounds defined!?
                     bounds = merge_bounds([bounds, new_bounds])
         if bounds == {}:
             bounds = gis.get_bounds()

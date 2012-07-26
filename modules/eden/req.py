@@ -189,7 +189,7 @@ class S3RequestModel(S3Model):
                                   Field("purpose", "text",
                                         label=T("Purpose")), # Donations: What will the Items be used for?; People: Task Details
                                   Field("date_required", "datetime",
-                                        label = T("Date Needed BY"),
+                                        label = T("Date Needed By"),
                                         requires = [IS_EMPTY_OR(
                                                     #IS_UTC_DATETIME_IN_RANGE(
                                                     IS_DATE_IN_RANGE(
@@ -467,6 +467,18 @@ $(function() {
             )
 
     # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        req_ref = S3ReusableField("req_ref", "string",
+                                  readable=False, writable=False)
+        return Storage(
+                req_req_ref = req_ref
+            )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_create_form_mods():
         """
@@ -491,10 +503,10 @@ $(function() {
             Function to be called from REST prep functions
              - main module & components (sites)
         """
-        if not r.component:
+        if not r.component or r.component.name =="req":
             table = current.db.req_req
             default_type = table.type.default
-            if table.type.default:
+            if default_type:
                 req_submit_button = {1:T("Save and add Items"),
                                      3:T("Save and add People")}
                 current.manager.s3.crud.submit_button = req_submit_button[default_type]
@@ -628,13 +640,18 @@ $(function() {
             @ToDo: Roll these up like inv_tabs in inv.py
         """
 
-        if current.deployment_settings.has_module("req") and \
-            current.auth.s3_has_permission("read", "req_req"):
-            return [
-                    (T("Requests"), "req"),
-                    (T("Match Requests"), "req_match/"),
-                    (T("Commit"), "commit")
-                    ]
+        s3_has_permission = current.auth.s3_has_permission
+        settings = current.deployment_settings
+        if settings.has_module("req") and \
+            s3_has_permission("read", "req_req"):
+            tabs= [(T("Requests"), "req")]
+            if s3_has_permission("read", "req_req",
+                                 c=current.request.controller,
+                                 f="req_match"):
+                tabs.append((T("Match Requests"), "req_match/"))
+            if settings.get_req_use_commit():
+                tabs.append((T("Commit"), "commit"))
+            return tabs
         else:
             return []
 
@@ -782,19 +799,22 @@ $(function() {
         # If the req_ref is None then set it up
         id = form.vars.id
         if settings.get_req_use_req_number() and not rrtable[id].req_ref:
-            code = s3db.inv_get_shipping_code(current.deployment_settings.get_req_shortname(),
+            code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
                                               rrtable[id].site_id,
                                               rrtable.req_ref,
                                              )
             db(rrtable.id == id).update(req_ref = code)
+
         # Configure the next page to go to based on the request type
         tablename = "req_req"
-        if "default_type" in request.get_vars:
-            type = request.get_vars.default_type
-        else:
-            type = form.vars.type
 
-        if type == "1" and settings.has_module("inv"):
+        if rrtable.type.default:
+            type = rrtable.type.default
+        elif "type" in form.vars:
+            type = int(form.vars.type)
+        else:
+            type = 1
+        if type == 1 and settings.has_module("inv"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -802,7 +822,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_item"]))
-        elif type == "2" and settings.has_module("asset"):
+        elif type == 2 and settings.has_module("asset"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -810,7 +830,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_asset"]))
-        elif type == "3" and settings.has_module("hrm"):
+        elif type == 3 and settings.has_module("hrm"):
             s3db.configure(tablename,
                            create_next = URL(c="req",
                                              f="req",
@@ -818,7 +838,7 @@ $(function() {
                            update_next = URL(c="req",
                                              f="req",
                                              args=["[id]", "req_skill"]))
-        #elif type == "4" and settings.has_module("cr"):
+        #elif type == 4 and settings.has_module("cr"):
         #    s3db.configure(tablename,
         #                   create_next = URL(c="req",
         #                                     f="req",
@@ -971,7 +991,6 @@ $(document).ready(function(){
 })'''),
                                         )
 
-
         self.configure(tablename,
                        super_entity="supply_item_entity",
                        onaccept=req_item_onaccept,
@@ -999,6 +1018,17 @@ $(document).ready(function(){
         return Storage(
                 req_item_id = req_item_id,
                 req_item_represent = self.req_item_represent,
+            )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+        req_item_id = S3ReusableField("req_item_id", "integer",
+                                      readable=False, writable=False)
+        return Storage(
+                req_item_id = req_item_id
             )
 
     # -------------------------------------------------------------------------

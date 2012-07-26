@@ -58,7 +58,7 @@ from gluon import *
 #from gluon.html import A, DIV, URL
 #from gluon.http import HTTP, redirect
 #from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
-from gluon.dal import Row, Rows
+from gluon.dal import Row, Rows, Table
 from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
@@ -1069,6 +1069,7 @@ class S3Resource(object):
                    stylesheet=None,
                    as_tree=False,
                    as_json=False,
+                   maxbounds=False,
                    pretty_print=False, **args):
         """
             Export this resource as S3XML
@@ -1109,7 +1110,8 @@ class S3Resource(object):
                                 dereference=dereference,
                                 mcomponents=mcomponents,
                                 rcomponents=rcomponents,
-                                references=references)
+                                references=references,
+                                maxbounds=maxbounds)
         if DEBUG:
             end = datetime.datetime.now()
             duration = end - _start
@@ -1167,7 +1169,8 @@ class S3Resource(object):
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
-                    references=None):
+                    references=None,
+                    maxbounds=False):
         """
             Export the resource as element tree
 
@@ -1348,7 +1351,8 @@ class S3Resource(object):
                         url=base_url,
                         results=results,
                         start=start,
-                        limit=limit)
+                        limit=limit,
+                        maxbounds=maxbounds)
         return tree
 
     # -------------------------------------------------------------------------
@@ -1545,9 +1549,21 @@ class S3Resource(object):
         # Reference map for this record
         rmap = xml.rmap(table, record, rfields)
 
+        # Use alias if distinct from resource name
+        linked = self.linked
+        if self.parent is not None and linked is not None:
+            alias = linked.alias
+            name = linked.name
+        else:
+            alias = self.alias
+            name = self.name
+        if alias == name:
+            alias = None
+
         # Generate the element
         element = xml.resource(parent, table, record,
                                fields=dfields,
+                               alias=alias,
                                postprocess=postprocess,
                                url=url)
         # Add the references
@@ -2151,6 +2167,8 @@ class S3Resource(object):
         fields = []
         append = fields.append
 
+        get_location_hierarchy = current.gis.get_location_hierarchy
+
         for s in slist:
 
             # Allow to override the field label
@@ -2166,16 +2184,20 @@ class S3Resource(object):
                 continue
             try:
                 field = resolve_selector(selector)
-            except (KeyError, SyntaxError):
+            except (AttributeError, SyntaxError):
                 continue
 
             # Fall back to the field label
             if label is None:
-                f = field.field
-                if f:
-                    label = f.label
+                fname = field.fname
+                if fname in ["L1", "L2", "L3", "L3", "L4", "L5"]:
+                    label = get_location_hierarchy(fname)
                 else:
-                    label = field.fname.capitalize()
+                    f = field.field
+                    if f:
+                        label = f.label
+                    else:
+                        label = fname.capitalize()
             field.label = label
 
             # Resolve the joins
@@ -2255,7 +2277,7 @@ class S3Resource(object):
                 left[tn] = l
                 table = c.table
             else:
-                raise KeyError("%s is not a component of %s" % (tn, tablename))
+                raise AttributeError("%s is not a component of %s" % (tn, tablename))
         else:
             # Field in the master table
             tn = tablename
@@ -2266,7 +2288,7 @@ class S3Resource(object):
             table = self.table
 
         if table is None:
-            raise KeyError("undefined table %s" % tn)
+            raise AttributeError("undefined table %s" % tn)
         else:
             # Resolve the field name
             if fn == "uid":
@@ -2300,9 +2322,9 @@ class S3Resource(object):
                     lname = fn
 
                 if ltable is None:
-                    ltable = s3db.table(lname)
-                    if not ltable:
-                        raise SyntaxError("%s.%s is not a foreign key" % (tn, fn))
+                    ltable = s3db.table(lname,
+                                        SyntaxError("%s.%s is not a foreign key" % (tn, fn)),
+                                        db_only=True)
 
                 # Get the primary key
                 pkey = table._id.name
@@ -2312,7 +2334,7 @@ class S3Resource(object):
                     search_lkey = True
                 else:
                     if lkey not in ltable.fields:
-                        raise KeyError("No field %s in %s" % (lkey, lname))
+                        raise AttributeError("No field %s in %s" % (lkey, lname))
                     lkey_field = ltable[lkey]
                     _tn, pkey, multiple = s3_get_foreign_key(lkey_field, m2m=False)
                     if _tn and _tn != tn:
@@ -2326,7 +2348,7 @@ class S3Resource(object):
                     search_rkey = True
                 else:
                     if rkey not in ltable.fields:
-                        raise KeyError("No field %s in %s" % (rkey, lname))
+                        raise AttributeError("No field %s in %s" % (rkey, lname))
                     rkey_field = ltable[rkey]
                     ktablename, fkey, multiple = s3_get_foreign_key(rkey_field, m2m=False)
                     if not ktablename:
@@ -2363,9 +2385,9 @@ class S3Resource(object):
                         rkey_field = ltable[rkey]
 
                 # Load the referenced table
-                ktable = s3db.table(ktablename)
-                if ktable is None:
-                    raise KeyError("Undefined table: %s" % ktablename)
+                ktable = s3db.table(ktablename,
+                                    AttributeError("Undefined table: %s" % ktablename),
+                                    db_only=True)
 
                 # Resolve fkey, if still unknown
                 if not fkey:
@@ -2390,9 +2412,9 @@ class S3Resource(object):
                 if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 
-                ktable = s3db.table(ktablename)
-                if ktable is None:
-                    raise KeyError("Undefined table %s" % ktablename)
+                ktable = s3db.table(ktablename,
+                                    AttributeError("Undefined table %s" % ktablename),
+                                    db_only=True)
                 if pkey is None:
                     pkey = ktable._id
                 else:
@@ -2434,36 +2456,33 @@ class S3Resource(object):
             @param references: foreign key fields to include (None for all)
         """
 
-        manager = current.manager
-        xml = current.xml
-
-        UID = xml.UID
-        IGNORE_FIELDS = xml.IGNORE_FIELDS
-        FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
-
-        table = self.table
-        tablename = self.tablename
-
-        if tablename == "gis_location":
-            if "wkt" not in skip:
-                # Skip Bulky WKT fields
-                skip.append("wkt")
-            if current.deployment_settings.get_gis_spatialdb() and \
-               "the_geom" not in skip:
-                skip.append("the_geom")
-
         rfields = self.rfields
         dfields = self.dfields
 
         if rfields is None or dfields is None:
+            if self.tablename == "gis_location":
+                if "wkt" not in skip:
+                    # Skip Bulky WKT fields
+                    skip.append("wkt")
+                if current.deployment_settings.get_gis_spatialdb() and \
+                   "the_geom" not in skip:
+                    skip.append("the_geom")
+
+            xml = current.xml
+            UID = xml.UID
+            IGNORE_FIELDS = xml.IGNORE_FIELDS
+            FIELDS_TO_ATTRIBUTES = xml.FIELDS_TO_ATTRIBUTES
+
+            show_ids = current.manager.show_ids
             rfields = []
             dfields = []
+            table = self.table
             pkey = table._id.name
             for f in table.fields:
                 if f == UID or \
                    f in skip or \
                    f in IGNORE_FIELDS:
-                    if f != pkey or not manager.show_ids:
+                    if f != pkey or not show_ids:
                         continue
                 if s3_has_foreign_key(table[f]) and \
                     f not in FIELDS_TO_ATTRIBUTES and \
@@ -2799,9 +2818,26 @@ class S3Resource(object):
         headers = dict(map(lambda f: (f.colname, f.label), lfields))
 
         # Fields in the query
-        qfields = [f.field for f in lfields if f.field is not None]
-        if no_ids:
-            qfields.insert(0, table._id)
+        load = current.s3db.table
+        qfields = []
+        qtables = []
+        for f in lfields:
+            field = f.field
+            tname = f.tname
+            if field is None:
+                continue
+            qtable = load(tname)
+            if qtable is None:
+                continue
+            if tname not in qtables:
+                # Make sure the primary key of the table this field
+                # belongs to is included in the SELECT
+                qtables.append(tname)
+                pkey = qtable._id
+                qfields.append(pkey)
+                if str(field) == str(pkey):
+                    continue
+            qfields.append(field)
 
         # Add orderby fields which are not in qfields
         # @todo: this could need some cleanup/optimization
@@ -4040,7 +4076,9 @@ class S3ResourceQuery:
         elif op == self.ANYOF:
             q = l.contains(r, all=False)
         elif op == self.BELONGS:
-            if type(r) is list and None in r:
+            if type(r) is not list:
+                r = [r]
+            if None in r:
                 _r = [item for item in r if item is not None]
                 q = ((l.belongs(_r)) | (l == None))
             else:
@@ -4192,6 +4230,8 @@ class S3ResourceQuery:
                     return True
             return False
         elif op == self.BELONGS:
+            if not isinstance(r, (list, tuple)):
+                r = [r]
             r = convert(l, r)
             result = contains(r, l)
         elif op == self.LIKE:

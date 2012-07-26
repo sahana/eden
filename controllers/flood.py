@@ -63,7 +63,7 @@ def gauge():
             # Map Popups
             r.table.image_url.readable = False
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     # Post-processor
     def postp(r, output):
@@ -81,7 +81,7 @@ def gauge():
                                           _width=400,
                                           _height=310))
         return output
-    response.s3.postp = postp
+    s3.postp = postp
 
     output = s3_rest_controller()
 

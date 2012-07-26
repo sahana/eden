@@ -29,7 +29,8 @@
 
 __all__ = ["S3IRSModel",
            "S3IRSResponseModel",
-           "irs_rheader"]
+           "irs_rheader"
+           ]
 
 try:
     import json # try stdlib (Python 2.6)
@@ -51,7 +52,8 @@ class S3IRSModel(S3Model):
     names = ["irs_icategory",
              "irs_ireport",
              "irs_ireport_person",
-             "irs_ireport_id"]
+             "irs_ireport_id"
+             ]
 
     def model(self):
 
@@ -239,12 +241,15 @@ class S3IRSModel(S3Model):
         table = define_table(tablename,
                              super_link("sit_id", "sit_situation"),
                              super_link("doc_id", "doc_entity"),
-                             Field("name", label = T("Short Description"),
+                             Field("name",
+                                   label = T("Short Description"),
                                    requires = IS_NOT_EMPTY()),
-                             Field("message", "text", label = T("Message"),
+                             Field("message", "text",
+                                   label = T("Message"),
                                    represent = lambda text: \
                                        s3_truncate(text, length=48, nice=True)),
-                             Field("category", label = T("Category"),
+                             Field("category",
+                                   label = T("Category"),
                                    # The full set available to Admins & Imports/Exports
                                    # (users use the subset by over-riding this in the Controller)
                                    requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
@@ -364,14 +369,16 @@ class S3IRSModel(S3Model):
                                  "comments",
                                 ]
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="incident_search_L1",
                         field="L1",
+                        location_level="L1",
                         cols = 3,
                     ),
-                    S3SearchLocationHierarchyWidget(
+                    S3SearchOptionsWidget(
                         name="incident_search_L2",
                         field="L2",
+                        location_level="L2",
                         cols = 3,
                     ),
                     S3SearchOptionsWidget(
@@ -388,13 +395,12 @@ class S3IRSModel(S3Model):
                     ),
             ))
 
-        hierarchy = current.gis.get_location_hierarchy()
         report_fields = [
                          "category",
                          "datetime",
-                         (hierarchy["L1"], "L1"),
-                         (hierarchy["L2"], "L2"),
-                        ]
+                         "L1",
+                         "L2",
+                         ]
 
         # Resource Configuration
         configure(tablename,
@@ -402,14 +408,16 @@ class S3IRSModel(S3Model):
                   search_method = ireport_search,
                   report_options=Storage(
                       search=[
-                            S3SearchLocationHierarchyWidget(
+                            S3SearchOptionsWidget(
                                 name="incident_search_L1",
                                 field="L1",
+                                location_level="L1",
                                 cols = 3,
                             ),
-                            S3SearchLocationHierarchyWidget(
+                            S3SearchOptionsWidget(
                                 name="incident_search_L2",
                                 field="L2",
+                                location_level="L2",
                                 cols = 3,
                             ),
                             S3SearchOptionsWidget(

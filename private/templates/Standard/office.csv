@@ -1,4 +1,4 @@
-Name,Organisation,Type,Country,Building,Address,Postcode,State,District,City,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
+Name,Organisation,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
 "California Southern Baptist Convention","California Southern Baptist Convention Disaster Relief","Headquarters","United States",,"678 East Shaw Ave",93710,"California","Fresno County","Fresno",36.808787,-119.774975,"(559) 229-9533",,,,
 "Guadalupe Community Center","Catholic Charities of Los Angeles","Regional","United States",,"21600 Hart St",91303,"California","Los Angeles County","Canoga Park",34.197381,-118.600415,"(818) 340-2050",,,,
 "Oasis Community Center","Catholic Charities of Los Angeles","Regional","United States",,"2045 San Gabriel Ave",90810,"California","Los Angeles County","Carson",33.792884,-118.223955,"(562) 480-2166",,,,

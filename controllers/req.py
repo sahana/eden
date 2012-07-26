@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ def index():
         - custom View
     """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -62,12 +62,6 @@ def req():
         response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
                                                                         "site":s3db.org_site_represent(site_id, show_link=False)
                                                                         })
-
-    default_type = request.vars.default_type
-    if default_type:
-        type_field = req_table.type
-        type_field.default = int(default_type)
-        type_field.writable = False
 
     def prep(r):
 
@@ -284,7 +278,7 @@ def req_item():
     """ REST Controller """
 
     s3db.configure("req_req_item",
-                    insertable=False)
+                   insertable=False)
 
     def prep(r):
         if r.interactive:
@@ -446,7 +440,7 @@ def commit():
         # & can only make single-person commitments
         # (This should have happened in the main commitment)
         s3db.configure(tablename,
-                        insertable=False)
+                       insertable=False)
 
     def prep(r):
 
@@ -816,15 +810,15 @@ def commit_item_json():
             (ctable.id == itable.commit_id) & \
             (ctable.site_id == stable.id) & \
             (itable.deleted == False)
-    records =  db(query).select(ctable.id,
-                                ctable.date,
-                                stable.name,
-                                itable.quantity,
-                                orderby = db.req_commit.date)
+    records = db(query).select(ctable.id,
+                               ctable.date,
+                               stable.name,
+                               itable.quantity,
+                               orderby = db.req_commit.date)
 
-    json_str = "[%s,%s" % ( json.dumps(dict(id = str(T("Committed")),
-                                            quantity = "#")),
-                            records.json()[1:])
+    json_str = '''[%s,%s''' % (json.dumps(dict(id = str(T("Committed")),
+                                               quantity = "#")),
+                               records.json()[1:])
 
     response.headers["Content-Type"] = "application/json"
     return json_str

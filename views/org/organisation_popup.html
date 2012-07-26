@@ -1,6 +1,6 @@
 {{extend "layout.html"}}
 {{include "_popup.html"}}
-{{if "donor_id" in request.vars.caller:}}
+{{if "caller" in request.vars and "donor_id" in request.vars.caller:}}
     <script type="text/javascript">//<![CDATA[
     $(function() {
         // If coming from the 'Add Donor' button then populate the type field & hide row

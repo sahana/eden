@@ -121,19 +121,22 @@ def location():
             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
             field = "name"
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L0",
                 field="L0",
+                label = T("Country"),
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L1",
                 field="L1",
+                location_level="L1",
                 cols = 3,
             ),
-            s3base.S3SearchLocationHierarchyWidget(
+            s3base.S3SearchOptionsWidget(
                 name="location_search_L2",
                 field="L2",
+                location_level="L2",
                 cols = 3,
             ),
             s3base.S3SearchOptionsWidget(
@@ -202,48 +205,26 @@ def location():
 
     # Custom Method
     s3db.set_method("gis", "location", method="parents",
-                           action=s3_gis_location_parents)
+                    action=s3_gis_location_parents)
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
     vars = {}
-    # @ToDo: Clean up what needs to be done only for interactive views,
-    # vs. what needs to be done generally. E.g. some tooltips are defined
-    # for non-interactive.
     def prep(r, vars):
 
-        def get_location_info():
-            table = s3db.gis_location
-            query = (table.id == r.id)
-            return db(query).select(table.lat,
-                                    table.lon,
-                                    table.level,
-                                    limitby=(0, 1)).first()
+        if r.interactive and not r.component:
+            # Restrict access to Polygons to just MapAdmins
+            if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
+                table.gis_feature_type.writable = table.gis_feature_type.readable = False
+                table.wkt.writable = table.wkt.readable = False
+            else:
+                table.wkt.comment = DIV(_class="stickytip",
+                                        _title="WKT|%s %s%s %s%s" % (T("The"),
+                                                                   "<a href='http://en.wikipedia.org/wiki/Well-known_text' target=_blank>",
+                                                                   T("Well-Known Text"),
+                                                                   "</a>",
+                                                                   T("representation of the Polygon/Line.")))
 
-        # Restrict access to Polygons to just MapAdmins
-        if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
-            table.gis_feature_type.writable = table.gis_feature_type.readable = False
-            table.wkt.writable = table.wkt.readable = False
-        elif r.interactive:
-            table.wkt.comment = DIV(_class="stickytip",
-                                    _title="WKT|%s %s%s %s%s" % (T("The"),
-                                                               "<a href='http://en.wikipedia.org/wiki/Well-known_text' target=_blank>",
-                                                               T("Well-Known Text"),
-                                                               "</a>",
-                                                               T("representation of the Polygon/Line.")))
-
-        if r.interactive:
-            # Don't show street address, postcode for hierarchy on read or update.
-            if r.method != "create" and r.id:
-                try:
-                    location
-                except:
-                    location = get_location_info()
-                if location.level:
-                    table.addr_street.writable = table.addr_street.readable = False
-                    table.addr_postcode.writable = table.addr_postcode.readable = False
-
-            # Options which are only required in interactive HTML views
             table.level.comment = DIV(_class="tooltip",
                                       _title="%s|%s" % (T("Level"),
                                                         T("If the location is a geographic area, then state at what level here.")))
@@ -259,18 +240,13 @@ def location():
                                                              vars=dict(child="parent")),
                                            parent_comment)
 
+            table.inherited.comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (table.inherited.label,
+                                                            T("Whether the Latitude & Longitude are inherited from a higher level in the location hierarchy rather than being a separately-entered figure.")))
+
             table.comments.comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Comments"),
                                                            T("Please use this field to record any additional information, such as Ushahidi instance IDs. Include a history of the record if it is updated.")))
-
-            if r.representation == "iframe":
-                # De-duplicator needs to be able to access UUID fields
-                table.uuid.readable = table.uuid.writable = True
-                table.uuid.label = "UUID"
-                table.uuid.comment = DIV(_class="stickytip",
-                                         _title="UUID|%s%s%s" % (T("The"),
-                                                                 " <a href='http://eden.sahanafoundation.org/wiki/UUID#Mapping' target=_blank>Universally Unique ID</a>. ",
-                                                                 T("Suggest not changing this field unless you know what you are doing.")))
 
             if r.method in (None, "list") and r.record is None:
                 # List
@@ -278,6 +254,7 @@ def location():
             elif r.method in ("delete", "search"):
                 pass
             else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.gis.feature_crud.js" % appname)
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
                 lat = config.lat
@@ -288,6 +265,7 @@ def location():
                 if r.method == "create":
                     add_feature = True
                     add_feature_active = True
+                    table.inherited.readable = False
                 else:
                     if r.method == "update":
                         add_feature = True
@@ -297,20 +275,13 @@ def location():
                         add_feature = False
                         add_feature_active = False
 
-                    try:
-                        location
-                    except:
-                        location = get_location_info()
-                    if location and location.lat is not None and location.lon is not None:
-                        lat = location.lat
-                        lon = location.lon
+                    record = r.record
+                    if record and record.lat is not None and record.lon is not None:
+                        lat = record.lat
+                        lon = record.lon
                     # Same as a single zoom on a cluster
                     zoom = zoom + 2
 
-                # @ToDo: Does map make sense if the user is updating a group?
-                # If not, maybe leave it out. OTOH, might be nice to select
-                # admin regions to include in the group by clicking on them in
-                # the map. Would involve boundaries...
                 _map = gis.show_map(lat = lat,
                                     lon = lon,
                                     zoom = zoom,
@@ -488,208 +459,6 @@ def l0():
     response.headers["Content-Type"] = "application/json"
     return output
 
-# -----------------------------------------------------------------------------
-def location_duplicates():
-    """
-        Handle De-duplication of Locations by comparing the ones which are closest together
-
-        @ToDo: Extend to being able to check locations for which we have no Lat<>Lon info (i.e. just names & parents)
-    """
-
-    # @ToDo: Set this via the UI & pass in as a var
-    dupe_distance = 50 # km
-
-    # Shortcut
-    locations = s3db.gis_location
-
-    table_header = THEAD(TR(TH(T("Location 1")),
-                            TH(T("Location 2")),
-                            TH(T("Distance(Kms)")),
-                            TH(T("Resolve"))))
-
-    # Calculate max possible combinations of records
-    # To handle the AJAX requests by the dataTables jQuery plugin.
-    totalLocations = db(locations.id > 0).count()
-
-    item_list = []
-    if request.vars.iDisplayStart:
-        end = int(request.vars.iDisplayLength) + int(request.vars.iDisplayStart)
-        locations = db((locations.id > 0) & \
-                       (locations.deleted == False) & \
-                       (locations.lat != None) & \
-                       (locations.lon != None)).select(locations.id,
-                                                       locations.name,
-                                                       locations.level,
-                                                       locations.lat,
-                                                       locations.lon)
-        # Calculate the Great Circle distance
-        count = 0
-        for oneLocation in locations[:len(locations) / 2]:
-            for anotherLocation in locations[len(locations) / 2:]:
-                if count > end and request.vars.max != "undefined":
-                    count = int(request.vars.max)
-                    break
-                if oneLocation.id == anotherLocation.id:
-                    continue
-                else:
-                    dist = gis.greatCircleDistance(oneLocation.lat,
-                                                   oneLocation.lon,
-                                                   anotherLocation.lat,
-                                                   anotherLocation.lon)
-                    if dist < dupe_distance:
-                        count = count + 1
-                        item_list.append([oneLocation.name,
-                                          anotherLocation.name,
-                                          dist,
-                                          "<a href=\"../gis/location_resolve?locID1=%i&locID2=%i\", class=\"action-btn\">Resolve</a>" % (oneLocation.id, anotherLocation.id)
-                                         ])
-                    else:
-                        continue
-
-        item_list = item_list[int(request.vars.iDisplayStart):end]
-        # Convert data to JSON
-        result  = []
-        result.append({
-                    "sEcho" : request.vars.sEcho,
-                    "iTotalRecords" : count,
-                    "iTotalDisplayRecords" : count,
-                    "aaData" : item_list
-                    })
-        output = json.dumps(result)
-        # Remove unwanted brackets
-        output = output[1:]
-        output = output[:-1]
-        return output
-    else:
-        # Don't load records except via dataTables (saves duplicate loading & less confusing for user)
-        items = DIV((TABLE(table_header,
-                           TBODY(),
-                           _id="list",
-                           _class="dataTable display")))
-        return(dict(items=items))
-
-# -----------------------------------------------------------------------------
-def delete_location():
-    """
-        Delete references to a old record and replacing it with the new one.
-    """
-
-    old = request.vars.old
-    new = request.vars.new
-
-    # Find all tables which link to the Locations table
-    # @ToDo Replace with db.gis_location._referenced_by
-    tables = s3_table_links("gis_location")
-
-    for table in tables:
-        for count in range(len(tables[table])):
-            field = tables[str(db[table])][count]
-            query = db[table][field] == old
-            db(query).update(**{field:new})
-
-    # Remove the record
-    db(s3db.gis_location.id == old).update(deleted=True)
-    return "Record Gracefully Deleted"
-
-# -----------------------------------------------------------------------------
-def location_resolve():
-    """
-        Opens a popup screen where the de-duplication process takes place.
-    """
-
-    # @ToDo: Error gracefully if conditions not satisfied
-    locID1 = request.vars.locID1
-    locID2 = request.vars.locID2
-
-    # Shortcut
-    locations = s3db.gis_location
-
-    # Remove the comment and replace it with buttons for each of the fields
-    count = 0
-    for field in locations:
-        id1 = str(count) + "Right"      # Gives a unique number to each of the arrow keys
-        id2 = str(count) + "Left"
-        count  = count + 1
-
-        # Comment field filled with buttons
-        field.comment = DIV(TABLE(TR(TD(INPUT(_type="button", _id=id1, _class="rightArrows", _value="-->")),
-                                     TD(INPUT(_type="button", _id=id2, _class="leftArrows", _value="<--")))))
-        record = locations[locID1]
-    myUrl = URL(c="gis", f="location")
-    form1 = SQLFORM(locations, record, _id="form1", _action=("%s/%s" % (myUrl, locID1)))
-
-    # For the second location remove all the comments to save space.
-    for field in locations:
-        field.comment = None
-    record = locations[locID2]
-    form2 = SQLFORM(locations, record,_id="form2", _action=("%s/%s" % (myUrl, locID2)))
-    return dict(form1=form1, form2=form2, locID1=locID1, locID2=locID2)
-
-# -----------------------------------------------------------------------------
-def location_links():
-    """
-        @arg id - the location record id
-        Returns a JSON array of records which link to the specified location
-
-        @ToDo: Deprecated with new de-duplicator?
-    """
-
-    try:
-        record_id = request.args[0]
-    except:
-        item = current.xml.json_message(False, 400, "Need to specify a record ID!")
-        raise HTTP(400, body=item)
-
-    try:
-        # Shortcut
-        locations = s3db.gis_location
-
-        deleted = (locations.deleted == False)
-        query = (locations.id == record_id)
-        query = deleted & query
-        record = db(query).select(locations.id, limitby=(0, 1)).first().id
-    except:
-        item = current.xml.json_message(False, 404, "Record not found!")
-        raise HTTP(404, body=item)
-
-    # Find all tables which link to the Locations table
-    # @ToDo: Replace with db.gis_location._referenced_by
-    tables = s3_table_links("gis_location")
-
-    results = []
-    for table in tables:
-        for count in range(len(tables[table])):
-            field = tables[str(db[table])][count]
-            query = db[table][field] == record_id
-            _results = db(query).select()
-            module, resourcename = table.split("_", 1)
-            for result in _results:
-                id = result.id
-                # We currently have no easy way to get the default represent for a table!
-                try:
-                    # Locations & Persons
-                    represent = eval("s3_%s_represent(id)" % table)
-                except:
-                    try:
-                        # Organizations
-                        represent = eval("s3_%s_represent(id)" % resourcename)
-                    except:
-                        try:
-                            # Many tables have a Name field
-                            represent = (id and [db[table][id].name] or ["None"])[0]
-                        except:
-                            # Fallback
-                            represent = id
-                results.append({
-                    "module" : module,
-                    "resource" : resourcename,
-                    "id" : id,
-                    "represent" : represent
-                    })
-
-    output = json.dumps(results)
-    return output
-
 # =============================================================================
 # Common CRUD strings for all layers
 ADD_LAYER = T("Add Layer")
@@ -805,8 +574,7 @@ def config():
                             (ltable.config_id == r.id)
                     rows = db(query).select(table.layer_id)
                     # Filter them out
-                    ltable.layer_id.requires = IS_ONE_OF(db,
-                                                         "gis_layer_entity.layer_id",
+                    ltable.layer_id.requires = IS_ONE_OF(db, "gis_layer_entity.layer_id",
                                                          s3db.gis_layer_represent,
                                                          not_filterby="layer_id",
                                                          not_filter_opts=[row.layer_id for row in rows]
@@ -967,8 +735,7 @@ def symbology():
                     rows = db(query).select(table.layer_id)
                     # Filter them out
                     # Restrict Layers to those which have Markers
-                    ltable.layer_id.requires = IS_ONE_OF(db,
-                                                         "gis_layer_entity.layer_id",
+                    ltable.layer_id.requires = IS_ONE_OF(db, "gis_layer_entity.layer_id",
                                                          s3db.gis_layer_represent,
                                                          filterby="instance_type",
                                                          filter_opts=("gis_layer_feature",
@@ -1124,8 +891,7 @@ def layer_entity():
                             (ltable.layer_id == r.id)
                     rows = db(query).select(table.id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                          "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                           "%(name)s",
                                                           not_filterby="id",
                                                           not_filter_opts=[row.id for row in rows]
@@ -1150,8 +916,7 @@ def layer_entity():
                             (ltable.layer_id == r.id)
                     rows = db(query).select(table.id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.id for row in rows]
@@ -1187,8 +952,7 @@ def layer_feature():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1202,8 +966,7 @@ def layer_feature():
                         (table.id == r.id)
                 rows = db(query).select(ltable.symbology_id)
                 # Filter them out
-                ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                         "gis_symbology.id",
+                ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                          "%(name)s",
                                                          not_filterby="id",
                                                          not_filter_opts=[row.symbology_id for row in rows]
@@ -1264,8 +1027,7 @@ def layer_openstreetmap():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1323,8 +1085,7 @@ def layer_bing():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1382,8 +1143,7 @@ def layer_empty():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1432,8 +1192,7 @@ def layer_google():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1499,8 +1258,7 @@ def layer_mgrs():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1561,8 +1319,7 @@ def layer_arcrest():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1629,8 +1386,7 @@ def layer_geojson():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1648,8 +1404,7 @@ def layer_geojson():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1720,8 +1475,7 @@ def layer_georss():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1739,8 +1493,7 @@ def layer_georss():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1810,8 +1563,7 @@ def layer_gpx():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -1882,13 +1634,14 @@ def layer_kml():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
                                                          )
             elif r.component_name == "symbology":
+                ltable = s3db.gis_layer_symbology
+                field = ltable.gps_marker
                 field.readable = False
                 field.writable = False
                 if r.method != "update":
@@ -1899,8 +1652,7 @@ def layer_kml():
                             (table.id == r.id)
                     rows = db(query).select(ltable.symbology_id)
                     # Filter them out
-                    ltable.symbology_id.requires = IS_ONE_OF(db,
-                                                             "gis_symbology.id",
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
                                                              "%(name)s",
                                                              not_filterby="id",
                                                              not_filter_opts=[row.symbology_id for row in rows]
@@ -1975,8 +1727,7 @@ def layer_theme():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2059,8 +1810,7 @@ def layer_tms():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2127,8 +1877,7 @@ def layer_wfs():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2197,8 +1946,7 @@ def layer_wms():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2270,8 +2018,7 @@ def layer_xyz():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]
@@ -2338,8 +2085,7 @@ def layer_js():
                             (table.id == r.id)
                     rows = db(query).select(ltable.config_id)
                     # Filter them out
-                    ltable.config_id.requires = IS_ONE_OF(db,
-                                                         "gis_config.id",
+                    ltable.config_id.requires = IS_ONE_OF(db, "gis_config.id",
                                                          "%(name)s",
                                                          not_filterby="config_id",
                                                          not_filter_opts=[row.config_id for row in rows]

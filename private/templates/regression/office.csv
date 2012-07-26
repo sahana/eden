@@ -1,4 +1,4 @@
-Name,Organisation,Type,Country,Building,Address,Postcode,State,City,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
+Name,Organisation,Type,Country,Building,Address,Postcode,L1,L3,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
 "Simmons Office","Example.co.uk","Field","Greenland","Q Skinner Building","777-939 Ac Rd.","P6 0WF","Perth","Bentonville","-80","-15","1 18 424 4777-0537","1 28 529 2862-7844","pede@liberoat.org","1 61 886 3539-5933",
 "Townsend Office","Example.edu","Headquarters","Iceland","V Velazquez Building","578-4097 Posuere St.","A48 3KM","Selkirkshire","Weirton","87","65","1 18 981 8592-4716","1 17 120 1694-0368","imperdiet@aliquetnecimperdiet.org","1 97 689 4386-7584",
 "Marquez Office","Example.com","Warehouse","Lesotho","U Contreras Building","289-9700 Sit St.","X5J 7D1","New York","Milford","-10","127","1 28 479 1765-9480","1 90 190 9437-6515","ipsum@ligula.ca","1 42 411 4888-7368",

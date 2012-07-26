@@ -390,8 +390,8 @@ class S3SupplyModel(S3Model):
         # ---------------------------------------------------------------------
         # Item Search Method
         #
-        item_search = S3Search(
-            advanced=(S3SearchSimpleWidget(
+        report_options = Storage(
+            search=[S3SearchSimpleWidget(
                         name="item_search_text",
                         label=T("Search"),
                         comment=T("Search for an item by its code, name, model and/or comment."),
@@ -417,13 +417,24 @@ class S3SupplyModel(S3Model):
                         #represent ="%(name)s",
                         cols = 1
                       ),
-            )
+                   ],
+
+            defaults=Storage(
+                             rows="name",
+                             cols="category_id",
+                             fact="brand_id",
+                             aggregate="count",
+                            ),
+            hide_comments=True,
         )
+        item_search = S3Search(advanced=report_options.get("search"))
 
         configure(tablename,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
-                  search_method = item_search)
+                  search_method = item_search,
+                  report_options = report_options,
+                  )
 
         # Catalog Items as component of Items
         add_component("supply_catalog_item", supply_item="item_id")
@@ -926,7 +937,8 @@ S3FilterFieldChange({
         item_category_id = id
         while item_category_id:
             query = (table.id == item_category_id)
-            r = db(query).select(table.code,
+            r = db(query).select(table.catalog_id,
+                                 table.code,
                                  table.name,
                                  table.parent_item_category_id,
                                  # left = table.on(table.id == table.parent_item_category_id), Doesn't work
@@ -948,8 +960,15 @@ S3FilterFieldChange({
 
             # Feed the loop
             item_category_id = r.parent_item_category_id
+            
+        catalog = s3_get_db_field_value(tablename = "supply_catalog",
+                                        fieldname = "name",
+                                        look_up_value = r.catalog_id)
 
-        return represent
+        if catalog:
+            return "%s > %s" % (catalog, represent)
+        else:
+            return represent
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1520,7 +1539,7 @@ class item_entity_virtualfields:
                 return current.messages.NONE
         elif record.comments:
             comments = s3_comments_represent(record.comments,
-                                             showlink=False)
+                                             show_link=False)
         else:
             comments = current.messages.NONE
         return A(comments,

@@ -93,10 +93,9 @@ class S3XLS(S3Codec):
         indices = self.indices
         list_fields = [f for f in list_fields if f not in indices]
 
-        # Filter and orderby
+        # Filter
         if s3.filter is not None:
             resource.add_filter(s3.filter)
-        orderby = report_groupby
 
         # Retrieve the resource contents
         table = resource.table
@@ -110,17 +109,33 @@ class S3XLS(S3Codec):
         title = str(crud_strings.get(name, not_found))
 
         # Only include fields that can be read.
-        headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
+        # - doesn't work with virtual fields and anyway list_fields should override readable
+        #headers = [f.label for f in lfields if (f.show and f.field and f.field.readable)]
+        headers = [f.label for f in lfields if f.show]
         # Doesn't work with Virtual Fields
         #types = [f.field.type for f in lfields if f.show]
         types = []
         for f in lfields:
             if f.show:
-                try:
+                if f.field:
                     types.append(f.field.type)
-                except:
+                else:
                     # Virtual Field
                     types.append("string")
+
+        orderby = report_groupby
+        if not orderby:
+            # @ToDo: Some central function (where does HRM List get it's orderby from?)
+            if "person_id" in list_fields:
+                orderby = "pr_person.first_name"
+                list_fields.append("person_id$first_name")
+                headers.append("Sort")
+                types.append("sort")
+            elif "organisation_id" in list_fields:
+                orderby = "org_organisation.name"
+                list_fields.append("organisation_id$name")
+                headers.append("Sort")
+                types.append("sort")
 
         items = resource.sqltable(fields=list_fields,
                                   start=None,
@@ -165,6 +180,11 @@ class S3XLS(S3Codec):
         except ImportError:
             current.session.error = self.ERROR.XLRD_ERROR
             redirect(URL(extension=""))
+        # Environment
+        request = current.request
+
+        # The xlwt library supports a maximum of 182 character in a single cell 
+        max_cell_size = 182
 
         # Get the attributes
         title = attr.get("title")
@@ -180,7 +200,14 @@ class S3XLS(S3Codec):
             (title, types, headers, items) = self.extractResource(data_source,
                                                                   list_fields,
                                                                   report_groupby)
-
+        if len(items) > 0 and len(headers) != len(items[0]):
+            from ..s3utils import s3_debug
+            msg = """modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
+requesting url %s
+Headers = %d, Data Items = %d
+Headers     %s
+List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fields)
+            s3_debug(msg)
         if report_groupby != None:
             if isinstance(report_groupby, Field):
                 groupby_label = report_groupby.label
@@ -198,8 +225,8 @@ class S3XLS(S3Codec):
 
         # Create the workbook and a sheet in it
         book = xlwt.Workbook(encoding="utf-8")
-        # Length of the title Needs to be fixed...
-        sheet1 = book.add_sheet(str(title[0:10]))
+        # The spreadsheet doesn't like a / in the sheet name, so replace any with a space
+        sheet1 = book.add_sheet(str(title.replace("/"," ")))
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
@@ -238,44 +265,39 @@ class S3XLS(S3Codec):
             styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
             styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
 
-        # Initialize counters
-        rowCnt = 0
-        colCnt = 0
-
-        # Environment
-        request = current.request
-
-        # Title row
-        totalCols = len(headers)-1
-        if report_groupby != None:
-            totalCols -= 1
-
-        if totalCols > 0:
-            sheet1.write_merge(rowCnt, rowCnt, 0, totalCols, str(title),
-                               styleLargeHeader)
-        currentRow = sheet1.row(rowCnt)
-        currentRow.height = 440
-        rowCnt += 1
-        currentRow = sheet1.row(rowCnt)
-        currentRow.write(totalCols, request.now, styleNotes)
-        rowCnt += 1
-        currentRow = sheet1.row(rowCnt)
-
         # Header row
+        colCnt = -1
+        headerRow = sheet1.row(2)
         fieldWidth=[]
         for label in headers:
+            if label == "Sort":
+                continue
             if report_groupby != None:
                 if label == groupby_label:
                     continue
-            currentRow.write(colCnt, str(label), styleHeader)
+            colCnt += 1
+            headerRow.write(colCnt, str(label), styleHeader)
             width = len(label) * S3XLS.COL_WIDTH_MULTIPLIER
             fieldWidth.append(width)
             sheet1.col(colCnt).width = width
-            colCnt += 1
-
+        # Title row
+        currentRow = sheet1.row(0)
+        if colCnt > 0:
+            sheet1.write_merge(0, 0, 0, colCnt, str(title),
+                               styleLargeHeader)
+        currentRow = sheet1.row(1)
+        currentRow.height = 440
+        currentRow.write(colCnt, request.now, styleNotes)
         # fix the size of the last column to display the date
         if 16 * S3XLS.COL_WIDTH_MULTIPLIER > width:
-            sheet1.col(totalCols).width = 16 * S3XLS.COL_WIDTH_MULTIPLIER
+            sheet1.col(colCnt).width = 16 * S3XLS.COL_WIDTH_MULTIPLIER
+
+
+        # Initialize counters
+        totalCols = colCnt
+        rowCnt = 3
+        colCnt = 0
+
 
         subheading = None
         for item in items:
@@ -287,10 +309,15 @@ class S3XLS(S3Codec):
                 style = styleEven
             else:
                 style = styleOdd
-            for label in headers:
-                represent = item[colCnt]
+            for represent in item:
+                coltype=types[colCnt]
+                if coltype == "sort":
+                    continue
+                label = headers[colCnt]
                 if type(represent) is not str:
                     represent = unicode(represent)
+                if len(represent) > max_cell_size:
+                    represent = represent[:max_cell_size]
                 # Strip away markup from representation
                 try:
                     markup = etree.XML(str(represent))
@@ -315,7 +342,6 @@ class S3XLS(S3Codec):
                             else:
                                 style = styleOdd
                         continue
-                coltype=types[colCnt]
                 value = represent
                 if coltype == "date":
                     try:

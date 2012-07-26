@@ -224,37 +224,33 @@
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
 
-        <!-- Create the Organisation/Branch -->
-        <resource name="org_organisation">
-            <xsl:choose>
-                <xsl:when test="$OrgName!=''">
-                    <!-- This is the Organisation -->
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$OrgName"/></data>
-                </xsl:when>
-                <xsl:when test="$BranchName!=''">
-                    <!-- This is the Branch -->
+        <xsl:choose>
+            <xsl:when test="$BranchName!=''">
+                <!-- This is the Branch -->
+                <resource name="org_organisation">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$BranchName"/></data>
-                </xsl:when>
-            </xsl:choose>
-
-            <xsl:if test="$BranchName!=''">
-                <!-- Nest the Top-Level -->
-                <resource name="org_organisation_branch">
-                    <reference field="organisation_id">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="col[@field='Organisation']"/>
-                        </xsl:attribute>
-                    </reference>
+                    <resource name="org_organisation_branch" alias="parent">
+                        <reference field="organisation_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="col[@field='Organisation']"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
                 </resource>
-            </xsl:if>
-
-        </resource>
+            </xsl:when>
+            <xsl:when test="$OrgName!=''">
+                <!-- This is the top-level Organisation -->
+                <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$OrgName"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
 
     </xsl:template>
 

@@ -36,7 +36,6 @@ def person():
 def patient():
     """ RESTful CRUD controller """
 
-    resourcename = request.function
     tablename = "patient_patient"
 
     # Load Models
@@ -77,13 +76,13 @@ def patient():
 
 
     s3db.configure(tablename,
-                    search_method=patient_search,
-                    create_next = URL(args=["[id]", "relative"]))
+                   search_method=patient_search,
+                   create_next = URL(args=["[id]", "relative"]))
     # Pre-process
     def prep(r):
         if r.id:
             s3db.configure("patient_relative",
-                            create_next = URL(args=[str(r.id), "home"]))
+                           create_next = URL(args=[str(r.id), "home"]))
         return True
     s3.prep = prep
 
@@ -98,7 +97,7 @@ def patient():
             (T("Accompanying Relative"), "relative"),
             (T("Home"), "home")]
     rheader = lambda r: patient_rheader(r, tabs=tabs)
-    output = s3_rest_controller(module, resourcename, rheader=rheader)
+    output = s3_rest_controller(rheader=rheader)
 
     return output
 
@@ -151,4 +150,3 @@ def patient_rheader(r, tabs=[]):
     return None
 
 # END =========================================================================
-

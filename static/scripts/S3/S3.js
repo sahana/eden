@@ -75,6 +75,7 @@ S3.addTooltips = function() {
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
+    $('label[title]').cluetip({splitTitle: '|', showTitle:false});
     $('.tooltipbody').cluetip({activation: 'hover', sticky: false, splitTitle: '|', showTitle: false});
     var tipCloseText = '<img src="' + S3.Ap.concat('/static/img/cross2.png') + '" alt="close" />';
     $('.stickytip').cluetip( {
@@ -136,6 +137,36 @@ $(document).ready(function() {
     // accept comma as thousands separator
     $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
     $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
+
+    // Resizable textareas
+    $('textarea.resizable:not(.textarea-processed)').each(function() {
+        // Avoid non-processed teasers.
+        if ($(this).is(('textarea.teaser:not(.teaser-processed)'))) {
+            return false;
+        }
+        var textarea = $(this).addClass('textarea-processed');
+        var staticOffset = null;
+        // When wrapping the text area, work around an IE margin bug. See:
+        // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
+        $(this).wrap('<div class="resizable-textarea"><span></span></div>')
+        .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
+        var grippie = $('div.grippie', $(this).parent())[0];
+        grippie.style.marginRight = (grippie.offsetWidth - $(this)[0].offsetWidth) + 'px';
+        function startDrag(e) {
+            staticOffset = textarea.height() - e.pageY;
+            textarea.css('opacity', 0.25);
+            $(document).mousemove(performDrag).mouseup(endDrag);
+            return false;
+        }
+        function performDrag(e) {
+            textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
+            return false;
+        }
+        function endDrag(e) {
+            $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
+            textarea.css('opacity', 1);
+        }
+    });
 
     // IE6 non anchor hover hack
     $('#modulenav .hoverable').hover(
@@ -741,6 +772,7 @@ S3.autocomplete = function(fieldname, module, resourcename, input, filter, link,
             .append( '<a>' + item[fieldname] + '</a>' )
             .appendTo( ul );
     };
+    // @ToDo: Do this only if new_items=False
     $(dummy_input).blur(function() {
         if (!$(dummy_input).val()) {
             $(real_input).val('');

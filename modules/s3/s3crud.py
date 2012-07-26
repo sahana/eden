@@ -937,6 +937,8 @@ class S3CRUD(S3Method):
             distinct = r.method == "search"
 
             # Get the master query for SSPag
+            # FixMe: don't use session to store filters; also causes resource
+            # filters to be discarded
             if session.s3.filter is not None:
                 resource.build_query(filter=s3.filter,
                                      vars=session.s3.filter)
@@ -1152,7 +1154,7 @@ class S3CRUD(S3Method):
                         request.post_vars[pkey] = record_id
 
             # Add asterisk to labels of required fields
-            mark_required = self._config("mark_required")
+            mark_required = self._config("mark_required", default = [])
             labels, required = s3_mark_required(table, mark_required)
             if required:
                 # Show the key if there are any required fields.

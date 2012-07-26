@@ -71,6 +71,8 @@ class CreateVolunteerTraining(SeleniumUnitTest):
                        "2012-04-11"),
                      ( "end_date",
                        "2012-04-12"),
+                     ( "hours",
+                       "12"),
                      ( "comments",
                        "Testing comments"),
                      ]

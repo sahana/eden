@@ -57,7 +57,6 @@ class CreateWarehouse(SeleniumUnitTest):
         ("name", "Bucharest RFAAT Central Warehouse (Test)"),
         ("code", "12345679"),
         ("organisation_id", "Romanian Food Assistance Association", "autocomplete"),
-        ("region", "Europe"),
         ("comments", "This is a Test Warehouse"),
     ],
 ]

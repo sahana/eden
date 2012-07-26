@@ -58,7 +58,7 @@ from gluon.utils import web2py_uuid
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3fields import s3_uid, s3_timestamp, s3_deletion_status
+from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3method import S3Method
 from s3utils import s3_mark_required
 from s3error import S3PermissionError
@@ -269,6 +269,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -306,6 +307,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -503,11 +505,11 @@ class AuthS3(Auth):
             of a register form
         """
 
-        response = current.response
+        cookies = current.response.cookies
 
-        response.cookies["registered"] = "yes"
-        response.cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
-        response.cookies["registered"]["path"] = "/"
+        cookies["registered"] = "yes"
+        cookies["registered"]["expires"] = 365 * 24 * 3600 # 1 year
+        cookies["registered"]["path"] = "/"
 
     # -------------------------------------------------------------------------
     def login(self,
@@ -1214,7 +1216,6 @@ class AuthS3(Auth):
 
         db = current.db
         s3db = current.s3db
-        manager = current.manager
 
         organisation_id = user.organisation_id
         if not organisation_id:
@@ -1231,7 +1232,7 @@ class AuthS3(Auth):
                 if organisation_id:
                     record["id"] = organisation_id
                     s3db.update_super(otable, record)
-                    manager.onaccept(otable, record, method="create")
+                    current.manager.onaccept(otable, record, method="create")
                     self.s3_set_record_owner(otable, organisation_id)
 
                 # Update user
@@ -5057,7 +5058,7 @@ class S3RoleManager(S3Method):
                                            _name="role_desc",
                                            _rows="4"),
                                   "")
-            key_row = P(T("* Required Fields"), _class="red")
+            key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
             # Prepare ACL forms -----------------------------------------------

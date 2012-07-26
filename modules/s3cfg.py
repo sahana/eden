@@ -189,6 +189,16 @@ class S3Config(Storage):
         else:
             organisation_id = None
         return organisation_id
+    def get_auth_registration_pending(self):
+        """ Message someone gets when they register & they need approving """
+        return self.auth.get("registration_pending",
+            "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
+                self.get_mail_approver())
+    def get_auth_registration_pending_approval(self):
+        """ Message someone gets when they register & they need approving """
+        return self.auth.get("registration_pending_approval",
+            "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s). You will get a notification by email when your account is activated." % \
+                self.get_mail_approver())
     def get_auth_registration_requests_image(self):
         """ Have the registration form request an Image """
         return self.auth.get("registration_requests_image", False)
@@ -738,7 +748,7 @@ class S3Config(Storage):
         """
         return self.inv.get("shipment_type", {
                 0 : current.messages.NONE,
-                11: current.T("Internal"),
+                11: current.T("Internal Shipment"),
             })
 
     def get_inv_send_types(self):
@@ -755,11 +765,10 @@ class S3Config(Storage):
         """
         T = current.T
         return self.inv.get("recv_type", {
-                31: T("Other Warehouse"),
-                32: T("Local Donation"),
-                33: T("Foreign Donation"),
-                34: T("Local Purchases"),
-                35: T("Confiscated Goods from Bureau Of Customs")
+                #31: T("Other Warehouse"), Same as Internal Shipment
+                32: T("Donation"),
+                #33: T("Foreign Donation"),
+                34: T("Purchase"),
            })
 
     def get_inv_send_form_name(self):

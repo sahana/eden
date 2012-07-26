@@ -1,4 +1,4 @@
-Name,Organisation,Branch,Type,Country,Building,Address,Postcode,State,District,City,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
+Name,Organisation,Branch,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
 New York City Office of Emergency Management ,New York City,Office of Emergency Management,,United States,,165 Cadman Plz E,,New York,Brooklyn,,40.69917032,-73.98976911,(718) 422-8933,,,,
 Salvation Army Donation Center Office,Salvation Army,Salvation Army of Greater New York,,United States,,536 West 46th Street,,New York,New York,,40.76249219,-73.99474042,,,,,
 American Red Cross Greater New York Office,American Red Cross,American Red Cross of Greater New York,,United States,,520 West 49th Street,,New York,New York,,40.76438318,-73.99341089,,,,,

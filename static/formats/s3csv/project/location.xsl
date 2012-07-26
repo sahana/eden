@@ -183,10 +183,10 @@
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
-        <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
-        <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
-        <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
+        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
+        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
+        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
+        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
 
         <xsl:variable name="lat" select="col[@field='Lat']"/>
         <xsl:variable name="lon" select="col[@field='Lon']"/>
@@ -222,10 +222,16 @@
                 </reference>
                 <data field="name"><xsl:value-of select="$l1"/></data>
                 <data field="level"><xsl:text>L1</xsl:text></data>
-                <xsl:if test="$lat!='' and $lon!=''">
-                    <data field="lat"><xsl:value-of select="$lat"/></data>
-                    <data field="lon"><xsl:value-of select="$lon"/></data>
-                </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -253,10 +259,16 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l2"/></data>
                 <data field="level"><xsl:text>L2</xsl:text></data>
-                <xsl:if test="$lat!='' and $lon!=''">
-                    <data field="lat"><xsl:value-of select="$lat"/></data>
-                    <data field="lon"><xsl:value-of select="$lon"/></data>
-                </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L3'] or col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -291,10 +303,16 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l3"/></data>
                 <data field="level"><xsl:text>L3</xsl:text></data>
-                <xsl:if test="$lat!='' and $lon!=''">
-                    <data field="lat"><xsl:value-of select="$lat"/></data>
-                    <data field="lon"><xsl:value-of select="$lon"/></data>
-                </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="col[@field='L4']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="$lat"/></data>
+                            <data field="lon"><xsl:value-of select="$lon"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
 
@@ -336,7 +354,7 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l4"/></data>
                 <data field="level"><xsl:text>L4</xsl:text></data>
-                <xsl:if test="$lat!='' and $lon!=''">
+                <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
                     <data field="lat"><xsl:value-of select="$lat"/></data>
                     <data field="lon"><xsl:value-of select="$lon"/></data>
                 </xsl:if>
@@ -354,10 +372,10 @@
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
-        <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
-        <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
-        <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
+        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
+        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
+        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
+        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
 
         <xsl:choose>
             <xsl:when test="$l4!=''">
@@ -367,7 +385,6 @@
                     </xsl:attribute>
                 </reference>
             </xsl:when>
-
             <xsl:when test="$l3!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
@@ -425,7 +442,7 @@
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
-        <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
+        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
 
         <xsl:for-each select="col[starts-with(@field, 'ContactPerson')]">
             <xsl:variable name="PersonData" select="text()"/>
@@ -451,26 +468,8 @@
                                 <xsl:value-of select="$l4id"/>
                             </xsl:attribute>
                         </reference>
-
                         <!-- Home address -->
                         <data field="type">1</data>
-
-                        <!-- Populate the fields directly which are normally populated onvalidation -->
-                        <data field="address">
-                            <xsl:value-of select="$l4"/>
-                        </data>
-                        <data field="L0">
-                            <xsl:value-of select="$l0"/>
-                        </data>
-                        <data field="L1">
-                            <xsl:value-of select="$l1"/>
-                        </data>
-                        <data field="L2">
-                            <xsl:value-of select="$l2"/>
-                        </data>
-                        <data field="L3">
-                            <xsl:value-of select="$l3"/>
-                        </data>
                     </resource>
 
                     <!-- Contacts -->

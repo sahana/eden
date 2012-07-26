@@ -28,7 +28,9 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "doc_image_represent"]
+           "doc_image_represent",
+           "S3DocumentSourceModel",
+          ]
 
 import os
 
@@ -41,7 +43,8 @@ class S3DocumentLibrary(S3Model):
 
     names = ["doc_entity",
              "doc_document",
-             "doc_image"]
+             "doc_image",
+             ]
 
     def model(self):
 
@@ -63,32 +66,39 @@ class S3DocumentLibrary(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        super_key = self.super_key
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
+        entity_types = Storage(
+                               asset_asset=T("Asset"),
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
                                project_task=T("Task"),
-                               hms_hospital=T("Hospital"))
+                               hms_hospital=T("Hospital"),
+                               )
 
         tablename = "doc_entity"
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)
 
         # Components
-        add_component("doc_document", doc_entity=self.super_key(doc_entity))
-        add_component("doc_image", doc_entity=self.super_key(doc_entity))
+        add_component("doc_document", doc_entity=super_key(doc_entity))
+        add_component("doc_image", doc_entity=super_key(doc_entity))
 
         # ---------------------------------------------------------------------
         # Documents
         #
         tablename = "doc_document"
         table = define_table(tablename,
+                             # Component not instance
                              super_link("site_id", "org_site"),
+                             # Component not instance
                              super_link("doc_id", doc_entity),
+                             # Instance
+                             super_link("source_id", "doc_source_entity"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
                                    notnull=True,
@@ -143,6 +153,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  super_entity = "doc_source_entity",
                   onvalidation=self.document_onvalidation)
 
         # ---------------------------------------------------------------------
@@ -161,8 +172,10 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = define_table(tablename,
+                             # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
+                             # Component not instance
                              super_link("doc_id", doc_entity),
                              Field("file", "upload", autodelete=True,
                                    requires = IS_NULL_OR(
@@ -220,7 +233,6 @@ class S3DocumentLibrary(S3Model):
         configure(tablename,
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
-
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
@@ -315,6 +327,80 @@ class S3DocumentLibrary(S3Model):
                 form.errors["file"] = "%s %s" % \
                                       (T("This file already exists on the server as"), doc_name)
         return
+
+# =============================================================================
+
+class S3DocumentSourceModel(S3Model):
+
+    names = ["doc_source_entity",
+             "doc_source_id",
+             "doc_source"
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Document-source entities
+        #
+        source_types = Storage(
+                               #pr_pentity = T("Person"),
+                               doc_document = T("Document"),
+                               #flood_gauge = T("Flood Gauge"),
+                               #survey_series = T("Survey")
+                               )
+
+        tablename = "doc_source_entity"
+
+        table = self.super_entity(tablename,
+                                  "source_id",
+                                  source_types
+                                  )
+        # Reusable Field
+        source_id = S3ReusableField("source_id", table,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(current.db,
+                                                          "doc_source_entity.source_id")),
+                                    label = T("Source"),
+                                    ondelete = "CASCADE")
+        # Components
+        self.add_component("doc_source", doc_source_entity=self.super_key(table))
+
+        # ---------------------------------------------------------------------
+        # Document-source details
+        #
+        tablename = "doc_source"
+        table = self.define_table(tablename,
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
+                                  self.super_link("source_id", "doc_source_entity"),
+                                  Field("name",
+                                        label=T("Name")),
+                                  Field("reliability",
+                                        label=T("Reliability")),
+                                  Field("review",
+                                        label=T("Review")),
+                                  *s3_meta_fields()
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage(
+                doc_source_id = source_id
+            )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if the module is disabled """
+        source_id = S3ReusableField("source_id", "integer",
+                                    readable=False,
+                                    writable=False)
+
+        return Storage(
+                doc_source_id = source_id
+            )
 
 # =============================================================================
 def doc_image_represent(filename):

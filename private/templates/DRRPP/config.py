@@ -19,13 +19,22 @@ settings.base.system_name_short = T("DRRPP")
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "DRRPP"
 
+# Auth settings
+# Do new users need to verify their email address?
+settings.auth.registration_requires_verification = True
+# Do new users need to be approved by an administrator prior to being able to login?
+settings.auth.registration_requires_approval = True
+# Uncomment this to request the Organisation when a user registers
+settings.auth.registration_requests_organisation = True
+settings.auth.registration_pending = \
+"""Registration awaiting approval from Administrator or Organisation Contact.
+A confirmation email will be sent to you once approved.
+For enquiries contact %s""" % settings.get_mail_approver()
+
 # L10n settings
-#settings.L10n.languages = OrderedDict([
-#    ("en-gb", "English"),
-#    ("es", "Español"),
-#])
-# Default Language
-#settings.L10n.default_language = "en-gb"
+settings.L10n.languages = OrderedDict([
+    ("en", "English"),
+])
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0700"
 # Number formats (defaults to ISO 31-0)
@@ -49,7 +58,7 @@ settings.fin.currencies = {
 }
 
 # Security Policy
-settings.security.policy = 8 # Delegations
+settings.security.policy = 6 # Realm
 settings.security.map = True
 
 # Theme
@@ -71,17 +80,15 @@ settings.project.mode_drr = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project
-settings.project.multiple_budgets = True
+#settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to customise
-#settings.project.organisation_roles = {
-#    1: T("Host National Society"),
-#    2: T("Partner National Society"),
-#    3: T("Donor"),
-#    #4: T("Customer"), # T("Beneficiary")?
-#    5: T("Partner")
-#}
+settings.project.organisation_roles = {
+    1: T("Lead Organization"),
+    2: T("Partner Organization"),
+    3: T("Donor"),
+}
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
@@ -118,13 +125,6 @@ settings.modules = OrderedDict([
             access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
             module_type = None  # This item is handled separately for the menu
         )),
-    # Uncomment to enable internal support requests
-    ("support", Storage(
-            name_nice = T("Support"),
-            #description = "Support Requests",
-            restricted = True,
-            module_type = None  # This item is handled separately for the menu
-        )),
     ("gis", Storage(
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
@@ -136,7 +136,7 @@ settings.modules = OrderedDict([
             #description = "Central point to record details on People",
             restricted = True,
             access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = None
         )),
     ("org", Storage(
             name_nice = T("Organizations"),
@@ -149,13 +149,13 @@ settings.modules = OrderedDict([
             name_nice = T("Staff"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
     ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
     ("msg", Storage(
             name_nice = T("Messaging"),
