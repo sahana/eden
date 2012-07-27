@@ -64,7 +64,8 @@ class HospitalDataModel(S3Model):
         organisation_id = self.org_organisation_id
         human_resource_id = self.hrm_human_resource_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         s3_date_format = settings.get_L10n_date_format()
         s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -335,7 +336,13 @@ class HospitalDataModel(S3Model):
                                                                 UNKNOWN_OPT)),
                              Field("access_status",
                                    label = T("Road Conditions")),
-
+                             Field("obsolete", "boolean",
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
+                                     (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                   default = False,
+                                   readable = False,
+                                   writable = False),
                              s3_comments(),
                              *s3_meta_fields())
 

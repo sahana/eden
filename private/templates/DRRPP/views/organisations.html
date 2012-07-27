@@ -1,0 +1,16 @@
+{{extend "layout.html"}}
+
+{{s3.scripts.append("/%s/static/scripts/jquery.dataTables.js" % appname)}}
+{{s3.scripts.append("/%s/static/scripts/jquery.dataTables.fnSetFilteringDelay.js" % appname)}}
+{{s3.scripts.append("/%s/static/scripts/jquery.dataTables.sortFunctions.js" % appname)}}
+{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.new.js" % appname)}}
+
+{{if globals().get("tables", False):}}
+	<h1>{{=T("Regional Organisations")}}</h1>
+	{{table = tables[0]}}
+	{{include "_datatable.html"}}
+
+	<h1>{{=T("Committees, Forums, Mechanism, Meetings and Networks")}}</h1>
+	{{table = tables[1]}}
+	{{include "_datatable.html"}}
+{{pass}}

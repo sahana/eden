@@ -60,13 +60,13 @@ settings.inv.send_short_name = "TOS"
 settings.inv.send_ref_field_name = "Tally Out Number"
 settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
 settings.inv.recv_shortname = "ARDR"
-settings.inv.shipment_types = {
-         0: T("-"),
-         1: T("Other Warehouse"),
-         2: T("Donation"),
-         3: T("Foreign Donation"),
-         4: T("Local Purchases"),
-         5: T("Confiscated Goods from Bureau Of Customs")
+settings.inv.recv_type = {
+         #0: T("-"),
+         #1: T("Other Warehouse"),
+         32: T("Donation"),
+         33: T("Foreign Donation"),
+         34: T("Local Purchases"),
+         35: T("Confiscated Goods from Bureau Of Customs")
     }
 
 # Comment/uncomment modules here to disable/enable them

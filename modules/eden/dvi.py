@@ -56,7 +56,8 @@ class S3DVIModel(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
         datetime_represent = S3DateTime.datetime_represent
 
         configure = self.configure
@@ -163,6 +164,13 @@ class S3DVIModel(S3Model):
                              Field("description",
                                    label = T("Description")),
                              location_id(),
+                             Field("obsolete", "boolean",
+                                label = T("Obsolete"),
+                                represent = lambda bool: \
+                                  (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                default = False,
+                                readable = False,
+                                writable = False),
                              *s3_meta_fields())
 
         # Reusable Field

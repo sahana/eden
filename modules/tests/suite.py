@@ -135,6 +135,17 @@ parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
                     action='store_const',
                     const = True)
+desc = """Run the smoke tests even if debug is set to true.
+
+With debug on it can add up to a second per link and given that a full run
+of the smoke tests will include thousands of links the difference of having
+this setting one can be measured in hours.
+"""
+parser.add_argument("--force-debug",
+                    action='store_const',
+                    const=True,
+                    help = desc
+                   )
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 
@@ -170,6 +181,10 @@ config.base_dir = base_dir
 if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
     print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
     exit()
+if args["suite"] == "smoke" or args["suite"] == "complete":
+    if settings.get_base_debug() and not args["force_debug"]:
+        print "settings.base.debug is set to True in 000_config.py, either set it to False or use the --force-debug switch"
+        exit()
 
 config.verbose = args["verbose"]
 browser_open = False

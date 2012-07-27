@@ -93,6 +93,13 @@ class SeleniumUnitTest(Web2UnitTest):
         
         date_format = str(current.deployment_settings.get_L10n_date_format())
         datetime_format = str(current.deployment_settings.get_L10n_datetime_format())
+        # if the logged in confirm is shown then try and clear it.
+        try:
+            elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem.click()
+        except:
+            pass
+
         # Fill in the Form
         for details in data:
             el_id = "%s_%s" % (tablename, details[0])
@@ -169,7 +176,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         result["before"] = self.getRows(table, id_data, dbcallback)
         # Submit the Form
-        browser.find_element_by_css_selector("input[type='submit']").click()
+        submit_btn = browser.find_element_by_css_selector("input[type='submit']")
+        submit_btn.click()
         # Check & Report the results
         confirm = True
         try:

@@ -191,7 +191,7 @@ class S3ResourceTests(unittest.TestCase):
 
         resource = s3mgr.define_resource("project", "project")
         selector = "organisation_id.test"
-        self.assertRaises(KeyError,
+        self.assertRaises(AttributeError,
                           resource.resolve_selector,
                           selector)
 

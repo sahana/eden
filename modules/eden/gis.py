@@ -3453,7 +3453,7 @@ def gis_layer_onaccept(form):
     return
 
 # =============================================================================
-def gis_location_represent(id, row=None, showlink=True, simpletext=False):
+def gis_location_represent(id, row=None, show_link=True, simpletext=False):
     """ FK representation """
 
     if row:
@@ -3533,9 +3533,9 @@ def gis_location_represent(id, row=None, showlink=True, simpletext=False):
         row.parent == None):
         # Map popups don't support iframes (& meaningless anyway), and if there
         # is no lat, lon or parent, there's no way to place this on a map.
-        showlink = False
+        show_link = False
 
-    if showlink and simpletext:
+    if show_link and simpletext:
         # We aren't going to use the represent, so skip making it.
         represent_text = current.T("Show on Map")
     elif row.level == "L0":
@@ -3592,7 +3592,7 @@ def gis_location_represent(id, row=None, showlink=True, simpletext=False):
             if not represent_text:
                 represent_text = row.name or row.id
 
-    if showlink:
+    if show_link:
         # ToDo: Convert to popup? (HTML again!)
         represent = A(represent_text,
                       _style="cursor:pointer;cursor:hand",
