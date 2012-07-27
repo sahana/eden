@@ -52,109 +52,112 @@
             <xsl:attribute name="maxlat"><xsl:value-of select="@latmax"/></xsl:attribute>
             <xsl:attribute name="maxlon"><xsl:value-of select="@lonmax"/></xsl:attribute>
         </bounds>
-        <xsl:apply-templates select=".//resource[@name='gis_location']"/>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template match="resource[@name='gis_location']">
-        <xsl:variable name="uid">
-            <xsl:value-of select="@uuid"/>
-        </xsl:variable>
-        <xsl:choose>
-            <xsl:when test="//reference[@resource='gis_location' and @uuid=$uid]">
-                <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uid]">
-                    <xsl:apply-templates select=".."/>
-                </xsl:for-each>
-            </xsl:when>
-            <xsl:otherwise>
-                <node>
-                    <xsl:variable name="id" select='position()' />
-                    <xsl:attribute name="id">
-                        <xsl:text>-</xsl:text>
-                        <xsl:value-of select="$id" />
-                    </xsl:attribute>
-                    <xsl:attribute name="lat"><xsl:value-of select="data[@field='lat']"/></xsl:attribute>
-                    <xsl:attribute name="lon"><xsl:value-of select="data[@field='lon']"/></xsl:attribute>
-                    <tag>
-                        <xsl:attribute name="k">id:uuid</xsl:attribute>
-                        <xsl:attribute name="v">
-                            <!--<xsl:value-of select="$domain"/>
-                            <xsl:text>/</xsl:text>-->
-                            <xsl:value-of select="@uuid"/>
-                        </xsl:attribute>
-                    </tag>
-                    <tag>
-                        <xsl:attribute name="k">name</xsl:attribute>
-                        <xsl:attribute name="v"><xsl:value-of select="./data[@field='name']"/></xsl:attribute>
-                    </tag>
-                    <tag>
-                        <xsl:choose>
-                            <xsl:when test="reference[@field='feature_class_id']='Town'">
-                                <xsl:attribute name="k">place</xsl:attribute>
-                                <xsl:attribute name="v">town</xsl:attribute>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='feature_class_id']='Airport'">
-                                <xsl:attribute name="k">aeroway</xsl:attribute>
-                                <xsl:attribute name="v">aerodrome</xsl:attribute>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='feature_class_id']='Bridge'">
-                                <xsl:attribute name="k">highway</xsl:attribute>
-                                <xsl:attribute name="v">road</xsl:attribute>
-                                <xsl:attribute name="k">bridge</xsl:attribute>
-                                <xsl:attribute name="v">yes</xsl:attribute>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='feature_class_id']='Hospital'">
-                                <xsl:attribute name="k">amenity</xsl:attribute>
-                                <xsl:attribute name="v">hospital</xsl:attribute>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='feature_class_id']='Church'">
-                                <xsl:attribute name="k">amenity</xsl:attribute>
-                                <xsl:attribute name="v">place_of_worship</xsl:attribute>
-                            </xsl:when>
-                            <xsl:when test="reference[@field='feature_class_id']='School'">
-                                <xsl:attribute name="k">amenity</xsl:attribute>
-                                <xsl:attribute name="v">school</xsl:attribute>
-                            </xsl:when>
-                        </xsl:choose>
-                    </tag>
-                </node>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:apply-templates select=".//resource"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="reference[@field='location_id']">
-            <node>
-                <xsl:variable name="id" select='position()' />
-                <xsl:attribute name="id">
-                    <xsl:text>-</xsl:text>
-                    <xsl:value-of select="$id" />
-                </xsl:attribute>
-                <xsl:attribute name="lat"><xsl:value-of select="reference[@field='location_id']/@lat"/></xsl:attribute>
-                <xsl:attribute name="lon"><xsl:value-of select="reference[@field='location_id']/@lon"/></xsl:attribute>
-                <tag>
-                    <xsl:attribute name="k">id:uuid</xsl:attribute>
-                    <xsl:attribute name="v">
-                        <!--<xsl:value-of select="$domain"/>
-                        <xsl:text>/</xsl:text>-->
-                        <xsl:value-of select="@uuid"/>
-                    </xsl:attribute>
-                </tag>
-                <tag>
-                    <xsl:attribute name="k">name</xsl:attribute>
-                    <xsl:attribute name="v"><xsl:value-of select="./data[@field='name']"/></xsl:attribute>
-                </tag>
-                <tag>
-                    <xsl:choose>
-                        <xsl:when test="@name='hms_hospital'">
-                            <xsl:attribute name="k">amenity</xsl:attribute>
-                            <xsl:attribute name="v">hospital</xsl:attribute>
-                        </xsl:when>
-                    </xsl:choose>
-                </tag>
-            </node>
-        </xsl:if>
+        <xsl:choose>
+            <xsl:when test="@name='gis_location'">
+                <xsl:if test="./data[@field='level']='L3' or ./data[@field='level']='L4'">
+                    <node>
+                        <xsl:variable name="id" select='position()' />
+                        <xsl:attribute name="id">
+                            <xsl:text>-</xsl:text>
+                            <xsl:value-of select="$id" />
+                        </xsl:attribute>
+                        <xsl:attribute name="lat"><xsl:value-of select="data[@field='lat']"/></xsl:attribute>
+                        <xsl:attribute name="lon"><xsl:value-of select="data[@field='lon']"/></xsl:attribute>
+                        <tag>
+                            <xsl:attribute name="k">id:uuid</xsl:attribute>
+                            <xsl:attribute name="v">
+                                <xsl:value-of select="@uuid"/>
+                            </xsl:attribute>
+                        </tag>
+                        <tag>
+                            <xsl:attribute name="k">name</xsl:attribute>
+                            <xsl:attribute name="v"><xsl:value-of select="data[@field='name']"/></xsl:attribute>
+                        </tag>
+                        <tag>
+                            <!-- @ToDo: Vary this by country -->
+                            <xsl:choose>
+                                <xsl:when test="./data[@field='level']='L3'">
+                                    <xsl:attribute name="k">place</xsl:attribute>
+                                    <xsl:attribute name="v">town</xsl:attribute>
+                                </xsl:when>
+                            </xsl:choose>
+                            <xsl:choose>
+                                <xsl:when test="./data[@field='level']='L4'">
+                                    <xsl:attribute name="k">place</xsl:attribute>
+                                    <xsl:attribute name="v">village</xsl:attribute>
+                                </xsl:when>
+                            </xsl:choose>
+                        </tag>
+                    </node>
+                </xsl:if>
+            </xsl:when>
+            <xsl:when test="reference[@field='location_id']">
+                <xsl:variable name="lat">
+                    <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                </xsl:variable>
+                <xsl:variable name="lon">
+                    <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                </xsl:variable>
+                <xsl:variable name="name">
+                    <xsl:value-of select="./data[@field='name']"/>
+                </xsl:variable>
+                <xsl:if test="$lat!='' and $lon!='' and $name!=''">
+                    <node>
+                        <xsl:variable name="id" select='position()' />
+                        <xsl:attribute name="id">
+                            <xsl:text>-</xsl:text>
+                            <xsl:value-of select="$id" />
+                        </xsl:attribute>
+                        <xsl:attribute name="lat"><xsl:value-of select="$lat"/></xsl:attribute>
+                        <xsl:attribute name="lon"><xsl:value-of select="$lon"/></xsl:attribute>
+                        <tag>
+                            <xsl:attribute name="k">id:uuid</xsl:attribute>
+                            <xsl:attribute name="v">
+                                <xsl:value-of select="@uuid"/>
+                            </xsl:attribute>
+                        </tag>
+                        <tag>
+                            <xsl:attribute name="k">name</xsl:attribute>
+                            <xsl:attribute name="v"><xsl:value-of select="$name"/></xsl:attribute>
+                        </tag>
+                        <tag>
+                            <xsl:choose>
+                                <xsl:when test="@name='hms_hospital'">
+                                    <xsl:attribute name="k">amenity</xsl:attribute>
+                                    <xsl:attribute name="v">hospital</xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="@name='org_facility'">
+                                    <xsl:choose>
+                                        <xsl:when test="reference[@field='facility_type_id']='Airport'">
+                                            <xsl:attribute name="k">aeroway</xsl:attribute>
+                                            <xsl:attribute name="v">aerodrome</xsl:attribute>
+                                        </xsl:when>
+                                        <xsl:when test="reference[@field='facility_type_id']='Church'">
+                                            <xsl:attribute name="k">amenity</xsl:attribute>
+                                            <xsl:attribute name="v">place_of_worship</xsl:attribute>
+                                        </xsl:when>
+                                        <xsl:when test="reference[@field='facility_type_id']='School'">
+                                            <xsl:attribute name="k">amenity</xsl:attribute>
+                                            <xsl:attribute name="v">school</xsl:attribute>
+                                        </xsl:when>
+                                    </xsl:choose>
+                                </xsl:when>
+                                <xsl:when test="@name='org_office'">
+                                    <!-- @ToDo: Vary this by Organisation Type -->
+                                    <xsl:attribute name="k">office</xsl:attribute>
+                                    <xsl:attribute name="v">ngo</xsl:attribute>
+                                </xsl:when>
+                            </xsl:choose>
+                        </tag>
+                    </node>
+                </xsl:if>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
     <!-- ****************************************************************** -->
 

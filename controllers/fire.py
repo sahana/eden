@@ -39,23 +39,29 @@ def index():
 def station():
     """ Fire Station """
 
-    location_id = s3db.gis_location_id
-
     csv_extra_fields = [
         dict(label="Country",
-             field=location_id("country_id",
-                               label=T("Country"),
-                               requires = IS_NULL_OR(
-                                          IS_ONE_OF(db,
-                                                    "gis_location.id",
-                                                    "%(name)s",
-                                                    filterby = "level",
-                                                    filter_opts = ["L0"],
-                                                    sort=True)),
-                               widget = None)),
+             field=s3db.gis_country_id()),
         dict(label="Organisation",
              field=s3db.org_organisation_id())
     ]
+
+    # Pre-processor
+    def prep(r):
+        if r.interactive:
+            if r.component:
+                # remove CRUD generated buttons in the tabs
+                s3db.configure("inv_inv_item",
+                               create=False,
+                               listadd=False,
+                               editable=False,
+                               deletable=False,
+                               )
+            elif r.method == "update":
+                field = r.table.obsolete
+                field.readable = field.writable = True
+        return True
+    s3.prep = prep
 
     return s3_rest_controller(rheader = fire_rheader,
                               csv_extra_fields = csv_extra_fields)

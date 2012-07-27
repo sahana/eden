@@ -169,24 +169,40 @@
             </xsl:call-template>
 
             <!-- Countries -->
-            <xsl:if test="$Countries!=''">
-                <reference field="countries_id" resource="gis_location">
-                    <xsl:attribute name="uuid">
-                        <xsl:variable name="CountryCodes">
-                            <xsl:call-template name="splitList">
-                                <xsl:with-param name="arg">countrycode</xsl:with-param>
-                                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
-                                <xsl:with-param name="list">
-                                    <xsl:value-of select="$Countries"/>
-                                </xsl:with-param>
-                            </xsl:call-template>
-                        </xsl:variable>
-                        <xsl:if test="starts-with($CountryCodes, ',&quot;')">
-                            <xsl:value-of select="concat('[', substring-after($CountryCodes, ','), ']')"/>
-                        </xsl:if>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$Countries=''">
+                </xsl:when>
+                <xsl:when test="$Countries='Pacific'">
+                    <data field="region"><xsl:value-of select="$Countries"/></data>
+                </xsl:when>
+                <xsl:when test="$Countries='South Asia'">
+                    <data field="region"><xsl:value-of select="$Countries"/></data>
+                </xsl:when>
+                <xsl:when test="$Countries='South East Asia'">
+                    <data field="region"><xsl:value-of select="$Countries"/></data>
+                </xsl:when>
+                <xsl:when test="$Countries='East, Central and West Asia'">
+                    <data field="region"><xsl:value-of select="$Countries"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <reference field="countries_id" resource="gis_location">
+                        <xsl:attribute name="uuid">
+                            <xsl:variable name="CountryCodes">
+                                <xsl:call-template name="splitList">
+                                    <xsl:with-param name="arg">countrycode</xsl:with-param>
+                                    <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
+                                    <xsl:with-param name="list">
+                                        <xsl:value-of select="$Countries"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </xsl:variable>
+                            <xsl:if test="starts-with($CountryCodes, ',&quot;')">
+                                <xsl:value-of select="concat('[', substring-after($CountryCodes, ','), ']')"/>
+                            </xsl:if>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:otherwise>
+            </xsl:choose>
 
         </resource>
 
@@ -324,6 +340,7 @@
             <data field="website"><xsl:value-of select="data[@field='website']"/></data>
             <data field="year"><xsl:value-of select="data[@field='year']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
+            <data field="region"><xsl:value-of select="reference[@field='country_id']"/></data>
 
             <reference field="organisation_type_id" resource="org_organisation_type">
                 <xsl:choose>

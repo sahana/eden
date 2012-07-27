@@ -2331,9 +2331,6 @@ def org_office_controller():
             if r.record and r.record.type == 5: # 5 = Warehouse
                 s3.crud_strings["org_office"] = s3.org_warehouse_crud_strings
 
-            if r.id:
-                table.obsolete.readable = table.obsolete.writable = True
-
             if r.component:
 
                 cname = r.component.name
@@ -2356,6 +2353,8 @@ def org_office_controller():
                     # Hide fields which don't make sense in a Create form
                     # inc list_create (list_fields over-rides)
                     s3db.req_create_form_mods()
+            elif r.id:
+                table.obsolete.readable = table.obsolete.writable = True
 
         return True
     s3.prep = prep
