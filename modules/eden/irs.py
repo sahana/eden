@@ -712,10 +712,14 @@ class S3IRSModel(S3Model):
             message = ""
             if record.message:
                 message = "\n%s" % record.message
-            text = "%s\n%s%s%s" % (id,
+            text = "SI#%s\n%s%s%s" % (id,
                                    record.name,
                                    contact,
                                    message)
+            text += "\nTo Respond to this Deployment Notification, Reply with \
+the keyword 'SI' ,followed by the '#' key and the Report ID, \
+followed by the response(Yes/No) and comments. e.g. \
+SI#%s Yes Comments"%id
 
             # Encode the message as an OpenGeoSMS
             message = msg.prepare_opengeosms(record.location_id,
