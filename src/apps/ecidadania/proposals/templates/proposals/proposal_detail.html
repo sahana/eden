@@ -34,13 +34,6 @@
 
             });
 
-          /*  request.done(function(msg) {
-                var cur_votes = parseInt($(".span1 p").html());
-             //   var votes = cur_votes + 1;
-                $(".span1 p").html(votes);
-                $(".span1 button").attr('disabled', 'disabled');
-            });*/
-
             request.fail(function(jqXHR, textStatus) {
                 $("#jsnotify").notify("create", {
                     title:"Couldn't vote the proposal",
@@ -48,24 +41,8 @@
                     icon:"alert.png"
                 });
             })
-         }
-
-     </script>
-     {% if location.latitude and location.longitude %}
-     <script type="text/javascript">
-    function showmap(){
-         map = new OpenLayers.Map("proposalmap");
-         var mapnik         = new OpenLayers.Layer.OSM();
-         var fromProjection = new OpenLayers.Projection("EPSG:4326");   
-         var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
-         var position       = new OpenLayers.LonLat({{location.latitude}},{{location.longitude}}).transform( fromProjection, toProjection);
-         var zoom           = 15;
-         map.addLayer(mapnik);
-         map.setCenter(position, zoom );
-         $("div.span10 button").attr('disabled', 'disabled'); 
-    }    
+        }
     </script>
-    {% endif %}
 {% endblock %}
 
 {% block space %}
@@ -86,8 +63,8 @@
                     <div class="proposal-message">{{ proposal.description|safe }}</div>
                     <div class="proposal-creator">{% trans "proposed by " %} {{ proposal.author }} {% trans " at " %} {{ proposal.pub_date }}</div>
                     {% if location.latitude and location.longitude %}
-                        <button onclick="showmap();" class="btn btn-small">Map</button>
-                        <div style="width:400px; height:350px;" id="proposalmap"></div>
+                        <button class="btn btn-small showmap">{% trans "Show/hide map" %}</button>
+                        <div id="proposalmap" class="map"></div>
                     {% endif %}    
                 </div>
             </div>
@@ -97,5 +74,21 @@
             <p>{% render_comment_form for proposal%}</p>
         </div>
     </div>
+
+    <script type="text/javascript">
+        map = new OpenLayers.Map("proposalmap");
+        var mapnik         = new OpenLayers.Layer.OSM();
+        var fromProjection = new OpenLayers.Projection("EPSG:4326");
+        var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
+        //var toProjection   = new OpenLayers.Projection("EPSG:900913"); 
+        var position       = new OpenLayers.LonLat({{ proposal.longitude }}, {{ proposal.latitude }}).transform( fromProjection, toProjection);
+        var zoom           = 17;
+        map.addLayer(mapnik);
+        map.setCenter(position, zoom);
+        $('#proposalmap').hide();
+        $('button.showmap').click(function() {
+            $('#proposalmap').toggle('fast');
+        })
+    </script>
 
 {% endblock %}

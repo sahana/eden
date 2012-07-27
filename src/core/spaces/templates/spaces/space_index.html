@@ -15,7 +15,7 @@
     <div class="row">
         <div class="span12">
             <ul class="nav nav-tabs">
-                <li class="active"><a href="#overview" data-toggle="tab">{% trans "Overview" %}</a></li>
+                <li class="e"><a href="#overview" data-toggle="tab">{% trans "Overview" %}</a></li>
                 {% if get_place.mod_news %}
                     <li><a href="#news" data-toggle="tab">{% trans "News" %}</a></li>
                 {% endif %}
@@ -78,50 +78,62 @@
                             {% if get_place.mod_news %}
                                 <h6>{% trans "News"%}</h6>
                                 <ul class="unstyled">
-                                    {% for news in publication %}
+                                    {% for news in publication|slice:":3" %}
                                         <li><a href="{% url 'profile_public' news.author %}">{{ news.author }}</a> {% trans "posted" %} <a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a> {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "Nothing published yet." %}</li>
                                     {% endfor %}
+                                    {% if publication %}
+                                        <li><a href="{% url 'list-space-news' get_place.url %}">{% trans "more..." %}</a></li>
+                                    {% endif %}
                                 </ul>
                             {% endif %}
 
                             {% if get_place.mod_debate %}
                                 <h6>{% trans "Debates" %}</h6>
                                 <ul class="unstyled">
-                                    {% for debate in debates %}
+                                    {% for debate in debates|slice:":3" %}
                                         <li><a href="{% url 'profile_public' debate.author %}">{{ debate.author }}</a> {% trans "created debate" %} <a href="{{ debate.get_absolute_url }}">{{ debate.title }}</a> {% trans "on" %} {{ debate.date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No debates started." %}</li>
                                     {% endfor %}
+                                    {% if debates %}
+                                        <li><a href="{% url 'list-debates' get_place.url %}">{% trans "more..." %}</a></li>
+                                    {% endif %}
                                 </ul>
                             {% endif %} 
 
                             {% if get_place.mod_proposals %}
                                 <h6>{% trans "Proposals" %}</h6>
                                 <ul class="unstyled">
-                                    {% for proposal in proposals %}
+                                    {% for proposal in proposals|slice:":3" %}
                                         <li><a href="{% url 'profile_public' proposal.author %}">{{ proposal.author }}</a> {% trans "proposed" %} <a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "on" %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No proposals available." %}</li>
-                                    {% endfor %} 
+                                    {% endfor %}
+                                    {% if proposals %}
+                                        <li><a href="{% url 'list-proposals' get_place.url %}">{% trans "more..." %}</a></li>
+                                    {% endif %}
                                 </ul>
                             {% endif %}
                             
                             {% if get_place.mod_cal %}
                                 <h6>{% trans "Events" %}</h6>
                                 <ul class="unstyled">
-                                    {% for m in event %}
+                                    {% for m in event|slice:":3" %}
                                         <li><a href="{{ m.get_absolute_url }}">{{ m.title }}</a> {% trans "on" %} {{ m.event_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No events registered." %}</li>
                                     {% endfor %}
+                                    {% if event %}
+                                        <li><a href="{% url 'list-events' get_place.url %}">{% trans "View all events" %}</a></li>
+                                    {% endif %}
                                 </ul>
                             {% endif %}
                             {% if get_place.mod_voting %}
                                 <h6>{% trans "Polls" %}</h6>
                                 <ul class="unstyled">
-                                    {% for p in polls %}
+                                    {% for p in polls|slice:":3" %}
                                         <li><a href="{% url 'view-poll' get_place.url p.id %}">{{ p.question }}</a> {% trans "on" %} {{ p.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "No events registered." %}</li>
@@ -129,7 +141,11 @@
                                 </ul>
                                 <h6>{% trans "Votings" %}</h6>
                                 <ul class="unstyled">
-                                    <li>nothing at this moment. Not implemented!</li>
+                                    {% for v in votings %}
+                                        <li><a href="#">{{ v.title }}</a> {% trans "on" %} {{ p.pub_date|date:"d F Y" }}</li>
+                                    {% empty %}
+                                        <li>{% trans "There are no votings." %}</li>
+                                    {% endfor %}
                                 </ul>
                             {% endif %}
                         </div>
@@ -149,6 +165,7 @@
                 <div class="tab-pane" id="voting">
                     <div class="row">
                         <div class="span8">
+                            <h4>Polls</h4>
                             {% for poll in polls %}
                                 <h4 class="posttitle"><a href="{% url 'view-poll' get_place.url poll.id %}">{{ poll.question }}</a>
                                     {% if user_is_admin %}
@@ -159,6 +176,24 @@
                                         {% endif %}
                                         {% if perms.voting.delete_poll %}
                                             <a href="{% url 'delete-poll' get_place.url poll.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}                             
+                                </h4>
+                            {% endfor %}
+                            <h4>Voting</h4>
+                                                  {% for voting in votings %}
+                                <h4 class="posttitle"><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a>
+                                    adfasda
+                                    {% if user_is_admin %}
+                                       {% if perms.voting.change_voting %}
+                                            <a href="{% url 'edit-voting' get_place.url voting.id %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                            </a>
+                                        {% endif %}
+                                        {% if perms.voting.delete_voting %}
+                                            <a href="{% url 'delete-voting' get_place.url voting.id %}">
                                                 <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
                                             </a>
                                         {% endif %}
@@ -181,29 +216,7 @@
                                 <h4>{% trans "Actions" %}</h4>
                                 <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List polls" %}</a></li>
                             </ul>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="span8">
-                            {% for voting in votings %}
-                                <h4 class="posttitle"><a href="{% url 'view-voting' get_place.url voting.id %}">{{ voting.title }}</a>
-                                    {% if user_is_admin %}
-                                       {% if perms.voting.change_voting %}
-                                            <a href="{% url 'edit-voting' get_place.url voting.id %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
-                                            </a>
-                                        {% endif %}
-                                        {% if perms.voting.delete_voting %}
-                                            <a href="{% url 'delete-voting' get_place.url voting.id %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
-                                            </a>
-                                        {% endif %}
-                                    {% endif %}                             
-                                </h4>
-                            {% endfor %}
-                        </div>
-                        <div class="span4 space-sidebar">
-                            {% if user_is_admin %}
+                                                       {% if user_is_admin %}
                                 {% if perms.voting.add_voting %}
                                     <h4>{% trans "Administration" %}</h4>
                                     <ul class="unstyled">
@@ -216,7 +229,15 @@
                             <ul class="unstyled">
                                 <h4>{% trans "Actions" %}</h4>
                                 <li><a href="{% url 'list-polls' get_place.url %}">{% trans "List voting" %}</a></li>
-                            </ul>
+                            </ul>:q
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="span8">
+
+                        </div>
+                        <div class="span4">
+ 
                         </div>
                     </div>
                 </div>
@@ -440,7 +461,6 @@
                     </div>
                 </div>
                 {% endif %}
-                
                 
                 <div class="tab-pane" id="events">
                     <div class="row">

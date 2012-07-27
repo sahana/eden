@@ -59,7 +59,7 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet
 from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from helpers.cache import get_or_insert_object_in_cache
-from apps.ecidadania.voting.models import Poll
+from apps.ecidadania.voting.models import Poll, Voting
 #
 # RSS FEED
 #
@@ -313,6 +313,8 @@ class ViewSpaceIndex(DetailView):
                                                     .order_by('-date')
         context['event'] = Event.objects.filter(space=place.id) \
                                                 .order_by('-event_date')
+        context['votings'] = Voting.objects.filter(space=place.id)
+        context['polls'] = Poll.objects.filter(space=place.id)
         #True if the request.user has admin rights on this space
         context['user_is_admin'] = (self.request.user in place.admins.all()
             or self.request.user in place.mods.all()
