@@ -134,6 +134,9 @@ class EditProposal(UpdateView):
         
     def get_context_data(self, **kwargs):
         context = super(EditProposal, self).get_context_data(**kwargs)
+        self.p_set = Proposal.objects.get(pk = self.kwargs['prop_id'])
+        self.field = ProposalField.objects.filter(proposalset = self.p_set.proposalset)
+        context['form_field'] = [f_name.field_name for f_name in self.field]
         context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
         return context
         
