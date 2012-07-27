@@ -162,7 +162,7 @@ class S3FireStationModel(S3Model):
         table = define_table(tablename,
                              station_id(),
                              vehicle_id(),
-                             s3_meta_fields()
+                             *s3_meta_fields()
                              )
 
         # CRUD strings

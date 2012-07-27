@@ -3545,7 +3545,7 @@ class S3SliderWidget(FormWidget):
                             _class="hide",
                             _value=self.value)
 
-        response.s3.jquery_ready.append("S3.slider('%s','%f','%f','%f','%f');\n" % \
+        response.s3.jquery_ready.append('''S3.slider('%s','%f','%f','%f','%f')''' % \
           (fieldname,
            self.minval,
            self.maxval,
@@ -3626,11 +3626,12 @@ class S3OptionsMatrixWidget(FormWidget):
                                     ))
             grid_rows.append(TR(row_cells))
 
-        current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
+        s3 = current.response.s3
+        s3.scripts.append("/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application)
 
         # If the table has an id attribute, activate the jQuery plugin for it.
         if "_id" in attributes:
-            current.response.s3.jquery_ready.append("$('#{0}').s3optionsmatrix();".format(attributes.get('_id')))
+            s3.jquery_ready.append('''$('#{0}').s3optionsmatrix()'''.format(attributes.get("_id")))
 
         return TABLE(header, TBODY(grid_rows), **attributes)
 
@@ -3644,75 +3645,71 @@ class S3KeyValueWidget(ListWidget):
         """
             Returns a widget with key-value fields
         """
-        self._class = 'key-value-pairs'
+        self._class = "key-value-pairs"
         self.delimiter = delimiter
         T = current.T
 
         if key_label == None:
-            self.key_label = T("Key: ")
+            self.key_label = "%s: " % T("Key")
         else:
             self.key_label = key_label
 
         if value_label == None:
-            self.value_label = T("Value: ")
+            self.value_label = "%s: " % T("Value")
         else:
             self.value_label = value_label
 
     def __call__(self, field, value, **attributes):
         T = current.T
-        _id = '%s_%s' % (field._tablename, field.name)
+        _id = "%s_%s" % (field._tablename, field.name)
         _name = field.name
-        _class = 'string'
+        _class = "string"
         requires = field.requires if isinstance(field.requires, (IS_NOT_EMPTY, IS_LIST_OF)) else None
         items = []
 
-        for val in value or ['']:
+        for val in value or [""]:
             kv = val.split(self.delimiter)
             k = kv[0]
             if len(kv)>1: v = kv[1]
-            else: v = ''
+            else: v = ""
 
             items.append(LI(
                 INPUT(_id=_id, _class=_class, _name=_name, _type="hidden", value=val, hideerror=True, requires=requires),
                 self.key_label,
-                INPUT(_class="key",   _type="text", _value=k), " ",
+                INPUT(_class="key", _type="text", _value=k), " ",
                 self.value_label,
                 INPUT(_class="value", _type="text", _value=v)
             ))
 
-        script = SCRIPT("""
-(function($){
+        script = SCRIPT(
+'''(function($){
 $.fn.kv_pairs = function (keyl, vall, delim) {
-    var self=$(this),
-        ref = self.find(":hidden:first").clone(),
-        plus=$('<a href="javascript:void(0)">+</a>').click(function() {new_item();});
-
-    function new_item () {
-        self.find("li").each(function() {
-          var trimmed = $.trim($(this).find(":hidden").val());
-          if (trimmed=='' || trimmed == delim) $(this).remove();
-        });
-
-        self.append($("<li>").append(ref.clone().val(''))
-            .append(keyl + ' <input class="key" type="text"> ' + vall + ' <input class="value" type="text">')
-            .append(plus)).find(".key:last").focus();
-        return false;
-    }
-
-    self.find(".value,.key").live('keypress', function (e) {
-        return (e.which == 13) ? $(this).is(".value") && new_item() : true;
-    }).live('blur', function () {
-        var li = $(this).parents().eq(0)
-        li.find(":hidden").val(li.find(".key").val() + delim + li.find(".value").val())
-    })
-
-    self.find(".value:last").after(plus);
+ var self=$(this),
+     ref=self.find(':hidden:first').clone(),
+     plus=$('<a href="javascript:void(0)">+</a>').click(function(){new_item()})
+ function new_item(){
+  self.find('li').each(function(){
+   var trimmed=$.trim($(this).find(":hidden").val())
+   if(trimmed==''||trimmed==delim) $(this).remove()
+  })
+  self.append($("<li>").append(ref.clone().val(''))
+   .append(keyl+' <input class="key" type="text"> '+vall+' <input class="value" type="text">')
+   .append(plus)).find('.key:last').focus()
+  return false
+ }
+ self.find('.value,.key').live('keypress',function(e){
+  return (e.which == 13)?$(this).is(".value")&&new_item():true
+ }).live('blur',function(){
+  var li=$(this).parents().eq(0)
+  li.find(':hidden').val(li.find('.key').val()+delim+li.find('.value').val())
+ })
+ self.find('.value:last').after(plus)
 }
-})(jQuery);
-jQuery(document).ready(function(){jQuery('#%s_kv_pairs').kv_pairs("%s", "%s", "%s");});
-""" % (_id, self.key_label, self.value_label, self.delimiter))
-        attributes['_id']=_id+'_kv_pairs'
+})(jQuery)
+jQuery(document).ready(function(){jQuery('#%s_kv_pairs').kv_pairs('%s','%s','%s')})''' % \
+    (_id, self.key_label, self.value_label, self.delimiter))
+        attributes["_id"] = _id + "_kv_pairs"
 
-        return TAG[''](UL(*items,**attributes),script)
+        return TAG[""](UL(*items, **attributes), script)
 
 # END =========================================================================

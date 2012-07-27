@@ -802,6 +802,6 @@ S3.slider = function(fieldname, minval, maxval, steprange, value) {
             $( '#' + fieldname + '_input' ).val( ui.value );
         }
     });
-}
+};
 
 // ============================================================================
