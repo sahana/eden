@@ -114,8 +114,8 @@ class TranslateAPI:
                 tmpstr = []
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, "ALL", self.grp.modlist)
-                elif f.endswith(".html") == True:
-                    tmpstr = R.read_html(f)
+                elif f.endswith(".html") == True or f.endswith(".js") == True:
+                    tmpstr = R.read_html_js(f)
                 for s in tmpstr:
                     strings.append((f+":"+str(s[0]), s[1]))
 
@@ -148,8 +148,9 @@ class TranslateAPI:
 
             if filename.endswith(".py") == True:
                 tmpstr = R.findstr(filename, "ALL", self.grp.modlist)
-            elif filename.endswith(".html") == True:
-                tmpstr = R.read_html(filename)
+            elif filename.endswith(".html") == True or \
+                 filename.endswith(".js") == True:
+                tmpstr = R.read_html_js(filename)
             else:
                 print "Please enter a '.py' file path"
                 return []
@@ -696,10 +697,10 @@ class TranslateReadFiles:
             return final_strings
 
         #----------------------------------------------------------------------
-        def read_html(self, filename):
+        def read_html_js(self, filename):
 
             """
-               Function to read and extract strings from html files
+               Function to read and extract strings from html/js files
                using regular expressions
             """
 
@@ -712,11 +713,11 @@ class TranslateReadFiles:
                                + r'(?:"(?:[^"\\]|\\.)*"))'
             regex_trans = re.compile(PY_STRING_LITERAL_RE, re.DOTALL)
 
-            html_file = open(filename)
+            html_js_file = open(filename)
             linecount = 0
             strings = []
 
-            for line in html_file:
+            for line in html_js_file:
                 linecount += 1
                 occur = regex_trans.findall(line)
                 for s in occur:
