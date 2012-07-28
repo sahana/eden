@@ -1,0 +1,3 @@
+"Name","Description","Type","Config","Folder","Enabled","Visible"
+"Current Weather",,"city",,"Weather","True","False"
+"Weather Stations",,"station",,"Weather","True","False"

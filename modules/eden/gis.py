@@ -1862,6 +1862,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_js = T("JS Layer"),
                               gis_layer_kml = T("KML Layer"),
                               gis_layer_mgrs = T("MGRS Layer"),
+                              gis_layer_openweathermap = T("OpenWeatherMap Layer"),
                               gis_layer_theme = T("Theme Layer"),
                               gis_layer_tms = T("TMS Layer"),
                               gis_layer_wfs = T("WFS Layer"),
@@ -2278,6 +2279,7 @@ class S3MapModel(S3Model):
              "gis_layer_kml",
              "gis_layer_mgrs",
              "gis_layer_openstreetmap",
+             "gis_layer_openweathermap",
              "gis_layer_tms",
              "gis_layer_wfs",
              "gis_layer_wms",
@@ -2846,6 +2848,40 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
+        # OpenWeatherMap
+        #
+
+        openweathermap_layer_types = ["station", "city"]
+
+        tablename = "gis_layer_openweathermap"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description", label=T("Description")),
+                             Field("type", length=16, label=T("Type"),
+                                   requires=IS_IN_SET(openweathermap_layer_types)),
+                             gis_layer_folder()(),
+                             s3_role_required(),       # Single Role
+                             #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept=gis_layer_onaccept,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_openweathermap=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # ---------------------------------------------------------------------
         # TMS
         #
 
@@ -2947,7 +2983,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              #gis_refresh()(),
                              gis_opacity()(),
-                              cluster_distance()(),
+                             cluster_distance()(),
                              cluster_threshold()(),
                              #Field("editable", "boolean", default=False, label=T("Editable?")),
                              s3_role_required(),       # Single Role
@@ -3861,6 +3897,7 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_bing" or \
          resourcename == "layer_empty" or \
          resourcename == "layer_google" or \
+         resourcename == "layer_openweathermap" or \
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \
          resourcename == "layer_wfs" or \

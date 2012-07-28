@@ -516,7 +516,9 @@ def register_onaccept(form):
     id = form.vars.id
     db = current.db
     table = db.auth_user
-    db(table.id==form.vars.id).update(comments = "%s | %s" % (position, reason))
+    db(table.id == form.vars.id).update(
+                                    comments = "%s | %s" % (position, reason)
+                                )
 
 # =============================================================================
 class contact():

@@ -41,6 +41,12 @@
         <xsl:for-each select="//resource[@name='org_organisation']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
+        <xsl:for-each select="//resource[@name='pr_person']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:for-each select="//resource[@name='auth_user']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <resource name="org_organisation_type">
             <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
             <data field="name">Committees/Mechanism/Forum</data>
@@ -434,6 +440,56 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='pr_person']">
+
+        <xsl:variable name="first_name" select="data[@field='first_name']"/>
+        <xsl:variable name="last_name" select="data[@field='last_name']"/>
+
+        <xsl:if test="$first_name!=$last_name and $first_name!='Test' and $last_name!='Test' and $first_name!='test' and $last_name!='test'">
+            <resource name="pr_person">
+                <data field="first_name"><xsl:value-of select="$first_name"/></data>
+                <data field="last_name"><xsl:value-of select="$last_name"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='auth_user']">
+
+        <xsl:variable name="first_name" select="data[@field='first_name']"/>
+        <xsl:variable name="last_name" select="data[@field='last_name']"/>
+        <xsl:variable name="registration_key" select="data[@field='registration_key']"/>
+        <xsl:variable name="position" select="data[@field='position']"/>
+        <xsl:variable name="reason" select="data[@field='reason']"/>
+        <xsl:variable name="organisation">
+            <xsl:value-of select="reference[@field='organisation_id']"/>
+        </xsl:variable>
+
+        <xsl:if test="$first_name!=$last_name and $first_name!='Test' and $last_name!='Test' and $first_name!='test' and $last_name!='test'">
+            <resource name="auth_user">
+                <data field="first_name"><xsl:value-of select="$first_name"/></data>
+                <data field="last_name"><xsl:value-of select="$last_name"/></data>
+                <data field="email"><xsl:value-of select="data[@field='email']"/></data>
+                <data field="password"><xsl:value-of select="data[@field='password']"/></data>
+                <xsl:if test="$registration_key!=''">
+                    <data field="registration_key"><xsl:value-of select="$registration_key"/></data>
+                </xsl:if>
+                <xsl:if test="$reason!=''">
+                    <data field="comments">
+                        <xsl:value-of select="concat($position, ' | ', $reason)"/>
+                    </data>
+                </xsl:if>
+                <!-- NB This requires a custom onvalidation to lookup the org to convert to integer-->
+                <xsl:if test="$organisation!=''">
+                    <data field="organisation_id"><xsl:value-of select="$organisation"/></data>
+                </xsl:if>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
@@ -506,5 +562,7 @@
             </xsl:when>
         </xsl:choose>
     </xsl:template>
+
+    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

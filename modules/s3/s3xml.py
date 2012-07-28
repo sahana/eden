@@ -949,7 +949,6 @@ class S3XML(S3Codec):
                     attr[URL] = fileurl
                     attr[ATTRIBUTE.filename] = filename
             elif fieldtype == "password":
-                # Do not export password fields
                 data = SubElement(elem, DATA)
                 data.attrib[FIELD] = f
                 data.text = v
