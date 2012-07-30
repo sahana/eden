@@ -47,7 +47,7 @@ subprocess.Popen.wait(b)
 d = raw_input('Do you want to create the database? (y/n) ')
 
 if d == 'y':
-	os.chdir(cwd + 'src/')
+	os.chdir(cwd + '/src/')
 	c = subprocess.Popen('../bin/django syncdb')
 elif d == 'n':
 	print 'Process finished'
