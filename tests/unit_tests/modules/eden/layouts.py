@@ -57,7 +57,7 @@ class LayoutTests(unittest.TestCase):
 
         self.assertFalse(comment.check_permission())
         self.assertEqual(comment.xml(), "")
-        auth.s3_impersonate(1)
+        auth.s3_impersonate("admin@example.com")
         self.assertTrue(comment.check_permission())
         output = comment.xml()
         self.assertTrue(type(output) is str)
