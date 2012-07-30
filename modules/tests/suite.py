@@ -67,6 +67,9 @@ def loadAllTests():
     
     # Create Members
     addTests(loadTests(CreateMember))
+    
+    # Search Staff (Simple & Advance)
+    addTests(loadTests(SearchStaff))
 
     return suite
 
