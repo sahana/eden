@@ -175,8 +175,8 @@ class S3HRModel(S3Model):
                                              T("Yes"))[opt == True],
                                         ),
                                   *s3_meta_fields())
-        
-        table.site_id.label = T("Office/Warehouse/Facility") 
+
+        table.site_id.label = T("Office/Warehouse/Facility")
 
         crud_strings["hrm_staff"] = Storage(
             title_create = T("Add Staff Member"),
@@ -4139,8 +4139,11 @@ def hrm_rheader(r, tabs=[]):
                     experience_tab,
                     teams_tab,
                     (T("Assets"), "asset"),
-                    (T("Roles"), "roles"),
                    ]
+            # Add role manager tab if a user record exists
+            user_id = current.auth.s3_get_user_id(record.id)
+            if user_id:
+                tabs.append((T("Roles"), "roles"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(service_record,
                       A(s3_avatar_represent(record.id,
