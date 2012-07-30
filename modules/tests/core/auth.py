@@ -5,8 +5,10 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 from gluon import current
+from gluon.storage import Storage
 from .utils import *
 
+current.data = Storage()
 current.data["auth"] = {
         "normal" : {
                 "email": "test@example.com",

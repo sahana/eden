@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3xml.py
 #
 import unittest
+from gluon import *
 from gluon.contrib import simplejson as json
 
 # =============================================================================

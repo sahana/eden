@@ -5,8 +5,9 @@
 
 import unittest
 
-from gluon import current
-from s3.s3widgets import S3OptionsMatrixWidget, s3_checkboxes_widget
+from gluon import *
+from gluon.storage import Storage
+from s3.s3widgets import S3OptionsMatrixWidget, s3_checkboxes_widget, s3_grouped_checkboxes_widget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # =============================================================================

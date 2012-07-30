@@ -1594,7 +1594,7 @@ class S3SQLTable(object):
                         continue
 
                     try:
-                        value = S3FieldSelector.extract(resource, row, col["name"])
+                        value = S3FieldSelector.extract(resource, row, lf)
                     except:
                         # field not found in row
                         value = None

@@ -6,14 +6,19 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3rest.py
 #
 import unittest
+from gluon import *
+from gluon.storage import Storage
 from gluon.dal import Query
+from s3.s3resource import S3FieldSelector, S3ResourceFilter
 
 # =============================================================================
 class Test_s3mgr_raises_on_nonexistent_modules(unittest.TestCase):
     """ Legacy Test Case """
 
     def test(test):
-        test.assertRaises(Exception, s3db.table, "something that doesn't exist")
+        test.assertRaises(Exception,
+                          current.s3db.table,
+                          "something that doesn't exist")
 
 # =============================================================================
 class S3ResourceTests(unittest.TestCase):
@@ -26,7 +31,7 @@ class S3ResourceTests(unittest.TestCase):
     #
     def testGetJoinSimpleComponent(self):
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         # Master resource has no component join
         self.assertEqual(resource.get_join(), None)
         component = resource.components["identity"]
@@ -36,7 +41,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testGetJoinSuperComponent(self):
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         component = resource.components["contact"]
         ijoin = component.get_join()
         self.assertEqual(str(ijoin), "((pr_person.pe_id = pr_contact.pe_id) AND "
@@ -44,7 +49,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testGetJoinLinkTableComponent(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         component = resource.components["task"]
         ijoin = component.get_join()
         self.assertEqual(str(ijoin),
@@ -54,7 +59,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testGetLeftJoinSimpleComponent(self):
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         # Master Resource has no join!
         self.assertEqual(resource.get_left_join(), None)
         component = resource.components["identity"]
@@ -67,7 +72,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testGetLeftJoinSuperComponent(self):
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         component = resource.components["contact"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
@@ -78,7 +83,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testGetLeftJoinLinkTableComponent(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         component = resource.components["task"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
@@ -93,7 +98,7 @@ class S3ResourceTests(unittest.TestCase):
     #
     def testResolveSelectorInnerField(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selector = "name"
         f = resource.resolve_selector(selector)
         self.assertNotEqual(f, None)
@@ -109,7 +114,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectorVirtualField(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selector = "virtual"
         f = resource.resolve_selector(selector)
         self.assertNotEqual(f, None)
@@ -125,7 +130,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectorComponentField(self):
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         selector = "identity.value"
         f = resource.resolve_selector(selector)
         self.assertNotEqual(f, None)
@@ -146,7 +151,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectorLinkedTableField(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selector = "task.description"
         f = resource.resolve_selector(selector)
         self.assertNotEqual(f, None)
@@ -170,7 +175,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectorReferencedTableField(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selector = "organisation_id$name"
         f = resource.resolve_selector(selector)
         self.assertNotEqual(f, None)
@@ -189,7 +194,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectorExceptions(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selector = "organisation_id.test"
         self.assertRaises(AttributeError,
                           resource.resolve_selector,
@@ -197,7 +202,7 @@ class S3ResourceTests(unittest.TestCase):
 
     def testResolveSelectors(self):
 
-        resource = s3mgr.define_resource("project", "project")
+        resource = current.manager.define_resource("project", "project")
         selectors = ["id",
                      "name",
                      "organisation_id$name",
@@ -238,12 +243,12 @@ class S3ResourceTests(unittest.TestCase):
 class S3ResourceFilterTests(unittest.TestCase):
 
     def setUp(self):
-        auth.s3_impersonate("admin@example.com")
+        current.auth.s3_impersonate("admin@example.com")
 
     def testGetQueryJoinsInnerField(self):
 
-        resource = s3mgr.define_resource("pr", "person")
-        q = s3base.S3FieldSelector("first_name") == "test"
+        resource = current.manager.define_resource("pr", "person")
+        q = S3FieldSelector("first_name") == "test"
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins, Storage())
@@ -255,8 +260,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsReferencedTableField(self):
 
-        resource = s3mgr.define_resource("project", "project")
-        q = s3base.S3FieldSelector("organisation_id$name") == "test"
+        resource = current.manager.define_resource("project", "project")
+        q = S3FieldSelector("organisation_id$name") == "test"
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins, Storage())
@@ -272,8 +277,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsComponentField(self):
 
-        resource = s3mgr.define_resource("pr", "person")
-        q = s3base.S3FieldSelector("identity.value") == "test"
+        resource = current.manager.define_resource("pr", "person")
+        q = S3FieldSelector("identity.value") == "test"
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins, Storage())
@@ -289,8 +294,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsSuperComponentField(self):
 
-        resource = s3mgr.define_resource("pr", "person")
-        q = s3base.S3FieldSelector("contact.value") == "test"
+        resource = current.manager.define_resource("pr", "person")
+        q = S3FieldSelector("contact.value") == "test"
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins, Storage())
@@ -306,8 +311,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsLinkedComponentField(self):
 
-        resource = s3mgr.define_resource("project", "project")
-        q = s3base.S3FieldSelector("task.description") == "test"
+        resource = current.manager.define_resource("project", "project")
+        q = S3FieldSelector("task.description") == "test"
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins, Storage())
@@ -326,9 +331,9 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsCombination(self):
 
-        resource = s3mgr.define_resource("project", "project")
-        q = (s3base.S3FieldSelector("organisation_id$name") == "test") & \
-            (s3base.S3FieldSelector("task.description") == "test")
+        resource = current.manager.define_resource("project", "project")
+        q = (S3FieldSelector("organisation_id$name") == "test") & \
+            (S3FieldSelector("task.description") == "test")
 
         joins, distinct = q.joins(resource)
         self.assertEqual(joins.keys(), [])
@@ -350,9 +355,9 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testResourceFilterConstruction(self):
 
-        q = (s3base.S3FieldSelector("organisation_id$name") == "test") & \
-            (s3base.S3FieldSelector("task.description") == "test")
-        resource = s3mgr.define_resource("project", "project",
+        q = (S3FieldSelector("organisation_id$name") == "test") & \
+            (S3FieldSelector("task.description") == "test")
+        resource = current.manager.define_resource("project", "project",
                                          filter=q)
 
         rfilter = resource.rfilter
@@ -389,9 +394,9 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction1(self):
 
-        q1 = (s3base.S3FieldSelector("organisation_id$name") == "test")
-        q2 = (s3base.S3FieldSelector("task.description") == "test")
-        resource = s3mgr.define_resource("project", "project", filter=q1)
+        q1 = (S3FieldSelector("organisation_id$name") == "test")
+        q2 = (S3FieldSelector("task.description") == "test")
+        resource = current.manager.define_resource("project", "project", filter=q1)
 
         resource.add_filter(q2)
 
@@ -417,9 +422,9 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction2(self):
 
-        q1 = (s3base.S3FieldSelector("human_resource.organisation_id$name") == "test")
-        q2 = (s3base.S3FieldSelector("identity.value") == "test")
-        resource = s3mgr.define_resource("pr", "person", filter=q1)
+        q1 = (S3FieldSelector("human_resource.organisation_id$name") == "test")
+        q2 = (S3FieldSelector("identity.value") == "test")
+        resource = current.manager.define_resource("pr", "person", filter=q1)
 
         resource.add_filter(q2)
 
@@ -447,7 +452,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction3(self):
 
-        resource = s3mgr.define_resource("project", "project", id=1)
+        resource = current.manager.define_resource("project", "project", id=1)
 
         component = resource.components["activity"]
         component.build_query()
@@ -469,10 +474,10 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction4(self):
 
-        resource = s3mgr.define_resource("pr", "person",
+        resource = current.manager.define_resource("pr", "person",
                                          id=1,
                                          components=["competency"],
-                                         filter=(s3base.S3FieldSelector("competency.id") == 1))
+                                         filter=(S3FieldSelector("competency.id") == 1))
 
         component = resource.components["competency"]
         query = component.get_query()
@@ -487,9 +492,9 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetLeftJoins(self):
 
-        q = (s3base.S3FieldSelector("organisation_id$name") == "test") & \
-            (s3base.S3FieldSelector("task.description") == "test")
-        resource = s3mgr.define_resource("project", "project", filter=q)
+        q = (S3FieldSelector("organisation_id$name") == "test") & \
+            (S3FieldSelector("task.description") == "test")
+        resource = current.manager.define_resource("project", "project", filter=q)
 
         fjoins = resource.rfilter.get_left_joins()
         self.assertNotEqual(fjoins, None)
@@ -506,7 +511,7 @@ class S3ResourceFilterTests(unittest.TestCase):
         url_query = {"project.organisation_id$name__like": "*test*",
                      "task.description__like!": "*test*"}
 
-        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        resource = current.manager.define_resource("project", "project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -528,7 +533,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         url_query = {"project.organisation_id$name__like": "Test*,Other*"}
 
-        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        resource = current.manager.define_resource("project", "project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -547,7 +552,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         url_query = {"project.organisation_id$name|task.description__like": "Test*"}
 
-        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        resource = current.manager.define_resource("project", "project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -569,7 +574,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testSerializeURLQuery(self):
 
-        FS = s3base.S3FieldSelector
+        FS = S3FieldSelector
 
         #q = FS("person.date_of_birth") <= datetime.date(2012, 4, 1)
 
@@ -664,7 +669,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q = FS("first_name").like(["Test%", "Other%"])
 
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         u = q.serialize_url(resource=resource)
         k = "person.first_name__like"
         self.assertNotEqual(u, None)
@@ -678,7 +683,7 @@ class S3ResourceFilterTests(unittest.TestCase):
         url_query = {"project.organisation_id$name__like": "*test*",
                      "task.description__like!": "*test*"}
 
-        resource = s3mgr.define_resource("project", "project", vars=url_query)
+        resource = current.manager.define_resource("project", "project", vars=url_query)
         rfilter = resource.rfilter
         url_vars = rfilter.serialize_url()
         self.assertEqual(len(url_vars), len(url_query))
@@ -686,9 +691,9 @@ class S3ResourceFilterTests(unittest.TestCase):
             self.assertTrue(k in url_vars)
             self.assertEqual(url_vars[k], url_query[k])
 
-        FS = s3base.S3FieldSelector
+        FS = S3FieldSelector
         q = FS("first_name").like(["Test%", "Other%"])
-        resource = s3mgr.define_resource("pr", "person")
+        resource = current.manager.define_resource("pr", "person")
         resource.add_filter(q)
         rfilter = resource.rfilter
         u = rfilter.serialize_url()
@@ -701,7 +706,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testParseValue(self):
 
-        parse_value = s3base.S3ResourceFilter._parse_value
+        parse_value = S3ResourceFilter._parse_value
 
         self.assertEqual(parse_value("NONE"), None)
         self.assertEqual(parse_value('"NONE"'), "NONE")
@@ -713,8 +718,8 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testAnyOf(self):
 
-        resource = s3mgr.define_resource("org", "organisation")
-        FS = s3base.S3FieldSelector
+        resource = current.manager.define_resource("org", "organisation")
+        FS = S3FieldSelector
         q = FS("sector_id").contains([1, 2])
         query = q.query(resource)
         self.assertEqual(str(query), "((org_organisation.sector_id LIKE '%|1|%') AND "
@@ -725,13 +730,18 @@ class S3ResourceFilterTests(unittest.TestCase):
                                      "(org_organisation.sector_id LIKE '%|2|%'))")
 
     def tearDown(self):
-        auth.s3_impersonate(None)
+        current.auth.s3_impersonate(None)
 
 # =============================================================================
 class S3MergeOrganisationsTests(unittest.TestCase):
 
     def setUp(self):
         """ Set up organisation records """
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
 
         auth.override = True
 
@@ -756,7 +766,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
         self.id1 = org1_id
         self.id2 = org2_id
 
-        self.resource = s3mgr.define_resource("org", "organisation")
+        self.resource = current.manager.define_resource("org", "organisation")
 
     def testMerge(self):
         """ Test merge """
@@ -836,6 +846,11 @@ class S3MergeOrganisationsTests(unittest.TestCase):
     def testMergeLinkTable(self):
         """ Test merge of link table entries """
 
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         org1, org2 = self.get_records()
 
         org1_pe_id = s3db.pr_get_pe_id(org1)
@@ -888,7 +903,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
     def testMergeVirtualReference(self):
         """ Test merge with virtual references """
 
-        utable = auth.settings.table_user
+        utable = current.auth.settings.table_user
         user = Storage(first_name="Test",
                        last_name="User",
                        password="xyz",
@@ -899,7 +914,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
         success = self.resource.merge(self.id1, self.id2)
         self.assertTrue(success)
 
-        user = db(utable.id == user_id).select(limitby=(0, 1)).first()
+        user = current.db(utable.id == user_id).select(limitby=(0, 1)).first()
         self.assertNotEqual(user, None)
 
         self.assertEqual(str(user.organisation_id), str(self.id1))
@@ -908,7 +923,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
 
         table = self.resource.table
         query = (table._id.belongs(self.id1, self.id2))
-        rows = db(query).select(limitby=(0, 2))
+        rows = current.db(query).select(limitby=(0, 2))
         row1 = row2 = None
         for row in rows:
             row_id = row[table._id]
@@ -920,14 +935,19 @@ class S3MergeOrganisationsTests(unittest.TestCase):
 
     def tearDown(self):
 
-        db.rollback()
-        auth.override = False
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 class S3MergePersonsTests(unittest.TestCase):
 
     def setUp(self):
         """ Set up person records """
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
 
         auth.override = True
 
@@ -948,23 +968,33 @@ class S3MergePersonsTests(unittest.TestCase):
         self.id1 = person1_id
         self.id2 = person2_id
 
-        self.resource = s3mgr.define_resource("pr", "person")
+        self.resource = current.manager.define_resource("pr", "person")
 
     def testPermissionError(self):
         """ Check for exception if not authorized """
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         auth.override = False
         auth.s3_impersonate(None)
-        self.assertRaises(auth.permission.error,
+        self.assertRaises(current.auth.permission.error,
                           self.resource.merge, self.id1, self.id2)
         # Check for proper rollback
         ptable = s3db.pr_person
         query = ptable._id.belongs((self.id1, self.id2))
         rows = db(query).select(ptable._id, limitby=(0, 2))
         self.assertEqual(len(rows), 0)
-        auth.override = True
+        current.auth.override = True
 
     def testOriginalNotFoundError(self):
         """ Check for exception if record not found """
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         self.assertRaises(KeyError, self.resource.merge, 0, self.id2)
         # Check for proper rollback
         ptable = s3db.pr_person
@@ -974,6 +1004,11 @@ class S3MergePersonsTests(unittest.TestCase):
 
     def testNotDuplicateFoundError(self):
         """ Check for exception if record not found """
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         self.assertRaises(KeyError, self.resource.merge, self.id1, 0)
         # Check for proper rollback
         ptable = s3db.pr_person
@@ -1029,6 +1064,11 @@ class S3MergePersonsTests(unittest.TestCase):
     def testMergeSingleComponent(self):
         """ Test merge of single-component """
 
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         person1, person2 = self.get_records()
 
         dtable = s3db.pr_physical_description
@@ -1064,6 +1104,11 @@ class S3MergePersonsTests(unittest.TestCase):
     def testMergeMultiComponent(self):
         """ Test merge of multiple-component """
 
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
         person1, person2 = self.get_records()
 
         itable = s3db.pr_identity
@@ -1097,6 +1142,7 @@ class S3MergePersonsTests(unittest.TestCase):
 
     def get_records(self):
 
+        db = current.db
         table = self.resource.table
         query = (table._id.belongs(self.id1, self.id2))
         rows = db(query).select(limitby=(0, 2))
@@ -1111,14 +1157,19 @@ class S3MergePersonsTests(unittest.TestCase):
 
     def tearDown(self):
 
-        db.rollback()
-        auth.override = False
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 class S3MergeLocationsTests(unittest.TestCase):
 
     def setUp(self):
         """ Set up location records """
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
 
         auth.override = True
 
@@ -1137,7 +1188,7 @@ class S3MergeLocationsTests(unittest.TestCase):
         self.id1 = location1_id
         self.id2 = location2_id
 
-        self.resource = s3mgr.define_resource("gis", "location")
+        self.resource = current.manager.define_resource("gis", "location")
 
     def testMerge(self):
         """ Test merge """
@@ -1158,6 +1209,9 @@ class S3MergeLocationsTests(unittest.TestCase):
 
     def testMergeSimpleReference(self):
         """ Test merge of a simple reference including super-entity """
+
+        db = current.db
+        s3db = current.s3db
 
         # Create an office referencing location 2
         otable = s3db.org_office
@@ -1183,6 +1237,11 @@ class S3MergeLocationsTests(unittest.TestCase):
         self.assertEqual(site.location_id, self.id1)
 
     def testMergeReferenceLists(self):
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
 
         ptable = s3db.project_project
         project = Storage(name="Test Project",
@@ -1213,7 +1272,7 @@ class S3MergeLocationsTests(unittest.TestCase):
 
         table = self.resource.table
         query = (table._id.belongs(self.id1, self.id2))
-        rows = db(query).select(limitby=(0, 2))
+        rows = current.db(query).select(limitby=(0, 2))
         row1 = row2 = None
         for row in rows:
             row_id = row[table._id]
@@ -1225,13 +1284,15 @@ class S3MergeLocationsTests(unittest.TestCase):
 
     def tearDown(self):
 
-        db.rollback()
-        auth.override = False
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 class S3JSONTests(unittest.TestCase):
 
     def setUp(self):
+
+        s3db = current.s3db
 
         ptable = s3db.pr_person
         otable = s3db.org_organisation
@@ -1241,45 +1302,45 @@ class S3JSONTests(unittest.TestCase):
         job_role = Storage(name="TestJSONJobRole")
         job_role_id = jtable.insert(**job_role)
         job_role.update(id=job_role_id)
-        s3mgr.onaccept(jtable, Storage(vars=job_role))
+        current.manager.onaccept(jtable, Storage(vars=job_role))
 
         organisation = Storage(name="TestJSONOrganisation")
         organisation_id = otable.insert(**organisation)
         organisation.update(id=organisation_id)
         s3db.update_super(otable, organisation)
-        s3mgr.onaccept(otable, Storage(vars=organisation))
+        current.manager.onaccept(otable, Storage(vars=organisation))
 
         person = Storage(first_name="TestJSON1",
                          last_name="Person")
         person_id = ptable.insert(**person)
         person.update(id=person_id)
         s3db.update_super(ptable, person)
-        s3mgr.onaccept(ptable, Storage(vars=person))
+        current.manager.onaccept(ptable, Storage(vars=person))
 
         hr_record = Storage(person_id=person_id,
                             organisation_id=organisation_id,
                             job_role_id=job_role_id)
         hr_record_id = htable.insert(**hr_record)
         hr_record.update(id=hr_record_id)
-        s3mgr.onaccept(htable, Storage(vars=hr_record))
+        current.manager.onaccept(htable, Storage(vars=hr_record))
 
         person = Storage(first_name="TestJSON2",
                          last_name="Person")
         person_id = ptable.insert(**person)
         person.update(id=person_id)
         s3db.update_super(ptable, person)
-        s3mgr.onaccept(ptable, Storage(vars=person))
+        current.manager.onaccept(ptable, Storage(vars=person))
 
         hr_record = Storage(person_id=person_id,
                             organisation_id=organisation_id)
         hr_record_id = htable.insert(**hr_record)
         hr_record.update(id=hr_record_id)
-        s3mgr.onaccept(htable, Storage(vars=hr_record))
+        current.manager.onaccept(htable, Storage(vars=hr_record))
 
     def testJSONExport(self):
 
-        auth.override = True
-        resource = s3mgr.define_resource("hrm", "human_resource")
+        current.auth.override = True
+        resource = current.manager.define_resource("hrm", "human_resource")
         fields = ["id",
                   "person_id$first_name",
                   "person_id$middle_name",
@@ -1287,7 +1348,7 @@ class S3JSONTests(unittest.TestCase):
                   "organisation_id$name",
                   "job_role_id$name"]
 
-        FS = s3base.S3FieldSelector
+        FS = S3FieldSelector
         query = FS("person_id$first_name").like("TestJSON%")
 
         resource.add_filter(query)
@@ -1308,11 +1369,11 @@ class S3JSONTests(unittest.TestCase):
             else:
                 self.assertEqual(record["hrm_job_role.name"], None)
 
-        auth.override = True
+        current.auth.override = True
 
     def tearDown(self):
 
-        db.rollback()
+        current.db.rollback()
 
 # =============================================================================
 class S3ImportXMLTests(unittest.TestCase):
@@ -1349,8 +1410,8 @@ class S3ImportXMLTests(unittest.TestCase):
     def testImportXML(self):
         """ Test JSON message after XML import """
 
-        auth.override = True
-        resource = s3mgr.define_resource("pr", "person")
+        current.auth.override = True
+        resource = current.manager.define_resource("pr", "person")
         msg = resource.import_xml(self.tree)
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
@@ -1362,7 +1423,7 @@ class S3ImportXMLTests(unittest.TestCase):
         self.assertTrue(len(msg["created"]) == 1)
 
     def tearDown(self):
-        db.rollback()
+        current.db.rollback()
 
 # =============================================================================
 def run_suite(*test_classes):

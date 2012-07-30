@@ -5,7 +5,7 @@
 
 import unittest
 
-from gluon import current
+from gluon import *
 from s3.s3search import S3SearchSimpleWidget, S3SearchOptionsWidget, S3SearchMinMaxWidget
 
 # =============================================================================
@@ -67,6 +67,7 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
         pass
 
     def testWidget(self):
+        T = current.T
         # Test the widget method
 
         # Test the widget method with a virtual field and custom options
