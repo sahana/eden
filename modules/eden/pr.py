@@ -1706,7 +1706,7 @@ class S3PersonImageModel(S3Model):
         query = (table.id == row.get("id"))
         deleted_row = db(query).select(table.image,
                                        limitby=(0, 1)).first()
-        s3db.pr_image_delete_all(deleted_row.image)
+        current.s3db.pr_image_delete_all(deleted_row.image)
 
 # =============================================================================
 class S3ImageLibraryModel(S3Model):

@@ -23,6 +23,12 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="s3xrc">
+        <xsl:for-each select="//resource[@name='drrpp_file']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:for-each select="//resource[@name='framework_file']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_framework']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
@@ -36,6 +42,9 @@
             <xsl:apply-templates select="."/>
         </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_project']">
+            <xsl:apply-templates select="."/>
+        </xsl:for-each>
+        <xsl:for-each select="//resource[@name='drrpp_link']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
         <xsl:for-each select="//resource[@name='org_organisation']">
@@ -146,14 +155,22 @@
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='impl_org_dummy']"/></xsl:with-param>
-                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">impl_org</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='funding_dummy']"/></xsl:with-param>
-                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">donor</xsl:with-param>
+            </xsl:call-template>
+
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="data[@field='file_dummy']"/></xsl:with-param>
+                <xsl:with-param name="arg">file</xsl:with-param>
+            </xsl:call-template>
+
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="data[@field='link_dummy']"/></xsl:with-param>
+                <xsl:with-param name="arg">link</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
@@ -164,13 +181,11 @@
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='hazard_ids']"/></xsl:with-param>
-                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">hazard</xsl:with-param>
             </xsl:call-template>
 
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list"><xsl:value-of select="data[@field='theme_ids']"/></xsl:with-param>
-                <!--<xsl:with-param name="listsep">;</xsl:with-param>-->
                 <xsl:with-param name="arg">theme</xsl:with-param>
             </xsl:call-template>
 
@@ -283,13 +298,59 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_file']">
+
+        <resource name="doc_document">
+            <reference field="doc_id" resource="project_project">
+                <!--@ToDo -->
+            </reference>
+            <data field="name"><xsl:value-of select="data[@field='file']"/></data>
+            <data field="comments"><xsl:value-of select="data[@field='comment']"/></data>
+            <data field="file">
+                <xsl:attribute name="filename">
+                    <xsl:value-of select="data[@field='file']"/>
+                </xsl:attribute>
+                <xsl:attribute name="url">
+                    <xsl:text>local</xsl:text>
+                </xsl:attribute>
+            </data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='framework_file']">
+
+        <resource name="doc_document">
+            <reference field="doc_id" resource="project_framework">
+                <!--@ToDo -->
+            </reference>
+            <data field="name"><xsl:value-of select="data[@field='file']"/></data>
+            <data field="file">
+                <xsl:attribute name="filename">
+                    <xsl:value-of select="data[@field='file']"/>
+                </xsl:attribute>
+                <xsl:attribute name="url">
+                    <xsl:text>local</xsl:text>
+                </xsl:attribute>
+            </data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_framework']">
 
         <resource name="project_framework">
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
             <data field="description"><xsl:value-of select="data[@field='description']"/></data>
             <data field="time_frame"><xsl:value-of select="data[@field='time_frame']"/></data>
-            <!-- @ToDo: doc_document -->
+
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="data[@field='file_dummy']"/></xsl:with-param>
+                <xsl:with-param name="arg">file</xsl:with-param>
+            </xsl:call-template>
+
         </resource>
 
     </xsl:template>
@@ -330,6 +391,20 @@
                     <data field="addr_street"><xsl:value-of select="data[@field='location']"/></data>
                 </reference>
             </resource>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="resource[@name='drrpp_link']">
+
+        <resource name="doc_document">
+            <reference field="doc_id" resource="project_project">
+                <!--@ToDo -->
+            </reference>
+            <data field="name"><xsl:value-of select="data[@field='url']"/></data>
+            <data field="url"><xsl:value-of select="data[@field='url']"/></data>
+            <data field="comments"><xsl:value-of select="data[@field='comment']"/></data>
         </resource>
 
     </xsl:template>
@@ -495,6 +570,7 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
+
             <!-- Country reference list -->
             <xsl:when test="$arg='countrycode'">
                 <xsl:variable name="CountryCode">
@@ -513,6 +589,7 @@
                 </xsl:variable>
                 <xsl:value-of select="concat(',&quot;', 'urn:iso:std:iso:3166:-1:code:', $CountryCode, '&quot;')"/>
             </xsl:when>
+
             <!-- Hazard list -->
             <xsl:when test="$arg='hazard'">
                 <resource name="project_hazard">
@@ -522,6 +599,7 @@
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
+
             <!-- Theme list -->
             <xsl:when test="$arg='theme'">
                 <resource name="project_theme">
@@ -531,6 +609,7 @@
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
+
             <!-- Partner Organisations -->
             <xsl:when test="$arg='impl_org'">
                 <resource name="project_organisation">
@@ -540,6 +619,7 @@
                     </reference>
                 </resource>
             </xsl:when>
+
             <!-- Donors -->
             <xsl:when test="$arg='donor'">
                 <resource name="project_organisation">
@@ -549,6 +629,7 @@
                     </reference>
                 </resource>
             </xsl:when>
+
             <!-- Outputs -->
             <xsl:when test="$arg='output'">
                 <resource name="project_output">
@@ -560,6 +641,30 @@
                     </reference>
                 </resource>
             </xsl:when>
+
+            <!-- Files -->
+            <xsl:when test="$arg='file'">
+                <resource name="doc_document">
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                    <data field="file">
+                        <xsl:attribute name="filename">
+                            <xsl:value-of select="$item"/>
+                        </xsl:attribute>
+                        <xsl:attribute name="url">
+                            <xsl:text>local</xsl:text>
+                        </xsl:attribute>
+                    </data>
+                </resource>
+            </xsl:when>
+
+            <!-- Links -->
+            <xsl:when test="$arg='link'">
+                <resource name="doc_document">
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                    <data field="url"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+
         </xsl:choose>
     </xsl:template>
 
