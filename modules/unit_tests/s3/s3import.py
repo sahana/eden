@@ -7,6 +7,8 @@
 #
 import unittest
 
+from gluon import *
+
 # =============================================================================
 class S3ComponentDisambiguationTests(unittest.TestCase):
     """ Test component disambiguation using the alias-attribute """
@@ -46,8 +48,11 @@ class S3ComponentDisambiguationTests(unittest.TestCase):
     def testOrganisationBranchImport(self):
         """ Test import of organisation branches using alias-attribute """
 
-        auth.override = True
-        resource = s3mgr.define_resource("org", "organisation")
+        db = current.db
+        s3db = current.s3db
+
+        current.auth.override = True
+        resource = current.manager.define_resource("org", "organisation")
         msg = resource.import_xml(self.branch_tree)
 
         table = resource.table
@@ -69,8 +74,11 @@ class S3ComponentDisambiguationTests(unittest.TestCase):
     def testParentImport(self):
         """ Test import of organisation parents using alias-attribute """
 
-        auth.override = True
-        resource = s3mgr.define_resource("org", "organisation")
+        db = current.db
+        s3db = current.s3db
+
+        current.auth.override = True
+        resource = current.manager.define_resource("org", "organisation")
         msg = resource.import_xml(self.parent_tree)
 
         table = resource.table
@@ -91,7 +99,7 @@ class S3ComponentDisambiguationTests(unittest.TestCase):
 
     def tearDown(self):
 
-        db.rollback()
+        current.db.rollback()
 
 # =============================================================================
 def run_suite(*test_classes):

@@ -8,7 +8,8 @@
 import unittest
 import datetime
 
-from gluon import current
+from gluon import *
+from gluon.storage import Storage
 
 # =============================================================================
 class PRTests(unittest.TestCase):
@@ -16,6 +17,9 @@ class PRTests(unittest.TestCase):
 
     def setUp(self):
         """ Set up organisation records """
+
+        auth = current.auth
+        s3db = current.s3db
 
         auth.override = True
 
@@ -41,6 +45,9 @@ class PRTests(unittest.TestCase):
         self.org2 = s3db.pr_get_pe_id("org_organisation", org2_id)
 
     def testGetRealmUsers(self):
+
+        auth = current.auth
+        s3db = current.s3db
 
         auth.s3_impersonate("admin@example.com")
         admin_id = auth.user.id
@@ -122,20 +129,23 @@ class PRTests(unittest.TestCase):
         # None as realm should give a list of all current users
         table = auth.settings.table_user
         query = (table.deleted != True)
-        rows = db(query).select(table.id)
+        rows = current.db(query).select(table.id)
         all_users = [row.id for row in rows]
         users = s3db.pr_realm_users(None)
         self.assertTrue(all([u in users for u in all_users]))
 
     def tearDown(self):
 
-        db.rollback()
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 class PersonDeduplicateTests(unittest.TestCase):
     """ PR Tests """
 
     def setUp(self):
+
+        s3db = current.s3db
 
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
@@ -164,11 +174,16 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def testHook(self):
 
+        s3db = current.s3db
+
         deduplicate = s3db.get_config("pr_person", "deduplicate")
         self.assertNotEqual(deduplicate, None)
         self.assertTrue(callable(deduplicate))
 
     def testMatchNames(self):
+
+        s3db = current.s3db
+        from s3.s3import import S3ImportItem
 
         deduplicate = s3db.get_config("pr_person", "deduplicate")
 
@@ -178,7 +193,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person)
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Mismatch
         person = Storage(first_name = "Other",
@@ -190,6 +205,9 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def testMatchEmail(self):
 
+        s3db = current.s3db
+        from s3.s3import import S3ImportItem
+
         deduplicate = s3db.get_config("pr_person", "deduplicate")
 
         # Test without contact records in the DB
@@ -200,7 +218,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person, email="testuser@example.com")
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Mismatch
         person = Storage(first_name = "Other",
@@ -229,7 +247,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person, email="testuser@example.com")
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same names, different email
         person = Storage(first_name = "Test",
@@ -237,7 +255,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person, email="otheremail@example.com")
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same names, same email, but different record
         person = Storage(first_name = "Test",
@@ -245,7 +263,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person, email="otheruser@example.org")
         deduplicate(item)
         self.assertEqual(item.id, self.person2_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Mismatch - First names different
         person = Storage(first_name = "Other",
@@ -256,6 +274,9 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertNotEqual(item.id, self.person2_id)
 
     def testMatchInitials(self):
+
+        s3db = current.s3db
+        from s3.s3import import S3ImportItem
 
         deduplicate = s3db.get_config("pr_person", "deduplicate")
 
@@ -275,7 +296,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person)
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same names, different initials
         person = Storage(first_name="Test",
@@ -284,7 +305,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person)
         deduplicate(item)
         self.assertEqual(item.id, self.person2_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same names, different initials, and email
         person = Storage(first_name="Test",
@@ -293,23 +314,25 @@ class PersonDeduplicateTests(unittest.TestCase):
         item = self.import_item(person, email="testuser@example.org")
         deduplicate(item)
         self.assertEqual(item.id, self.person2_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same initials
         person = Storage(initials="OU")
         item = self.import_item(person)
         deduplicate(item)
         self.assertEqual(item.id, self.person2_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Match - same initials, same email
         person = Storage(initials="TU")
         item = self.import_item(person, email="testuser@example.com")
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
-        self.assertEqual(item.method, s3base.S3ImportItem.METHOD.UPDATE)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
     def testMatchDOB(self):
+
+        s3db = current.s3db
 
         deduplicate = s3db.get_config("pr_person", "deduplicate")
 
@@ -342,13 +365,14 @@ class PersonDeduplicateTests(unittest.TestCase):
     def import_item(self, person, email=None, sms=None):
         """ Construct a fake import item """
 
+        from s3.s3import import S3ImportItem
         def item(tablename, data):
             return Storage(id = None,
                            method = None,
                            tablename = tablename,
                            data = data,
                            components = [],
-                           METHOD = s3base.S3ImportItem.METHOD)
+                           METHOD = S3ImportItem.METHOD)
         import_item = item("pr_person", person)
         if email:
             import_item.components.append(item("pr_contact",
@@ -362,7 +386,7 @@ class PersonDeduplicateTests(unittest.TestCase):
 
     def tearDown(self):
 
-        db.rollback()
+        current.db.rollback()
         self.pe_id = None
         self.person_id = None
 

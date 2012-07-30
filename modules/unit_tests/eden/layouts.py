@@ -32,6 +32,9 @@ class LayoutTests(unittest.TestCase):
 
     def testAddResourceLink(self):
 
+        auth = current.auth
+        deployment_settings = current.deployment_settings
+
         comment = S3AddResourceLink(c="pr", f="person")
 
         # If the module is active, the comment should always be active
@@ -40,7 +43,8 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(comment.method, "create")
 
         # Label should fall back to CRUD string
-        crud_string = s3base.S3CRUD.crud_string("pr_person", "label_create_button")
+        from s3.s3crud import S3CRUD
+        crud_string = S3CRUD.crud_string("pr_person", "label_create_button")
         self.assertEqual(comment.label, crud_string)
 
         if "dvi" in deployment_settings.modules:

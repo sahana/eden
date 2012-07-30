@@ -6,6 +6,7 @@
 # python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3resource.py
 #
 import unittest
+from gluon import *
 
 # =============================================================================
 class S3ResourceExportXMLTests(unittest.TestCase):
@@ -14,8 +15,8 @@ class S3ResourceExportXMLTests(unittest.TestCase):
 
         xml = current.xml
 
-        auth.override = True
-        resource = s3mgr.define_resource("org", "office", id=1)
+        current.auth.override = True
+        resource = current.manager.define_resource("org", "office", id=1)
         tree = resource.export_tree(start=0, limit=1, dereference=False)
 
         root = tree.getroot()
@@ -40,8 +41,8 @@ class S3ResourceExportXMLTests(unittest.TestCase):
 
         xml = current.xml
 
-        auth.override = True
-        resource = s3mgr.define_resource("org", "office", id=1)
+        current.auth.override = True
+        resource = current.manager.define_resource("org", "office", id=1)
         tree = resource.export_tree(start=0, limit=1, dereference=False, maxbounds=True)
         root = tree.getroot()
         attrib = root.attrib

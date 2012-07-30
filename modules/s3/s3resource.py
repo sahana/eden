@@ -2959,7 +2959,8 @@ class S3Resource(object):
             record = Storage()
             for lfield in lfields:
                 record[lfield.colname] = S3FieldSelector.extract(self,
-                                                    row, lfield.selector)
+                                                                 row,
+                                                                 lfield)
             records.append(record)
         return json.dumps(records)
 
@@ -3810,8 +3811,6 @@ class S3FieldSelector:
                       the value from the row otherwise
         """
 
-        if isinstance(field, basestring):
-            field = S3FieldSelector(field)
         if isinstance(field, Field):
             f = field
             colname = str(field)
@@ -4371,9 +4370,9 @@ class S3ResourceQuery:
                 url_query[key] = v
             return url_query
         if op == self.AND:
-            lu = l.serialize_url()
+            lu = l.serialize_url(resource=resource)
             url_query.update(lu)
-            ru = r.serialize_url()
+            ru = r.serialize_url(resource=resource)
             url_query.update(ru)
         elif op == self.OR:
             sub = self._or()
@@ -4383,7 +4382,7 @@ class S3ResourceQuery:
             n, o, v, invert = sub
             _serialize(n, o, v, invert)
         elif op == self.NOT:
-            lu = l.serialize_url()
+            lu = l.serialize_url(resource=resource)
             for k in lu:
                 url_query["%s!" % k] = lu[k]
         elif isinstance(l, S3FieldSelector):
