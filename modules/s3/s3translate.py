@@ -769,6 +769,101 @@ class TranslateReadFiles:
 
 #==============================================================================
 
+class TranslateReportStatus:
+
+
+        def create_master_file(self):
+
+            """ Function to create a master file containing all the strings """
+
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+
+            A = TranslateAPI()
+            modlist = A.get_modules()
+            modlist.append("core")
+            all_strings = []
+            string_dict = {}
+            ind = 0
+
+            for mod in modlist:
+                string_dict[mod] = []
+                strings = A.get_strings_by_module(mod)
+                for (l,s) in strings:
+                    
+                    if (s[0] == '"' and s[-1] == '"') or\
+                       (s[0] == "'" and s[-1] == "'"):
+                        s = s[1:-1]
+
+                    if s not in all_strings:
+                        all_strings.append(s)
+                        string_dict[mod].append(ind)
+                        ind += 1
+                    else:
+                        tmpind = all_strings.index(s)
+                        string_dict[mod].append(tmpind)
+
+            base_dir = os.path.join(os.getcwd(), "applications", \
+                                    current.request.application)
+            data_file = os.path.join(base_dir, "uploads","temp.pkl")
+
+            f = open(data_file, 'wb')
+            pickle.dump(all_strings, f)
+            pickle.dump(string_dict, f)
+            f.close()
+	    
+        def get_percentage_per_module(self, langfile):
+            
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+
+            base_dir = os.path.join(os.getcwd(), "applications", \
+                                    current.request.application)
+            langfile = os.path.join(base_dir, "languages", langfile)
+
+            R = TranslateReadFiles()
+            lang_strings = R.read_w2pfile(langfile)
+
+            translated_strings = []
+            for (s1,s2) in lang_strings:
+
+                if (s1[0] == '"' and s1[-1] == '"') or\
+                   (s1[0] == "'" and s1[-1] == "'"):
+                    s1 = s1[1:-1]
+
+                if (s2[0] == '"' and s2[-1] == '"') or\
+                   (s2[0] == "'" and s2[-1] == "'"):
+                    s2 = s2[1:-1]
+
+                if s1 != s2 and not s2.startswith("*** "):
+                    translated_strings.append(s1)
+
+            data_file = os.path.join(base_dir, "uploads","temp.pkl")
+            f = open(data_file, 'rb')
+            all_strings = pickle.load(f)
+            string_dict = pickle.load(f)
+            f.close()
+
+            percent_dict = {}
+
+            for mod in string_dict.keys():
+
+                count = 0
+
+                for ind in string_dict[mod]:
+                    string = all_strings[ind]
+                    if string in translated_strings:
+                        count += 1
+
+                percent_dict[mod] = (float(count)/len(string_dict[mod]))*100.0
+                print "Module: ",mod,":",percent_dict[mod]
+            
+
+#==============================================================================
 class StringsToExcel:
 
         """Class to convert strings to .xls format"""
@@ -888,8 +983,7 @@ class StringsToExcel:
 
             base_dir = os.path.join(os.getcwd(), "applications", \
                                     current.request.application)
-            langdir = os.path.join(base_dir, "languages")
-            langfile = os.path.join(langdir, langfile)
+            langfile = os.path.join(base_dir, "languages", langfile)
 
             NewStrings = []
             A = TranslateAPI()
@@ -961,8 +1055,7 @@ class CsvToWeb2py:
 
             base_dir = os.path.join(os.getcwd(), "applications",\
                                    current.request.application)
-            langdir = os.path.join(base_dir, "languages")
-            w2pfilename = os.path.join(langdir, w2pfilename)
+            w2pfilename = os.path.join(base_dir, "languages", w2pfilename)
 
             # Dictionary to store (location,translated string)
             # with untranslated string as the key

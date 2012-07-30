@@ -733,7 +733,7 @@ def translate():
     if not request.vars.opt:
         return dict()
 
-    from s3.s3translate import TranslateAPI, StringsToExcel
+    from s3.s3translate import TranslateAPI, StringsToExcel, TranslateReportStatus
     from math import ceil
 
     tablename = "translate_language"
@@ -749,6 +749,8 @@ def translate():
         # If 1st workflow, i.e selecting the modules for translation is selected
         if opt == "1":
 
+            TEMP = TranslateReportStatus()
+            TEMP.get_percentage_per_module("fr.py")
             if form.accepts(request.vars, session):
 
                 modlist = []
