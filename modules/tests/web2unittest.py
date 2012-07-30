@@ -121,6 +121,10 @@ class SeleniumUnitTest(Web2UnitTest):
                                 pass
                             break
                     self.assertTrue(raw_value,"%s option cannot be found in %s" % (el_value, el_id))
+                elif el_type == "checkbox":
+                    for value in el_value:
+                        self.browser.find_element_by_xpath("//label[contains(text(),'%s')]" % value).click()
+                        # @ToDo: Add value to id_data to check for create function
                 elif el_type == "autocomplete":
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
