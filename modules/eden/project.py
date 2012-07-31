@@ -84,6 +84,7 @@ class S3ProjectModel(S3Model):
 
     names = ["project_theme",
              "project_theme_id",
+             "project_theme_opts",
              "project_hazard",
              "project_hfa_opts",
              "project_project",
@@ -375,6 +376,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_sector",
                         label = sector,
                         field = "sector_id",
+                        options = self.org_sector_opts,
                         cols = 4
                     ))
         if mode_drr:
@@ -382,6 +384,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_hazard",
                         label = T("Hazard"),
                         field = "multi_hazard_id",
+                        options = self.project_hazard_opts,
                         help_field="comments",
                         cols = 4
                     ))
@@ -390,6 +393,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_theme",
                         label = T("Theme"),
                         field = "multi_theme_id",
+                        options = self.project_theme_opts,
                         help_field="comments",
                         cols = 4
                     ))
@@ -397,7 +401,8 @@ class S3ProjectModel(S3Model):
             append(S3SearchOptionsWidget(
                         name = "project_search_hfa",
                         label = T("HFA"),
-                        field = "hfa"
+                        field = "hfa",
+                        options = project_hfa_opts,
                     ))
 
         project_search = S3Search(advanced = advanced)
@@ -642,6 +647,7 @@ class S3ProjectModel(S3Model):
             project_multi_activity_type_id = multi_activity_type_id,
             project_theme_id = theme_id,
             project_hfa_opts = project_hfa_opts,
+            project_theme_opts = self.project_theme_opts,
         )
 
     # -------------------------------------------------------------------------
@@ -948,6 +954,38 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def project_hazard_opts():
+        """
+            Provide the options for the Hazard search filter
+        """
+        db = current.db
+        table = db.project_hazard
+        opts = db(table.deleted == False).select(table.id,
+                                                 table.name,
+                                                 orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = opt.name
+        return od
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_theme_opts():
+        """
+            Provide the options for the Theme search filter
+        """
+        db = current.db
+        table = db.project_theme
+        opts = db(table.deleted == False).select(table.id,
+                                                 table.name,
+                                                 orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = opt.name
+        return od
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def project_human_resource_onvalidation(form):
         """
             Prevent the same hrm_human_resource record being added more than
@@ -1110,19 +1148,6 @@ class S3Project3WModel(S3Model):
                         ]
             )
 
-        def project_theme_opts():
-            """
-                Provide the options for the Theme search filter
-            """
-            table = self.project_theme
-            opts = db(table.deleted == False).select(table.id,
-                                                     table.name,
-                                                     orderby=table.name)
-            od = OrderedDict()
-            for opt in opts:
-                od[opt.id] = opt.name
-            return od
-
         if theme_percentages:
             theme_search = S3SearchOptionsWidget(
                     name = "project_location_search_theme",
@@ -1130,7 +1155,7 @@ class S3Project3WModel(S3Model):
                     #field = "multi_theme_percentage_id$theme_id",
                     field = "multi_theme_percentage_id",
                     cols = 1,
-                    options = project_theme_opts,
+                    options = self.project_theme_opts,
                 )
         else:
             theme_search = S3SearchOptionsWidget(
@@ -1138,7 +1163,7 @@ class S3Project3WModel(S3Model):
                     label = T("Theme"),
                     field = "project_id$multi_theme_id",
                     cols = 1,
-                    options = project_theme_opts,
+                    options = self.project_theme_opts,
                 )
         advanced_search = (
             simple,

@@ -67,6 +67,7 @@ class S3OrganisationModel(S3Model):
 
     names = ["org_sector",
              "org_sector_id",
+             "org_sector_opts",
              #"org_subsector",
              "org_organisation_type",
              "org_organisation_type_id",
@@ -626,9 +627,26 @@ class S3OrganisationModel(S3Model):
         #
         return Storage(
                     org_sector_id = sector_id,
+                    org_sector_opts = self.org_sector_opts,
                     org_organisation_type_id = organisation_type_id,
                     org_organisation_id = organisation_id,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_sector_opts():
+        """
+            Provide the options for the Sector search filter
+        """
+        db = current.db
+        table = db.org_sector
+        opts = db(table.deleted == False).select(table.id,
+                                                 table.name,
+                                                 orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = opt.name
+        return od
 
     # -------------------------------------------------------------------------
     @staticmethod
