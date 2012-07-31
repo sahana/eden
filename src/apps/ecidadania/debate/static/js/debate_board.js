@@ -101,6 +101,7 @@ function viewNote(obj) {
     request.done(function(note) {
         $('h3#view-note-title').text(note.title);
         $('p#view-note-desc').html(note.message);
+        $('p#view-note-author').html(note.author.name);
     });
 
     request.fail(function (jqXHR, textStatus) {
@@ -127,8 +128,10 @@ function editNote(obj) {
     });
 
     request.done(function(note) {
-
         $("input[name='notename']").val(note.title);
+        wysieditor.data("wysihtml5").editor.setValue(note.message, true);
+        // If for some reason the WYSIHTML5 editor fails, it will fallback
+        // into a simple textarea that gets shown
         $("textarea#id_note_message").val(note.message);
         $("#last-edited-note").html(noteID);
     });
