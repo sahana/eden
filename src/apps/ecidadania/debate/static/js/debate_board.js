@@ -107,7 +107,7 @@ function viewNote(obj) {
 =======
 
         var html = '';
-        var comment_count = "<h5 class='note-comment-title'>Коментари (" + note.comments.length + ")";
+        var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")";
 for(var i=0; i<note.comments.length; i++) {
             var item = note.comments[i];
         html += "<div class='comment-bubble' id='comment" + i +"'>" + "<p id='username' class='viewer'>"+ item.username + "</p>";
@@ -149,7 +149,6 @@ function editNote(obj) {
         // If for some reason the WYSIHTML5 editor fails, it will fallback
         // into a simple textarea that gets shown
         $("textarea#id_note_message").val(note.message);
-        $("input#message").val(note.message);
     });
 
     request.fail(function (jqXHR, textStatus) {
