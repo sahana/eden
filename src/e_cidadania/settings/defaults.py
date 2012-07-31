@@ -137,6 +137,7 @@ DJANGO_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.messages',
+    'django.contrib.comments',
     'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
