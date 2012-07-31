@@ -101,10 +101,6 @@ function viewNote(obj) {
     request.done(function(note) {
         $('h3#view-note-title').text(note.title);
         $('p#view-note-desc').html(note.message);
-<<<<<<< Updated upstream
-        $('p#view-note-author').html(note.author.name);
-    });
-=======
 
         var html = '';
         var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")";
@@ -118,7 +114,6 @@ for(var i=0; i<note.comments.length; i++) {
         $('span#num-comments').html(comment_count);
         $('form#form_comments div.kopce').html(note.form_html);
    });
->>>>>>> Stashed changes
 
     request.fail(function (jqXHR, textStatus) {
         $('#edit-current-note').modal('hide');

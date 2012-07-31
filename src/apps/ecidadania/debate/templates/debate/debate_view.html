@@ -81,7 +81,11 @@
                                                     <span id="view-note" class="label label-info hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
                                                     {% if note.author == request_user or request_user.is_staff %}
                                                         <span id="edit-note" class="label label-info hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
-                                                    {% endif %}
+																												{% endif %}
+																												<br />{% get_comment_count for note as comment_count %}
+																												<span class="comments">{{ comment_count	}} comments</span>
+																											</div>
+
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
@@ -146,6 +150,7 @@
 											<div id="comments"></div>
                     </div>
 										<div class="modal-footer">
+											{% if user.is_authenticated %}
 <h5 class="note-comment-title">Comment</h5><div id="note-comment">
 <form id="form_comments" action="{% comment_form_target %}" method="post">
    {% csrf_token %}
@@ -159,6 +164,7 @@
    </tr>
 </table>
 </form>
+{% endif %}
                     </div>
                 </div>
 
