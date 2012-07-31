@@ -707,7 +707,7 @@ class S3LocationTagModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
-                    gis_country_opts = gis_country_opts,
+                    gis_country_opts = self.gis_country_opts,
                 )
 
     # -------------------------------------------------------------------------
