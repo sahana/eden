@@ -1016,6 +1016,8 @@ class S3Resource(object):
         else:
             return False
 
+        tablename = self.tablename
+
         self.load()
         for record in self._rows:
 
@@ -1028,6 +1030,11 @@ class S3Resource(object):
                 if not success:
                     db.rollback()
                     return False
+                else:
+                    onapprove = current.s3db.get_config(tablename,
+                                                        "onapprove", None)
+                    if onapprove is not None:
+                        callback(onapprove, record, tablename=tablename)
             if components is None:
                 continue
             for alias in self.components:
