@@ -360,13 +360,24 @@ class S3ProjectModel(S3Model):
                                  "description",
                                 ]
                         ),
-                    S3SearchOptionsWidget(
-                        name = "project_search_country",
-                        label = T("Countries"),
-                        field = "countries_id",
-                    )]
+                    ]
         append = advanced.append
 
+        if mode_3w:
+            countries = settings.get_gis_countries()
+            if countries:
+                append(S3SearchOptionsWidget(
+                            name = "project_search_country",
+                            label = T("Countries"),
+                            field = "countries_id",
+                            options = self.gis_country_opts(countries),
+                        ))
+            else:
+                append(S3SearchOptionsWidget(
+                            name = "project_search_country",
+                            label = T("Countries"),
+                            field = "countries_id",
+                        ))
         if use_sectors:
             if settings.get_ui_cluster():
                 sector = T("Cluster")

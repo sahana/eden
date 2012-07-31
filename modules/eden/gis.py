@@ -667,7 +667,9 @@ class S3LocationTagModel(S3Model):
         - flexible Key-Value component attributes to Locations
     """
 
-    names = ["gis_location_tag"]
+    names = ["gis_location_tag",
+             "gis_country_opts",
+            ]
 
     def model(self):
 
@@ -705,7 +707,31 @@ class S3LocationTagModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
+                    gis_country_opts = gis_country_opts,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_country_opts(countries):
+        """
+            Provide the options for a Search widget
+            - countries is a list of ISO2 codes
+            - normally provided via settings.get_gis_countries()
+        """
+
+        db = current.db
+        table = db.gis_location
+        ttable = db.gis_location_tag
+        query = (ttable.tag == "ISO2") & \
+                (ttable.value.belongs(countries)) & \
+                (ttable.location_id == table.id)
+        opts = db(query).select(table.id,
+                                table.name,
+                                orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = opt.name
+        return od
 
     # -------------------------------------------------------------------------
     @staticmethod
