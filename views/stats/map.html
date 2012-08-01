@@ -1,0 +1,734 @@
+{{extend "stats/layout.html"}}
+<div id="map"></div>
+<section id="mapKey">
+    <div id="logo">
+        <h1>Vulnerability Mapping</h1>
+    </div>
+    <h3>LEGEND</h3>
+    <section id="resilienceKey">
+        <input type="checkbox" name="resilience" value="resilience" id="resilienceCheck" checked />
+        <div id="resilienceLabel">
+            <label for="resilienceCheck">RESILIENCE</label>
+            <p><a class="calculationLink" href="#calculation" title="See how it's calculated"><span class="arrow">&rarr;</span> Calculation</a></p>
+        </div>
+        <div id="colorBlocks">
+            <div id="redsquare">1</div>
+            <div id="orangesquare">2</div>
+            <div id="yellowsquare">3</div>
+            <div id="greensquare">4</div>
+            <div id="darkgreensquare">5</div>
+            <div id="lowLabel">LOW</div>
+            <div id="highLabel">HIGH</div>
+        </div>
+        <div id="noDataBlock">
+            <div id="nodatasquare"></div>
+            <div id="noDataLabel">No Data</div>
+        </div>
+    </section>
+    <section id="populationKey">
+        <input type="checkbox" name="population" id="populationCheck" value="population" />
+        <label for="populationCheck">POPULATION DENSITY</label>
+        <div id="populationBlocks">
+            <div id="blockOne">
+                <div class="block"></div>
+                <div class="label">0</div>
+            </div>
+            <div id="blockTwo">
+                <div class="block"></div>
+                <div class="label">1&ndash;4</div>
+            </div>
+            <div id="blockThree">
+                <div class="block"></div>
+                <div class="label">5&ndash;24</div>
+            </div>
+            <div id="blockFour">
+                <div class="block"></div>
+                <div class="label">25-249</div>
+            </div>
+            <div id="blockFive">
+                <div class="block"></div>
+                <div class="label">250&ndash;999</div>
+            </div>
+            <div id="blockSix">
+                <div class="block"></div>
+                <div class="label">1000+</div>
+            </div>
+        </div>
+    </section>
+    <section id="iconsKey">
+        <input type="checkbox" name="icons" id="iconsCheck" value="icons" onChange="toggleIconLayer()" />
+        <label for="iconsCheck">ICONS</label>
+        <div class="iconSection" id="volunteerSection">Volunteer</div>
+        <div class="iconSection" id="mapSection">Map</div>
+    </section>
+    <div id="iconsBlocker"></div>
+</section> <!-- End of map key -->
+<div id="topbar" class="transparent"></div>
+
+<!-- <div id="timeline">
+    <label for="amount"></label>
+    <input type="text" id="amount" style="border:0; color:#f6931f; font-weight:bold;" />
+    <div id="timelineSlider"></div>
+</div> -->
+
+<section id="drawer" class="transparent">
+    <div id="risingTab"></div>
+    <div id="drawerContent">
+        <div id="drawerSpacer"></div>
+        <div id="drawerTop">
+            <div id="indicator">5</div>
+            <h1><span class="geoName">Vietnam</span> <span class="geoType">Country in</span> <span class="year">2010</span></h1>
+            <div id="show-hide" class="showMore"><span class="arrow">&uarr;</span> SHOW MORE</div>
+            <div id="divider">|</div>
+            <div id="analysisLink">
+                <a href="/{{=appname}}/static/img/stats/temp/analysis1.jpeg" title="Go to analysis">GO TO ANALYSIS</a>
+            </div>
+            <div id="search">
+                <input class="rounded" type="text" name="search" />
+                <div id="searchSubmit"></div>
+            </div>
+        </div>  <!-- end of drawerTop div -->
+        <div id="drawerInside" class="hidden">
+            <div id="drawerSpacer2">&nbsp;</div>
+            <ul id="drawerQuickActions" class="hidden">
+                <li><a href="/{{=appname}}/static/img/stats/temp/Reports_allReports_approvalPending.jpeg" class="reportsLink" title="View Reports"> View Reports</a>&nbsp;&nbsp;|</li>
+                <li><a href="/{{=appname}}/static/img/stats/temp/submitData_CSV_submission.jpeg" class="dataLink" title="Submit Data">Submit data to the region</a>&nbsp;&nbsp;|</li>
+                <li id="subGeo">
+                    <span id="subGeoReported">8 Provinces Reported</span>
+                    <div id="subGeoPopup" class="popup">
+                        <div class="popupContent">
+                            <ul>
+                                <li>
+                                    <div class="ratingBox4">4</div><p>Name of a subregion</p>
+                                </li>
+                                <li>
+                                    <div class="ratingBox1">1</div><p>Another subregion</p>
+                                </li>
+                                <li>
+                                    <div class="ratingBox3">3</div><p>Another subregion</p>
+                                </li>
+                                <li>
+                                    <div class="ratingBox2">2</div><p>Name of a subregion</p>
+                                </li>
+                                <li>
+                                    <div class="ratingBox3">3</div><p>Another subregion</p>
+                                </li>
+                                <li>
+                                    <div class="ratingBox5">5</div><p>Another subregion</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="popupBottom"></div>
+                    </div>
+                </li>
+            </ul>
+            <section id="resilienceSummary" class="hidden">
+                <h2 class="eleven">OVERALL RESILIENCE</h2>
+                <ul>
+                    <li class="eleven"><a class="calculationLink" href="#calculations" title="See how it's calculated"><span class="arrow">&rarr;</span> Calculation</a></li>
+                    <li id="mainRating">5</li>
+                </ul>
+            </section>
+            <section id="dataBreakdown" class="hidden">
+                <h2>DATA QUALITY</h2>
+                <ul>
+                    <li id="qualityDescription" class="noCommune">
+                        <div id="poor" class="currentQuality">POOR
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>POOR</h3>
+                                    <p>0&ndash;25% of total data reported.</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div> | 
+                        <div id="fair">FAIR
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>FAIR</h3>
+                                    <p>25&ndash;50% of total data reported.</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div> | 
+                        <div id="moderate">MODERATE
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>MODERATE</h3>
+                                    <p>50&ndash;75% of total data reported.</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div> | 
+                        <div id="strong">STRONG
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>STRONG</h3>
+                                    <p>75&ndash;100% of total data reported.</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="qualityCommunes">36 out of 397 Communes Reported</li>
+                    <li id="populationCount">
+                        <p>POPULATION:</p>
+                        <div class="statistic">
+                            <div class="listText">862,000</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: 1989 Vietnam Population Census</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="maleCount" class="communeOnly">
+                        <p>Male:</p> 
+                        <div class="statistic">
+                            <div class="listText">298</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: 1989 Vietnam Population Census</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="femaleCount" class="communeOnly">
+                        <p>Female:</p>
+                        <div class="statistic">
+                            <div class="listText">291</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: 1989 Vietnam Population Census</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="seniorCount" class="communeOnly">
+                        <p>Over 60:</p>
+                        <div class="statistic">
+                            <div class="listText">208</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: General Statistical Office published data for 1992</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="childCount" class="communeOnly">
+                        <p>Under 5:</p>
+                        <div class="statistic">
+                            <div class="listText">105</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: General Statistical Office published data for 1992</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="houseCount" class="communeOnly">
+                        <p>Households:</p>
+                        <div class="statistic">
+                            <div class="listText">127</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: 1993 Vietnam Living Standards Survey</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="povertyCount" class="communeOnly">
+                        <p>Households under <br />poverty line:</p>
+                        <div class="statistic">
+                            <div class="listText">101</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <p>Source: 1993 Vietnam Living Standards Survey</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+            <figure id="indicatorRatingChart" class="hidden">
+                <h2>INDICATOR RATINGS</h2>
+                <div id="chartKey"><img src="/{{=appname}}/static/img/stats/legend_medianPng8.png" alt="Median and Range symbols" /></div>
+                <div id="chartDropdown">
+                    <select id="chartSwitcher" onChange="updateChart(this.options[this.selectedIndex].value, false);">
+                        <option value="0">Current Location</option>
+                    </select>
+                </div>
+                <div id="chartLabel1">1</div>
+                <div id="chartLabel2">2</div>
+                <div id="chartLabel3">3</div>
+                <div id="chartLabel4">4</div>
+                <div id="chartLabel5">5</div>
+                <ul>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator "Zero"</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator "Zero"</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange0">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator One</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator One</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange1">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Two</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Two</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange2">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Three</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Three</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange3">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Four</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Four</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange4">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Five</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Five</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange5">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Six</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Six</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange6">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Seven</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Seven</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange7">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Eight</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Eight</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange8">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="indicatorRatingLabel">
+                            <div class="listText">Indicator Nine</div>
+                            <div class="popup">
+                                <div class="popupContent">
+                                    <h3>Indicator Nine</h3>
+                                    <p>Description of indicator. Lorem ipsum dolor sit amet, consectetur adipiscing elit. In dictum fringilia velit...</p>
+                                </div>
+                                <div class="popupBottom"></div>
+                            </div>
+                        </div>
+                        <div class="visRange">
+                            <div class="indicatorRange" id="visRange9">
+                                <div class="leftBox"></div>
+                                <div class="medianDot"></div>
+                                <div class="rightBox"></div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </figure>
+            <section id="browseOtherRegions" class="hidden">
+                <h2>BROWSE OTHER REGIONS</h2>
+                <ul>
+                    <li id="l0"><label for="l0_select">COUNTRY:</label> 
+                        <select id="l0_select" onChange="refreshDropdowns('l0_select')">
+                            <option value="na" class="none">Choose Country</option>
+                            <option value="vietnam" selected="selected" class="three">Vietnam</option>
+                            <option value="another" class="five">Another Country</option>
+                            <option value="yetAnother" class="one">Yet Another</option>
+                        </select>
+                    </li>
+                    <li id="l1"><label for="l1_select">PROVINCE:</label>
+                        <select id="l1_select" onChange="refreshDropdowns('l1_select')">
+                            <option value="na" selected="selected" class="none">Choose Province</option>
+                            <option value="phuYen" class="four">Phu Yen</option>
+                            <option value="another province" class="two">Another Province</option>
+                            <option value="yet another" class="two">Yet Another</option>
+                        </select>
+                    </li>
+                    <li id="l2" class="hiddenDropdown"><label for="l2_select">DISTRICT:</label>
+                        <select id="l2_select" onChange="refreshDropdowns('l2_select')">
+                            <option value="na" class="none" selected="selected">Choose district</option>
+                            <option value="district one" class="three">District One</option>
+                            <option value="another" class="two">Another</option>
+                        </select>
+                    </li>
+                    <li id="l3" class="hiddenDropdown"><label for="l3_select">COMMUNE:</label>
+                        <select id="l3_select" onChange="refreshDropdowns('l3_select')">
+                            <option value="na" class="none">Choose commune</option>
+                            <option value="commune one" class="four">Commune One</option>
+                            <option value="another" class="five">Another</option>
+                        </select>
+                    </li>
+                    <li id="l4" class="hiddenDropdown"><label for="l4_select">DISTRICT:</label>
+                        <select id="l4_select" onChange="refreshDropdowns('l4_select')">
+                            <option value="na" class="none">Choose commune</option>
+                            <option value="another" class="four">Commune One</option>
+                            <option value="yetAnother" class="one">Another</option>
+                        </select>
+                    </li>
+                    <li id="l5" class="hiddenDropdown"><label for="l5_select">DISTRICT:</label>
+                        <select id="l5_select" onChange="refreshDropdowns('l5_select')">
+                            <option value="na" class="none">Choose commune</option>
+                            <option value="another" class="four">Commune One</option>
+                            <option value="yetAnother" class="two">Another</option>
+                        </select>
+                    </li>
+                </ul>
+                <a id="newRegion" href="javascript:setLevel()" title="Go to the region">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+            </section>
+        </div>
+    </div>
+</section>
+
+<!-- Here are infoWindow layouts -->
+<section class="infoWindow countryWindow">
+    <div class="infoWindowMain">
+        <div class="closePanel"></div>
+        <div class="subGeoIndicator">4</div>
+        <h2 class="subGeoName">Vietnam</h2>
+        <h2 class="subGeoType">Country</h2>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <h3>DATA QUALITY:</h3>
+        <div class="windowQualityRatings">
+            <div class="poor">POOR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>POOR</h3>
+                        <p>0&ndash;25% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="fair currentQuality">FAIR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>FAIR</h3>
+                        <p>25&ndash;50% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="moderate">MODERATE
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>MODERATE</h3>
+                        <p>50&ndash;75% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="strong">STRONG
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>STRONG</h3>
+                        <p>75&ndash;100% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div>
+        </div>
+        <div class="subGeoCommunesReported">200 out of 700 Communes Reported</div>
+        <h3>POPULATION: 862,000</h3>
+        <h3>PROVINCES IN THIS COUNTRY:</h3>
+        <select class="subGeoSelect">
+            <option value="TuyHoa" class="three">Phu Yen</option>
+            <option value="Anotherprovince" class="four">Another Province</option>
+            <option value="another" class="two">Another</option>
+        </select>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <div class="infoWindowButtons">
+            <div class="subGeoSubmitDataButton">Submit Data</div>
+            <div class="subGeoAnalysisButton">Analysis</div>
+            <div class="subGeoReportsButton">Reports</div>
+        </div>
+    </div>
+    <div class="rightCorner"></div>
+</section>
+<section class="infoWindow provinceWindow activeWindow">
+    <div class="infoWindowMain">
+        <div class="closePanel"></div>
+        <div class="subGeoIndicator">4</div>
+        <h2 class="subGeoName">Phu Yen</h2>
+        <h2 class="subGeoType">Province</h2>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <h3>DATA QUALITY:</h3>
+        <div class="windowQualityRatings">
+            <div class="poor">POOR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>POOR</h3>
+                        <p>0&ndash;25% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="fair currentQuality">FAIR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>FAIR</h3>
+                        <p>25&ndash;50% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="moderate">MODERATE
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>MODERATE</h3>
+                        <p>50&ndash;75% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="strong">STRONG
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>STRONG</h3>
+                        <p>75&ndash;100% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div>
+        </div>
+        <div class="subGeoCommunesReported">200 out of 700 Communes Reported</div>
+        <h3>POPULATION: 862,000</h3>
+        <h3>DISTRICTS IN THIS PROVINCE:</h3>
+        <select class="subGeoSelect">
+            <option value="TuyHoa" class="three">Tuy Hoa</option>
+            <option value="Anotherdistrict" class="four">Another district</option>
+            <option value="another" class="two">Another</option>
+        </select>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <div class="infoWindowButtons">
+            <div class="subGeoSubmitDataButton">Submit Data</div>
+            <div class="subGeoAnalysisButton">Analysis</div>
+            <div class="subGeoReportsButton">Reports</div>
+        </div>
+    </div>
+    <div class="rightCorner"></div>
+</section>
+<section class="infoWindow districtWindow">
+    <div class="infoWindowMain">
+        <div class="closePanel"></div>
+        <div class="subGeoIndicator">2</div>
+        <h2 class="subGeoName">Tuy Hoa</h2>
+        <h2 class="subGeoType">District</h2>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <h3>DATA QUALITY:</h3>
+        <div class="windowQualityRatings">
+            <div class="poor">POOR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>POOR</h3>
+                        <p>0&ndash;25% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="fair">FAIR
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>FAIR</h3>
+                        <p>25&ndash;50% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="moderate currentQuality">MODERATE
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>MODERATE</h3>
+                        <p>50&ndash;75% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div> | 
+            <div class="strong">STRONG
+                <div class="popup">
+                    <div class="popupContent">
+                        <h3>STRONG</h3>
+                        <p>75&ndash;100% of total data reported.</p>
+                    </div>
+                    <div class="popupBottom"></div>
+                </div>
+            </div>
+        </div>
+        <div class="subGeoCommunesReported">8 out of 10 Communes Reported</div>
+        <h3>POPULATION: 152,113</h3>
+        <h3>COMMUNES IN THIS DISTRICT:</h3>
+        <select class="subGeoSelect">
+            <option value="hoatam" class="three">Hoa Tam</option>
+            <option value="Another commune" class="four">Another commune</option>
+            <option value="another" class="two">Another</option>
+        </select>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <div class="infoWindowImages">
+            <img class="firstImage" src="/{{=appname}}/static/img/stats/temp/map1thumb.jpg" alt="image thumbnail" />
+            <img class="secondImage" src="/{{=appname}}/static/img/stats/temp/map1thumb.jpg" alt="image thumbnail" />
+        </div>
+        <div class="infoWindowButtons">
+            <div class="subGeoSubmitDataButton">Submit Data</div>
+            <div class="subGeoAnalysisButton">Analysis</div>
+            <div class="subGeoReportsButton">Reports</div>
+        </div>
+    </div>
+    <div class="rightCorner"></div>
+</section>
+<section class="infoWindow communeWindow">
+    <div class="infoWindowMain">
+        <div class="closePanel"></div>
+        <div class="subGeoIndicator">3</div>
+        <h2 class="subGeoName">Hoa Tam</h2>
+        <h2 class="subGeoType">Commune</h2>
+        <a class="goToSubRegion" href="#dostuff">GO TO THE REGION <span class="arrow">&rarr;</span></a>
+        <div class="windowQualityRatings">Last Data Collected on 7/3/11 by Tina Pham</div>
+        <h3>POPULATION: 589</h3>
+        <div class="infoWindowImages">
+            <img class="firstImage" src="/{{=appname}}/static/img/stats/temp/map1thumb.jpg" alt="image thumbnail" />
+            <img class="secondImage" src="/{{=appname}}/static/img/stats/temp/map1thumb.jpg" alt="image thumbnail" />
+        </div>
+        <div class="infoWindowButtons">
+            <div class="subGeoSubmitDataButton">Submit Data</div>
+            <div class="subGeoAnalysisButton">Analysis</div>
+            <div class="subGeoReportsButton">Reports</div>
+        </div>
+    </div>
+    <div class="rightCorner"></div>
+</section>

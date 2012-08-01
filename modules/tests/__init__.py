@@ -1,3 +1,4 @@
+from auth import *
 from core import *
 from org import *
 from hrm import *
