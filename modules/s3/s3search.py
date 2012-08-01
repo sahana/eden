@@ -1267,7 +1267,12 @@ class S3Search(S3CRUD):
                                            simple_form,
                                            advanced_form,
                                            form_values)
+
+        search_url = None
         if not errors:
+            if hasattr(query, "serialize_url"):
+                search_url = r.url(method = "",
+                                   vars = query.serialize_url(resource))
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
@@ -1385,7 +1390,18 @@ class S3Search(S3CRUD):
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
-            list_formats = DIV(T("Export to:"),
+
+            # Permalink
+            if search_url:
+                link = A(T("Link to this result"),
+                         _href=search_url,
+                         _class="permalink")
+                sep = " | "
+            else:
+                link = sep = ""
+
+            list_formats = DIV(link, sep,
+                               "%s: " % T("Export to"),
                                A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
                                  _href=r.url(method="", representation="pdf",

@@ -2264,6 +2264,18 @@ class S3RecordApprovalTests(unittest.TestCase):
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
+        self.approved_org = None
+        def org_onapprove_test(record):
+            self.approved_org = record.id
+        org_onapprove = s3db.get_config("org_organisation", "onapprove")
+        s3db.configure("org_organisation", onapprove=org_onapprove_test)
+
+        self.approved_off = None
+        def off_onapprove_test(record):
+            self.approved_off = record.id
+        off_onapprove = s3db.get_config("org_office", "onapprove")
+        s3db.configure("org_office", onapprove=off_onapprove_test)
+
         try:
             # Set record approval on
             deployment_settings.auth.record_approval = True
@@ -2323,10 +2335,19 @@ class S3RecordApprovalTests(unittest.TestCase):
             self.assertTrue(approved(ftable, office_id))
             self.assertFalse(unapproved(ftable, office_id))
 
+            # Check hooks
+            self.assertEqual(self.approved_org, org_id)
+            self.assertEqual(self.approved_off, office_id)
+
         finally:
             current.db.rollback()
             deployment_settings.auth.record_approval = False
             auth.s3_impersonate(None)
+
+            if org_onapprove is not None:
+                s3db.configure("org_organisation", onapprove=org_onapprove)
+            if off_onapprove is not None:
+                s3db.configure("org_office", onapprove=off_onapprove)
 
     def testRecordApprovalWithoutComponents(self):
         """ Test record approval without components"""
