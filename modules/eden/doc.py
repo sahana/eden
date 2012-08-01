@@ -311,11 +311,16 @@ class S3DocumentLibrary(S3Model):
     def document_onvalidation(form, document=True):
         """ Form validation for both, documents and images """
 
+        vars = form.vars
+        doc = vars.file
+        if isinstance(doc, NoneType):
+            # This is a prepop, so file not in form
+            return
+
         import cgi
 
         T = current.T
         db = current.db
-        vars = form.vars
 
         if document:
             tablename = "doc_document"
@@ -326,7 +331,6 @@ class S3DocumentLibrary(S3Model):
 
         table = db[tablename]
 
-        doc = vars.file
         url = vars.url
         if not hasattr(doc, "file"):
             id = current.request.post_vars.id
@@ -341,23 +345,24 @@ class S3DocumentLibrary(S3Model):
             form.errors.url = msg
 
         # Do a checksum on the file to see if it's a duplicate
-        if isinstance(doc, cgi.FieldStorage) and doc.filename:
-            f = doc.file
-            vars.checksum = doc_checksum(f.read())
-            f.seek(0)
-            if not vars.name:
-                vars.name = doc.filename
+        #if isinstance(doc, cgi.FieldStorage) and doc.filename:
+        #    f = doc.file
+        #    vars.checksum = doc_checksum(f.read())
+        #    f.seek(0)
+        #    if not vars.name:
+        #        vars.name = doc.filename
 
-        if vars.checksum is not None:
-            # Duplicate allowed if original version is deleted
-            query = ((table.checksum == vars.checksum) & \
-                     (table.deleted == False))
-            result = db(query).select(table.name,
-                                      limitby=(0, 1)).first()
-            if result:
-                doc_name = result.name
-                form.errors["file"] = "%s %s" % \
-                                      (T("This file already exists on the server as"), doc_name)
+        #if vars.checksum is not None:
+        #    # Duplicate allowed if original version is deleted
+        #    query = ((table.checksum == vars.checksum) & \
+        #             (table.deleted == False))
+        #    result = db(query).select(table.name,
+        #                              limitby=(0, 1)).first()
+        #    if result:
+        #        doc_name = result.name
+        #        form.errors["file"] = "%s %s" % \
+        #                              (T("This file already exists on the server as"), doc_name)
+
         return
 
 # =============================================================================

@@ -61,8 +61,6 @@ class S3FireStationModel(S3Model):
         ireport_id = self.irs_ireport_id
         vehicle_id = self.vehicle_vehicle_id
 
-        s3_utc_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-
         add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -255,16 +253,14 @@ class S3FireStationModel(S3Model):
         table = define_table(tablename,
                              station_id(),
                              Field("name"),
-                             Field("start_time", "datetime",
-                                   requires = IS_UTC_DATETIME_IN_RANGE(),
-                                   widget = S3DateTimeWidget(),
-                                   default = request.utcnow,
-                                   represent = s3_utc_represent),
-                             Field("end_time","datetime",
-                                   requires = IS_UTC_DATETIME_IN_RANGE(),
-                                   widget = S3DateTimeWidget(),
-                                   default = request.utcnow,
-                                   represent = s3_utc_represent),
+                             s3_datetime("start_time",
+                                         empty=False,
+                                         default="now"
+                                         ),
+                             s3_datetime("end_time",
+                                         empty=False,
+                                         default="now"
+                                         ),
                              *s3_meta_fields())
 
         shift_id = S3ReusableField("shift_id", table,

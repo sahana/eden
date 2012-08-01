@@ -2663,9 +2663,6 @@ class S3ProjectTaskModel(S3Model):
 
         project_id = self.project_project_id
 
-        s3_utc_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
-
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
@@ -2812,18 +2809,14 @@ class S3ProjectTaskModel(S3Model):
                                         #              _title="%s|%s" % (T("Assigned to"),
                                         #                                T("Enter some characters to bring up a list of possible matches")))
                                         ),
-                             Field("date_due", "datetime",
-                                   label = T("Date Due"),
-                                   readable = staff,
-                                   writable = staff,
-                                   requires = [IS_EMPTY_OR(
-                                               IS_UTC_DATETIME_IN_RANGE(
-                                                   minimum=request.utcnow - datetime.timedelta(days=1),
-                                                   error_message="%s %%(min)s!" %
-                                                                 T("Enter a valid future date")))],
-                                   widget = S3DateTimeWidget(past=0,
-                                                             future=8760),  # Hours, so 1 year
-                                   represent = s3_date_represent),
+                             s3_datetime("date_due",
+                                         label = T("Date Due"),
+                                         past=0,
+                                         future=8760,  # Hours, so 1 year
+                                         represent="date",
+                                         readable = staff,
+                                         writable = staff,
+                                         ),
                              milestone_id(
                                    readable = milestones and staff,
                                    writable = milestones and staff,
@@ -2856,7 +2849,8 @@ class S3ProjectTaskModel(S3Model):
         # Comment these if you don't need a Site associated with Tasks
         #table.site_id.readable = table.site_id.writable = True
         #table.site_id.label = T("Check-in at Facility") # T("Managing Office")
-        table.created_on.represent = s3_date_represent
+        table.created_on.represent = lambda dt: \
+                                        S3DateTime.date_represent(dt, utc=True)
 
         # CRUD Strings
         ADD_TASK = T("Add Task")
@@ -3114,13 +3108,10 @@ class S3ProjectTaskModel(S3Model):
         table = define_table(tablename,
                              task_id(),
                              self.pr_person_id(default=auth.s3_logged_in_person()),
-                             Field("date", "datetime",
-                                   label = T("Date"),
-                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME()),
-                                   represent = s3_utc_represent,
-                                   widget = S3DateTimeWidget(past=8760, # Hours, so 1 year
-                                                             future=0),
-                                   default = request.utcnow),
+                             s3_datetime(default="now",
+                                         past=8760, # Hours, so 1 year
+                                         future=0
+                                         ),
                              Field("hours", "double",
                                    label = "%s (%s)" % (T("Time"),
                                                         T("hours")),

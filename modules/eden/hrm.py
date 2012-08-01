@@ -3069,31 +3069,35 @@ def hrm_human_resource_onaccept(form):
     site_id = record.site_id
     site_contact = record.site_contact
     ptable = db.pr_person
-    if record.type == 1 and site_id:
+    if record.type == 1:
         # Staff
         # Add/update the record in the link table
         hstable = s3db.hrm_human_resource_site
         query = (hstable.human_resource_id == id)
-        this = db(query).select(hstable.id,
-                                limitby=(0, 1)).first()
-        if this:
-            db(query).update(site_id=site_id,
-                             human_resource_id=id,
-                             site_contact=site_contact)
+        if site_id:
+            this = db(query).select(hstable.id,
+                                    limitby=(0, 1)).first()
+            if this:
+                db(query).update(site_id=site_id,
+                                 human_resource_id=id,
+                                 site_contact=site_contact)
+            else:
+                hstable.insert(site_id=site_id,
+                               human_resource_id=id,
+                               site_contact=site_contact)
+            # Update the location ID from the selected site
+            stable = s3db.org_site
+            query = (stable._id == site_id)
+            site = db(query).select(stable.location_id,
+                                    limitby=(0, 1)).first()
+            try:
+                data.location_id = site.location_id
+            except:
+                # Site not found?
+                pass
         else:
-            hstable.insert(site_id=site_id,
-                           human_resource_id=id,
-                           site_contact=site_contact)
-        # Update the location ID from the selected site
-        stable = s3db.org_site
-        query = (stable._id == site_id)
-        site = db(query).select(stable.location_id,
-                                limitby=(0, 1)).first()
-        try:
-            data.location_id = site.location_id
-        except:
-            # Site not found?
-            pass
+            db(query).delete()
+            data["location_id"] = None
     elif record.type == 2:
         # Volunteer: synchronise the location ID with the Home Address
         atable = s3db.pr_address
@@ -3149,9 +3153,8 @@ def hrm_human_resource_onaccept(form):
     if data:
         record.update_record(**data)
 
-        if data.location_id:
-            # Populate the Lx fields
-            s3_lx_update(ptable, person_id)
+        # Populate the Lx fields
+        s3_lx_update(ptable, person_id)
 
     if user and record.organisation_id:
         profile = dict()

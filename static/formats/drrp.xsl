@@ -317,7 +317,9 @@
                     <xsl:value-of select="reference[field='project_id']/@uuid"/>
                 </xsl:attribute>
                 <data field="file">
-                    <xsl:attribute name="filename">DUMMY</xsl:attribute>
+                    <xsl:attribute name="filename">
+                        <xsl:value-of select="concat('doc_document', substring-after($File, '/download/drrpp_file'))"/>
+                    </xsl:attribute>
                     <xsl:attribute name="url">
                         <xsl:text>local</xsl:text>
                     </xsl:attribute>
