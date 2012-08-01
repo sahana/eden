@@ -149,11 +149,12 @@ class S3DocumentLibrary(S3Model):
             msg_list_empty = T("No Documents found")
         )
 
-        # Search Method?
+        # Search Method
 
         # Resource Configuration
         configure(tablename,
                   super_entity = "doc_source_entity",
+                  deduplicate=self.document_duplicate,
                   onvalidation=self.document_onvalidation)
 
         # ---------------------------------------------------------------------
@@ -231,6 +232,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  deduplicate=self.document_duplicate,
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
         # ---------------------------------------------------------------------
@@ -254,6 +256,36 @@ class S3DocumentLibrary(S3Model):
                      _href=URL(c="default", f="download", args=[file]))
         else:
             return current.messages.NONE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def document_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename not in ("doc_document", "doc_image"):
+            return
+
+        data = item.data
+        query = None
+        file = data.get("file", None)
+        if file:
+            table = item.table
+            query = (table.file == file)
+        else:
+            url = data.get("url", None)
+            if url:
+                table = item.table
+                query = (table.url == url)
+
+        if query:
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod

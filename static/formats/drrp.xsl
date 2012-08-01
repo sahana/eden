@@ -26,7 +26,7 @@
         <xsl:for-each select="//resource[@name='drrpp_file']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
-        <xsl:for-each select="//resource[@name='framework_file']">
+        <xsl:for-each select="//resource[@name='drrpp_framework_file']">
             <xsl:apply-templates select="."/>
         </xsl:for-each>
         <xsl:for-each select="//resource[@name='drrpp_framework']">
@@ -107,6 +107,12 @@
             <xsl:attribute name="modified_by">
                 <xsl:value-of select="@modified_by"/>
             </xsl:attribute>
+
+            <xsl:if test="data[@field='approved']='True'">
+                <xsl:attribute name="approved_by">
+                    <xsl:value-of select="@modified_by"/>
+                </xsl:attribute>
+            </xsl:if>
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
             <data field="code"><xsl:value-of select="data[@field='short_title']"/></data>
@@ -299,41 +305,48 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_file']">
+    
+        <xsl:variable name="File" select="data[@field='file']"/>
 
         <resource name="doc_document">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="substring-after($File, '/download/')"/>
+            </xsl:attribute>
             <reference field="doc_id" resource="project_project">
-                <!--@ToDo -->
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="reference[field='project_id']/@uuid"/>
+                </xsl:attribute>
+                <data field="file">
+                    <xsl:attribute name="filename">DUMMY</xsl:attribute>
+                    <xsl:attribute name="url">
+                        <xsl:text>local</xsl:text>
+                    </xsl:attribute>
+                </data>
             </reference>
-            <data field="name"><xsl:value-of select="data[@field='file']"/></data>
-            <data field="comments"><xsl:value-of select="data[@field='comment']"/></data>
-            <data field="file">
-                <xsl:attribute name="filename">
-                    <xsl:value-of select="data[@field='file']"/>
-                </xsl:attribute>
-                <xsl:attribute name="url">
-                    <xsl:text>local</xsl:text>
-                </xsl:attribute>
-            </data>
         </resource>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template match="resource[@name='framework_file']">
+    <xsl:template match="resource[@name='drrpp_framework_file']">
+
+        <xsl:variable name="File" select="data[@field='file']"/>
 
         <resource name="doc_document">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="substring-after($File, '/download/')"/>
+            </xsl:attribute>
             <reference field="doc_id" resource="project_framework">
-                <!--@ToDo -->
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="reference[field='framework_id']/@uuid"/>
+                </xsl:attribute>
+                <data field="file">
+                    <xsl:attribute name="filename">DUMMY</xsl:attribute>
+                    <xsl:attribute name="url">
+                        <xsl:text>local</xsl:text>
+                    </xsl:attribute>
+                </data>
             </reference>
-            <data field="name"><xsl:value-of select="data[@field='file']"/></data>
-            <data field="file">
-                <xsl:attribute name="filename">
-                    <xsl:value-of select="data[@field='file']"/>
-                </xsl:attribute>
-                <xsl:attribute name="url">
-                    <xsl:text>local</xsl:text>
-                </xsl:attribute>
-            </data>
         </resource>
 
     </xsl:template>
@@ -342,6 +355,29 @@
     <xsl:template match="resource[@name='drrpp_framework']">
 
         <resource name="project_framework">
+
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="@uuid"/>
+            </xsl:attribute>
+            <xsl:attribute name="created_on">
+                <xsl:value-of select="@created_on"/>
+            </xsl:attribute>
+            <xsl:attribute name="modified_on">
+                <xsl:value-of select="@modified_on"/>
+            </xsl:attribute>
+            <xsl:attribute name="created_by">
+                <xsl:value-of select="@created_by"/>
+            </xsl:attribute>
+            <xsl:attribute name="modified_by">
+                <xsl:value-of select="@modified_by"/>
+            </xsl:attribute>
+
+            <xsl:if test="data[@field='approved']='True'">
+                <xsl:attribute name="approved_by">
+                    <xsl:value-of select="@modified_by"/>
+                </xsl:attribute>
+            </xsl:if>
+
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
             <data field="description"><xsl:value-of select="data[@field='description']"/></data>
             <data field="time_frame"><xsl:value-of select="data[@field='time_frame']"/></data>
@@ -400,7 +436,9 @@
 
         <resource name="doc_document">
             <reference field="doc_id" resource="project_project">
-                <!--@ToDo -->
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="reference[field='project_id']/@uuid"/>
+                </xsl:attribute>
             </reference>
             <data field="name"><xsl:value-of select="data[@field='url']"/></data>
             <data field="url"><xsl:value-of select="data[@field='url']"/></data>
@@ -492,6 +530,12 @@
             <xsl:attribute name="modified_by">
                 <xsl:value-of select="@modified_by"/>
             </xsl:attribute>
+
+            <xsl:if test="data[@field='approved']='True'">
+                <xsl:attribute name="approved_by">
+                    <xsl:value-of select="@modified_by"/>
+                </xsl:attribute>
+            </xsl:if>
 
             <data field="name"><xsl:value-of select="data[@field='name']"/></data>
             <data field="acronym"><xsl:value-of select="data[@field='acronym']"/></data>
@@ -614,9 +658,9 @@
             <xsl:when test="$arg='impl_org'">
                 <resource name="project_organisation">
                     <data field="role">2</data>
-                    <reference field="organisation_id" resource="org_organisation">
+                    <resource name="org_organisation">
                         <data field="name"><xsl:value-of select="$item"/></data>
-                    </reference>
+                    </resource>
                 </resource>
             </xsl:when>
 
@@ -624,9 +668,9 @@
             <xsl:when test="$arg='donor'">
                 <resource name="project_organisation">
                     <data field="role">3</data>
-                    <reference field="organisation_id" resource="org_organisation">
+                    <resource name="org_organisation">
                         <data field="name"><xsl:value-of select="$item"/></data>
-                    </reference>
+                    </resource>
                 </resource>
             </xsl:when>
 
@@ -645,10 +689,13 @@
             <!-- Files -->
             <xsl:when test="$arg='file'">
                 <resource name="doc_document">
-                    <data field="name"><xsl:value-of select="$item"/></data>
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="substring-before($item, ';')"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="substring-after($item, ';')"/></data>
                     <data field="file">
                         <xsl:attribute name="filename">
-                            <xsl:value-of select="$item"/>
+                            <xsl:value-of select="substring-after($item, ';')"/>
                         </xsl:attribute>
                         <xsl:attribute name="url">
                             <xsl:text>local</xsl:text>
