@@ -39,7 +39,8 @@ from django.http import HttpResponse
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
-        ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm
+        ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
+        ProposalMergeForm
 from core.spaces.models import Space
 
 
@@ -257,6 +258,49 @@ def proposal_to_set(request, space_url):
                                 context_instance = RequestContext(request))
 
     
+
+    
+
+#
+# Merged proposal views. Only admin and moderator can create merged proposal.    
+#   
+ 
+
+def mergedproposal_to_set(request, space_url):
+    sel_form = ProposalSetSelectForm(request.POST or None)
+    get_place = get_object_or_404(Space, url=space_url)
+
+    if request.method == 'POST':
+        if sel_form.is_valid():
+            return redirect('/spaces/'+ space_url +'/proposal/merged/'+ request.POST['proposalset'] +'/')
+
+    return render_to_response("proposals/mergedproposal_in_set.html",{'form':sel_form, 'get_place':get_place}, \
+                                context_instance = RequestContext(request))
+
+
+   
+def merged_proposal(request, space_url, p_set):
+    get_place = get_object_or_404(Space, url=space_url)
+    field = ProposalField.objects.filter(proposalset=p_set)
+    form_field = [f_name.field_name for f_name in field]
+       
+    if request.method == 'POST':
+        merged_form = ProposalForm(request.POST)
+        if merged_form.is_valid():
+            form_data = merged_form.save(commit=False)
+            form_data.proposalset = get_object_or_404(ProposalSet, pk=p_set)
+            form_data.space = get_object_or_404(Space, url=space_url)
+            form_data.author = request.user
+            form_data.merged = True
+            field = ProposalField.objects.filter(proposalset=p_set)
+            form_field = [f_name.field_name for f_name in self.field]
+            form_data.save()
+            return redirect('/spaces/'+ space_url +'/')
+    else: 
+        merged_form = ProposalMergeForm(initial={'p_set':p_set})
+
+    return render_to_response("proposals/proposal_merged.html",{'form':merged_form, 'get_place':get_place, \
+                                'form_field':form_field},context_instance = RequestContext(request))
 #
 # Proposal Sets
 #
