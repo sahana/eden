@@ -343,7 +343,9 @@
                     <xsl:value-of select="reference[field='framework_id']/@uuid"/>
                 </xsl:attribute>
                 <data field="file">
-                    <xsl:attribute name="filename">DUMMY</xsl:attribute>
+                    <xsl:attribute name="filename">
+                        <xsl:value-of select="concat('doc_document', substring-after($File, '/download/drrpp_file'))"/>
+                    </xsl:attribute>
                     <xsl:attribute name="url">
                         <xsl:text>local</xsl:text>
                     </xsl:attribute>
@@ -436,14 +438,23 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_link']">
 
+        <xsl:variable name="URL" select="data[@field='url']"/>
+
         <resource name="doc_document">
             <reference field="doc_id" resource="project_project">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="reference[field='project_id']/@uuid"/>
                 </xsl:attribute>
             </reference>
-            <data field="name"><xsl:value-of select="data[@field='url']"/></data>
-            <data field="url"><xsl:value-of select="data[@field='url']"/></data>
+            <xsl:choose>
+                <xsl:when test="string-length($URL) &gt; 128">
+                    <data field="name"><xsl:value-of select="substring($URL, 0, 128)"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="name"><xsl:value-of select="$URL"/></data>
+                </xsl:otherwise>
+            </xsl:choose>
+            <data field="url"><xsl:value-of select="translate($URL, ' ', '')"/></data>
             <data field="comments"><xsl:value-of select="data[@field='comment']"/></data>
         </resource>
 
@@ -697,7 +708,7 @@
                     <data field="name"><xsl:value-of select="substring-after($item, ';')"/></data>
                     <data field="file">
                         <xsl:attribute name="filename">
-                            <xsl:value-of select="substring-after($item, ';')"/>
+                            <xsl:value-of select="concat('doc_document', substring-after(substring-before($item, ';'), 'drrpp_file'))"/>
                         </xsl:attribute>
                         <xsl:attribute name="url">
                             <xsl:text>local</xsl:text>
@@ -709,8 +720,15 @@
             <!-- Links -->
             <xsl:when test="$arg='link'">
                 <resource name="doc_document">
-                    <data field="name"><xsl:value-of select="$item"/></data>
-                    <data field="url"><xsl:value-of select="$item"/></data>
+                    <xsl:choose>
+                        <xsl:when test="string-length($item) &gt; 128">
+                            <data field="name"><xsl:value-of select="substring($item, 0, 128)"/></data>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    <data field="url"><xsl:value-of select="translate($item, ' ', '')"/></data>
                 </resource>
             </xsl:when>
 

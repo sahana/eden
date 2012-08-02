@@ -660,6 +660,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("deletable", False)
 
+    def get_hrm_job_roles(self):
+        """
+            If set to True then HRs can have multiple Job Roles in addition to their Job Title
+        """
+        return self.hrm.get("job_roles", False)
+
     def get_hrm_show_staff(self):
         """
             If set to True then show 'Staff' options when HRM enabled

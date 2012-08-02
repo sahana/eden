@@ -63,7 +63,7 @@ class CreateStaff(SeleniumUnitTest):
                      ( "email",
                        "rjltestdonotusetest99@romanian.com",
                        "pr_person"),
-                     ( "job_role_id",
+                     ( "job_title_id",
                        "Warehouse Manager",
                        "option"),
                      ( "site_id",

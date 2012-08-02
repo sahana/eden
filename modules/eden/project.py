@@ -2712,7 +2712,7 @@ class S3ProjectTaskModel(S3Model):
                                        sortby="name",
                                        requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "project_milestone.id",
-                                                              "%(name)s")),
+                                                              self.milestone_represent)),
                                        represent = self.milestone_represent,
                                        comment = S3AddResourceLink(c="project",
                                                                    f="milestone",
@@ -2952,7 +2952,7 @@ class S3ProjectTaskModel(S3Model):
             advanced_task_search.insert(4, S3SearchOptionsWidget(
                                                 name = "task_search_milestone",
                                                 label = T("Milestone"),
-                                                field = "milestone_id$name",
+                                                field = "milestone_id",
                                                 cols = 3
                                             ))
 
@@ -2978,9 +2978,8 @@ class S3ProjectTaskModel(S3Model):
                                   sortby="name",
                                   requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "project_task.id",
-                                                          "%(name)s")),
-                                  represent = lambda id, row=None: \
-                                    (id and [db.project_task[id].name] or [messages.NONE])[0],
+                                                          self.project_task_represent)),
+                                  represent = self.project_task_represent,
                                   comment = S3AddResourceLink(c="project",
                                                               f="task",
                                                               title=ADD_TASK,
@@ -3230,7 +3229,7 @@ class S3ProjectTaskModel(S3Model):
         db = current.db
         table = db.project_milestone
         record = db(table.id == id).select(table.name,
-                                          limitby=(0, 1)).first()
+                                           limitby=(0, 1)).first()
         try:
             return record.name
         except:
@@ -3274,6 +3273,25 @@ class S3ProjectTaskModel(S3Model):
             except:
                 return current.messages.UNKNOWN_OPT
         else:
+            return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_task_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+            
+        db = current.db
+        table = db.project_task
+        record = db(table.id == id).select(table.name,
+                                           limitby=(0, 1)).first()
+        try:
+            return record.name
+        except:
             return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
@@ -3383,7 +3401,7 @@ class S3ProjectTaskModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        s3mgr = current.manager
+        define_resource = current.manager.define_resource
 
         vars = form.vars
         id = vars.id
@@ -3400,7 +3418,8 @@ class S3ProjectTaskModel(S3Model):
                     type = table[var].type
                     if type == "integer" or \
                        type.startswith("reference"):
-                        vvar = int(vvar)
+                        if vvar:
+                            vvar = int(vvar)
                         if vvar == rvar:
                             continue
                     represent = table[var].represent
@@ -3428,10 +3447,10 @@ class S3ProjectTaskModel(S3Model):
             filter = (ltable.task_id == id)
             if vars.project_id:
                 # Create the link to the Project
-                #master = s3mgr.define_resource("project", "task", id=id)
+                #master = define_resource("project", "task", id=id)
                 #record = db(ptable.id == vars.project_id).select(ptable.id,
                 #                                                 limitby=(0, 1)).first()
-                #link = s3mgr.define_resource("project", "task_project")
+                #link = define_resource("project", "task_project")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == id) & \
                         (ltable.project_id == vars.project_id)
@@ -3443,8 +3462,8 @@ class S3ProjectTaskModel(S3Model):
                                             project_id = vars.project_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = s3mgr.define_resource("project", "task_project",
-                                          filter=filter)
+            links = define_resource("project", "task_project",
+                                    filter=filter)
             ondelete = s3db.get_config("project_task_project",
                                        "ondelete")
             links.delete(ondelete=ondelete)
@@ -3470,8 +3489,8 @@ class S3ProjectTaskModel(S3Model):
                                             activity_id = vars.activity_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = s3mgr.define_resource("project", "task_activity",
-                                          filter=filter)
+            links = define_resource("project", "task_activity",
+                                    filter=filter)
             ondelete = s3db.get_config("project_task_activity",
                                        "ondelete")
             links.delete(ondelete=ondelete)
@@ -4636,6 +4655,8 @@ def project_task_controller():
             # Hide the Status column (always 'assigned' or 'reopened')
             list_fields.remove("status")
             s3db.configure(tablename,
+                           # Override the 'show read-only view of record after update'
+                           create_next=URL(vars={"mine":1}),
                            list_fields=list_fields)
         except:
             pass

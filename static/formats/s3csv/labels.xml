@@ -95,6 +95,10 @@
         <label>Volunteer Role</label>
     </column>
 
+    <column name="JobRole">
+        <label>Job Role</label>
+    </column>
+
     <column name="MemberType">
         <label>HRMType</label>
         <label>PersonType</label>

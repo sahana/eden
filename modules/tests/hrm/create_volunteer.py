@@ -60,7 +60,7 @@ class CreateVolunteer(SeleniumUnitTest):
                      ( "email",
                        "test8@notavalidemail.com",
                        "pr_person"),
-                     ( "job_role_id",
+                     ( "job_title_id",
                        "Security",
                        "option"),
                      ]
