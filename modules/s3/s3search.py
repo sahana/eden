@@ -610,7 +610,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
                                                for row in rows
                                                if row[field] is not None]))
 
-        if len(opt_values) < 1:
+        if len(opt_values) < 2:
             msg = attr.get("_no_opts", T("No options available"))
             return SPAN(msg, _class="no-options-available")
 
