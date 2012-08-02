@@ -2270,11 +2270,11 @@ class S3RecordApprovalTests(unittest.TestCase):
         org_onapprove = s3db.get_config("org_organisation", "onapprove")
         s3db.configure("org_organisation", onapprove=org_onapprove_test)
 
-        self.approved_off = None
-        def off_onapprove_test(record):
-            self.approved_off = record.id
-        off_onapprove = s3db.get_config("org_office", "onapprove")
-        s3db.configure("org_office", onapprove=off_onapprove_test)
+        self.approved_office = None
+        def office_onapprove_test(record):
+            self.approved_office = record.id
+        office_onapprove = s3db.get_config("org_office", "onapprove")
+        s3db.configure("org_office", onapprove=office_onapprove_test)
 
         try:
             # Set record approval on
@@ -2337,7 +2337,7 @@ class S3RecordApprovalTests(unittest.TestCase):
 
             # Check hooks
             self.assertEqual(self.approved_org, org_id)
-            self.assertEqual(self.approved_off, office_id)
+            self.assertEqual(self.approved_office, office_id)
 
         finally:
             current.db.rollback()
@@ -2346,8 +2346,8 @@ class S3RecordApprovalTests(unittest.TestCase):
 
             if org_onapprove is not None:
                 s3db.configure("org_organisation", onapprove=org_onapprove)
-            if off_onapprove is not None:
-                s3db.configure("org_office", onapprove=off_onapprove)
+            if office_onapprove is not None:
+                s3db.configure("org_office", onapprove=office_onapprove)
 
     def testRecordApprovalWithoutComponents(self):
         """ Test record approval without components"""
@@ -2420,6 +2420,95 @@ class S3RecordApprovalTests(unittest.TestCase):
             current.db.rollback()
             deployment_settings.auth.record_approval = False
             auth.s3_impersonate(None)
+
+    def testRecordReject(self):
+
+        db = current.db
+        auth = current.auth
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
+        self.rejected_org = None
+        def org_onreject_test(record):
+            self.rejected_org = record.id
+        org_onreject = s3db.get_config("org_organisation", "onreject")
+        s3db.configure("org_organisation", onreject=org_onreject_test)
+
+        self.rejected_office = None
+        def office_onreject_test(record):
+            self.rejected_office = record.id
+        office_onreject = s3db.get_config("org_office", "onreject")
+        s3db.configure("org_office", onreject=office_onreject_test)
+
+        try:
+            # Set record approval on
+            deployment_settings.auth.record_approval = True
+
+            # Impersonate as admin
+            auth.s3_impersonate("admin@example.com")
+
+            # Create test record
+            otable = s3db.org_organisation
+            org = Storage(name="Test Reject Organisation")
+            org_id = otable.insert(**org)
+            self.assertTrue(org_id > 0)
+            org.update(id=org_id)
+            s3db.update_super(otable, org)
+
+            # Create test component
+            ftable = s3db.org_office
+            office = Storage(name="Test Reject Office",
+                             organisation_id=org_id)
+            office_id = ftable.insert(**office)
+            self.assertTrue(office_id > 0)
+            office.update(id=office_id)
+            s3db.update_super(ftable, office)
+
+            # Check records
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+
+            approved = auth.permission.approved
+            unapproved = auth.permission.unapproved
+
+            # Check approved/unapproved
+            self.assertFalse(approved(otable, org_id))
+            self.assertTrue(unapproved(otable, org_id))
+            self.assertFalse(approved(ftable, office_id))
+            self.assertTrue(unapproved(ftable, office_id))
+
+            # Reject
+            resource = current.manager.define_resource("org", "organisation", id=org_id)
+            self.assertTrue(resource.reject())
+
+            # Check records
+            row = db(otable.id==org_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+            self.assertTrue(row.deleted)
+
+            row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+            self.assertEqual(row.approved_by, None)
+            self.assertTrue(row.deleted)
+
+            # Check hooks
+            self.assertEqual(self.rejected_org, org_id)
+            self.assertEqual(self.rejected_office, office_id)
+
+        finally:
+            current.db.rollback()
+            deployment_settings.auth.record_approval = False
+            auth.s3_impersonate(None)
+
+            if org_onreject is not None:
+                s3db.configure("org_organisation", onreject=org_onreject)
+            if office_onreject is not None:
+                s3db.configure("org_office", onreject=office_onreject)
 
     def testHasPermissionWithRecordApproval(self):
         """ Test has_permission with record approval """
