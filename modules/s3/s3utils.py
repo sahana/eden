@@ -1855,14 +1855,19 @@ class S3BulkImporter(object):
             app = details[0].strip('" ')
             res = details[1].strip('" ')
             request = current.request
+
             csvFileName = details[2].strip('" ')
-            (csvPath, csvFile) = os.path.split(csvFileName)
-            if csvPath != "":
-                path = os.path.join(request.folder,
-                                    "private",
-                                    "templates",
-                                    csvPath)
-            csv = os.path.join(path, csvFile)
+            if csvFileName[:7] == "http://":
+                csv = csvFileName
+            else:
+                (csvPath, csvFile) = os.path.split(csvFileName)
+                if csvPath != "":
+                    path = os.path.join(request.folder,
+                                        "private",
+                                        "templates",
+                                        csvPath)
+                csv = os.path.join(path, csvFile)
+
             xslFileName = details[3].strip('" ')
             templateDir = os.path.join(request.folder,
                                        "static",
@@ -1960,11 +1965,26 @@ class S3BulkImporter(object):
                 return
 
             # Check if the source file is accessible
-            try:
-                csv = open(task[3], "r")
-            except IOError:
-                self.errorList.append(errorString % task[3])
-                return
+            filename = task[3]
+            if filename[:7] == "http://":
+                import urllib2
+                req = urllib2.Request(url=filename)
+                try:
+                    f = urllib2.urlopen(req)
+                except urllib2.HTTPError, e:
+                    self.errorList.append("Could not access %s: %s" % (filename, e.read()))
+                    return
+                except:
+                    self.errorList.append(errorString % filename)
+                    return
+                else:
+                    csv = f
+            else:
+                try:
+                    csv = open(filename, "r")
+                except IOError:
+                    self.errorList.append(errorString % filename)
+                    return
 
             # Check if the stylesheet is accessible
             try:
