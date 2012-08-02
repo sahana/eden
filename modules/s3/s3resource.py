@@ -210,6 +210,7 @@ class S3Resource(object):
         self.skip_import = False
         self.job = None
         self.error = None
+        self.mtime = None
         self.error_tree = None
         self.import_count = 0
         self.import_created = []
@@ -2187,6 +2188,8 @@ class S3Resource(object):
         self.import_created += import_job.created
         self.import_updated += import_job.updated
         self.import_deleted += import_job.deleted
+        if self.mtime is None or import_job.mtime > self.mtime:
+            self.mtime = import_job.mtime
         if self.error:
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error

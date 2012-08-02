@@ -12,6 +12,7 @@ from gluon import *
 # =============================================================================
 class S3ResourceExportXMLTests(unittest.TestCase):
 
+    # -------------------------------------------------------------------------
     def testExportTree(self):
 
         xml = current.xml
@@ -38,6 +39,7 @@ class S3ResourceExportXMLTests(unittest.TestCase):
             self.assertEqual(attrib["name"], "org_office")
             self.assertTrue("uuid" in attrib)
 
+    # -------------------------------------------------------------------------
     def testExportTreeWithMaxBounds(self):
 
         xml = current.xml
@@ -53,6 +55,7 @@ class S3ResourceExportXMLTests(unittest.TestCase):
         self.assertTrue("lonmin" in attrib)
         self.assertTrue("lonmax" in attrib)
 
+    # -------------------------------------------------------------------------
     def testExportTreeWithMSince(self):
         """ Test automatic ordering of export items by mtime if msince is given """
 
@@ -109,6 +112,90 @@ class S3ResourceExportXMLTests(unittest.TestCase):
         uuid = child.get("uuid", None)
         self.assertEqual(uuid, last)
 
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def testImportXMLWithMTime(self):
+        """ Test mtime update in imports """
+
+        manager = current.manager
+        current.auth.override = True
+
+        # If mtime is given in the import XML, then resource.mtime should
+        # get updated to the youngest entry
+        xmlstr = """
+<s3xml>
+    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL1" modified_on="2012-03-31T00:00:00">
+        <data field="name">MTimeTestHospital1</data>
+    </resource>
+    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL2" modified_on="2012-04-21T00:00:00">
+        <data field="name">MTimeTestHospital2</data>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = manager.define_resource("hms", "hospital")
+        resource.import_xml(self.xmltree)
+        self.assertEqual(current.xml.as_utc(resource.mtime),
+                         current.xml.as_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
+
+        current.auth.override = False
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def testImportXMLWithoutMTime(self):
+        """ Test mtime update in imports with no mtime given """
+
+        manager = current.manager
+        current.auth.override = True
+
+        # If no mtime is given, resource.mtime should be set to current UTC
+        xmlstr = """
+<s3xml>
+    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL3">
+        <data field="name">MTimeTestHospital3</data>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = manager.define_resource("hms", "hospital")
+        resource.import_xml(self.xmltree)
+        # Can't compare with exactly utcnow as these would be milliseconds apart,
+        # assume equal dates are sufficient for this test
+        self.assertEqual(current.xml.as_utc(resource.mtime).date(),
+                         current.xml.as_utc(datetime.datetime.utcnow()).date())
+
+        current.auth.override = False
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def testImportXMLWithPartialMTime(self):
+        """ Test mtime update in imports if mtime given in only some records """
+
+        manager = current.manager
+        current.auth.override = True
+
+        # If mixed, then we should still get current UTC
+        xmlstr = """
+<s3xml>
+    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL4" modified_on="2012-03-31T00:00:00">
+        <data field="name">MTimeTestHospital4</data>
+    </resource>
+    <resource name="hms_hospital" uuid="MTIMETESTHOSPITAL5">
+        <data field="name">MTimeTestHospital5</data>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = manager.define_resource("hms", "hospital")
+        resource.import_xml(self.xmltree)
+        self.assertEqual(current.xml.as_utc(resource.mtime).date(),
+                         current.xml.as_utc(datetime.datetime.utcnow()).date())
+
+        current.auth.override = False
         current.db.rollback()
 
 # =============================================================================
