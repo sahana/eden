@@ -910,7 +910,7 @@ class S3OptionsMenu(object):
         if job_roles(""):
             jt_catalog_label = "Job Title Catalog"
         else:
-            jt_catalog_label = "Job Role Catalog"
+            jt_catalog_label = "Volunteer Role Catalog"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",

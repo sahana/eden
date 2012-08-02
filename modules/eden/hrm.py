@@ -1132,7 +1132,6 @@ class S3HRSkillModel(S3Model):
         person_id = self.pr_person_id
         organisation_id = self.org_organisation_id
         site_id = self.org_site_id
-        job_role_id = self.hrm_job_role_id
 
         messages = current.messages
         NONE = messages.NONE
@@ -1399,7 +1398,7 @@ class S3HRSkillModel(S3Model):
         #                          Field("name", notnull=True, unique=True,
         #                                length=32,    # Mayon compatibility
         #                                label=T("Name")),
-        #                          job_role_id(),
+        #                          self.hrm_job_role_id(),
         #                          skill_id(),
         #                          competency_id(),
         #                          Field("priority", "integer",
@@ -1489,7 +1488,7 @@ class S3HRSkillModel(S3Model):
         tablename = "hrm_credential"
         table = define_table(tablename,
                              person_id(),
-                             job_role_id(),
+                             self.hrm_job_title_id(),
                              organisation_id(empty=False,
                                              widget = S3OrganisationAutocompleteWidget(
                                                         default_from_profile=True),
@@ -2971,7 +2970,7 @@ def hrm_human_resource_represent(id, show_link=False):
 
     query = (htable.id == id) & \
             (htable.person_id == ptable.id)
-    row = current.db(query).select(htable.job_role_id,
+    row = current.db(query).select(htable.job_title_id,
                                    htable.organisation_id,
                                    htable.type,
                                    ptable.first_name,
@@ -2988,8 +2987,8 @@ def hrm_human_resource_represent(id, show_link=False):
     if hr.organisation_id and \
        current.deployment_settings.get_hrm_show_organisation():
         repr = ", %s" % s3db.org_organisation_represent(hr.organisation_id)
-    if hr.job_role_id:
-        repr = ", %s%s" % (hrm_job_role_represent(hr.job_role_id), repr)
+    if hr.job_title_id:
+        repr = ", %s%s" % (hrm_job_title_represent(hr.job_title_id), repr)
     person = row["pr_person"]
     repr = "%s%s" % (s3_fullname(person), repr)
     if show_link:
@@ -3142,7 +3141,7 @@ def hrm_training_event_represent(id, row=None):
 #    db = current.db
 #    s3db = current.s3db
 #    table = s3db.hrm_position
-#    jtable = s3db.hrm_job_role
+#    jtable = s3db.hrm_job_title
 #    otable = s3db.org_organisation
 #    query = (table.id == id) & \
 #            (table.job_role_id == jtable.id)
@@ -3151,7 +3150,7 @@ def hrm_training_event_represent(id, row=None):
 #                                otable.name,
 #                                limitby = (0, 1)).first()
 #    try:
-#        represent = position.hrm_job_role.name
+#        represent = position.hrm_job_title.name
 #        if position.org_organisation:
 #            represent = "%s (%s)" % (represent,
 #                                     position.org_organisation.name)
@@ -4056,9 +4055,9 @@ class HRMTrainingVirtualFields:
             return current.messages.NONE
 
     # -------------------------------------------------------------------------
-    def job_role(self):
+    def job_title(self):
         """
-            Which Job Roles(s) the person is active with
+            Which Job Titles(s) the person is active with
         """
         try:
             person_id = self.hrm_training.person_id
@@ -4068,10 +4067,10 @@ class HRMTrainingVirtualFields:
         if person_id:
             s3db = current.s3db
             table = s3db.hrm_human_resource
-            jtable = s3db.hrm_job_role
+            jtable = s3db.hrm_job_title
             query = (table.person_id == person_id) & \
                     (table.status != 2) & \
-                    (table.job_role_id == jtable.id)
+                    (table.job_title_id == jtable.id)
             jobs = current.db(query).select(jtable.name,
                                             distinct=True,
                                             orderby=jtable.name)
@@ -4400,9 +4399,9 @@ def hrm_training_event_controller():
             field.readable = False
             field.writable = False
             field.default = record.hours
-            # Suitable liset_fields
+            # Suitable list_fields
             list_fields = ["person_id",
-                           (T("Job Role"), "job_role"),
+                           (T("Job Title"), "job_title"),
                            (T("Organization"), "organisation"),
                            ]
             current.s3db.configure("hrm_training",
@@ -4440,7 +4439,7 @@ def hrm_training_controller():
             T = current.T
             list_fields = ["course_id",
                            "person_id",
-                           (T("Job Role"), "job_role"),
+                           (T("Job Title"), "job_title"),
                            (T("Organization"), "organisation"),
                            "date",
                            ]
