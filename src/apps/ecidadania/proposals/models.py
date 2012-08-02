@@ -24,6 +24,7 @@ Proposal data models are the ones to store the data inside the DB.
 import datetime
 from django.core import urlresolvers
 
+from django import forms
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes import generic
@@ -158,7 +159,7 @@ class Proposal(BaseProposalAbstractModel):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     merged = models.NullBooleanField(default=False, blank=True, null=True)
-    merged_proposals = models.ManyToManyField(ProposalSet, blank=True, null=True)
+    merged_proposals = models.ForeignKey('self', blank=True, null=True)
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
