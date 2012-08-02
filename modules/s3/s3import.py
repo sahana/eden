@@ -2641,6 +2641,7 @@ class S3ImportJob():
             self.conflict_policy = S3ImportItem.POLICY.OTHER
 
         # Synchronization settings
+        self.mtime = None
         self.last_sync = last_sync
         self.onconflict = onconflict
 
@@ -3042,6 +3043,7 @@ class S3ImportJob():
         # Commit the items
         items = self.items
         count = 0
+        mtime = None
         created = []
         cappend = created.append
         updated = []
@@ -3063,6 +3065,8 @@ class S3ImportJob():
                     return False
             elif item.tablename == tablename:
                 count += 1
+                if mtime is None or item.mtime > mtime:
+                    mtime = item.mtime
                 if item.id:
                     if item.method == item.METHOD.CREATE:
                         cappend(item.id)
@@ -3071,6 +3075,7 @@ class S3ImportJob():
                     elif item.method == item.METHOD.DELETE:
                         deleted.append(item.id)
         self.count = count
+        self.mtime = mtime
         self.created = created
         self.updated = updated
         self.deleted = deleted

@@ -592,28 +592,23 @@ class S3SearchOptionsWidget(S3SearchWidget):
             else:
                 opt_values = []
 
-                # Find unique values of options for that field
                 rows = resource.sqltable(fields=[field_name], as_rows=True)
                 if rows:
                     if field_type.startswith("list"):
                         for row in rows:
-                            # row == {field_name: [#, ...]}
                             fk_list = row[field]
-
                             if fk_list != None:
                                 try:
                                     fkeys = fk_list.split("|")
                                 except:
                                     fkeys = fk_list
-
                                 for fkey in fkeys:
                                     if fkey not in opt_values:
                                         opt_values.append(fkey)
                     else:
-                        opt_values = [row[field] for row
-                                                 in rows
-                                                 if row[field] != None and
-                                                 row[field] not in opt_values]
+                        opt_values = list(set([row[field]
+                                               for row in rows
+                                               if row[field] is not None]))
 
         if len(opt_values) < 2:
             msg = attr.get("_no_opts", T("No options available"))
