@@ -103,7 +103,7 @@ def staff():
     table.site_id.readable = True
     list_fields = ["id",
                    "person_id",
-                   "job_role_id",
+                   "job_title_id",
                    "organisation_id",
                    "department",
                    "site_id",
@@ -591,6 +591,19 @@ def group():
 # =============================================================================
 def job_role():
     """ Job Roles Controller """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
+def job_title():
+    """ Job Titles Controller """
 
     mode = session.s3.hrm.mode
     def prep(r):
