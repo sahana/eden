@@ -719,6 +719,12 @@ class S3Config(Storage):
             Whether Human Resources should show Education
         """
         return self.hrm.get("use_education", False)
+    
+    def get_hrm_organisation_label(self):
+        """
+            Label for Organisations in Human Resources
+        """
+        return self.hrm.get("organisation_label", current.T("Organization"))
 
     # -------------------------------------------------------------------------
     # Inventory Management Settings

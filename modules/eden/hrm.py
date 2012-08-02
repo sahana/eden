@@ -112,22 +112,25 @@ class S3HRModel(S3Model):
             elif controller == "vol":
                 group = "volunteer"
 
-        job_roles = current.deployment_settings.get_hrm_job_roles()
+        settings = current.deployment_settings
+        job_roles = settings.get_hrm_job_roles()
+        organisation_label = settings.get_hrm_organisation_label()
 
         tablename = "hrm_human_resource"
         table = self.define_table(tablename,
                                   self.super_link("track_id", "sit_trackable"),
                                   self.org_organisation_id(
+                                    label = organisation_label,
                                     widget=S3OrganisationAutocompleteWidget(
                                         default_from_profile=True),
                                     empty=False
                                     ),
+                                  self.org_site_id,
                                   self.pr_person_id(
                                     widget=S3AddPersonWidget(controller="hrm"),
                                     requires=IS_ADD_PERSON_WIDGET(),
                                     comment=None
                                     ),
-                                  self.org_site_id,
                                   Field("type", "integer",
                                         requires = IS_IN_SET(hrm_type_opts,
                                                              zero=None),
@@ -2695,7 +2698,7 @@ class S3HRExperienceModel(S3Model):
                                     widget = S3OrganisationAutocompleteWidget(
                                                 default_from_profile=True)
                                     ),
-                                  Field("job_title", label=T("Job Title")),
+                                  self.hrm_job_title_id(),
                                   s3_date("start_date",
                                           label=T("Start Date"),
                                           ),
@@ -3472,9 +3475,9 @@ def hrm_map_popup(r):
               TD(s3_fullname(r.record.person_id))))
 
     # Job Title
-    if r.record.job_role_id:
-        append(TR(TD(B("%s:" % r.table.job_role_id.label)),
-                  TD(r.table.job_role_id.represent(r.record.job_role_id))))
+    if r.record.job_title_id:
+        append(TR(TD(B("%s:" % r.table.job_title_id.label)),
+                  TD(r.table.job_title_id.represent(r.record.job_title_id))))
 
     # Organization (better with just name rather than Represent)
     # @ToDo: Make this configurable - some deployments will only see
@@ -4181,10 +4184,15 @@ def hrm_rheader(r, tabs=[]):
 
                 # Already formatted as HTML
                 active = TD(record.active)
-
+                tooltip = SPAN(_class="tooltip",
+                               _title="%s|%s" % \
+                    (T("Active"),
+                     T("A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year")),
+                               _style="display:inline-block"
+                               )
                 row1 = TR(TH("%s:" % T("Programme")),
                           record.programme,
-                          TH("%s:" % T("Active?")),
+                          TH("%s:" % T("Active?"), tooltip),
                           active
                           )
                 row2 = TR(TH("%s:" % T("Programme Hours (Month)")),

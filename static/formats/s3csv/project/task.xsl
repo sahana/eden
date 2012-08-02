@@ -89,7 +89,7 @@
         <xsl:variable name="ActivityName" select="col[@field='Activity']/text()"/>
         <xsl:variable name="Task" select="col[@field='Short Description']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
-        <xsl:variable name="Author" select="col[@field='Raised By']/text()"/>
+        <xsl:variable name="Author" select="col[@field='Author']/text()"/>
         <xsl:variable name="DateDue" select="col[@field='Date Due']/text()"/>
         <xsl:variable name="Milestone" select="col[@field='Milestone']/text()"/>
         <xsl:variable name="TimeEstimated" select="col[@field='Time Estimated']/text()"/>

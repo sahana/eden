@@ -144,6 +144,23 @@ class S3AssetModel(S3Model):
                                                                       ),
                                             script = None, # No Item Pack Filter
                                             ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("site_id", "org_site",
+                                        label = T("Office/Warehouse/Facility"),
+                                        default = auth.user.site_id if auth.is_logged_in() else None,
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        ondelete = "RESTRICT",
+                                        # Comment these to use a Dropdown & not an Autocomplete
+                                        #widget = S3SiteAutocompleteWidget(),
+                                        #comment = DIV(_class="tooltip",
+                                        #              _title="%s|%s" % (T("Warehouse"),
+                                        #                                T("Enter some characters to bring up a list of possible matches"))),
+                                        represent = self.org_site_represent
+                                        ),
+                             self.org_organisation_id(),
                              # @ToDo: Can we set this automatically based on Item Category?
                              Field("type", "integer",
                                    readable = vehicle,

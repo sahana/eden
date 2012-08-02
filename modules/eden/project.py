@@ -1121,7 +1121,7 @@ class S3Project3WModel(S3Model):
                     title_update = T("Edit Community Details"),
                     title_search = T("Search Community"),
                     title_upload = T("Import Community Data"),
-                    title_report = T("Who is doing What Where"),
+                    title_report = T("3W Report"),
                     title_map = T("Map of Communties"),
                     subtitle_create = T("Add New Community"),
                     label_list_button = T("List Communities"),
@@ -1142,7 +1142,7 @@ class S3Project3WModel(S3Model):
                     title_update = T("Edit Location Details"),
                     title_search = T("Search Location"),
                     title_upload = T("Import Location Data"),
-                    title_report = T("Who is doing What Where"),
+                    title_report = T("3W Report"),
                     title_map = T("Map of Projects"),
                     subtitle_create = T("Add New Location"),
                     label_list_button = T("List Locations"),
@@ -1240,12 +1240,22 @@ class S3Project3WModel(S3Model):
         )
 
         # Resource Configuration
-        report_fields = [(T("Location"), "location_id"),
+        report_fields = [#(T("Location"), "location_id"),
+                         (T("Country"), "L0"),
+                         "L1",
+                         "L2",
+                         "L3",
+                         "L4",
                          (T("Organization"), "organisation"),
                          (T("Project"), "project_id"),
                          (T("Activity Type"), "multi_activity_type_id"),
                         ]
         list_fields = ["location_id",
+                       (T("Country"), "L0"),
+                         "L1",
+                         "L2",
+                         "L3",
+                         "L4",
                        "project_id",
                        ]
         if theme_percentages:
@@ -1267,7 +1277,7 @@ class S3Project3WModel(S3Model):
                                          cols=report_fields,
                                          facts=report_fields,
                                          defaults=Storage(
-                                                          rows="location_id",
+                                                          rows="L1",
                                                           cols="project_id",
                                                           fact="multi_activity_type_id",
                                                           aggregate="list",
@@ -1429,17 +1439,17 @@ class S3Project3WModel(S3Model):
                              #activity_id(comment=None),
                              project_location_id(comment=None),
                              beneficiary_type_id(empty=False),
-                             Field("number", "integer",
+                             Field("value", "double",
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             s3_date("start_date",
+                             s3_date("date",
                                      label = T("Start Date"),
-                                     empty = False,
+                                     #empty = False,
                                      ),
                              s3_date("end_date",
                                      label = T("End Date"),
-                                     empty = False,
+                                     #empty = False,
                                      ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -1540,7 +1550,7 @@ class S3Project3WModel(S3Model):
         def beneficiary_L1_opts():
             """
                 Provide the options for the L1 search filter
-                @ToDo: Limit to just those project_lcoations to which the user has access
+                @ToDo: Limit to just those project_location records to which the user has access
             """
             table = self.project_location
             ltable = self.gis_location
@@ -1649,25 +1659,45 @@ class S3Project3WModel(S3Model):
         ADD_PROJECT_ORG = T("Add Organization to Project")
         crud_strings[tablename] = Storage(
             title_create = ADD_PROJECT_ORG,
-            title_display = T("Organization Details"),
-            title_list = T("Organizations"),
-            title_update = T("Edit Organization"),
-            title_search = T("Search Organizations"),
-            title_upload = T("Import Organizations"),
+            title_display = T("Project Organization Details"),
+            title_list = T("Project Organizations"),
+            title_update = T("Edit Project Organization"),
+            title_search = T("Search Project Organizations"),
+            title_upload = T("Import Project Organizations"),
             title_report = T("Funding Report"),
             subtitle_create = T("Add Organization to Project"),
-            label_list_button = T("List Organizations"),
+            label_list_button = T("List Project Organizations"),
             label_create_button = ADD_PROJECT_ORG,
             label_delete_button = T("Remove Organization from Project"),
             msg_record_created = T("Organization added to Project"),
             msg_record_modified = T("Project Organization updated"),
             msg_record_deleted = T("Organization removed from Project"),
-            msg_list_empty = T("No Organizations for this Project"))
+            msg_list_empty = T("No Organizations for Project(s)"))
 
         # Search Method?
+        
+        # Report Options
+        report_fields = ["project_id",
+                         "organisation_id",
+                         "role",
+                         "amount",
+                         "currency",
+                         ]
+        report_options = Storage( rows = report_fields,
+                                  cols = report_fields,
+                                  facts = report_fields,
+                                  #methods = ["sum"],
+                                  defaults = Storage( rows = "organisation_id",
+                                                      cols  ="currency",
+                                                      fact = "amount",
+                                                      aggregate = "sum",
+                                                      totals = False
+                                                      )
+                                 )
 
         # Resource Configuration
         configure(tablename,
+                  report_options = report_options,
                   deduplicate=self.project_organisation_deduplicate,
                   onvalidation=self.project_organisation_onvalidation,
                   onaccept=self.project_organisation_onaccept,
@@ -3994,6 +4024,50 @@ class S3ProjectLocationVirtualFields:
                                        limitby=(0, 1)).first()
         if org:
             return org.name
+        else:
+            return None
+
+    def L0(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_location.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L0" in parents:
+            return parents["L0"]
+        else:
+            return None
+
+    def L1(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_location.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L1" in parents:
+            return parents["L1"]
+        else:
+            return None
+
+    def L2(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_location.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L2" in parents:
+            return parents["L2"]
+        else:
+            return None
+
+    def L3(self):
+        parents = Storage()
+        parents = current.gis.get_parent_per_level(parents,
+                                                   self.project_location.location_id,
+                                                   ids=False,
+                                                   names=True)
+        if "L3" in parents:
+            return parents["L3"]
         else:
             return None
 

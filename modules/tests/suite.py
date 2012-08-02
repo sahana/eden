@@ -81,12 +81,16 @@ parser.add_argument("-C", "--class",
                    )
 method_desc = """Name of method to run, this is used in conjunction with the
 class argument or with the name of the class followed by the name of the method
-separated with a period, class.period.
+separated with a period, class.method.
 """
 parser.add_argument("-M",
                     "--method",
                     "--test",
                     help = method_desc
+                   )
+parser.add_argument("-A",
+                    "--auth",
+                    help = """Run an Auth test without the webdriver""",
                    )
 parser.add_argument("-V", "--verbose",
                     type = int,
@@ -119,7 +123,7 @@ full: This will run all test
 """
 parser.add_argument("--suite",
                     help = suite_desc,
-                    choices = ["smoke", "quick", "complete", "full"],
+                    choices = ["smoke", "auth", "quick", "complete", "full"],
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
@@ -182,7 +186,7 @@ test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
 if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
-    print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
+    print "The tests will fail unless you have settings.ui.navigate_away_confirm = False in models/000_config.py"
     exit()
 if args["suite"] == "smoke" or args["suite"] == "complete":
     if settings.get_base_debug() and not args["force_debug"]:
@@ -220,6 +224,8 @@ elif args["suite"] == "smoke":
         from s3 import s3_debug
         s3_debug("%s, unable to run the smoke tests." % msg)
         pass
+elif args["auth"]:
+    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
 elif args["suite"] == "complete":
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)

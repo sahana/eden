@@ -623,7 +623,7 @@ def s3_auth_group_represent(opt):
     return ", ".join(roles)
 
 # =============================================================================
-def s3_include_debug():
+def s3_include_debug(js =  True, css = True):
     """
         Generates html to include:
             the js scripts listed in /static/scripts/tools/sahana.js.cfg
@@ -647,42 +647,44 @@ def s3_include_debug():
     folder = request.folder
     appname = request.application
     theme = current.deployment_settings.get_theme()
-
-    # JavaScript
-    scripts_dir = os.path.join(folder, "static", "scripts")
-    sys.path.append(os.path.join(scripts_dir, "tools"))
-    import mergejsmf
-
-    configDictCore = {
-        ".": scripts_dir,
-        "web2py": scripts_dir,
-        #"T2":     scripts_dir_path,
-        "S3":     scripts_dir
-    }
-    configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir
-    (fs, files) = mergejsmf.getFiles(configDictCore, configFilename)
-
-    # Restore prints
-    #sys.stdout = save_stdout
-
     include = ""
-    for file in files:
-        include = '%s\n<script src="/%s/static/scripts/%s" type="text/javascript"></script>' \
-            % (include, appname, file)
+
+    if js:
+    # JavaScript
+        scripts_dir = os.path.join(folder, "static", "scripts")
+        sys.path.append(os.path.join(scripts_dir, "tools"))
+        import mergejsmf
+    
+        configDictCore = {
+            ".": scripts_dir,
+            "web2py": scripts_dir,
+            #"T2":     scripts_dir_path,
+            "S3":     scripts_dir
+        }
+        configFilename = "%s/tools/sahana.js.cfg"  % scripts_dir
+        (fs, files) = mergejsmf.getFiles(configDictCore, configFilename)
+    
+        # Restore prints
+        #sys.stdout = save_stdout
+    
+        for file in files:
+            include = '%s\n<script src="/%s/static/scripts/%s" type="text/javascript"></script>' \
+                % (include, appname, file)
 
     # CSS
-    include = "%s\n <!-- CSS Syles -->" % include
-    css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
-    try:
-        f = open(css_cfg, "r")
-    except:
-        raise HTTP(500, "Theme configuration file missing: private/templates/%s/css.cfg" % theme)
-    files = f.readlines()
-    files = files[:-1]
-    for file in files:
-        include = '%s\n<link href="/%s/static/styles/%s" rel="stylesheet" type="text/css" />' \
-            % (include, appname, file[:-1])
-    f.close()
+    if css:
+        include = "%s\n <!-- CSS Syles -->" % include
+        css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
+        try:
+            f = open(css_cfg, "r")
+        except:
+            raise HTTP(500, "Theme configuration file missing: private/templates/%s/css.cfg" % theme)
+        files = f.readlines()
+        files = files[:-1]
+        for file in files:
+            include = '%s\n<link href="/%s/static/styles/%s" rel="stylesheet" type="text/css" />' \
+                % (include, appname, file[:-1])
+        f.close()
 
     return XML(include)
 

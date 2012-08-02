@@ -22,7 +22,7 @@
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}
 {{# This kills the map in IE8: VML.js }}
-{{#<script src="/=appname/static/scripts/web2py/modernizr-1.7.min.js"></script>}}
+{{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
 <style type="text/css">
 {{if s3.rtl:}}
  div{direction:rtl;}
@@ -99,7 +99,6 @@ S3.Ap='/{{=appname}}'
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
 {{pass}}
-{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script'))</script>{{pass}}
 {{# Include dynamically added Scripts }}
 {{for script in s3.scripts:}}
  {{=SCRIPT(_src=script)}}
@@ -116,5 +115,6 @@ $(document).ready(function(){
 })
 {{pass}}
 //]]></script>
+{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script'))</script>{{pass}}
 </body>
 </html>

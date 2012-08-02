@@ -502,6 +502,10 @@ class S3OrganisationModel(S3Model):
         add_component("hrm_human_resource",
                       org_organisation="organisation_id")
 
+        # Members
+        add_component("member_membership",
+                      org_organisation="organisation_id")
+
         # Projects
         if settings.get_project_mode_3w():
             add_component("project_project",
@@ -515,6 +519,10 @@ class S3OrganisationModel(S3Model):
         else:
             add_component("project_project",
                           org_organisation="organisation_id")
+            
+        # Assets
+        add_component("asset_asset",
+                      org_organisation="organisation_id")
 
         # Documents
         add_component("doc_document", org_organisation="organisation_id")
@@ -1078,7 +1086,8 @@ class S3SiteModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or [current.messages.NONE])[0],
+                                          (bool and [T("Obsolete")] or 
+                                           [current.messages.NONE])[0],
                                         default = False,
                                         readable = False,
                                         writable = False),
@@ -1124,6 +1133,10 @@ class S3SiteModel(S3Model):
         add_component("inv_recv",
                       org_site="site_id")
         add_component("inv_send",
+                      org_site="site_id")
+
+        # Assets
+        add_component("asset_asset",
                       org_site="site_id")
 
         # Procurement Plans
