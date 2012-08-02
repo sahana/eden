@@ -592,7 +592,10 @@ class S3SearchOptionsWidget(S3SearchWidget):
             else:
                 opt_values = []
 
-                rows = resource.sqltable(fields=[field_name], as_rows=True)
+                rows = resource.sqltable(fields=[field_name],
+                                         start=None,
+                                         limit=None,
+                                         as_rows=True)
                 if rows:
                     if field_type.startswith("list"):
                         for row in rows:
