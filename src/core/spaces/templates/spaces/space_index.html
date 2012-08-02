@@ -394,8 +394,18 @@
                                 </ul>
                                 <ul class="unstyled">
                                     {% if perms.proposals.add_proposal %}
-                                        <li><a href="{% url 'select_set' get_place.url %}">
+                                        <li>
+                                            <a href="{% url 'select_set' get_place.url %}">
                                                 <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans "Add proposal" %}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                                 <ul class="unstyled">
+                                    {% if perms.proposals.add_proposalset %}
+                                        <li>
+                                            <a href="{% url 'merge_proposal' get_place.url %}">
+                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Merge proposal' %}" title="{% trans 'Merge Proposal' %}"/>{% trans "Create Merged Proposal" %}
                                             </a>
                                         </li>
                                     {% endif %}

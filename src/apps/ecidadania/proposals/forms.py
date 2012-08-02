@@ -22,7 +22,8 @@ Proposal forms.
 """
 
 
-from django.forms import ModelForm, forms
+from django.forms import ModelForm
+from django import forms
 from django.core import validators
 from django.contrib.auth.models import User
 
@@ -30,6 +31,7 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet, ProposalFiel
 from apps.ecidadania.debate.models import Debate
 
 import datetime
+import pdb
 
 class ProposalSetForm(ModelForm):
 
@@ -52,11 +54,31 @@ class ProposalForm(ModelForm):
     class Meta:
         model = Proposal
         exclude = ('contenttype','object_pk','content_object')
+    
 
+class ProposalMergeForm(ModelForm):
+
+    """
+    """
+#    merged_proposals = forms.ModelMultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = Proposal
+        exclude = ('contenttype','object_pk','content_object')
+
+    def __init__(self, *args, **kwargs):
+        pdb.set_trace()
+        if len(kwargs) > 0:
+            self.p_set = kwargs['initial']['p_set']
+            super(ProposalMergeForm, self).__init__(*args, **kwargs)
+            if self.instance:
+                self.fields['merged_proposals'].widget = forms.SelectMultiple()
+                self.fields['merged_proposals'].queryset = Proposal.objects.filter(proposalset=self.p_set)
+           
 class VoteProposal(ModelForm):
 
     """
-    asd
+    aswd
     """
     class Meta:
         model = Proposal
