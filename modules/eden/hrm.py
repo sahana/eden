@@ -4243,14 +4243,10 @@ def hrm_rheader(r, tabs=[]):
             teams_tab = None
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
-            if group == "staff":
-                address_tab_name = T("Home Address")
-            else:
-                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (T("ID"), "identity"),
                     (T("Description"), "physical_description"),
-                    (address_tab_name, "address"),
+                    (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
@@ -4265,16 +4261,14 @@ def hrm_rheader(r, tabs=[]):
             # Configure for HR manager mode
             if group == "staff":
                 hr_record = T("Staff Record")
-                address_tab_name = T("Home Address")
             elif group == "volunteer":
                 hr_record = T("Volunteer Record")
-                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
                     (T("ID"), "identity"),
                     education_tab,
                     (T("Description"), "physical_description"),
-                    (address_tab_name, "address"),
+                    (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
