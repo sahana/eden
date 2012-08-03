@@ -39,15 +39,17 @@ from ..s3 import *
 
 class S3TranslateModel(S3Model):
 
-    names = ["translate_language"]
+    names = ["translate_language", "translate_percentage", "translate_update"]
 
     def model(self):
 
         T = current.T
         s3 = current.response.s3
 
+        #---------------------------------------------------------------------
+        # Translated CSV files
+        #
         tablename = "translate_language"
-
         table = self.define_table(tablename,
                                   Field("code", notnull = True,
                                          length = 10,
@@ -63,6 +65,30 @@ class S3TranslateModel(S3Model):
             title_create = T("Upload file"),
             msg_record_created = T("File uploaded"))
 
+        #--------------------------------------------------------------------- 
+        # Translation Status
+        #
+        tablename = "translate_percentage"
+        table = self.define_table(tablename,
+                                  Field("code", notnull = True,
+                                         length = 10),
+                                  Field("module", notnull = True,
+                                         length = 10),
+                                  Field("translated","integer"),
+                                  Field("untranslated","integer"),
+                                        *s3.meta_fields())
+
+        #---------------------------------------------------------------------
+        # Update bit
+        #
+        tablename = "translate_update"
+        table = self.define_table(tablename,
+                                  Field("code", notnull = True,
+                                         length = 10),
+                                  Field("sbit","boolean", default = False),
+                                        *s3.meta_fields())
+
+        #----------------------------------------------------------------------
         # Return names to response.s3
         return Storage()
 
@@ -87,6 +113,10 @@ class S3TranslateModel(S3Model):
         import os
         from ..s3.s3translate import CsvToWeb2py
 
+        s3db = current.s3db
+        db = current.db
+	utable = s3db.translate_update
+
         base_dir = os.path.join(os.getcwd(), "applications",\
                                current.request.application)
         upload_folder = os.path.join(base_dir, "uploads")
@@ -98,6 +128,9 @@ class S3TranslateModel(S3Model):
         C = CsvToWeb2py()
         # Merging the existing translations with the new translations
         C.convert_to_w2p(csvfilelist, code+".py", "m")
+
+        query = (utable.code == code)
+        db(query).update(sbit=True)
 
         return
 

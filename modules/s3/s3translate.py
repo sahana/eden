@@ -192,7 +192,7 @@ class TranslateGetFiles:
 
             # Directories which are not required to be searched
             self.rest_dirs = ["languages", "deployment-templates", "docs",
-            "tests", "test", ".git", "TranslationFunctionality"]
+            "tests", "test", ".git", "TranslationFunctionality", "uploads"]
 
         #----------------------------------------------------------------------
         def get_module_list(self):
@@ -751,7 +751,7 @@ class TranslateReadFiles:
             # Storing the strings as (original string, translated string) tuple
             for i in range(0, len(tmpstr)):
                 if i%2 == 0:
-                    strings.append((tmpstr[i], tmpstr[i+1]))
+                    strings.append((tmpstr[i][1:-1], tmpstr[i+1][1:-1]))
             return strings
 
         #----------------------------------------------------------------------
@@ -771,10 +771,13 @@ class TranslateReadFiles:
 
 class TranslateReportStatus:
 
-
         def create_master_file(self):
 
             """ Function to create a master file containing all the strings """
+
+            s3db = current.s3db
+            db = current.db
+            utable = s3db.translate_update
 
             try:
                 import cPickle as pickle
@@ -791,8 +794,7 @@ class TranslateReportStatus:
             for mod in modlist:
                 string_dict[mod] = []
                 strings = A.get_strings_by_module(mod)
-                for (l,s) in strings:
-                    
+                for (l, s) in strings:
                     if (s[0] == '"' and s[-1] == '"') or\
                        (s[0] == "'" and s[-1] == "'"):
                         s = s[1:-1]
@@ -807,20 +809,27 @@ class TranslateReportStatus:
 
             base_dir = os.path.join(os.getcwd(), "applications", \
                                     current.request.application)
-            data_file = os.path.join(base_dir, "uploads","temp.pkl")
+            data_file = os.path.join(base_dir, "uploads", "temp.pkl")
 
             f = open(data_file, 'wb')
             pickle.dump(all_strings, f)
             pickle.dump(string_dict, f)
             f.close()
-	    
-        def get_percentage_per_module(self, langfile):
-            
+
+            db(utable.id>0).update(sbit=True)
+
+        #---------------------------------------------------------------------
+        def update_percentages(self, lang_code):
+
+            s3db = current.s3db
+            db = current.db
+            ptable = s3db.translate_percentage
             try:
                 import cPickle as pickle
             except:
                 import pickle
 
+            langfile = lang_code + ".py"
             base_dir = os.path.join(os.getcwd(), "applications", \
                                     current.request.application)
             langfile = os.path.join(base_dir, "languages", langfile)
@@ -829,26 +838,15 @@ class TranslateReportStatus:
             lang_strings = R.read_w2pfile(langfile)
 
             translated_strings = []
-            for (s1,s2) in lang_strings:
-
-                if (s1[0] == '"' and s1[-1] == '"') or\
-                   (s1[0] == "'" and s1[-1] == "'"):
-                    s1 = s1[1:-1]
-
-                if (s2[0] == '"' and s2[-1] == '"') or\
-                   (s2[0] == "'" and s2[-1] == "'"):
-                    s2 = s2[1:-1]
-
+            for (s1, s2) in lang_strings:
                 if s1 != s2 and not s2.startswith("*** "):
                     translated_strings.append(s1)
 
-            data_file = os.path.join(base_dir, "uploads","temp.pkl")
+            data_file = os.path.join(base_dir, "uploads", "temp.pkl")
             f = open(data_file, 'rb')
             all_strings = pickle.load(f)
             string_dict = pickle.load(f)
             f.close()
-
-            percent_dict = {}
 
             for mod in string_dict.keys():
 
@@ -859,11 +857,68 @@ class TranslateReportStatus:
                     if string in translated_strings:
                         count += 1
 
-                percent_dict[mod] = (float(count)/len(string_dict[mod]))*100.0
-                print "Module: ",mod,":",percent_dict[mod]
-            
+                query = (ptable.code == lang_code) & \
+                        (ptable.module == mod)
+                db(query).update(translated = count,
+                                 untranslated = len(string_dict[mod]) - count)
+
+        #---------------------------------------------------------------------
+        def get_translation_percentages(self, lang_code):
+
+            import os
+            base_dir = os.path.join(os.getcwd(), "applications", \
+                                    current.request.application)
+            pickle_file = os.path.join(base_dir, "uploads", "temp.pkl")
+            if not os.path.exists(pickle_file):
+                self.create_master_file()
+
+            s3db = current.s3db
+            db = current.db
+            ptable = s3db.translate_percentage
+            utable = s3db.translate_update
+
+            A = TranslateAPI()
+            modlist = A.get_modules()
+            modlist.append("core")
+
+            query = (utable.code == lang_code)
+            row = db(query).select()
+
+            if not row:
+                utable.insert(code = lang_code,
+                              sbit = False)
+                for mod in modlist:
+                    ptable.insert(code = lang_code,
+                                  module = mod,
+                                  translated = 0,
+                                  untranslated = 0)
+                self.update_percentages(lang_code)
+            else:
+                for r in row:
+                    if r.sbit == True:
+                        self.update_percentages(lang_code)
+                        db(query).update(sbit = False)
+
+            percent_dict={}
+            total_translated = 0
+            total_untranslated = 0
+            query = (ptable.code == lang_code)
+            rows = db(query).select()
+            for row in rows:
+                total_translated += row.translated
+                total_untranslated += row.untranslated
+                percent_dict[row.module] = \
+                  (float(row.translated)/(row.translated+row.untranslated))*100
+            percent_dict["complete_file"] = \
+            (float(total_translated)/(total_translated+total_untranslated))*100
+
+            for mod in percent_dict.keys():
+                percent_dict[mod] = round(percent_dict[mod],2)
+
+            return percent_dict
 
 #==============================================================================
+
 class StringsToExcel:
 
         """Class to convert strings to .xls format"""
@@ -1003,7 +1058,6 @@ class StringsToExcel:
 
             # Retrive strings from existing w2p language file
             OldStrings = R.read_w2pfile(langfile)
-            OldStrings = self.remove_quotes(OldStrings)
             OldStrings.sort(key=lambda tup: tup[0])
 
             # Merging those strings which were already translated earlier
@@ -1073,11 +1127,10 @@ class CsvToWeb2py:
                         d[row[1]] = (row[0], row[2])
 
             # If strings are to be merged with existing .py file
-            if option == "-m":
+            if option == "m":
                 data = R.read_w2pfile(w2pfilename)
                 for row in data:
-                    tmprow = (row[0][1:-1], row[1][1:-1])
-                    row = (tmprow[0], tmprow[1].decode("string-escape"))
+                    row = (row[0], row[1].decode("string-escape"))
                     if row[0] not in d.keys():
                         d[row[0]] = ("", row[1])
 
@@ -1088,12 +1141,12 @@ class CsvToWeb2py:
                 data.append([d[k][0], k, d[k][1]])
 
             # Create intermediate csv file
-            f = tempfile.NamedTemporaryFile(delete=False)
+            f = NamedTemporaryFile(delete=False)
             csvfilename = f.name + ".csv"
             self.write_csvfile(csvfilename, data)
 
             # Convert the csv file to intermediate po file
-            g = tempfile.NamedTemporaryFile(delete=False)
+            g = NamedTemporaryFile(delete=False)
             pofilename = g.name + ".po"
             call(["csv2po", "-i", csvfilename, "-o", pofilename])
 

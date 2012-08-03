@@ -749,8 +749,6 @@ def translate():
         # If 1st workflow, i.e selecting the modules for translation is selected
         if opt == "1":
 
-            TEMP = TranslateReportStatus()
-            TEMP.get_percentage_per_module("fr.py")
             if form.accepts(request.vars, session):
 
                 modlist = []
@@ -823,6 +821,61 @@ def translate():
             # Adding the custom form to the output
             output["title"] = T("Select the required modules")
             output["form"] = form
+
+        elif opt=="3":
+
+
+            if form.accepts(request.vars, session):
+
+                code = form.request_vars.code
+                S = TranslateReportStatus()
+                percent_dict = S.get_translation_percentages(code)
+
+                modlist = []
+                for mod in sorted(percent_dict.keys()):
+                    if mod!="complete_file":
+                        modlist.append(mod)
+                modcount = len(modlist)
+
+                table = TABLE(_class="translation_module_table")
+                table.append(BR())
+
+                # Setting number of columns in the table
+                NO_OF_COLUMNS = 3
+
+                # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
+                num = 0
+                max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
+
+                while num < max_rows:
+                    row = TR(TD(modlist[num]), TD(percent_dict[modlist[num]]))
+                    for c in range(1, NO_OF_COLUMNS):
+                        if num + c*max_rows < modcount:
+                            row.append(TD(modlist[num+c*max_rows]))
+                            row.append(TD(percent_dict[modlist[num+c*max_rows]]))
+                    num += 1
+                    table.append(row)
+
+                # Adding the table to output to display it
+                div = DIV()
+                div.append(table)
+                div.append(BR())
+                div.append(TR(TD("Overall translation percentage of the file: "), TD(percent_dict["complete_file"])))
+                form.append(div)
+                output["title"] = T("Module-wise Percentage of Translated Strings")
+                output["form"] = form
+
+            else:
+
+                div = DIV()
+                row = TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code")))
+                div.append(row)
+                div.append(BR())
+                div.append(INPUT(_type='submit',_value='Submit'))
+                form.append(div)
+                # Adding the custom form to the output
+                output["title"] = T("Select the language file")
+                output["form"] = form
 
         return output
 
