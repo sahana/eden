@@ -10,7 +10,7 @@ import unittest
 import argparse
 
 def loadAllTests():
-    loadTests = unittest.TestLoader().loadTestsFromTestCase
+
     # Create Organisation
     loadTests = unittest.TestLoader().loadTestsFromTestCase
     suite = loadTests(CreateOrganisation)
