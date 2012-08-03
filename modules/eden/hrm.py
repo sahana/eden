@@ -3059,6 +3059,24 @@ def hrm_job_role_multirepresent(opt):
     return vals
 
 # =============================================================================
+def hrm_job_title_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+
+    db = current.db
+    table = db.hrm_job_title
+    r = db(table.id == id).select(table.name,
+                                  limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
 def hrm_skill_multirepresent(opt):
     """
         Skill representation

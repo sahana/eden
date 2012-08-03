@@ -48,7 +48,7 @@ class CreateCategory(SeleniumUnitTest):
                        "Other Items",
                        "option" ),
                      ( "parent_item_category_id",
-                       "Food",
+                       "Standard > Food",
                        "option" ),
                      ( "code",
                        "123"),
