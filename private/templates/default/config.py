@@ -300,6 +300,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.email_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
 #settings.hrm.deletable = True
+# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
+#settings.hrm.job_roles = True
 # Uncomment to hide the Staff resource
 #settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.

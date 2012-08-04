@@ -106,10 +106,12 @@ def morgue():
                     [(T("Morgue"), "name")]
               ], tabs=morgue_tabs)
 
- # Pre-processor
+    # Pre-processor
     def prep(r):
-        if r.interactive and r.id:
-                table.obsolete.readable = table.obsolete.writable = True
+        if r.interactive and r.id and not r.component:
+            field = r.table.obsolete
+            field.readable = field.writable = True
+        return True
     s3.prep = prep
 
     output = s3_rest_controller(rheader=rheader)

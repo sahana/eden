@@ -44,7 +44,6 @@ def site_org_json():
     table = s3db.org_site
     otable = s3db.org_organisation
     response.headers["Content-Type"] = "application/json"
-    #db.req_commit.date.represent = lambda dt: dt[:10]
     query = (table.site_id == request.args[0]) & \
             (table.organisation_id == otable.id)
     records = db(query).select(otable.id,
@@ -57,17 +56,21 @@ def facility():
     
     # Pre-processor
     def prep(r):
-        if r.interactive and r.method == "update":
-                table.obsolete.readable = table.obsolete.writable = True
+        if r.interactive:
+            if r.component:
+                # remove CRUD generated buttons in the tabs
+                s3db.configure("inv_inv_item",
+                               create=False,
+                               listadd=False,
+                               editable=False,
+                               deletable=False,
+                               )
+            elif r.method == "update":
+                field = r.table.obsolete
+                field.readable = field.writable = True
+        return True
     s3.prep = prep
 
-    # remove CRUD generated buttons in the tabs
-    s3db.configure("inv_inv_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -140,7 +143,7 @@ def person():
         else:
             s3mgr.show_ids = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller("pr", "person")
 

@@ -60,15 +60,19 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="location">
+
+        <xsl:variable name="ID" select="./properties/id/text()"/>
+        <xsl:variable name="Name" select="./properties/name/text()"/>
+
         <resource name="gis_location">
 
-            <xsl:attribute name="uuid">
-                <xsl:value-of select="./properties/id/text()"/>
-            </xsl:attribute>
+            <xsl:if test="$ID!=''">
+                <xsl:attribute name="uuid"><xsl:value-of select="$ID"/></xsl:attribute>
+            </xsl:if>
 
-            <data field="name">
-                <xsl:value-of select="./properties/name/text()"/>
-            </data>
+            <xsl:if test="$Name!=''">
+                <data field="name"><xsl:value-of select="$Name"/></data>
+            </xsl:if>
 
             <xsl:choose>
 

@@ -63,7 +63,7 @@ class CreateStaff(SeleniumUnitTest):
                      ( "email",
                        "rjltestdonotusetest99@romanian.com",
                        "pr_person"),
-                     ( "job_role_id",
+                     ( "job_title_id",
                        "Warehouse Manager",
                        "option"),
                      ( "site_id",
@@ -71,5 +71,29 @@ class CreateStaff(SeleniumUnitTest):
                        "autocomplete"),
                      ]
                      )
+        
 
+    def test_hrm001_create_staff_registry(self):
+        """
+            @case: HRM001
+            @description: Create a Staff from registry
+            
+            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
+            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
+        """
+        print "\n"
 
+        self.login(account="admin", nexturl="hrm/staff/create")
+        self.browser.find_element_by_id("select_from_registry").click()
+        self.create("hrm_human_resource", 
+                    [( "organisation_id",
+                       "Timor-Leste Red Cross Society",
+                       "autocomplete"),
+                     ( "person_id",
+                       "Yakobus Maia",
+                       "autocomplete"),
+                     ( "site_id",
+                       "Ainaro Branch Office",
+                       "autocomplete")
+                     ]
+                     )

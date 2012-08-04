@@ -631,7 +631,8 @@ $('#submit_record__row input').click(function(){
 
     return XML(output)
 # -----------------------------------------------------------------------------
-def organisation():
+def partners():
+    # ToDo: This could need to be a deployment setting
     current.request.get_vars["organisation.organisation_type_id$name"] = "Bilateral,Government,Intergovernmental,NGO,UN agency"
     return s3db.org_organisation_controller()
 # END =========================================================================

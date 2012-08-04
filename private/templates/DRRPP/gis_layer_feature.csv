@@ -1,0 +1,2 @@
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
+"Projects",,"project","location","US","project",,"Project","name/location_id/multi_activity_type_id",,,,,,"True","True"

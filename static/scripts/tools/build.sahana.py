@@ -247,6 +247,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # Also do s3.vulnerability.js
+    print "Compressing s3.vulnerability.js"
+    sourceDirectoryVulnerability = ".."
+    configFilenameVulnerability = "sahana.js.vulnerability.cfg"
+    outputFilenameVulnerability = "s3.vulnerability.min.js"
+    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
+                                      None,
+                                      configFilenameVulnerability)
+    minimizedVulnerability = minimize(mergedVulnerability)
+    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    try:
+        os.remove("../S3/%s" % outputFilenameVulnerability)
+    except:
+        pass
+    shutil.move(outputFilenameVulnerability, "../S3")
+
     if dogis:
         sourceDirectoryGIS = "../S3"
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"

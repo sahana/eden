@@ -280,7 +280,10 @@ class S3CRUD(S3Method):
             if representation in ("popup", "iframe"):
                 self.next = None
             elif not create_next:
-                self.next = r.url(method="")
+                if r.component:
+                    self.next = r.url(method="")
+                else:
+                    self.next = r.url(id="[id]", method="read")
             else:
                 try:
                     self.next = create_next(self)
@@ -627,7 +630,10 @@ class S3CRUD(S3Method):
             if representation in ("popup", "iframe", "plain"):
                 self.next = None
             elif not update_next:
-                self.next = r.url(method="")
+                if r.component:
+                    self.next = r.url(method="")
+                else:
+                    self.next = r.url(id="[id]", method="read")
             else:
                 try:
                     self.next = update_next(self)

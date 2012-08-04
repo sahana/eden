@@ -221,7 +221,7 @@ class S3StatsModel(S3Model):
         rows = db(query).select(table.date,
                                 table.value,
                                 table.date.max(),
-                                groupby=table.location_id,
+                                groupby = table.location_id|table.date|table.value
                                 )
         if len(rows) == 0:
             return

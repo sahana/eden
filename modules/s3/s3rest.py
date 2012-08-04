@@ -1253,7 +1253,7 @@ class S3Request(object):
         if "maxbounds" in _vars:
             if _vars["maxbounds"].lower() == "true":
                 maxbounds = True
-        if r.representation == "gpx":
+        if r.representation in ("gpx", "osm"):
             maxbounds = True
 
         # Components of the master resource (tablenames)

@@ -53,6 +53,10 @@ settings.security.map = True
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 
+# HRM
+# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
+settings.hrm.job_roles = True
+
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True

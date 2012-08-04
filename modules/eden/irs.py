@@ -61,8 +61,6 @@ class S3IRSModel(S3Model):
         db = current.db
         settings = current.deployment_settings
 
-        datetime_represent = S3DateTime.datetime_represent
-
         # Shortcuts
         add_component = self.add_component
         configure = self.configure
@@ -274,21 +272,18 @@ class S3IRSModel(S3Model):
                                    readable = False,
                                    writable = False,
                                    label = T("Contact Details")),
-                             Field("datetime", "datetime",
-                                   default = current.request.utcnow,
-                                   label = T("Date/Time of Alert"),
-                                   widget = S3DateTimeWidget(future=0),
-                                   represent = lambda val: datetime_represent(val, utc=True),
-                                   requires = [IS_NOT_EMPTY(),
-                                               IS_UTC_DATETIME(allow_future=False)]),
-                             Field("expiry", "datetime",
-                                   #readable = False,
-                                   #writable = False,
-                                   label = T("Expiry Date/Time"),
-                                   widget = S3DateTimeWidget(past=0),
-                                   represent = lambda val: datetime_represent(val, utc=True),
-                                   requires = IS_NULL_OR(IS_UTC_DATETIME())
-                                  ),
+                             s3_datetime("datetime",
+                                         label = T("Date/Time of Alert"),
+                                         empty=False,
+                                         default="now",
+                                         future=0,
+                                         ),
+                             s3_datetime("expiry",
+                                         label = T("Expiry Date/Time"),
+                                         empty=False,
+                                         default="now",
+                                         past=0,
+                                         ),
                              self.gis_location_id(),
                              # Very basic Impact Assessment
                              Field("affected", "integer",
@@ -319,14 +314,14 @@ class S3IRSModel(S3Model):
                                           T("Yes"))[verified == True]),
                              # @ToDo: Move this to Events?
                              # Then display here as a Virtual Field
-                             Field("dispatch", "datetime",
-                                   # We don't want these visible in Create forms
-                                   # (we override in Update forms in controller)
-                                   readable = False,
-                                   writable = False,
-                                   label = T("Date/Time of Dispatch"),
-                                   widget = S3DateTimeWidget(future=0),
-                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False))),
+                             s3_datetime("dispatch",
+                                         label = T("Date/Time of Dispatch"),
+                                         future=0,
+                                         # We don't want these visible in Create forms
+                                         # (we override in Update forms in controller)
+                                         readable = False,
+                                         writable = False,
+                                         ),
                              Field("closed", "boolean",
                                    # We don't want these visible in Create forms
                                    # (we override in Update forms in controller)
@@ -1111,11 +1106,11 @@ class S3IRSResponseModel(S3Model):
                                         tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
 
                                     ),
-                             Field("datetime", "datetime",
-                                   label=T("Dispatch Time"),
-                                   widget = S3DateTimeWidget(future=0),
-                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME(allow_future=False)),
-                                   default = current.request.utcnow),
+                             s3_datetime("datetime",
+                                         label=T("Dispatch Time"),
+                                         default="now",
+                                         future=0,
+                                         ),
                              self.super_link("site_id", "org_site",
                                              label = T("Fire Station"),
                                              readable = True,
