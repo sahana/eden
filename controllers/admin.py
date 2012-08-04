@@ -824,7 +824,6 @@ def translate():
 
         elif opt=="3":
 
-
             if form.accepts(request.vars, session):
 
                 code = form.request_vars.code
@@ -864,6 +863,7 @@ def translate():
                 form.append(div)
                 output["title"] = T("Module-wise Percentage of Translated Strings")
                 output["form"] = form
+                s3.has_required = False
 
             else:
 
