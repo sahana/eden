@@ -802,7 +802,7 @@ class S3HRJobModel(S3Model):
                                 ondelete = "SET NULL")
 
         multi_job_role_id = S3ReusableField("job_role_id",
-                                "list:reference db.hrm_job_role",
+                                "list:reference hrm_job_role",
                                 sortby = "name",
                                 label = label,
                                 requires = IS_NULL_OR(

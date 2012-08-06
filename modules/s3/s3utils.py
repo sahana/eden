@@ -633,7 +633,7 @@ def s3_include_debug_css():
     folder = request.folder
     appname = request.application
     theme = current.deployment_settings.get_theme()
-    
+
     css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
     try:
         f = open(css_cfg, "r")
