@@ -99,10 +99,9 @@ def volunteer():
     s3.filter = (_type == 2)
     _location = table.location_id
     _location.label = T("Home Address")
-    table.job_role_id.label = T("Volunteer Role")
     list_fields = ["id",
                    "person_id",
-                   "job_role_id",
+                   "job_title_id",
                    "organisation_id",
                    (settings.get_ui_label_mobile_phone(), "phone"),
                    "location_id",
@@ -428,7 +427,6 @@ def person():
             if r.component:
                 if r.component_name == "human_resource":
                     table = r.component.table
-                    table.job_role_id.label = T("Volunteer Role")
                     table.code.writable = False
                     table.code.readable = False
                     table.department.writable = False
@@ -705,6 +703,19 @@ def group():
 # =============================================================================
 def job_role():
     """ Job Roles Controller """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller("hrm", resourcename)
+    return output
+
+def job_title():
+    """ Job Titles Controller """
 
     mode = session.s3.hrm.mode
     def prep(r):

@@ -55,8 +55,6 @@ class HospitalDataModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
-        s3 = current.response.s3
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -66,10 +64,6 @@ class HospitalDataModel(S3Model):
 
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
-
-        s3_date_format = settings.get_L10n_date_format()
-        s3_datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
 
         add_component = self.add_component
         configure = self.configure
@@ -499,11 +493,10 @@ class HospitalDataModel(S3Model):
         tablename = "hms_activity"
         table = define_table(tablename,
                              hospital_id(ondelete="CASCADE"),
-                             Field("date", "datetime", unique=True,  # Date&Time the entry applies to
-                                   requires = IS_UTC_DATETIME(allow_future=False),
-                                   represent = s3_datetime_represent,
-                                   widget = S3DateTimeWidget(future=0),
-                                   label = T("Date & Time")),
+                             s3_datetime(label = T("Date & Time"),
+                                         empty=False,
+                                         future=0,
+                                         ),
                              Field("patients", "integer",            # Current Number of Patients
                                    requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
                                    default = 0,
@@ -592,11 +585,10 @@ class HospitalDataModel(S3Model):
                                    represent = lambda opt: \
                                                hms_bed_type_opts.get(opt,
                                                                 UNKNOWN_OPT)),
-                             Field("date", "datetime",
-                                   requires = IS_UTC_DATETIME(allow_future=False),
-                                   represent = s3_datetime_represent,
-                                   widget = S3DateTimeWidget(future=0),
-                                   label = T("Date of Report")),
+                             s3_datetime(label = T("Date of Report"),
+                                         empty=False,
+                                         future=0,
+                                         ),
                              Field("beds_baseline", "integer",
                                    default = 0,
                                    requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
@@ -895,7 +887,7 @@ class HospitalDataModel(S3Model):
                 (ctable.bed_type == bed_type)
         row = db(query).select(ctable.id,
                                limitby=(0, 1)).first()
-        if row and str(row.id) != request.post_vars.id:
+        if row and str(row.id) != current.request.post_vars.id:
             form.errors["bed_type"] = current.T("Bed type already registered")
         elif "unit_id" not in form.vars:
             query = htable.id == hospital_id

@@ -1706,7 +1706,7 @@ class S3PersonImageModel(S3Model):
         query = (table.id == row.get("id"))
         deleted_row = db(query).select(table.image,
                                        limitby=(0, 1)).first()
-        s3db.pr_image_delete_all(deleted_row.image)
+        current.s3db.pr_image_delete_all(deleted_row.image)
 
 # =============================================================================
 class S3ImageLibraryModel(S3Model):
@@ -2071,8 +2071,6 @@ class S3PersonPresence(S3Model):
         ADD_LOCATION = current.messages.ADD_LOCATION
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        datetime_represent = S3DateTime.datetime_represent
-
         crud_strings = current.response.s3.crud_strings
 
         # Trackable types
@@ -2147,12 +2145,12 @@ class S3PersonPresence(S3Model):
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Location Details"),
                                                                         T("Specific Area (e.g. Building/Room) within the Location that this Person/Group is seen.")))),
-                                  Field("datetime", "datetime",
-                                        label = T("Date/Time"),
-                                        default = current.request.utcnow,
-                                        requires = IS_UTC_DATETIME(allow_future=False),
-                                        widget = S3DateTimeWidget(future=0),
-                                        represent = lambda val: datetime_represent(val, utc=True)),
+                                  s3_datetime("datetime",
+                                              label = T("Date/Time"),
+                                              empty=False,
+                                              default="now",
+                                              future=0
+                                              ),
                                   Field("presence_condition", "integer",
                                         requires = IS_IN_SET(pr_presence_conditions,
                                                              zero=None),
@@ -2439,11 +2437,10 @@ class S3PersonDescription(S3Model):
                                    label=T("Status"),
                                    represent=lambda opt: \
                                             person_status.get(opt, UNKNOWN_OPT)),
-                             Field("timestmp", "datetime",
-                                   label=T("Date/Time"),
-                                   requires=[IS_EMPTY_OR(IS_UTC_DATETIME_IN_RANGE())],
-                                   widget = S3DateTimeWidget(),
-                                   default=current.request.utcnow),
+                             s3_datetime("timestmp",
+                                         label=T("Date/Time"),
+                                         default="now"
+                                         ),
                              Field("note_text", "text",
                                    label=T("Text")),
                              Field("note_contact", "text",

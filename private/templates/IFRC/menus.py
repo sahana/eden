@@ -118,7 +118,7 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
-                    DB("Job Roles", f="job_role")
+                    DB("Job Roles", f="job_title")
                 ))
         elif request.controller in ("hrm", "org"):
             dashboard = DB()(
@@ -143,7 +143,7 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
-                    DB("Job Roles", f="job_role")
+                    DB("Job Roles", f="job_title")
                 ))
 
         elif request.controller == "default" and request.function == "index":
@@ -278,7 +278,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create",vars = red_cross_filter,),
                         M("List All", vars = red_cross_filter,),
                         M("Search", m="search", vars = red_cross_filter,),
-                        #M("Import", m="import", p="create")
+                        M("Import", m="import", p="create", check=is_org_admin)
                     ),
                     M("Offices", c="org", f="office",
                       check=manager_mode)(
@@ -287,7 +287,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Job Role Catalog", c="hrm", f="job_role",
+                    M("Job Role Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("New Job Role", m="create"),
                         M("List All"),

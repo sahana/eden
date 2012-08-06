@@ -3,7 +3,7 @@
 "Hospitals",,"hms","hospital","US","hospital","Medical Facility","Hospital",,,,,,,"False",
 "Shelters",,"cr","shelter","US","shelter","Campground","Shelter","name/population/capacity","shelter.status=2","status",2,,,"False",
 "Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.type=NONE,1,2,3,4&amp;office.obsolete=False",,,,,"False",
-"Projects",,"project","location","US",project",,"Project","name/location_id/multi_activity_type_id",,,,,,"False",
+"Projects",,"project","location","US","project",,"Project","name/location_id/multi_activity_type_id",,,,,,"False",
 "Staff","All Active Staff","hrm","staff","US","staff","Contact, Dreadlocks","Staff","person_id/job_role_id/organisation_id","human_resource.status=1","type",1,"True",,"False",
 "Volunteers","All Active Volunteers","vol","volunteer","US","volunteer","Contact, Dreadlocks","Volunteer","person_id/job_role_id/organisation_id","human_resource.status=1","type",2,"True",,"False",
 "Vehicles",,"vehicle","vehicle","US","vehicle","Car","Vehicle","number/person_id","asset.type=1","type",1,"True",,"False",

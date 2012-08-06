@@ -5243,6 +5243,7 @@ S3.gis.layers_feature_resources[%i]={
                 CoordinateLayer,
                 GeoRSSLayer,
                 KMLLayer,
+                OpenWeatherMapLayer,
                 WFSLayer,
                 FeatureLayer,
             ]
@@ -6315,6 +6316,55 @@ class OSMLayer(Layer):
             )
             self.setup_folder_and_visibility(output)
             return output
+
+# -----------------------------------------------------------------------------
+class OpenWeatherMapLayer(Layer):
+    """
+       OpenWeatherMap Layers from Catalogue
+    """
+
+    tablename = "gis_layer_openweathermap"
+    js_array = "S3.gis.OWM"
+
+    # -------------------------------------------------------------------------
+    def as_dict(self):
+        sublayers = self.sublayers
+        if sublayers:
+            if current.response.s3.debug:
+                # Non-debug has this included within OpenLayers.js
+                self.scripts.append("scripts/gis/OWM.OpenLayers.1.3.0.2.js")
+            output = {}
+            for sublayer in sublayers:
+                if sublayer.type == "station":
+                    output["station"] = {"name": sublayer.name or "Weather Stations",
+                                         "id": sublayer.layer_id,
+                                         "dir": sublayer.dir,
+                                         "visibility": sublayer.visible
+                                         }
+                elif sublayer.type == "city":
+                    output["city"] = {"name": sublayer.name or "Current Weather",
+                                      "id": sublayer.layer_id,
+                                      "dir": sublayer.dir,
+                                      "visibility": sublayer.visible
+                                      }
+            return output
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        output = self.as_dict()
+        if output:
+            result = json.dumps(output, indent=4, sort_keys=True)
+            if result:
+                return '''%s=%s\n''' % (self.js_array, result)
+
+        return None
 
 # -----------------------------------------------------------------------------
 class ThemeLayer(Layer):

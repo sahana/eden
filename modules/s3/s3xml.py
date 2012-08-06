@@ -949,7 +949,6 @@ class S3XML(S3Codec):
                     attr[URL] = fileurl
                     attr[ATTRIBUTE.filename] = filename
             elif fieldtype == "password":
-                # Do not export password fields
                 data = SubElement(elem, DATA)
                 data.attrib[FIELD] = f
                 data.text = v
@@ -1870,7 +1869,10 @@ class S3XML(S3Codec):
                         e = encoding
                         break
         try:
-            reader = csv.DictReader(utf_8_encode(source),
+            import StringIO
+            if not isinstance(source, StringIO.StringIO):
+                source = utf_8_encode(source)
+            reader = csv.DictReader(source,
                                     delimiter=delimiter,
                                     quotechar=quotechar)
             for r in reader:

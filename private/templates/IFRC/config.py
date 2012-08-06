@@ -14,7 +14,7 @@ T = current.T
 settings.base.prepopulate = ["IFRC_Train"]
 
 settings.base.system_name = T("Resource Management System")
-settings.base.system_name_short = T("Resource Management System")
+settings.base.system_name_short = T("RMS")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "IFRC"
@@ -87,6 +87,8 @@ settings.hrm.use_credentials = False
 settings.hrm.use_education = True
 # Uncomment to disable the use of HR Teams
 settings.hrm.use_teams = False
+# Custom label for Organisations in HR module
+settings.hrm.organisation_label = T("National Society / Branch")
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

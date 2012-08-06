@@ -97,25 +97,13 @@ class S3AssetModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
-        request = current.request
-        settings = current.deployment_settings
 
         person_id = self.pr_person_id
         location_id = self.gis_location_id
-        organisation_id = self.org_organisation_id
-        organisation_represent = self.org_organisation_represent
-        room_id = self.org_room_id
-        item_id = self.supply_item_entity_id
-        supply_item_id = self.supply_item_id
-        supply_item_represent = self.supply_item_represent
-        #supplier_id = self.proc_supplier_id
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-        vehicle = settings.has_module("vehicle")
-
-        s3_date_format = settings.get_L10n_date_format()
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+        vehicle = current.deployment_settings.has_module("vehicle")
 
         # Shortcuts
         add_component = self.add_component
@@ -134,8 +122,8 @@ class S3AssetModel(S3Model):
                             ASSET_TYPE_OTHER      : T("Other")
                            }
 
-        asset_item_represent = lambda id: supply_item_represent(id,
-                                                                show_um = False)
+        asset_item_represent = lambda id: self.supply_item_represent(id,
+                                                                     show_um = False)
 
         ctable = self.supply_item_category
         itable = self.supply_item
@@ -146,16 +134,33 @@ class S3AssetModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              Field("number",
                                    label = T("Asset Number")),
-                             item_id,
-                             supply_item_id(represent = asset_item_represent,
-                                            requires = IS_ONE_OF(db((ctable.can_be_asset == True) & \
-                                                                    (itable.item_category_id == ctable.id)),
-                                                                 "supply_item.id",
-                                                                 asset_item_represent,
-                                                                 sort=True,
-                                                          ),
+                             self.supply_item_entity_id,
+                             self.supply_item_id(represent = asset_item_represent,
+                                                 requires = IS_ONE_OF(db((ctable.can_be_asset == True) & \
+                                                                         (itable.item_category_id == ctable.id)),
+                                                                      "supply_item.id",
+                                                                      asset_item_represent,
+                                                                      sort=True,
+                                                                      ),
                                             script = None, # No Item Pack Filter
                                             ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("site_id", "org_site",
+                                        label = T("Office/Warehouse/Facility"),
+                                        default = auth.user.site_id if auth.is_logged_in() else None,
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        ondelete = "RESTRICT",
+                                        # Comment these to use a Dropdown & not an Autocomplete
+                                        #widget = S3SiteAutocompleteWidget(),
+                                        #comment = DIV(_class="tooltip",
+                                        #              _title="%s|%s" % (T("Warehouse"),
+                                        #                                T("Enter some characters to bring up a list of possible matches"))),
+                                        represent = self.org_site_represent
+                                        ),
+                             self.org_organisation_id(),
                              # @ToDo: Can we set this automatically based on Item Category?
                              Field("type", "integer",
                                    readable = vehicle,
@@ -171,11 +176,9 @@ class S3AssetModel(S3Model):
                              #supplier_id(),
                              Field("supplier",
                                    label = T("Supplier")),
-                             Field("purchase_date", "date",
-                                   label = T("Purchase Date"),
-                                   requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
-                                   represent = s3_date_represent,
-                                   widget = S3DateWidget()),
+                             s3_date("purchase_date",
+                                     label = T("Purchase Date")
+                                     ),
                              Field("purchase_price", "double",
                                    #default=0.00,
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
@@ -371,21 +374,15 @@ class S3AssetModel(S3Model):
                                    represent = lambda opt: \
                                        asset_log_status_opts.get(opt, UNKNOWN_OPT)
                                    ),
-                             Field("datetime",
-                                   "datetime",
-                                   label = T("Date"),
-                                   default=request.utcnow,
-                                   requires = IS_UTC_DATETIME(),
-                                   widget = S3DateTimeWidget(),
-                                   represent = s3_date_represent,
-                                   ),
-                             Field("datetime_until",
-                                   "datetime",
-                                   label = T("Date Until"),
-                                   requires = IS_EMPTY_OR(IS_UTC_DATETIME()),
-                                   widget = S3DateTimeWidget(),
-                                   represent = s3_date_represent,
-                                   ),
+                             s3_datetime("datetime",
+                                         default="now",
+                                         empty=False,
+                                         represent="date",
+                                         ),
+                             s3_datetime("datetime_until",
+                                         label = T("Date Until"),
+                                         represent="date",
+                                         ),
                              person_id(label = T("Assigned To")),
                              Field("check_in_to_person",
                                    "boolean",
@@ -397,9 +394,12 @@ class S3AssetModel(S3Model):
                                                                    T("If selected, then this Asset's Location will be updated whenever the Person's Location is updated."))),
                                    readable = False,
                                    writable = False),
-                             organisation_id(readable = False,
-                                             writable = False,
-                                             widget = None),      # This is the Organisation to whom the loan is made
+                             # The Organisation to whom the loan is made
+                             self.org_organisation_id(
+                                    readable = False,
+                                    writable = False,
+                                    widget = None
+                                    ),
                              #Field("site_or_location",
                              #      "integer",
                              #      requires = IS_NULL_OR(IS_IN_SET(site_or_location_opts)),
@@ -436,7 +436,7 @@ class S3AssetModel(S3Model):
  })
 })''' % dict(instance_type_nice = auth.org_site_types)),
                                               ),
-                             room_id(),
+                             self.org_room_id(),
                              #location_id(),
                              Field("cancel", #
                                    "boolean",

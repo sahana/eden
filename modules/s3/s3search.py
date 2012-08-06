@@ -592,28 +592,26 @@ class S3SearchOptionsWidget(S3SearchWidget):
             else:
                 opt_values = []
 
-                # Find unique values of options for that field
-                rows = resource.sqltable(fields=[field_name], as_rows=True)
+                rows = resource.sqltable(fields=[field_name],
+                                         start=None,
+                                         limit=None,
+                                         as_rows=True)
                 if rows:
                     if field_type.startswith("list"):
                         for row in rows:
-                            # row == {field_name: [#, ...]}
                             fk_list = row[field]
-
                             if fk_list != None:
                                 try:
                                     fkeys = fk_list.split("|")
                                 except:
                                     fkeys = fk_list
-
                                 for fkey in fkeys:
                                     if fkey not in opt_values:
                                         opt_values.append(fkey)
                     else:
-                        opt_values = [row[field] for row
-                                                 in rows
-                                                 if row[field] != None and
-                                                 row[field] not in opt_values]
+                        opt_values = list(set([row[field]
+                                               for row in rows
+                                               if row[field] is not None]))
 
         if len(opt_values) < 2:
             msg = attr.get("_no_opts", T("No options available"))
@@ -1267,7 +1265,12 @@ class S3Search(S3CRUD):
                                            simple_form,
                                            advanced_form,
                                            form_values)
+
+        search_url = None
         if not errors:
+            if hasattr(query, "serialize_url"):
+                search_url = r.url(method = "",
+                                   vars = query.serialize_url(resource))
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
@@ -1385,7 +1388,18 @@ class S3Search(S3CRUD):
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
-            list_formats = DIV(T("Export to:"),
+
+            # Permalink
+            if search_url:
+                link = A(T("Link to this result"),
+                         _href=search_url,
+                         _class="permalink")
+                sep = " | "
+            else:
+                link = sep = ""
+
+            list_formats = DIV(link, sep,
+                               "%s: " % T("Export to"),
                                A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
                                  _href=r.url(method="", representation="pdf",

@@ -68,6 +68,8 @@ settings.gis.map_width = 854
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
 settings.gis.display_L0 = True
+# Deployment only covers Asia-Pacific
+settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "MH", "MM", "MN", "MV", "MY", "NP", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "SL", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]
 
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
@@ -83,6 +85,8 @@ settings.project.mode_drr = True
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
 # Uncomment this to customise
 settings.project.organisation_roles = {
     1: T("Lead Organization"),
