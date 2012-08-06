@@ -80,6 +80,12 @@ def facility_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def office_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def organisation_type():
     """ RESTful CRUD controller """
 

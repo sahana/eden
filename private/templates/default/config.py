@@ -294,6 +294,8 @@ settings.L10n.decimal_separator = "."
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+#settings.org.summary = True
 
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address

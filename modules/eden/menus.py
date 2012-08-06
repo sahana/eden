@@ -1335,6 +1335,11 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
+                    M("Office Types", f="office_type",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M(SECTORS, f="sector", restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),

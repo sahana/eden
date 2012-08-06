@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3InventoryModel",
+__all__ = ["S3WarehouseModel",
+           "S3InventoryModel",
            "S3TrackingModel",
            "S3AdjustModel",
            "inv_tabs",
@@ -110,6 +111,259 @@ send_type_opts.update(inv_item_status_opts)
 send_type_opts.update(settings.get_inv_send_types())
 recv_type_opts = settings.get_inv_shipment_types()
 recv_type_opts.update(settings.get_inv_recv_types())
+
+# =============================================================================
+class S3WarehouseModel(S3Model):
+
+    names = ["inv_warehouse",
+             #"inv_warehouse_type",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        messages = current.messages
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Warehouse Types
+        #
+        # tablename = "inv_warehouse_type"
+        # table = define_table(tablename,
+                             # Field("name", length=128,
+                                   # notnull=True, unique=True,
+                                   # label=T("Name")),
+                             # s3_comments(),
+                             # *s3_meta_fields())
+
+        # CRUD strings
+        #crud_strings[tablename] = Storage(
+        #    title_create = T("Add Warehouse Type"),
+        #    title_display = T("Warehouse Type Details"),
+        #    title_list = T("Warehouse Types"),
+        #    title_update = T("Edit Warehouse Type"),
+        #    title_search = T("Search Warehouse Types"),
+        #    subtitle_create = T("Add New Warehouse Type"),
+        #    label_list_button = T("List Warehouse Types"),
+        #    label_create_button = T("Add New Warehouse Type"),
+        #    label_delete_button = T("Delete Warehouse Type"),
+        #    msg_record_created = T("Warehouse Type added"),
+        #    msg_record_modified = T("Warehouse Type updated"),
+        #    msg_record_deleted = T("Warehouse Type deleted"),
+        #    msg_list_empty = T("No Warehouse Types currently registered"))
+
+        #warehouse_type_id = S3ReusableField("warehouse_type_id", table,
+        #                        sortby="name",
+        #                        requires = IS_NULL_OR(
+        #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
+        #                                              self.inv_warehouse_type_represent,
+        #                                              sort=True
+        #                                              )),
+        #                        represent = self.inv_warehouse_type_represent,
+        #                        label = T("Warehouse Type"),
+        #                        comment = S3AddResourceLink(c="inv",
+        #                                    f="warehouse_type",
+        #                                    label=T("Add Warehouse Type"),
+        #                                    title=T("Warehouse Type"),
+        #                                    tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Warehouse Type'.")),
+        #                        ondelete = "SET NULL")
+
+        #configure(tablename,
+        #          deduplicate = self.inv_warehouse_type_duplicate,
+        #          )
+
+        # Tags as component of Warehouse Types
+        #add_component("inv_warehouse_type_tag",
+        #              inv_warehouse_type=dict(joinby="warehouse_type_id",
+        #                                      name="tag"))
+
+        # ---------------------------------------------------------------------
+        # Warehouses
+        #
+        tablename = "inv_warehouse"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("site_id", "org_site"),
+                             super_link("doc_id", "doc_entity"),
+                             Field("name", notnull=True,
+                                   length=64,           # Mayon Compatibility
+                                   label = T("Name")),
+                             Field("code", length=10, # Mayon compatibility
+                                   label=T("Code")
+                                   # Deployments that don't wants warehouse codes can hide them
+                                   #readable=False,
+                                   #writable=False,
+                                   # @ToDo: Deployment Setting to add validator to make these unique
+                                   ),
+                             self.org_organisation_id(widget = S3OrganisationAutocompleteWidget(
+                                default_from_profile=True)),
+                             #warehouse_type_id(),
+                             self.gis_location_id(),
+                             Field("phone1", label = T("Phone 1"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("phone2", label = T("Phone 2"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("email", label = T("Email"),
+                                   requires = IS_NULL_OR(IS_EMAIL())),
+                             Field("fax", label = T("Fax"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("obsolete", "boolean",
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
+                                    (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                   default = False,
+                                   readable = False,
+                                   writable = False),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Warehouse"),
+            title_display = T("Warehouse Details"),
+            title_list = T("Warehouses"),
+            title_update = T("Edit Warehouse"),
+            title_search = T("Search Warehouses"),
+            title_upload = T("Import Warehouses"),
+            title_map = T("Map of Warehouses"),
+            subtitle_create = T("Add New Warehouse"),
+            label_list_button = T("List Warehouses"),
+            label_create_button = T("Add New Warehouse"),
+            label_delete_button = T("Delete Warehouse"),
+            msg_record_created = T("Warehouse added"),
+            msg_record_modified = T("Warehouse updated"),
+            msg_record_deleted = T("Warehouse deleted"),
+            msg_list_empty = T("No Warehouses currently registered"))
+
+        # Search Method
+        warehouse_search = S3Search(
+            advanced=(S3SearchSimpleWidget(
+                        name="warehouse_search_text",
+                        label=T("Search"),
+                        comment=T("Search for warehouse by text."),
+                        field=["name", "comments", "email"]
+                      ),
+                      S3SearchOptionsWidget(
+                        name="warehouse_search_org",
+                        label=T("Organization"),
+                        comment=T("Search for warehouse by organization."),
+                        field="organisation_id",
+                        represent ="%(name)s",
+                        cols = 3
+                      ),
+                      S3SearchOptionsWidget(
+                        name="warehouse_search_location",
+                        field="location_id$L1",
+                        location_level="L1",
+                        cols = 3
+                      ),
+                      S3SearchLocationWidget(
+                        name="warehouse_search_map",
+                        label=T("Map"),
+                      ),
+            ))
+
+        configure(tablename,
+                  super_entity=("pr_pentity", "org_site"),
+                  search_method = warehouse_search,
+                  deduplicate=self.inv_warehouse_duplicate,
+                  list_fields=["id",
+                               "name",
+                               "organisation_id",   # Filtered in Component views
+                               #"type",
+                               #(T("Address"), "location_id$addr_street"),
+                               (T("Country"), "location_id$L0"),
+                               "location_id$L1",
+                               "location_id$L2",
+                               "location_id$L3",
+                               #"location_id$L4",
+                               "phone1",
+                               "email"
+                               ])
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3db.*)
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    #@staticmethod
+    #def inv_warehouse_type_duplicate(item):
+    #    """ Import item de-duplication """
+
+    #    if item.tablename == "inv_warehouse_type":
+    #        table = item.table
+    #        name = item.data.get("name", None)
+    #        query = (table.name.lower() == name.lower())
+    #        duplicate = current.db(query).select(table.id,
+    #                                             limitby=(0, 1)).first()
+    #        if duplicate:
+    #            item.id = duplicate.id
+    #            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    #@staticmethod
+    #def inv_warehouse_type_represent(id, row=None):
+    #    """ FK representation """
+
+    #    if row:
+    #        return row.name
+    #    elif not id:
+    #        return current.messages.NONE
+
+    #    db = current.db
+    #    table = db.inv_warehouse_type
+    #    r = db(table.id == id).select(table.name,
+    #                                  limitby = (0, 1)).first()
+    #    try:
+    #        return r.name
+    #    except:
+    #        return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.inv_warehouse
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_duplicate(item):
+        """
+            Import item deduplication, match by name
+                (Adding location_id doesn't seem to be a good idea)
+
+            @param item: the S3ImportItem instance
+        """
+
+        if item.tablename == "inv_warehouse":
+            table = item.table
+            name = "name" in item.data and item.data.name
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
 # =============================================================================
 class S3InventoryModel(S3Model):
     """
@@ -146,6 +400,8 @@ class S3InventoryModel(S3Model):
                           }
         # =====================================================================
         # Inventory Item
+        #
+        # Stock in a warehouse or other site's inventory store.
         #
         # ondelete references have been set to RESTRICT because the inv. items
         # should never be automatically deleted
@@ -2093,8 +2349,7 @@ def inv_tabs(r):
         current.auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
         tablename, record = s3_rheader_resource(r)
-        if collapse_tabs and not \
-            (tablename == "org_office" and record.type == 5): # 5 = Warehouse
+        if collapse_tabs and not (tablename == "inv_warehouse"):
             # Test if the tabs are collapsed
             show_collapse = True
             show_inv = r.get_vars.show_inv
@@ -2140,7 +2395,7 @@ def inv_tabs(r):
 
 # =============================================================================
 def inv_warehouse_rheader(r):
-    """ Resource Header for warehouse inv. item """
+    """ Resource Header for warehouses and inventory items """
 
     if r.representation != "html" or r.method == "import":
         # RHeaders only used in interactive views
@@ -2149,9 +2404,54 @@ def inv_warehouse_rheader(r):
     s3db = current.s3db
     tablename, record = s3_rheader_resource(r)
     rheader = None
-    if tablename == "org_organisation" or tablename == "org_office":
-        rheader = s3db.org_rheader(r)
-    if tablename == "inv_inv_item" and record != None:
+    if tablename == "inv_warehouse":
+        tabs = [(T("Basic Details"), None),
+                #(T("Contact Data"), "contact"),
+                (T("Staff"), "human_resource"),
+                (T("Assign Staff"), "human_resource_site"),
+               ]
+        tabs = tabs + s3db.inv_tabs(r)
+        if settings.has_module("req"):
+            tabs = tabs + s3db.req_tabs(r)
+        tabs.append((T("Attachments"), "document"))
+        tabs.append((T("User Roles"), "roles"))
+
+        logo = org_organisation_logo(record.organisation_id)
+
+        rData = TABLE(
+                      TR(
+                         TH("%s: " % table.name.label),
+                         record.name,
+                         #TH("%s: " % table.type.label),
+                         #table.type.represent(record.type),
+                         ),
+                      TR(
+                         TH("%s: " % table.organisation_id.label),
+                         table.organisation_id.represent(record.organisation_id),
+                         TH("%s: " % table.location_id.label),
+                         table.location_id.represent(record.location_id),
+                         ),
+                      TR(
+                         TH("%s: " % table.email.label),
+                         record.email or "",
+                         TH("%s: " % table.phone1.label),
+                         record.phone1 or "",
+                         ),
+                    )
+        rheader = DIV()
+        if logo:
+            rheader.append(TABLE(TR(TD(logo),TD(rData))))
+        else:
+            rheader.append(rData)
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader.append(rheader_tabs)
+
+        #if r.component and r.component.name == "req":
+            # Inject the helptext script
+            #rheader.append(s3.req_helptext_script)
+
+    elif tablename == "inv_inv_item" and record != None:
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
                ]
@@ -2169,7 +2469,8 @@ def inv_warehouse_rheader(r):
                              ),
                         rheader_tabs
                         )
-    if tablename == "inv_track_item" and record != None:
+
+    elif tablename == "inv_track_item" and record != None:
         table = s3db["inv_inv_item"]
         irecord = table[record.item_id]
         tabs = [(T("Details"), None),
@@ -2189,8 +2490,8 @@ def inv_warehouse_rheader(r):
                         rheader_tabs
                         )
 
-    rfooter = TAG[""]()
     if record and "site_id" in record:
+        rfooter = TAG[""]()
         if (r.component and r.component.name == "inv_item"):
             if r.component_id:
                 asi_btn = A( T("Adjust Stock Item"),
@@ -2221,17 +2522,8 @@ def inv_warehouse_rheader(r):
                           _class = "action-btn"
                           )
             rfooter.append(ts_btn)
-    # else:
-        # ns_btn = A( T("Receive New Stock"),
-                      # _href = URL(c = "inv",
-                                  # f = "recv",
-                                  # args = ["create"]
-                                  # ),
-                      # _class = "action-btn"
-                      # )
-        # rfooter.append(ns_btn)
+            current.response.s3.rfooter = rfooter
 
-    current.response.s3.rfooter = rfooter
     return rheader
 
 # =============================================================================

@@ -1,60 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Inventory Warehouse - CSV Import Stylesheet
-
-         1st May 2011 / Graeme Foster <graeme AT acm DOT org>
-
-         - use for import to /inv/warehouse/create resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be inv/warehouse/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
+         Warehouse - CSV Import Stylesheet
 
          CSV fields:
-         Name............org_office.name
-         Organisation....org_organisation.name
-         Country.........gis_location.L0
-         L1..............gis_location.L1
-         L2..............gis_location.L2
-         L3..............gis_location.L3
-         L4..............gis_location.L4
-         Lat.............gis_location.lat
-         Lon.............gis_location.lon
-         Building........gis_location.name (Name used if not-provided)
-         Address.........gis_location.addr_street
-         Postcode........gis_location.addr_postcode
-         Phone...........org_office.phone1
-         Email...........org_office.email
-         Comments........org_office.comments
-
-        @todo:
-            - make updateable (don't use temporary UIDs)
+         Name....................inv_warehouse
+         Organisation............org_organisation
+         Branch..................org_organisation[_branch]
+         #Type....................inv_warehouse_type
+         Country.................gis_location.L0 Name or ISO2
+         Building................gis_location.name (Name used if not-provided)
+         Address.................gis_location.addr_street
+         Postcode................gis_location.addr_postcode
+         L1......................gis_location.L1
+         L2......................gis_location.L2
+         L3......................gis_location.L3
+         L4......................gis_location.L4
+         Lat.....................gis_location.lat
+         Lon.....................gis_location.lon
+         Phone1..................inv_warehouse
+         Phone2..................inv_warehouse
+         Email...................inv_warehouse
+         Fax.....................inv_warehouse
+         Comments................inv_warehouse
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
+    <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
+    <!-- Indexes for faster processing -->
+    <!--<xsl:key name="warehouse_type" match="row" use="col[@field='Type']"/>-->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="branch" match="row"
+             use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Organisations -->
+            <!-- Warehouse Types
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('warehouse_type', col[@field='Type'])[1])]">
+                <xsl:call-template name="WarehouseType" />
+            </xsl:for-each> -->
+
+            <!-- Top-level Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation"/>
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName">
+                        <xsl:value-of select="col[@field='Organisation']/text()"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="BranchName"></xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
+            <!-- Branch Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branch', concat(col[@field='Organisation'], '/',
+                                                                                        col[@field='Branch']))[1])]">
+                <xsl:call-template name="Organisation">
+                    <xsl:with-param name="OrgName"></xsl:with-param>
+                    <xsl:with-param name="BranchName">
+                        <xsl:value-of select="col[@field='Branch']/text()"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Warehouses -->
             <xsl:apply-templates select="table/row"/>
+
         </s3xml>
     </xsl:template>
 
@@ -63,30 +79,47 @@
 
         <!-- Create the variables -->
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="Warehouse" select="col[@field='Name']/text()"/>
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
+        <xsl:variable name="WarehouseName" select="col[@field='Name']/text()"/>
 
-        <!-- The Warehouse resource which is an org_office record -->
-        <resource name="org_office">
+        <resource name="inv_warehouse">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$Warehouse"/>
+                <xsl:value-of select="$WarehouseName"/>
             </xsl:attribute>
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Warehouse"/>
+                    <xsl:value-of select="$WarehouseName"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
+                    <xsl:choose>
+                        <xsl:when test="$BranchName!=''">
+                            <xsl:value-of select="concat($OrgName,$BranchName)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$OrgName"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:attribute>
             </reference>
-            <!-- Warehouse Data -->
-            <data field="type">5</data>
-            <data field="name"><xsl:value-of select="$Warehouse"/></data>
-            <data field="phone1"><xsl:value-of select="col[@field='Phone']"/></data>
+
+            <!--<xsl:if test="col[@field='Type']!=''">
+                <reference field="office_type_id" resource="inv_warehouse_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('WarehouseType:', col[@field='Type'])"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>-->
+
+            <!-- Warehouse data -->
+            <data field="name"><xsl:value-of select="$WarehouseName"/></data>
+            <data field="phone1"><xsl:value-of select="col[@field='Phone1']"/></data>
+            <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
             <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
+            <data field="fax"><xsl:value-of select="col[@field='Fax']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
@@ -96,22 +129,57 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:param name="OrgName"/>
+        <xsl:param name="BranchName"/>
 
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
-        </resource>
-
+        <xsl:choose>
+            <xsl:when test="$BranchName!=''">
+                <!-- This is the Branch -->
+                <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$BranchName"/></data>
+                    <resource name="org_organisation_branch" alias="parent">
+                        <reference field="organisation_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="col[@field='Organisation']"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$OrgName!=''">
+                <!-- This is the top-level Organisation -->
+                <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$OrgName"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="WarehouseType">
 
+        <xsl:variable name="Type" select="col[@field='Type']"/>
+
+        <xsl:if test="$Type!=''">
+            <resource name="inv_warehouse_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('WarehouseType:', $Type)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Type"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Locations">
 
-        <xsl:variable name="Warehouse" select="col[@field='Name']/text()"/>
+        <xsl:variable name="WarehouseName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Building" select="col[@field='Building']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
@@ -119,26 +187,20 @@
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
 
-        <!-- L0 location -->
-        <!-- Cannot be updated, so would produce validation errors -->
-        <!--
-        <resource name="gis_location">
-            <xsl:attribute name="uuid">
-                <xsl:text>urn:iso:std:iso:3166:-1:code:</xsl:text>
-                <xsl:call-template name="iso2countryname">
-                    <xsl:with-param name="country" select="$l0"/>
-                </xsl:call-template>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$l0"/></data>
-            <data field="level"><xsl:text>L0</xsl:text></data>
-        </resource>
-        -->
-
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
-            <xsl:call-template name="countryname2iso">
-                <xsl:with-param name="country" select="$l0"/>
-            </xsl:call-template>
+            <xsl:choose>
+                <xsl:when test="string-length($l0)!=2">
+                    <xsl:call-template name="countryname2iso">
+                        <xsl:with-param name="country">
+                            <xsl:value-of select="$l0"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$l0"/>
+                </xsl:otherwise>
+            </xsl:choose>
         </xsl:variable>
 
         <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
@@ -264,7 +326,7 @@
         <!-- Warehouse Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$Warehouse"/>
+                <xsl:value-of select="$WarehouseName"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l4!=''">
@@ -308,7 +370,7 @@
                     <data field="name"><xsl:value-of select="$Building"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="name"><xsl:value-of select="$Warehouse"/></data>
+                    <data field="name"><xsl:value-of select="$WarehouseName"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>

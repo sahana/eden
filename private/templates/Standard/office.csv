@@ -1,4 +1,4 @@
-Name,Organisation,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Phone1,Phone2,Email,Fax,Comments
+"Name","Organisation","Type","Country","Building","Address","Postcode","L1","L2","L3","Lat","Lon","Phone1","Phone2","Email","Fax","Comments"
 "California Southern Baptist Convention","California Southern Baptist Convention Disaster Relief","Headquarters","United States",,"678 East Shaw Ave",93710,"California","Fresno County","Fresno",36.808787,-119.774975,"(559) 229-9533",,,,
 "Guadalupe Community Center","Catholic Charities of Los Angeles","Regional","United States",,"21600 Hart St",91303,"California","Los Angeles County","Canoga Park",34.197381,-118.600415,"(818) 340-2050",,,,
 "Oasis Community Center","Catholic Charities of Los Angeles","Regional","United States",,"2045 San Gabriel Ave",90810,"California","Los Angeles County","Carson",33.792884,-118.223955,"(562) 480-2166",,,,
@@ -67,7 +67,6 @@ Name,Organisation,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Phone1
 "Whittier Public Health Center","Los Angeles County Department of Public Health","Regional","United States",,"7643 S Painter Ave",90602,"California","Los Angeles County","Whittier",33.9721224457,-118.0327340215,"(562) 464-5350",,,,
 "Los Angeles County Department of Social Services","Los Angeles County Department of Social Services","Headquarters","United States",,"12860 Crossroads Pkwy South",91746,"California","Los Angeles County","City of Industry",34.0287331492,-118.0239383876,"(562) 908-8400",,,,
 "Los Angeles County Emergency Management Office","Los Angeles County Emergency Management Office","Headquarters","United States",,"500 W Temple St, Ste 493",90012,"California","Los Angeles County","Los Angeles",34.0565490723,-118.2462997437,"(213) 974-1411",,,,
-"EMD Main Warehouse","Los Angeles City Emergency Management Department","Warehouse","United States","EMD-Main-WH","Alverston Avenue",,"California","Los Angeles County","Los Angeles",33.95132,-118.39733,,,,,
 "Incident Command Post","Los Angeles City Emergency Management Department","Headquarters","United States",,,,"California","Los Angeles County","Los Angeles",33.9481309342,-118.3967473412,,,,,
 "Chapter Headquarters, West District Office","American Red Cross of Greater Los Angeles","Headquarters","United States",,"11355 Ohio Avenue",90025,"California","Los Angeles County","Los Angeles",34.048073,-118.452446,"(310) 445-9900",,,,
 "Central East District Office","American Red Cross of Greater Los Angeles","Regional","United States",,"2227 S. Atlantic Blvd",90040,"California","Los Angeles County","Los Angeles",34.005764,-118.163742,"(323) 780-7660",,,,
@@ -88,7 +87,6 @@ Name,Organisation,Type,Country,Building,Address,Postcode,L1,L2,L3,Lat,Lon,Phone1
 "Good Shepherd Center for Homeless Women and Children","Catholic Charities of Los Angeles","Regional","United States",,"1671 Beverly Blvd",90026,"California","Los Angeles County","Los Angeles",34.064319,-118.265074,"(213) 235-1460",,,,
 "El Santo Nino Community Center","Catholic Charities of Los Angeles","Regional","United States",,"601 E 23rd St",90011,"California","Los Angeles County","Los Angeles",34.024868,-118.261606,"(213) 748-5246",,,,
 "Temporary Skilled Worker Center","Catholic Charities of Los Angeles","Regional","United States",,"1190 S Flower St",91502,"California","Los Angeles County","Burbank",34.170277,-118.301488,"(818) 566-7148",,,,
-"Central Warehouse","American Red Cross of Greater Los Angeles","Warehouse","United States","ARC-OC-WH","Sawgrass Drive",,"California","Orange County",,33.77497,-117.88686,,,,,
 "Capinteria Community Services","Catholic Charities of Los Angeles","Regional","United States",,"941 Walnut St",93013,"California","Santa Barbara County","Carpinteria",34.396921,-119.517031,"(805) 684-8621",,,,
 "Lompoc Community Services","Catholic Charities of Los Angeles","Regional","United States",,"903 East Chestnut Ave",93436,"California","Santa Barbara County","Lompoc",34.642148,-120.447498,"(805) 736-4886",,,,
 "Lompoc Food Pantry","Catholic Charities of Los Angeles","Regional","United States",,"903 East Chestnut Ave",93436,"California","Santa Barbara County","Lompoc",34.642148,-120.447498,"(805) 736-4886",,,,

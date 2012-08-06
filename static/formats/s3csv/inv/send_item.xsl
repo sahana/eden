@@ -23,7 +23,7 @@
          recipient..............inv_recipient_id, *  part of the inv_send key
          date...................inv_send.date,    *  part of the inv_send key
          delivery_date..........inv_send.delivery_date
-         warehouse..............inv_send.site_id -> org_office.name
+         warehouse..............inv_send.site_id -> inv_warehouse.name
          to_site_id.............inv_send.to_site_id
          status.................inv_send.status
          inv_send.comments......inv_send.comments
@@ -48,7 +48,7 @@
              match="row"
              use="col[@field='warehouse']"/>
 
-    <xsl:key name="org_office"
+    <xsl:key name="inv_warehouse"
              match="row"
              use="col[@field='to_site_id']"/>
 
@@ -109,10 +109,10 @@
                 </xsl:call-template>
             </xsl:for-each>
             <!-- ******************************************************************
-                 Search for each destination and create a unique org_office record
+                 Search for each destination and create a unique inv_warehouse record
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('org_office',
+                                        generate-id(key('inv_warehouse',
                                                         col[@field='to_site_id'])[1])]">
                 <xsl:call-template name="Place">
                     <xsl:with-param name="placename" select="col[@field='to_site_id']"/>
@@ -227,7 +227,7 @@
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
             <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_office">
+            <reference field="site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$warehouse"/>
                 </xsl:attribute>
@@ -291,8 +291,8 @@
     <xsl:template name="Place">
         <xsl:param name="placename"/>
 
-        <!-- Create the place, an org_office record -->
-        <resource name="org_office">
+        <!-- Create the place, an inv_warehouse record -->
+        <resource name="inv_warehouse">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$placename"/>
             </xsl:attribute>
@@ -308,8 +308,6 @@
         <xsl:variable name="firstName" select="substring-before($name,' ')"/>
         <xsl:variable name="lastName" select="substring-after($name,' ')"/>
 
-
-        <!-- Create the warehouse, an org_office record with type = 5 -->
         <resource name="pr_person">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$name"/>
@@ -379,13 +377,13 @@
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
             <!-- Link to warehouse -->
-            <reference field="site_id" resource="org_office">
+            <reference field="site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$warehouse"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to destination -->
-            <reference field="to_site_id" resource="org_office">
+            <reference field="to_site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$destination"/>
                 </xsl:attribute>
@@ -423,7 +421,7 @@
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
             <!-- Link to destination -->
-            <reference field="to_site_id" resource="org_office">
+            <reference field="to_site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$destination"/>
                 </xsl:attribute>
