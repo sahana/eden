@@ -213,7 +213,7 @@ class S3OrganisationModel(S3Model):
                                        # sortby="abrv",
                                        # requires = IS_NULL_OR(
                                                         # IS_ONE_OF(db, "org_subsector.id",
-                                                                  # self.org_subsector_requires_represent,
+                                                                  # self.org_subsector_represent,
                                                                   # sort=True)),
                                        # represent = self.org_subsector_represent,
                                        # label = SUBSECTOR,
@@ -662,7 +662,7 @@ class S3OrganisationModel(S3Model):
                                                  orderby=table.name)
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = opt.name
+            od[opt.id] = current.T(opt.name)
         return od
 
     # -------------------------------------------------------------------------
@@ -738,16 +738,16 @@ class S3OrganisationModel(S3Model):
         """ FK representation """
 
         if row:
-            return row.abrv
+            return row.name
         elif not id:
             return current.messages.NONE
 
         db = current.db
         table = db.org_sector
-        r = db(table.id == id).select(table.abrv,
+        r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.abrv
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -810,35 +810,28 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_subsector_represent(id):
+    def org_subsector_represent(id, row=None):
         """ Subsector ID representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
 
         db = current.db
         table = db.org_subsector
-        query = (table.id == id)
-        record = db(query).select(table.sector_id,
-                                  table.abrv,
-                                  limitby=(0, 1)).first()
-        return org_subsector_requires_represent(record)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_subsector_requires_represent(record):
-        """ Used to generate text for the Select """
-
-        if record:
-            db = current.db
-            table = db.org_sector
-            query = (table.id == record.sector_id)
-            sector_record = db(query).select(table.abrv,
-                                             limitby=(0, 1)).first()
-            if sector_record:
-                sector = sector_record.abrv
+        r = db(table.id == id).select(table.name,
+                                      table.sector_id,
+                                      limitby = (0, 1)).first()
+        try:
+            sector = db(query).select(table.abrv,
+                                      limitby=(0, 1)).first()
+            if sector:
+                return "%s: %s" % (sector.abrv, current.T(r.name))
             else:
-                sector = current.messages.NONE
-            return "%s:%s" % (sector, record.abrv)
-        else:
-            return current.messages.NONE
+                return current.T(r.name)
+        except:
+            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -870,7 +863,7 @@ class S3OrganisationModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1022,7 +1015,6 @@ class S3OrganisationModel(S3Model):
         if record:
             current.s3db.pr_update_affiliations(table, record)
         return
-
 
 # =============================================================================
 class S3OrganisationVirtualFields:
@@ -1489,7 +1481,7 @@ class S3FacilityModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1889,7 +1881,7 @@ class S3OfficeModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 

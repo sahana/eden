@@ -198,6 +198,12 @@ def project():
                               csv_template="project")
 
 # =============================================================================
+def status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def theme():
     """ RESTful CRUD controller """
 

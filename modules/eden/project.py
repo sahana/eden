@@ -82,7 +82,8 @@ class S3ProjectModel(S3Model):
         There are also additional Classes for optional Link Tables
     """
 
-    names = ["project_theme",
+    names = ["project_status",
+             "project_theme",
              "project_theme_id",
              "project_theme_opts",
              "project_hazard",
@@ -126,6 +127,45 @@ class S3ProjectModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
+        # Status
+        #
+        tablename = "project_status"
+        table = define_table(tablename,
+                             Field("name", length=128,
+                                   notnull=True, unique=True,
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_STATUS = T("Add Status")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_STATUS,
+            title_display = T("Status Details"),
+            title_list = T("Statuses"),
+            title_update = T("Edit Status"),
+            title_upload = T("Import Statuses"),
+            subtitle_create = T("Add New Status"),
+            label_list_button = T("List Statuses"),
+            label_create_button = ADD_STATUS,
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No Statuses currently registered"))
+
+        # Reusable Field
+        status_id = S3ReusableField("status_id", table,
+                                    label = T("Status"),
+                                    sortby = "name",
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "project_status.id",
+                                                          self.project_status_represent,
+                                                          sort=True)),
+                                    represent = self.project_status_represent,
+                                    ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
         # Theme
         # @ToDo: Move to S3ProjectThemeModel once direct link removed
         #        - which needs an embedded widget UI
@@ -134,7 +174,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128, notnull=True, unique=True),
                              s3_comments(),
-                             format = "%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -248,12 +287,6 @@ class S3ProjectModel(S3Model):
             5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
         }
 
-        project_status_opts = {
-            1: T("Proposed"),
-            2: T("Current"),
-            3: T("Completed"),
-        }
-    
         tablename = "project_project"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -278,11 +311,7 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
-                             Field("status", "integer",
-                                   label = T("Status"),
-                                   requires = IS_IN_SET(project_status_opts),
-                                   represent = lambda opt: \
-                                    project_status_opts.get(opt, messages.UNKNOWN_OPT)),
+                             status_id(),
                              # NB There is additional client-side validation for start/end date in the Controller
                              s3_date("start_date",
                                      label = T("Start Date")
@@ -575,6 +604,9 @@ class S3ProjectModel(S3Model):
 
         # Themes
         add_component("project_theme_percentage", project_project="project_id")
+
+        # Statuses
+        add_component("project_status", project_project="project_id")
 
         # DRRPP
         if settings.get_template() == "DRRPP":
@@ -941,7 +973,7 @@ class S3ProjectModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -960,7 +992,26 @@ class S3ProjectModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_status_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_status
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -992,9 +1043,10 @@ class S3ProjectModel(S3Model):
         opts = db(table.deleted == False).select(table.id,
                                                  table.name,
                                                  orderby=table.name)
+        T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = opt.name
+            od[opt.id] = T(opt.name)
         return od
 
     # -------------------------------------------------------------------------
@@ -1008,9 +1060,10 @@ class S3ProjectModel(S3Model):
         opts = db(table.deleted == False).select(table.id,
                                                  table.name,
                                                  orderby=table.name)
+        T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = opt.name
+            od[opt.id] = T(opt.name)
         return od
 
     # -------------------------------------------------------------------------
@@ -1417,16 +1470,16 @@ class S3Project3WModel(S3Model):
 
         # Reusable Field
         beneficiary_type_id = S3ReusableField("beneficiary_type_id", table,
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "project_beneficiary_type.id",
-                                                          self.project_beneficiary_type_represent)),
-                                   represent = self.project_beneficiary_type_represent,
-                                   label = T("Beneficiary Type"),
-                                   comment = S3AddResourceLink(c="project",
-                                                               f="beneficiary_type",
-                                                               title=ADD_BNF_TYPE,
-                                                               tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
-                                   ondelete = "CASCADE")
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "project_beneficiary_type.id",
+                                  self.project_beneficiary_type_represent)),
+            represent = self.project_beneficiary_type_represent,
+            label = T("Beneficiary Type"),
+            comment = S3AddResourceLink(c="project",
+                                        f="beneficiary_type",
+                                        title=ADD_BNF_TYPE,
+                                        tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+            ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
         # Project Beneficiary
@@ -1741,7 +1794,7 @@ class S3Project3WModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1757,10 +1810,14 @@ class S3Project3WModel(S3Model):
 
         db = current.db
         table = db.project_beneficiary
-        r = db(table.id == id).select(table.type,
-                                      limitby = (0, 1)).first()
+        ttable = db.project_beneficiary_type
+        query = (table.id == id) & \
+                (ttable,)
+        r = db(query).select(table.value,
+                             ttable.name,
+                             limitby = (0, 1)).first()
         try:
-            return r.type
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -3307,20 +3364,28 @@ class S3ProjectTaskModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def project_task_represent(id, row=None):
+    def project_task_represent(id, row=None, show_link=True):
         """ FK representation """
 
         if row:
-            return row.name
+            if show_link:
+                return A(row.name,
+                         _href=URL(c="project", f="task", args=[row.id]))
+            else:
+                return row.name
         elif not id:
             return current.messages.NONE
             
         db = current.db
         table = db.project_task
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
+        r = db(table.id == id).select(table.name,
+                                      limitby=(0, 1)).first()
         try:
-            return record.name
+            if show_link:
+                return A(r.name,
+                         _href=URL(c="project", f="task", args=[id]))
+            else:
+                return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
