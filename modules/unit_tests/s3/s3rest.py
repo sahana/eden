@@ -1297,12 +1297,12 @@ class S3JSONTests(unittest.TestCase):
         ptable = s3db.pr_person
         otable = s3db.org_organisation
         htable = s3db.hrm_human_resource
-        jtable = s3db.hrm_job_role
+        jtable = s3db.hrm_job_title
 
-        job_role = Storage(name="TestJSONJobRole")
-        job_role_id = jtable.insert(**job_role)
-        job_role.update(id=job_role_id)
-        current.manager.onaccept(jtable, Storage(vars=job_role))
+        job_title = Storage(name="TestJSONJobTitle")
+        job_title_id = jtable.insert(**job_title)
+        job_title.update(id=job_title_id)
+        current.manager.onaccept(jtable, Storage(vars=job_title))
 
         organisation = Storage(name="TestJSONOrganisation")
         organisation_id = otable.insert(**organisation)
@@ -1319,7 +1319,7 @@ class S3JSONTests(unittest.TestCase):
 
         hr_record = Storage(person_id=person_id,
                             organisation_id=organisation_id,
-                            job_role_id=job_role_id)
+                            job_title_id=job_title_id)
         hr_record_id = htable.insert(**hr_record)
         hr_record.update(id=hr_record_id)
         current.manager.onaccept(htable, Storage(vars=hr_record))
@@ -1346,7 +1346,7 @@ class S3JSONTests(unittest.TestCase):
                   "person_id$middle_name",
                   "person_id$last_name",
                   "organisation_id$name",
-                  "job_role_id$name"]
+                  "job_title_id$name"]
 
         FS = S3FieldSelector
         query = FS("person_id$first_name").like("TestJSON%")
@@ -1363,11 +1363,11 @@ class S3JSONTests(unittest.TestCase):
         data = json.loads(result)
         self.assertEqual(len(data), 2)
         for record in data:
-            self.assertTrue("hrm_job_role.name" in record)
+            self.assertTrue("hrm_job_title.name" in record)
             if record["pr_person.first_name"] == "TestJSON1":
-                self.assertEqual(record["hrm_job_role.name"], "TestJSONJobRole")
+                self.assertEqual(record["hrm_job_title.name"], "TestJSONJobTitle")
             else:
-                self.assertEqual(record["hrm_job_role.name"], None)
+                self.assertEqual(record["hrm_job_title.name"], None)
 
         current.auth.override = True
 
