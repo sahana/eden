@@ -519,7 +519,7 @@ class S3OrganisationModel(S3Model):
         else:
             add_component("project_project",
                           org_organisation="organisation_id")
-            
+
         # Assets
         add_component("asset_asset",
                       org_organisation="organisation_id")
@@ -988,7 +988,7 @@ class S3OrganisationModel(S3Model):
 class S3OrganisationVirtualFields:
     """ Virtual fields for the org_organisation table """
 
-    extra_fields = ["organisation_id"]
+    #extra_fields = ["organisation_id"]
 
     def address(self):
         """ Fetch the address of an office """
@@ -1091,7 +1091,7 @@ class S3SiteModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or 
+                                          (bool and [T("Obsolete")] or
                                            [current.messages.NONE])[0],
                                         default = False,
                                         readable = False,
