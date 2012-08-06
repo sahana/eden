@@ -1021,23 +1021,24 @@ class S3OrganisationModel(S3Model):
 class S3OrganisationVirtualFields:
     """ Virtual fields for the org_organisation table """
 
-    extra_fields = ["organisation_id"]
-
     def address(self):
         """ Fetch the address of an office """
-        from eden.gis import gis_location_represent
-        db = current.db
 
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_office
+        gtable = db.gis_location
         if hasattr(self, "org_organisation"):
-            query = (db.org_office.deleted != True) & \
-                    (db.org_office.organisation_id == self.org_organisation.id) & \
-                    (db.org_office.location_id == db.gis_location.id)
-            row = db(query).select(db.gis_location.id).first()
+            query = (otable.deleted != True) & \
+                    (otable.organisation_id == self.org_organisation.id) & \
+                    (otable.location_id == gtable.id)
+            row = db(query).select(gtable.id,
+                                   limitby=(0, 1)).first()
         else:
             row = None
 
         if row:
-            return gis_location_represent(row.id)
+            return s3db.gis_location_represent(row.id)
         else:
             return None
 
@@ -1156,7 +1157,7 @@ class S3SiteModel(S3Model):
                                   Field("obsolete", "boolean",
                                         label = T("Obsolete"),
                                         represent = lambda bool: \
-                                          (bool and [T("Obsolete")] or 
+                                          (bool and [T("Obsolete")] or
                                            [current.messages.NONE])[0],
                                         default = False,
                                         readable = False,
@@ -2600,6 +2601,7 @@ def org_office_controller():
         if r.representation == "plain":
             # Map popups want less clutter
             table.obsolete.readable = False
+
 
         if r.interactive:
 

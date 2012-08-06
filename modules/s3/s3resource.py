@@ -1454,6 +1454,45 @@ class S3Resource(object):
             return 0
 
     # -------------------------------------------------------------------------
+    def _extract(self, rows, lfields):
+        """
+            Extract the fields corresponding to lfields from rows and
+            return them as a list of Storages, with duplicate rows (due
+            to left joins) collapsed, retaining the original order.
+
+            @param rows: the Rows
+            @param lfields: list of resolved field selectors
+        """
+
+        pkey = self.table._id
+        multiple = [c._alias for c in self.components.values() if c.multiple]
+
+        ids = []
+        duplicates = []
+        records = []
+        for row in rows:
+            _id = row[pkey]
+            if _id in ids:
+                idx = ids.index(_id)
+                data = records[idx]
+                for lf in lfields:
+                    if lf.tname in multiple:
+                        key = lf.colname
+                        value = S3FieldSelector.extract(self, row, lf)
+                        if _id in duplicates:
+                            data[key].append(value)
+                        else:
+                            data[key] = [data[key], value]
+                duplicates.append(_id)
+            else:
+                data = Storage()
+                for lf in lfields:
+                    data[lf.colname] = S3FieldSelector.extract(self, row, lf)
+                ids.append(_id)
+                records.append(data)
+        return records
+
+    # -------------------------------------------------------------------------
     # XML Export
     # -------------------------------------------------------------------------
     def export_xml(self,
