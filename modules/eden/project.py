@@ -163,6 +163,9 @@ class S3ProjectModel(S3Model):
                                                           self.project_status_represent,
                                                           sort=True)),
                                     represent = self.project_status_represent,
+                                    comment = S3AddResourceLink(title=ADD_STATUS,
+                                                                c="project",
+                                                                f="status"),
                                     ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
@@ -235,7 +238,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128, notnull=True, unique=True),
                              s3_comments(),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -374,7 +376,6 @@ class S3ProjectModel(S3Model):
                              s3_comments(comment=DIV(_class="tooltip",
                                                      _title="%s|%s" % (T("Comments"),
                                                                        T("Outcomes, Impact, Challenges")))),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -641,7 +642,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128,
                                    notnull=True, unique=True),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # Field configuration?
@@ -2085,7 +2085,6 @@ class S3ProjectActivityModel(S3Model):
                                         label = "%s (%s)" % (T("Time Taken"),
                                                              T("hours"))),
                                   s3_comments(),
-                                  format="%(name)s",
                                   *s3_meta_fields())
         # CRUD Strings
         ACTIVITY = T("Activity")
@@ -2773,7 +2772,6 @@ class S3ProjectTaskModel(S3Model):
                                    requires=IS_NOT_EMPTY()),
                              s3_date(label = T("Date")),
                              s3_comments(),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -3203,7 +3201,6 @@ class S3ProjectTaskModel(S3Model):
                                                         T("hours")),
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_comments(),
-                             format="%(comments)s",
                              *s3_meta_fields())
 
         # CRUD Strings
