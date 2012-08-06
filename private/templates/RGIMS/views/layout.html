@@ -43,17 +43,22 @@
  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{include "scripts_top.html"}}
+</head>
 {{try:}}
  {{if r.representation == "popup":}}{{representation = "popup"}}
  {{elif r.representation == "iframe":}}{{representation = "iframe"}}
  {{else:}}{{representation = ""}}{{pass}}
 {{except:}}{{representation = ""}}{{pass}}
 {{if representation == "popup":}}
- {{include "layout_popup.html"}}
+ <body>
+ {{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
+ {{if response.flash or response.confirmation:}}
+  {{include "layout_popup.html"}}
+ {{else:}}{{include}}{{pass}}
 {{elif representation == "iframe":}}
  {{include "layout_iframe.html"}}
+ {{include}}
 {{else:}}
-</head>
 <body>
  <div id='menu_modules'>
   {{=current.menu.main}}

@@ -98,12 +98,12 @@ class S3OrganisationModel(S3Model):
         #
         tablename = "org_sector"
         table = define_table(tablename,
-                             Field("abrv", length=64,
-                                   notnull=True, unique=True,
-                                   label=T("Abbreviation")),
                              Field("name", length=128,
                                    notnull=True, unique=True,
                                    label=T("Name")),
+                             Field("abrv", length=64,
+                                   notnull=True, unique=True,
+                                   label=T("Abbreviation")),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -169,10 +169,11 @@ class S3OrganisationModel(S3Model):
         # tablename = "org_subsector"
         # table = define_table(tablename,
                              # sector_id(),
+                             # Field("name", length=128,
+                             #       label=T("Name")),
                              # Field("abrv", length=64,
                                    # notnull=True, unique=True,
                                    # label=T("Abbreviation")),
-                             # Field("name", length=128, label=T("Name")),
                              # *s3_meta_fields())
 
         ##CRUD strings
