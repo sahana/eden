@@ -110,9 +110,10 @@
             <!-- Status -->
             <xsl:if test="$Status">
                 <reference field="status_id" resource="project_status">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Status"/>
-                </xsl:attribute>
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Status"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- HFAs -->
@@ -223,7 +224,7 @@
                     </xsl:attribute>
                 </reference>
             </resource>
-            
+
             <!-- Project Budgets -->
             <xsl:variable name="Currency" select="col[@field='Currency']"/>
             <xsl:for-each select="col[starts-with(@field, 'Budget')]">
