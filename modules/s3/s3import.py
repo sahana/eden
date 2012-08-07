@@ -210,11 +210,14 @@ class S3Importer(S3CRUD):
         self.function = r.function
 
         # Target table for the data import
+        self.controller_resource = self.resource
         self.controller_table = self.table
         self.controller_tablename = self.tablename
 
         # Table for uploads
         self.__define_table()
+        self.upload_resource = None
+        self.item_resource = None
 
         # XSLT Path
         self.xslt_path = os.path.join(r.folder, r.XSLT_PATH)
@@ -1584,38 +1587,40 @@ class S3Importer(S3CRUD):
     # -------------------------------------------------------------------------
     def _use_upload_table(self):
         """
-            @todo: docstring?
+            Set the resource and the table to being s3_import_upload
         """
 
-        self.resource.table = self.upload_table
-        self.resource.tablename = self.upload_tablename
-        self.resource.clear_query()
+        if self.upload_resource == None:
+            from s3resource import S3Resource
+            (prefix, name) = self.UPLOAD_TABLE_NAME.split("_",1)
+            self.upload_resource = S3Resource(prefix, name)
+        self.resource = self.upload_resource
         self.table = self.upload_table
         self.tablename = self.upload_tablename
 
     # -------------------------------------------------------------------------
     def _use_controller_table(self):
         """
-            @todo: docstring?
+            Set the resource and the table to be the imported resource
         """
 
-        self.resource.table = self.controller_table
-        self.resource.tablename = self.controller_tablename
-        self.resource.clear_query()
+        self.resource = self.controller_resource
         self.table = self.controller_table
         self.tablename = self.controller_tablename
 
     # -------------------------------------------------------------------------
     def _use_import_item_table(self, job_id):
         """
-            @todo: docstring?
+            Set the resource and the table to being s3_import_item 
         """
 
+        if self.item_resource == None:
+            from s3resource import S3Resource
+            (prefix, name) = S3ImportJob.ITEM_TABLE_NAME.split("_",1)
+            self.item_resource = S3Resource(prefix, name)
+        self.resource = self.item_resource
         self.tablename = S3ImportJob.ITEM_TABLE_NAME
         self.table = S3ImportJob.define_item_table()
-        self.resource.table = self.table
-        self.resource.tablename = self.tablename
-        self.resource.clear_query()
 
     # -------------------------------------------------------------------------
     def __define_table(self):

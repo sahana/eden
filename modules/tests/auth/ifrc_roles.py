@@ -25,10 +25,12 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from tests.web2unittest import SeleniumUnitTest
-from tests import *
 from gluon import current
 from gluon.storage import Storage
+
+import unittest
+from tests.web2unittest import SeleniumUnitTest
+#from tests import *
 #import unittest, re, time
 
 class IFRCRoles(SeleniumUnitTest):
