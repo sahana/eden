@@ -684,7 +684,7 @@ class S3ParsingModel(S3Model):
                                         self.source_represent(id, 
                                                               show_link=True)),
                                   Field("workflow_task_id",
-                                        label = T("Workflow Task ID")), 
+                                        label = T("Workflow")), 
                                   *s3_meta_fields())
         # ---------------------------------------------------------------------
         # user_opts contains the available users.

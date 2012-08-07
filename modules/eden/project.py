@@ -55,7 +55,6 @@ except ImportError:
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
-from gluon.sqlhtml import CheckboxesWidget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from ..s3 import *
@@ -344,7 +343,7 @@ class S3ProjectModel(S3Model):
                                        readable = use_sectors,
                                        writable = use_sectors,
                                        widget = lambda f, v: \
-                                        CheckboxesWidget.widget(f, v, cols=3)
+                                        CheckboxesWidgetS3.widget(f, v, cols=3),
                                        ),
                              countries_id(
                                           readable = mode_3w,
@@ -697,7 +696,7 @@ class S3ProjectModel(S3Model):
                                                  represent = lambda opt, row=None: \
                                                     multiref_represent(opt, "project_activity_type"),
                                                  widget = lambda f, v: \
-                                                    CheckboxesWidgetS3.widget(f, v, col=3),
+                                                    CheckboxesWidgetS3.widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------

@@ -2338,8 +2338,8 @@ def org_rheader(r, tabs=[]):
                       TR(
                          TH("%s: " % table.name.label),
                          record.name,
-                         TH("%s: " % table.type.label),
-                         table.type.represent(record.type),
+                         TH("%s: " % table.office_type_id.label),
+                         table.office_type_id.represent(record.office_type_id),
                          ),
                       TR(
                          TH("%s: " % table.organisation_id.label),

@@ -400,12 +400,12 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
 # =============================================================================
 def s3_represent_facilities(db, site_ids, link=True):
     """
-        @todo: docstring?
+        Represent Facilities
     """
 
     table = db.org_site
     sites = db(table._id.belongs(site_ids)).select(table._id,
-                                                    table.instance_type)
+                                                   table.instance_type)
     if not sites:
         return []
 
@@ -422,32 +422,18 @@ def s3_represent_facilities(db, site_ids, link=True):
 
     results = []
     for instance_type in instance_types:
-        table = db[instance_type]
+        represent = db.org_site.instance_type.represent
+        instance_type_nice = represent(instance_type)
+        c, f = instance_type.split("_")
         site_ids = instance_ids[instance_type]
-
+        table = db[instance_type]
         query = table.site_id.belongs(site_ids)
-
-        if instance_type == "org_office":
-            records = db(query).select(table.id,
-                                        table.site_id,
-                                        table.type,
-                                        table.name)
-        else:
-            records = db(query).select(table.id,
-                                        table.site_id,
-                                        table.name)
-
+        records = db(query).select(table.id,
+                                   table.site_id,
+                                   table.name)
         for record in records:
-            if instance_type == "org_office" and record.type == 5:
-                instance_type_nice = current.T("Warehouse")
-            else:
-                represent = db.org_site.instance_type.represent
-                instance_type_nice = represent(instance_type)
-
             site_str = "%s (%s)" % (record.name, instance_type_nice)
-
             if link:
-                c, f = instance_type.split("_")
                 site_str = A(site_str, _href=URL(c=c,
                                                  f=f,
                                                  args=[record.id],

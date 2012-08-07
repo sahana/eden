@@ -53,6 +53,10 @@ settings.security.map = True
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 
+# Organisation Management
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+settings.org.summary = True
+
 # HRM
 # Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
 settings.hrm.job_roles = True
