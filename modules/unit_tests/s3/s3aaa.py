@@ -1096,9 +1096,11 @@ class S3PermissionTests(unittest.TestCase):
 
         # Create a record
         auth.s3_impersonate(None)
+        table.owned_by_user.default=None
+
         auth.override = True
         table = s3db.org_office
-        record_id = table.insert(name="New Office")
+        record_id = table.insert(name="Ownership Test Office")
         auth.override = False
 
         self.table = table
