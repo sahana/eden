@@ -31,7 +31,6 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet, ProposalFiel
 from apps.ecidadania.debate.models import Debate
 
 import datetime
-import pdb
 
 class ProposalSetForm(ModelForm):
 
@@ -67,7 +66,6 @@ class ProposalMergeForm(ModelForm):
         exclude = ('contenttype','object_pk','content_object')
 
     def __init__(self, *args, **kwargs):
-        pdb.set_trace()
         if len(kwargs) > 0:
             self.p_set = kwargs['initial']['p_set']
             super(ProposalMergeForm, self).__init__(*args, **kwargs)
