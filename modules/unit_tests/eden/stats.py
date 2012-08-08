@@ -12,6 +12,8 @@ from gluon import *
 from gluon.storage import Storage
 
 # =============================================================================
+@unittest.skipIf(not current.deployment_settings.has_module("vulnerability"),
+                 "Vulnerability module deactivated")
 class StatsTests(unittest.TestCase):
     """ Stats Tests """
 
@@ -84,8 +86,8 @@ class StatsTests(unittest.TestCase):
             Test that the stats_aggregate records are being generated correctly.
             Because the stats_aggregate records depend on earlier results it is
             important that all these test are in the same test so that the
-            interdependence of the indicators can be checked. 
-            
+            interdependence of the indicators can be checked.
+
             Summary of test:
             1) Indicator 1 for gis4_1 in 2006 = 3
             2) Indicator 2 for gis4_1 in 2006 = 4
@@ -113,7 +115,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
                                           date(2007,01,1):3
@@ -222,7 +224,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
                                           date(2007,01,1):3
@@ -337,7 +339,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
                                           date(2007,01,1):3,
@@ -507,7 +509,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2010,01,1):1,
                                           date(2011,01,1):3,
@@ -713,7 +715,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2008,01,1):1,
                                           date(2009,01,1):3,
@@ -979,7 +981,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
-        
+
         expected = Storage()
         expected["rule1"] = Storage(type={date(2008,01,1):1,
                                           date(2009,01,1):1,
@@ -1256,7 +1258,7 @@ class StatsTests(unittest.TestCase):
         """
             We check against three rules:
             1) The aggregate record that matches the newly inserted record
-               * Use indicator and location to find the record. It should 
+               * Use indicator and location to find the record. It should
                  have a type of 1 for the actual period other periods will
                  have types of 1 or 3, and the data may vary
             2) The records aggregate for each parent location
@@ -1310,7 +1312,7 @@ class StatsTests(unittest.TestCase):
         # Get the data for checking rule 2, the data aggregated over location (and time)
         rows = current.gis.get_parents(location_id)
         location_list = [i.id for i in rows]
-        self.assertTrue(len(location_list) == len(expected.rule2.data)) 
+        self.assertTrue(len(location_list) == len(expected.rule2.data))
         query = (atable.parameter_id == indicator_id) & \
                 (atable.location_id.belongs(location_list)) & \
                 (atable.deleted == False)
@@ -1377,7 +1379,7 @@ class StatsTests(unittest.TestCase):
                     exp_stat = exp_data[statistic]
                     msg = "Expecting a %s of %s  for location %s in record %s" % (statistic, exp_stat, self.location_code[location], record)
                     self.assertTrue(record[statistic] == exp_stat, msg)
-        
+
     def tearDown(self):
 
         current.db.rollback()
