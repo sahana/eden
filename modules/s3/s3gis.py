@@ -642,7 +642,7 @@ class GIS(object):
 
         else:
             # no features
-            config = self.get_config()
+            config = GIS.get_config()
             if config.min_lat is not None:
                 min_lat = config.min_lat
             else:
@@ -911,7 +911,8 @@ class GIS(object):
                         table[level].label = labels[level]
 
     # -------------------------------------------------------------------------
-    def set_config(self, config_id=None, force_update_cache=False):
+    @staticmethod
+    def set_config(config_id=None, force_update_cache=False):
         """
             Reads the specified GIS config from the DB, caches it in response.
 
@@ -1101,7 +1102,8 @@ class GIS(object):
         return config_id if row else cache
 
     # -------------------------------------------------------------------------
-    def get_config(self):
+    @staticmethod
+    def get_config():
         """
             Returns the current GIS config structure.
 
@@ -1112,7 +1114,10 @@ class GIS(object):
 
         if not gis.config:
             # Ask set_config to put the appropriate config in response.
-            self.set_config()
+            if current.session.s3.gis_config_id:
+                GIS.set_config(current.session.s3.gis_config_id)
+            else:
+                GIS.set_config()
 
         return gis.config
 
@@ -1160,7 +1165,7 @@ class GIS(object):
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
-            config = self.get_config()
+            config = GIS.get_config()
             location = config.region_location_id
         if location:
             # Try the Region, but ensure we have the fallback available in a single query
@@ -1398,6 +1403,8 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
 
+        # @ToDo: Avoid try/except here!
+        # - separate parameters best as even isinstance is expensive
         try:
             # location is passed as integer (location_id)
             table = s3db.gis_location
@@ -1451,7 +1458,7 @@ class GIS(object):
             @param: key_type: whether to return an id or code
         """
 
-        config = self.get_config()
+        config = GIS.get_config()
 
         if config.default_location_id:
             return self.get_parent_country(config.default_location_id)
@@ -3238,22 +3245,6 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def layer_subtypes(layer="google"):
-        """ Return a lit of the subtypes available for a Layer """
-
-        if layer == "google":
-            return ["Satellite", "Maps", "Hybrid", "Terrain", "MapMaker",
-                    "MapMakerHybrid"]
-        elif layer == "yahoo":
-            return ["Satellite", "Maps", "Hybrid"]
-        elif layer == "bing":
-            return ["Satellite", "Maps", "Hybrid"]
-        else:
-            return None
-
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def parse_location(wkt, lon=None, lat=None):
         """
             Parses a location from wkt, returning wkt, lat, lon, bounding box and type.
@@ -4494,7 +4485,7 @@ class GIS(object):
         vars = request.vars
 
         # Read configuration
-        config = self.get_config()
+        config = GIS.get_config()
         if height:
             map_height = height
         else:
@@ -5736,9 +5727,12 @@ class BingLayer(Layer):
         if sublayers:
             if Projection().epsg != 900913:
                 raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
+            apikey = current.deployment_settings.get_gis_api_bing()
+            if not apikey:
+                raise Exception("Cannot display Bing layers unless we have an API key\n")
             # Mandatory attributes
             output = {
-                "ApiKey": current.deployment_settings.get_gis_api_bing()
+                "ApiKey": apikey
                 }
 
             for sublayer in sublayers:
@@ -5794,11 +5788,11 @@ class CoordinateLayer(Layer):
         if sublayers:
             sublayer = sublayers[0]
             name_safe = re.sub("'", "", sublayer.name)
-            if "visible" in sublayer and sublayer["visible"]:
+            if sublayer.visible:
                 visibility = "true"
             else:
                 visibility = "false"
-            output = '''S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s}''' % \
+            output = '''S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s}\n''' % \
                 (name_safe, visibility, sublayer.layer_id)
             return output
         else:
@@ -6307,10 +6301,10 @@ class OSMLayer(Layer):
                 }
             self.add_attributes_if_not_default(
                 output,
-                base = (self.base, (False,)),
+                base = (self.base, (True,)),
                 _base = (self._base, (False,)),
-                url2 = (self.url2, (None,)),
-                url3 = (self.url3, (None,)),
+                url2 = (self.url2, ("",)),
+                url3 = (self.url3, ("",)),
                 zoomLevels = (self.zoom_levels, (9,)),
                 attribution = (self.attribution, (None,)),
             )

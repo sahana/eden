@@ -1,13 +1,12 @@
 import unittest
 import sys
+import datetime
+import time
+
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-
-import datetime
-import time
-
 
 from gluon import current
 

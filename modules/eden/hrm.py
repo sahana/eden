@@ -499,18 +499,18 @@ class S3HRModel(S3Model):
             Provide the options for the HRM course search filter
         """
 
-        ctable = current.s3db.hrm_course
+        table = current.s3db.hrm_course
         root_org = current.auth.root_org()
         if root_org:
-            query = (ctable.deleted == False) & \
-                    ((ctable.organisation_id == root_org) | \
-                     (ctable.organisation_id == None))
+            query = (table.deleted == False) & \
+                    ((table.organisation_id == root_org) | \
+                     (table.organisation_id == None))
         else:
-            query = (ctable.deleted == False) & \
-                    (ctable.organisation_id == None)
+            query = (table.deleted == False) & \
+                    (table.organisation_id == None)
 
-        opts = current.db(query).select(ctable.id,
-                                        ctable.name)
+        opts = current.db(query).select(table.id,
+                                        table.name)
         _dict = {}
         for opt in opts:
             _dict[opt.id] = opt.name
@@ -802,7 +802,7 @@ class S3HRJobModel(S3Model):
                                 ondelete = "SET NULL")
 
         multi_job_role_id = S3ReusableField("job_role_id",
-                                "list:reference db.hrm_job_role",
+                                "list:reference hrm_job_role",
                                 sortby = "name",
                                 label = label,
                                 requires = IS_NULL_OR(

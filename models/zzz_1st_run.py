@@ -168,7 +168,7 @@ if len(pop_list) > 0:
     # L0 Countries
     resource = s3mgr.define_resource("gis", "location")
     stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "gis", "location.xsl")
-    import_file = os.path.join(request.folder, "private", "templates", "default", "countries.csv")
+    import_file = os.path.join(request.folder, "private", "templates", "locations", "countries.csv")
     File = open(import_file, "r")
     resource.import_xml(File, format="csv", stylesheet=stylesheet)
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)

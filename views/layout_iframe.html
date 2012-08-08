@@ -1,7 +1,5 @@
-</head>
 <body onload='iframeResizePipe()'>
 <iframe id='helpframe' src='' height='0' width='0' frameborder='0'></iframe>
-{{include}}
 <script type="text/javascript">
 function iframeResizePipe(){
  {{#From http://stackoverflow.com/questions/153152/resizing-an-iframe-based-on-content}}
@@ -13,6 +11,3 @@ function iframeResizePipe(){
  pipe.src='{{=URL2(r=request, c="static")}}/helper.html?height='+height+'&cacheb='+Math.random()
 }
 </script>
-{{include "scripts.html"}}
-</body>
-</html>

@@ -10,7 +10,7 @@
          Name....................org_office
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
-         Type....................org_office
+         Type....................org_office_type
          Country.................gis_location.L0 Name or ISO2
          Building................gis_location.name (Name used if not-provided)
          Address.................gis_location.addr_street
@@ -33,14 +33,8 @@
     <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
-    <!-- Office types, see modules/eden/org.py -->
-    <org:office-type code="1">Headquarters</org:office-type>
-    <org:office-type code="2">Regional</org:office-type>
-    <org:office-type code="3">National</org:office-type>
-    <org:office-type code="4">Field</org:office-type>
-    <org:office-type code="5">Warehouse</org:office-type>
-
     <!-- Indexes for faster processing -->
+    <xsl:key name="office_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="branch" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
@@ -48,6 +42,11 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+            <!-- Office Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('office_type', col[@field='Type'])[1])]">
+                <xsl:call-template name="OfficeType" />
+            </xsl:for-each>
+
             <!-- Top-level Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
@@ -107,10 +106,12 @@
                 </xsl:attribute>
             </reference>
 
-            <xsl:variable name="typename" select="col[@field='Type']"/>
-            <xsl:variable name="typecode" select="document('')//org:office-type[text()=normalize-space($typename)]/@code"/>
-            <xsl:if test="$typecode">
-                <data field="type"><xsl:value-of select="$typecode"/></data>
+            <xsl:if test="col[@field='Type']!=''">
+                <reference field="office_type_id" resource="org_office_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('OfficeType:', col[@field='Type'])"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- Office data -->
@@ -161,7 +162,21 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="OfficeType">
 
+        <xsl:variable name="Type" select="col[@field='Type']"/>
+
+        <xsl:if test="$Type!=''">
+            <resource name="org_office_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('OfficeType:', $Type)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Type"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Locations">
 
         <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>

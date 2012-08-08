@@ -131,110 +131,108 @@ def shelter():
                                       args=["[id]", "presence"]))
 
     # Pre-processor
-    s3.prep = cr_shelter_prep
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
+        if r.component and r.component.name == "presence":
+            r.resource.add_filter(s3db.pr_presence.closed == False)
+
+        if r.interactive:
+            if r.id:
+                s3db.cr_shelter.obsolete.readable = s3db.cr_shelter.obsolete.writable = True
+            if r.component:
+                if r.component.name == "inv_item" or \
+                   r.component.name == "recv" or \
+                   r.component.name == "send":
+                    # Filter out items which are already in this inventory
+                    s3db.inv_prep(r)
+
+                elif r.component.name == "human_resource":
+                    # Filter out people which are already staff for this warehouse
+                    s3base.s3_filter_staff(r)
+                    # Make it clear that this is for adding new staff, not assigning existing
+                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
+                    # Cascade the organisation_id from the hospital to the staff
+                    field = s3db.hrm_human_resource.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
+
+                elif r.component.name == "rat":
+                    # Hide the Implied fields
+                    db.assess_rat.location_id.writable = False
+                    db.assess_rat.location_id.default = r.record.location_id
+                    db.assess_rat.location_id.comment = ""
+                    # Set defaults
+                    staff_id = auth.s3_logged_in_human_resource()
+                    if staff_id:
+                        db.assess_rat.staff_id.default = staff_id.id
+
+                elif r.component.name == "presence":
+                    if deployment_settings.get_ui_camp():
+                        REGISTER_LABEL = T("Register Person into this Camp")
+                        EMPTY_LIST = T("No People currently registered in this camp")
+                    else:
+                        REGISTER_LABEL = T("Register Person into this Shelter")
+                        EMPTY_LIST = T("No People currently registered in this shelter")
+                    # Hide the Implied fields
+                    db.pr_presence.location_id.writable = False
+                    db.pr_presence.location_id.default = r.record.location_id
+                    db.pr_presence.location_id.comment = ""
+                    db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
+                    # AT: Add Person
+                    s3db.table("pr_group", None)
+                    add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
+                    db.pr_presence.pe_id.comment = \
+                        DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
+                            S3AddResourceLink(c="pr",
+                                              f="group",
+                                              title=add_group_label,
+                                              tooltip=T("Create a group entry in the registry."))
+                        )
+                    db.pr_presence.pe_id.widget = S3AutocompleteWidget("pr", "pentity")
+                    # Set defaults
+                    db.pr_presence.datetime.default = request.utcnow
+                    db.pr_presence.observer.default = s3_logged_in_person()
+                    popts = s3db.pr_presence_opts
+                    pcnds = s3db.pr_presence_conditions
+                    cr_shelter_presence_opts = {
+                        popts.CHECK_IN: pcnds[popts.CHECK_IN],
+                        popts.CHECK_OUT: pcnds[popts.CHECK_OUT]
+                    }
+                    db.pr_presence.presence_condition.requires = IS_IN_SET(
+                        cr_shelter_presence_opts, zero=None)
+                    db.pr_presence.presence_condition.default = popts.CHECK_IN
+                    # Change the Labels
+                    s3.crud_strings.pr_presence = Storage(
+                        title_create = T("Register Person"),
+                        title_display = T("Registration Details"),
+                        title_list = T("Registered People"),
+                        title_update = T("Edit Registration"),
+                        title_search = T("Search Registations"),
+                        subtitle_create = REGISTER_LABEL,
+                        label_list_button = T("List Registrations"),
+                        label_create_button = T("Register Person"),
+                        msg_record_created = T("Registration added"),
+                        msg_record_modified = T("Registration updated"),
+                        msg_record_deleted = T("Registration entry deleted"),
+                        msg_list_empty = EMPTY_LIST
+                    )
+
+                elif r.component.name == "req":
+                    if r.method != "update" and r.method != "read":
+                        # Hide fields which don't make sense in a Create form
+                        # inc list_create (list_fields over-rides)
+                        s3db.req_create_form_mods()
+
+        return True
+    s3.prep = prep
 
     rheader = s3db.cr_shelter_rheader
     output = s3_rest_controller(rheader=rheader)
 
     return output
 
-# -----------------------------------------------------------------------------
-def cr_shelter_prep(r):
-    """
-        Pre-processor for the REST Controller
-    """
-
-    if r.component and r.component.name == "presence":
-        r.resource.add_filter(s3db.pr_presence.closed == False)
-
-    if r.interactive:
-        if r.id:
-            s3db.cr_shelter.obsolete.readable = s3db.cr_shelter.obsolete.writable = True
-        if r.component:
-            if r.component.name == "inv_item" or \
-               r.component.name == "recv" or \
-               r.component.name == "send":
-                # Filter out items which are already in this inventory
-                s3db.inv_prep(r)
-
-            elif r.component.name == "human_resource":
-                # Filter out people which are already staff for this warehouse
-                s3base.s3_filter_staff(r)
-                # Make it clear that this is for adding new staff, not assigning existing
-                s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
-                # Cascade the organisation_id from the hospital to the staff
-                field = s3db.hrm_human_resource.organisation_id
-                field.default = r.record.organisation_id
-                field.writable = False
-
-            elif r.component.name == "rat":
-                # Hide the Implied fields
-                db.assess_rat.location_id.writable = False
-                db.assess_rat.location_id.default = r.record.location_id
-                db.assess_rat.location_id.comment = ""
-                # Set defaults
-                staff_id = auth.s3_logged_in_human_resource()
-                if staff_id:
-                    db.assess_rat.staff_id.default = staff_id.id
-
-            elif r.component.name == "presence":
-                if deployment_settings.get_ui_camp():
-                    REGISTER_LABEL = T("Register Person into this Camp")
-                    EMPTY_LIST = T("No People currently registered in this camp")
-                else:
-                    REGISTER_LABEL = T("Register Person into this Shelter")
-                    EMPTY_LIST = T("No People currently registered in this shelter")
-                # Hide the Implied fields
-                db.pr_presence.location_id.writable = False
-                db.pr_presence.location_id.default = r.record.location_id
-                db.pr_presence.location_id.comment = ""
-                db.pr_presence.proc_desc.readable = db.pr_presence.proc_desc.writable = False
-                # AT: Add Person
-                s3db.table("pr_group", None)
-                add_group_label = s3base.S3CRUD.crud_string("pr_group", "label_create_button")
-                db.pr_presence.pe_id.comment = \
-                    DIV(s3db.pr_person_comment(T("Add Person"), REGISTER_LABEL, child="pe_id"),
-                        S3AddResourceLink(c="pr",
-                                          f="group",
-                                          title=add_group_label,
-                                          tooltip=T("Create a group entry in the registry."))
-                    )
-                db.pr_presence.pe_id.widget = S3AutocompleteWidget("pr", "pentity")
-                # Set defaults
-                db.pr_presence.datetime.default = request.utcnow
-                db.pr_presence.observer.default = s3_logged_in_person()
-                popts = s3db.pr_presence_opts
-                pcnds = s3db.pr_presence_conditions
-                cr_shelter_presence_opts = {
-                    popts.CHECK_IN: pcnds[popts.CHECK_IN],
-                    popts.CHECK_OUT: pcnds[popts.CHECK_OUT]
-                }
-                db.pr_presence.presence_condition.requires = IS_IN_SET(
-                    cr_shelter_presence_opts, zero=None)
-                db.pr_presence.presence_condition.default = popts.CHECK_IN
-                # Change the Labels
-                s3.crud_strings.pr_presence = Storage(
-                    title_create = T("Register Person"),
-                    title_display = T("Registration Details"),
-                    title_list = T("Registered People"),
-                    title_update = T("Edit Registration"),
-                    title_search = T("Search Registations"),
-                    subtitle_create = REGISTER_LABEL,
-                    label_list_button = T("List Registrations"),
-                    label_create_button = T("Register Person"),
-                    msg_record_created = T("Registration added"),
-                    msg_record_modified = T("Registration updated"),
-                    msg_record_deleted = T("Registration entry deleted"),
-                    msg_list_empty = EMPTY_LIST
-                )
-
-            elif r.component.name == "req":
-                if r.method != "update" and r.method != "read":
-                    # Hide fields which don't make sense in a Create form
-                    # inc list_create (list_fields over-rides)
-                    s3db.req_create_form_mods()
-
-    return True
 # =============================================================================
 def incoming():
     """ Incoming Shipments """

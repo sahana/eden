@@ -1133,7 +1133,7 @@ class S3Request(object):
         elif method == "delete":
             return self.__DELETE()
 
-        elif method == "clear" and not r.component:
+        elif method == "clear" and not self.component:
             manager.clear_session(self.prefix, self.name)
             if "_next" in self.vars:
                 request_vars = dict(_next=self._next)

@@ -8,6 +8,66 @@
 import unittest
 import datetime
 from gluon import *
+from gluon.storage import Storage
+
+# =============================================================================
+class S3ResourceRepresentationTests(unittest.TestCase):
+
+    def setUp(self):
+
+        s3mgr = current.manager
+        current.auth.override = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="TESTCOLLAPSEORG">
+        <data field="name">TestCollapseOrg</data>
+        <resource name="org_office" uuid="TESTCOLLAPSEOFFICE1">
+            <data field="name">TestCollapseOffice1</data>
+        </resource>
+        <resource name="org_office" uuid="TESTCOLLAPSEOFFICE2">
+            <data field="name">TestCollapseOffice2</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = s3mgr.define_resource("org", "organisation")
+        resource.import_xml(self.xmltree)
+
+    def testCollapseRows(self):
+
+        s3db = current.s3db
+
+        otable = s3db.org_organisation
+        ftable = s3db.org_office
+        query = (otable.uuid == "TESTCOLLAPSEORG") & \
+                (ftable.organisation_id == otable.id)
+
+        rows = current.db(query).select(otable.id,
+                                        otable.name,
+                                        ftable.id,
+                                        ftable.name)
+        self.assertEqual(len(rows), 2)
+
+        resource = current.manager.define_resource("org", "organisation")
+        list_fields = ["name", "office.name"]
+        lfields = resource.resolve_selectors(list_fields,
+                                             skip_components=False)[0]
+        collapsed = resource._extract(rows, lfields)
+        self.assertEqual(len(collapsed), 1)
+
+        office_names = collapsed[0]["org_office.name"]
+        self.assertTrue(isinstance(office_names, list))
+        self.assertEqual(len(office_names), 2)
+        self.assertTrue("TestCollapseOffice1" in office_names)
+        self.assertTrue("TestCollapseOffice2" in office_names)
+
+    def tearDown(self):
+
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 class S3ResourceExportXMLTests(unittest.TestCase):
@@ -214,6 +274,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
+        S3ResourceRepresentationTests,
         S3ResourceExportXMLTests,
     )
 

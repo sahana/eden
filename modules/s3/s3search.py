@@ -47,7 +47,7 @@ from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
 from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
-from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
 from s3resource import S3FieldSelector
 
