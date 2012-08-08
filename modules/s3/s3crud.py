@@ -2098,4 +2098,68 @@ class S3CRUD(S3Method):
 
         return ", ".join(orderby)
 
+# =============================================================================
+class S3ApproveRecords(S3CRUD):
+    """
+        Method handler for record approval
+
+        @status: work in progress
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST interface
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        if self.method == "approve":
+            if r.record is None:
+                output = self.select(r, **attr)
+            else:
+                output = self.approve(r, **attr)
+        elif self.method == "reject":
+            if r.record is None:
+                output = self.select(r, **attr)
+            else:
+                output = self.approve(r, **attr)
+        else:
+            r.error(405, current.manager.ERROR.BAD_METHOD)
+        return output
+
+    # -------------------------------------------------------------------------
+    def approve(self, r, **attr):
+        """
+            Approve an unapproved record
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def reject(self, r, **attr):
+        """
+            Reject an unapproved record
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def select(self, r, **attr):
+        """
+            List unapproved records
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        raise NotImplementedError
+
 # END =========================================================================
