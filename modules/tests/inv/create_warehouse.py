@@ -48,7 +48,7 @@ class CreateWarehouse(SeleniumUnitTest):
         """
 
         # Configuration
-        tablename = "org_office"
+        tablename = "inv_warehouse"
         url = "inv/warehouse/create"
         account = "admin"
         data = [
