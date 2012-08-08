@@ -795,7 +795,8 @@ class S3HRJobModel(S3Model):
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
                                 represent = hrm_job_role_represent,
-                                comment=S3AddResourceLink(f="job_role",
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_role",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
@@ -813,7 +814,8 @@ class S3HRJobModel(S3Model):
                                                       sort=True,
                                                       multiple=True)),
                                 represent = hrm_job_role_multirepresent,
-                                comment=S3AddResourceLink(f="job_role",
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_role",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
@@ -882,11 +884,12 @@ class S3HRJobModel(S3Model):
                                 label = label,
                                 requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "hrm_job_title.id",
-                                                      self.hrm_job_title_represent,
+                                                      hrm_job_title_represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
-                                represent = self.hrm_job_title_represent,
-                                comment=S3AddResourceLink(f="job_title",
+                                represent = hrm_job_title_represent,
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_title",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
@@ -1082,25 +1085,6 @@ class S3HRJobModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_job_title_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.hrm_job_title
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
@@ -3006,6 +2990,23 @@ def hrm_human_resource_represent(id, show_link=False):
                              )
                  )
     return repr
+
+# =============================================================================
+def hrm_job_title_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+
+    table = current.s3db.hrm_job_title
+    r = current.db(table.id == id).select(table.name,
+                                          limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def hrm_job_role_represent(id, row=None):
