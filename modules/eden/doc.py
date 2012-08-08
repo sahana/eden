@@ -28,8 +28,8 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "doc_image_represent",
            "S3DocumentSourceModel",
+           "doc_image_represent",
            "doc_source_represent",
           ]
 
@@ -367,7 +367,6 @@ class S3DocumentLibrary(S3Model):
         return
 
 # =============================================================================
-
 class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
@@ -448,6 +447,9 @@ def doc_image_represent(filename):
 
         @param filename: name of the image file
     """
+
+    if not filename:
+        return current.messages.NONE
 
     return DIV(A(IMG(_src=URL(c="default", f="download",
                               args=filename),

@@ -43,7 +43,6 @@ from gluon.tools import callback
 
 from s3method import S3Method
 from s3export import S3Exporter
-#from s3gis import S3MAP
 from s3utils import s3_mark_required
 from s3widgets import S3EmbedComponentWidget
 
@@ -55,7 +54,6 @@ except ImportError:
     raise
 
 # =============================================================================
-
 class S3CRUD(S3Method):
     """
         Interactive CRUD Method Handler
@@ -333,6 +331,11 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        # Check authorization to read the record
+        authorised = self._permitted()
+        if not authorised:
+            r.unauthorised()
+
         session = current.session
         request = self.request
         response = current.response
@@ -362,11 +365,6 @@ class S3CRUD(S3Method):
 
         # Get the target record ID
         record_id = self.record_id
-
-        # Check authorization to read the record
-        authorised = self._permitted()
-        if not authorised:
-            r.unauthorised()
 
         if r.interactive:
 
