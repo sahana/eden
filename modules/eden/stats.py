@@ -219,10 +219,10 @@ class S3StatsModel(S3Model):
                 (table.parameter_id == parameter_id) & \
                 (table.deleted != True)
         rows = db(query).select(table.date,
-                                table.location_id,
                                 table.value,
                                 table.date.max(),
-                                groupby=table.location_id)
+                                groupby = table.location_id|table.date|table.value
+                                )
         if len(rows) == 0:
             return
         sum = 0

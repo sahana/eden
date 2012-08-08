@@ -85,6 +85,8 @@ settings.project.mode_drr = True
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
 # Uncomment this to customise
 settings.project.organisation_roles = {
     1: T("Lead Organization"),

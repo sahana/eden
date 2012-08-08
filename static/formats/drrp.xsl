@@ -89,6 +89,8 @@
         <xsl:variable name="ContactPhone" select="data[@field='contact_phone']"/>
         <xsl:variable name="HFA" select="data[@field='hfa_ids']/@value"/>
         <xsl:variable name="RFA" select="data[@field='rfa_ids']/@value"/>
+        <xsl:variable name="Hazards" select="data[@field='hazard_ids']"/>
+        <xsl:variable name="Themes" select="data[@field='theme_ids']"/>
 
         <resource name="project_project">
 
@@ -185,15 +187,36 @@
                 <xsl:with-param name="arg">output</xsl:with-param>
             </xsl:call-template>
 
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="data[@field='hazard_ids']"/></xsl:with-param>
-                <xsl:with-param name="arg">hazard</xsl:with-param>
-            </xsl:call-template>
+            <!-- Project Hazards -->
+            <xsl:if test="$Hazards!=''">
+                <reference field="multi_hazard_id" resource="project_hazard">
+                    <xsl:attribute name="tuid">
+                        <xsl:variable name="HazardList">
+                            <xsl:call-template name="quoteList">
+                                <xsl:with-param name="prefix"><xsl:value-of select="'Hazard:'"/></xsl:with-param>
+                                <xsl:with-param name="list"><xsl:value-of select="$Hazards"/></xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:variable>
+                        <xsl:value-of select="concat('[', $HazardList, ']')"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="data[@field='theme_ids']"/></xsl:with-param>
-                <xsl:with-param name="arg">theme</xsl:with-param>
-            </xsl:call-template>
+            <!-- Project Themes -->
+            <xsl:if test="$Themes!=''">
+                <!-- Embedded within record -->
+                <reference field="multi_theme_id" resource="project_theme">
+                    <xsl:attribute name="tuid">
+                        <xsl:variable name="ThemeList">
+                            <xsl:call-template name="quoteList">
+                                <xsl:with-param name="prefix"><xsl:value-of select="'Theme:'"/></xsl:with-param>
+                                <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:variable>
+                        <xsl:value-of select="concat('[', $ThemeList, ']')"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Countries -->
             <xsl:choose>
@@ -232,6 +255,16 @@
             </xsl:choose>
 
         </resource>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Hazards"/></xsl:with-param>
+            <xsl:with-param name="arg">hazard</xsl:with-param>
+        </xsl:call-template>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
+            <xsl:with-param name="arg">theme</xsl:with-param>
+        </xsl:call-template>
 
         <xsl:if test="$ContactOrganisation!=''">
             <resource name="org_organisation">

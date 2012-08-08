@@ -155,7 +155,7 @@ class S3OrganisationModel(S3Model):
                                     comment = S3AddResourceLink(c="org",
                                                 f="sector",
                                                 label=ADD_SECTOR,
-                                                title=T("Sector"),
+                                                title=SECTOR,
                                                 tooltip=help),
                                     label = SECTOR,
                                     ondelete = "SET NULL")

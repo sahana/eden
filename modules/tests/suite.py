@@ -10,23 +10,23 @@ import unittest
 import argparse
 
 def loadAllTests():
-    loadTests = unittest.TestLoader().loadTestsFromTestCase
+
     # Create Organisation
     loadTests = unittest.TestLoader().loadTestsFromTestCase
     suite = loadTests(CreateOrganisation)
-    
+
     # Shortcut
     addTests = suite.addTests
-    
+
     # Create Office
     addTests(loadTests(CreateOffice))
-    
+
     # Setup Staff
     addTests(loadTests(CreateStaff))
-    
+
     # Setup New Volunteer
     addTests(loadTests(CreateVolunteer))
-    
+
     # Create Staff & Volunteer Training
     addTests(loadTests(CreateStaffTraining))
     addTests(loadTests(CreateVolunteerTraining))
@@ -35,7 +35,7 @@ def loadAllTests():
     addTests(loadTests(SendItem))
     addTests(loadTests(ReceiveItem))
     addTests(loadTests(SendReceiveItem))
-    
+
     # Project Tests
     addTests(loadTests(CreateProject))
 
@@ -44,10 +44,10 @@ def loadAllTests():
 
     # Assign Staff to Organisation
     addTests(loadTests(AddStaffToOrganisation))
-    
+
     # Assign Staff to Office
     addTests(loadTests(AddStaffToOffice))
-    
+
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
     # Delete a prepop organisation
@@ -55,19 +55,19 @@ def loadAllTests():
 
     # Create a Warehouse
     addTests(loadTests(CreateWarehouse))
-    
+
     # Create an Item
     addTests(loadTests(CreateItem))
-    
+
     # Create a Catalog
     addTests(loadTests(CreateCatalog))
-    
+
     # Create a Category
     addTests(loadTests(CreateCategory))
-    
+
     # Create Members
     addTests(loadTests(CreateMember))
-    
+
     # Search Staff (Simple & Advance)
     addTests(loadTests(SearchStaff))
 

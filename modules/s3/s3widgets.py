@@ -2564,7 +2564,9 @@ class S3AddPersonWidget(FormWidget):
                   ptable.date_of_birth,
                   ptable.gender]
 
-        if request.controller == "hrm":
+        if controller == "hrm":
+            emailRequired = current.deployment_settings.get_hrm_email_required()
+        elif controller == "vol":
             fields.append(ptable.occupation)
             emailRequired = current.deployment_settings.get_hrm_email_required()
         else:
@@ -2595,7 +2597,8 @@ class S3AddPersonWidget(FormWidget):
         for tr in form[0]:
             if not tr.attributes["_id"].startswith("submit_record"):
                 if "_class" in tr.attributes:
-                    tr.attributes["_class"] = "%s box_middle" % tr.attributes["_class"]
+                    tr.attributes["_class"] = "%s box_middle" % \
+                                                tr.attributes["_class"]
                 else:
                     tr.attributes["_class"] = "box_middle"
                 trs.append(tr)
@@ -2605,7 +2608,7 @@ class S3AddPersonWidget(FormWidget):
         # Divider
         divider = TR(TD(_class="subheading"),
                      TD(),
-                    _class="box_bottom")
+                     _class="box_bottom")
 
         # JavaScript
         if s3.debug:
