@@ -2402,7 +2402,12 @@ def inv_warehouse_rheader(r):
         return None
 
     s3db = current.s3db
+
+    # Need to use this format as otherwise req_match?viewing=org_office.x
+    # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
+    r.record = record
+    r.table = s3db[tablename]
     rheader = None
     if tablename == "inv_warehouse":
         tabs = [(T("Basic Details"), None),
@@ -2416,33 +2421,19 @@ def inv_warehouse_rheader(r):
         tabs.append((T("Attachments"), "document"))
         tabs.append((T("User Roles"), "roles"))
 
-        logo = org_organisation_logo(record.organisation_id)
+        rheader_fields = [["name", "organisation_id", "email"],
+                              ["location_id", "phone1"],
+                              ]
 
-        rData = TABLE(
-                      TR(
-                         TH("%s: " % table.name.label),
-                         record.name,
-                         #TH("%s: " % table.type.label),
-                         #table.type.represent(record.type),
-                         ),
-                      TR(
-                         TH("%s: " % table.organisation_id.label),
-                         table.organisation_id.represent(record.organisation_id),
-                         TH("%s: " % table.location_id.label),
-                         table.location_id.represent(record.location_id),
-                         ),
-                      TR(
-                         TH("%s: " % table.email.label),
-                         record.email or "",
-                         TH("%s: " % table.phone1.label),
-                         record.phone1 or "",
-                         ),
-                    )
+        rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
+
         rheader = DIV()
+        
+        logo = s3db.org_organisation_logo(record.organisation_id)
         if logo:
-            rheader.append(TABLE(TR(TD(logo),TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo),TD(rheader_fields))))
         else:
-            rheader.append(rData)
+            rheader = DIV(rheader_fields)
 
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader.append(rheader_tabs)

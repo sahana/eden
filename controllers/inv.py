@@ -43,7 +43,7 @@ def warehouse():
     def prep(r):
 
         if r.id:
-            table.obsolete.readable = table.obsolete.writable = True
+            r.table.obsolete.readable = r.table.obsolete.writable = True
 
         if r.component:
             if r.component.name == "inv_item":
@@ -106,7 +106,7 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.org_rheader,
+                                rheader=s3db.inv_warehouse_rheader,
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
@@ -1301,6 +1301,7 @@ def track_item():
     s3db.configure("inv_track_item",
                     create=False,
                     listadd=False,
+                    insertable=False,
                     editable=False,
                     deletable=False,
                    )

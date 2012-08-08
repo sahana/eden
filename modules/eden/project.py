@@ -1562,19 +1562,19 @@ class S3Project3WModel(S3Model):
             pquery = (ptable.deleted == False)
             pbquery = (pbtable.deleted == False)
             pmin = ptable.start_date.min()
-            pbmin = pbtable.start_date.min()
+            pbmin = pbtable.date.min()
             p_start_date_min = db(pquery).select(pmin,
                                                  orderby=pmin,
                                                  limitby=(0, 1)).first()[pmin]
-            pb_start_date_min = db(pbquery).select(pbmin,
+            pb_date_min = db(pbquery).select(pbmin,
                                                    orderby=pbmin,
                                                    limitby=(0, 1)).first()[pbmin]
-            if p_start_date_min and pb_start_date_min:
+            if p_start_date_min and pb_date_min:
                 start_year = min(p_start_date_min,
-                                 pb_start_date_min).year
+                                 pb_date_min).year
             else:
                 start_year = (p_start_date_min and p_start_date_min.year) or \
-                             (pb_start_date_min and pb_start_date_min.year)
+                             (pb_date_min and pb_date_min.year)
 
             pmax = ptable.end_date.max()
             pbmax = pbtable.end_date.max()
@@ -4184,7 +4184,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
     extra_fields = ["project_location_id$location_id",
                     "project_id",
-                    "start_date",
+                    "date",
                     "end_date"]
 
     # -------------------------------------------------------------------------
@@ -4324,18 +4324,18 @@ class S3ProjectBeneficiaryVirtualFields:
 
     # -------------------------------------------------------------------------
     def year(self):
-        start_date = self.project_beneficiary.start_date
+        date = self.project_beneficiary.date
         end_date = self.project_beneficiary.end_date
-        if not start_date or not end_date:
+        if not date or not end_date:
             project = current.s3db.project_project[self.project_beneficiary.project_id]
             if project:
-                if not start_date:
-                    start_date = project.start_date
+                if not date:
+                    date = project.date
                 if not end_date:
                     end_date = project.end_date
-        if not start_date or not end_date:
-            return [start_date.year or end_date.year]
-        return [year for year in xrange(start_date.year, end_date.year + 1)]
+        if not date or not end_date:
+            return [date.year or end_date.year]
+        return [year for year in xrange(date.year, end_date.year + 1)]
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:

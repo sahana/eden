@@ -1549,8 +1549,14 @@ def org_facility_rheader(r, tabs=[]):
 
     T = current.T
     s3db = current.s3db
+    
+    # Need to use this format as otherwise /inv/incoming?viewing=org_office.x
+    # doesn't have an rheader
+    tablename, record = s3_rheader_resource(r)
+    r.record = record
+    r.table = s3db[tablename]
 
-    tabs += [(T("Details"), None)]
+    tabs = [(T("Details"), None)]
     try:
         tabs = tabs + s3db.req_tabs(r)
     except:
@@ -2282,15 +2288,20 @@ def org_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    # Need to use this format as otherwise /inv/incoming?viewing=org_office.x
+    
+    s3db = current.s3db
+    
+    # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
+    r.record = record
+    r.table = s3db[tablename]
+    
     if record is None:
         # List or Create form: rheader makes no sense here
         return None
 
     T = current.T
-    s3db = current.s3db
     table = s3db[tablename]
     resourcename = r.name
     settings = current.deployment_settings
@@ -2354,40 +2365,19 @@ def org_rheader(r, tabs=[]):
         tabs.append((T("Attachments"), "document"))
         tabs.append((T("User Roles"), "roles"))
 
-        logo = org_organisation_logo(record.organisation_id)
+        rheader_fields = [["name", "organisation_id", "email"],
+                          ["office_type_id", "location_id", "phone1"],
+                          ]
+        rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
 
-        rData = TABLE(
-                      TR(
-                         TH("%s: " % table.name.label),
-                         record.name,
-                         TH("%s: " % table.office_type_id.label),
-                         table.office_type_id.represent(record.office_type_id),
-                         ),
-                      TR(
-                         TH("%s: " % table.organisation_id.label),
-                         table.organisation_id.represent(record.organisation_id),
-                         TH("%s: " % table.location_id.label),
-                         table.location_id.represent(record.location_id),
-                         ),
-                      TR(
-                         TH("%s: " % table.email.label),
-                         record.email or "",
-                         TH("%s: " % table.phone1.label),
-                         record.phone1 or "",
-                         ),
-                      #TR(TH(A(T("Edit Office"),
-                      #        _href=URL(c="org", f="office",
-                      #                  args=[r.id, "update"],
-                      #                  vars={"_next": _next})))
-                      #   )
-                          )
         rheader = DIV()
+        
+        logo = org_organisation_logo(record.organisation_id)
         if logo:
-            rheader.append(TABLE(TR(TD(logo),TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo),TD(rheader_fields))))
         else:
-            rheader.append(rData)
+            rheader = DIV(rheader_fields)
 
-        rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":
