@@ -740,10 +740,10 @@ $(document).ready(function(){
             elif r.component.name == "send":
                 # Default to the Search tab in the location selector
                 current.response.s3.gis.tab = "search"
-                if current.request.get_vars.get("select", "sent") == "incoming":
-                    # Display only incoming shipments which haven't been received yet
-                    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
-                    #r.resource.add_component_filter("send", filter)
+                #if current.request.get_vars.get("select", "sent") == "incoming":
+                #    # Display only incoming shipments which haven't been received yet
+                #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
+                #    r.resource.add_component_filter("send", filter)
 
     # -------------------------------------------------------------------------
     @staticmethod

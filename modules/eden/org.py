@@ -92,6 +92,14 @@ class S3OrganisationModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
+        location = current.session.s3.location_filter
+        if location:
+            filterby = "location_id"
+            filter_opts = (location, None)
+        else:
+            filterby = None
+            filter_opts = (None,)
+
         # ---------------------------------------------------------------------
         # Sector
         # (Cluster in UN-style terminology)
@@ -104,6 +112,10 @@ class S3OrganisationModel(S3Model):
                              Field("abrv", length=64,
                                    notnull=True, unique=True,
                                    label=T("Abbreviation")),
+                             self.gis_location_id(
+                                    widget = S3LocationAutocompleteWidget(),
+                                    requires = IS_LOCATION()
+                                ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -153,6 +165,8 @@ class S3OrganisationModel(S3Model):
                                                 IS_ONE_OF(db, "org_sector.id",
                                                           self.org_sector_represent,
                                                           sort=True,
+                                                          filterby=filterby,
+                                                          filter_opts=filter_opts,
                                                           multiple=True)),
                                     represent = self.org_sector_multirepresent,
                                     comment = S3AddResourceLink(c="org",
@@ -460,9 +474,9 @@ class S3OrganisationModel(S3Model):
                     ),
                     S3SearchOptionsWidget(
                         name = "org_search_sector",
-                        label = T("Sector"),
+                        label = SECTOR,
                         field = "sector_id",
-                        represent = self.org_sector_represent,
+                        options = self.org_sector_opts,
                         cols = 3
                     ),
                     # Doesn't work on all versions of gluon/sqlhtml.py
@@ -652,22 +666,6 @@ class S3OrganisationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_sector_opts():
-        """
-            Provide the options for the Sector search filter
-        """
-        db = current.db
-        table = db.org_sector
-        opts = db(table.deleted == False).select(table.id,
-                                                 table.name,
-                                                 orderby=table.name)
-        od = OrderedDict()
-        for opt in opts:
-            od[opt.id] = current.T(opt.name)
-        return od
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def org_organisation_onaccept(form):
         """
             If a logo was uploaded then create the extra versions.
@@ -786,6 +784,30 @@ class S3OrganisationModel(S3Model):
             else:
                 vals = len(vals) and vals[0] or ""
         return vals
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_sector_opts():
+        """
+            Provide the options for Sector search filters
+        """
+
+        db = current.db
+        table = db.org_sector
+        location = current.session.s3.location_filter
+        if location:
+            query = (table.deleted == False) & \
+                    (table.location_id == location)
+        else:
+            query = (table.deleted == False)
+
+        opts = db(query).select(table.id,
+                                table.name,
+                                orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = current.T(opt.name)
+        return od
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2398,6 +2420,9 @@ def org_organisation_controller():
 
     # Pre-process
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.representation == "json":
             r.table.pe_id.readable = True
             list_fields = s3db.get_config(r.tablename,
@@ -2593,6 +2618,8 @@ def org_office_controller():
 
     # Pre-processor
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
 
         table = r.table
         if organisation_id:
@@ -2602,9 +2629,7 @@ def org_office_controller():
             # Map popups want less clutter
             table.obsolete.readable = False
 
-
         if r.interactive:
-
             # Plug in role matrix for Admins/OrgAdmins
             auth = current.auth
             if r.id and auth.user is not None:
@@ -2617,7 +2642,6 @@ def org_office_controller():
                                     action=S3OrgRoleManager())
 
             if r.component:
-
                 cname = r.component.name
                 if cname in ("inv_item", "recv", "send"):
                     # Filter out items which are already in this inventory

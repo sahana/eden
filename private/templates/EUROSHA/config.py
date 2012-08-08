@@ -50,6 +50,10 @@ settings.fin.currencies = {
 settings.security.policy = 6 # Realm
 settings.security.map = True
 
+# Set this if there will be multiple areas in which work is being done,
+# and a menu to select among them is wanted.
+settings.gis.menu = "Country"
+
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 

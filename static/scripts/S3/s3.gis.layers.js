@@ -236,7 +236,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'aerial') {
+        if (bing.Base == 'aerial') {
             map.setBaseLayer(layer);
         }
     }
@@ -250,7 +250,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'road') {
+        if (bing.Base == 'road') {
             map.setBaseLayer(layer);
         }
     }
@@ -264,7 +264,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'hybrid') {
+        if (bing.Base == 'hybrid') {
             map.setBaseLayer(layer);
         }
     }

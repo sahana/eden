@@ -232,12 +232,10 @@ class S3MainMenu(object):
 
         T = current.T
         db = current.db
-        gis = current.gis
         auth = current.auth
         s3db = current.s3db
         request = current.request
-        session = current.session
-        s3 = current.response.s3
+        _config = current.response.s3.gis.config
 
         # See if we need to switch config before we decide which
         # config item to mark as active:
@@ -249,20 +247,24 @@ class S3MainMenu(object):
                 # Manually-crafted URL?
                 pass
             else:
-                if s3.gis.config and s3.gis.config.id != config:
+                if _config is None or _config.id != config:
                     # Set this as the current config
-                    # @ToDo: restore some awareness of this in session
-                    config = gis.set_config(config)
+                    gis = current.gis
+                    gis.set_config(config)
+                    s3 = current.session.s3
+                    cfg = gis.get_config()
+                    s3.gis_config_id = config
+                    s3.location_filter = cfg.region_location_id
                     if settings.has_module("event"):
                         # See if this config is associated with an Event
                         table = s3db.event_config
                         query = (table.config_id == config)
-                        event = db(query).select(table.event_id,
-                                                 limitby=(0, 1)).first()
-                        if event:
-                            session.s3.event = event.event_id
+                        incident = db(query).select(table.incident_id,
+                                                    limitby=(0, 1)).first()
+                        if incident:
+                            s3.event = incident.incident_id
                         else:
-                            session.s3.event = None
+                            s3.event = None
             # Don't use the outdated cache for this call
             cache = None
         else:
@@ -278,27 +280,31 @@ class S3MainMenu(object):
         query &= (table.config_id == ctable.id)
         configs = db(query).select(ctable.id, ctable.name, cache=cache)
 
-        gis_menu = MM(settings.get_gis_menu(), c="gis", f="config", **attr)
+        gis_menu = MM(settings.get_gis_menu(),
+                      c=request.controller,
+                      f=request.function,
+                      **attr)
+        args = request.args
         if len(configs):
             # Use short names for the site and personal configs else they'll wrap.
             # Provide checkboxes to select between pages
             gis_menu(
-                    MM({"name": T("Default Map"),
+                    MM({"name": T("Default"),
                         "id": "gis_menu_id_0",
                         # @ToDo: Show when default item is selected without having
                         # to do a DB query to read the value
-                        #"value": s3.gis.config and s3.gis.config.id is 0,
+                        #"value": _config and _config.id is 0,
                         "request_type": "load"
-                       }, args=request.args, vars={"_config": 0}
+                       }, args=args, vars={"_config": 0}
                     )
                 )
             for config in configs:
                 gis_menu(
-                    MM({"name": T(config.name),
+                    MM({"name": config.name,
                         "id": "gis_menu_id_%s" % config.id,
-                        "value": s3.gis.config and s3.gis.config.id == config.id,
+                        "value": _config and _config.id == config.id,
                         "request_type": "load"
-                       }, args=request.args, vars={"_config": config.id}
+                       }, args=args, vars={"_config": config.id}
                     )
                 )
         return gis_menu

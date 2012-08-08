@@ -433,7 +433,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_sector",
                         label = sector,
                         field = "sector_id",
-                        #options = self.org_sector_opts,
+                        options = self.org_sector_opts,
                         cols = 4
                     ))
         if mode_drr:

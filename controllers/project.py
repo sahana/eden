@@ -77,6 +77,9 @@ def project():
 
     # Pre-process
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive:
             if not r.component:
                 if not r.id and r.function == "index":

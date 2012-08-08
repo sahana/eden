@@ -954,6 +954,9 @@ def asset_controller():
 
     # Pre-process
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive:
             s3_address_hide(r.table)
         if r.component_name == "log":
