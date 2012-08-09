@@ -43,14 +43,14 @@ from gluon import current
 
     TranslateAPI           : API class to retreive strings and files by module
 
-    TranslateGetFiles      : Class to traverse the eden directory and 
+    TranslateGetFiles      : Class to traverse the eden directory and
                              categorize files based on module
 
     TranslateParseFiles    : Class to parse python code using its parse tree
                              and obtain the required strings and data
 
     TranslateReadFiles     : Class to open a file, read its contents and build
-                             a parse tree (for .py files) or use regex 
+                             a parse tree (for .py files) or use regex
                              (for html/js files) to obtain a list of strings
                              by calling methods from TranslateParseFiles
 
@@ -74,7 +74,7 @@ class TranslateAPI:
 
         """
             API class for the Translation module to get
-            files,modules and strings individually
+            files, modules and strings individually
         """
 
         def __init__(self):
@@ -83,8 +83,8 @@ class TranslateAPI:
                                    current.request.application)
             self.grp = TranslateGetFiles()
             self.grp.group_files(base_dir, "", 0)
-    
-        #------------------------------------------------------------------
+
+        #--------------------------------------------------------------------
         def get_langcodes(self):
 
             """ Return a list of language codes """
@@ -92,7 +92,7 @@ class TranslateAPI:
             lang_list = []
             base_dir = os.path.join(os.getcwd(), "applications",\
                                    current.request.application)
-            langdir = os.path.join(base_dir,"languages")
+            langdir = os.path.join(base_dir, "languages")
             files = os.listdir(langdir)
 
             for f in files:
@@ -100,7 +100,7 @@ class TranslateAPI:
 
             return lang_list
 
-        #------------------------------------------------------------------    
+        #--------------------------------------------------------------------
         def get_modules(self):
 
             """ Return a list of modules """
@@ -644,6 +644,8 @@ class TranslateParseFiles:
 
 class TranslateReadFiles:
 
+        """ Class to open and read files """
+
         def findstr(self, fileName, spmod, modlist):
 
             """
@@ -793,6 +795,11 @@ class TranslateReadFiles:
 
 class TranslateReportStatus:
 
+        """
+           Class to report the percentage of translated strings for each module
+           for a given language
+        """
+
         def create_master_file(self):
 
             """ Function to create a master file containing all the strings """
@@ -809,7 +816,11 @@ class TranslateReportStatus:
             A = TranslateAPI()
             modlist = A.get_modules()
             modlist.append("core")
+
+            # List containing all the strings in the eden code
             all_strings = []
+            # Dictionary keyed on modules containg the indices of strings
+            # in all_strings which belong to the corresponding module
             string_dict = {}
             ind = 0
 
@@ -817,6 +828,7 @@ class TranslateReportStatus:
                 string_dict[mod] = []
                 strings = A.get_strings_by_module(mod)
                 for (l, s) in strings:
+                    # Removing quotes around the strings
                     if (s[0] == '"' and s[-1] == '"') or\
                        (s[0] == "'" and s[-1] == "'"):
                         s = s[1:-1]
@@ -829,6 +841,7 @@ class TranslateReportStatus:
                         tmpind = all_strings.index(s)
                         string_dict[mod].append(tmpind)
 
+            # Saving all_strings and string_dict as pickle objects in a file
             base_dir = os.path.join(os.getcwd(), "applications", \
                                     current.request.application)
             data_file = os.path.join(base_dir, "uploads", "temp.pkl")
@@ -838,10 +851,18 @@ class TranslateReportStatus:
             pickle.dump(string_dict, f)
             f.close()
 
+            # Setting the update flag for all languages to indicate that the
+            # previously stored percentages of translation may have changed
+            # as the master file has been changed.
             db(utable.id>0).update(sbit=True)
 
         #---------------------------------------------------------------------
         def update_percentages(self, lang_code):
+
+            """
+               Function to update the translation percentages for all modules
+               for a given language
+            """
 
             s3db = current.s3db
             db = current.db
@@ -856,15 +877,18 @@ class TranslateReportStatus:
                                     current.request.application)
             langfile = os.path.join(base_dir, "languages", langfile)
 
+            # Reading the language file
             R = TranslateReadFiles()
             lang_strings = R.read_w2pfile(langfile)
 
+            # translated_strings contains those strings which are translated
             translated_strings = []
             for (s1, s2) in lang_strings:
                 if not s2.startswith("*** "):
                     if s1!=s2 or lang_code == "en-gb":
                         translated_strings.append(s1)
 
+            # Retreing the data stored in master file
             data_file = os.path.join(base_dir, "uploads", "temp.pkl")
             f = open(data_file, 'rb')
             all_strings = pickle.load(f)
@@ -880,6 +904,7 @@ class TranslateReportStatus:
                     if string in translated_strings:
                         count += 1
 
+                # Updating the translation count in the table
                 query = (ptable.code == lang_code) & \
                         (ptable.module == mod)
                 db(query).update(translated = count,
@@ -892,6 +917,7 @@ class TranslateReportStatus:
             base_dir = os.path.join(os.getcwd(), "applications", \
                                     current.request.application)
             pickle_file = os.path.join(base_dir, "uploads", "temp.pkl")
+            # If master file doesn't exist, create it
             if not os.path.exists(pickle_file):
                 self.create_master_file()
 
@@ -907,6 +933,9 @@ class TranslateReportStatus:
             query = (utable.code == lang_code)
             row = db(query).select()
 
+            # If the translation percentages for the given language hasn't been
+            # calculated earlier, add the row corresponding to that language
+            # in the table and call the update_percentages() method
             if not row:
                 utable.insert(code = lang_code,
                               sbit = False)
@@ -918,15 +947,22 @@ class TranslateReportStatus:
                 self.update_percentages(lang_code)
             else:
                 for r in row:
+                    # If the update bit for the language is set,
+                    # then update the percentages
                     if r.sbit == True:
                         self.update_percentages(lang_code)
                         db(query).update(sbit = False)
 
+            # Dictionary keyed on modules to store percentage for each module
             percent_dict={}
+            # Total number of translated strings for the given language
             total_translated = 0
+            # Total number of untranslated strings for the given language
             total_untranslated = 0
             query = (ptable.code == lang_code)
             rows = db(query).select()
+            # Displaying the translation percentage for each module
+            # by fetching the data from the table
             for row in rows:
                 total_translated += row.translated
                 total_untranslated += row.untranslated
@@ -935,9 +971,11 @@ class TranslateReportStatus:
             percent_dict["complete_file"] = \
             (float(total_translated)/(total_translated+total_untranslated))*100
 
+            # Rounding off the percentages to 2 decimal places
             for mod in percent_dict.keys():
-                percent_dict[mod] = round(percent_dict[mod],2)
+                percent_dict[mod] = round(percent_dict[mod], 2)
 
+            # Return the dictionary
             return percent_dict
 
 #==============================================================================
@@ -1056,7 +1094,7 @@ class StringsToExcel:
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
-                translated and call the "create_spreadsheet()" method if the 
+                translated and call the "create_spreadsheet()" method if the
                 default filetype "xls" is chosen. If "po" is chosen, then the
                 export_to_po()" method is called.
             """
@@ -1149,7 +1187,7 @@ class CsvToWeb2py:
             h = open(pofilename, "r")
 
             #Modifying headers to return the po file for download
-	    response = current.response
+            response = current.response
             filename = "trans.po"
             disposition = "attachment; filename=\"%s\"" % filename
             response.headers["Content-Type"] = contenttype(".po")

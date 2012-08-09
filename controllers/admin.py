@@ -726,8 +726,9 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 def translate():
 
     """
-        Controller to enable selection of modules for translation
-        and updating the language file with uploaded translations
+        Controller to enable selection of modules for translation,
+        updating the language file with uploaded translations and
+        displaying the translation percentages for each module
     """
 
     if not request.vars.opt:
@@ -746,9 +747,14 @@ def translate():
         # To prevent redirection
         r.next = None
 
-        # If 1st workflow, i.e selecting the modules for translation is selected
+        # To remove the false error from the form
+        # error : "Invalid form (re-opened in another window?)"
+        if response.error and not output["form"]["error"]:
+            response.error = None
+
         if opt == "1":
 
+            # If 1st workflow, i.e selecting the modules for translation is selected
             if form.accepts(request.vars, session):
 
                 modlist = []
@@ -824,19 +830,21 @@ def translate():
             div.append(row)
             div.append(BR())
 
+            # Drop-down for available language codes
             lang_col = TD()
             lang_dropdown = SELECT(_name = "code")
             for lang in langlist:
                 lang_dropdown.append(lang)
-	    lang_col.append(lang_dropdown)
+                lang_col.append(lang_dropdown)
 
             row = TR(TD(T("Language code: ")), TD(lang_col))
             div.append(row)
             div.append(BR())
 
+            # Providing option to export strings in pootle format
             row = TR(TD(T("Export as Pootle (.po) file")), TD(INPUT(_type="checkbox", _name="filetype")))
-	    row.append(BR())
-	    row.append(TR(TD(T("(Excel (.xls) is default)"))))
+            row.append(BR())
+            row.append(TR(TD(T("(Excel (.xls) is default)"))))
             div.append(row)
 
             div.append(BR())
@@ -852,6 +860,7 @@ def translate():
             # If 3rd workflow, displaying translation percentage is selected
             if form.accepts(request.vars, session):
 
+                # Retreiving the translation percentage for each module
                 code = form.request_vars.code
                 S = TranslateReportStatus()
                 percent_dict = S.get_translation_percentages(code)
@@ -892,15 +901,16 @@ def translate():
                 s3.has_required = False
 
             else:
-
+                # Display the form for 3rd workflow
                 A = TranslateAPI()
                 langlist = A.get_langcodes()
                 langlist.sort()
+                # Drop-down for selecting language codes
                 lang_col = TD()
                 lang_dropdown = SELECT(_name = "code")
                 for lang in langlist:
                     lang_dropdown.append(lang)
-	        lang_col.append(lang_dropdown)
+                lang_col.append(lang_dropdown)
 
                 div = DIV()
                 row = TR(TD(T("Language code: ")),TD(lang_col))
@@ -912,6 +922,7 @@ def translate():
                 output["title"] = T("Select the language file")
                 output["form"] = form
 
+        # 2nd workflow, i.e uploading translated files is selected by default
         return output
 
     response.s3.postp = postp
