@@ -44,7 +44,7 @@ from gluon.tools import callback
 from s3method import S3Method
 from s3export import S3Exporter
 from s3utils import s3_mark_required
-from s3forms import S3CRUDForm
+from s3forms import S3SQLForm
 from s3widgets import S3EmbedComponentWidget
 
 try:
@@ -72,6 +72,7 @@ class S3CRUD(S3Method):
             @returns: output object to send to the view
         """
 
+        self.sqlform = S3SQLForm(self.resource)
         self.settings = current.response.s3.crud
 
         # Pre-populate create-form?
@@ -238,18 +239,17 @@ class S3CRUD(S3Method):
                 original = None
 
             # Get the form
-            sqlform = S3CRUDForm(self.resource)
-            form = sqlform(request=self.request,
-                           data=self.data,
-                           record_id=original,
-                           from_table=from_table,
-                           from_record=from_record,
-                           map_fields=map_fields,
-                           onvalidation=onvalidation,
-                           onaccept=onaccept,
-                           link=link,
-                           message=message,
-                           format=representation)
+            form = self.sqlform(request=request,
+                                data=self.data,
+                                record_id=original,
+                                from_table=from_table,
+                                from_record=from_record,
+                                map_fields=map_fields,
+                                onvalidation=onvalidation,
+                                onaccept=onaccept,
+                                link=link,
+                                message=message,
+                                format=representation)
 
             # Insert subheadings
             subheadings = _config("subheadings")
@@ -401,11 +401,10 @@ class S3CRUD(S3Method):
 
             # Item
             if record_id:
-                sqlform = S3CRUDForm(resource)
-                item = sqlform(request=request,
-                               record_id=record_id,
-                               readonly=True,
-                               format=representation)
+                item = self.sqlform(request=request,
+                                    record_id=record_id,
+                                    readonly=True,
+                                    format=representation)
                 if subheadings:
                     self.insert_subheadings(item, self.tablename, subheadings)
             else:
@@ -443,11 +442,10 @@ class S3CRUD(S3Method):
                         field.readable = False
 
             # Form
-            sqlform = S3CRUDForm(self.resource)
-            item = sqlform(request=self.request,
-                           record_id=record_id,
-                           readonly=True,
-                           format=representation)
+            item = self.sqlform(request=request,
+                                record_id=record_id,
+                                readonly=True,
+                                format=representation)
             output["item"] = item
 
             # Details Link
@@ -588,14 +586,13 @@ class S3CRUD(S3Method):
             message = crud_string(self.tablename, "msg_record_modified")
 
             # Get the form
-            sqlform = S3CRUDForm(self.resource)
-            form = sqlform(request=self.request,
-                           record_id=record_id,
-                           onvalidation=onvalidation,
-                           onaccept=onaccept,
-                           message=message,
-                           link=link,
-                           format=representation)
+            form = self.sqlform(request=self.request,
+                                record_id=record_id,
+                                onvalidation=onvalidation,
+                                onaccept=onaccept,
+                                message=message,
+                                link=link,
+                                format=representation)
 
             # Insert subheadings
             if subheadings:
@@ -1012,11 +1009,10 @@ class S3CRUD(S3Method):
                        self._permitted(method="update"):
                          items = self.update(r, **attr).get("form", None)
                     else:
-                        sqlform = S3CRUDForm(self.resource)
-                        items = sqlform(request=self.request,
-                                        record_id=r.id,
-                                        readonly=True,
-                                        format=representation)
+                        items = self.sqlform(request=self.request,
+                                             record_id=r.id,
+                                             readonly=True,
+                                             format=representation)
                 else:
                     raise HTTP(404, body="Record not Found")
             else:

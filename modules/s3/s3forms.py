@@ -34,121 +34,7 @@ from gluon.tools import callback
 from s3utils import s3_mark_required
 
 # =============================================================================
-class S3Form(object):
-    """ Form Base Class """
-
-    # -------------------------------------------------------------------------
-    def __init__(self):
-        """ Form declaration """
-
-        pass
-
-    # -------------------------------------------------------------------------
-    def __call__(self, request, **kwargs):
-        """ Form rendering and processing """
-
-        success = self.pre_process(request, **kwargs)
-
-        if success:
-            success = self.pre_render(request, **kwargs)
-        else:
-            self._error()
-            return None
-
-        if success:
-            form = self.render(request, **kwargs)
-        else:
-            self._error()
-            return None
-
-        if form is not None:
-            success = self.post_render(request, form, **kwargs)
-        else:
-            self._error()
-            return None
-
-        if success:
-            success = self.process(request, form, **kwargs)
-        else:
-            self._error()
-            return None
-
-        if success:
-            success = self.post_process(request, form, **kwargs)
-        else:
-            self._error()
-            return None
-
-        if success:
-            return form
-        else:
-            self._error()
-            return None
-
-    # -------------------------------------------------------------------------
-    # Rendering
-    # -------------------------------------------------------------------------
-    def pre_render(self, request, **kwargs):
-
-        return True
-
-    # -------------------------------------------------------------------------
-    def render(self, request, **kwargs):
-
-        self.error = NotImplementedError
-        return None
-
-    # -------------------------------------------------------------------------
-    def post_render(self, request, form, **kwargs):
-
-        return True
-
-    # -------------------------------------------------------------------------
-    # Processing
-    # -------------------------------------------------------------------------
-    def pre_process(self, request, **kwargs):
-
-        return True
-
-    # -------------------------------------------------------------------------
-    def process(self, request, form, **kwargs):
-
-        self.error = NotImplementedError
-        return False
-
-    # -------------------------------------------------------------------------
-    def post_process(self, request, form, **kwargs):
-
-        return True
-
-    # -------------------------------------------------------------------------
-    # Error handling
-    # -------------------------------------------------------------------------
-    def _error(self):
-
-        error = self.error
-
-        if isinstance(error, Exception) or \
-           type(error).__name__ == "type" and issubclass(error, Exception):
-            raise error
-        elif isinstance(error, (basestring, lazyT)):
-            response.s3.error = error
-        return
-
-# =============================================================================
-class S3FormElement(object):
-    """ Form Element Base Class """
-
-    # -------------------------------------------------------------------------
-    def __init__(self):
-        pass
-
-    # -------------------------------------------------------------------------
-    def __call__(self):
-        pass
-
-# =============================================================================
-class S3CRUDForm(S3Form):
+class S3SQLForm(object):
     """ Standard CRUD form """
 
     # -------------------------------------------------------------------------
@@ -158,8 +44,6 @@ class S3CRUDForm(S3Form):
 
             @param resource: the S3Resource
         """
-
-        S3Form.__init__(self)
 
         self.resource = resource
 
