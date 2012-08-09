@@ -62,7 +62,7 @@ class S3StatsModel(S3Model):
         super_entity = self.super_entity
 
         #----------------------------------------------------------------------
-        # The super entity - stats_parameter
+        # Super entity: stats_parameter
         #
         sp_types = Storage(
                            vulnerability_indicator = T("Vulnerability Indicator"),
@@ -95,7 +95,7 @@ class S3StatsModel(S3Model):
                                    )
 
         #----------------------------------------------------------------------
-        # The super entity - stats_data
+        # Super entity: stats_data
         #
         sd_types = Storage(
                            vulnerability_data = T("Vulnerability Data"),
@@ -162,25 +162,25 @@ class S3StatsModel(S3Model):
                                    ),
                              Field("min", "double",
                                    label = T("Minimum"),
-                                  ),
+                                   ),
                              Field("max", "double",
                                    label = T("Maximum"),
-                                  ),
+                                   ),
                              Field("mean", "double",
                                    label = T("Mean"),
-                                  ),
+                                   ),
                              Field("median", "double",
                                    label = T("Median"),
-                                  ),
+                                   ),
                              #Field("mean_ad", "double",
                              #      label = T("Mean Absolute Deviation"),
-                             #     ),
+                             #      ),
                              #Field("std", "double",
                              #      label = T("Standard Deviation"),
-                             #     ),
+                             #      ),
                              #Field("variance", "double",
                              #      label = T("Variance"),
-                             #     ),
+                             #      ),
                              *s3_meta_fields()
                              )
 

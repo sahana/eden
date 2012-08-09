@@ -258,7 +258,15 @@ def inv_item():
 # -----------------------------------------------------------------------------
 def track_movement():
     """ REST Controller """
+
     table = s3db.inv_track_item
+
+    s3db.configure("inv_track_item",
+                   create=False,
+                   listadd=False,
+                   editable=False,
+                   deletable=False,
+                   )
 
     def prep(r):
         if r.interactive:
@@ -268,18 +276,10 @@ def track_movement():
                          (table.recv_inv_item_id == item_id)
                 s3.filter = filter
         return True
-
-    s3db.configure("inv_track_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
-
     s3.prep = prep
-    output =  s3_rest_controller("inv",
-                                 "track_item",
-                                 rheader=s3db.inv_warehouse_rheader,
+
+    output = s3_rest_controller("inv", "track_item",
+                                rheader=s3db.inv_warehouse_rheader,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
