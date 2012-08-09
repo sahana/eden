@@ -53,7 +53,13 @@
                                 <li><a href="{% url 'add_fields' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add form field' %}" title="{% trans 'Add Form field'%}"/>{% trans 'Add form fields '%}
                                 </a></li>
+                                <li><a href="{% url 'delete_fields' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete form field' %}" title="{% trans 'Delete form field'%}"/>{% trans 'Delete form field '%}
+                                </a></li>
+
                             {% endif %}
+                        
+                            
                             {% if perms.spaces.delete_space %}
                                 <li><a href="{% url 'delete-space' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>{% trans 'Delete space' %}
@@ -363,7 +369,9 @@
                             <h4>{% trans "New proposals" %}</h4>
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
-                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    {% if not proposal.merged %}
+                                        <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    {% endif %}        
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
                                 {% endfor %}
@@ -377,6 +385,15 @@
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Merged proposals" %}</h4>
+                            <ul class="unstyled">
+                                {% for proposal in proposals %}
+                                    {% if proposal.merged  %}
+                                        <li><a href="{{ proposal.get_absolute_url}}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on"%} {{ proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y"}}</li>
+                                    {% endif %}
+                                {% empty %}
+                                        <li>{% trans "No merged proposals" %}</li>
+                                {% endfor %}
+                            </ul>
                             <h4>{% trans "Most commented" %}</h4>
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
