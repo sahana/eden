@@ -69,6 +69,7 @@ class S3SQLForm(object):
                  onvalidation=None,
                  onaccept=None,
                  message="Record created/updated",
+                 subheadings=None,
                  format=None):
         """
             Generate the form
@@ -147,9 +148,18 @@ class S3SQLForm(object):
                 # Submit button has been removed
                 pass
 
-        logged = False
+        # Subheadings
+        if subheadings:
+            self.insert_subheadings(form, tablename, subheadings)
+
+        # Cancel button
+        if not readonly and response.s3.cancel:
+            form[0][-1][0].append(A(current.T("Cancel"),
+                                    _href=response.s3.cancel,
+                                    _class="action-lnk"))
 
         # Process the form
+        logged = False
         if not readonly:
             success, error = self.process(form,
                                           request.post_vars,
@@ -406,4 +416,52 @@ class S3SQLForm(object):
             return current.s3db.get_config(tablename, key, default)
         else:
             return default
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def insert_subheadings(form, tablename, subheadings):
+        """
+            Insert subheadings into forms
+
+            @param form: the form
+            @param tablename: the tablename
+            @param subheadings: a dict of {"Headline": Fieldnames}, where
+                Fieldname can be either a single field name or a list/tuple
+                of field names belonging under that headline
+        """
+
+        if subheadings:
+            if tablename in subheadings:
+                subheadings = subheadings.get(tablename)
+            form_rows = iter(form[0])
+            tr = form_rows.next()
+            i = 0
+            done = []
+            while tr:
+                f = tr.attributes.get("_id", None)
+                if f.startswith(tablename):
+                    f = f[len(tablename)+1:-6]
+                    for k in subheadings.keys():
+                        if k in done:
+                            continue
+                        fields = subheadings[k]
+                        if not isinstance(fields, (list, tuple)):
+                            fields = [fields]
+                        if f in fields:
+                            done.append(k)
+                            form[0].insert(i, TR(TD(k, _colspan=3,
+                                                    _class="subheading"),
+                                                 _class = "subheading",
+                                                 _id = "%s_%s__subheading" %
+                                                       (tablename, f)))
+                            tr.attributes.update(_class="after_subheading")
+                            tr = form_rows.next()
+                            i += 1
+                try:
+                    tr = form_rows.next()
+                except StopIteration:
+                    break
+                else:
+                    i += 1
+
 # END =========================================================================

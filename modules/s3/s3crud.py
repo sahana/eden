@@ -238,6 +238,8 @@ class S3CRUD(S3Method):
             else:
                 original = None
 
+            subheadings = _config("subheadings")
+
             # Get the form
             form = self.sqlform(request=request,
                                 data=self.data,
@@ -249,18 +251,8 @@ class S3CRUD(S3Method):
                                 onaccept=onaccept,
                                 link=link,
                                 message=message,
+                                subheadings=subheadings,
                                 format=representation)
-
-            # Insert subheadings
-            subheadings = _config("subheadings")
-            if subheadings:
-                self.insert_subheadings(form, tablename, subheadings)
-
-            # Cancel button?
-            if response.s3.cancel:
-                form[0][-1][0].append(A(current.T("Cancel"),
-                                      _href=response.s3.cancel,
-                                      _class="action-lnk"))
 
             # Navigate-away confirmation
             if self.settings.navigate_away_confirm:
@@ -404,9 +396,8 @@ class S3CRUD(S3Method):
                 item = self.sqlform(request=request,
                                     record_id=record_id,
                                     readonly=True,
+                                    subheadings=subheadings,
                                     format=representation)
-                if subheadings:
-                    self.insert_subheadings(item, self.tablename, subheadings)
             else:
                 item = DIV(crud_string(tablename, "msg_list_empty"),
                            _class="empty")
@@ -592,17 +583,8 @@ class S3CRUD(S3Method):
                                 onaccept=onaccept,
                                 message=message,
                                 link=link,
+                                subheadings=subheadings,
                                 format=representation)
-
-            # Insert subheadings
-            if subheadings:
-                self.insert_subheadings(form, tablename, subheadings)
-
-            # Cancel button?
-            if s3.cancel:
-                form[0][-1][0].append(A(current.T("Cancel"),
-                                        _href=s3.cancel,
-                                        _class="action-lnk"))
 
             # Navigate-away confirmation
             if self.settings.navigate_away_confirm:
@@ -1159,53 +1141,6 @@ class S3CRUD(S3Method):
                 return "%s..." % text[:l]
         else:
             return text
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def insert_subheadings(form, tablename, subheadings):
-        """
-            Insert subheadings into forms
-
-            @param form: the form
-            @param tablename: the tablename
-            @param subheadings: a dict of {"Headline": Fieldnames}, where
-                Fieldname can be either a single field name or a list/tuple
-                of field names belonging under that headline
-        """
-
-        if subheadings:
-            if tablename in subheadings:
-                subheadings = subheadings.get(tablename)
-            form_rows = iter(form[0])
-            tr = form_rows.next()
-            i = 0
-            done = []
-            while tr:
-                f = tr.attributes.get("_id", None)
-                if f.startswith(tablename):
-                    f = f[len(tablename)+1:-6]
-                    for k in subheadings.keys():
-                        if k in done:
-                            continue
-                        fields = subheadings[k]
-                        if not isinstance(fields, (list, tuple)):
-                            fields = [fields]
-                        if f in fields:
-                            done.append(k)
-                            form[0].insert(i, TR(TD(k, _colspan=3,
-                                                    _class="subheading"),
-                                                 _class = "subheading",
-                                                 _id = "%s_%s__subheading" %
-                                                       (tablename, f)))
-                            tr.attributes.update(_class="after_subheading")
-                            tr = form_rows.next()
-                            i += 1
-                try:
-                    tr = form_rows.next()
-                except StopIteration:
-                    break
-                else:
-                    i += 1
 
     # -------------------------------------------------------------------------
     def insert_buttons(self, r, *buttons, **attr):
