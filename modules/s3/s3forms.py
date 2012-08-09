@@ -173,59 +173,19 @@ class S3CRUDForm(S3Form):
     # -------------------------------------------------------------------------
     # Rendering
     # -------------------------------------------------------------------------
-    def pre_render(self, request, **kwargs):
-
-        readonly
-        record_id => self.record_id
-        from_table
-        from_record
-        map_fields
-        data
-        format
-
-        s3 = current.response.s3
-
-        self.format = kwargs.get("format", None)
-        self.readonly = kwargs.get("readonly", False)
-
-        if not self.readonly:
-
-            # Pre-populate create-form
-            if record_id is None:
-                record = self.prepopulate(from_table=from_table,
-                                          from_record=from_record,
-                                          map_fields=map_fields,
-                                          data=data,
-                                          format=format)
-
-            # De-duplicate link table entries
-            record_id = self.deduplicate_link(request, record_id)
-
-            # Add asterisk to labels of required fields
-            mark_required = self._config("mark_required", default = [])
-            labels, required = s3_mark_required(table, mark_required)
-            if required:
-                # Show the key if there are any required fields.
-                s3.has_required = True
-            else:
-                s3.has_required = False
-
-        pass
-
-    # -------------------------------------------------------------------------
-    def render(self,
-               request=None,
-               data=None,
-               record_id=None,
-               readonly=False,
-               from_table=None,
-               from_record=None,
-               map_fields=None,
-               link=None,
-               onvalidation=None,
-               onaccept=None,
-               message="Record created/updated",
-               format=None):
+    def __call__(self,
+                 request=None,
+                 data=None,
+                 record_id=None,
+                 readonly=False,
+                 from_table=None,
+                 from_record=None,
+                 map_fields=None,
+                 link=None,
+                 onvalidation=None,
+                 onaccept=None,
+                 message="Record created/updated",
+                 format=None):
         """
             Generate the form
         """
@@ -250,24 +210,6 @@ class S3CRUDForm(S3Form):
 
         self.record_id = record_id
 
-        ------------- PRE-PROCESS ------------
-
-            ## Copy formkey if un-deleting a duplicate
-            #if "id" in request.post_vars:
-                #original = str(request.post_vars.id)
-                #formkey = session.get("_formkey[%s/None]" % tablename)
-                #formname = "%s/%s" % (tablename, original)
-                #session["_formkey[%s]" % formname] = formkey
-                #if "deleted" in table:
-                    #table.deleted.writable = True
-                    #request.post_vars.update(deleted=False)
-                #request.post_vars.update(_formname=formname, id=original)
-                #request.vars.update(**request.post_vars)
-            #else:
-                #original = None
-
-        ------------ PRE-RENDER -------------------------------
-
         if not readonly:
 
             # Pre-populate create-form
@@ -289,8 +231,6 @@ class S3CRUDForm(S3Form):
                 s3.has_required = True
             else:
                 s3.has_required = False
-
-        ---------- RENDER -------------
 
         # Determine form style
         if format == "plain":
@@ -315,8 +255,6 @@ class S3CRUDForm(S3Form):
                        separator = "",
                        submit_button = settings.submit_button)
 
-        ------------ POST-RENDER ----------
-
         # Style the Submit button, if-requested
         if settings.submit_style:
             try:
@@ -324,23 +262,6 @@ class S3CRUDForm(S3Form):
             except TypeError:
                 # Submit button has been removed
                 pass
-
-            ## Insert subheadings
-            #subheadings = _config("subheadings")
-            #if subheadings:
-                #self.insert_subheadings(form, tablename, subheadings)
-
-            ## Cancel button?
-            #if response.s3.cancel:
-                #form[0][-1][0].append(A(current.T("Cancel"),
-                                      #_href=response.s3.cancel,
-                                      #_class="action-lnk"))
-
-            ## Navigate-away confirmation
-            #if self.settings.navigate_away_confirm:
-                #form.append(SCRIPT("S3EnableNavigateAwayConfirm();"))
-
-        ------------- PROCESS ----------------
 
         logged = False
 
@@ -358,8 +279,6 @@ class S3CRUDForm(S3Form):
             elif error:
                 response.error = error
 
-        -------------- POST-PROCESS -------------
-
         # Audit read
         if not logged and not form.errors:
             audit("read", prefix, name,
@@ -367,15 +286,10 @@ class S3CRUDForm(S3Form):
 
         return form
 
-
-    # -------------------------------------------------------------------------
-    def post_render(self, request, form, *args, **kwargs)
-
     # -------------------------------------------------------------------------
     # Processing
     # -------------------------------------------------------------------------
-    def process(self,
-                request, form,
+    def process(self, form, vars,
                 onvalidation = None,
                 onaccept = None,
                 link = None,
@@ -383,8 +297,6 @@ class S3CRUDForm(S3Form):
         """
             Process the form
         """
-
-        vars = request.post_vars
 
         manager = current.manager
         audit = manager.audit
