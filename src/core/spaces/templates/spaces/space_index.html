@@ -53,7 +53,13 @@
                                 <li><a href="{% url 'add_fields' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add form field' %}" title="{% trans 'Add Form field'%}"/>{% trans 'Add form fields '%}
                                 </a></li>
+                                <li><a href="{% url 'delete_fields' get_place.url %}">
+                                    <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete form field' %}" title="{% trans 'Delete Form field'%}"/>{% trans 'Add form fields '%}
+                                </a></li>
+
                             {% endif %}
+                        
+                            
                             {% if perms.spaces.delete_space %}
                                 <li><a href="{% url 'delete-space' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete space' %}" title="{% trans 'Delete space' %}"/>{% trans 'Delete space' %}
