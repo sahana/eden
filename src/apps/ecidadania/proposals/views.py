@@ -235,10 +235,10 @@ def remove_proposal_field(request, space_url):
             form_data = d_form.save(commit=False)
             delete_field = ProposalField.objects.filter(proposalset=form_data.proposalset, field_name=form_data.field_name)
             delete_field.delete()
-            return render_to_response("proposals/proposalfield_delete_form.html", {'form':d_form, 'get_place':get_place,\
+            return render_to_response("proposals/proposalform_remove_field.html", {'form':d_form, 'get_place':get_place,\
                                         'deleted_field':form_data}, context_instance = RequestContext(request))
 
-    return render_to_response("proposals/proposalfield_delete_form.html", {'form':d_form, 'get_place':get_place}, \
+    return render_to_response("proposals/proposalform_remove_field.html", {'form':d_form, 'get_place':get_place}, \
                                 context_instance = RequestContext(request))
 
     """
