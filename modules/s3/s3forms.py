@@ -29,6 +29,7 @@
 """
 
 from gluon import *
+from gluon.storage import Storage
 from gluon.tools import callback
 from s3utils import s3_mark_required
 
@@ -109,6 +110,9 @@ class S3CRUDForm(S3Form):
                  onaccept=None,
                  message="Record created/updated",
                  format=None):
+        """
+            Generate the form
+        """
 
         session = current.session
         response = current.response
@@ -132,77 +136,16 @@ class S3CRUDForm(S3Form):
 
         if not readonly:
 
-            # Pre-populate from a previous record?
-            if record_id is None and from_table is not None:
-                # Field mapping
-                if map_fields:
-                    if isinstance(map_fields, dict):
-                        fields = [from_table[map_fields[f]]
-                                for f in map_fields
-                                    if f in table.fields and
-                                    map_fields[f] in from_table.fields and
-                                    table[f].writable]
-                    elif isinstance(map_fields, (list, tuple)):
-                        fields = [from_table[f]
-                                for f in map_fields
-                                    if f in table.fields and
-                                    f in from_table.fields and
-                                    table[f].writable]
-                    else:
-                        raise TypeError
-                else:
-                    fields = [from_table[f]
-                              for f in table.fields
-                              if f in from_table.fields and table[f].writable]
-                # Audit read => this is a read method, finally
-                prefix, name = from_table._tablename.split("_", 1)
-                audit("read", prefix, name,
-                      record=from_record, representation=format)
-                # Get original record
-                query = (from_table.id == from_record)
-                row = current.db(query).select(limitby=(0, 1), *fields).first()
-                if row:
-                    if isinstance(map_fields, dict):
-                        record = Storage([(f, row[map_fields[f]])
-                                          for f in map_fields])
-                    else:
-                        record = Storage(row)
+            # Pre-populate create-form
+            if record_id is None:
+                record = self.prepopulate(from_table=from_table,
+                                          from_record=from_record,
+                                          map_fields=map_fields,
+                                          data=data,
+                                          format=format)
 
-            # Pre-populate from call?
-            elif record_id is None and isinstance(data, dict):
-                record = Storage([(f, data[f])
-                                  for f in data
-                                  if f in table.fields and table[f].writable])
-
-            # Add missing fields to pre-populated record
-            if record:
-                missing_fields = Storage()
-                for f in table.fields:
-                    if f not in record and table[f].writable:
-                        missing_fields[f] = table[f].default
-                record.update(missing_fields)
-                record.update(id=None)
-
-            # Switch to update method if this request attempts to
-            # create a duplicate entry in a link table:
-            linked = self.resource.linked
-            if request.env.request_method == "POST" and \
-            linked is not None:
-                pkey = table._id.name
-                if not request.post_vars[pkey]:
-                    lkey = linked.lkey
-                    rkey = linked.rkey
-                    _lkey = request.post_vars[lkey]
-                    _rkey = request.post_vars[rkey]
-                    query = (table[lkey] == _lkey) & (table[rkey] == _rkey)
-                    row = current.db(query).select(table._id, limitby=(0, 1)).first()
-                    if row is not None:
-                        record_id = row[pkey]
-                        formkey = session.get("_formkey[%s/None]" % tablename)
-                        formname = "%s/%s" % (tablename, record_id)
-                        session["_formkey[%s]" % formname] = formkey
-                        request.post_vars["_formname"] = formname
-                        request.post_vars[pkey] = record_id
+            # De-duplicate link table entries
+            record_id = self.deduplicate_link(request, record_id)
 
             # Add asterisk to labels of required fields
             mark_required = self._config("mark_required", default = [])
@@ -213,9 +156,7 @@ class S3CRUDForm(S3Form):
             else:
                 s3.has_required = False
 
-        if record is None:
-            record = record_id
-
+        # Determine form style
         if format == "plain":
             # Default formstyle works best when we have no formatting
             formstyle = "table3cols"
@@ -223,6 +164,8 @@ class S3CRUDForm(S3Form):
             formstyle = settings.formstyle
 
         # Generate the form
+        if record is None:
+            record = record_id
         form = SQLFORM(table,
                        record = record,
                        record_id = record_id,
@@ -266,14 +209,6 @@ class S3CRUDForm(S3Form):
                   record=record_id, representation=format)
 
         return form
-
-    # -------------------------------------------------------------------------
-    def preprocess(self):
-        pass
-
-    # -------------------------------------------------------------------------
-    def postprocess(self):
-        pass
 
     # -------------------------------------------------------------------------
     def process(self, form, vars,
@@ -373,5 +308,124 @@ class S3CRUDForm(S3Form):
                 error = current.T("Invalid form (re-opened in another window?)")
 
         return success, error
+
+    # -------------------------------------------------------------------------
+    def prepopulate(self,
+                    from_table=None,
+                    from_record=None,
+                    map_fields=None,
+                    data=None,
+                    format=None):
+        """
+            Pre-populate the form with values from a previous record or
+            controller-submitted data
+
+            @param from_table: the table to copy the data from
+            @param from_record: the record to copy the data from
+            @param map_fields: field selection/mapping
+            @param data: the data to prepopulate the form with
+            @param format: the request format extension
+        """
+
+        audit = current.manager.audit
+
+        table = self.table
+        record = None
+
+        # Pre-populate from a previous record?
+        if from_table is not None:
+
+            # Field mapping
+            if map_fields:
+                if isinstance(map_fields, dict):
+                    # Map fields with other names
+                    fields = [from_table[map_fields[f]]
+                              for f in map_fields
+                                if f in table.fields and
+                                   map_fields[f] in from_table.fields and
+                                   table[f].writable]
+
+                elif isinstance(map_fields, (list, tuple)):
+                    # Only use a subset of the fields
+                    fields = [from_table[f]
+                              for f in map_fields
+                                if f in table.fields and
+                                   f in from_table.fields and
+                                   table[f].writable]
+                else:
+                    raise TypeError
+            else:
+                # Use all writable fields
+                fields = [from_table[f]
+                          for f in table.fields
+                            if f in from_table.fields and
+                            table[f].writable]
+
+            # Audit read => this is a read method, after all
+            prefix, name = from_table._tablename.split("_", 1)
+            audit("read", prefix, name,
+                  record=from_record, representation=format)
+
+            # Get original record
+            query = (from_table.id == from_record)
+            row = current.db(query).select(limitby=(0, 1), *fields).first()
+            if row:
+                if isinstance(map_fields, dict):
+                    record = Storage([(f, row[map_fields[f]])
+                                      for f in map_fields])
+                else:
+                    record = Storage(row)
+
+        # Pre-populate from call?
+        elif isinstance(data, dict):
+            record = Storage([(f, data[f])
+                              for f in data
+                                if f in table.fields and
+                                   table[f].writable])
+
+        # Add missing fields to pre-populated record
+        if record:
+            missing_fields = Storage()
+            for f in table.fields:
+                if f not in record and table[f].writable:
+                    missing_fields[f] = table[f].default
+            record.update(missing_fields)
+            record[table._id.name] = None
+
+        return record
+
+    # -------------------------------------------------------------------------
+    def deduplicate_link(self, request, record_id):
+        """
+            Change to update if this request attempts to create a
+            duplicate entry in a link table
+
+            @param request: the request
+            @param record_id: the record ID
+        """
+
+        linked = self.resource.linked
+        table = self.table
+
+        session = current.session
+
+        if request.env.request_method == "POST" and linked is not None:
+            pkey = table._id.name
+            if not request.post_vars[pkey]:
+                lkey = linked.lkey
+                rkey = linked.rkey
+                _lkey = request.post_vars[lkey]
+                _rkey = request.post_vars[rkey]
+                query = (table[lkey] == _lkey) & (table[rkey] == _rkey)
+                row = current.db(query).select(table._id, limitby=(0, 1)).first()
+                if row is not None:
+                    record_id = row[pkey]
+                    formkey = session.get("_formkey[%s/None]" % tablename)
+                    formname = "%s/%s" % (tablename, record_id)
+                    session["_formkey[%s]" % formname] = formkey
+                    request.post_vars["_formname"] = formname
+                    request.post_vars[pkey] = record_id
+
+        return record_id
 
 # END =========================================================================
