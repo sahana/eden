@@ -27,7 +27,7 @@ This template shows the help_text automatically if found in the data models.
 
 <div class="row">
     <div class="span12">
-        <h3>{% trans "Delete Proposal Field" %}</h3>
+        <h3>{% trans "Delete Proposal Form Field" %}</h3>
         <br />
         <form class="form-horizontal" action="" method="post">{% csrf_token %}
 
@@ -74,6 +74,10 @@ This template shows the help_text automatically if found in the data models.
                 {% endif %}
             </div>
         </div>
+        {% if deleted_field %}
+            <hr />
+            <h3>{{ deleted_field }} has been removed from the form</h3>
+        {% endif %}
         <hr />
         <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Go back" %}</a>
         <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Delete' %}" />
