@@ -773,9 +773,16 @@ def translate():
                 # Obtaining the language file from the language code
                 code = form.request_vars.code + ".py"
 
+                # Obtaining the type of file to export to
+                filetype = form.request_vars.filetype
+                if filetype is None:
+                    filetype = "xls"
+                elif filetype == "on":
+                    filetype = "po"
+
                 # Generating the xls file for download
                 X = StringsToExcel()
-                output = X.convert_to_xls(code, modlist, [])
+                output = X.convert_to_xls(code, modlist, [], filetype)
                 return output
 
             # Creating a form with checkboxes for list of modules
@@ -783,6 +790,9 @@ def translate():
             modlist = A.get_modules()
             modlist.sort()
             modcount = len(modlist)
+
+            langlist = A.get_langcodes()
+            langlist.sort()
 
             table = TABLE(_class="translation_module_table")
             table.append(BR())
@@ -813,8 +823,23 @@ def translate():
             row = TR(TD(T("Select all modules")), TD(INPUT(_type="checkbox", _name="module_list", _value="all")))
             div.append(row)
             div.append(BR())
-            row = TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code")))
+
+            lang_col = TD()
+            lang_dropdown = SELECT(_name = "code")
+            for lang in langlist:
+                lang_dropdown.append(lang)
+	    lang_col.append(lang_dropdown)
+
+            row = TR(TD(T("Language code: ")), TD(lang_col))
             div.append(row)
+            div.append(BR())
+
+            row = TR(TD(T("Export as Pootle (.po) file")), TD(INPUT(_type="checkbox", _name="filetype")))
+	    row.append(BR())
+	    row.append(TR(TD(T("(Excel (.xls) is default)"))))
+            div.append(row)
+
+            div.append(BR())
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)
@@ -824,6 +849,7 @@ def translate():
 
         elif opt=="3":
 
+            # If 3rd workflow, displaying translation percentage is selected
             if form.accepts(request.vars, session):
 
                 code = form.request_vars.code
@@ -867,8 +893,17 @@ def translate():
 
             else:
 
+                A = TranslateAPI()
+                langlist = A.get_langcodes()
+                langlist.sort()
+                lang_col = TD()
+                lang_dropdown = SELECT(_name = "code")
+                for lang in langlist:
+                    lang_dropdown.append(lang)
+	        lang_col.append(lang_dropdown)
+
                 div = DIV()
-                row = TR(TD(T("Language code: ")),TD(INPUT(_type="text",_name="code")))
+                row = TR(TD(T("Language code: ")),TD(lang_col))
                 div.append(row)
                 div.append(BR())
                 div.append(INPUT(_type='submit',_value='Submit'))

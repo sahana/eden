@@ -41,26 +41,31 @@ from gluon import current
     List of classes with description :
 
 
-    TranslateAPI        : API class to retreive strings and files by module
+    TranslateAPI           : API class to retreive strings and files by module
 
-    TranslateGetFiles   : Class to traverse the eden directory and categorize
-                          files based on module
+    TranslateGetFiles      : Class to traverse the eden directory and 
+                             categorize files based on module
 
-    TranslateParseFiles : Class to parse python code using its parse tree and
-                          obtain the required strings and data
+    TranslateParseFiles    : Class to parse python code using its parse tree
+                             and obtain the required strings and data
 
-    TranslateReadFiles  : Class to open a file, read its contents and when
-                          required,build a parse tree to obtain a list of
-                          strings by calling methods from TranslateParseFiles
+    TranslateReadFiles     : Class to open a file, read its contents and build
+                             a parse tree (for .py files) or use regex 
+                             (for html/js files) to obtain a list of strings
+                             by calling methods from TranslateParseFiles
 
-    StringsToExcel      : Class which obtains strings for translation based
-                          on given modules, adds existing translations from
-                          corresponding language file to this list, and then
-                          converts the list to a spreadsheet for translators
+    TranslateReportStatus  : Class to report the translated percentage of each
+                             language file for each module. It also updates
+                             these percentages as and when required
 
-    CsvToWeb2py         : Class which reads a list of csv files containing
-                          translations, merges translations in these files and
-                          updates existing language file with new translations
+    StringsToExcel         : Class which obtains strings for translation based
+                             on given modules, adds existing translations from
+                             corresponding language file to this list, and then
+                             converts the list to a spreadsheet for translators
+
+    CsvToWeb2py            : Class which reads a list of csv files containing
+                             translations, merges translations, and updates
+                             existing language file with new translations
 """
 
 # =============================================================================
@@ -78,9 +83,28 @@ class TranslateAPI:
                                    current.request.application)
             self.grp = TranslateGetFiles()
             self.grp.group_files(base_dir, "", 0)
-
+    
         #------------------------------------------------------------------
+        def get_langcodes(self):
+
+            """ Return a list of language codes """
+
+            lang_list = []
+            base_dir = os.path.join(os.getcwd(), "applications",\
+                                   current.request.application)
+            langdir = os.path.join(base_dir,"languages")
+            files = os.listdir(langdir)
+
+            for f in files:
+                lang_list.append(f[:-3])
+
+            return lang_list
+
+        #------------------------------------------------------------------    
         def get_modules(self):
+
+            """ Return a list of modules """
+
             return self.grp.modlist
 
         #------------------------------------------------------------------
@@ -690,8 +714,6 @@ class TranslateReadFiles:
                     for atr in l[1:]:
                         obj = getattr(obj, atr)()
                     s=obj
-                #elif s[0]!='"' and s[0]!="'":
-                #    print fileName+"#"+str(loc), s
                 final_strings.append((loc, s))
 
             return final_strings
@@ -839,8 +861,9 @@ class TranslateReportStatus:
 
             translated_strings = []
             for (s1, s2) in lang_strings:
-                if s1 != s2 and not s2.startswith("*** "):
-                    translated_strings.append(s1)
+                if not s2.startswith("*** "):
+                    if s1!=s2 or lang_code == "en-gb":
+                        translated_strings.append(s1)
 
             data_file = os.path.join(base_dir, "uploads", "temp.pkl")
             f = open(data_file, 'rb')
@@ -1028,12 +1051,14 @@ class StringsToExcel:
             return output.read()
 
         #----------------------------------------------------------------------
-        def convert_to_xls(self, langfile, modlist, filelist):
+        def convert_to_xls(self, langfile, modlist, filelist, filetype):
 
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
-                translated and call the "create_spreadsheet()" method
+                translated and call the "create_spreadsheet()" method if the 
+                default filetype "xls" is chosen. If "po" is chosen, then the
+                export_to_po()" method is called.
             """
 
             base_dir = os.path.join(os.getcwd(), "applications", \
@@ -1077,7 +1102,11 @@ class StringsToExcel:
                 else:
                     Strings.append((l, s, ""))
 
-            return self.create_spreadsheet(Strings)
+            if filetype == "xls":
+                return self.create_spreadsheet(Strings)
+            elif filetype == "po":
+                C = CsvToWeb2py()
+                return C.export_to_po(Strings)
 
 #==============================================================================
 
@@ -1095,6 +1124,39 @@ class CsvToWeb2py:
             transWriter.writerow(["location", "source", "target"])
             for row in data:
                 transWriter.writerow(row)
+
+        #----------------------------------------------------------------------
+        def export_to_po(self, data):
+
+            """ Returns a ".po" file constructed from given strings """
+
+            from gluon.contenttype import contenttype
+            from tempfile import NamedTemporaryFile
+            from subprocess import call
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
+
+            f = NamedTemporaryFile(delete=False)
+            csvfilename = f.name + ".csv"
+            self.write_csvfile(csvfilename, data)
+
+            g = NamedTemporaryFile(delete=False)
+            pofilename = g.name + ".po"
+            call(["csv2po", "-i", csvfilename, "-o", pofilename])
+
+            h = open(pofilename, "r")
+
+            #Modifying headers to return the po file for download
+	    response = current.response
+            filename = "trans.po"
+            disposition = "attachment; filename=\"%s\"" % filename
+            response.headers["Content-Type"] = contenttype(".po")
+            response.headers["Content-disposition"] = disposition
+
+            h.seek(0)
+            return h.read()
 
         #----------------------------------------------------------------------
         def convert_to_w2p(self, csvfiles, w2pfilename, option):
