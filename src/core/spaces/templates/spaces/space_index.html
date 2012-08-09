@@ -369,7 +369,9 @@
                             <h4>{% trans "New proposals" %}</h4>
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
-                                    <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    {% if not proposal.merged %}
+                                        <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                    {% endif %}        
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
                                 {% endfor %}
@@ -383,6 +385,15 @@
                                 {% endfor %}
                             </ul>
                             <h4>{% trans "Merged proposals" %}</h4>
+                            <ul class="unstyled">
+                                {% for proposal in proposals %}
+                                    {% if proposal.merged  %}
+                                        <li><a href="{{ proposal.get_absolute_url}}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on"%} {{ proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y"}}</li>
+                                    {% endif %}
+                                {% empty %}
+                                        <li>{% trans "No merged proposals" %}</li>
+                                {% endfor %}
+                            </ul>
                             <h4>{% trans "Most commented" %}</h4>
                             <h4>{% trans "Highlighted proposals" %}</h4>
                         </div>
