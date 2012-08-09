@@ -1297,6 +1297,7 @@ class S3OptionsMenu(object):
                         M("Group Memberships", f="group_membership"),
                     ),
                     M("Email InBox", f="email_inbox"),
+                    M("Twilio SMS InBox", f="twilio_inbox"),
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(
@@ -1634,6 +1635,7 @@ class S3OptionsMenu(object):
             M("Parsing Settings", c="msg", f="workflow"),                       
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
+            M("Twilio SMS Settings", c="msg", f="twilio_inbound_settings"),           
             M("Twitter Settings", c="msg", f="twitter_settings",
                 args=[1], m="update")
         ]

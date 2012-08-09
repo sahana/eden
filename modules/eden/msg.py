@@ -357,6 +357,8 @@ class S3SMSModel(S3Model):
              "msg_modem_settings",
              "msg_api_settings",
              "msg_smtp_to_sms_settings",
+             "msg_twilio_inbound_settings",
+             "msg_twilio_inbox"
             ]
 
     def model(self):
@@ -364,7 +366,7 @@ class S3SMSModel(S3Model):
         #T = current.T
 
         define_table = self.define_table
-
+        configure = self.configure
         # ---------------------------------------------------------------------
         # Settings
         tablename = "msg_setting"
@@ -421,6 +423,36 @@ class S3SMSModel(S3Model):
                              #Field("preference", "integer", default = 5),
                              *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
+        tablename = "msg_twilio_inbound_settings"
+        table = define_table(tablename,
+                             Field("account_name"),
+                             Field("url",
+                                   default = \
+                                   "https://api.twilio.com/2010-04-01/Accounts"
+                                   ),
+                             Field("account_sid", length=64,
+                                   requires=IS_NOT_EMPTY()),
+                             Field("auth_token", length=64,
+                                   requires=IS_NOT_EMPTY()),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        tablename = "msg_twilio_inbox"
+        table = define_table(tablename,
+                             Field("sid", length=64),
+                             Field("body", "text"),
+                             Field("status"),
+                             Field("sender"),
+                             Field("received_on"),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  list_fields = ["body",
+                                 "sender",
+                                 "received_on"
+                                 ]
+                  )
         # ---------------------------------------------------------------------
         return Storage()
 
