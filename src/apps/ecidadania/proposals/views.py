@@ -40,7 +40,7 @@ from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
-        ProposalMergeForm
+        ProposalMergeForm, ProposalFieldDeleteForm
 from core.spaces.models import Space
 
 
@@ -235,7 +235,7 @@ def remove_proposal_field(request, space_url):
             form_data = d_form.save(commit=False)
             delete_field = ProposalField.objects.filter(proposalset=form_data.proposalset, field_name=form_data.field_name)
             delete_field.delete()
-            return render_to_response("proposals/proposalfield_remove_field.html", {'form':d_form, 'get_place':get_place,\
+            return render_to_response("proposals/proposalfield_delete_form.html", {'form':d_form, 'get_place':get_place,\
                                         'deleted_field':form_data}, context_instance = RequestContext(request))
 
     return render_to_response("proposals/proposalfield_delete_form.html", {'form':d_form, 'get_place':get_place}, \
@@ -293,7 +293,7 @@ def merged_proposal(request, space_url, p_set):
             form_data.author = request.user
             form_data.merged = True
             field = ProposalField.objects.filter(proposalset=p_set)
-            form_field = [f_name.field_name for f_name in self.field]
+            form_field = [f_name.field_name for f_name in field]
             form_data.save()
             return redirect('/spaces/'+ space_url +'/')
     else: 
