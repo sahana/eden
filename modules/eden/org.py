@@ -1558,7 +1558,7 @@ def org_facility_rheader(r, tabs=[]):
 
     T = current.T
     s3db = current.s3db
-    
+
     # Need to use this format as otherwise /inv/incoming?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
@@ -1882,7 +1882,7 @@ class S3OfficeModel(S3Model):
             add_component("org_office_summary",
                           org_office=dict(name="summary",
                                           joinby="office_id"))
-        
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
@@ -2297,15 +2297,12 @@ def org_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    
+
     s3db = current.s3db
-    
-    # Need to use this format as otherwise req_match?viewing=org_office.x
-    # doesn't have an rheader
+
     tablename, record = s3_rheader_resource(r)
-    r.record = record
-    r.table = s3db[tablename]
-    
+    table = s3db.table(tablename)
+
     if record is None:
         # List or Create form: rheader makes no sense here
         return None
@@ -2316,6 +2313,7 @@ def org_rheader(r, tabs=[]):
     settings = current.deployment_settings
 
     if tablename == "org_organisation":
+
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),
@@ -2326,9 +2324,9 @@ def org_rheader(r, tabs=[]):
                     (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
                    ]
-
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
+        # Lookup sector
         if table.sector_id.readable and record.sector_id:
             if settings.get_ui_cluster():
                 sector_label = T("Cluster(s)")
@@ -2339,29 +2337,33 @@ def org_rheader(r, tabs=[]):
         else:
             sectors = ""
 
+        # Lookup website
         if record.website:
             website = TR(TH("%s: " % table.website.label),
                          A(record.website, _href=record.website))
         else:
             website = ""
 
-        rheader = DIV()
+        # Data
+        rheader_data = TABLE(TR(TH("%s: " % table.name.label),
+                                record.name,
+                               ),
+                               website,
+                               sectors,
+                            )
+
+        # Inject logo
         logo = org_organisation_logo(record)
-        rData = TABLE(
-                        TR(
-                            TH("%s: " % table.name.label),
-                            record.name,
-                          ),
-                        website,
-                        sectors,
-                        )
         if logo:
-            rheader.append(TABLE(TR(TD(logo), TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo),
+                                   TD(rheader_data))))
         else:
-            rheader.append(rData)
+            rheader = DIV(rheader_data)
         rheader.append(rheader_tabs)
 
     elif tablename == "org_office":
+
+        # Tabs
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
@@ -2374,19 +2376,24 @@ def org_rheader(r, tabs=[]):
         tabs.append((T("Attachments"), "document"))
         tabs.append((T("User Roles"), "roles"))
 
+        # Fields
         rheader_fields = [["name", "organisation_id", "email"],
                           ["office_type_id", "location_id", "phone1"],
                           ]
-        rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
 
-        rheader = DIV()
-        
+        # Build header
+        rheader = S3ResourceHeader(rheader_fields, tabs)
+        rheader_fields, rheader_tabs = rheader(r,
+                                               table=table,
+                                               record=record)
+
+        # Inject logo
         logo = org_organisation_logo(record.organisation_id)
         if logo:
-            rheader.append(TABLE(TR(TD(logo), TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo),
+                                   TD(rheader_fields))))
         else:
             rheader = DIV(rheader_fields)
-
         rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":
@@ -2394,15 +2401,21 @@ def org_rheader(r, tabs=[]):
             #rheader.append(s3.req_helptext_script)
 
     elif tablename in ("org_organisation_type", "org_office_type"):
+
+        # Tabs
         tabs = [(T("Basic Details"), None),
                 (T("Tags"), "tag"),
                ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
-        rheader = DIV(TABLE(TR(
+
+        # Header
+        rheader = DIV(
+                    TABLE(
+                        TR(
                             TH("%s: " % table.name.label),
                             record.name,
-                            )),
-                      rheader_tabs)
+                        ),
+                    ), rheader_tabs)
 
     return rheader
 
