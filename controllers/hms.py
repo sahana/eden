@@ -76,41 +76,52 @@ def hospital():
                                   T("The Unique Identifier (UUID) as assigned to this facility by the government."))))
             table.total_beds.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Total Beds"),
-                                  T("Total number of beds in this hospital. Automatically updated from daily reports."))))
+                                  T("Total number of beds in this facility. Automatically updated from daily reports."))))
             table.available_beds.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Available Beds"),
-                                  T("Number of vacant/available beds in this hospital. Automatically updated from daily reports."))))
-            table.ems_status.comment = DIV(DIV(_class="tooltip",
-                _title="%s|%s" % (T("EMS Status"),
-                                  T("Status of operations of the emergency department of this hospital."))))
-            table.ems_reason.comment = DIV(DIV(_class="tooltip",
-                _title="%s|%s" % (T("EMS Reason"),
-                                  T("Report the contributing factors for the current EMS status."))))
-            table.or_status.comment = DIV(DIV(_class="tooltip",
-                _title="%s|%s" % (T("OR Status"),
-                                  T("Status of the operating rooms of this hospital."))))
-            table.or_reason.comment = DIV(DIV(_class="tooltip",
-                _title="%s|%s" % (T("OR Reason"),
-                                  T("Report the contributing factors for the current OR status."))))
-            table.facility_status.comment = DIV(DIV(_class="tooltip",
+                                  T("Number of vacant/available beds in this facility. Automatically updated from daily reports."))))
+
+            stable = s3db.hms_status
+            stable.facility_status.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Facility Status"),
-                                  T("Status of general operation of the facility."))))
-            table.clinical_status.comment = DIV(DIV(_class="tooltip",
+                                  T("Status of the facility."))))
+            stable.facility_operations.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Facility Operations"),
+                                  T("Overall status of the facility operations."))))
+            stable.clinical_status.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Clinical Status"),
-                                  T("Status of clinical operation of the facility."))))
-            table.morgue_status.comment = DIV(DIV(_class="tooltip",
+                                  T("Status of the clinical departments."))))
+            stable.clinical_operations.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Clinical Operations"),
+                                  T("Overall status of the clinical operations."))))
+            stable.ems_status.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Emergency Medical Services"),
+                                  T("Status of operations/availability of emergency medical services at this facility."))))
+            stable.ems_reason.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("EMS Status Reasons"),
+                                  T("Report the contributing factors for the current EMS status."))))
+            stable.or_status.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("OR Status"),
+                                  T("Status of the operating rooms of this facility."))))
+            stable.or_reason.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("OR Status Reason"),
+                                  T("Report the contributing factors for the current OR status."))))
+            stable.morgue_status.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Morgue Status"),
                                   T("Status of morgue capacity."))))
-            table.security_status.comment = DIV(DIV(_class="tooltip",
-                _title="%s|%s" % (T("Security Status"),
-                                  T("Status of security procedures/access restrictions in the hospital."))))
-            table.morgue_units.comment =  DIV(DIV(_class="tooltip",
+            stable.morgue_units.comment =  DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Morgue Units Available"),
                                   T("Number of vacant/available units to which victims can be transported immediately."))))
-            table.access_status.comment =  DIV(DIV(_class="tooltip",
+            stable.security_status.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Security Status"),
+                                  T("Status of security procedures/access restrictions for the facility."))))
+            stable.staffing.comment = DIV(DIV(_class="tooltip",
+                _title="%s|%s" % (T("Staffing Level"),
+                                  T("Current staffing level at the facility."))))
+            stable.access_status.comment =  DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Road Conditions"),
-                                  T("Describe the condition of the roads to your hospital."))))
-            
+                                  T("Describe the condition of the roads from/to the facility."))))
+
             if r.id:
                 table.obsolete.readable = table.obsolete.writable = True
 
