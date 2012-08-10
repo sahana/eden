@@ -1985,6 +1985,10 @@ def req_match():
 
     if tablename == "org_office":
         rheader = s3db.org_rheader
+    elif tablename == "org_facility":
+        rheader = s3db.org_facility_rheader
+    elif tablename == "inv_warehouse":
+        rheader = s3db.inv_warehouse_rheader
     elif tablename == "cr_shelter":
         rheader = s3db.cr_shelter_rheader
     elif tablename == "hms_hospital":
@@ -1994,10 +1998,17 @@ def req_match():
 
     s3.filter = (s3db.req_req.site_id != site_id)
     s3db.configure("req_req", insertable=False)
+    
+    # Post-process
+    def postp(r, output):
+        if r.representation == "html":
+            output["title"] = s3.crud_strings[tablename].title_display
+        return output
+
+    s3.postp = postp
+
     output = current.rest_controller("req", "req", rheader = rheader)
 
-    if tablename == "org_office" and isinstance(output, dict):
-        output["title"] = T("Warehouse Details")
     return output
 
 # END =========================================================================

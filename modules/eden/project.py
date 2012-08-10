@@ -55,7 +55,6 @@ except ImportError:
 from gluon import *
 from gluon.dal import Row
 from gluon.storage import Storage
-from gluon.sqlhtml import CheckboxesWidget
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from ..s3 import *
@@ -82,7 +81,8 @@ class S3ProjectModel(S3Model):
         There are also additional Classes for optional Link Tables
     """
 
-    names = ["project_theme",
+    names = ["project_status",
+             "project_theme",
              "project_theme_id",
              "project_theme_opts",
              "project_hazard",
@@ -126,6 +126,48 @@ class S3ProjectModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
+        # Status
+        #
+        tablename = "project_status"
+        table = define_table(tablename,
+                             Field("name", length=128,
+                                   notnull=True, unique=True,
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_STATUS = T("Add Status")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_STATUS,
+            title_display = T("Status Details"),
+            title_list = T("Statuses"),
+            title_update = T("Edit Status"),
+            title_upload = T("Import Statuses"),
+            subtitle_create = T("Add New Status"),
+            label_list_button = T("List Statuses"),
+            label_create_button = ADD_STATUS,
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No Statuses currently registered"))
+
+        # Reusable Field
+        status_id = S3ReusableField("status_id", table,
+                                    label = T("Status"),
+                                    sortby = "name",
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "project_status.id",
+                                                          self.project_status_represent,
+                                                          sort=True)),
+                                    represent = self.project_status_represent,
+                                    comment = S3AddResourceLink(title=ADD_STATUS,
+                                                                c="project",
+                                                                f="status"),
+                                    ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
         # Theme
         # @ToDo: Move to S3ProjectThemeModel once direct link removed
         #        - which needs an embedded widget UI
@@ -134,7 +176,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128, notnull=True, unique=True),
                              s3_comments(),
-                             format = "%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -196,7 +237,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128, notnull=True, unique=True),
                              s3_comments(),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -248,12 +288,6 @@ class S3ProjectModel(S3Model):
             5: T("HFA5: Strengthen disaster preparedness for effective response at all levels."),
         }
 
-        project_status_opts = {
-            1: T("Proposed"),
-            2: T("Current"),
-            3: T("Completed"),
-        }
-    
         tablename = "project_project"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -278,11 +312,7 @@ class S3ProjectModel(S3Model):
                                    ),
                              Field("description", "text",
                                    label = T("Description")),
-                             Field("status", "integer",
-                                   label = T("Status"),
-                                   requires = IS_IN_SET(project_status_opts),
-                                   represent = lambda opt: \
-                                    project_status_opts.get(opt, messages.UNKNOWN_OPT)),
+                             status_id(),
                              # NB There is additional client-side validation for start/end date in the Controller
                              s3_date("start_date",
                                      label = T("Start Date")
@@ -313,7 +343,7 @@ class S3ProjectModel(S3Model):
                                        readable = use_sectors,
                                        writable = use_sectors,
                                        widget = lambda f, v: \
-                                        CheckboxesWidget.widget(f, v, cols=3)
+                                        CheckboxesWidgetS3.widget(f, v, cols=3),
                                        ),
                              countries_id(
                                           readable = mode_3w,
@@ -338,14 +368,13 @@ class S3ProjectModel(S3Model):
                                    represent = self.hfa_opts_represent,
                                    widget = CheckboxesWidgetS3.widget),
                              Field("objectives", "text",
-                                   readable = mode_drr,
-                                   writable = mode_drr,
+                                   readable = mode_3w,
+                                   writable = mode_3w,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              s3_comments(comment=DIV(_class="tooltip",
                                                      _title="%s|%s" % (T("Comments"),
                                                                        T("Outcomes, Impact, Challenges")))),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -404,7 +433,7 @@ class S3ProjectModel(S3Model):
                         name = "project_search_sector",
                         label = sector,
                         field = "sector_id",
-                        #options = self.org_sector_opts,
+                        options = self.org_sector_opts,
                         cols = 4
                     ))
         if mode_drr:
@@ -576,6 +605,9 @@ class S3ProjectModel(S3Model):
         # Themes
         add_component("project_theme_percentage", project_project="project_id")
 
+        # Statuses
+        add_component("project_status", project_project="project_id")
+
         # DRRPP
         if settings.get_template() == "DRRPP":
             add_component("project_drrpp",
@@ -609,7 +641,6 @@ class S3ProjectModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128,
                                    notnull=True, unique=True),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # Field configuration?
@@ -665,7 +696,7 @@ class S3ProjectModel(S3Model):
                                                  represent = lambda opt, row=None: \
                                                     multiref_represent(opt, "project_activity_type"),
                                                  widget = lambda f, v: \
-                                                    CheckboxesWidgetS3.widget(f, v, col=3),
+                                                    CheckboxesWidgetS3.widget(f, v, cols=3),
                                                  ondelete = "RESTRICT")
 
         # ---------------------------------------------------------------------
@@ -941,7 +972,7 @@ class S3ProjectModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -960,7 +991,26 @@ class S3ProjectModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_status_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.project_status
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -992,9 +1042,10 @@ class S3ProjectModel(S3Model):
         opts = db(table.deleted == False).select(table.id,
                                                  table.name,
                                                  orderby=table.name)
+        T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = opt.name
+            od[opt.id] = T(opt.name)
         return od
 
     # -------------------------------------------------------------------------
@@ -1008,9 +1059,10 @@ class S3ProjectModel(S3Model):
         opts = db(table.deleted == False).select(table.id,
                                                  table.name,
                                                  orderby=table.name)
+        T = current.T
         od = OrderedDict()
         for opt in opts:
-            od[opt.id] = opt.name
+            od[opt.id] = T(opt.name)
         return od
 
     # -------------------------------------------------------------------------
@@ -1417,16 +1469,16 @@ class S3Project3WModel(S3Model):
 
         # Reusable Field
         beneficiary_type_id = S3ReusableField("beneficiary_type_id", table,
-                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db, "project_beneficiary_type.id",
-                                                          self.project_beneficiary_type_represent)),
-                                   represent = self.project_beneficiary_type_represent,
-                                   label = T("Beneficiary Type"),
-                                   comment = S3AddResourceLink(c="project",
-                                                               f="beneficiary_type",
-                                                               title=ADD_BNF_TYPE,
-                                                               tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
-                                   ondelete = "CASCADE")
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "project_beneficiary_type.id",
+                                  self.project_beneficiary_type_represent)),
+            represent = self.project_beneficiary_type_represent,
+            label = T("Beneficiary Type"),
+            comment = S3AddResourceLink(c="project",
+                                        f="beneficiary_type",
+                                        title=ADD_BNF_TYPE,
+                                        tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+            ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
         # Project Beneficiary
@@ -1510,19 +1562,19 @@ class S3Project3WModel(S3Model):
             pquery = (ptable.deleted == False)
             pbquery = (pbtable.deleted == False)
             pmin = ptable.start_date.min()
-            pbmin = pbtable.start_date.min()
+            pbmin = pbtable.date.min()
             p_start_date_min = db(pquery).select(pmin,
                                                  orderby=pmin,
                                                  limitby=(0, 1)).first()[pmin]
-            pb_start_date_min = db(pbquery).select(pbmin,
+            pb_date_min = db(pbquery).select(pbmin,
                                                    orderby=pbmin,
                                                    limitby=(0, 1)).first()[pbmin]
-            if p_start_date_min and pb_start_date_min:
+            if p_start_date_min and pb_date_min:
                 start_year = min(p_start_date_min,
-                                 pb_start_date_min).year
+                                 pb_date_min).year
             else:
                 start_year = (p_start_date_min and p_start_date_min.year) or \
-                             (pb_start_date_min and pb_start_date_min.year)
+                             (pb_date_min and pb_date_min.year)
 
             pmax = ptable.end_date.max()
             pbmax = pbtable.end_date.max()
@@ -1741,7 +1793,7 @@ class S3Project3WModel(S3Model):
         r = db(table.id == id).select(table.name,
                                       limitby = (0, 1)).first()
         try:
-            return r.name
+            return current.T(r.name)
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -1757,10 +1809,14 @@ class S3Project3WModel(S3Model):
 
         db = current.db
         table = db.project_beneficiary
-        r = db(table.id == id).select(table.type,
-                                      limitby = (0, 1)).first()
+        ttable = db.project_beneficiary_type
+        query = (table.id == id) & \
+                (ttable,)
+        r = db(query).select(table.value,
+                             ttable.name,
+                             limitby = (0, 1)).first()
         try:
-            return r.type
+            return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -2028,7 +2084,6 @@ class S3ProjectActivityModel(S3Model):
                                         label = "%s (%s)" % (T("Time Taken"),
                                                              T("hours"))),
                                   s3_comments(),
-                                  format="%(name)s",
                                   *s3_meta_fields())
         # CRUD Strings
         ACTIVITY = T("Activity")
@@ -2716,7 +2771,6 @@ class S3ProjectTaskModel(S3Model):
                                    requires=IS_NOT_EMPTY()),
                              s3_date(label = T("Date")),
                              s3_comments(),
-                             format="%(name)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -3146,7 +3200,6 @@ class S3ProjectTaskModel(S3Model):
                                                         T("hours")),
                                    represent=lambda v, row=None: IS_FLOAT_AMOUNT.represent(v, precision=2)),
                              s3_comments(),
-                             format="%(comments)s",
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -3307,20 +3360,28 @@ class S3ProjectTaskModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def project_task_represent(id, row=None):
+    def project_task_represent(id, row=None, show_link=True):
         """ FK representation """
 
         if row:
-            return row.name
+            if show_link:
+                return A(row.name,
+                         _href=URL(c="project", f="task", args=[row.id]))
+            else:
+                return row.name
         elif not id:
             return current.messages.NONE
             
         db = current.db
         table = db.project_task
-        record = db(table.id == id).select(table.name,
-                                           limitby=(0, 1)).first()
+        r = db(table.id == id).select(table.name,
+                                      limitby=(0, 1)).first()
         try:
-            return record.name
+            if show_link:
+                return A(r.name,
+                         _href=URL(c="project", f="task", args=[id]))
+            else:
+                return r.name
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -4123,7 +4184,7 @@ class S3ProjectBeneficiaryVirtualFields:
 
     extra_fields = ["project_location_id$location_id",
                     "project_id",
-                    "start_date",
+                    "date",
                     "end_date"]
 
     # -------------------------------------------------------------------------
@@ -4263,18 +4324,18 @@ class S3ProjectBeneficiaryVirtualFields:
 
     # -------------------------------------------------------------------------
     def year(self):
-        start_date = self.project_beneficiary.start_date
+        date = self.project_beneficiary.date
         end_date = self.project_beneficiary.end_date
-        if not start_date or not end_date:
+        if not date or not end_date:
             project = current.s3db.project_project[self.project_beneficiary.project_id]
             if project:
-                if not start_date:
-                    start_date = project.start_date
+                if not date:
+                    date = project.date
                 if not end_date:
                     end_date = project.end_date
-        if not start_date or not end_date:
-            return [start_date.year or end_date.year]
-        return [year for year in xrange(start_date.year, end_date.year + 1)]
+        if not date or not end_date:
+            return [date.year or end_date.year]
+        return [year for year in xrange(date.year, end_date.year + 1)]
 
 # =============================================================================
 class S3ProjectCommunityContactVirtualFields:

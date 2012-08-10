@@ -805,7 +805,17 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Organisation
     def get_org_site_code_len(self):
+        """
+            Length of auto-generated Codes for Facilities (org_site)
+        """
         return self.org.get("site_code_len", 10)
+
+    def get_org_summary(self):
+        """
+            Whether to use Summary fields for Organisation/Office:
+                # National/International staff
+        """
+        return self.org.get("summary", False)
 
     # -------------------------------------------------------------------------
     # Proc

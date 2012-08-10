@@ -2393,8 +2393,9 @@ class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
         - supports also integer-type keys in option sets
+        - has an identifiable class
 
-        Used in s3aaa & S3SearchOptionsWidget
+        Used in Sync, Projects
     """
 
     @staticmethod
@@ -2405,8 +2406,8 @@ class CheckboxesWidgetS3(OptionsWidget):
         see also: :meth:`FormWidget.widget`
         """
 
-        # was values = re.compile("[\w\-:]+").findall(str(value))
-        values = not isinstance(value,(list,tuple)) and [value] or value
+        #values = re.compile("[\w\-:]+").findall(str(value))
+        values = not isinstance(value, (list, tuple)) and [value] or value
         values = [str(v) for v in values]
 
         attr = OptionsWidget._attributes(field, {}, **attributes)
@@ -2450,6 +2451,11 @@ class CheckboxesWidgetS3(OptionsWidget):
             for k, v in options[r_index * cols:(r_index + 1) * cols]:
                 input_id = "id-%s-%s" % (field.name, input_index)
                 option_help = options_help.get(str(k), "")
+                if option_help:
+                    label = LABEL(v, _for=input_id, _title=option_help)
+                else:
+                    # Don't provide empty client-side popups
+                    label = LABEL(v, _for=input_id)
 
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
@@ -2458,7 +2464,7 @@ class CheckboxesWidgetS3(OptionsWidget):
                                     hideerror=True,
                                     _value=k,
                                     value=(str(k) in values)),
-                              LABEL(v, _for=input_id, _title=option_help)))
+                              label))
 
                 input_index += 1
             opts.append(TR(tds))
@@ -3266,7 +3272,7 @@ def s3_richtext_widget(field, value):
 
 # =============================================================================
 def s3_grouped_checkboxes_widget(field,
-                                 field_value,
+                                 value,
                                  size=20,
                                  **attributes):
     """
@@ -3282,6 +3288,8 @@ def s3_grouped_checkboxes_widget(field,
 
         @type size: int
         @param size: number of input elements for each group
+
+        Used by S3SearchOptionsWidget
     """
     import locale
 
@@ -3314,7 +3322,7 @@ def s3_grouped_checkboxes_widget(field,
         letters = []
         letters_options = {}
 
-        for value, label in options:
+        for val, label in options:
             letter = label and label[0]
 
             if letter:
@@ -3322,9 +3330,9 @@ def s3_grouped_checkboxes_widget(field,
 
                 if letter not in letters_options:
                     letters.append(letter)
-                    letters_options[letter] = [(value, label)]
+                    letters_options[letter] = [(val, label)]
                 else:
-                    letters_options[letter].append((value, label))
+                    letters_options[letter].append((val, label))
 
         widget = DIV(_class=attributes.pop("_class",
                                            "s3-grouped-checkboxes-widget"))
@@ -3367,7 +3375,7 @@ def s3_grouped_checkboxes_widget(field,
                                                  multiple=True)
 
                 letter_widget = s3_checkboxes_widget(group_field,
-                                                     field_value,
+                                                     value,
                                                      start_at_id=input_index,
                                                      **attributes)
 
@@ -3382,7 +3390,7 @@ def s3_grouped_checkboxes_widget(field,
         # not enough options to form groups
 
         try:
-            widget = s3_checkboxes_widget(field, field_value, **attributes)
+            widget = s3_checkboxes_widget(field, value, **attributes)
         except:
             # some versions of gluon/sqlhtml.py don't support non-integer keys
             if s3_debug:

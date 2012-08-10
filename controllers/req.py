@@ -27,6 +27,7 @@ def is_affiliated():
         Check if User is affiliated to an Organisation
         @ToDo: Move this elsewhere
     """
+
     if not auth.is_logged_in():
         return False
     elif s3_has_role(ADMIN):
@@ -424,8 +425,40 @@ def req_item_inv_item():
 def req_skill():
     """ REST Controller """
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return req_skill_controller()
+    tablename = "req_req_skill"
+    table = s3db[tablename]
+
+    s3db.configure(tablename,
+                   insertable=False)
+
+    def prep(r):
+        if r.interactive:
+            if r.method != "update" and r.method != "read":
+                # Hide fields which don't make sense in a Create form
+                # - includes one embedded in list_create
+                # - list_fields over-rides, so still visible within list itself
+                s3db.req_hide_quantities(r.table)
+
+        return True
+    s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive:
+            response.s3.actions = [
+                dict(url = URL(c = "req",
+                               f = "req",
+                               args = ["req_skill", "[id]"]),
+                     _class = "action-btn",
+                     label = str(READ)
+                    )
+                ]
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("req", "req_skill")
+
+    return output
 
 # =============================================================================
 def commit():

@@ -156,9 +156,8 @@ settings.L10n.decimal_separator = "."
 # Currently unused
 #settings.gis.display_L1 = False
 # Set this if there will be multiple areas in which work is being done,
-# and a menu to select among them is wanted. With this on, any map
-# configuration that is designated as being available in the menu will appear
-#settings.gis.menu = T("Maps")
+# and a menu to select among them is wanted.
+#settings.gis.menu = "Maps"
 # Maximum Marker Size
 # (takes effect only on display)
 #settings.gis.marker_max_height = 35
@@ -294,6 +293,8 @@ settings.L10n.decimal_separator = "."
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+#settings.org.summary = True
 
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address

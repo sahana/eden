@@ -48,6 +48,9 @@ def station():
 
     # Pre-processor
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive:
             if r.component:
                 # remove CRUD generated buttons in the tabs

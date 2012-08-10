@@ -81,6 +81,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="resource[@name='drrpp_project']">
 
+        <xsl:variable name="Status" select="data[@field='status_id']"/>
         <xsl:variable name="Countries" select="data[@field='country_dummy']"/>
         <xsl:variable name="LeadOrganisation" select="reference[@field='lead_organisation_id']/@uuid"/>
         <xsl:variable name="ContactOrganisation" select="reference[@field='contact_organisation_id']/@uuid"/>
@@ -125,7 +126,15 @@
             <data field="currency">USD</data>
             <data field="objectives"><xsl:value-of select="data[@field='objectives']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='comments']"/></data>
-            <data field="status"><xsl:value-of select="data[@field='status_id']/@value"/></data>
+
+            <xsl:if test="$Status">
+                <reference field="status_id" resource="project_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Status"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
             <data field="hfa">
                 [<xsl:value-of select="translate(substring($HFA, 2, string-length($HFA) - 2), '|', ',')"/>]
             </data>
@@ -265,6 +274,15 @@
             <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
             <xsl:with-param name="arg">theme</xsl:with-param>
         </xsl:call-template>
+
+        <xsl:if test="$Status">
+            <resource name="project_status">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Status"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Status"/></data>
+            </resource>
+        </xsl:if>
 
         <xsl:if test="$ContactOrganisation!=''">
             <resource name="org_organisation">

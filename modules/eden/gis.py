@@ -37,8 +37,9 @@ __all__ = ["S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
+           "gis_location_filter",
            "gis_location_represent",
-           'gis_location_lx_represent',
+           "gis_location_lx_represent",
            "gis_layer_represent",
            "gis_rheader",
            ]
@@ -370,7 +371,10 @@ class S3LocationModel(S3Model):
         """
 
         # Update the Path (async if-possible)
-        feature = json.dumps(dict(id=form.vars.id))
+        vars = form.vars
+        feature = json.dumps(dict(id=vars.id,
+                                  level=vars.get("level", False),
+                                  ))
         current.s3task.async("gis_update_location_tree",
                              args=[feature])
         return
@@ -3513,6 +3517,54 @@ def gis_layer_onaccept(form):
                           layer_id = layer_id,
                           enabled = True)
     return
+
+# =============================================================================
+def gis_location_filter(r):
+    """
+        Filter resources to those for a specific location
+    """
+
+    lfilter = current.session.s3.location_filter
+    if not lfilter:
+        return
+
+    db = current.db
+    s3db = current.s3db
+    gtable = s3db.gis_location
+    query = (gtable.id == lfilter)
+    row = current.db(query).select(gtable.id,
+                                   gtable.name,
+                                   gtable.level,
+                                   gtable.path,
+                                   limitby=(0, 1)).first()
+    if row and row.level:
+        resource = r.resource
+        if resource.name == "organisation":
+            selector = "organisation.country"
+            if row.level != "L0":
+                code = current.gis.get_parent_country(row, key_type="code")
+            else:
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.location_id == row.id)
+                tag = db(query).select(ttable.value,
+                                       limitby=(0, 1)).first()
+                code = tag.value
+            filter = (S3FieldSelector(selector) == code)
+            resource.add_filter(filter)
+        elif resource.name == "project":
+            selector = "project.countries_id"
+            if row.level != "L0":
+                id = current.gis.get_parent_country(row)
+            else:
+                id = lfilter
+            filter = (S3FieldSelector(selector).contains(id))
+            resource.add_filter(filter)
+        else:
+            # Normal case: resource with location_id
+            selector = "%s.location_id$%s" % (resource.name, row.level)
+            filter = (S3FieldSelector(selector) == row.name)
+            resource.add_filter(filter)
 
 # =============================================================================
 def gis_location_represent(id, row=None, show_link=True, simpletext=False):

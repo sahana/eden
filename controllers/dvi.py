@@ -108,6 +108,9 @@ def morgue():
 
     # Pre-processor
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive and r.id and not r.component:
             field = r.table.obsolete
             field.readable = field.writable = True

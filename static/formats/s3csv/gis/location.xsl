@@ -138,19 +138,23 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="L0">
-        <xsl:if test="col[@field='L0']!='' and col[@field='ISO2']!=''">
+
+        <xsl:variable name="l0" select="col[@field='L0']/text()"/>
+        <xsl:variable name="code" select="col[@field='ISO2']/text()"/>
+
+        <xsl:if test="$l0!='' and $code!=''">
 
             <!-- Create the gis location -->
             <resource name="gis_location">
                 <xsl:attribute name="uuid">
-                    <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', col[@field='ISO2'])"/>
+                    <xsl:value-of select="concat('urn:iso:std:iso:3166:-1:code:', $code)"/>
                 </xsl:attribute>
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
                     <xsl:when test="col[@field='L1'] or col[@field='L2'] or col[@field='L3'] or col[@field='L4'] or col[@field='Name']">
                     </xsl:when>
                     <xsl:otherwise>
-                        <data field="name"><xsl:value-of select="col[@field='L0']"/></data>
+                        <data field="name"><xsl:value-of select="$l0"/></data>
                         <data field="level"><xsl:text>L0</xsl:text></data>
                         <xsl:choose>
                             <xsl:when test="col[@field='WKT']!=''">
@@ -170,7 +174,7 @@
                         <!-- Named Tags -->
                         <resource name="gis_location_tag">
                             <data field="tag">ISO2</data>
-                            <data field="value"><xsl:value-of select="col[@field='ISO2']"/></data>
+                            <data field="value"><xsl:value-of select="$code"/></data>
                         </resource>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
@@ -709,7 +713,5 @@
             </resource>
         </xsl:if>
     </xsl:template>
-
-    <!-- ****************************************************************** -->
 
 </xsl:stylesheet>

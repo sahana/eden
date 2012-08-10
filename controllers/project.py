@@ -77,6 +77,9 @@ def project():
 
     # Pre-process
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive:
             if not r.component:
                 if not r.id and r.function == "index":
@@ -198,6 +201,12 @@ def project():
                               csv_template="project")
 
 # =============================================================================
+def status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def theme():
     """ RESTful CRUD controller """
 
