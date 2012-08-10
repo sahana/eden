@@ -201,10 +201,11 @@ def index():
 
     # Menu Boxes
     menu_btns = [#div, label, app, function
-                ["facility", SHELTERS, "cr", "shelter"],
-                ["facility", T("Warehouses"), "inv", "warehouse"],
+                ["facility", T("Facilities"), "org", "facility"],
                 ["facility", T("Hospitals"), "hms", "hospital"],
                 ["facility", T("Offices"), "org", "office"],
+                ["facility", SHELTERS, "cr", "shelter"],
+                ["facility", T("Warehouses"), "inv", "warehouse"],
                 ["sit", T("Staff"), "hrm", "staff"],
                 ["sit", T("Volunteers"), "vol", "volunteer"],
                 ["sit", T("Incidents"), "irs", "ireport"],

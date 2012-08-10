@@ -707,10 +707,11 @@ class S3IRSModel(S3Model):
             message = ""
             if record.message:
                 message = "\n%s" % record.message
-            text = "%s\n%s%s%s" % (id,
+            text = "SI#%s\n%s%s%s" % (id,
                                    record.name,
                                    contact,
                                    message)
+            text += "Send help to see how to respond!"
 
             # Encode the message as an OpenGeoSMS
             message = msg.prepare_opengeosms(record.location_id,

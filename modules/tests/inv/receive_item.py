@@ -60,7 +60,7 @@ class ReceiveItem(InvTestFunctions):
                       "option",
                      ),
                      ("type",
-                      "Other Warehouse",
+                      "Internal Shipment",
                       "option",
                      )
                     ]

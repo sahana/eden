@@ -499,18 +499,18 @@ class S3HRModel(S3Model):
             Provide the options for the HRM course search filter
         """
 
-        ctable = current.s3db.hrm_course
+        table = current.s3db.hrm_course
         root_org = current.auth.root_org()
         if root_org:
-            query = (ctable.deleted == False) & \
-                    ((ctable.organisation_id == root_org) | \
-                     (ctable.organisation_id == None))
+            query = (table.deleted == False) & \
+                    ((table.organisation_id == root_org) | \
+                     (table.organisation_id == None))
         else:
-            query = (ctable.deleted == False) & \
-                    (ctable.organisation_id == None)
+            query = (table.deleted == False) & \
+                    (table.organisation_id == None)
 
-        opts = current.db(query).select(ctable.id,
-                                        ctable.name)
+        opts = current.db(query).select(table.id,
+                                        table.name)
         _dict = {}
         for opt in opts:
             _dict[opt.id] = opt.name
@@ -795,14 +795,15 @@ class S3HRJobModel(S3Model):
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
                                 represent = hrm_job_role_represent,
-                                comment=S3AddResourceLink(f="job_role",
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_role",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
                                 ondelete = "SET NULL")
 
         multi_job_role_id = S3ReusableField("job_role_id",
-                                "list:reference db.hrm_job_role",
+                                "list:reference hrm_job_role",
                                 sortby = "name",
                                 label = label,
                                 requires = IS_NULL_OR(
@@ -813,7 +814,8 @@ class S3HRJobModel(S3Model):
                                                       sort=True,
                                                       multiple=True)),
                                 represent = hrm_job_role_multirepresent,
-                                comment=S3AddResourceLink(f="job_role",
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_role",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
@@ -882,11 +884,12 @@ class S3HRJobModel(S3Model):
                                 label = label,
                                 requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "hrm_job_title.id",
-                                                      self.hrm_job_title_represent,
+                                                      hrm_job_title_represent,
                                                       filterby="organisation_id",
                                                       filter_opts=filter_opts)),
-                                represent = self.hrm_job_title_represent,
-                                comment=S3AddResourceLink(f="job_title",
+                                represent = hrm_job_title_represent,
+                                comment=S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
+                                                          f="job_title",
                                                           label=label_create,
                                                           title=label,
                                                           tooltip=tooltip),
@@ -1082,25 +1085,6 @@ class S3HRJobModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_job_title_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages.NONE
-
-        db = current.db
-        table = db.hrm_job_title
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 class S3HRSkillModel(S3Model):
@@ -3008,6 +2992,23 @@ def hrm_human_resource_represent(id, show_link=False):
     return repr
 
 # =============================================================================
+def hrm_job_title_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+
+    table = current.s3db.hrm_job_title
+    r = current.db(table.id == id).select(table.name,
+                                          limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
 def hrm_job_role_represent(id, row=None):
     """ FK representation """
 
@@ -3056,6 +3057,24 @@ def hrm_job_role_multirepresent(opt):
     else:
         vals = len(vals) and vals[0] or ""
     return vals
+
+# =============================================================================
+def hrm_job_title_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+
+    db = current.db
+    table = db.hrm_job_title
+    r = db(table.id == id).select(table.name,
+                                  limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def hrm_skill_multirepresent(opt):
@@ -4243,14 +4262,10 @@ def hrm_rheader(r, tabs=[]):
             teams_tab = None
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
-            if group == "staff":
-                address_tab_name = T("Home Address")
-            else:
-                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (T("ID"), "identity"),
                     (T("Description"), "physical_description"),
-                    (address_tab_name, "address"),
+                    (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),
@@ -4265,16 +4280,14 @@ def hrm_rheader(r, tabs=[]):
             # Configure for HR manager mode
             if group == "staff":
                 hr_record = T("Staff Record")
-                address_tab_name = T("Home Address")
             elif group == "volunteer":
                 hr_record = T("Volunteer Record")
-                address_tab_name = T("Addresses")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
                     (T("ID"), "identity"),
                     education_tab,
                     (T("Description"), "physical_description"),
-                    (address_tab_name, "address"),
+                    (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
                     (T("Trainings"), "training"),
                     (T("Certificates"), "certification"),

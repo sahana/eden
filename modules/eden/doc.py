@@ -28,8 +28,9 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "doc_image_represent",
            "S3DocumentSourceModel",
+           "doc_image_represent",
+           "doc_source_represent",
           ]
 
 import os
@@ -366,7 +367,6 @@ class S3DocumentLibrary(S3Model):
         return
 
 # =============================================================================
-
 class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
@@ -399,6 +399,7 @@ class S3DocumentSourceModel(S3Model):
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(current.db,
                                                           "doc_source_entity.source_id")),
+                                    represent = doc_source_represent,
                                     label = T("Source"),
                                     ondelete = "CASCADE")
         # Components
@@ -447,6 +448,9 @@ def doc_image_represent(filename):
         @param filename: name of the image file
     """
 
+    if not filename:
+        return current.messages.NONE
+
     return DIV(A(IMG(_src=URL(c="default", f="download",
                               args=filename),
                      _height=40),
@@ -476,5 +480,24 @@ def doc_checksum(docstr):
 
     converted = hashlib.sha1(docstr).hexdigest()
     return converted
+
+def doc_source_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.instance_type
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.instance_type
+
+    db = current.db
+    table = db.doc_source_entity
+    r = db(table._id == id).select(table.instance_type,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # END =========================================================================

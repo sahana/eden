@@ -43,15 +43,14 @@
     <xsl:variable name="HazardPrefix" select="'Hazard:'"/>
     <xsl:variable name="ThemePrefix" select="'Theme:'"/>
 
-    <!-- Status opts, see modules/eden/project.py -->
-    <project:status-opt code="1">Proposed</project:status-opt>
-    <project:status-opt code="2">Current</project:status-opt>
-    <project:status-opt code="3">Completed</project:status-opt>
-
     <!-- ****************************************************************** -->
     <xsl:key name="orgs"
              match="row"
              use="col[@field='Organisation']"/>
+
+    <xsl:key name="statuses"
+             match="row"
+             use="col[@field='Status']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -61,6 +60,13 @@
                                         generate-id(key('orgs',
                                                         col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Statuses -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('statuses',
+                                                        col[@field='Status'])[1])]">
+                <xsl:call-template name="Status"/>
             </xsl:for-each>
 
             <!-- Themes -->
@@ -79,6 +85,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <!-- Optional Classifications -->
+        <xsl:variable name="Status" select="col[@field='Status']"/>
         <xsl:variable name="Countries" select="col[@field='Countries']"/>
         <xsl:variable name="Sectors" select="col[@field='Departments']"/>
         <xsl:variable name="Hazards" select="col[@field='Hazards']"/>
@@ -101,10 +108,12 @@
             </xsl:if>
 
             <!-- Status -->
-            <xsl:variable name="typename" select="col[@field='Status']"/>
-            <xsl:variable name="typecode" select="document('')//project:status-opt[text()=normalize-space($typename)]/@code"/>
-            <xsl:if test="$typecode">
-                <data field="status"><xsl:value-of select="$typecode"/></data>
+            <xsl:if test="$Status">
+                <reference field="status_id" resource="project_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Status"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- HFAs -->
@@ -215,7 +224,7 @@
                     </xsl:attribute>
                 </reference>
             </resource>
-            
+
             <!-- Project Budgets -->
             <xsl:variable name="Currency" select="col[@field='Currency']"/>
             <xsl:for-each select="col[starts-with(@field, 'Budget')]">
@@ -325,6 +334,19 @@
                 <xsl:value-of select="concat('ProjectOrganisation:', $OrgName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Status">
+        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+
+        <resource name="project_status">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Status"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Status"/></data>
         </resource>
 
     </xsl:template>

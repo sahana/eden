@@ -1,12 +1,12 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Test,User,test@example.com,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0",International Federation of Red Cross and Red Crescent Societies
-Adriana,Macedo,adriana.macedo@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Duarte,Botelheiro,duarte.botelheiro@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Beatriz,de Carvalho,beatriz.decarvalho@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Yakobus,Sereno,yakobus.serena@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Liliana,Otilia,liliana.otilia@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Eduardo,dos Santos,eduardo.dossantos@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
-Margarida,Martins,margarida.martins@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor",Timor-Leste Red Cross Society
+Test,User,test@example.com,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies
+Adriana,Macedo,adriana.macedo@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Duarte,Botelheiro,duarte.botelheiro@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Beatriz,de Carvalho,beatriz.decarvalho@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Yakobus,Sereno,yakobus.serena@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Liliana,Otilia,liliana.otilia@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Eduardo,dos Santos,eduardo.dossantos@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
+Margarida,Martins,margarida.martins@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
 Eeru,Hykka,eeru.hykka@punainenristi.fi,eden,,Finnish Red Cross
 Asset,Reader,asset_reader@example.com,eden,asset_reader/0,International Federation of Red Cross and Red Crescent Societies
 Asset,Data Entry,asset_data_entry@example.com,eden,asset_data_entry/0,International Federation of Red Cross and Red Crescent Societies
@@ -39,4 +39,4 @@ Volunteer,Super Editor,vol_super@example.com,eden,vol_super/0,International Fede
 Assessment,Reader,survey_reader@example.com,eden,survey_reader/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Data Entry,survey_data_entry@example.com,eden,survey_data_entry/0,International Federation of Red Cross and Red Crescent Societies
 Assessment,Editor,survey_editor@example.com,eden,survey_editor/0,International Federation of Red Cross and Red Crescent Societies
-Assessment,Super Editor,survey_super@example.com,eden,survey_super/0,International Federation of Red Cross and Red Crescent Societies
+Assessment,Super Editor,survey_super@example.com,eden,survey_super/0,International Federation of Red Cross and Red Crescent Societies7

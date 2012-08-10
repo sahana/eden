@@ -249,7 +249,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Offices (& Warehouses) -->
+    <!-- Offices -->
     <xsl:template match="resource[@name='org_office']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
@@ -267,14 +267,56 @@
                     <description>
                         <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
                         <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
-                        <xsl:choose>
-                            <xsl:when test="data[@field='type']/@value=5">
-                                    <xsl:value-of select="concat(substring-before(@url, 'org/office'), 'inv/warehouse', substring-after(@url, 'org/office'))"/>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                    <xsl:value-of select="@url"/>
-                            </xsl:otherwise>
-                        </xsl:choose>
+                            <xsl:value-of select="@url"/>
+                        <xsl:text>&gt;</xsl:text>
+                        <xsl:value-of select="data[@field='name']"/>
+                        <xsl:text>&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;</xsl:text>
+                        <xsl:if test="./data[@field='phone1'] != 'null'">
+                            <xsl:text>&lt;tr&gt;&lt;td&gt;</xsl:text>
+                            <xsl:value-of select="data[@field='phone1']"/>
+                            <xsl:text>&lt;/td&gt;&lt;/tr&gt;</xsl:text>
+                        </xsl:if>
+                        <!-- Inventory Items (Stock Position Report) -->
+                        <xsl:for-each select="./resource[@name='inv_inv_item']">
+                            <xsl:text>&lt;tr&gt;&lt;td&gt;</xsl:text>
+                            <xsl:value-of select="./data[@field='quantity']/text()"/><xsl:text> </xsl:text><xsl:value-of select="./reference[@field='item_id']/text()"/>
+                            <xsl:text>&lt;/td&gt;&lt;/tr&gt;</xsl:text>
+                        </xsl:for-each>
+                        <xsl:text>&lt;/table&gt;</xsl:text>
+                    </description>
+
+                    <Point>
+                        <coordinates>
+                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:text>,</xsl:text>
+                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                        </coordinates>
+                    </Point>
+                </Placemark>
+            </xsl:if>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Warehouses -->
+    <xsl:template match="resource[@name='inv_warehouse']">
+        <xsl:if test="./reference[@field='location_id']">
+            <!-- Skip records without LatLon -->
+            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+                    <IconStyle>
+                        <Icon>
+                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                        </Icon>
+                    </IconStyle>
+                </Style>
+                <Placemark>
+                    <name><xsl:value-of select="data[@field='name']"/></name>
+                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <description>
+                        <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
+                        <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
+                            <xsl:value-of select="@url"/>
                         <xsl:text>&gt;</xsl:text>
                         <xsl:value-of select="data[@field='name']"/>
                         <xsl:text>&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;</xsl:text>

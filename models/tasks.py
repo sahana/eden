@@ -155,42 +155,48 @@ if settings.has_module("msg"):
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 
-    def stats_update_aggregate_location(root_location_id, parameter_id, user_id=None):
+    def stats_update_time_aggregate(data_id, user_id=None):
+        """
+            Update the stats_aggregate table for the given stats_data record
+
+            @param data_id: the id of the stats_data record just added
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task
+        result = s3db.stats_update_time_aggregate(data_id)
+        return result
+
+    tasks["stats_update_time_aggregate"] = stats_update_time_aggregate
+
+    def stats_update_aggregate_location(root_location_id,
+                                        parameter_id,
+                                        start_date,
+                                        end_date,
+                                        user_id=None):
         """
             Update the stats_aggregate table for the given location and parameter
 
             @param root_location_id: the id of the location
             @param paramerter_id: the parameter for which the stats are being updated
+            @param start_date: the start date of the period in question
+            @param end_date: the end date of the period in question
             @param user_id: calling request's auth.user.id or None
         """
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task
-        result = s3db.stats_update_aggregate_location(root_location_id, parameter_id)
+        result = s3db.stats_update_aggregate_location(root_location_id,
+                                                      parameter_id,
+                                                      start_date,
+                                                      end_date,
+                                                      )
         return result
 
     tasks["stats_update_aggregate_location"] = stats_update_aggregate_location
-
-# -----------------------------------------------------------------------------
-if settings.has_module("vulnerability"):
-
-    def vulnerability_update_resilence(root_location_id, user_id=None):
-        """
-            Update the resilience parameter on the stats_aggregate table
-            for the given location
-
-            @param root_location_id: the id of the location
-            @param user_id: calling request's auth.user.id or None
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-        # Run the Task
-        result = s3db.vulnerability_resilence(root_location_id)
-        return result
-
-    tasks["vulnerability_update_resilence"] = vulnerability_update_resilence
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks

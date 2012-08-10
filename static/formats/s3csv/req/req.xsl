@@ -75,7 +75,7 @@
 
                 <!-- Site -->
                 <xsl:variable name="Site"><xsl:value-of select="col[@field='Requested for Facility']"/></xsl:variable>
-                <resource name="org_office">
+                <resource name="inv_warehouse">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$Site"/>
                     </xsl:attribute>
@@ -287,7 +287,7 @@
                     <data field="date_required"><xsl:value-of select="col[@field='Date Required']"/></data>
                     <data field="time_required"><xsl:value-of select="col[@field='Time Required']"/></data>
                     <xsl:if test="col[@field='Requested for Facility']!=''">
-                        <reference field="site_id" resource="org_office">
+                        <reference field="site_id" resource="inv_warehouse">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="$Site"/>
                             </xsl:attribute>

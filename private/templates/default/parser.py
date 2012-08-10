@@ -62,7 +62,7 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_person(message=""):
+    def parse_person(message="", sender=""):
         """
             Search for People
         """
@@ -82,6 +82,7 @@ class S3Parsing(object):
         pkeywords = primary_keywords + contact_keywords
         keywords = string.split(message)
         pquery = []
+	result = []
         name = ""
         reply = ""
         for word in keywords:
@@ -100,19 +101,19 @@ class S3Parsing(object):
         if "person" in pquery:
 
             table = s3db.pr_person
-            rows = db(table.deleted ==False).select(table.pe_id,
+	    query = (table.deleted ==False)
+	    query = query & (current.auth.s3_accessible_query("read", table))
+            rows = db(query).select(table.pe_id,
                                                     table.first_name,
                                                     table.middle_name,
                                                     table.last_name)
             _name = soundex(str(name))
             for row in rows:
-                result = []
-                if (_name == soundex(row.first_name)) or \
+		if (_name == soundex(row.first_name)) or \
                    (_name == soundex(row.middle_name)) or \
                    (_name == soundex(row.last_name)):
                     presult = dict(name = row.first_name, id = row.pe_id)
                     result.append(presult)
-                    break
 
             if len(result) > 1:
                 return T("Multiple Matches")
@@ -122,20 +123,28 @@ class S3Parsing(object):
                 if "email" in pquery:
                     query = (table.pe_id == result[0]["id"]) & \
                         (table.contact_method == "EMAIL")
+		    query = query & \
+		        (current.auth.s3_accessible_query("read", table))
                     recipient = db(query).select(table.value,
                                                  orderby = table.priority,
                                                  limitby=(0, 1)).first()
                     if recipient:
                         reply = "%s Email->%s" % (reply, recipient.value)
+		    else:
+			reply = "%s 's Email Not available!"%reply
                 if "phone" in pquery:
                     query = (table.pe_id == result[0]["id"]) & \
                         (table.contact_method == "SMS")
-                    recipient = db(query).select(table.value,
-                                                 orderby = table.priority,
-                                                 limitby=(0, 1)).first()
+		    query = query & \
+		        (current.auth.s3_accessible_query("read", table))
+		    recipient = db(query).select(table.value,
+		                                 orderby = table.priority,
+		                                 limitby=(0, 1)).first()
                     if recipient:
                         reply = "%s Mobile->%s" % (reply,
                                                recipient.value)
+		    else:
+			reply = "%s 's Mobile Contact Not available!"%reply
 
             if len(result) == 0:
                 return T("No Match")
@@ -145,7 +154,7 @@ class S3Parsing(object):
     
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_hospital(message=""):
+    def parse_hospital(message="", sender=""):
         """
            Search for Hospitals
         """
@@ -165,6 +174,7 @@ class S3Parsing(object):
         pkeywords = primary_keywords + contact_keywords
         keywords = string.split(message)
         pquery = []
+	result = []
         name = ""
         reply = ""
         for word in keywords:
@@ -182,7 +192,10 @@ class S3Parsing(object):
         #  Hospital Search [example: get name hospital facility status ]
         if "hospital" in pquery:
             table = s3db.hms_hospital
-            rows = db(table.deleted == False).select(table.id,
+	    query = (table.deleted == False)
+	    query = query & \
+                (current.auth.s3_accessible_query("read", table))
+	    rows = db(query).select(table.id,
                                                      table.name,
                                                      table.aka1,
                                                      table.aka2,
@@ -193,12 +206,10 @@ class S3Parsing(object):
                                                      )
             _name = soundex(str(name))
             for row in rows:
-                result = []
                 if (_name == soundex(row.name)) or \
                    (_name == soundex(row.aka1)) or \
                    (_name == soundex(row.aka2)):
                     result.append(row)
-                    break
 
             if len(result) > 1:
                 return T("Multiple Matches")
@@ -228,7 +239,7 @@ class S3Parsing(object):
     
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_org(message=""):
+    def parse_org(message="", sender=""):
         """
            Search for Organisations
         """
@@ -248,6 +259,7 @@ class S3Parsing(object):
         pkeywords = primary_keywords + contact_keywords
         keywords = string.split(message)
         pquery = []
+	result = []
         name = ""
         reply = ""
         for word in keywords:
@@ -265,17 +277,18 @@ class S3Parsing(object):
         # Organization search [example: get name organisation phone]
         if "organisation" in pquery:
             table = s3db.org_organisation
-            rows = db(table.deleted == False).select(table.id,
+	    query = (table.deleted == False)
+	    query = query & \
+                (current.auth.s3_accessible_query("read", table))
+	    rows = db(query).select(table.id,
                                                      table.name,
                                                      table.donation_phone,
                                                      table.acronym)
             _name = soundex(str(name))
             for row in rows:
-                result = []
                 if (_name == soundex(row.name)) or \
                    (_name == soundex(row.acronym)):
                     result.append(row)
-                    break
 
             if len(result) > 1:
                 return T("Multiple Matches")
@@ -288,8 +301,11 @@ class S3Parsing(object):
                     reply = reply + "Phone->" + str(org.donation_phone)
                 if "office" in pquery:
                     otable = s3db.org_office
-                    office = db(table.organisation_id == org.id).select(otable.address,
-                                                                        limitby=(0, 1)).first()
+		    query = (otable.organisation_id == org.id)
+		    query = query & \
+			(current.auth.s3_accessible_query("read", otable))
+		    office = db(query).select(otable.address, \
+		                              limitby=(0, 1)).first()
                     reply = reply + "Address->" + office.address
             if len(reply) == 0:
                 return T("No Match")
@@ -300,7 +316,7 @@ class S3Parsing(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_ireport(message=""):
+    def parse_ireport(message="", sender=""):
         """
             Parse Replies To Deployment Request.
         """
@@ -312,6 +328,9 @@ class S3Parsing(object):
         db = current.db
         s3db = current.s3db
 	rtable = s3db.irs_ireport_human_resource
+	ctable = s3db.pr_contact
+	htable = s3db.hrm_human_resource
+	ptable = s3db.pr_person_user
 	words = string.split(message)
 	message = ""
 	reponse = ""
@@ -320,27 +339,49 @@ class S3Parsing(object):
 	comments = False
 	
 	for word in words:
-	    if "SI#" in word:
+	    if "SI#" in word and not ireport:
 		report = word.split("#")[1]
 		report = int(report)
 		ireport = True
-	    elif soundex(word) == soundex("Yes"):
-		response = "Yes"
+	    elif (soundex(word) == soundex("Yes")) and ireport and not comments:
+		response = True
 		comments = True
-	    elif soundex(word) == soundex("No"):
-		response = "No"
+	    elif soundex(word) == soundex("No") and ireport and not comments:
+		response = False
 		comments = True
 	    else :
 		if comments:
 		    message+= word + " "
 	
-	if ireport:	
-	    db(rtable.ireport_id == report).update(comments=message, \
-	                                           response = response)
+	query = (ctable.contact_method == "EMAIL") & \
+	    (ctable.value == sender)
+	query = query & \
+            (current.auth.s3_accessible_query("read", ctable))
+	responder = db(query).select(ctable.pe_id, limitby=(0,1)).first()
+	if responder:
+	    query = (ptable.pe_id == responder.pe_id)
+	    query = query & \
+                (current.auth.s3_accessible_query("read", ptable))	    
+	    human_resource = db(query).select(ptable.id, \
+	                                      limitby=(0,1)).first()
+	
+	if human_resource:
+	    query = (htable.person_id == human_resource.id)
+	    query = query & \
+                (current.auth.s3_accessible_query("read", htable))	    
+	    person = db(query).select(htable.id, limitby=(0,1)).first()
+	if ireport:
+	    query = (rtable.ireport_id == report) & \
+	        (rtable.human_resource_id == person.id)
+	    query = query & \
+                (current.auth.s3_accessible_query("read", rtable))	    
+	    db(query).update(reply=message, \
+	                     response = response)
 	    reply = "Response Logged in the Report (Id: %d )"%report
 	else:
 	    reply = "Please provide the keyword SI followed by \
-	    the pound key (#),followed by the Inciden Report ID. e.g. SI#1"
+the pound key (#),the Inciden Report ID, the response \
+and comments seperated by spaces. e.g. SI#1 Yes/No Comments"
 	db.commit()
 	return reply
     
