@@ -514,12 +514,20 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Sites
+        add_component("org_site",
+                      org_organisation="organisation_id")
+
         # Offices
         add_component("org_office",
                       org_organisation="organisation_id")
 
-        # Sites
-        add_component("org_site",
+        # Warehouses
+        add_component("inv_warehouse",
+                      org_organisation="organisation_id")
+
+        # Facilities
+        add_component("org_facility",
                       org_organisation="organisation_id")
 
         # Staff
@@ -2320,7 +2328,9 @@ def org_rheader(r, tabs=[]):
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
-                    (T("Facilities"), "site"),
+                    (T("Offices"), "office"),
+                    (T("Warehouses"), "warehouse"),
+                    (T("Facilities"), "facility"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
                     (T("User Roles"), "roles"),
@@ -2379,11 +2389,9 @@ def org_rheader(r, tabs=[]):
                           ]
         rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
 
-        rheader = DIV()
-        
         logo = org_organisation_logo(record.organisation_id)
         if logo:
-            rheader.append(TABLE(TR(TD(logo), TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo), TD(rheader_fields))))
         else:
             rheader = DIV(rheader_fields)
 
