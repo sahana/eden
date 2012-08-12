@@ -777,7 +777,11 @@ def translate():
                         modlist.append("core")
 
                 # Obtaining the language file from the language code
-                code = form.request_vars.code + ".py"
+                code = form.request_vars.new_code
+		if code == "":
+                    code = form.request_vars.code
+
+                code += ".py"
 
                 # Obtaining the type of file to export to
                 filetype = form.request_vars.filetype
@@ -811,43 +815,45 @@ def translate():
             max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
 
             while num < max_rows:
-                row = TR(TD(num+1), TD(modlist[num]), TD(INPUT(_type="checkbox", _name="module_list", _value=modlist[num])))
+                row = TR(TD(num+1), TD(INPUT(_type="checkbox", _name="module_list", _value=modlist[num])), TD(modlist[num]))
                 for c in range(1, NO_OF_COLUMNS):
                     if num + c*max_rows < modcount:
                         row.append(TD(num+1+c*max_rows))
-                        row.append(TD(modlist[num+c*max_rows]))
                         row.append(TD(INPUT(_type = "checkbox", _name="module_list", _value=modlist[num+c*max_rows])))
+                        row.append(TD(modlist[num+c*max_rows]))
                 num += 1
                 table.append(row)
 
             div = DIV()
             div.append(table)
             div.append(BR())
-            row = TR(TD(T("Include core files")), TD(INPUT(_type="checkbox", _name="module_list", _value="core", _checked="yes")))
+            row = TR(TD(INPUT(_type="checkbox", _name="module_list", _value="core", _checked="yes")), TD(T("Include core files")))
             div.append(row)
             div.append(BR())
-            row = TR(TD(T("Select all modules")), TD(INPUT(_type="checkbox", _name="module_list", _value="all")))
+            row = TR(TD(INPUT(_type="checkbox", _name="module_list", _value="all")), TD(T("Select all modules")))
             div.append(row)
             div.append(BR())
+
+            # Providing option to export strings in pootle format
+            row = TR(TD(INPUT(_type="checkbox", _name="filetype")), TD(T("Export as Pootle (.po) file (Excel (.xls) is default)")))
+            row.append(BR())
+            row.append(BR())
+            div.append(row)
 
             # Drop-down for available language codes
             lang_col = TD()
             lang_dropdown = SELECT(_name = "code")
             for lang in langlist:
                 lang_dropdown.append(lang)
-                lang_col.append(lang_dropdown)
+            lang_col.append(lang_dropdown)
 
-            row = TR(TD(T("Language code: ")), TD(lang_col))
+            row = TR(TD(T("Select language code: ")), TD(lang_col))
+            row.append(TD(T(" Or add a new language code:")))
+	    row.append(TD(INPUT(_type="text", _name="new_code")))
             div.append(row)
             div.append(BR())
 
-            # Providing option to export strings in pootle format
-            row = TR(TD(T("Export as Pootle (.po) file")), TD(INPUT(_type="checkbox", _name="filetype")))
-            row.append(BR())
-            row.append(TR(TD(T("(Excel (.xls) is default)"))))
-            div.append(row)
 
-            div.append(BR())
             div.append(BR())
             div.append(INPUT(_type='submit',_value='Submit'))
             form.append(div)
@@ -855,9 +861,19 @@ def translate():
             output["title"] = T("Select the required modules")
             output["form"] = form
 
+        elif opt=="2":
+
+            # If 2nd workflow, i.e uploading translated csv files is selected
+            div = DIV()
+            div.append(BR())
+            div.append(T("Note: Make sure that all the text cells are quoted in the csv file before uploading"))
+            form = output["form"]
+            form.append(div)
+            output["form"] = form
+
         elif opt=="3":
 
-            # If 3rd workflow, displaying translation percentage is selected
+            # If 3rd workflow, i.e reporting translation percentage is selected
             if form.accepts(request.vars, session):
 
                 # Retreiving the translation percentage for each module

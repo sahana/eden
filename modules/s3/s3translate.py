@@ -1103,6 +1103,12 @@ class StringsToExcel:
                                     current.request.application)
             langfile = os.path.join(base_dir, "languages", langfile)
 
+            # If the language file doesn't exist, create it
+	    if not os.path.exists(langfile):
+                f = open(langfile,"w")
+                f.write('')
+                f.close()
+
             NewStrings = []
             A = TranslateAPI()
             R = TranslateReadFiles()
