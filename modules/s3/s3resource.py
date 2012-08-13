@@ -3631,7 +3631,7 @@ class S3ResourceField(object):
                 # table -- f -- pkey --> ktable
 
                 # Find the referenced table
-                ktablename, pkey, multiple = s3_get_foreign_key(f)
+                ktablename, pkey, multiple = s3_get_foreign_key(f, m2m=False)
                 if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 
