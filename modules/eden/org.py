@@ -108,14 +108,14 @@ class S3OrganisationModel(S3Model):
         tablename = "org_sector"
         table = define_table(tablename,
                              Field("name", length=128,
-                                   notnull=True, unique=True,
+                                   notnull=True,
                                    label=T("Name")),
                              Field("abrv", length=64,
-                                   notnull=True, unique=True,
+                                   notnull=True,
                                    label=T("Abbreviation")),
                              self.gis_location_id(
                                     widget=S3LocationAutocompleteWidget(),
-                                    requires=IS_LOCATION()
+                                    requires=IS_EMPTY_OR(IS_LOCATION())
                                 ),
                              s3_comments(),
                              *s3_meta_fields())
