@@ -1096,9 +1096,11 @@ class S3PermissionTests(unittest.TestCase):
 
         # Create a record
         auth.s3_impersonate(None)
-        auth.override = True
         table = s3db.org_office
-        record_id = table.insert(name="New Office")
+        table.owned_by_user.default=None
+
+        auth.override = True
+        record_id = table.insert(name="Ownership Test Office")
         auth.override = False
 
         self.table = table
@@ -2264,22 +2266,28 @@ class S3RecordApprovalTests(unittest.TestCase):
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
+        # Set record approval on
+        deployment_settings.auth.record_approval = True
+
         self.approved_org = None
         def org_onapprove_test(record):
             self.approved_org = record.id
         org_onapprove = s3db.get_config("org_organisation", "onapprove")
-        s3db.configure("org_organisation", onapprove=org_onapprove_test)
+        otable_requires_approval = s3db.get_config("org_organisation", "requires_approval", False)
+        s3db.configure("org_organisation",
+                       onapprove=org_onapprove_test,
+                       requires_approval=True)
 
         self.approved_office = None
         def office_onapprove_test(record):
             self.approved_office = record.id
         office_onapprove = s3db.get_config("org_office", "onapprove")
-        s3db.configure("org_office", onapprove=office_onapprove_test)
+        ftable_requires_approval = s3db.get_config("org_office", "requires_approval", False)
+        s3db.configure("org_office",
+                       onapprove=office_onapprove_test,
+                       requires_approval=True)
 
         try:
-            # Set record approval on
-            deployment_settings.auth.record_approval = True
-
             # Impersonate as admin
             auth.s3_impersonate("admin@example.com")
 
@@ -2344,10 +2352,12 @@ class S3RecordApprovalTests(unittest.TestCase):
             deployment_settings.auth.record_approval = False
             auth.s3_impersonate(None)
 
-            if org_onapprove is not None:
-                s3db.configure("org_organisation", onapprove=org_onapprove)
-            if office_onapprove is not None:
-                s3db.configure("org_office", onapprove=office_onapprove)
+            s3db.configure("org_organisation",
+                           onapprove=org_onapprove,
+                           requires_approval=otable_requires_approval)
+            s3db.configure("org_office",
+                           onapprove=office_onapprove,
+                           requires_approval=ftable_requires_approval)
 
     def testRecordApprovalWithoutComponents(self):
         """ Test record approval without components"""
@@ -2357,10 +2367,16 @@ class S3RecordApprovalTests(unittest.TestCase):
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
-        try:
-            # Set record approval on
-            deployment_settings.auth.record_approval = True
+        # Set record approval on
+        deployment_settings.auth.record_approval = True
+        otable = s3db.org_organisation
+        otable_requires_approval = s3db.get_config(otable, "requires_approval", False)
+        s3db.configure(otable, requires_approval=True)
+        ftable = s3db.org_office
+        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", False)
+        s3db.configure(ftable, requires_approval=True)
 
+        try:
             # Impersonate as admin
             auth.s3_impersonate("admin@example.com")
 
@@ -2419,6 +2435,10 @@ class S3RecordApprovalTests(unittest.TestCase):
         finally:
             current.db.rollback()
             deployment_settings.auth.record_approval = False
+            s3db.configure("org_organisation",
+                           requires_approval=otable_requires_approval)
+            s3db.configure("org_office",
+                           requires_approval=ftable_requires_approval)
             auth.s3_impersonate(None)
 
     def testRecordReject(self):
@@ -2440,15 +2460,19 @@ class S3RecordApprovalTests(unittest.TestCase):
         office_onreject = s3db.get_config("org_office", "onreject")
         s3db.configure("org_office", onreject=office_onreject_test)
 
+        # Set record approval on
+        deployment_settings.auth.record_approval = True
+        otable = s3db.org_organisation
+        otable_requires_approval = s3db.get_config(otable, "requires_approval", False)
+        ftable = s3db.org_office
+        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", False)
+
         try:
-            # Set record approval on
-            deployment_settings.auth.record_approval = True
 
             # Impersonate as admin
             auth.s3_impersonate("admin@example.com")
 
             # Create test record
-            otable = s3db.org_organisation
             org = Storage(name="Test Reject Organisation")
             org_id = otable.insert(**org)
             self.assertTrue(org_id > 0)
@@ -2456,7 +2480,6 @@ class S3RecordApprovalTests(unittest.TestCase):
             s3db.update_super(otable, org)
 
             # Create test component
-            ftable = s3db.org_office
             office = Storage(name="Test Reject Office",
                              organisation_id=org_id)
             office_id = ftable.insert(**office)
@@ -2471,6 +2494,10 @@ class S3RecordApprovalTests(unittest.TestCase):
             row = db(ftable.id==office_id).select(limitby=(0, 1)).first()
             self.assertNotEqual(row, None)
             self.assertEqual(row.approved_by, None)
+
+            # Activate approval for these tables
+            s3db.configure(otable, requires_approval=True)
+            s3db.configure(ftable, requires_approval=True)
 
             approved = auth.permission.approved
             unapproved = auth.permission.unapproved
@@ -2505,10 +2532,12 @@ class S3RecordApprovalTests(unittest.TestCase):
             deployment_settings.auth.record_approval = False
             auth.s3_impersonate(None)
 
-            if org_onreject is not None:
-                s3db.configure("org_organisation", onreject=org_onreject)
-            if office_onreject is not None:
-                s3db.configure("org_office", onreject=office_onreject)
+            s3db.configure("org_organisation",
+                           onreject=org_onreject,
+                           requires_approval=otable_requires_approval)
+            s3db.configure("org_office",
+                           onreject=office_onreject,
+                           requires_approval=ftable_requires_approval)
 
     def testHasPermissionWithRecordApproval(self):
         """ Test has_permission with record approval """
@@ -2605,6 +2634,14 @@ class S3RecordApprovalTests(unittest.TestCase):
             self.assertFalse("approved_by" in str(query))
 
             table = s3db.org_organisation
+
+            # Approval not required by default
+            session.approver_role = None
+            auth.s3_impersonate("normaluser@example.com")
+            query = accessible_query("read", table, c="org", f="organisation")
+            self.assertEqual(str(query), "(org_organisation.id > 0)")
+
+            s3db.configure(table, requires_approval=True)
 
             # Admin can always see all records
             session.approver_role = None

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
     Inventory Management
@@ -28,122 +29,60 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
-def office():
-    """
-        Required to ensure the tabs work from req_match
-    """
-    return warehouse()
-# -----------------------------------------------------------------------------
 def warehouse():
     """
         RESTful CRUD controller
-        Filtered version of the org_office resource
     """
-
-    module = "org"
-    resourcename = "office"
-    tablename = "org_office"
-    table = s3db[tablename]
-
-    itable = s3db.inv_inv_item
 
     if "viewing" in request.get_vars:
         viewing = request.get_vars.viewing
         tn, id = viewing.split(".", 1)
-        if tn == "org_office":
+        if tn == "inv_warehousec":
             request.args.insert(0, id)
-
-    s3.crud_strings[tablename] = s3.org_warehouse_crud_strings
-
-    # Type is Warehouse
-    table.type.default = 5 # Warehouse
-    table.type.writable = False
-
-    # Only show warehouses
-    s3.filter = (table.type == 5)
-
-    # Remove type from list_fields
-    list_fields = s3db.get_config(tablename, "list_fields")
-    try:
-        list_fields.remove("type")
-    except:
-        # Already removed
-        pass
-    s3db.configure(tablename, list_fields=list_fields)
-
-    warehouse_search = s3base.S3Search(
-        advanced=(s3base.S3SearchSimpleWidget(
-                    name="warehouse_search_text",
-                    label=T("Search"),
-                    comment=T("Search for warehouse by text."),
-                    field=["name","comments", "email"]
-                  ),
-                  s3base.S3SearchOptionsWidget(
-                    name="warehouse_search_org",
-                    label=T("Organization"),
-                    comment=T("Search for warehouse by organization."),
-                    field="organisation_id",
-                    represent ="%(name)s",
-                    cols = 3
-                  ),
-                  s3base.S3SearchOptionsWidget(
-                    name="warehouse_search_location",
-                    field="location_id$L1",
-                    location_level="L1",
-                    cols = 3
-                  ),
-                  s3base.S3SearchLocationWidget(
-                    name="warehouse_search_map",
-                    label=T("Map"),
-                  ),
-        ))
-    s3db.configure(tablename,
-                    search_method = warehouse_search)
 
     # CRUD pre-process
     def prep(r):
-        if r.tablename == "org_office": # and r.interactive:
 
-            if r.id:
-                table.obsolete.readable = table.obsolete.writable = True
+        if r.id:
+            r.table.obsolete.readable = r.table.obsolete.writable = True
 
-            if r.component:
-                if r.component.name == "inv_item":
-                    # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
-                    # Remove the Warehouse Name from the list_fields
-                    list_fields = s3db.get_config("inv_inv_item", "list_fields")
-                    try:
-                        list_fields.remove("site_id")
-                        s3db.configure("inv_inv_item", list_fields=list_fields)
-                    except:
-                        pass
+        if r.component:
+            if r.component.name == "inv_item":
+                # Filter out items which are already in this inventory
+                s3db.inv_prep(r)
+                # Remove the Warehouse Name from the list_fields
+                list_fields = s3db.get_config("inv_inv_item", "list_fields")
+                try:
+                    list_fields.remove("site_id")
+                    s3db.configure("inv_inv_item", list_fields=list_fields)
+                except:
+                    pass
 
-                elif r.component.name == "recv" or \
-                   r.component.name == "send":
-                    # Filter out items which are already in this inventory
-                    s3db.inv_prep(r)
+            elif r.component.name == "recv" or \
+                 r.component.name == "send":
+                # Filter out items which are already in this inventory
+                s3db.inv_prep(r)
 
-                elif r.component.name == "human_resource":
-                    # Filter out people which are already staff for this warehouse
-                    s3base.s3_filter_staff(r)
-                    # Cascade the organisation_id from the hospital to the staff
-                    htable = s3db.hrm_human_resource
-                    htable.organisation_id.default = r.record.organisation_id
-                    htable.organisation_id.writable = False
+            elif r.component.name == "human_resource":
+                # Filter out people which are already staff for this warehouse
+                s3base.s3_filter_staff(r)
+                # Cascade the organisation_id from the hospital to the staff
+                htable = s3db.hrm_human_resource
+                htable.organisation_id.default = r.record.organisation_id
+                htable.organisation_id.writable = False
 
-                elif r.component.name == "req":
-                    s3db.req_prep(r)
-                    if r.method != "update" and r.method != "read":
-                        # Hide fields which don't make sense in a Create form
-                        # inc list_create (list_fields over-rides)
-                        s3db.req_create_form_mods()
+            elif r.component.name == "req":
+                s3db.req_prep(r)
+                if r.method != "update" and r.method != "read":
+                    # Hide fields which don't make sense in a Create form
+                    # inc list_create (list_fields over-rides)
+                    s3db.req_create_form_mods()
 
         # "show_obsolete" var option can be added (btn?) later to
         # disable this filter
         if r.method in [None, "list"] and \
             not r.vars.get("show_obsolete", False):
-            r.resource.add_filter((s3db.org_office.obsolete != True))
+            r.resource.add_filter(s3db.inv_warehouse.obsolete != True)
         return True
     s3.prep = prep
 
@@ -162,16 +101,14 @@ def warehouse():
     s3.postp = postp
 
     if "extra_data" in request.get_vars:
-        csv_template = "inv_item"
-        module = "inv"
         resourcename = "inv_item"
     else:
-        csv_template = "warehouse"
-    csv_stylesheet = "%s.xsl" % csv_template
+        resourcename = "warehouse"
+    csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.org_rheader,
-                                csv_template = csv_template,
+                                rheader=s3db.inv_warehouse_rheader,
+                                csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
                                 csv_extra_fields = [
@@ -181,6 +118,7 @@ def warehouse():
     if "add_btn" in output:
         del output["add_btn"]
     return output
+
 # -----------------------------------------------------------------------------
 def supplier():
     current.request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
@@ -320,7 +258,15 @@ def inv_item():
 # -----------------------------------------------------------------------------
 def track_movement():
     """ REST Controller """
+
     table = s3db.inv_track_item
+
+    s3db.configure("inv_track_item",
+                   create=False,
+                   listadd=False,
+                   editable=False,
+                   deletable=False,
+                   )
 
     def prep(r):
         if r.interactive:
@@ -330,18 +276,10 @@ def track_movement():
                          (table.recv_inv_item_id == item_id)
                 s3.filter = filter
         return True
-
-    s3db.configure("inv_track_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
-
     s3.prep = prep
-    output =  s3_rest_controller("inv",
-                                 "track_item",
-                                 rheader=s3db.inv_warehouse_rheader,
+
+    output = s3_rest_controller("inv", "track_item",
+                                rheader=s3db.inv_warehouse_rheader,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -651,7 +589,8 @@ def send_commit():
                                 item_pack_id = row.req_req_item.item_pack_id,
                                 quantity = row.req_commit_item.quantity,
                                 currency = row.req_req_item.currency,
-                                req_item_id = row.req_req_item.id)
+                                req_item_id = row.req_req_item.id
+                                )
         track_table(track_table.id == id).update(tracking_no = "TN:%6d" % (10000 + id))
     # redirect to inv_send for the send id just created
     redirect(URL(c = "inv",
@@ -673,7 +612,6 @@ def send_process():
     siptable = s3db.supply_item_pack
     rrtable = s3db.req_req
     ritable = s3db.req_req_item
-    otable = s3db.org_office
 
     if not auth.s3_has_permission("update",
                                   stable,
@@ -686,7 +624,7 @@ def send_process():
         session.error = T("This shipment has already been sent.")
 
     # Get the track items that are part of this shipment
-    query = ( tracktable.send_id == send_id ) & \
+    query = (tracktable.send_id == send_id ) & \
             (tracktable.deleted == False)
     track_items = db(query).select()
     if not track_items:
@@ -1216,7 +1154,6 @@ def recv_process():
     siptable = s3db.supply_item_pack
     rrtable = s3db.req_req
     ritable = s3db.req_req_item
-    otable = s3db.org_office
 
     if not auth.s3_has_permission("update",
                                   rtable,
@@ -1363,10 +1300,11 @@ def track_item():
     table = s3db.inv_track_item
 
     s3db.configure("inv_track_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
+                   create=False,
+                   listadd=False,
+                   insertable=False,
+                   editable=False,
+                   deletable=False,
                    )
 
     vars = request.get_vars
@@ -1572,7 +1510,6 @@ def adj_close():
     atable = s3db.inv_adj
     aitable = s3db.inv_adj_item
     inv_item_table = s3db.inv_inv_item
-    otable = s3db.org_office
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
@@ -1621,13 +1558,6 @@ def adj_close():
     # Go to the Inventory of the Site which has adjusted these items
     (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
                                                    adj_rec.site_id)
-    if resourcename == "office":
-        query = (otable.id == id)
-        otype = db(query).select(otable.type, limitby=(0, 1)).first()
-        if otype and otype.type == 5:
-            prefix = "inv"
-            resourcename = "warehouse"
-
     url = URL(c = prefix,
               f = resourcename,
               args = [id, "inv_item"])

@@ -52,7 +52,7 @@ class CreateItem(SeleniumUnitTest):
                      ( "um",
                        "litre" ),
                      ( "item_category_id",
-                       "Food",
+                       "Standard > Food",
                        "option"),
                      ( "model",
                        "Tomato" ),

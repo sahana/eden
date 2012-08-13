@@ -57,7 +57,7 @@ class CreateOffice(SeleniumUnitTest):
 #         "Romanian Food Assistance Association",
 #         "autocomplete",
 #        ),
-        ("type",
+        ("office_type_id",
          "Headquarters",
          "option",
         ),

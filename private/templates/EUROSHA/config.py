@@ -50,8 +50,16 @@ settings.fin.currencies = {
 settings.security.policy = 6 # Realm
 settings.security.map = True
 
+# Set this if there will be multiple areas in which work is being done,
+# and a menu to select among them is wanted.
+settings.gis.menu = "Country"
+
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
+
+# Organisation Management
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+settings.org.summary = True
 
 # HRM
 # Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
@@ -60,6 +68,8 @@ settings.hrm.job_roles = True
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project

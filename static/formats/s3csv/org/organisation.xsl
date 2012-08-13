@@ -173,7 +173,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="OrganisationType">
         <xsl:if test="col[@field='Type']!=''">
             <resource name="org_organisation_type">

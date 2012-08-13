@@ -19,8 +19,8 @@
            You can add a third argument &ignore_errors
 
          CSV fields:
-         destination............inv_recv.site_id -> org_office.name
-         from_location..........inv_recv.from_site_id -> org_office.name
+         destination............inv_recv.site_id -> inv_warehouse.name
+         from_location..........inv_recv.from_site_id -> inv_warehouse.name
          recipient..............inv_recv.recipient_id
          sender.................inv_recv.sender_id
          eta....................inv_recv.eta
@@ -77,7 +77,7 @@
         <s3xml>
             <xsl:apply-templates select="./table/row"/>
             <!-- ******************************************************************
-                 Search for each destination and create a unique org_office record
+                 Search for each destination and create a unique inv_warehouse record
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('org_destination',
@@ -87,7 +87,7 @@
                 </xsl:call-template>
             </xsl:for-each>
             <!-- ******************************************************************
-                 Search for each source and create a unique org_office record
+                 Search for each source and create a unique inv_warehouse record
                  ****************************************************************** -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('org_source',
@@ -218,12 +218,12 @@
     <xsl:template name="Place">
         <xsl:param name="placename"/>
 
-        <!-- Create the place, an org_office record -->
-        <resource name="org_office">
+        <!-- Create the place, an inv_warehouse record -->
+        <resource name="inv_warehouse">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$placename"/>
             </xsl:attribute>
-            <!-- Office Data -->
+            <!-- Warehouse Data -->
             <data field="name"><xsl:value-of select="$placename"/></data>
         </resource>
     </xsl:template>
@@ -235,8 +235,6 @@
         <xsl:variable name="firstName" select="substring-before($name,' ')"/>
         <xsl:variable name="lastName" select="substring-after($name,' ')"/>
 
-
-        <!-- Create the warehouse, an org_office record with type = 5 -->
         <resource name="pr_person">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$name"/>
@@ -307,13 +305,13 @@
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
             <!-- Link to from_location -->
-            <reference field="site_id" resource="org_office">
+            <reference field="site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$from_location"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to destination -->
-            <reference field="to_site_id" resource="org_office">
+            <reference field="to_site_id" resource="inv_warehouse">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$destination"/>
                 </xsl:attribute>

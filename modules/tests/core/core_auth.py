@@ -6,7 +6,7 @@ from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
 from gluon import current
 from gluon.storage import Storage
-from .utils import *
+from .core_utils import *
 
 current.data = Storage()
 current.data["auth"] = {

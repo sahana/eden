@@ -65,6 +65,9 @@ def hospital():
 
     # Pre-processor
     def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
         if r.interactive:
             # Add comments
             table = r.table

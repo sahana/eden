@@ -278,7 +278,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create",vars = red_cross_filter,),
                         M("List All", vars = red_cross_filter,),
                         M("Search", m="search", vars = red_cross_filter,),
-                        #M("Import", m="import", p="create")
+                        M("Import", m="import", p="create", check=is_org_admin)
                     ),
                     M("Offices", c="org", f="office",
                       check=manager_mode)(

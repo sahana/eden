@@ -357,10 +357,6 @@ def person():
                                       s3db.org_site_represent,
                                       filterby="organisation_id",
                                       filter_opts=[session.s3.hrm.org]))
-                elif r.component_name == "address":
-                    _crud = s3.crud_strings.pr_address
-                    _crud.title_create = T("Add Home Address")
-                    _crud.title_update = T("Edit Home Address")
                 elif r.component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields

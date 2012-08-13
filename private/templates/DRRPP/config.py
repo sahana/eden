@@ -74,17 +74,25 @@ settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK",
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 
+# Organisations
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+settings.org.summary = True
+
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project
 #settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
 # Uncomment this to customise
 settings.project.organisation_roles = {
     1: T("Lead Organization"),
