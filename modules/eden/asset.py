@@ -142,8 +142,8 @@ class S3AssetModel(S3Model):
                                                                       asset_item_represent,
                                                                       sort=True,
                                                                       ),
-                                            script = None, # No Item Pack Filter
-                                            ),
+                                                 script = None, # No Item Pack Filter
+                                                 ),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
