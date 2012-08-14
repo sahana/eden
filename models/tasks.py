@@ -163,9 +163,9 @@ if settings.has_module("msg"):
         # Run the Task
         result = msg.parse_import(workflow, source)
         return result
-        
+
     tasks["msg_parse_workflow"] = msg_parse_workflow
-    
+
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 

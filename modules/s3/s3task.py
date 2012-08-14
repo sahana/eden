@@ -143,6 +143,11 @@ class S3Task(object):
         table.vars.readable = False
         table.vars.writable = False
 
+        # Always use "default" controller (web2py uses current controller),
+        # otherwise the anonymous worker does not pass the controller
+        # permission check and gets redirected to login before it reaches
+        # the task function which does the s3_impersonate
+        table.application_name.default = "%s/default" % current.request.application
         table.application_name.readable = False
         table.application_name.writable = False
 
