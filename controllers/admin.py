@@ -734,15 +734,16 @@ def translate():
     if not request.vars.opt:
         return dict()
 
-    from s3.s3translate import TranslateAPI, StringsToExcel, TranslateReportStatus
+    from s3.s3translate import TranslateAPI, StringsToExcel, TranslateReportStatus, TranslateReadFiles
     from math import ceil
 
     tablename = "translate_language"
     opt = request.vars.opt
-    # Creating a custom form
-    form = FORM()
 
     def postp(r, output):
+
+        # Creating a custom form
+        form = FORM()
 
         # To prevent redirection
         r.next = None
@@ -778,7 +779,7 @@ def translate():
 
                 # Obtaining the language file from the language code
                 code = form.request_vars.new_code
-		if code == "":
+                if code == "":
                     code = form.request_vars.code
 
                 code += ".py"
@@ -849,7 +850,7 @@ def translate():
 
             row = TR(TD(T("Select language code: ")), TD(lang_col))
             row.append(TD(T(" Or add a new language code:")))
-	    row.append(TD(INPUT(_type="text", _name="new_code")))
+            row.append(TD(INPUT(_type="text", _name="new_code")))
             div.append(row)
             div.append(BR())
 
@@ -879,6 +880,10 @@ def translate():
                 # Retreiving the translation percentage for each module
                 code = form.request_vars.code
                 S = TranslateReportStatus()
+
+                if form.request_vars.update_master == "on":
+                    S.create_master_file()
+
                 percent_dict = S.get_translation_percentages(code)
 
                 modlist = []
@@ -932,13 +937,38 @@ def translate():
                 row = TR(TD(T("Language code: ")),TD(lang_col))
                 div.append(row)
                 div.append(BR())
+                row = TR(TD(INPUT(_type="checkbox", _name="update_master")), TD(T("Update Master file")))
+                div.append(row)
+                div.append(BR())
+                div.append(BR())
                 div.append(INPUT(_type='submit',_value='Submit'))
                 form.append(div)
                 # Adding the custom form to the output
                 output["title"] = T("Select the language file")
                 output["form"] = form
 
-        # 2nd workflow, i.e uploading translated files is selected by default
+        elif opt == "4":
+
+            if form.accepts(request.vars, session):
+
+                # Retreiving strings from the uploaded file
+                f = request.vars.upload.file
+                strings = []
+                R = TranslateReadFiles()
+                for line in f:
+                    strings.append(line)
+                # Update the file containing user strings
+                R.merge_user_strings_file(strings)
+                response.flash = "File Uploaded"
+
+            div = DIV()
+            div.append(T("Upload a text file containing new-line separated strings:"))
+            div.append(INPUT(_type="file", _name="upload"))
+            div.append(BR())
+            div.append(INPUT(_type='submit',_value='Submit'))
+            form.append(div)
+            output["form"] = form
+
         return output
 
     response.s3.postp = postp

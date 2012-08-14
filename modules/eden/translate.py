@@ -49,10 +49,16 @@ class S3TranslateModel(S3Model):
         #---------------------------------------------------------------------
         # Translated CSV files
         #
+        from ..s3.s3translate import TranslateAPI
+
+        A = TranslateAPI()
+        langlist = A.get_langcodes()
+        langlist.sort()
         tablename = "translate_language"
         table = self.define_table(tablename,
                                   Field("code", notnull = True,
-                                         length = 10,
+                                         length = 10, requires = \
+                                         IS_IN_SET(langlist),
                                          label = T("Language code")),
                                   Field("file", "upload", notnull = True,
                                         label = T("Translated File")),
@@ -65,7 +71,7 @@ class S3TranslateModel(S3Model):
             title_create = T("Upload file"),
             msg_record_created = T("File uploaded"))
 
-        #--------------------------------------------------------------------- 
+        #---------------------------------------------------------------------
         # Translation Status
         #
         tablename = "translate_percentage"
@@ -74,8 +80,8 @@ class S3TranslateModel(S3Model):
                                          length = 10),
                                   Field("module", notnull = True,
                                          length = 10),
-                                  Field("translated","integer"),
-                                  Field("untranslated","integer"),
+                                  Field("translated", "integer"),
+                                  Field("untranslated", "integer"),
                                         *s3.meta_fields())
 
         #---------------------------------------------------------------------
@@ -85,7 +91,7 @@ class S3TranslateModel(S3Model):
         table = self.define_table(tablename,
                                   Field("code", notnull = True,
                                          length = 10),
-                                  Field("sbit","boolean", default = False),
+                                  Field("sbit", "boolean", default = False),
                                         *s3.meta_fields())
 
         #----------------------------------------------------------------------
@@ -115,7 +121,7 @@ class S3TranslateModel(S3Model):
 
         s3db = current.s3db
         db = current.db
-	utable = s3db.translate_update
+        utable = s3db.translate_update
 
         base_dir = os.path.join(os.getcwd(), "applications",\
                                current.request.application)

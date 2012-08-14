@@ -671,7 +671,11 @@ class TranslateReadFiles:
 
             P = TranslateParseFiles()
 
-            st = parser.suite(fileContent)
+            try:
+                st = parser.suite(fileContent)
+            except:
+                return []
+
             # Create a parse tree list for traversal
             stList = parser.st2list(st, line_info=1)
 
@@ -748,6 +752,58 @@ class TranslateReadFiles:
                     strings.append((linecount, s))
 
             return strings
+
+        #----------------------------------------------------------------------
+        def get_user_strings(self):
+
+            """
+                Function to return the list of user-supplied strings
+            """
+
+            base_dir = os.path.join(os.getcwd(), "applications", \
+                                    current.request.application)
+            user_file = os.path.join(base_dir, "uploads", "user_strings.txt")
+
+            strings = []
+            COMMENT = "User supplied"
+
+            if os.path.exists(user_file):
+                f = open(user_file, "r")
+                for line in f:
+                    line = line.replace("\n", "")
+                    line = line.replace("\r", "")
+                    strings.append((COMMENT, line))
+                f.close()
+
+            return strings
+
+        #----------------------------------------------------------------------
+        def merge_user_strings_file(self, newstrings):
+
+            """
+                Function to merge the existing file of user-supplied strings
+                with newly uploaded strings
+            """
+
+            base_dir = os.path.join(os.getcwd(), "applications", \
+                                    current.request.application)
+            user_file = os.path.join(base_dir, "uploads", "user_strings.txt")
+
+            oldstrings = []
+
+            if os.path.exists(user_file):
+                f = open(user_file, "r")
+                for line in f:
+                    oldstrings.append(line)
+                f.close()
+
+            # Appending user strings if not already present
+            f = open(user_file, "a")
+            for s in newstrings:
+                if s not in oldstrings:
+                    f.write(s)
+
+            f.close()
 
         #----------------------------------------------------------------------
         def read_w2pfile(self, fileName):
@@ -1104,8 +1160,8 @@ class StringsToExcel:
             langfile = os.path.join(base_dir, "languages", langfile)
 
             # If the language file doesn't exist, create it
-	    if not os.path.exists(langfile):
-                f = open(langfile,"w")
+            if not os.path.exists(langfile):
+                f = open(langfile, "w")
                 f.write('')
                 f.close()
 
@@ -1121,7 +1177,11 @@ class StringsToExcel:
             for f in filelist:
                 NewStrings += A.get_strings_by_file(f)
 
+            # Remove quotes
             NewStrings = self.remove_quotes(NewStrings)
+            # Add user-supplied strings
+            NewStrings += R.get_user_strings()
+            # Remove duplicates
             NewStrings = self.remove_duplicates(NewStrings)
             NewStrings.sort(key=lambda tup: tup[1])
 
@@ -1146,8 +1206,10 @@ class StringsToExcel:
                 else:
                     Strings.append((l, s, ""))
 
+            # Create excel file
             if filetype == "xls":
                 return self.create_spreadsheet(Strings)
+            # Create pootle file
             elif filetype == "po":
                 C = CsvToWeb2py()
                 return C.export_to_po(Strings)
