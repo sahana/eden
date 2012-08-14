@@ -99,4 +99,44 @@ class ViewSpaceIndexTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertContains(response, "Hello anonymous user.")
-         
+
+
+        
+class TestCreateSpace(ECDTestCase):
+    """
+    Tests if a space can be created successfully.
+    """       
+    
+    def setUp(self):
+        """
+        Do some necessary setup before every test run.
+        """        
+        self.init()
+    
+    def testAnAdminCanAccessTheSpaceCreationPage(self):
+        """
+        Tests if an admin can access the page to create a space.
+        """
+        #Log in an admin.
+        admin = self.login(self.admin_username, self.admin_password)
+        
+        #Check if the admin is logged in and is a superuser.
+        self.assertTrue(self.isLoggedIn(admin))
+        self.assertTrue(admin.is_superuser)
+        
+        #Get the URL for creating space.
+        url = self.getURL(url_names.CREATE_SPACE)
+        
+        #Make a GET request to the above url.
+        response = self.get(url)
+        
+        #Check if the response was OK.
+        self.assertResponseOK(response)
+        
+        #Check if the correct template was used to render the response.
+        self.assertTemplateUsed(response, 'spaces/space_form.html')
+        
+        #Check if the response was for a GET request.
+        self.assertEqual(response.request['REQUEST_METHOD'], 'GET')
+    
+
