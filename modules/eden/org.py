@@ -108,14 +108,14 @@ class S3OrganisationModel(S3Model):
         tablename = "org_sector"
         table = define_table(tablename,
                              Field("name", length=128,
-                                   notnull=True, unique=True,
+                                   notnull=True,
                                    label=T("Name")),
                              Field("abrv", length=64,
-                                   notnull=True, unique=True,
+                                   notnull=True,
                                    label=T("Abbreviation")),
                              self.gis_location_id(
                                     widget=S3LocationAutocompleteWidget(),
-                                    requires=IS_LOCATION()
+                                    requires=IS_EMPTY_OR(IS_LOCATION())
                                 ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -514,12 +514,20 @@ class S3OrganisationModel(S3Model):
 
         # Components
 
+        # Sites
+        add_component("org_site",
+                      org_organisation="organisation_id")
+
         # Offices
         add_component("org_office",
                       org_organisation="organisation_id")
 
-        # Sites
-        add_component("org_site",
+        # Warehouses
+        add_component("inv_warehouse",
+                      org_organisation="organisation_id")
+
+        # Facilities
+        add_component("org_facility",
                       org_organisation="organisation_id")
 
         # Staff
@@ -1558,7 +1566,7 @@ def org_facility_rheader(r, tabs=[]):
 
     T = current.T
     s3db = current.s3db
-    
+
     # Need to use this format as otherwise /inv/incoming?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
@@ -1882,7 +1890,7 @@ class S3OfficeModel(S3Model):
             add_component("org_office_summary",
                           org_office=dict(name="summary",
                                           joinby="office_id"))
-        
+
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
         #
@@ -2297,15 +2305,15 @@ def org_rheader(r, tabs=[]):
     if r.representation != "html":
         # RHeaders only used in interactive views
         return None
-    
+
     s3db = current.s3db
-    
+
     # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
     r.record = record
     r.table = s3db[tablename]
-    
+
     if record is None:
         # List or Create form: rheader makes no sense here
         return None
@@ -2316,17 +2324,19 @@ def org_rheader(r, tabs=[]):
     settings = current.deployment_settings
 
     if tablename == "org_organisation":
+
         # Tabs
         if not tabs:
             tabs = [(T("Basic Details"), None),
                     (T("Branches"), "branch"),
-                    (T("Facilities"), "site"),
+                    (T("Offices"), "office"),
+                    (T("Warehouses"), "warehouse"),
+                    (T("Facilities"), "facility"),
                     (T("Staff & Volunteers"), "human_resource"),
                     (T("Projects"), "project"),
                     (T("User Roles"), "roles"),
                     #(T("Tasks"), "task"),
                    ]
-
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         if table.sector_id.readable and record.sector_id:
@@ -2377,13 +2387,15 @@ def org_rheader(r, tabs=[]):
         rheader_fields = [["name", "organisation_id", "email"],
                           ["office_type_id", "location_id", "phone1"],
                           ]
-        rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
 
-        rheader = DIV()
-        
+        rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,
+                                                        tabs)(r, as_div=True)
+
+        # Inject logo
         logo = org_organisation_logo(record.organisation_id)
         if logo:
-            rheader.append(TABLE(TR(TD(logo), TD(rData))))
+            rheader = DIV(TABLE(TR(TD(logo),
+                                   TD(rheader_fields))))
         else:
             rheader = DIV(rheader_fields)
 
