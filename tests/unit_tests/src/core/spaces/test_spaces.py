@@ -68,10 +68,16 @@ class ViewSpaceIndexTest(ECDTestCase):
         #print self.printResponse(response)
         self.assertResponseOK(response)
         self.assertContains(response, "Hello anonymous user.")
-        
+   
+    def testAStaffCanAccessAPublicSpace(self):
+        """Tests if a user who is a staff can access a public space.
+        """
+        user = self.login("test_user", "test_password")
+        #self.logout()     
         user.public = False
         user.is_staff = True
         user.save()
+        self.assertTrue(self.isLoggedIn(user))
         self.assertTrue(user.is_staff)
         self.assertFalse(user.public)
         url = self.getURL(url_names.SPACE_INDEX, 
@@ -79,16 +85,18 @@ class ViewSpaceIndexTest(ECDTestCase):
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertContains(response, "Hello anonymous user.")
+    
+    def testAdminCanAccessAPublicSpace(self):
+        """Tests if an admin can access a public space.
+        """   
+        admin = self.login("some_admin", "pass")
+        #self.logout()
+        url = self.getURL(url_names.SPACE_INDEX, 
+                          kwargs={'space_url': self.user_space.url})
+        self.assertTrue(self.admin.is_superuser)
+        self.assertTrue(self.user_space.public)
         
-        admin = self.login(self.admin_username, self.admin_password)
-        self.logout()
-        self.assertTrue(admin.is_superuser)
         response = self.get(url)
         self.assertResponseOK(response)
         self.assertContains(response, "Hello anonymous user.")
-        
-        
-       
-        
-
-    
+         
