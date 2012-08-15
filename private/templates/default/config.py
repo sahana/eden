@@ -540,6 +540,11 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
+    ("transport", Storage(
+           name_nice = T("Transport"),
+           restricted = True,
+           module_type = 10,
+       )),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),
     #       #description = "Helps to report and search for missing persons",

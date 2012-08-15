@@ -4,10 +4,10 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Facility - CSV Import Stylesheet
+         Airport - CSV Import Stylesheet
 
          CSV fields:
-         Name....................org_facility.name
+         Name....................transport_airport.name
          Organisation............org_organisation.name
          Country.................gis_location.L0 Name or ISO2
          Building................gis_location.name
@@ -18,9 +18,7 @@
          L3......................gis_location.L3
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
-         Comments................org_facility.comments
-
-         @ToDo: Add support for Types
+         Comments................transport_airport.comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -49,7 +47,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
 
-        <resource name="org_facility">
+        <resource name="transport_airport">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$OfficeName"/>
             </xsl:attribute>
