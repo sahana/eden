@@ -225,7 +225,24 @@ elif args["suite"] == "smoke":
         s3_debug("%s, unable to run the smoke tests." % msg)
         pass
 elif args["auth"]:
-    suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
+    from tests.auth import *
+    create_role_test_data()
+    #suite = unittest.TestSuite()
+    suite = test_roles()
+    
+    #test_role = TestRole()
+    #test_role.set(org = "Org-A",
+    #              user = "asset_reader@Org-A.com",
+    #              row_num = 0,
+    #                     method = "create",
+    #                     table = "org_organisation",
+    #                     c = None,
+    #                     f = None,
+    #                     record_id = 42,
+    #                     uuid = "uuid",
+    #                     permission = True)
+    #suite.addTest(test_role)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
 elif args["suite"] == "complete":
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)
