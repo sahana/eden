@@ -244,6 +244,14 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("import", s3base.S3Importer())
     r.set_handler("map", s3base.S3Map())
 
+    # Activate record approval?
+    if deployment_settings.get_auth_record_approval():
+        prefix, name, table, tablename = r.target()
+        if "approved_by" in table.fields and \
+           s3db.get_config(tablename, "requires_approval", False):
+            r.set_handler(["approve", "reject"], s3base.S3ApproveRecords(),
+                          http = ["GET", "POST"])
+
     # Don't load S3PDF unless needed (very slow import with reportlab)
     if r.method == "import" and r.representation == "pdf":
         from s3.s3pdf import S3PDF
@@ -305,7 +313,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif r.method != "import":
+    elif r.method not in ("import", "approve", "reject"):
         s3.actions = None
 
     return output

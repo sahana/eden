@@ -29,3 +29,4 @@ Name,Height,Width,Image
 "volcano",50,50,"gis_marker.image.Geo_Volcanic_Threat.png"
 "volunteer",40,39,"gis_marker.image.Volunteer.png"
 "water",33,44,"gis_marker.image.Water_Supply_Infrastructure_Theme_S1.png"
+"warehouse",33,44,"gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png"
