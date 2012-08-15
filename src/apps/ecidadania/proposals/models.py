@@ -159,7 +159,7 @@ class Proposal(BaseProposalAbstractModel):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     merged = models.NullBooleanField(default=False, blank=True, null=True)
-    merged_proposals = models.ForeignKey('self', blank=True, null=True)
+    merged_proposals = models.ManyToManyField('self', blank=True, null=True)
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
