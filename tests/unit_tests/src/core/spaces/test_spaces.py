@@ -20,6 +20,7 @@
 
 
 from core.spaces import url_names
+from core.spaces.models import Space
 
 from tests.test_utils import ECDTestCase
 
@@ -177,9 +178,53 @@ class DeleteSpaceTest(ECDTestCase):
         self.logout()
         admin = self.login(self.admin_username, self.admin_password)
         self.assertTrue(self.isLoggedIn(admin))
-        print space.admins.all()
         self.assertTrue(admin in space.admins.all())
         response = self.get(url)
-        print response
         self.assertResponseOK(response)
         self.assertTemplateNotUsed(response, 'not_allowed.html')
+
+
+class ListSpacesTest(ECDTestCase):
+    """
+    Tests the list spaces view.
+    """
+    
+    def setUp(self):
+        self.init()
+        
+        #We have two public spaces namely self.user_space and self.admin_space.
+        #We create one more private space and test if this is not listed for
+        #a user who does not own this space.
+        space_properties = {'author': self.admin, 'public': False, 
+                            'name': 'foo_space', 'url': 'foo_space_url',}
+        self.private_space = self.seed(Space, properties=space_properties)
+        self.assertFalse(self.private_space.public)
+        
+        self.url = self.getURL(url_names.LIST_SPACES)
+               
+    def testOnlyPublicSpacesAreListedForAnonymousUser(self):
+        """
+        Tests if only the public spaces are listed for anonymous user.
+        """
+        #No user is logged in currently
+        response = self.get(self.url)
+        self.assertResponseOK(response)
+        spaces_returned = response.context[0].dicts[0]['space_list']
+        self.assertEqual(len(spaces_returned), 2)
+        self.assertTrue(self.user_space in spaces_returned)
+        self.assertTrue(self.admin_space in spaces_returned)
+        self.assertTrue(self.private_space not in spaces_returned)
+    
+    def testAllSpacesAreReturnedForALoggedInUser(self):
+        """
+        Tests if both the public and private spaces are returned for a logged
+        in user.
+        """    
+        
+        admin = self.login(self.admin_username, self.admin_password)
+        response = self.get(self.url)
+        spaces_returned = response.context[0].dicts[0]['spaces_list']
+        self.assertEqual(len(spaces_returned), 3)
+        self.assertTrue(self.user_space in spaces_returned)
+        self.assertTrue(self.admin_space in spaces_returned)
+        self.assertTrue(self.private_space in spaces_returned)        
