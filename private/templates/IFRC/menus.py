@@ -88,6 +88,9 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
             ),
+            homepage("vulnerability")(
+                MM("Map", c="vulnerability", f="index"),
+            ),
             #homepage("event", "irs")(
             #    MM("Events", c="event", f="event"),
             #    MM("Incident Reports", c="irs", f="ireport"),

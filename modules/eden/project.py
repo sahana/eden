@@ -3226,16 +3226,24 @@ class S3ProjectTaskModel(S3Model):
         # Virtual Fields
         table.virtualfields.append(S3ProjectTimeVirtualFields())
 
+        list_fields = ["id",
+                       (T("Project"), "project"),
+                       "task_id",
+                       "person_id",
+                       "date",
+                       "hours",
+                       "comments",
+                       ]
+        report_fields = list_fields + [(T("Day"), "day")]
+        
         configure(tablename,
                   onaccept=self.time_onaccept,
-                  list_fields=["id",
-                               (T("Project"), "project"),
-                               "task_id",
-                               "person_id",
-                               "date",
-                               "hours",
-                               "comments",
-                               ])
+                  report_options=Storage(
+                        rows = report_fields,
+                        cols = report_fields,
+                        facts = report_fields,
+                    ),
+                  list_fields=list_fields)
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (s3db.*)
