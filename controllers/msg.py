@@ -546,7 +546,44 @@ def workflow():
     )
 
     s3db.configure("msg_workflow", listadd=True, deletable=True)
-
+    
+    def prep(r):
+        if r.interactive:
+            import inspect
+            import sys
+            
+            parser = current.deployment_settings.get_msg_parser()
+            module_name = "applications.%s.private.templates.%s.parser" % \
+                (current.request.application, parser)
+            __import__(module_name)
+            mymodule = sys.modules[module_name]
+            S3Parsing = mymodule.S3Parsing()
+            
+            mtable = s3db.msg_inbound_email_settings
+            ttable = s3db.msg_twilio_inbound_settings
+            source_opts = []
+            append = source_opts.append
+            records = db(mtable.id > 0).select(mtable.username)
+            for record in records:
+                append(record.username)
+                
+            records = current.db(ttable.deleted == False).select( \
+                ttable.account_name)
+            for record in records:
+                append(record.account_name)
+            
+            # Dynamic lookup of the parsing functions in S3Parsing class.
+            parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
+            parse_opts = []
+            for parser in parsers:
+                parse_opts += [parser[0]]
+                    
+            r.table.source_task_id.requires = IS_IN_SET(source_opts,zero = None)
+            r.table.workflow_task_id.requires = IS_IN_SET(parse_opts, \
+                                                          zero = None)
+        return True
+    s3.prep = prep
+    
     def postp(r, output):
 
         wtable = s3db.msg_workflow
