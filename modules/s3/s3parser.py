@@ -51,9 +51,9 @@ class S3Parsing(object):
 	s3db = current.s3db
 	
 	stable = s3db.msg_session
-	AuthParse = AuthParse()
-	check_login = AuthParse.parse_login
-	check_session = AuthParse.is_session_alive
+	Parse = AuthParse()
+	check_login = Parse.parse_login
+	check_session = Parse.is_session_alive
 	
 	is_session_alive = check_session(sender)
 	if is_session_alive:
@@ -67,11 +67,6 @@ class S3Parsing(object):
 		stable.insert(email = email, expiration_time = expiration, \
 		              sender = sender)
 		return "Authenticated!"
-	    else:
-		return "Either your session has expired or you have not \
-authenticated your request yet!Please authenticate by sending a message with \
-your login details.e.g. login your@domain.com mypassword"
-	
 	
         import sys
         parser = settings.get_msg_parser()

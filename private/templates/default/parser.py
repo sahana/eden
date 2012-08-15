@@ -338,6 +338,50 @@ class S3Parsing(object):
 	reply = ""
 	comments = False
 	
+	if "http://maps.google.com/maps?q" in words[0]:
+	    words = words[0].split("?q=")[1].split(",")
+	    lat = words[0]
+	    lon = words[1].split("&")[0]
+	    code = words[1].split("&")[1].split("=")[1]
+	    text = ""
+	    for a in range(1, len(words)):
+		text = text + words[a] + " "
+	    
+	    if code == "SI":
+		rtable = s3db.irs_ireport
+		gtable = s3db.gis_location
+		info = string.split(text)
+		name = info[len(info)-1]
+		category = ""
+		for a in range(0, len(info)-1):
+		    category = category + info[a] + " "
+		
+		#Look up for an existing location in DB
+		#records = db(gtable.id>0).select(gtable.id, \
+		#                                 gtable.lat, gtable.lon)
+		#for record in records:
+		#    try:
+		#	if "%.6f"%record.lat == str(lat) and \
+		#	   "%.6f"%record.lon == str(lon):
+		#	    location_id = record.id
+		#	    break
+		#   except:
+		#	pass
+		
+		#if location_id:    
+		#    rtable.insert(name=name, message = "", category=category, \
+		#              location_id = location_id)
+		#else:
+		location_id = gtable.insert(name="Incident:%s"%name, \
+		                            lat=lat, lon=lon)
+		if location_id:
+		    rtable.insert(name=name, message="", \
+		                  category=category, \
+		                  location_id=location_id)			
+		    
+		db.commit()
+		return "Incident Report Logged!"
+	    
 	for word in words:
 	    if "SI#" in word and not ireport:
 		report = word.split("#")[1]
