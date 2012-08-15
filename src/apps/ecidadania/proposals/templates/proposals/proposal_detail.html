@@ -65,7 +65,17 @@
                     {% if location.latitude and location.longitude %}
                         <button class="btn btn-small showmap">{% trans "Show/hide map" %}</button>
                         <div id="proposalmap" class="map"></div>
-                    {% endif %}    
+                    {% endif %}
+                    <h3>Merged Proposal</h3>
+                    <div class="proposal-title">
+                        <ul>
+                        {% if merged_proposal %}
+                            {% for merged in merged_proposal %}
+                            <li><a href="{{ merged.get_absolute_url }}">{{ merged.title }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                        </ul>
+                    </div>
                 </div>
             </div>
 
