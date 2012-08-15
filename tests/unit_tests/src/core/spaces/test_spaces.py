@@ -140,3 +140,46 @@ class TestCreateSpace(ECDTestCase):
         self.assertEqual(response.request['REQUEST_METHOD'], 'GET')
     
 
+class DeleteSpaceTest(ECDTestCase):
+    """
+    Tests the deletion of a space.
+    """
+    
+    def setUp(self):
+        self.init()
+    
+    def testGeneralUserAccess(self):
+        """
+        Tests if a general user is prohibited from deleting the space.
+        """
+        space = self.admin_space
+        general_user = self.login('test_user', 'test_password')
+        url = self.getURL(url_names.DELETE_SPACE, kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseRedirect(response)
+        self.assertEqual(url, response.request['PATH_INFO'])
+    
+    def testAdminAccess(self):
+        """
+        Tests if a correct admin can delete a space.
+        """
+        space =self.admin_space
+        user = self.create_super_user("other_admin", "other_password",
+                                      logged_in=True)
+        self.assertTrue(self.isLoggedIn(user))
+        
+        url = self.getURL(url_names.DELETE_SPACE, kwargs={'space_url': space.url})
+        response = self.get(url)
+        self.assertResponseOK(response)
+        self.assertTemplateUsed(response, 'not_allowed.html')
+        
+        #logout the present super user because the space does not belong to it
+        self.logout()
+        admin = self.login(self.admin_username, self.admin_password)
+        self.assertTrue(self.isLoggedIn(admin))
+        print space.admins.all()
+        self.assertTrue(admin in space.admins.all())
+        response = self.get(url)
+        print response
+        self.assertResponseOK(response)
+        self.assertTemplateNotUsed(response, 'not_allowed.html')
