@@ -42,6 +42,7 @@ from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
 from core.spaces.models import Space
+import pdb
 
 
 class AddProposal(FormView):
@@ -104,6 +105,9 @@ class ViewProposal(DetailView):
                              .annotate(Count('support_votes'))
         # We are going to get the proposal position in the list
         self.get_position = 0
+        proposal = get_object_or_404(Proposal, pk=self.kwargs['prop_id'])
+        if proposal.merged == True:
+            context['merged_proposal'] = proposal.merged_proposals.all()
         for i,x in enumerate(support_votes_count):
             if x.id == int(self.kwargs['prop_id']):
                 self.get_position = i
@@ -283,7 +287,6 @@ def merged_proposal(request, space_url, p_set):
     get_place = get_object_or_404(Space, url=space_url)
     field = ProposalField.objects.filter(proposalset=p_set)
     form_field = [f_name.field_name for f_name in field]
-       
     if request.method == 'POST':
         merged_form = ProposalForm(request.POST)
         if merged_form.is_valid():
@@ -295,6 +298,7 @@ def merged_proposal(request, space_url, p_set):
             field = ProposalField.objects.filter(proposalset=p_set)
             form_field = [f_name.field_name for f_name in field]
             form_data.save()
+            merged_form.save_m2m()
             return redirect('/spaces/'+ space_url +'/')
     else: 
         merged_form = ProposalMergeForm(initial={'p_set':p_set})
