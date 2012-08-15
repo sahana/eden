@@ -1145,7 +1145,7 @@ def twitter_settings():
     try:
         import tweepy
     except:
-        session.error =  T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
+        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
         redirect(URL(c="admin", f="index"))
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1158,11 +1158,11 @@ def twitter_settings():
     )
 
     def prep(r):
-        if not (deployment_settings.twitter.oauth_consumer_key and deployment_settings.twitter.oauth_consumer_secret):
+        if not (settings.twitter.oauth_consumer_key and settings.twitter.oauth_consumer_secret):
             session.error = T("You should edit Twitter settings in models/000_config.py")
             return True
-        oauth = tweepy.OAuthHandler(deployment_settings.twitter.oauth_consumer_key,
-                                    deployment_settings.twitter.oauth_consumer_secret)
+        oauth = tweepy.OAuthHandler(settings.twitter.oauth_consumer_key,
+                                    settings.twitter.oauth_consumer_secret)
 
         #tablename = "%s_%s" % (module, resourcename)
         #table = db[tablename]
@@ -1429,7 +1429,6 @@ def load_search(id):
     output = r()
     #extract the updates
     return output
-
 
 # -----------------------------------------------------------------------------
 def check_updates(user_id):
