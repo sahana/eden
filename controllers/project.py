@@ -497,7 +497,9 @@ def time():
                        listadd=False)
         person_id = auth.s3_logged_in_person()
         if person_id:
-            s3.filter = (table.person_id == person_id)
+            now = request.utcnow
+            s3.filter = (table.person_id == person_id) & \
+                        (table.date > (now - datetime.timedelta(days=2)))
         try:
             list_fields = s3db.get_config(tablename,
                                           "list_fields")
@@ -639,9 +641,11 @@ $('#submit_record__row input').click(function(){
                  SCRIPT(script))
 
     return XML(output)
+
 # -----------------------------------------------------------------------------
 def partners():
     # ToDo: This could need to be a deployment setting
     current.request.get_vars["organisation.organisation_type_id$name"] = "Bilateral,Government,Intergovernmental,NGO,UN agency"
     return s3db.org_organisation_controller()
+
 # END =========================================================================

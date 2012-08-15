@@ -50,8 +50,6 @@ class S3StatsModel(S3Model):
              "stats_rebuild_aggregates",
              ]
 
-    extra_aggr_fns = ["vulnerability_update_resilience"]
-
     def model(self):
 
         T = current.T
@@ -110,8 +108,10 @@ class S3StatsModel(S3Model):
                              "data_id",
                              sd_types,
                              param_id(),
-                             location_id(widget = S3LocationAutocompleteWidget(),
-                                        requires = IS_LOCATION()),
+                             location_id(
+                                    widget = S3LocationAutocompleteWidget(),
+                                    requires = IS_LOCATION()
+                                ),
                              Field("value", "double",
                                    label = T("Value")),
                              Field("date", "date",
@@ -451,14 +451,11 @@ class S3StatsModel(S3Model):
                                   str(end_date),
                                   ]
                           )
-            for fn in S3StatsModel.extra_aggr_fns:
-                stmt = "s3db.%s(%s, %s, '%s', '%s')" % (fn,
-                                                        parameter_id,
-                                                        location_id,
-                                                        start_date,
-                                                        end_date,
-                                                        )
-                exec(stmt)
+            if parameter_id in s3db.vulnerability_ids() or \
+               parameter_id == s3db.vulnerability_resilience_id():
+                s3db.vulnerability_update_resilience(location_id,
+                                                     start_date,
+                                                     end_date)
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -644,7 +641,10 @@ class S3StatsDemographicModel(S3Model):
                                                          orderby="stats_parameter.name",
                                                          sort=True)
                                 ),
-                             self.gis_location_id(),
+                             self.gis_location_id(
+                                    widget = S3LocationAutocompleteWidget(),
+                                    requires = IS_LOCATION()
+                                ),
                              Field("value", "double",
                                    label = T("Value")),
                              Field("date", "date",
