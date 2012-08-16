@@ -32,6 +32,8 @@
 """
 
 from gluon import current
+from s3utils import soundex
+import string
 
 class S3Parsing(object):
     """
@@ -49,8 +51,15 @@ class S3Parsing(object):
 	auth = current.auth
 	session = current.session
 	s3db = current.s3db
-	
+        T = current.T
+	db = current.db
+        msg = current.msg
+        rtable = s3db.irs_ireport_human_resource
+        ctable = s3db.pr_contact
+        htable = s3db.hrm_human_resource
+        ptable = s3db.pr_person_user
 	stable = s3db.msg_session
+	
 	Parse = AuthParse()
 	check_login = Parse.parse_login
 	check_session = Parse.is_session_alive
@@ -84,10 +93,63 @@ class S3Parsing(object):
             parse_opts += [parser[0]]
 
         for parser in parse_opts:
-            if parser == workflow:
-                result = getattr(S3Parsing, parser)
-                return result(message, sender)
-
+            if parser == workflow :
+                parse = False
+		    
+                # Equivalent keywords in one list
+                primary_keywords = ["get", "give", "show"] 
+                contact_keywords = ["email", "mobile", "facility", "clinical",
+		                    "security", "phone", "status", "hospital",
+		                    "person", "organisation"]
+		
+                pkeywords = primary_keywords + contact_keywords
+                keywords = string.split(message)
+                pquery = []
+                name = ""
+		
+                for word in keywords:
+                    match = None
+                    for key in pkeywords:
+                        if soundex(key) == soundex(word):
+                            match = key
+                            break
+                    if match:
+                        pquery.append(match)
+                    else:
+                        name = word
+		
+                if workflow == "parse_ireport":
+                    (lat, lon, code, text) = msg.parse_opengeosms(message)
+                    if code == "SI":
+                        result = getattr(S3Parsing, parser)
+                        return result(lat, lon, text, message, sender)
+                    else:
+                        result = getattr(S3Parsing, parser)
+                        return result(message=message, sender=sender)
+				    
+                # --------------------------------------------------------------
+                # Person Search [get name person phone email]
+                elif "person" in pquery and workflow == "parse_person":
+                    parse = True
+    
+                # --------------------------------------------------------------
+                #  Hospital Search [example: get name hospital facility status ]
+                elif "hospital" in pquery and workflow == "parse_hospital":
+                    parse = True
+                # --------------------------------------------------------------
+                # Organization search [example: get name organisation phone]
+                elif "organisation" in pquery and workflow == "parse_org":
+                    parse = True
+		
+		
+		    
+                if parse:
+                    result = getattr(S3Parsing, parser)
+                    return result(pquery, name, sender)
+                else:
+                    return "Please provide one of the keywords \
+		    - person, hospital, organisation"
+			    
 # =============================================================================
 class AuthParse(object): 
     """

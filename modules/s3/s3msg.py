@@ -793,6 +793,35 @@ class S3Msg(object):
         return opengeosms
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_opengeosms(message):
+        """
+           Function to parse an OpenGeoSMS
+           @param: message - Inbound message to be parsed for OpenGeoSMS.
+           Returns the lat, lon, code and text contained in the message.
+        """
+        
+        lat = ""
+        lon = ""
+        code = ""
+        text = ""
+           
+        s3db = current.s3db
+        words = string.split(message)
+        if "http://maps.google.com/maps?q" in words[0]:
+            # Parse OpenGeoSMS
+            pwords = words[0].split("?q=")[1].split(",")
+            lat = pwords[0]
+            lon = pwords[1].split("&")[0]
+            code = pwords[1].split("&")[1].split("=")[1]
+            text = ""
+            for a in range(1, len(words)):
+                text = text + words[a] + " "
+                
+                    
+        return lat, lon, code, text
+                
+    # -------------------------------------------------------------------------
     # Send SMS
     # -------------------------------------------------------------------------
     def send_sms_via_modem(self, mobile, text=""):

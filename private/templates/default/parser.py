@@ -42,11 +42,17 @@
 __all__ = ["S3Parsing"]
 
 import string
-import sys
 
 from gluon import current
 
-from s3 import soundex
+#from s3utils import soundex
+
+import sys
+application = current.request.application
+module_name = 'applications.%s.modules.s3.s3utils'%application
+__import__(module_name)
+mymodule = sys.modules[module_name]
+soundex = mymodule.soundex
                 
 # =============================================================================
 class S3Parsing(object):
@@ -56,355 +62,274 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_person(message="", sender=""):
+    def parse_person(pquery="", name="", sender=""):
         """
             Search for People
         """
 
-        if not message:
-            return None
-
+        
         T = current.T
         db = current.db
         s3db = current.s3db
 
-        primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
-        contact_keywords = ["email", "mobile", "facility", "clinical",
-                            "security", "phone", "status", "hospital",
-                            "person", "organisation"]
-
-        pkeywords = primary_keywords + contact_keywords
-        keywords = string.split(message)
-        pquery = []
         result = []
-        name = ""
         reply = ""
-        for word in keywords:
-            match = None
-            for key in pkeywords:
-                if soundex(key) == soundex(word):
-                    match = key
-                    break
-            if match:
-                pquery.append(match)
-            else:
-                name = word
+        
+        table = s3db.pr_person
+        query = (table.deleted ==False)
+        query = query & (current.auth.s3_accessible_query("read", table))
+        rows = db(query).select(table.pe_id,
+                                table.first_name,
+                                table.middle_name,
+                                table.last_name)
+        _name = soundex(str(name))
+        for row in rows:
+            if (_name == soundex(row.first_name)) or \
+               (_name == soundex(row.middle_name)) or \
+               (_name == soundex(row.last_name)):
+                presult = dict(name = row.first_name, id = row.pe_id)
+                result.append(presult)
 
-        if "person" in pquery:
-            # Person Search [get name person phone email]
-            s3_accessible_query = current.auth.s3_accessible_query
-            table = s3db.pr_person
-            query = (table.deleted == False) & \
-                    (s3_accessible_query("read", table))
-            rows = db(query).select(table.pe_id,
-                                    table.first_name,
-                                    table.middle_name,
-                                    table.last_name)
-            _name = soundex(str(name))
-            for row in rows:
-                if (_name == soundex(row.first_name)) or \
-                   (_name == soundex(row.middle_name)) or \
-                   (_name == soundex(row.last_name)):
-                    presult = dict(name = row.first_name, id = row.pe_id)
-                    result.append(presult)
+	if len(result) > 1:
+	    return T("Multiple Matches")
+        if len(result) == 1:
+	    reply = result[0]["name"]
+            table = s3db.pr_contact
+            if "email" in pquery:
+                query = (table.pe_id == result[0]["id"]) & \
+		    (table.contact_method == "EMAIL")
+                query = query & \
+		    (current.auth.s3_accessible_query("read", table))
+		recipient = db(query).select(table.value,
+		                             orderby = table.priority,
+		                             limitby=(0, 1)).first()
+		if recipient:
+		    reply = "%s Email->%s" % (reply, recipient.value)
+                else:
+		    reply = "%s 's Email Not available!"%reply
+            if "phone" in pquery:
+                query = (table.pe_id == result[0]["id"]) & \
+		    (table.contact_method == "SMS")
+                query = query & \
+		    (current.auth.s3_accessible_query("read", table))
+		recipient = db(query).select(table.value,
+		                             orderby = table.priority,
+		                             limitby=(0, 1)).first()
+		if recipient:
+                    reply = "%s Mobile->%s" % (reply,
+		                               recipient.value)
+                else:
+		    reply = "%s 's Mobile Contact Not available!"%reply
 
-            if len(result) > 1:
-                return T("Multiple Matches")
-            if len(result) == 1:
-                reply = result[0]["name"]
-                table = s3db.pr_contact
-                if "email" in pquery:
-                    query = (table.pe_id == result[0]["id"]) & \
-                            (table.contact_method == "EMAIL") & \
-                            (s3_accessible_query("read", table))
-                    recipient = db(query).select(table.value,
-                                                 orderby = table.priority,
-                                                 limitby=(0, 1)).first()
-                    if recipient:
-                        reply = "%s Email->%s" % (reply, recipient.value)
-                    else:
-                        reply = "%s 's Email Not available!"%reply
-                if "phone" in pquery:
-                    query = (table.pe_id == result[0]["id"]) & \
-                            (table.contact_method == "SMS") & \
-                            (s3_accessible_query("read", table))
-                    recipient = db(query).select(table.value,
-                                                 orderby = table.priority,
-                                                 limitby=(0, 1)).first()
-                    if recipient:
-                        reply = "%s Mobile->%s" % (reply,
-                                               recipient.value)
-                    else:
-                        reply = "%s 's Mobile Contact Not available!"%reply
+	if len(result) == 0:
+            return T("No Match")
 
-            if len(result) == 0:
-                return T("No Match")
-
-            return reply
-        return "Please provide one of the keywords - person, hospital, organisation"
+        return reply
+        
     
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_hospital(message="", sender=""):
+    def parse_hospital(pquery="", name="", sender=""):
         """
            Search for Hospitals
         """
 
-        if not message:
-            return None
-
         T = current.T
         db = current.db
         s3db = current.s3db
-
-        primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
-        contact_keywords = ["email", "mobile", "facility", "clinical",
-                            "security", "phone", "status", "hospital",
-                            "person", "organisation"]
-
-        pkeywords = primary_keywords + contact_keywords
-        keywords = string.split(message)
-        pquery = []
-        result = []
-        name = ""
         reply = ""
-        for word in keywords:
-            match = None
-            for key in pkeywords:
-                if soundex(key) == soundex(word):
-                    match = key
-                    break
-            if match:
-                pquery.append(match)
-            else:
-                name = word
+        result = []
 
-        if "hospital" in pquery:
-            #  Hospital Search [example: get name hospital facility status ]
-            table = s3db.hms_hospital
-            query = (table.deleted == False) & \
-                    (current.auth.s3_accessible_query("read", table))
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.aka1,
-                                    table.aka2,
-                                    table.phone_emergency,
-                                    table.clinical_status,
-                                    table.facility_status,
-                                    table.security_status,
-                                    )
-            _name = soundex(str(name))
-            for row in rows:
-                if (_name == soundex(row.name)) or \
-                   (_name == soundex(row.aka1)) or \
-                   (_name == soundex(row.aka2)):
-                    result.append(row)
+        table = s3db.hms_hospital
+        query = (table.deleted == False)
+        query = query & \
+	    (current.auth.s3_accessible_query("read", table))
+        rows = db(query).select(table.id,
+	                        table.name,
+	                        table.aka1,
+	                        table.aka2,
+	                        table.phone_emergency,
+	                        table.clinical_status,
+	                        table.facility_status,
+	                        table.security_status,
+	                        )
+        _name = soundex(str(name))
+        for row in rows:
+            if (_name == soundex(row.name)) or \
+	       (_name == soundex(row.aka1)) or \
+	       (_name == soundex(row.aka2)):
+		result.append(row)
 
-            if len(result) > 1:
-                return T("Multiple Matches")
+        if len(result) > 1:
+	    return T("Multiple Matches")
 
-            if len(result) == 1:
-                hospital = result[0]
-                reply = "%s %s (%s) " % (reply, hospital.name,
-                                         T("Hospital"))
-                if "phone" in pquery:
-                    reply = reply + "Phone->" + str(hospital.phone_emergency)
-                if "facility" in pquery:
-                    reply = reply + "Facility status " + \
-                        str(table.facility_status.represent(hospital.facility_status))
-                if "clinical" in pquery:
-                    reply = reply + "Clinical status " + \
-                        str(table.clinical_status.represent(hospital.clinical_status))
-                if "security" in pquery:
-                    reply = reply + "Security status " + \
-                        str(table.security_status.represent(hospital.security_status))
+	if len(result) == 1:
+            hospital = result[0]
+            reply = "%s %s (%s) " % (reply, hospital.name,
+	                             T("Hospital"))
+            if "phone" in pquery:
+		reply = reply + "Phone->" + str(hospital.phone_emergency)
+            if "facility" in pquery:
+                reply = reply + "Facility status " + \
+		    str(table.facility_status.\
+		        represent(hospital.facility_status))
+            if "clinical" in pquery:
+                reply = reply + "Clinical status " + \
+		    str(table.clinical_status.\
+		        represent(hospital.clinical_status))
+	    if "security" in pquery:
+                reply = reply + "Security status " + \
+		    str(table.security_status.\
+		        represent(hospital.security_status))
 
-            if len(result) == 0:
-                return T("No Match")
+        if len(result) == 0:
+	    return T("No Match")
 
-            return reply
-
-        return "Please provide one of the keywords - person, hospital, organisation"
+        return reply
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def parse_org(message="", sender=""):
+    def parse_org(pquery="", name="", sender=""):
         """
            Search for Organisations
         """
 
-        if not message:
-            return None
-
         T = current.T
         db = current.db
         s3db = current.s3db
-
-        primary_keywords = ["get", "give", "show"] # Equivalent keywords in one list
-        contact_keywords = ["email", "mobile", "facility", "clinical",
-                            "security", "phone", "status", "hospital",
-                            "person", "organisation"]
-
-        pkeywords = primary_keywords + contact_keywords
-        keywords = string.split(message)
-        pquery = []
+	
         result = []
-        name = ""
         reply = ""
-        for word in keywords:
-            match = None
-            for key in pkeywords:
-                if soundex(key) == soundex(word):
-                    match = key
-                    break
-            if match:
-                pquery.append(match)
-            else:
-                name = word
 
-        if "organisation" in pquery:
-            # Organization search [example: get name organisation phone]
-            s3_accessible_query = current.auth.s3_accessible_query
-            table = s3db.org_organisation
-            query = (table.deleted == False) & \
-                    (s3_accessible_query("read", table))
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.donation_phone,
-                                    table.acronym)
-            _name = soundex(str(name))
-            for row in rows:
-                if (_name == soundex(row.name)) or \
-                   (_name == soundex(row.acronym)):
-                    result.append(row)
+        table = s3db.org_organisation
+        query = (table.deleted == False)
+        query = query & \
+	    (current.auth.s3_accessible_query("read", table))
+        rows = db(query).select(table.id,
+	                        table.name,
+	                        table.donation_phone,
+	                        table.acronym)
+        _name = soundex(str(name))
+        for row in rows:
+            if (_name == soundex(row.name)) or \
+	       (_name == soundex(row.acronym)):
+		result.append(row)
 
-            if len(result) > 1:
-                return T("Multiple Matches")
+        if len(result) > 1:
+            return T("Multiple Matches")
 
-            if len(result) == 1:
-                org = result[0]
-                reply = "%s %s (%s) " % (reply, org.name,
-                                         T("Organization"))
-                if "phone" in pquery:
-                    reply = reply + "Phone->" + str(org.donation_phone)
-                if "office" in pquery:
-                    otable = s3db.org_office
-                    query = (otable.organisation_id == org.id) & \
-                            (s3_accessible_query("read", otable))
-                    office = db(query).select(otable.address,
-                                              limitby=(0, 1)).first()
-                    reply = reply + "Address->" + office.address
-            if len(reply) == 0:
-                return T("No Match")
+        if len(result) == 1:
+            org = result[0]
+            reply = "%s %s (%s) " % (reply, org.name,
+	                             T("Organization"))
+            if "phone" in pquery:
+                reply = reply + "Phone->" + str(org.donation_phone)
+            if "office" in pquery:
+                otable = s3db.org_office
+                query = (otable.organisation_id == org.id)
+                query = query & \
+		    (current.auth.s3_accessible_query("read", otable))
+                office = db(query).select(otable.address, \
+		                          limitby=(0, 1)).first()
+                reply = reply + "Address->" + office.address
+        if len(result) == 0:
+	    return T("No Match")
 
-            return reply
-
-        return "Please provide one of the keywords - person, hospital, organisation"
-
+        return reply
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_ireport(message="", sender=""):
+    def parse_ireport(lat="", lon="", text="", message="", sender=""):
         """
             Parse Replies To Deployment Request.
         """
 
-        if not message:
-            return None
+	T = current.T
+	db = current.db
+	s3db = current.s3db
+	msg = current.msg
+	rhtable = s3db.irs_ireport_human_resource
+	ctable = s3db.pr_contact
+	htable = s3db.hrm_human_resource
+	ptable = s3db.pr_person_user
+	words = string.split(message)
+	message = ""
+	reponse = ""
+	ireport = False
+	reply = ""
+	category = ""
+	name = ""
+	comments = False
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        rtable = s3db.irs_ireport_human_resource
-        ctable = s3db.pr_contact
-        htable = s3db.hrm_human_resource
-        ptable = s3db.pr_person_user
-        words = string.split(message)
-        message = ""
-        reponse = ""
-        ireport = False
-        reply = ""
-        comments = False
-
-        if "http://maps.google.com/maps?q" in words[0]:
-            # Parse OpenGeoSMS
-            words = words[0].split("?q=")[1].split(",")
-            lat = words[0]
-            lon = words[1].split("&")[0]
-            code = words[1].split("&")[1].split("=")[1]
-            text = ""
-            for a in range(1, len(words)):
-                text = text + words[a] + " "
-            
-            if code == "SI":
-                rtable = s3db.irs_ireport
-                gtable = s3db.gis_location
-                info = string.split(text)
-                name = info[len(info)-1]
-                category = ""
-                for a in range(0, len(info)-1):
-                    category = category + info[a] + " "
-            
-            #@ToDo: Check for an existing location in DB
-            #records = db(gtable.id>0).select(gtable.id, \
-            #                                 gtable.lat, gtable.lon)
-            #for record in records:
-            #    try:
-            #	if "%.6f"%record.lat == str(lat) and \
-            #	   "%.6f"%record.lon == str(lon):
-            #	    location_id = record.id
-            #	    break
-            #   except:
-            #	pass
-
-            location_id = gtable.insert(name="Incident:%s" % name,
-                                        lat=lat,
-                                        lon=lon)
-            rtable.insert(name=name,
-                          message="",
-                          category=category,
-                          location_id=location_id)			
-
-            db.commit()
-            return "Incident Report Logged!"
+	rtable = s3db.irs_ireport
+	gtable = s3db.gis_location
+	if text:
+	    info = string.split(text)
+	    name = info[len(info)-1]
+	    for a in range(0, len(info)-1):
+		category = category + info[a] + " "
+	
+	#@ToDo: Check for an existing location in DB
+	#records = db(gtable.id>0).select(gtable.id, \
+	#                                 gtable.lat, gtable.lon)
+	#for record in records:
+	#	try:
+	#	    if "%.6f"%record.lat == str(lat) and \
+	#	       "%.6f"%record.lon == str(lon):
+	#		location_id = record.id
+	#		break
+	#	except:
+	#	    pass
 	    
+	if lat and lon and name and category:
+	    location_id = gtable.insert(name="Incident:%s" % name,
+	                                lat=lat,
+	                                lon=lon)
+	    rtable.insert(name=name,
+	                  message="",
+	                  category=category,
+	                  location_id=location_id)			
+	    
+	    db.commit()
+	    return "Incident Report Logged!"
+	
 	for word in words:
-            if "SI#" in word and not ireport:
-                report = word.split("#")[1]
-                report = int(report)
-                ireport = True
-            elif (soundex(word) == soundex("Yes")) and ireport and not comments:
-                response = True
-                comments = True
-            elif soundex(word) == soundex("No") and ireport and not comments:
-                response = False
-                comments = True
-            elif comments:
-                message += word + " "
+	    if "SI#" in word and not ireport:
+		report = word.split("#")[1]
+		report = int(report)
+		ireport = True
+	    elif (soundex(word) == soundex("Yes")) and ireport and not comments:
+		response = True
+		comments = True
+	    elif soundex(word) == soundex("No") and ireport and not comments:
+		response = False
+		comments = True
+	    elif comments:
+		message += word + " "
 
-        if not ireport:
-            reply = """Please provide the keyword SI followed by the pound key (#),
-the Incident Report ID, the response and comments seperated by spaces.
-e.g. SI#1 Yes/No Comments"""
-        else:
-            query = (ctable.contact_method == "EMAIL") & \
-                    (ctable.value == sender)
-            responder = db(query).select(ctable.pe_id, limitby=(0, 1)).first()
-            if responder:
-                query = (ptable.pe_id == responder.pe_id)
-                human_resource = db(query).select(ptable.id,
-                                                  limitby=(0, 1)).first()
-            
-                if human_resource:
-                    query = (htable.person_id == human_resource.id)
-                    person = db(query).select(htable.id, limitby=(0, 1)).first()
-                    if person:
-                        query = (rtable.ireport_id == report) & \
-                                (rtable.human_resource_id == person.id)
-                        db(query).update(reply=message,
-                                         response=response)
-                        reply = "Response Logged in the Report (Id: %d )" % report
+	if not ireport:
+	    reply = """Expected format:SI#1 Yes/No Comments"""
+	else:
+	    query = (ctable.contact_method == "EMAIL") & \
+	        (ctable.value == sender)
+	    responder = db(query).select(ctable.pe_id, limitby=(0, 1)).first()
+	    if responder:
+		query = (ptable.pe_id == responder.pe_id)
+		human_resource = db(query).select(ptable.id,
+		                                  limitby=(0, 1)).first()
+	    
+		if human_resource:
+		    query = (htable.person_id == human_resource.id)
+		    person = db(query).select(htable.id, limitby=(0, 1)).first()
+		    if person:
+			query = (rhtable.ireport_id == report) & \
+			    (rhtable.human_resource_id == person.id)
+			db(query).update(reply=message,
+			                 response=response)
+			reply = "Response Logged in the Report (Id: %d )"%report
 
-        db.commit()
-        return reply
+	if not reply:
+	    reply = "Send help to see how to respond!"
+	db.commit()
+	return reply
 
 # END =========================================================================
