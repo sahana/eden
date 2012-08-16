@@ -83,6 +83,8 @@ class ProposalSet(models.Model):
     ProposalSet date model. This will contain a group of proposal
     which will be created after the debate using the debate note after it is finished.
 
+    .. addedversion:: 0.1.5b
+
     :automatically filled fields: space, author, pub_date, debate
     :user filled fields: Name
 
@@ -159,7 +161,8 @@ class Proposal(BaseProposalAbstractModel):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     merged = models.NullBooleanField(default=False, blank=True, null=True)
-    merged_proposals = models.ManyToManyField('self', blank=True, null=True)
+    merged_proposals = models.ManyToManyField('self', blank=True, null=True, help_text = \
+                                                _("select proposals from the list"))
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
@@ -197,6 +200,8 @@ class ProposalField(models.Model):
     optionally added the proposal form which is residing in a particular proposal set.
 
     user filled fields: proposalset, field_name
+    const:`OPTIONAL_FIELD` for class:ProposalField is hardcoded with three field values, more \
+            field can be added as need.
 
     """
 
