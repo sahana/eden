@@ -26,23 +26,30 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.detail import DetailView
 from django.views.generic import FormView
-from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, permission_required
-from django.template import RequestContext
-from django.views.decorators.http import require_POST
-from django.db.models import Count
-from django.utils.decorators import method_decorator
 from django.views.generic.create_update import update_object
-from django.db.models import F
+
+# Decorators 
+from django.contrib.auth.decorators import login_required, permission_required
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+
+# Response types
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.http import HttpResponse
 
+# Some extras
+from django.template import RequestContext
+from django.db.models import Count
+from django.db.models import F
+
+# Application models 
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
         ProposalField
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
 from core.spaces.models import Space
-import pdb
+
 
 
 class AddProposal(FormView):
@@ -204,16 +211,27 @@ class ListProposals(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ListProposals, self).get_context_data(**kwargs)
-        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])   
         return context
 
 
-    """
-    To add form fields to the proposal form based on the proposalset. The admin will be able to customize the proposal forms \
-    for each proposal set
-    """
+
 
 def add_proposal_fields(request, space_url):
+    
+    """
+    Adds a new form field to the proposal form. The admin can customize the proposal form for a 
+    particular proposal set. The optional fields will be already defined, this function will allow 
+    the admin to add those field to the proposal form.
+
+    .. versionadded:: 0.1.5
+    
+    :arguments: space_url
+    :context:form, get_place, prop_fields, form_data, prop_fields
+
+    """
+    
+    
     form = ProposalFieldForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
     if request.method == 'POST':
@@ -227,11 +245,19 @@ def add_proposal_fields(request, space_url):
                                 },context_instance = RequestContext(request))
 
 
-    """
-    Removing proposal form fields for a particular proposalset
-    """
 
 def remove_proposal_field(request, space_url):
+    
+    """
+    Removes a form field from proposal form. Only for proposals which are in proposal set.
+
+    ..versionadded:: 0.1.5
+
+    :arguments: space_url
+    :context: d_form, get_place, delete_field
+
+    """
+    
     d_form = ProposalFieldDeleteForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
     if request.method == 'POST':
@@ -245,12 +271,20 @@ def remove_proposal_field(request, space_url):
     return render_to_response("proposals/proposalform_remove_field.html", {'form':d_form, 'get_place':get_place}, \
                                 context_instance = RequestContext(request))
 
-    """
-    The user need to select the proposalset beforing filling the proposal form as proposal forms are customized based on
-    Proposal Set
-    """
 
 def proposal_to_set(request, space_url):
+    
+    """
+    Allows to select a proposal set to which a proposal need to be added.
+
+    .. versionadded:: 0.1.5
+
+    :arguments: space_url 
+    :context: form, get_place
+
+    """
+
+
     sel_form = ProposalSetSelectForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
 
@@ -261,16 +295,19 @@ def proposal_to_set(request, space_url):
     return render_to_response("proposals/proposalset_select_form.html", {'form':sel_form, 'get_place':get_place},\
                                 context_instance = RequestContext(request))
 
-    
-
-    
-
-#
-# Merged proposal views. Only admin and moderator can create merged proposal.    
-#   
+       
  
 
 def mergedproposal_to_set(request, space_url):
+
+    """
+    Allows to select a proposal set to which a merged proposal need to be added
+
+    :arguments: space_url 
+    :context:form, get_place
+
+    """
+
     sel_form = ProposalSetSelectForm(request.POST or None)
     get_place = get_object_or_404(Space, url=space_url)
 
@@ -284,6 +321,19 @@ def mergedproposal_to_set(request, space_url):
 
    
 def merged_proposal(request, space_url, p_set):
+    
+    """
+    Create a new merged proposal. This proposal can be linked to many other proposals which are in the
+    same proposal set. Only admin and moderator can create merged proposals.
+
+    .. versionadded:: 0.1.5
+
+    :arguments: space_url, p_set
+    :context:form, get_place, form_field
+
+    """
+
+
     get_place = get_object_or_404(Space, url=space_url)
     field = ProposalField.objects.filter(proposalset=p_set)
     form_field = [f_name.field_name for f_name in field]
