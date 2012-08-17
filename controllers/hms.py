@@ -233,6 +233,8 @@ def hospital():
                     table.problem_details.comment = DIV(DIV(_class="tooltip",
                                                             _title="%s|%s" % (T("Current problems, details"),
                                                                               T("Please specify any problems and obstacles with the proper handling of the disease, in detail (in numbers, where appropriate). You may also add suggestions the situation could be improved."))))
+            else:
+                response.s3.formats["have"] = r.url(representation="have")
 
         elif r.representation == "aadata":
             pass
