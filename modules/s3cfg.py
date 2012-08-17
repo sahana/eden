@@ -69,6 +69,7 @@ class S3Config(Storage):
         self.project = Storage()
         self.req = Storage()
         self.supply = Storage()
+        self.hms = Storage()
 
     # -------------------------------------------------------------------------
     # Template
@@ -719,7 +720,7 @@ class S3Config(Storage):
             Whether Human Resources should show Education
         """
         return self.hrm.get("use_education", False)
-    
+
     def get_hrm_organisation_label(self):
         """
             Label for Organisations in Human Resources
@@ -947,6 +948,11 @@ class S3Config(Storage):
     # Supply
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Other Items")
+
+    # -------------------------------------------------------------------------
+    # Hospital Registry
+    def get_hms_track_ctc(self):
+        return self.hms.get("track_ctc", False)
 
     # -------------------------------------------------------------------------
     # Active modules list

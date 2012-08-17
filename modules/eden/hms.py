@@ -28,6 +28,7 @@
 """
 
 __all__ = ["HospitalDataModel",
+           "CholeraTreatmentCapabilityModel",
            "hms_hospital_rheader"
            ]
 
@@ -45,7 +46,6 @@ class HospitalDataModel(S3Model):
              "hms_activity",
              "hms_bed_capacity",
              "hms_services",
-             "hms_ctc_capability",
              "hms_image",
              "hms_resources",
              "hms_hospital_id"
@@ -294,8 +294,11 @@ class HospitalDataModel(S3Model):
         add_component("hms_bed_capacity", hms_hospital=multiple)
         add_component("hms_activity", hms_hospital=multiple)
         add_component("hms_services", hms_hospital=single)
-        add_component("hms_ctc_capability", hms_hospital=single)
         add_component("hms_resources", hms_hospital=multiple)
+
+        # Optional components
+        if settings.get_hms_track_ctc():
+            add_component("hms_ctc", hms_hospital=single)
 
         # ---------------------------------------------------------------------
         # Hospital status
@@ -726,111 +729,6 @@ class HospitalDataModel(S3Model):
                   extra="id")
 
         # ---------------------------------------------------------------------
-        # Cholera Treatment Capability
-        #
-        hms_problem_types = {
-            1: T("Security problems"),
-            2: T("Hygiene problems"),
-            3: T("Sanitation problems"),
-            4: T("Improper handling of dead bodies"),
-            5: T("Improper decontamination"),
-            6: T("Understaffed"),
-            7: T("Lack of material"),
-            8: T("Communication problems"),
-            9: T("Information gaps")
-        }
-
-        tablename = "hms_ctc_capability"
-        table = define_table(tablename,
-                             hospital_id(ondelete="CASCADE"),
-                             Field("ctc", "boolean", default=False,
-                                   represent = lambda opt: \
-                                               opt and T("yes") or T("no"),
-                                   label = T("Cholera-Treatment-Center")),
-                             Field("number_of_patients", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
-                                   label = T("Current number of patients"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("cases_24", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
-                                   label = T("New cases in the past 24h"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("deaths_24", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
-                                   label = T("Deaths in the past 24h"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             #Field("staff_total", "integer", default=0),
-                             Field("icaths_available", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Infusion catheters available"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("icaths_needed_24", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Infusion catheters needed per 24h"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("infusions_available", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Infusions available"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("infusions_needed_24", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Infusions needed per 24h"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             #Field("infset_available", "integer", default=0),
-                             #Field("infset_needed_24", "integer", default=0),
-                             Field("antibiotics_available", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Antibiotics available"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("antibiotics_needed_24", "integer", default=0,
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                   label = T("Antibiotics needed per 24h"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("problem_types", "list:integer",
-                                   requires = IS_EMPTY_OR(IS_IN_SET(hms_problem_types,
-                                                                    zero=None,
-                                                                    multiple=True)),
-                                   represent = lambda optlist: \
-                                               optlist and ", ".join(map(str,optlist)) or T("N/A"),
-                                   label = T("Current problems, categories")),
-                             Field("problem_details", "text",
-                                   label = T("Current problems, details")),
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        # Field configuration
-        table.modified_on.label = T("Last updated on")
-        table.modified_on.readable = True
-        table.modified_by.label = T("Last updated by")
-        table.modified_by.readable = True
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            title_create = T("Add Cholera Treatment Capability Information"),
-            title_display = T("Cholera Treatment Capability"),
-            title_list = T("Cholera Treatment Capability"),
-            title_update = T("Update Cholera Treatment Capability Information"),
-            title_search = T("Search Status"),
-            subtitle_create = T("Add Status"),
-            label_list_button = T("List Statuses"),
-            label_create_button = T("Add Status"),
-            label_delete_button = T("Delete Status"),
-            msg_record_created = T("Status added"),
-            msg_record_modified = T("Status updated"),
-            msg_record_deleted = T("Status deleted"),
-            msg_list_empty = T("No status information available"))
-
-        # Resource configuration
-        configure(tablename,
-                  list_fields = ["id"],
-                  subheadings = {
-                        "Activities": "ctc",
-                        "Medical Supplies Availability": "icaths_available",
-                        "Current Problems": "problem_types",
-                        "Comments": "comments"
-                  })
-
-        # ---------------------------------------------------------------------
         # Resources (multiple) - @todo: to be completed!
         #
         tablename = "hms_resources"
@@ -969,6 +867,125 @@ class HospitalDataModel(S3Model):
             hospital.update_record(modified_on=timestmp)
 
 # =============================================================================
+class CholeraTreatmentCapabilityModel(S3Model):
+
+    names = ["hms_ctc"]
+
+    def model(self):
+
+        T = current.T
+        hospital_id = self.hms_hospital_id
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Cholera Treatment Capability
+        #
+        hms_problem_types = {
+            1: T("Security problems"),
+            2: T("Hygiene problems"),
+            3: T("Sanitation problems"),
+            4: T("Improper handling of dead bodies"),
+            5: T("Improper decontamination"),
+            6: T("Understaffed"),
+            7: T("Lack of material"),
+            8: T("Communication problems"),
+            9: T("Information gaps")
+        }
+
+        tablename = "hms_ctc"
+        table = define_table(tablename,
+                             hospital_id(ondelete="CASCADE"),
+                             Field("ctc", "boolean", default=False,
+                                   represent = lambda opt: \
+                                               opt and T("yes") or T("no"),
+                                   label = T("Cholera-Treatment-Center")),
+                             Field("number_of_patients", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
+                                   label = T("Current number of patients"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("cases_24", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
+                                   label = T("New cases in the past 24h"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("deaths_24", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 999999)),
+                                   label = T("Deaths in the past 24h"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             #Field("staff_total", "integer", default=0),
+                             Field("icaths_available", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Infusion catheters available"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("icaths_needed_24", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Infusion catheters needed per 24h"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("infusions_available", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Infusions available"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("infusions_needed_24", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Infusions needed per 24h"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             #Field("infset_available", "integer", default=0),
+                             #Field("infset_needed_24", "integer", default=0),
+                             Field("antibiotics_available", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Antibiotics available"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("antibiotics_needed_24", "integer", default=0,
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                   label = T("Antibiotics needed per 24h"),
+                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
+                             Field("problem_types", "list:integer",
+                                   requires = IS_EMPTY_OR(IS_IN_SET(hms_problem_types,
+                                                                    zero=None,
+                                                                    multiple=True)),
+                                   represent = lambda optlist: \
+                                               optlist and ", ".join(map(str,optlist)) or T("N/A"),
+                                   label = T("Current problems, categories")),
+                             Field("problem_details", "text",
+                                   label = T("Current problems, details")),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # Field configuration
+        table.modified_on.label = T("Last updated on")
+        table.modified_on.readable = True
+        table.modified_by.label = T("Last updated by")
+        table.modified_by.readable = True
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Cholera Treatment Capability Information"),
+            title_display = T("Cholera Treatment Capability"),
+            title_list = T("Cholera Treatment Capability"),
+            title_update = T("Update Cholera Treatment Capability Information"),
+            title_search = T("Search Status"),
+            subtitle_create = T("Add Status"),
+            label_list_button = T("List Statuses"),
+            label_create_button = T("Add Status"),
+            label_delete_button = T("Delete Status"),
+            msg_record_created = T("Status added"),
+            msg_record_modified = T("Status updated"),
+            msg_record_deleted = T("Status deleted"),
+            msg_list_empty = T("No status information available"))
+
+        # Resource configuration
+        configure(tablename,
+                  list_fields = ["id"],
+                  subheadings = {
+                        "Activities": "ctc",
+                        "Medical Supplies Availability": "icaths_available",
+                        "Current Problems": "problem_types",
+                        "Comments": "comments"
+                  })
+
+# =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
     """ Page header for component resources """
 
@@ -976,6 +993,7 @@ def hms_hospital_rheader(r, tabs=[]):
     if r.representation == "html":
         T = current.T
         s3db = current.s3db
+        settings = current.deployment_settings
         tablename, record = s3_rheader_resource(r)
         if tablename == "hms_hospital" and record:
 
@@ -986,9 +1004,14 @@ def hms_hospital_rheader(r, tabs=[]):
                         (T("Images"), "image"),
                         (T("Services"), "services"),
                         (T("Bed Capacity"), "bed_capacity"),
-                        # @todo: make CTC and activity report tabs a deployment_setting?
-                        #(T("Cholera Treatment Capability"), "ctc_capability"),
+                        # @todo: make this a deployment setting:
                         #(T("Activity Report"), "activity"),
+                        ]
+
+                if settings.get_hms_track_ctc():
+                    tabs.append((T("Cholera Treatment Capability"), "ctc"))
+
+                tabs += [
                         (T("Staff"), "human_resource"),
                         (T("Assign Staff"), "human_resource_site"),
                         ]

@@ -193,8 +193,8 @@ def hospital():
                     table.organisation_id.writable = False
                     table.person_id.readable = False
                     table.person_id.writable = False
-                elif r.component.name == "ctc_capability":
-                    table = db.hms_ctc_capability
+                elif r.component.name == "ctc":
+                    table = db.hms_ctc
                     table.ctc.comment = DIV(DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Cholera Treatment Center"),
                                                                   T("Does this facility provide a cholera treatment center?"))))
