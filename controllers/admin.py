@@ -726,9 +726,21 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 def translate():
 
     """
-        Controller to enable selection of modules for translation,
-        updating the language file with uploaded translations and
-        displaying the translation percentages for each module
+        Translation controller to enable four major workflows :-
+
+	1) Select modules which require translation. The list of strings
+           belonging to selected modules can be exported in .xls or .po format
+
+        2) Upload csv file containing strings with their translations which
+           are then merged with existing language file
+
+        3) Display the percentage of translation for each module for a given
+           language file
+
+        4) Upload a text file containing a list of new-line separated strings
+           which are to be considered for translation in the future. These 
+           strings are termed as "user-supplied" strings and are picked up by
+           the first workflow when preparing the spreadsheet for translation
     """
 
     if not request.vars.opt:
@@ -755,7 +767,7 @@ def translate():
 
         if opt == "1":
 
-            # If 1st workflow, i.e selecting the modules for translation is selected
+            # If 1st workflow is selected
             if form.accepts(request.vars, session):
 
                 modlist = []
@@ -864,7 +876,7 @@ def translate():
 
         elif opt=="2":
 
-            # If 2nd workflow, i.e uploading translated csv files is selected
+            # If 2nd workflow is selected
             div = DIV()
             div.append(BR())
             div.append(T("Note: Make sure that all the text cells are quoted in the csv file before uploading"))
@@ -874,7 +886,7 @@ def translate():
 
         elif opt=="3":
 
-            # If 3rd workflow, i.e reporting translation percentage is selected
+            # If 3rd workflow is selected
             if form.accepts(request.vars, session):
 
                 # Retreiving the translation percentage for each module
@@ -949,6 +961,7 @@ def translate():
 
         elif opt == "4":
 
+            # If 4th workflow is selected
             if form.accepts(request.vars, session):
 
                 # Retreiving strings from the uploaded file

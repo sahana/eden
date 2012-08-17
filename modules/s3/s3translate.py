@@ -176,7 +176,7 @@ class TranslateAPI:
                  filename.endswith(".js") == True:
                 tmpstr = R.read_html_js(filename)
             else:
-                print "Please enter a '.py' file path"
+                print "Please enter a '.py', '.js' or '.html' file path"
                 return []
 
             for s in tmpstr:
@@ -676,6 +676,8 @@ class TranslateReadFiles:
             except:
                 return []
 
+            f.close()
+
             # Create a parse tree list for traversal
             stList = parser.st2list(st, line_info=1)
 
@@ -751,6 +753,7 @@ class TranslateReadFiles:
                 for s in occur:
                     strings.append((linecount, s))
 
+            html_js_file.close()
             return strings
 
         #----------------------------------------------------------------------
@@ -822,6 +825,8 @@ class TranslateReadFiles:
             st = parser.suite(fileContent)
             stList = parser.st2list(st, line_info=1)
 
+            f.close()
+
             P = TranslateParseFiles()
 
             for element in stList:
@@ -840,9 +845,11 @@ class TranslateReadFiles:
             """ Function to read a csv file and return a list of rows """
 
             data = []
-            transReader = csv.reader(open(fileName, "rb"))
+            f = open(fileName, "rb")
+            transReader = csv.reader(f)
             for row in transReader:
                 data.append(row)
+            f.close()
             return data
 
         #----------------------------------------------------------------------
@@ -1224,12 +1231,16 @@ class CsvToWeb2py:
 
             """ Function to write a list of rows into a csv file """
 
+            f = open(fileName, "wb")
+
             # Quoting all the elements while writing
-            transWriter = csv.writer(open(fileName, "wb"), delimiter=" ",\
+            transWriter = csv.writer(f, delimiter=" ",\
                                      quotechar='"', quoting = csv.QUOTE_ALL)
             transWriter.writerow(["location", "source", "target"])
             for row in data:
                 transWriter.writerow(row)
+
+            f.close()
 
         #----------------------------------------------------------------------
         def export_to_po(self, data):
@@ -1239,10 +1250,6 @@ class CsvToWeb2py:
             from gluon.contenttype import contenttype
             from tempfile import NamedTemporaryFile
             from subprocess import call
-            try:
-                from cStringIO import StringIO    # Faster, where available
-            except:
-                from StringIO import StringIO
 
             f = NamedTemporaryFile(delete=False)
             csvfilename = f.name + ".csv"
