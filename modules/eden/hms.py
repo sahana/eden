@@ -29,6 +29,7 @@
 
 __all__ = ["HospitalDataModel",
            "CholeraTreatmentCapabilityModel",
+           "HospitalActivityReportModel",
            "hms_hospital_rheader"
            ]
 
@@ -43,7 +44,6 @@ class HospitalDataModel(S3Model):
 
     names = ["hms_hospital",
              "hms_contact",
-             "hms_activity",
              "hms_bed_capacity",
              "hms_services",
              "hms_image",
@@ -292,13 +292,15 @@ class HospitalDataModel(S3Model):
         add_component("hms_status", hms_hospital=single)
         add_component("hms_contact", hms_hospital=multiple)
         add_component("hms_bed_capacity", hms_hospital=multiple)
-        add_component("hms_activity", hms_hospital=multiple)
         add_component("hms_services", hms_hospital=single)
         add_component("hms_resources", hms_hospital=multiple)
 
         # Optional components
         if settings.get_hms_track_ctc():
             add_component("hms_ctc", hms_hospital=single)
+
+        if settings.get_hms_activity_reports():
+            add_component("hms_activity", hms_hospital=multiple)
 
         # ---------------------------------------------------------------------
         # Hospital status
@@ -513,68 +515,6 @@ class HospitalDataModel(S3Model):
                                "skype"],
                   main="person_id",
                   extra="title")
-
-        # ---------------------------------------------------------------------
-        # Activity
-        #
-        tablename = "hms_activity"
-        table = define_table(tablename,
-                             hospital_id(ondelete="CASCADE"),
-                             s3_datetime(label = T("Date & Time"),
-                                         empty=False,
-                                         future=0,
-                                         ),
-                             Field("patients", "integer",            # Current Number of Patients
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                   default = 0,
-                                   label = T("Number of Patients"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("admissions24", "integer",        # Admissions in the past 24 hours
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                   default = 0,
-                                   label = T("Admissions/24hrs"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("discharges24", "integer",        # Discharges in the past 24 hours
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                   default = 0,
-                                   label = T("Discharges/24hrs"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("deaths24", "integer",            # Deaths in the past 24 hours
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
-                                   default = 0,
-                                   label = T("Deaths/24hrs"),
-                                   represent = lambda v, row=None: IS_INT_AMOUNT.represent(v)),
-                             Field("comment", length=128),
-                             *s3_meta_fields())
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            title_create = T("Add Activity Report"),
-            title_display = T("Activity Report"),
-            title_list = T("Activity Reports"),
-            title_update = T("Update Activity Report"),
-            title_search = T("Search Activity Report"),
-            subtitle_create = T("Add Activity Report"),
-            label_list_button = T("List Activity Reports"),
-            label_create_button = T("Add Report"),
-            label_delete_button = T("Delete Report"),
-            msg_record_created = T("Report added"),
-            msg_record_modified = T("Report updated"),
-            msg_record_deleted = T("Report deleted"),
-            msg_list_empty = T("No reports currently available"))
-
-        # Resource configuration
-        configure(tablename,
-                  onaccept = self.hms_activity_onaccept,
-                  list_fields=["id",
-                               "date",
-                               "patients",
-                               "admissions24",
-                               "discharges24",
-                               "deaths24",
-                               "comment"],
-                  main="hospital_id",
-                  extra="id")
 
         # ---------------------------------------------------------------------
         # Bed Capacity
@@ -850,22 +790,6 @@ class HospitalDataModel(S3Model):
             db(htable.id == hospital.id).update(total_beds=t_beds,
                                                 available_beds=a_beds)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hms_activity_onaccept(form):
-
-        db = current.db
-        atable = db.hms_activity
-        htable = db.hms_hospital
-        query = ((atable.id == form.vars.id) & \
-                 (htable.id == atable.hospital_id))
-        hospital = db(query).select(htable.id,
-                                    htable.modified_on,
-                                    limitby=(0, 1)).first()
-        timestmp = form.vars.date
-        if hospital and hospital.modified_on < timestmp:
-            hospital.update_record(modified_on=timestmp)
-
 # =============================================================================
 class CholeraTreatmentCapabilityModel(S3Model):
 
@@ -985,6 +909,123 @@ class CholeraTreatmentCapabilityModel(S3Model):
                         "Comments": "comments"
                   })
 
+        # ---------------------------------------------------------------------
+        # Return global names to s3db
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        return Storage()
+
+# =============================================================================
+class HospitalActivityReportModel(S3Model):
+
+    names = ["hms_activity"]
+
+    def model(self):
+
+        T = current.T
+
+        hospital_id = self.hms_hospital_id
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Activity
+        #
+        is_number_of_patients = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999))
+        represent_int_amount = lambda v, row=None: IS_INT_AMOUNT.represent(v)
+        tablename = "hms_activity"
+        table = define_table(tablename,
+                             hospital_id(ondelete="CASCADE"),
+                             s3_datetime(label = T("Date & Time"),
+                                         empty=False,
+                                         future=0),
+                             # Current Number of Patients
+                             Field("patients", "integer",
+                                   requires = is_number_of_patients,
+                                   default = 0,
+                                   label = T("Number of Patients"),
+                                   represent = represent_int_amount),
+                             # Admissions in the past 24 hours
+                             Field("admissions24", "integer",
+                                   requires = is_number_of_patients,
+                                   default = 0,
+                                   label = T("Admissions/24hrs"),
+                                   represent = represent_int_amount),
+                             # Discharges in the past 24 hours
+                             Field("discharges24", "integer",
+                                   requires = is_number_of_patients,
+                                   default = 0,
+                                   label = T("Discharges/24hrs"),
+                                   represent = represent_int_amount),
+                             # Deaths in the past 24 hours
+                             Field("deaths24", "integer",
+                                   requires = is_number_of_patients,
+                                   default = 0,
+                                   label = T("Deaths/24hrs"),
+                                   represent = represent_int_amount),
+                             Field("comment", length=128),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Activity Report"),
+            title_display = T("Activity Report"),
+            title_list = T("Activity Reports"),
+            title_update = T("Update Activity Report"),
+            title_search = T("Search Activity Report"),
+            subtitle_create = T("Add Activity Report"),
+            label_list_button = T("List Activity Reports"),
+            label_create_button = T("Add Report"),
+            label_delete_button = T("Delete Report"),
+            msg_record_created = T("Report added"),
+            msg_record_modified = T("Report updated"),
+            msg_record_deleted = T("Report deleted"),
+            msg_list_empty = T("No reports currently available"))
+
+        # Resource configuration
+        configure(tablename,
+                  onaccept = self.hms_activity_onaccept,
+                  list_fields=["id",
+                               "date",
+                               "patients",
+                               "admissions24",
+                               "discharges24",
+                               "deaths24",
+                               "comment"],
+                  main="hospital_id",
+                  extra="id")
+
+        # ---------------------------------------------------------------------
+        # Return global names to s3db
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_activity_onaccept(form):
+
+        db = current.db
+        atable = db.hms_activity
+        htable = db.hms_hospital
+        query = ((atable.id == form.vars.id) & \
+                 (htable.id == atable.hospital_id))
+        hospital = db(query).select(htable.id,
+                                    htable.modified_on,
+                                    limitby=(0, 1)).first()
+        timestmp = form.vars.date
+        if hospital and hospital.modified_on < timestmp:
+            hospital.update_record(modified_on=timestmp)
+
 # =============================================================================
 def hms_hospital_rheader(r, tabs=[]):
     """ Page header for component resources """
@@ -1004,9 +1045,10 @@ def hms_hospital_rheader(r, tabs=[]):
                         (T("Images"), "image"),
                         (T("Services"), "services"),
                         (T("Bed Capacity"), "bed_capacity"),
-                        # @todo: make this a deployment setting:
-                        #(T("Activity Report"), "activity"),
-                        ]
+                       ]
+
+                if settings.get_hms_activity_reports():
+                    tabs.append((T("Activity Report"), "activity"))
 
                 if settings.get_hms_track_ctc():
                     tabs.append((T("Cholera Treatment Capability"), "ctc"))

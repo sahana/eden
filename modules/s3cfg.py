@@ -954,6 +954,9 @@ class S3Config(Storage):
     def get_hms_track_ctc(self):
         return self.hms.get("track_ctc", False)
 
+    def get_hms_activity_reports(self):
+        return self.hms.get("activity_reports", False)
+
     # -------------------------------------------------------------------------
     # Active modules list
     def has_module(self, module_name):
