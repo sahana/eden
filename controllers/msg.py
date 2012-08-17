@@ -547,6 +547,42 @@ def workflow():
 
     s3db.configure("msg_workflow", listadd=True, deletable=True)
 
+    def prep(r):
+        if r.interactive:
+            import inspect
+            import sys
+
+            parser = settings.get_msg_parser()
+            module_name = "applications.%s.private.templates.%s.parser" % \
+                (appname, parser)
+            __import__(module_name)
+            mymodule = sys.modules[module_name]
+            S3Parsing = mymodule.S3Parsing()
+
+            mtable = s3db.msg_inbound_email_settings
+            ttable = s3db.msg_twilio_inbound_settings
+            source_opts = []
+            append = source_opts.append
+            records = db(mtable.id > 0).select(mtable.username)
+            for record in records:
+                append(record.username)
+
+            records = db(ttable.deleted == False).select(ttable.account_name)
+            for record in records:
+                append(record.account_name)
+
+            # Dynamic lookup of the parsing functions in S3Parsing class.
+            parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
+            parse_opts = []
+            for parser in parsers:
+                parse_opts += [parser[0]]
+
+            r.table.source_task_id.requires = IS_IN_SET(source_opts, zero=None)
+            r.table.workflow_task_id.requires = IS_IN_SET(parse_opts, \
+                                                          zero=None)
+        return True
+    s3.prep = prep
+    
     def postp(r, output):
 
         wtable = s3db.msg_workflow
@@ -566,7 +602,9 @@ def workflow():
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
 
-                record1 = db((wtable.workflow_task_id == s) &(wtable.source_task_id == v)).select(wtable.id)
+                query = (wtable.workflow_task_id == s) & \
+                        (wtable.source_task_id == v)
+                record1 = db(query).select(wtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
@@ -586,7 +624,9 @@ def workflow():
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
 
-                record1 = db((wtable.workflow_task_id == s) & (wtable.source_task_id == v)).select(wtable.id)
+                query = (wtable.workflow_task_id == s) & \
+                        (wtable.source_task_id == v)
+                record1 = db(query).select(wtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
@@ -594,7 +634,7 @@ def workflow():
         restrict_d = [str(row.id) for row in rows]
 
         rows = []
-        records = db(stable.id>0).select()
+        records = db(stable.id > 0).select(stable.vars)
         tasks = [record.vars for record in records]
         parser1 = []
         for task in tasks:
@@ -613,24 +653,26 @@ def workflow():
                 parser2 += [v]
 
 
-        workflows = db(wtable.id>0).select(wtable.id , wtable.workflow_task_id, wtable.source_task_id)
+        workflows = db(wtable.id > 0).select(wtable.id,
+                                             wtable.workflow_task_id,
+                                             wtable.source_task_id)
 
         for workflow in workflows :
             if workflow.workflow_task_id and workflow.source_task_id:
-                if (workflow.workflow_task_id not in parser1) or (workflow.source_task_id not in parser2) :
-                    if workflow:
-                        rows += [workflow]
+                if (workflow.workflow_task_id not in parser1) or \
+                   (workflow.source_task_id not in parser2):
+                    rows += [workflow]
 
         restrict_a = [str(row.id) for row in rows]
 
         s3.actions = \
         s3.actions + [
-                               dict(label=str(T("Enable")),
-                                    _class="action-btn",
-                                    url=URL(f="enable_parser",
-                                            args="[id]"),
-                                    restrict = restrict_e)
-                              ]
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_parser",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                      ]
 
         s3.actions.append(dict(label=str(T("Disable")),
                                         _class="action-btn",
@@ -1145,7 +1187,7 @@ def twitter_settings():
     try:
         import tweepy
     except:
-        session.error =  T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
+        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
         redirect(URL(c="admin", f="index"))
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1158,11 +1200,11 @@ def twitter_settings():
     )
 
     def prep(r):
-        if not (deployment_settings.twitter.oauth_consumer_key and deployment_settings.twitter.oauth_consumer_secret):
+        if not (settings.twitter.oauth_consumer_key and settings.twitter.oauth_consumer_secret):
             session.error = T("You should edit Twitter settings in models/000_config.py")
             return True
-        oauth = tweepy.OAuthHandler(deployment_settings.twitter.oauth_consumer_key,
-                                    deployment_settings.twitter.oauth_consumer_secret)
+        oauth = tweepy.OAuthHandler(settings.twitter.oauth_consumer_key,
+                                    settings.twitter.oauth_consumer_secret)
 
         #tablename = "%s_%s" % (module, resourcename)
         #table = db[tablename]
@@ -1429,7 +1471,6 @@ def load_search(id):
     output = r()
     #extract the updates
     return output
-
 
 # -----------------------------------------------------------------------------
 def check_updates(user_id):

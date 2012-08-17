@@ -1603,6 +1603,29 @@ class S3OptionsMenu(object):
         return self.admin()
 
     # -------------------------------------------------------------------------
+    def transport(self):
+        """ TRANSPORT """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="transport")(
+                    M("Airports", f="airport")(
+                        M("New", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Seaports", f="seaport")(
+                        M("New", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def vehicle(self):
         """ VEHICLE / Vehicle Tracking """
 

@@ -3435,12 +3435,13 @@ class GIS(object):
                                           lon=L0_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3535,13 +3536,14 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3672,6 +3674,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3679,7 +3682,7 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3844,6 +3847,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3852,7 +3856,7 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -4049,6 +4053,7 @@ class GIS(object):
                                       lon=Lx_lon)
         else:
             db(table.id == id).update(path=_path,
+                                      inherited=False,
                                       L0=L0_name,
                                       L1=L1_name,
                                       L2=L2_name,

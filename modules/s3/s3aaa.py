@@ -201,6 +201,7 @@ class AuthS3(Auth):
         else:
             shelter = T("Shelter")
         self.org_site_types = Storage(
+                                      transport_airport = T("Airport"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"),
                                       #org_facility = T("Site"),
@@ -208,6 +209,7 @@ class AuthS3(Auth):
                                       hms_hospital = T("Hospital"),
                                       #fire_station = T("Fire Station"),
                                       dvi_morgue = T("Morgue"),
+                                      transport_seaport = T("Seaport"),
                                       inv_warehouse = T("Warehouse"),
                                       )
 
