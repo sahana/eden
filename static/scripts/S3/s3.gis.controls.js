@@ -28,9 +28,8 @@ function addPopupControls() {
     // onClick Popup
     S3.gis.popupControl = new OpenLayers.Control.SelectFeature(
         S3.gis.layers_all, {
-            toggle: true,
-            clickout: true,
-            multiple: true
+            toggle: true
+            //multiple: true
         }
     );
     // onHover Tooltip
