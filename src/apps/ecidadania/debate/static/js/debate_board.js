@@ -108,7 +108,7 @@ for(var i=0; i<note.comments.length; i++) {
             var item = note.comments[i];
         html += "<div class='comment-bubble' id='comment" + i +"'>" + "<p id='username' class='viewer'>"+ item.username + "</p>";
         html += "<p id='date' class='viewer-date'>"+ item.submit_date +"</p>";
-        html += "<p id='comments" + i + "' class='viewer-comment'>" + item.comment +"</p><img src='/static/img/images/arrow-2.png' width='20' height='21'></div>";
+        html += "<p id='comments" + i + "' class='viewer-comment'>" + item.comment +"</p><img src='/static/img/arrow-2.png' width='20' height='21'></div>";
 }
         $('div#comments').html(html);
         $('span#num-comments').html(comment_count);
@@ -144,6 +144,7 @@ function editNote(obj) {
         // If for some reason the WYSIHTML5 editor fails, it will fallback
         // into a simple textarea that gets shown
         $("textarea#id_note_message").val(note.message);
+        $("#last-edited-note").text(noteID);
     });
 
     request.fail(function (jqXHR, textStatus) {
