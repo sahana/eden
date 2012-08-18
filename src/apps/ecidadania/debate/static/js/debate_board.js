@@ -103,7 +103,7 @@ function viewNote(obj) {
         $('p#view-note-desc').html(note.message);
 
         var html = '';
-        var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")";
+        var comment_count = "<h5 class='note-comment-title'>Comments (" + note.comments.length + ")</h5>";
 for(var i=0; i<note.comments.length; i++) {
             var item = note.comments[i];
         html += "<div class='comment-bubble' id='comment" + i +"'>" + "<p id='username' class='viewer'>"+ item.username + "</p>";
