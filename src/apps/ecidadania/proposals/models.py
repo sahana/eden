@@ -55,11 +55,15 @@ OPTIONAL_FIELDS = (
 class BaseProposalAbstractModel(models.Model):
 
     """
-    Abstract base class for titles and descriptions (dummy models)
+    Integrated generic relation into the proposal module, which will allow the proposal module 
+    to be related to any other module in e-cidadania. 
+
+    .. versionadded:: 0.1.5b
+    
+    :automatically filled fields: contype_type, object_pk
+
     """
-    content_type = models.ForeignKey(ContentType,
-            verbose_name=_('content_type'),
-            related_name="content_type_set_for_%(class)s", null=True, blank=True)
+
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_pk = models.TextField(_('object ID'), null=True)
     content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
