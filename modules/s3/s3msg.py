@@ -210,6 +210,7 @@ class S3Msg(object):
                 (wtable.source_task_id == source)
         records = db(query).select(wtable.source_task_id)
         reply = ""
+        wflow = ""
         for record in records:
             query = (ltable.is_parsed == False) & \
                     (ltable.inbound == True) & \
@@ -227,8 +228,26 @@ class S3Msg(object):
                     raise ValueError("Email address not defined!")
                 
                 reply = parser(workflow, message, email)
-                db(lid == row.id).update(reply = reply,
-                                               is_parsed = True)
+                if reply:
+                    db(lid == row.id).update(reply = reply,
+                                                   is_parsed = True)
+                else:
+                    flow = db(lid == row.id).select(ltable.reply, \
+                                                    limitby=(0,1)).first()
+                    try:
+                        wflow = flow.reply.split("Workflow:")[1].split(".")[0]
+                    except:
+                        pass                            
+                    if wflow == workflow:
+                        reply = "Send help to see how to respond !"
+                        db(lid == row.id).update(reply = reply,
+                                                is_parsed = True)
+                    else:
+                        reply = "Workflow:%s.Send help to see how to respond!"\
+                                %workflow
+                        db(lid == row.id).update(reply = flow.reply+reply)
+                        db.commit()
+                        return                    
                 reply = linsert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
@@ -792,6 +811,35 @@ class S3Msg(object):
 
         return opengeosms
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_opengeosms(message):
+        """
+           Function to parse an OpenGeoSMS
+           @param: message - Inbound message to be parsed for OpenGeoSMS.
+           Returns the lat, lon, code and text contained in the message.
+        """
+        
+        lat = ""
+        lon = ""
+        code = ""
+        text = ""
+           
+        s3db = current.s3db
+        words = string.split(message)
+        if "http://maps.google.com/maps?q" in words[0]:
+            # Parse OpenGeoSMS
+            pwords = words[0].split("?q=")[1].split(",")
+            lat = pwords[0]
+            lon = pwords[1].split("&")[0]
+            code = pwords[1].split("&")[1].split("=")[1]
+            text = ""
+            for a in range(1, len(words)):
+                text = text + words[a] + " "
+                
+                    
+        return lat, lon, code, text
+                
     # -------------------------------------------------------------------------
     # Send SMS
     # -------------------------------------------------------------------------
