@@ -57,8 +57,8 @@ class ECDTestCase(TestCase):
         self.foo_admin = self.create_user('foo_admin', 'foo_admin_password')
         self.foo_mod = self.create_user('foo_mod', 'foo_mod_password')
         
-        self.bar_user = self.create_user('bar_user', 'bar_password')
-        self.bar_admin = self.create_user('bar_admin', 'bar_password')
+        self.bar_user = self.create_user('bar_user', 'bar_user_password')
+        self.bar_admin = self.create_user('bar_admin', 'bar_admin_password')
         self.bar_mod = self.create_user('bar_mod', 'bar_mod_password')
             
         space_properties = {'name': 'foo_space', 'url': 'foo_space_url',
@@ -66,78 +66,81 @@ class ECDTestCase(TestCase):
                             'mod_debate': True, 'mod_proposals': True,
                             'mod_news': True, 'mod_cal': True, 'mod_docs': True,
                             }
-        self.foo_space = self.seed(Space, properties=space_properties)
-        self.foo_space.admins.clear()
+        self.foo_space = Space(**space_properties)
+        self.foo_space.save()
         self.foo_space.admins.add(self.foo_admin)
-        self.foo_space.mods.clear()
         self.foo_space.mods.add(self.foo_mod)
-        self.foo_space.mods.clear()
         self.foo_space.users.add(self.foo_user)
         self.foo_space.save()
         
         space_properties.update({'author': self.bar_admin, 'name': 'bar_space',
                                  'url': 'bar_space_url', 'public': True,})
-        self.bar_space = self.seed(Space, properties=space_properties)
-        self.bar_space.admins.clear()
+        self.bar_space = Space(**space_properties)
+        self.bar_space.save()
         self.bar_space.admins.add(self.bar_admin)
-        self.bar_space.mods.clear()
         self.bar_space.mods.add(self.bar_mod)
-        self.bar_space.users.clear()
         self.bar_space.users.add(self.bar_user)
         self.bar_space.save()
         
         debate_properties = {'space': self.foo_space, 'author': self.foo_admin}
-        self.foo_debate = self.seed(Debate, properties=debate_properties)
+        self.foo_debate = self.seed(Debate,properties=debate_properties)
         
         debate_properties.update({'space': self.bar_space, 
-                                 'author': self.bar_admin})
-        self.bar_debate = self.seed(Debate, properties=debate_properties)
+                                  'author': self.bar_admin})
+        self.bar_debate = self.seed(Debate,debate_properties)
         
         column_properties = {'debate': self.foo_debate, 'criteria': 'private'}
-        self.foo_column = Column(**column_properties).save()
+        self.foo_column = Column(**column_properties)
+        self.foo_column.save()
         
-        column_properties.update({'debate': self.bar_debate, 
+        column_properties.update({'debate': self.bar_debate,
                                   'criteria': 'public'})
-        self.bar_column = Column(**column_properties).save()
+        self.bar_column = Column(**column_properties)
+        self.bar_column.save()
         
         row_properties = column_properties.copy()
-        self.bar_row = self.seed(Row, properties=row_properties)
+        self.bar_row = Row(**row_properties)
+        self.bar_row.save()
         
         row_properties.update({'debate': self.foo_debate})
-        self.foo_row = self.seed(Row, properties=row_properties)
+        self.foo_row = Row(**row_properties)
+        self.foo_row.save()
         
         note_properties = {'column': self.foo_column, 'row': self.foo_row,
                            'debate': self.foo_debate, 'author': self.foo_admin}
-        self.foo_note = self.seed(Note, properties=note_properties)
+        self.foo_note = Note(**note_properties)
+        self.foo_note.save()
         
         note_properties.update({'column': self.bar_column, 
                                 'row': self.bar_row,
                                 'debate': self.bar_debate,
                                 'author': self.bar_admin})
-        self.bar_note = self.seed(Note, properties=note_properties)
+        self.bar_note = Note(**note_properties)
+        self.bar_note.save()
         
         post_properties = {'post_title': 'Foo news post', 'author': self.foo_user,
                            'pub_index': True, 'space': self.foo_space}
-        self.foo_post = self.seed(Post, properties=post_properties)
-
+        self.foo_post = Post(**post_properties)
+        self.foo_post.save()
+        
         post_properties.update({'post_title': 'Bar news post',
                                 'author': self.bar_user, 'space': self.bar_space})
-        self.bar_post = self.seed(Post, properties=post_properties)
+        self.bar_post = Post(**post_properties)
+        self.bar_post.save()
         
         proposal_set_properties = {'name': 'Foo Proposal Set', 
                                    'space': self.foo_space,
                                    'author': self.foo_admin, 
                                    'debate': self.foo_debate}
-        self.foo_poposalset = self.seed(ProposalSet, 
-                                        properties=proposal_set_properties)
+        self.foo_proposalset = ProposalSet(**proposal_set_properties)
+        self.foo_proposalset.save()
         
         proposal_set_properties.update({'name': 'Bar Proposal Set',
                                         'space': self.bar_space,
                                         'author': self.bar_admin,
                                         'debate': self.bar_debate})
-        self.bar_proposalset = self.seed(ProposalSet,
-                                         properties=proposal_set_properties)
-        
+        self.bar_proposalset = ProposalSet(**proposal_set_properties)
+        self.bar_proposalset.save()
         
     def seed(self, model, properties=None, constraints=None, follow_fk=None, 
              generate_fk=None, follow_m2m=None, factory=None, commit=True):
