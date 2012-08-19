@@ -1,7 +1,13 @@
 #comments {
     margin: 10px 0 40px;
 }
-
+div#note-comment > *, div#note-comment p label {
+  color: #FFFFFF !important;
+}
+div#note-comment #id_comment {
+  margin-top: -200px;
+  width: 93%;
+}
 div.comment-bubble {
     background-color: #FFFFFF;
     background-image: -moz-linear-gradient(center bottom , #F0F0F0 2%, #FFFFFF 48%, #FFFFFF 78%);
@@ -80,4 +86,13 @@ div#note-comment input[type="submit"] {
     padding: 4px 40px;
     text-align: center;
     text-transform: uppercase;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+}
+ 
+div#note-comment #id_name, div#note-comment #id_email, div#note-comment #id_url, div#note-comment #id_honeypot {
+    visibility: hidden;
 }
