@@ -121,20 +121,20 @@
                             </div>
 
                             <div class="control-group">
-															<label>{% trans "Description" %}</label>
                                 <div class="controls">
                                     <div class="input-prepend">
-																				{% wysiwyg_editor "message" %}
-                                        <span class="add-on"><a href="#" rel="tooltip" title="{% trans 'Long description of the note' %}"><i class="icon-question-sign"></i></a></span>
-                                    </div>
+                                    <div class="input">
+                                    <textarea id="id_note_message"></textarea>
+                                    {% wysiwyg_editor "id_note_message" %}
+                                    <span class="help-inline"></span>
                                 </div>
                             </div>
-
+                                </div>
+                            </div>
                             <div id="last-edited-note" class="hidden"></div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <a href="#" onclick="saveNote()" class="btn btn-primary">{% trans "Save" %}</a>
                         <a href="#" onclick="saveNote()" class="btn btn-primary">{% trans "Save" %}</a>
                     </div>
                 </div>
@@ -145,12 +145,12 @@
                         <h3 id="view-note-title"></h3>
                     </div>
                     <div class="modal-body">
-											<p id="view-note-desc"></p>
-											<span id="num-comments"></span>
-											<div id="comments"></div>
+                    <p id="view-note-desc"></p>
+                    <span id="num-comments"></span>
+                    <div id="comments"></div>
                     </div>
-										<div class="modal-footer">
-											{% if user.is_authenticated %}
+                    <div class="modal-footer">
+{% if user.is_authenticated %}
 <h5 class="note-comment-title">Comment</h5><div id="note-comment">
 <form id="form_comments" action="{% comment_form_target %}" method="post">
    {% csrf_token %}
