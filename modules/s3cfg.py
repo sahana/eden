@@ -709,17 +709,47 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_teams", True)
 
+    def get_hrm_use_certificates(self):
+        """
+            Whether Human Resources should use Certificates
+        """
+        return self.hrm.get("use_certificates", True)
+
     def get_hrm_use_credentials(self):
         """
             Whether Human Resources should use Credentials
         """
         return self.hrm.get("use_credentials", True)
 
+    def get_hrm_use_description(self):
+        """
+            Whether Human Resources should use Description
+        """
+        return self.hrm.get("use_description", True)
+
     def get_hrm_use_education(self):
         """
             Whether Human Resources should show Education
         """
         return self.hrm.get("use_education", False)
+
+    def get_hrm_use_id(self):
+        """
+            Whether Human Resources should use ID
+        """
+        return self.hrm.get("use_id", True)
+
+    def get_hrm_use_skills(self):
+        """
+            Whether Human Resources should use Skills
+        """
+        return self.hrm.get("use_skills", True)
+
+    def get_hrm_use_trainings(self):
+        """
+            Whether Human Resources should use Trainings
+        """
+        return self.hrm.get("use_trainings", True)
 
     def get_hrm_organisation_label(self):
         """

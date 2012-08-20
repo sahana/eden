@@ -313,12 +313,22 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
 #settings.hrm.show_organisation = True
+# Uncomment to disable the use of HR Certificates
+#settings.hrm.use_certificates = False
 # Uncomment to disable the use of HR Credentials
 #settings.hrm.use_credentials = False
+# Uncomment to disable the use of HR Description
+#settings.hrm.use_description = False
 # Uncomment to enable the use of HR Education
 #settings.hrm.use_education = True
+# Uncomment to disable the use of HR ID
+#settings.hrm.use_id = False
+# Uncomment to disable the use of HR Skills
+#settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 #settings.hrm.use_teams = False
+# Uncomment to disable the use of HR Trainings
+#settings.hrm.use_trainings = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

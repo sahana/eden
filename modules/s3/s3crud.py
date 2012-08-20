@@ -790,7 +790,8 @@ class S3CRUD(S3Method):
         if not fields:
             fields = []
 
-        if fields[0].name != table.fields[0]:
+        if not fields or \
+           fields[0].name != table.fields[0]:
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])

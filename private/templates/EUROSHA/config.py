@@ -13,7 +13,7 @@ T = current.T
 # Pre-Populate
 settings.base.prepopulate = ["EUROSHA"]
 
-settings.base.system_name = T("European Open Source Humanitarian Aid")
+settings.base.system_name = T("Eurosha Humanitarian Data Registry")
 settings.base.system_name_short = T("EUROSHA")
 
 # Theme (folder to use for views/layout.html)
@@ -47,7 +47,7 @@ settings.fin.currencies = {
 }
 
 # Security Policy
-settings.security.policy = 6 # Realm
+settings.security.policy = 7 # Realm w Hierarchy
 settings.security.map = True
 
 # Set this if there will be multiple areas in which work is being done,
@@ -64,6 +64,22 @@ settings.org.summary = True
 # HRM
 # Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
 settings.hrm.job_roles = True
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to disable Volunteer experience
+settings.hrm.vol_experience = False
+# Uncomment to disable the use of HR Certificates
+settings.hrm.use_certificates = False
+# Uncomment to disable the use of HR Credentials
+settings.hrm.use_credentials = False
+# Uncomment to disable the use of HR Description
+settings.hrm.use_description = False
+# Uncomment to disable the use of HR ID
+settings.hrm.use_id = False
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
+# Uncomment to disable the use of HR Trainings
+settings.hrm.use_trainings = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)

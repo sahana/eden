@@ -1457,7 +1457,7 @@ class S3OptionsMenu(object):
                     M(IMPORT, f="location",
                       m="import", p="create"),
                  ),
-                M("Partner Orgnisations",  f="partners")(
+                M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
                     M("List All"),
                     M("Search", m="search"),

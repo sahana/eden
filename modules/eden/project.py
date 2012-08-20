@@ -626,7 +626,7 @@ class S3ProjectModel(S3Model):
 
         configure("project_human_resource",
                   onvalidation=self.project_human_resource_onvalidation,
-                  list_fields=["project_id",
+                  list_fields=[#"project_id",
                                "human_resource_id$person_id",
                                "human_resource_id$organisation_id",
                                "human_resource_id$job_title",
