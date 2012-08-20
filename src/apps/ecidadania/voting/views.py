@@ -261,7 +261,7 @@ class EditVoting(UpdateView):
     :context: get_place
     """
     model = Voting
-    template_name = 'voting/voting_editform.html'
+    template_name = 'voting/voting_form.html'
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
