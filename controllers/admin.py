@@ -741,6 +741,9 @@ def translate():
            which are to be considered for translation in the future. These 
            strings are termed as "user-supplied" strings and are picked up by
            the first workflow when preparing the spreadsheet for translation
+
+        Note : The above functionalities require a considerable amount of
+               main memory to execute successfully.
     """
 
     if not request.vars.opt:
