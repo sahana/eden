@@ -41,7 +41,7 @@
 <div><h5>{% trans "Proposalsets:" %}</h5>
 <br />
 {% for proposalset in proposalsets %}
-<div style=" width: 300px; float: left;"><a href="">{{ proposalset }}</a>
+<div style=" width: 300px; float: left;"><a href="{{ proposalset.get_absolute_url }}">{{ proposalset }}</a>
 {% if proposalset.debate %}
 <br /><b>{% trans "Linked to debate:" %}</b> <a href="{{ proposalset.debate.get_absolute_url }}">{{ proposalset.debate }}</a>
 {% endif %}

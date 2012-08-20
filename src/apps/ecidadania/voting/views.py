@@ -211,6 +211,7 @@ class AddVoting(FormView):
         form_uncommited.author = self.request.user
         form_uncommited.space = self.space
         form_uncommited.save()
+        form.save_m2m()
         return super(AddVoting, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -260,7 +261,7 @@ class EditVoting(UpdateView):
     :context: get_place
     """
     model = Voting
-    template_name = 'voting/voting_form.html'
+    template_name = 'voting/voting_editform.html'
 
     def get_success_url(self):
         self.space = get_object_or_404(Space, url=self.kwargs['space_url'])

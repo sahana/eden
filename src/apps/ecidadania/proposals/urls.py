@@ -25,7 +25,7 @@ from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 from apps.ecidadania.proposals.views import ListProposalSet, AddProposalSet, \
     ViewProposalSet, EditProposalSet, DeleteProposalSet, ListProposals, \
-    ViewProposal, DeleteProposal, EditProposal, AddProposal
+    ViewProposal, DeleteProposal, EditProposal, AddProposal, ValidateVote
 
 urlpatterns = patterns('apps.ecidadania.proposals.views',
 
@@ -60,6 +60,8 @@ urlpatterns = patterns('apps.ecidadania.proposals.views',
     url(_(r'^(?P<prop_id>\w+)/edit/$'), EditProposal.as_view(), name='edit-proposal'),   
     
     url(_(r'^(?P<prop_id>\w+)/delete/$'), DeleteProposal.as_view(), name='delete-proposal'),
+
+    url(_(r'^(?P<space_url>\w+)/vote/approve/(?P<token>\w+)/$'), ValidateVote.as_view(), name='validate-vote'),
 
 )
 

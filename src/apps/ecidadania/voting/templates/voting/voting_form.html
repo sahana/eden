@@ -8,10 +8,10 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
 
 {% block title %}
       {% if form.title.value %}
-        {% trans "Edit voting process" %} {{ form.title.value }}
-          {% else %}
-          {% trans "Create new voting process" %}
-          {% endif %}
+          {% trans "Edit voting process" %} {{ form.title.value }}
+      {% else %}
+      {% trans "Create new voting process" %}
+      {% endif %}
 {% endblock %}
 
 
@@ -78,6 +78,24 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                     {% endif %}
                 </div>
             </div>
+            <div class="control-group {% if form.description.errors %}error{% endif%}">
+                <label>{{ form.description.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.description }}
+                        {% if form.description.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.description.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.description.errors %}
+                    <p class="help-block">
+                        {% for error in form.description.errors %}
+                        {{ error|escape }}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
 
             <div class="control-group {% if form.proposalsets.errors %}error{% endif%}">
                 <label>{{ form.proposalsets.label }}</label>
@@ -119,7 +137,11 @@ This is a form to create a new poll. It uses poll_board.js file to add new choic
                 <label>{{ form.start_date.label }}</label>
                 <div class="controls">
                     <div class="input-append">
-                        <input type="text" name="start_date" id="datepicker-start" class="hasDatePicker">
+                        {% if form.title.value %}
+                        {{ form.start_date }}
+                        {% else %}
+                        <input type="text" name="start_date" id="datepicker-start" class="hasDatePicker" />
+                        {% endif %}
                         {% if form.start_date.help_text %}
                         <span class="add-on"><a href="#" rel="tooltip" title="{{ form.start_date.help_text }}"><i class="icon-question-sign"></i></a></span>
                         {% endif %}

@@ -20,6 +20,8 @@
 """
 Proposal module views.
 """
+import hashlib
+import datetime
 
 # Generic class-based views
 from django.views.generic.list import ListView
@@ -38,18 +40,21 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.http import HttpResponse
 
 # Some extras
+from django.contrib import messages
 from django.template import RequestContext
 from django.db.models import Count
 from django.db.models import F
 
 # Application models 
 from apps.ecidadania.proposals.models import Proposal, ProposalSet, \
-        ProposalField
+        ProposalField, ConfirmVote
 from apps.ecidadania.proposals.forms import ProposalForm, VoteProposal, \
         ProposalSetForm, ProposalFieldForm, ProposalSetSelectForm, \
         ProposalMergeForm, ProposalFieldDeleteForm
 from core.spaces.models import Space
 
+from django.core.mail import send_mail
+from django.utils.translation import ugettext_lazy as _
 
 
 class AddProposal(FormView):
@@ -182,15 +187,55 @@ class DeleteProposal(DeleteView):
 def vote_proposal(request, space_url):
 
     """
-    Increment support votes for the proposal in 1.
+    Send email to user to validate vote before is calculated.
+    :attributes: - prop: current proposal
+    :rtype: multiple entity objects.
     """
     prop = get_object_or_404(Proposal, pk=request.POST['propid'])
-#    if Proposal.objects.filter(support_votes__contains=request.user):
-#        return HttpResponse("You already voted")
-#    else:
-    prop.support_votes.add(request.user)
-    return HttpResponse("Vote emmited.")
+    try:
+         intent = ConfirmVote.objects.get(user=request.user, proposal=prop)
+    except ConfirmVote.DoesNotExist:
+        token = hashlib.md5("%s%s%s" % (request.user, prop,
+                            datetime.datetime.now())).hexdigest()
+        intent = ConfirmVote(user=request.user, proposal=prop, token=token)
+        intent.save()
+        subject = _("New vote validation request")
+        body = _("Hello {0}, \n \
+                 You are getting this email because you wanted to support proposal {1}.\n\
+                 Please click on the link below to vefiry your vote.\n {2} \n \
+                 Thank you for your vote."
+                 .format(request.user.username, prop.title,
+                 intent.get_approve_url()))
+        send_mail(subject=subject, message=body,
+                   from_email="noreply@ecidadania.org",
+                   recipient_list=[request.user.email])
 
+class ValidateVote(DetailView):
+
+    """
+    Validates the vote. It adds the user to the list of users who voted it everything checks ok.
+    """
+    status = _("The requested vote validation does not exist!")
+
+    def get_object(self):
+        try:
+            intent = ConfirmVote.objects.get(token=self.kwargs['token'])
+            intent.proposal.support_votes.add(intent.user)
+            self.status = _("The vote has been authorised for proposal \
+            in space \"%s\"." % intent.proposal.title)
+            messages.success(self.request, _("Authorization successful"))
+
+        except ConfirmVote.DoesNotExist:
+            self.status  = _("The requested intent does not exist!")
+
+        return intent.proposal
+
+    def get_context_data(self, **kwargs):
+        context = super(ValidateVote, self).get_context_data(**kwargs)
+        context['status'] = self.status
+        context['request_user'] = ConfirmVote.objects.get(
+            token=self.kwargs['token']).user
+        return context
 
 class ListProposals(ListView):
 
