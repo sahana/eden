@@ -302,6 +302,16 @@ footer {
     font-style: italic;
     margin-bottom: 5px;
 }
+
+
+.map, #proposalmap {
+    width: 400px;
+    height: 350px;
+}
+
+.map img {
+    max-width:none;
+}
 /* END PROPOSAL STYLES */
 
 /* NEWS */

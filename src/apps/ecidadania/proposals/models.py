@@ -24,6 +24,7 @@ Proposal data models are the ones to store the data inside the DB.
 import datetime
 from django.core import urlresolvers
 
+from django import forms
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes import generic
@@ -44,15 +45,25 @@ CLOSE_REASONS = (
     (4, _('Offtopic'))
 )
 
+OPTIONAL_FIELDS = (
+    ('tags', _('Tags')), 
+    ('latitude', _('Latitude')),
+    ('longitude', _('Longitude'))
+)
+
 
 class BaseProposalAbstractModel(models.Model):
 
     """
-    Abstract base class for titles and descriptions (dummy models)
+    Integrated generic relation into the proposal module, which will allow the proposal module 
+    to be related to any other module in e-cidadania. 
+
+    .. versionadded:: 0.1.5b
+    
+    :automatically filled fields: contype_type, object_pk
+
     """
-    content_type = models.ForeignKey(ContentType,
-            verbose_name=_('content_type'),
-            related_name="content_type_set_for_%(class)s", null=True, blank=True)
+
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_pk = models.TextField(_('object ID'), null=True)
     content_object = generic.GenericForeignKey(ct_field="content_type", fk_field="object_pk")
@@ -75,6 +86,8 @@ class ProposalSet(models.Model):
     """
     ProposalSet date model. This will contain a group of proposal
     which will be created after the debate using the debate note after it is finished.
+
+    .. addedversion:: 0.1.5b
 
     :automatically filled fields: space, author, pub_date, debate
     :user filled fields: Name
@@ -152,7 +165,8 @@ class Proposal(BaseProposalAbstractModel):
     close_reason = models.SmallIntegerField(choices=CLOSE_REASONS, null=True,
                                             blank=True)
     merged = models.NullBooleanField(default=False, blank=True, null=True)
-    merged_proposals = models.ManyToManyField(ProposalSet, blank=True, null=True)
+    merged_proposals = models.ManyToManyField('self', blank=True, null=True, help_text = \
+                                                _("select proposals from the list"))
 
     anon_allowed = models.NullBooleanField(default=False, blank=True)
     support_votes = models.ManyToManyField(User, verbose_name=_('Votes from'),
@@ -182,3 +196,45 @@ class Proposal(BaseProposalAbstractModel):
         return ('view-proposal', (), {
             'space_url': self.space.url,
             'prop_id': str(self.id)})
+
+class ProposalField(models.Model):
+    
+    """
+    Proposal Fields data model. This will store details of addition form fields which can be 
+    optionally added the proposal form which is residing in a particular proposal set.
+
+    user filled fields: proposalset, field_name
+    const:`OPTIONAL_FIELD` for class:ProposalField is hardcoded with three field values, more \
+            field can be added as need.
+
+    """
+
+    proposalset= models.ForeignKey(ProposalSet, help_text= _('Customizing proposal \
+                                    form for a proposal set'), unique=False)
+    field_name = models.CharField(max_length=100, choices=OPTIONAL_FIELDS,help_text \
+                                    = _('Additional field that needed to added to the proposal form'))
+
+    def __unicode__(self):
+        return self.field_name
+
+    class Meta:
+        verbose_name = _('ProposalField')
+        verbose_name_plural = _('ProposalFields')
+
+class ConfirmVote(models.Model):
+
+    """
+    Intent data model. Intent stores the reference of a user-token when a user
+    asks entering in a restricted space.
+
+    .. versionadded: 0.1.5
+    """
+    user = models.ForeignKey(User)
+    proposal = models.ForeignKey(Proposal)
+    token = models.CharField(max_length=32)
+    requested_on = models.DateTimeField(auto_now_add=True)
+
+    def get_approve_url(self):
+        site = Site.objects.all()[0]
+        return "http://%s%svote/approve/%s" % (site.domain, self.proposal.get_absolute_url(), self.token)
+

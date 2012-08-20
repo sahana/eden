@@ -32,71 +32,62 @@ from django.views.generic.create_update import update_object
 from django.contrib.auth.models import User
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.forms.models import modelformset_factory, inlineformset_factory
-from core.spaces.models import Space
-from apps.ecidadania.voting.models import *
-from apps.ecidadania.voting.forms import *
 from django.core.exceptions import ObjectDoesNotExist
 from helpers.cache import get_or_insert_object_in_cache
 from django.core.urlresolvers import NoReverseMatch, reverse
 from django.template.response import TemplateResponse
 
+from core.spaces.models import Space
+from apps.ecidadania.voting.models import *
+from apps.ecidadania.voting.forms import *
+from apps.ecidadania.proposals.models import *
+
+@permission_required('voting.add_poll')
 def AddPoll(request, space_url):
 
     """
     Create a new poll. Only registered users belonging to a concrete group
-    are allowed to create polls. only site administrators will be able to
-    post polls in the index page.
+    are allowed to create polls. 
     
     :parameters: space_url
     :context: get_place
     """
     place = get_object_or_404(Space, url=space_url)
+    poll_form = PollForm(request.POST or None)
+    choice_form = ChoiceFormSet(request.POST or None, prefix="choiceform")
 
-    if request.user in place.admins.all() or request.user.is_staff or request.user.is_superuser:
-     
-        class RequiredFormSet(BaseFormSet):
+    try:
+        last_poll_id = Poll.objects.latest('id')
+        current_poll_id = last_poll_id.pk + 1
+    except ObjectDoesNotExist:
+        current_poll_id = 1
 
-            def __init__(self, *args, **kwargs):
-                super(RequiredFormSet, self).__init__(*args, **kwargs)
-                for form in self.forms:
-                    form.empty_permitted = False
+    if request.user in place.admins.all() \
+    or request.user in place.mods.all() \
+    or request.user.is_staff or request.user.is_superuser \
+    or request.user.has_perm('poll_add'):
+        if request.method == 'POST':
+            if poll_form.is_valid() and choice_form.is_valid():
+                poll_form_uncommited = poll_form.save(commit=False)
+                poll_form_uncommited.space = place
+                poll_form_uncommited.author = request.user
 
-        ChoiceFormSet = formset_factory(ChoiceForm, max_num=10, formset=RequiredFormSet, can_delete=True)
+                saved_poll = poll_form_uncommited.save()
+                poll_instance = get_object_or_404(Poll, pk=current_poll_id)
 
-        poll_form = PollForm(request.POST or None)
-        choice_form = ChoiceFormSet(request.POST or None, prefix="choiceform")
+                for form in choice_form.forms:
+                    choice = form.save(commit=False)
+                    choice.poll = poll_instance
+                    choice.save()
 
-        try:
-            last_poll_id = Poll.objects.latest('id')
-            current_poll_id = last_poll_id.pk + 1
-        except ObjectDoesNotExist:
-            current_poll_id = 1
-
-        if request.user.has_perm('poll_add') or request.user.is_staff:
-            if request.method == 'POST':
-                if poll_form.is_valid() and choice_form.is_valid():
-                    poll_form_uncommited = poll_form.save(commit=False)
-                    poll_form_uncommited.space = place
-                    poll_form_uncommited.author = request.user
-
-                    saved_poll = poll_form_uncommited.save()
-                    poll_instance = get_object_or_404(Poll, pk=current_poll_id)
-
-                    for form in choice_form.forms:
-                        choice = form.save(commit=False)
-                        choice.poll = poll_instance
-                        choice.save()
-                    return redirect('/spaces/' + space_url)
-
-            return render_to_response('voting/poll_form.html',
-                                     {'form': poll_form,
-                                      'choiceform': choice_form,
-                                      'get_place': place,
-                                      'pollid': current_poll_id,},
-                                     context_instance=RequestContext(request))
-
+                return redirect('/spaces/' + space_url)
+                
+        return render_to_response('voting/poll_form.html',
+            {'form': poll_form, 'choiceform': choice_form,
+             'get_place': place, 'pollid': current_poll_id,},
+             context_instance=RequestContext(request))
+    
     return render_to_response('not_allowed.html',context_instance=RequestContext(request))
-
 
 def EditPoll(request, space_url, poll_id):
     """
@@ -132,6 +123,7 @@ def EditPoll(request, space_url, poll_id):
                                       'get_place': place,
                                       'pollid': poll_id,},
                                      context_instance=RequestContext(request))
+
 
 class DeletePoll(DeleteView):
 
@@ -181,6 +173,7 @@ class ListPolls(ListView):
 
 
 def vote(request, poll_id, space_url):
+    place = get_object_or_404(Space, url=space_url)
     p = get_object_or_404(Poll, pk=poll_id)
     try:
         selected_choice = p.choice_set.get(pk=request.POST['choice'])
@@ -192,6 +185,123 @@ def vote(request, poll_id, space_url):
     else:
         selected_choice.votes += 1
         selected_choice.save()
-        return TemplateResponse(request, 'voting/poll_results.html', {'poll':p})
+        return TemplateResponse(request, 'voting/poll_results.html', {'poll':p, 'get_place': place})
+
+class AddVoting(FormView):
+
+    """
+    Create a new voting process. Only registered users belonging to a concrete group
+    are allowed to create voting processes.
+
+    versionadded: 0.1
+
+    :parameters: space_url
+    :context: get_place
+    """
+    form_class = VotingForm
+    template_name = 'voting/voting_form.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return '/spaces/' + self.space.url + '/'
+
+    def form_valid(self, form):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        form_uncommited = form.save(commit=False)
+        form_uncommited.author = self.request.user
+        form_uncommited.space = self.space
+        form_uncommited.save()
+        form.save_m2m()
+        return super(AddVoting, self).form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super(AddVoting, self).get_context_data(**kwargs)
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        context['get_place'] = self.space
+        return context
+
+    @method_decorator(permission_required('voting.add_voting'))
+    def dispatch(self, *args, **kwargs):
+        return super(AddVoting, self).dispatch(*args, **kwargs)
+
+class ViewVoting(DetailView):
+
+    """
+    View a specific voting process.
+    """
+    context_object_name = 'voting'
+    template_name = 'voting/voting_detail.html'
+
+    def get_object(self):
+        return Voting.objects.get(pk=self.kwargs['voting_id'])
+
+    def get_context_data(self, **kwargs):
+
+        """
+        Get extra context data for the ViewVoting view.
+        """
+        context = super(ViewVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        voting = Voting.objects.get(pk=self.kwargs['voting_id'])
+        all_proposals = Proposal.objects.all()
+        proposalsets = voting.proposalsets.all()
+        proposals = voting.proposals.all()
+        context['proposalsets'] = proposalsets
+        context['proposals'] = proposals
+        context['all_proposals'] = all_proposals
+
+        return context
+
+class EditVoting(UpdateView):
+
+    """
+    Edit an existent voting process.
+
+    :parameters: space_url, voting_id
+    :context: get_place
+    """
+    model = Voting
+    template_name = 'voting/voting_form.html'
+
+    def get_success_url(self):
+        self.space = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return '/spaces/' + self.space.url
+
+    def get_object(self):
+        cur_voting = get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+        return cur_voting
+
+    def get_context_data(self, **kwargs):
+        context = super(EditVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
+
+    @method_decorator(permission_required('voting.edit_voting'))
+    def dispatch(self, *args, **kwargs):
+        return super(EditVoting, self).dispatch(*args, **kwargs)
+
+class DeleteVoting(DeleteView):
+
+    """
+    Delete an existent voting process. Voting process deletion is only reserved to spaces
+    administrators or site admins.
+    """
+    context_object_name = "get_place"
+
+    def get_success_url(self):
+        space = self.kwargs['space_url']
+        return '/spaces/%s' % (space)
+
+    def get_object(self):
+        return get_object_or_404(Voting, pk=self.kwargs['voting_id'])
+
+    def get_context_data(self, **kwargs):
+
+        """
+        Get extra context data for the ViewVoting view.
+        """
+        context = super(DeleteVoting, self).get_context_data(**kwargs)
+        context['get_place'] = get_object_or_404(Space, url=self.kwargs['space_url'])
+        return context
 
 

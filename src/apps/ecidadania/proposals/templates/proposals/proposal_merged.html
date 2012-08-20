@@ -13,7 +13,7 @@ automatically if found in the data models.
     {% if form.title.value %}
         {% trans "Edit proposal" %} {{ form.title.value }}
     {% else %}
-        {% trans "Add new proposal" %}
+        {% trans "Add new merged proposal" %}
     {% endif %}
 {% endblock %}
 
@@ -36,7 +36,7 @@ automatically if found in the data models.
         {% if form.title.value %}
             <h3>{% trans "Edit proposal" %} {{ form.title.value }}</h3>
         {% else %}
-            <h3>{% trans "Add new proposal" %}</h3>
+            <h3>{% trans "Add new merged proposal" %}</h3>
         {% endif %}
 
         <form class="form-horizontal" action="" method="post">{% csrf_token %}
@@ -81,6 +81,22 @@ automatically if found in the data models.
                     {% endif %}
                 </div>
             </div>
+            <div class="control-group {% if form.merged_proposals.errors %}error{% endif %}">
+                <label>{{ form.merged_proposals.label }}</label>
+                <div class="controls">
+                    <div class="input-append">
+                        {{ form.merged_proposals }}
+                        {% if form.merged_proposals.help_text %}
+                            <span class="add-on"><a href="#" rel="tooltip" title="{{ form.merged_proposals.help_text }}"><i class="icon-question-sign"></i></a></span>
+                        {% endif %}
+                    </div>
+                    {% if form.merged_proposals.errors %}
+                        {% for error in form.merged_proposal.errors %}
+                            {{ error|escape }}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
             {% if "latitude" in form_field %}
             <div class="control-group {% if form.latitude.errors %}error{% endif %}">
                 <label>{{ form.latitude.label }}</label>
@@ -117,6 +133,7 @@ automatically if found in the data models.
                 </div>
             </div>
             {% endif %}
+
             {% if "tags" in form_field %}
             <div class="control-group {% if form.tags.errors %}error{% endif %}">
                 <label>{{ form.tags.label }}</label>

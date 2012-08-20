@@ -142,6 +142,49 @@ automatically if found in the data models.
                 </div>
             </div>
 
+            {% if user_is_admin %}
+                <hr>
+                <h3>{% trans "Staff members options" %}</h3>
+
+                <div class="control-group {% if form.space.errors %}error{% endif%}">
+                    <label>{{ form.space.label }}</label>
+                    <div class="controls">
+                        <div class="input-prepend">
+                            {{ form.space }}
+                            {% if form.space.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.space.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.space.errors %}
+                            <p class="help-block">
+                                {% for error in form.space.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="control-group {% if form.event_author.errors %}error{% endif%}">
+                   <label>{{ form.event_author.label }}</label>
+                    <div class="controls">
+                        <div class="input-prepend">
+                            {{ form.event_author }}
+                            {% if form.event_author.help_text %}
+                                <span class="add-on"><a href="#" rel="tooltip" title="{{ form.event_author.help_text }}"><i class="icon-question-sign"></i></a></span>
+                            {% endif %}
+                        </div>
+                        {% if form.event_author.errors %}
+                            <p class="help-block">
+                                {% for error in form.event_author.errors %}
+                                    {{ error|escape }}
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
             <hr />
             <a href="{{ get_place.get_absolute_url }}" class="btn btn-danger btn-small">&laquo; {% trans "Cancel" %}</a>
             <input class="btn btn-small btn-primary" type="submit" value="{% trans 'Create' %}" />

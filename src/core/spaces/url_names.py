@@ -1,3 +1,4 @@
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010-2012 Cidadania S. Coop. Galega
@@ -17,23 +18,22 @@
 # You should have received a copy of the GNU General Public License
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
-from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
+"""
+Module to store space related url names.
+"""
 
-from apps.ecidadania.voting.models import *
+EDIT_SPACE = 'edit-space'
 
-class ChoiceInline(admin.TabularInline):
-        model = Choice
-class PollAdmin(admin.ModelAdmin):
-        list_display = ('question', 'pub_date', 'poll_lastup', 'author',
-                                     'space')
-        search_fields = ('question', 'author', 'space')
+DELETE_SPACE = 'delete-space'
 
-        inlines = [ChoiceInline]
+LIST_SPACE_NEWS = 'list-space-news'
 
-class VotingAdmin(admin.ModelAdmin):
+CREATE_SPACE = 'create-space'
 
-        list_display = ('title', 'start_date', 'end_date', 'author', 'space')
-        search_fields = ('title', 'author', 'space')
-admin.site.register(Poll, PollAdmin)
-admin.site.register(Voting, VotingAdmin)
+LIST_SPACES = 'list-spaces'
+
+GOTO_SPACE = 'goto-space'
+
+EDIT_ROLES = 'edit-roles'
+
+SPACE_INDEX = 'space-index'

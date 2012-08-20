@@ -24,6 +24,7 @@ from django.contrib.auth.models import User
 from apps.thirdparty.tagging.fields import TagField
 from apps.thirdparty.tagging.models import Tag
 from core.spaces.models import Space
+from apps.ecidadania.proposals.models import *
 
 class Poll(models.Model):
     
@@ -51,21 +52,53 @@ class Poll(models.Model):
     def get_tags(self, tags):
         return Tag.objects.get_for_object(self)
 
-        @models.permalink
-        def get_absolute_url(self):
-            if self.space is not None:
-                return ('view-polls', (), {
-                    'space_url': self.space.url,
-                    'poll_id': str(self.id)})
-            else:
-                return ('view-polls', (), {
-                    'poll_id': str(self.id)})
+    @models.permalink
+    def get_absolute_url(self):
+        if self.space is not None:
+            return ('view-polls', (), {
+                'space_url': self.space.url,
+                'poll_id': str(self.id)})
+        else:
+            return ('view-polls', (), {
+                'poll_id': str(self.id)})
 
 class Choice(models.Model):
     poll = models.ForeignKey(Poll)
     choice_text = models.CharField(_('Choice'), max_length=200, blank=True, null=True, help_text=_('Enter choice to be voted upon'))
     votes = models.IntegerField(blank=True, null=True, default='0')
-       
+    
+    @models.permalink
+    def get_absolute_url(self):
+        if self.space is not None:
+            return ('view-polls', (), {
+                'space_url': self.space.url,
+                'poll_id': str(self.id)})
+        else:
+            return ('view-polls', (), {
+                'poll_id': str(self.id)})
 
+class Voting(models.Model):
+    title = models.CharField(_('Title'), max_length=200, unique=True)
+    description = models.TextField(_('Description'), blank=True, null=True)
 
+    space = models.ForeignKey(Space, blank=True, null=True)
+    date = models.DateTimeField(_('Date created'), auto_now_add=True)
+    date_mod = models.DateTimeField(_('Last update'), auto_now=True)
+    author = models.ForeignKey(User, blank=True, null=True)
+    start_date = models.DateField(_('Start date'), blank=True, null=True)
+    end_date = models.DateField(_('End date'), blank=True, null=True)
 
+    proposalsets = models.ManyToManyField(ProposalSet, blank=True, null=True)
+
+    proposals = models.ManyToManyField(Proposal, blank = True, null=True, limit_choices_to = {'proposalset__isnull': True})
+
+    @models.permalink
+    def get_absolute_url(self):
+        if self.space is not None:
+            return ('view-votings', (), {
+                'space_url': self.space.url,
+                'voting_id': str(self.id)})
+        else:
+            return ('view-votings', (), {
+                'voting_id': str(self.id)})
+   
