@@ -21,6 +21,7 @@ OpenLayers.Util.onImageLoadErrorColor = 'transparent';
 OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 // See http://crschmidt.net/~crschmidt/spherical_mercator.html#reprojecting-points
 S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
+S3.gis.proj4236 = new OpenLayers.Projection('EPSG:4236');
 S3.gis.projection_current = new OpenLayers.Projection('EPSG:' + S3.gis.projection);
 S3.gis.options = {
     displayProjection: S3.gis.proj4326,
@@ -633,7 +634,7 @@ function addToolbar() {
         }
         //toolbar.add(lineButton);
         if (S3.gis.draw_polygon) {
-            addPolygonControl(toolbar, polygon_pressed);
+            addPolygonControl(toolbar, polygon_pressed, true);
         }
         //toolbar.add(dragButton);
         //toolbar.add(resizeButton);

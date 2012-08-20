@@ -2002,8 +2002,8 @@ class S3SavedSearch(S3Model):
                                         writable = False,
                                         default = auth.user_id),
                                   Field("search_vars","text",
-                                        label = T("Search Criteria"),
-                                        represent=lambda id:s3_search_vars_represent(id)),
+                                        label = T("Search Criteria")),
+                                        #represent=lambda id:s3_search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   self.pr_person_id(
