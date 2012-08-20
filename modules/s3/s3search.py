@@ -2077,17 +2077,29 @@ class S3LocationSearch(S3Search):
             fieldname = str.lower(_vars.field)
             field = table[fieldname]
 
-            # Default fields to return
-            fields = [table.id,
-                      table.name,
-                      table.level,
-                      table.parent,
-                      table.path,
-                      table.uuid,
-                      table.lat,
-                      table.lon,
-                      table.addr_street,
-                      table.addr_postcode]
+            if _vars.simple:
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.path,
+                          table.L0,
+                          table.L1,
+                          table.L2,
+                          table.L3
+                          ]
+            else:
+                # Default fields to return
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.parent,
+                          table.path,
+                          table.uuid,
+                          table.lat,
+                          table.lon,
+                          table.addr_street,
+                          table.addr_postcode
+                          ]
 
             # Optional fields
             if "level" in _vars and _vars.level:
@@ -2201,7 +2213,8 @@ class S3LocationSearch(S3Search):
                           table.lat,
                           table.lon,
                           table.addr_street,
-                          table.addr_postcode]
+                          table.addr_postcode
+                          ]
             else:
                 output = current.xml.json_message(
                                 False,

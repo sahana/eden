@@ -193,8 +193,8 @@ def hospital():
                     table.organisation_id.writable = False
                     table.person_id.readable = False
                     table.person_id.writable = False
-                elif r.component.name == "ctc_capability":
-                    table = db.hms_ctc_capability
+                elif r.component.name == "ctc":
+                    table = db.hms_ctc
                     table.ctc.comment = DIV(DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Cholera Treatment Center"),
                                                                   T("Does this facility provide a cholera treatment center?"))))
@@ -233,6 +233,8 @@ def hospital():
                     table.problem_details.comment = DIV(DIV(_class="tooltip",
                                                             _title="%s|%s" % (T("Current problems, details"),
                                                                               T("Please specify any problems and obstacles with the proper handling of the disease, in detail (in numbers, where appropriate). You may also add suggestions the situation could be improved."))))
+            else:
+                response.s3.formats["have"] = r.url(representation="have")
 
         elif r.representation == "aadata":
             pass
