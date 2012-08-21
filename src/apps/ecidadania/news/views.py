@@ -84,7 +84,10 @@ class ViewPost(DetailView):
 
     def get_object(self):
         post = Post.objects.get(pk=self.kwargs['post_id'])
-        post.views = post.views + 1
+        try:
+            post.views = post.views + 1
+        except:
+            post.views = 1
         post.save()
         return post
 
