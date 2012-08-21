@@ -217,11 +217,16 @@ class S3Config(Storage):
     def get_auth_record_approver_role(self):
         """ UID of the record approver role """
         return self.auth.get("record_approver_role", "APPROVER")
+    def get_auth_owner_entity(self):
+        """ Hook to determine the owner entity of a record """
+        return self.auth.get("owner_entity", None)
 
     def get_aaa_role_modules(self):
         """
             Which modules are includes in the Role Manager
             - to assign discrete permissions to via UI
+
+            @todo: change prefix to "auth"
         """
         T = current.T
         return self.aaa.get("role_modules", OrderedDict([
@@ -237,6 +242,8 @@ class S3Config(Storage):
     def get_aaa_access_levels(self):
         """
             Access levels for the Role Manager UI
+
+            @todo: change prefix to "auth"
         """
         T = current.T
         return self.aaa.get("access_levels", OrderedDict([

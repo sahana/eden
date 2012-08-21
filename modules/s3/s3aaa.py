@@ -160,6 +160,7 @@ class AuthS3(Auth):
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
+
         self.messages.lock_keys = False
         self.messages.registration_pending_approval = "Account registered, however registration is still pending approval - please wait until confirmation received."
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
@@ -3043,8 +3044,11 @@ class AuthS3(Auth):
             if OENT in fields:
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
-                # Check for type-specific handler to find the owner entity
-                handler = s3db.get_config(tablename, "owner_entity")
+                # Check for custom handler to find the owner entity
+                # (global setting overrides table-specific setting)
+                handler = current.deployment_settings.get_auth_owner_entity()
+                if handler is None:
+                    handler = s3db.get_config(tablename, "owner_entity")
                 if callable(handler):
                     owner_entity = handler(table, row)
                     data[OENT] = owner_entity

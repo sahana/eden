@@ -50,6 +50,15 @@ settings.fin.currencies = {
 settings.security.policy = 7 # Realm w Hierarchy
 settings.security.map = True
 
+# Owner Entity
+def eurosha_owner_entity(table, row):
+    if auth.user is not None:
+        return s3db.pr_get_pe_id("org_organisation",
+                                 auth.user.organisation_id)
+    else:
+        return None
+settings.auth.owner_entity = eurosha_owner_entity
+
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted.
 settings.gis.menu = "Country"
@@ -229,5 +238,5 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
-    
+
 ])
