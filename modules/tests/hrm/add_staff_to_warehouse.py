@@ -49,11 +49,10 @@ class AddStaffToWarehouse(SeleniumUnitTest):
             wh_id = int(url_parts[-2])
         except:
             wh_id = int(url_parts[-1])
-        browser.get("%s/inv/warehouse/n/%s/human_resource_site" % (config.url, wh_id))
-        
-        self.create("hrm_human_resource", 
+        browser.get("%s/inv/warehouse/%s/human_resource_site" % (config.url, wh_id))
+        self.create("hrm_human_resource_site", 
                     [
-                     ( "person_id",
+                     ( "human_resource_id",
                        "Quito Cromos",
                        "autocomplete")
                      ]
