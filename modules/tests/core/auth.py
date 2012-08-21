@@ -4,58 +4,31 @@ __all__ = ["login", "logout", "register"]
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-from gluon import current
-from gluon.storage import Storage
-from .core_utils import *
 
-current.data = Storage()
-current.data["auth"] = {
-        "normal" : {
-                "email": "test@example.com",
-                "password": "eden",
-                "first_name": "Test",
-                "last_name": "User",
-            },
-        "admin" : {
-                "email": "admin@example.com",
-                "password": "testing",
-                "first_name": "Admin",
-                "last_name": "User",
-            },
-    }
+from gluon import current
+
+from s3 import s3_debug
+
+from .utils import *
 
 # -----------------------------------------------------------------------------
-def login(reporter, account="normal", nexturl=None):
+def login(account="normal"):
     """ Login to the system """
 
     config = current.test_config
     browser = config.browser
-    data = current.data["auth"]
 
-    if account in data:
-        email = data[account]["email"]
-        password = data[account]["password"]
-    elif isinstance(account, (tuple, list)):
-        email = account[0]
-        password = account[1]
+    url = "%s/default/user/login" % config.url
+    browser.get(url)
+
+    if account == "normal":
+        email = "test@example.com"
+        password = "eden"
+    elif account == "admin":
+        email = "admin@example.com"
+        password = "testing"
     else:
         raise NotImplementedError
-
-    # If the user is already logged in no need to do anything so return
-    if browser.page_source != None and \
-       browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0:
-        # If the URL is different then move to the new URL
-        if not browser.current_url.endswith(nexturl):
-            url = "%s/%s" % (config.url, nexturl)
-            browser.get(url)
-        return
-
-    if nexturl:
-        url = "%s/default/user/login?_next=/%s/%s" % \
-            (config.url, current.request.application, nexturl)
-    else:
-        url = "%s/default/user/login" % config.url
-    browser.get(url)
 
     # Login
     elem = browser.find_element_by_id("auth_user_email")
@@ -69,15 +42,15 @@ def login(reporter, account="normal", nexturl=None):
     try:
         elem = browser.find_element_by_xpath("//div[@class='confirmation']")
     except NoSuchElementException:
-        reporter("Login failed.. so registering account")
+        s3_debug("Login failed")
         # Try registering
-        register(account, reporter)
+        register(account)
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
-
+        
 # -----------------------------------------------------------------------------
-def logout(reporter):
+def logout():
     """ Logout """
 
     config = current.test_config
@@ -86,12 +59,10 @@ def logout(reporter):
     url = "%s/default/user/login" % config.url
     browser.get(url)
 
-    browser.find_element_by_id("auth_menu_email").click()
-
     try:
         elem = browser.find_element_by_id("auth_menu_logout")
     except NoSuchElementException:
-        reporter("Logged-out already")
+        s3_debug("Logged-out already")
         return True
 
     elem.click()
@@ -102,27 +73,30 @@ def logout(reporter):
     except NoSuchElementException:
         assert 0, "Logout unsuccesful"
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
 
 # -----------------------------------------------------------------------------
-def register(reporter, account="normal"):
+def register(account="normal"):
     """ Register on the system """
 
     config = current.test_config
     browser = config.browser
-    data = current.data["auth"]
-
-    if account in data:
-        email = data[account]["email"]
-        first_name = data[account]["first_name"]
-        last_name = data[account]["last_name"]
-        password = data[account]["password"]
-    else:
-        raise NotImplementedError
 
     # Load homepage
     homepage()
+
+    if account == "normal":
+        first_name = "Test"
+        last_name = "User"
+        email = "test@example.com"
+    elif account == "admin":
+        first_name = "Admin"
+        last_name = "User"
+        email = "admin@example.com"
+    else:
+        raise NotImplementedError
+    password = "eden"
 
     # Register user
     elem = browser.find_element_by_id("auth_user_first_name")
@@ -144,7 +118,7 @@ def register(reporter, account="normal"):
     except NoSuchElementException:
         assert 0, "Registration unsuccesful"
     else:
-        reporter(elem.text)
+        s3_debug(elem.text)
         return True
 
 # END =========================================================================
