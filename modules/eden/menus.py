@@ -235,7 +235,8 @@ class S3MainMenu(object):
         auth = current.auth
         s3db = current.s3db
         request = current.request
-        _config = current.response.s3.gis.config
+        s3 = current.session.s3
+        _config = s3.gis_config_id
 
         # See if we need to switch config before we decide which
         # config item to mark as active:
@@ -247,13 +248,10 @@ class S3MainMenu(object):
                 # Manually-crafted URL?
                 pass
             else:
-                if _config is None or _config.id != config:
+                if _config is None or _config != config:
                     # Set this as the current config
-                    gis = current.gis
-                    gis.set_config(config)
-                    s3 = current.session.s3
-                    cfg = gis.get_config()
                     s3.gis_config_id = config
+                    cfg = current.gis.get_config()
                     s3.location_filter = cfg.region_location_id
                     if settings.has_module("event"):
                         # See if this config is associated with an Event
@@ -293,7 +291,7 @@ class S3MainMenu(object):
                         "id": "gis_menu_id_0",
                         # @ToDo: Show when default item is selected without having
                         # to do a DB query to read the value
-                        #"value": _config and _config.id is 0,
+                        #"value": _config is 0,
                         "request_type": "load"
                        }, args=args, vars={"_config": 0}
                     )
@@ -302,7 +300,7 @@ class S3MainMenu(object):
                 gis_menu(
                     MM({"name": config.name,
                         "id": "gis_menu_id_%s" % config.id,
-                        "value": _config and _config.id == config.id,
+                        "value": _config == config.id,
                         "request_type": "load"
                        }, args=args, vars={"_config": config.id}
                     )
