@@ -6251,7 +6251,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_role_modules()
+        return current.deployment_settings.get_auth_role_modules()
 
     # -------------------------------------------------------------------------
     def get_access_levels(self):
@@ -6261,7 +6261,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_access_levels()
+        return current.deployment_settings.get_auth_access_levels()
 
     # -------------------------------------------------------------------------
     def get_assigned_roles(self, entity_id=None, user_id=None):

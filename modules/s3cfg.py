@@ -52,7 +52,6 @@ class S3Config(Storage):
         self.frontpage.rss = []
         self.fin = Storage()
         self.L10n = Storage()
-        self.aaa = Storage()
         self.mail = Storage()
         self.msg = Storage()
         self.options = Storage()
@@ -220,16 +219,13 @@ class S3Config(Storage):
     def get_auth_owner_entity(self):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("owner_entity", None)
-
-    def get_aaa_role_modules(self):
+    def get_auth_role_modules(self):
         """
             Which modules are includes in the Role Manager
             - to assign discrete permissions to via UI
-
-            @todo: change prefix to "auth"
         """
         T = current.T
-        return self.aaa.get("role_modules", OrderedDict([
+        return self.auth.get("role_modules", OrderedDict([
             ("staff", "Staff"),
             ("vol", "Volunteers"),
             ("member", "Members"),
@@ -239,14 +235,12 @@ class S3Config(Storage):
             ("survey", "Assessments"),
             ("irs", "Incidents")
         ]))
-    def get_aaa_access_levels(self):
+    def get_auth_access_levels(self):
         """
             Access levels for the Role Manager UI
-
-            @todo: change prefix to "auth"
         """
         T = current.T
-        return self.aaa.get("access_levels", OrderedDict([
+        return self.auth.get("access_levels", OrderedDict([
             ("reader", "Reader"),
             ("data_entry", "Data Entry"),
             ("editor", "Editor"),

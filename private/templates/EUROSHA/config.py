@@ -42,7 +42,6 @@ settings.L10n.thousands_separator = ","
 settings.fin.currencies = {
     "EUR" : T("Euros"),
     "GBP" : T("Great British Pounds"),
-    #"CHF" : T("Swiss Francs"),
     "USD" : T("United States Dollars"),
 }
 
@@ -52,9 +51,10 @@ settings.security.map = True
 
 # Owner Entity
 def eurosha_owner_entity(table, row):
-    if auth.user is not None:
-        return s3db.pr_get_pe_id("org_organisation",
-                                 auth.user.organisation_id)
+    user = current.auth.user
+    if user is not None:
+        return current.s3db.pr_get_pe_id("org_organisation",
+                                         user.organisation_id)
     else:
         return None
 settings.auth.owner_entity = eurosha_owner_entity
