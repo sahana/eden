@@ -1,99 +1,46 @@
-""" Sahana Eden Automated Test - HRM001 Create Staff
-
-    @copyright: 2011-2012 (c) Sahana Software Foundation
-    @license: MIT
-
-    Permission is hereby granted, free of charge, to any person
-    obtaining a copy of this software and associated documentation
-    files (the "Software"), to deal in the Software without
-    restriction, including without limitation the rights to use,
-    copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following
-    conditions:
-
-    The above copyright notice and this permission notice shall be
-    included in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-    OTHER DEALINGS IN THE SOFTWARE.
-"""
-
-from gluon import current
-import unittest
-from tests.web2unittest import SeleniumUnitTest
+__all__ = ["create_staff"]
+# Selenium WebDriver
+from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+#from selenium.webdriver.common.keys import Keys
+from gluon import current
 from s3 import s3_debug
 from tests import *
-#import unittest, re, time
-import time
+import unittest, re, time
 
-class CreateStaff(SeleniumUnitTest):
-    def test_hrm001_create_staff(self):
-        """
-            @case: HRM001
-            @description: Create a Staff
-            
-            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
-            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
-        """
-        print "\n"
+def create_staff():
 
-        self.login(account="admin", nexturl="hrm/staff/create")
-
-        self.create("hrm_human_resource", 
-                    [( "organisation_id",
-                       "Acme Suppliers",
-                       "autocomplete"),
-                     ( "first_name",
-                       "Robert",
-                       "pr_person"),
-                     ( "middle_name",
-                       "James",
-                       "pr_person"),
-                     ( "last_name",
-                       "Lemon",
-                       "pr_person"),
-                     ( "email",
-                       "rjltestdonotusetest99@romanian.com",
-                       "pr_person"),
-                     ( "job_title_id",
-                       "Warehouse Manager",
-                       "option"),
-                     ( "site_id",
-                       "AP Zone",
-                       "autocomplete"),
-                     ]
-                     )
-        
-
-    def test_hrm001_create_staff_registry(self):
-        """
-            @case: HRM001
-            @description: Create a Staff from registry
-            
-            @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
-            @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
-        """
-        print "\n"
-
-        self.login(account="admin", nexturl="hrm/staff/create")
-        self.browser.find_element_by_id("select_from_registry").click()
-        self.create("hrm_human_resource", 
-                    [( "organisation_id",
-                       "Timor-Leste Red Cross Society",
-                       "autocomplete"),
-                     ( "person_id",
-                       "Yakobus Maia",
-                       "autocomplete"),
-                     ( "site_id",
-                       "Ainaro Branch Office",
-                       "autocomplete")
-                     ]
-                     )
+    config = current.test_config
+    browser = config.browser
+    driver = browser
+    driver.find_element_by_link_text("Staff & Volunteers").click()
+    driver.find_element_by_link_text("New Staff Member").click()
+    w_autocomplete("Rom","hrm_human_resource_organisation","Romanian Food Assistance Association (Test) (RFAAT)",False)
+    driver.find_element_by_id("pr_person_first_name").clear()
+    driver.find_element_by_id("pr_person_first_name").send_keys("Robert")
+    driver.find_element_by_id("pr_person_middle_name").clear()
+    driver.find_element_by_id("pr_person_middle_name").send_keys("James")
+    driver.find_element_by_id("pr_person_last_name").clear()
+    driver.find_element_by_id("pr_person_last_name").send_keys("Lemon")
+    driver.find_element_by_id("pr_person_date_of_birth").click()
+    driver.find_element_by_id("pr_person_date_of_birth").clear()
+    driver.find_element_by_id("pr_person_date_of_birth").send_keys("1980-10-14")
+    driver.find_element_by_id("pr_person_gender").click()
+    driver.find_element_by_id("pr_person_gender").send_keys("male")
+    driver.find_element_by_id("pr_person_occupation").clear()
+    driver.find_element_by_id("pr_person_occupation").send_keys("Social Worker")
+    driver.find_element_by_id("pr_person_email").clear()
+    driver.find_element_by_id("pr_person_email").send_keys("rjltestdonotusetest4@romanianfoodassistanceassociation.com")
+    driver.find_element_by_id("hrm_human_resource_job_title").clear()
+    driver.find_element_by_id("hrm_human_resource_job_title").send_keys("Social Worker")
+    driver.find_element_by_id("hrm_human_resource_start_date").click()
+    driver.find_element_by_id("hrm_human_resource_start_date").clear()
+    driver.find_element_by_id("hrm_human_resource_start_date").send_keys("2012-02-02")
+    driver.find_element_by_css_selector("#hrm_human_resource_start_date__row > td").click()
+    driver.find_element_by_id("hrm_human_resource_end_date").click()
+    driver.find_element_by_id("hrm_human_resource_end_date").clear()
+    driver.find_element_by_id("hrm_human_resource_end_date").send_keys("2015-03-02")
+    w_autocomplete("Buch","hrm_human_resource_site","Bucharest RFAAT Centre (Test) (Office)",False)
+    driver.find_element_by_css_selector("input[type=\"submit\"]").click()
+    
+    
