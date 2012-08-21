@@ -1330,7 +1330,14 @@ class S3OptionsMenu(object):
                         M("Search", m="search"),
                         M("Import", m="import")
                     ),
-                    M("Offices", f="office", restrict=[ADMIN])(
+                    M("Offices", f="office")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        M("Search", m="search"),
+                        M("Import", m="import")
+                    ),
+                    M("Facilities", f="facility")(
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
@@ -1343,6 +1350,11 @@ class S3OptionsMenu(object):
                         M("List All"),
                     ),
                     M("Office Types", f="office_type",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Facility Types", f="facility_type",
                       restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
