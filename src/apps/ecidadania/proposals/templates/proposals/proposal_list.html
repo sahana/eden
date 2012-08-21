@@ -34,7 +34,7 @@
                         <div class="title"><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></div>
                         <div class="message">{{ p.message|truncatewords:12 }}</div>
                         {% get_comment_count for p as comment_count %}
-                        <div class="creator">{% trans "proposed by " %} <a href="{% url 'profile_public' p.author %}">{{ p.author }}</a> {% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} | <a href="{{ p.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></div>
+                        <div class="creator">{% trans "proposed by " %} <a href="{% url 'profile_public' p.author %}">{{ p.author }}</a> {% if p.proposalset %}{% trans " on " %} <a href="{{ p.proposalset.get_absolute_url }}">{{ p.proposalset }}</a> {% endif %}|{% trans " at " %} {{ p.pub_date|date:"j/m/Y G:i" }} <a href="{{ p.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></div>
                     </div>
                     {% comment %}
                         The following div is to make the wrapper to wrap everything.
