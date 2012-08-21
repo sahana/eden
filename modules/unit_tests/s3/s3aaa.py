@@ -3633,6 +3633,7 @@ class OwnerEntityTests(unittest.TestCase):
 
     def tearDown(self):
 
+        s3db = current.s3db
         settings = current.deployment_settings
 
         # Rollback DB
