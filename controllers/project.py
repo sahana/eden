@@ -82,7 +82,10 @@ def project():
 
         if r.interactive:
             if not r.component:
-                if not r.id and r.function == "index":
+                if r.id:
+                    r.table.human_resource_id.represent = lambda id: \
+                        s3db.hrm_human_resource_represent(id, show_link=True)
+                elif r.function == "index":
                     r.method = "search"
                     # If just a few Projects, then a List is sufficient
                     #r.method = "list"
