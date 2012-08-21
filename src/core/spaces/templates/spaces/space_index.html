@@ -56,9 +56,7 @@
                                 <li><a href="{% url 'delete_fields' get_place.url %}">
                                     <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete form field' %}" title="{% trans 'Delete form field'%}"/>{% trans 'Delete form field '%}
                                 </a></li>
-
                             {% endif %}
-                        
                             
                             {% if perms.spaces.delete_space %}
                                 <li><a href="{% url 'delete-space' get_place.url %}">
@@ -370,7 +368,10 @@
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
                                     {% if not proposal.merged %}
-                                        <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} {{ proposal.proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
+                                        <li><a href="{{ proposal.get_absolute_url }}">{{ proposal.title }}</a>
+                                            {% trans "by" %} {{ proposal.author }} {% if proposal.proposalset %}
+                                            {% trans "on" %} <a href="{{ proposal.proposalset.get_absolute_url }}">{{ proposal.proposalset }}</a> {% endif %}
+                                            {% trans "at" %} {{ proposal.pub_date|date:"d F Y" }}</li>
                                     {% endif %}        
                                 {% empty %}
                                     <li>{% trans "No proposals available." %}</li>
@@ -388,7 +389,7 @@
                             <ul class="unstyled">
                                 {% for proposal in proposals %}
                                     {% if proposal.merged  %}
-                                        <li><a href="{{ proposal.get_absolute_url}}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on"%} {{ proposalset }} {% trans "at" %} {{ proposal.pub_date|date:"d F Y"}}</li>
+                                        <li><a href="{{ proposal.get_absolute_url}}">{{ proposal.title }}</a> {% trans "by" %} {{ proposal.author }} {% trans "on" %} <a href="{{ proposal.proposalset.get_absolute_url }}">{{ proposalset }}</a> {% trans "at" %} {{ proposal.pub_date|date:"d F Y"}}</li>
                                     {% endif %}
                                 {% empty %}
                                         <li>{% trans "No merged proposals" %}</li>
@@ -418,11 +419,11 @@
                                         </li>
                                     {% endif %}
                                 </ul>
-                                 <ul class="unstyled">
+                                <ul class="unstyled">
                                     {% if perms.proposals.add_proposalset %}
                                         <li>
                                             <a href="{% url 'merge_proposal' get_place.url %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Merge proposal' %}" title="{% trans 'Merge Proposal' %}"/>{% trans "Create Merged Proposal" %}
+                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Merge proposal' %}" title="{% trans 'Merge Proposal' %}"/>{% trans "Create merged proposal" %}
                                             </a>
                                         </li>
                                     {% endif %}
