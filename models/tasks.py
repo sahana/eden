@@ -141,6 +141,20 @@ if settings.has_module("msg"):
 
     tasks["msg_process_inbound_email"] = msg_process_inbound_email
 
+    # -------------------------------------------------------------------------
+    def msg_twilio_inbound_sms(account, user_id):
+        """
+            Poll an inbound SMS(Twilio) source.
+
+            @param account: account name for the SMS source to read from.
+            This uniquely identifies one inbound SMS task.
+        """
+        # Run the Task
+        result = msg.twilio_inbound_sms(account)
+        return result
+
+    tasks["msg_twilio_inbound_sms"] = msg_twilio_inbound_sms
+
     # -----------------------------------------------------------------------------
     def msg_parse_workflow(workflow, source, user_id):
         """
@@ -149,9 +163,9 @@ if settings.has_module("msg"):
         # Run the Task
         result = msg.parse_import(workflow, source)
         return result
-        
+
     tasks["msg_parse_workflow"] = msg_parse_workflow
-    
+
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 

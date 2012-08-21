@@ -1303,6 +1303,7 @@ class S3OptionsMenu(object):
                         M("Group Memberships", f="group_membership"),
                     ),
                     M("Email InBox", f="email_inbox"),
+                    M("Twilio SMS InBox", f="twilio_inbox"),
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(
@@ -1456,7 +1457,7 @@ class S3OptionsMenu(object):
                     M(IMPORT, f="location",
                       m="import", p="create"),
                  ),
-                M("Partner Orgnisations",  f="partners")(
+                M("Partner Organizations",  f="partners")(
                     M("New", m="create"),
                     M("List All"),
                     M("Search", m="search"),
@@ -1594,6 +1595,29 @@ class S3OptionsMenu(object):
         return self.admin()
 
     # -------------------------------------------------------------------------
+    def transport(self):
+        """ TRANSPORT """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="transport")(
+                    M("Airports", f="airport")(
+                        M("New", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Search", m="search"),
+                    ),
+                    M("Seaports", f="seaport")(
+                        M("New", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        M("List All"),
+                        M("Map", m="map"),
+                        #M("Search", m="search"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def vehicle(self):
         """ VEHICLE / Vehicle Tracking """
 
@@ -1645,6 +1669,7 @@ class S3OptionsMenu(object):
             M("Parsing Settings", c="msg", f="workflow"),                       
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
+            M("Twilio SMS Settings", c="msg", f="twilio_inbound_settings"),           
             M("Twitter Settings", c="msg", f="twitter_settings",
                 args=[1], m="update")
         ]

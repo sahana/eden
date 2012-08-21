@@ -48,7 +48,6 @@ class SyncDataModel(S3Model):
              "sync_repository",
              "sync_task",
              "sync_job",
-             "sync_conflict",
              "sync_log"
              ]
 
@@ -208,7 +207,8 @@ class SyncDataModel(S3Model):
                   list_fields=["name",
                                "uuid",
                                "accept_push",
-                               (T("Last Synchronization"), "last_sync_time")
+                               (T("Last Pull"), "last_pull_time"),
+                               (T("Last Push"), "last_push_time"),
                               ],
                   onaccept=self.sync_repository_onaccept,
                   ondelete=self.sync_repository_ondelete,
@@ -279,14 +279,21 @@ class SyncDataModel(S3Model):
 
         tablename = "sync_task"
         table = define_table(tablename,
+                             repository_id(),
                              Field("resource_name",
                                    notnull=True),
-                             repository_id(),
-                             Field("last_sync", "datetime",
+                             Field("resource_filter",
+                                   readable=False,
+                                   writable=False,
+                                   label=T("Filter")),
+                             Field("last_pull", "datetime",
                                    readable=True,
                                    writable=False,
-                                   update="",
-                                   label=T("Last synchronized on")),
+                                   label=T("Last pull on")),
+                             Field("last_push", "datetime",
+                                   readable=True,
+                                   writable=False,
+                                   label=T("Last push on")),
                              Field("mode", "integer",
                                    requires = IS_IN_SET(sync_mode,
                                                         zero=None),
@@ -380,7 +387,8 @@ class SyncDataModel(S3Model):
         tablename = "sync_job"
         table = define_table(tablename,
                              repository_id(),
-                             scheduler_task_id())
+                             scheduler_task_id(),
+                             *s3_meta_fields())
 
         # CRUD Strings
         ADD_JOB = T("Add Job")
@@ -400,30 +408,10 @@ class SyncDataModel(S3Model):
             msg_no_match = T("No jobs configured"))
 
         # Resource Configuration
-        set_method("sync", "job",
+        set_method("sync", "repository",
                    component_name="job",
                    method="reset",
                    action=sync_job_reset)
-
-        # -------------------------------------------------------------------------
-        # Conflicts
-        # -------------------------------------------------------------------------
-        # @todo: implement table
-        tablename = "sync_conflict"
-        table = define_table(tablename,
-                             repository_id(),
-                             Field("dummy"))
-
-        # Field configuration?
-        # CRUD Strings?
-
-        # Resource Configuration
-        configure(tablename,
-                  insertable=False,
-                  editable=False)
-
-        # Reusable Fields?
-        # Components?
 
         # -------------------------------------------------------------------------
         # Log
@@ -479,7 +467,8 @@ class SyncDataModel(S3Model):
         """ Repository representation """
 
         db = current.db
-        rtable = db.sync_repository
+
+        rtable = current.s3db.sync_repository
         repository = db(rtable.id == rid).select(rtable.name,
                                                  limitby=(0, 1)).first()
         try:
@@ -497,22 +486,27 @@ class SyncDataModel(S3Model):
         """
 
         db = current.db
+        s3db = current.s3db
+
+        # Remove the URL to allow re-setup of the same repo
+        rtable = s3db.sync_repository
+        db(rtable.id == row.id).update(url=None)
 
         # Delete all resources in this repository
-        rtable = db.sync_task
-        db(rtable.repository_id == row.id).update(deleted=True)
+        ttable = s3db.sync_task
+        db(ttable.repository_id == row.id).update(deleted=True)
 
         # Delete all jobs for this repository
         # @todo: remove scheduler_task entry as well
-        jtable = db.sync_job
+        jtable = s3db.sync_job
         db(jtable.repository_id == row.id).update(deleted=True)
 
         # Delete all pending conflicts of this repository
-        ctable = db.sync_conflict
+        ctable = s3db.sync_conflict
         db(ctable.repository_id == row.id).delete()
 
         # Delete all log entries for this repository
-        ltable = db.sync_log
+        ltable = s3db.sync_log
         db(ltable.repository_id == row.id).delete()
 
         return
@@ -530,10 +524,9 @@ class SyncDataModel(S3Model):
             return
 
         if repository_id:
-            db = current.db
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             query = (rtable.id == repository_id)
-            repository = db(query).select(limitby=(0, 1)).first()
+            repository = current.db(query).select(limitby=(0, 1)).first()
             if repository and repository.url:
                 success = current.manager.sync.request_registration(repository)
                 if not success:
@@ -556,13 +549,12 @@ class SyncDataModel(S3Model):
         resource_name = form.vars.resource_name
 
         if repository_id and resource_name:
-            db = current.db
-            ttable = db.sync_task
+            ttable = current.s3db.sync_task
             query = (ttable.repository_id == repository_id) & \
                     (ttable.resource_name == resource_name) & \
                     (ttable.deleted != True)
-            row = db(query).select(ttable.id,
-                                   limitby=(0, 1)).first()
+            row = current.db(query).select(ttable.id,
+                                           limitby=(0, 1)).first()
             if row:
                 form.errors.resource_name = \
                 T("This resource is already configured for this repository")
@@ -571,15 +563,27 @@ class SyncDataModel(S3Model):
 class SyncRepositoryVirtualFields:
     """ Repository virtual fields """
 
-    def last_sync_time(self):
-        """ Last synchronization date/time for this repository """
+    def last_pull_time(self):
+        """ Last pull synchronization date/time for this repository """
 
         table = current.s3db.sync_task
         query = (table.repository_id == self.sync_repository.id)
-        task = current.db(query).select(orderby=~table.last_sync,
+        task = current.db(query).select(orderby=~table.last_pull,
                                         limitby=(0,1)).first()
         if task:
-            return S3DateTime.datetime_represent(task.last_sync, utc=True)
+            return S3DateTime.datetime_represent(task.last_pull, utc=True)
+        else:
+            return current.T("never")
+
+    def last_push_time(self):
+        """ Last push synchronization date/time for this repository """
+
+        table = current.s3db.sync_task
+        query = (table.repository_id == self.sync_repository.id)
+        task = current.db(query).select(orderby=~table.last_push,
+                                        limitby=(0,1)).first()
+        if task:
+            return S3DateTime.datetime_represent(task.last_push, utc=True)
         else:
             return current.T("never")
 
@@ -627,7 +631,7 @@ def sync_job_reset(r, **attr):
             job_id = r.component_id
             if job_id:
                 S3Task.reset(job_id)
-                current.session.confirmation = T("Job reactivated")
+                current.session.confirmation = current.T("Job reactivated")
     r.component_id = None
     redirect(r.url(method=""))
 
@@ -635,9 +639,13 @@ def sync_job_reset(r, **attr):
 def sync_now(r, **attr):
     """
         Manual synchronization of a repository
+
+        @param r: the S3Request
+        @param attr: controller options for the request
     """
 
     T = current.T
+    auth = current.auth
     response = current.response
 
     rheader = attr.get("rheader", None)
@@ -648,6 +656,9 @@ def sync_now(r, **attr):
     s3task = current.s3task
 
     sync = S3Sync()
+
+    if not auth.s3_logged_in():
+        auth.permission.fail()
 
     if r.interactive:
         if r.http in ("GET", "POST"):
@@ -660,7 +671,7 @@ def sync_now(r, **attr):
             if form.accepts(r.post_vars, current.session):
                 task_id = s3task.async("sync_synchronize",
                                        args = [repository.id],
-                                       vars = dict(user_id=current.auth.user.id,
+                                       vars = dict(user_id=auth.user.id,
                                                    manual=True))
                 if task_id is False:
                     response.error = T("Could not initiate manual synchronization.")

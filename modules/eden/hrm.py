@@ -3357,53 +3357,48 @@ def hrm_active(person_id):
     """
 
     now = current.request.utcnow
-    last_year = now - datetime.timedelta(days=365)
 
-    # Time spent on Programme work in the last 12 months
+    # Time spent on Programme work
     htable = current.s3db.hrm_programme_hours
     query = (htable.deleted == False) & \
             (htable.person_id == person_id) & \
-            (htable.date > last_year)
+            (htable.date != None)
     programmes = current.db(query).select(htable.hours,
                                           htable.date,
                                           orderby=htable.date)
-    programme_hours = 0
-    months = 12
-    for programme in programmes:
-        if programme.hours:
-            programme_hours += programme.hours
     if programmes:
-        first = programmes.first().date
-        first_month = first.month
-        first_year = first.year
-        last = programmes.last().date
-        last_month = last.month
-        last_year = last.year
-        current_month = now.month
-        if last_month == first_month:
-            if first_year == last_year:
-                months = 1
-            else:
-                months = 12
-        elif last_month > first_month:
-            months = last_month - first_month + 1
+        # Ignore up to 3 months of records
+        year = now.year
+        month = now.month - 3
+        if month <= 0:
+            month += 12
+            year -= 1
+        three_months_prior = datetime.date(year, month - 3, now.day)
+        end = max(programmes.last().date, three_months_prior)
+        last_year = end - datetime.timedelta(days=365)
+        # Is this the Volunteer's first year?
+        if programmes.first().date > last_year:
+            # Only start counting from their first month
+            start = programmes.first().date
         else:
-            months = 12 + last_month - first_month + 1
-        # Penalise only if nothing recorded for months > 3
-        extra_months = 0
-        if current_month > last_month:
-            extra_months = current_month - last_month
+            #start from a year before the latest record
+            start = last_year
+        
+        # Total hours between start and end
+        programme_hours = 0
+        for programme in programmes:
+            if programme.date >= start and programme.date <= end and programme.hours:
+                programme_hours += programme.hours
+        
+        # Average hours per month
+        months = max(1, (end - start).days / 30.5)
+        average = programme_hours / months
+        
+        # Active?
+        if average >= 8:
+            return True
         else:
-            extra_months = 12 + current_month - last_month
-        if extra_months > 3:
-            months += (extra_months - 3)
-
-    # Average monthly hours
-    average = programme_hours / months
-
-    # Active?
-    if average >= 8:
-        return True
+            return False
     else:
         return False
 
@@ -4245,31 +4240,56 @@ def hrm_rheader(r, tabs=[]):
         elif settings.get_hrm_staff_experience() == "experience":
             experience_tab = (T("Experience"), "experience")
 
+        if settings.get_hrm_use_certificates():
+            certificates_tab = (T("Certificates"), "certificate")
+        else:
+            certificates_tab = None
+
         if settings.get_hrm_use_credentials():
             credentials_tab = (T("Credentials"), "credential")
         else:
             credentials_tab = None
+
+        if settings.get_hrm_use_description():
+            description_tab = (T("Description"), "physical_description")
+        else:
+            description_tab = None
 
         if settings.get_hrm_use_education():
             education_tab = (T("Education"), "education")
         else:
             education_tab = None
 
-        # Tabs
+        if settings.get_hrm_use_id():
+            id_tab = (T("ID"), "identity")
+        else:
+            id_tab = None
+
+        if settings.get_hrm_use_skills():
+            skills_tab = (T("Skills"), "competency")
+        else:
+            skills_tab = None
+
         if settings.get_hrm_use_teams():
             teams_tab = (T("Teams"), "group_membership")
         else:
             teams_tab = None
+
+        if settings.get_hrm_use_trainings():
+            trainings_tab = (T("Trainings"), "training")
+        else:
+            trainings_tab = None
+
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
             tabs = [(T("Person Details"), None),
-                    (T("ID"), "identity"),
-                    (T("Description"), "physical_description"),
+                    id_tab,
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     (T("Positions"), "human_resource"),
@@ -4284,14 +4304,14 @@ def hrm_rheader(r, tabs=[]):
                 hr_record = T("Volunteer Record")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    (T("ID"), "identity"),
+                    id_tab,
                     education_tab,
-                    (T("Description"), "physical_description"),
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     teams_tab,

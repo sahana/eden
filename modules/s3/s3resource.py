@@ -217,6 +217,10 @@ class S3Resource(object):
         self.import_updated = []
         self.import_deleted = []
 
+        # Export meta data
+        self.muntil = None      # latest mtime of the exported records
+        self.results = None     # number of exported records
+
         # Search
         self.search = s3db.get_config(self.tablename, "search_method", None)
         if not self.search:
@@ -1897,11 +1901,16 @@ class S3Resource(object):
         # Total number of results
         results = self.count()
 
+        # Initialize export metadata
+        self.muntil = None
+        self.results = 0
+
         # Load slice
         if msince is not None and "modified_on" in table.fields:
             orderby = "modified_on ASC"
         else:
             orderby = None
+
         self.load(start=start, limit=limit, orderby=orderby)
 
         format = current.auth.permission.format
@@ -2043,6 +2052,10 @@ class S3Resource(object):
                         start=start,
                         limit=limit,
                         maxbounds=maxbounds)
+
+        # Store number of results
+        self.results = results
+
         return tree
 
     # -------------------------------------------------------------------------
@@ -2166,6 +2179,12 @@ class S3Resource(object):
                                              msince=msince)
                     if celement is not None:
                         add = True # keep the parent record
+
+                        # Update "modified until" from component
+                        if not self.muntil or \
+                           c.muntil and c.muntil > self.muntil:
+                            self.muntil = c.muntil
+
                         map_record(crecord, crmap,
                                    reference_map, export_map)
 
@@ -2224,9 +2243,11 @@ class S3Resource(object):
         # NB This can't be moved to tree level as we do want to export records
         #    which have modified components
         MTIME = xml.MTIME
-        if msince is not None:
-            if MTIME in record and record[MTIME] <= msince:
+        if MTIME in record:
+            if msince is not None and record[MTIME] <= msince:
                 return default
+            if not self.muntil or record[MTIME] > self.muntil:
+                self.muntil = record[MTIME]
 
         # Audit read
         prefix = self.prefix
@@ -3631,7 +3652,7 @@ class S3ResourceField(object):
                 # table -- f -- pkey --> ktable
 
                 # Find the referenced table
-                ktablename, pkey, multiple = s3_get_foreign_key(f)
+                ktablename, pkey, multiple = s3_get_foreign_key(f, m2m=False)
                 if not ktablename:
                     raise SyntaxError("%s.%s is not a foreign key" % (tn, f))
 

@@ -74,12 +74,6 @@ class S3MessagingModel(S3Model):
             1:T("Low")
         }
 
-        mtable = self.msg_inbound_email_settings
-        source_opts = []
-        append = source_opts.append
-        records = db(mtable.id > 0).select(mtable.username)
-        for record in records:
-            append(record.username)
 
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
@@ -112,8 +106,7 @@ class S3MessagingModel(S3Model):
                              Field("reply", "text" ,
                                    label = T("Reply")),
                              Field("source_task_id",
-                                   requires = IS_IN_SET(source_opts,
-                                                        zero = None)),
+                                   label = T("Message Source")),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -357,6 +350,8 @@ class S3SMSModel(S3Model):
              "msg_modem_settings",
              "msg_api_settings",
              "msg_smtp_to_sms_settings",
+             "msg_twilio_inbound_settings",
+             "msg_twilio_inbox"
             ]
 
     def model(self):
@@ -364,7 +359,7 @@ class S3SMSModel(S3Model):
         #T = current.T
 
         define_table = self.define_table
-
+        configure = self.configure
         # ---------------------------------------------------------------------
         # Settings
         tablename = "msg_setting"
@@ -421,6 +416,36 @@ class S3SMSModel(S3Model):
                              #Field("preference", "integer", default = 5),
                              *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
+        tablename = "msg_twilio_inbound_settings"
+        table = define_table(tablename,
+                             Field("account_name"),
+                             Field("url",
+                                   default = \
+                                   "https://api.twilio.com/2010-04-01/Accounts"
+                                   ),
+                             Field("account_sid", length=64,
+                                   requires=IS_NOT_EMPTY()),
+                             Field("auth_token", length=64,
+                                   requires=IS_NOT_EMPTY()),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        tablename = "msg_twilio_inbox"
+        table = define_table(tablename,
+                             Field("sid", length=64),
+                             Field("body", "text"),
+                             Field("status"),
+                             Field("sender"),
+                             Field("received_on"),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  list_fields = ["body",
+                                 "sender",
+                                 "received_on"
+                                 ]
+                  )
         # ---------------------------------------------------------------------
         return Storage()
 
@@ -662,20 +687,8 @@ class S3ParsingModel(S3Model):
 
     def model(self):
 
-        import inspect
-        import sys
-
         T = current.T
         
-        parser = current.deployment_settings.get_msg_parser()
-        module_name = "applications.%s.private.templates.%s.parser" % \
-            (current.request.application, parser)
-        __import__(module_name)
-        mymodule = sys.modules[module_name]
-        S3Parsing = mymodule.S3Parsing()
-        
-        mtable = self.msg_inbound_email_settings
-
         tablename = "msg_workflow"
         table = self.define_table(tablename,
                                   Field("source_task_id",
@@ -684,8 +697,9 @@ class S3ParsingModel(S3Model):
                                         self.source_represent(id, 
                                                               show_link=True)),
                                   Field("workflow_task_id",
-                                        label = T("Workflow")), 
-                                  *s3_meta_fields())
+                                        label = T("Workflow")),                                          
+                                        *s3_meta_fields())
+                                  
         # ---------------------------------------------------------------------
         # user_opts contains the available users.
         now = current.request.utcnow

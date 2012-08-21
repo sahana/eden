@@ -1627,10 +1627,10 @@ $(document).ready(function(){
                                             table.send_ref,
                                             table.to_site_id,
                                             limitby=(0, 1)).first()
-                                            
+
             send_ref_string = table.send_ref.represent( row.send_ref,
-                                                        show_link = False) 
-            to_string = table.to_site_id.represent( row.to_site_id, 
+                                                        show_link = False)
+            to_string = table.to_site_id.represent( row.to_site_id,
                                                      show_link = False)
             date_string = table.date.represent( row.date )
 
@@ -1768,14 +1768,14 @@ $(document).ready(function(){
                                             table.from_site_id,
                                             table.organisation_id,
                                             limitby=(0, 1)).first()
-                                            
+
             recv_ref_string = table.send_ref.represent( row.recv_ref,
-                                                        show_link = False) 
+                                                        show_link = False)
             if row.from_site_id:
-                from_string = table.from_site_id.represent( row.from_site_id, 
+                from_string = table.from_site_id.represent( row.from_site_id,
                                                             show_link = False)
             else:
-                from_string = table.organisation_id.represent( row.organisation_id, 
+                from_string = table.organisation_id.represent( row.organisation_id,
                                                                show_link = False)
             date_string = table.date.represent( row.date )
 
@@ -1823,11 +1823,11 @@ $(document).ready(function(){
         """
         type = form.vars.type and int(form.vars.type)
         if type == 11 and not form.vars.from_site_id:
-            # Internal Shipment needs from_site_id 
+            # Internal Shipment needs from_site_id
             # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
             form.errors.from_site_id = T("Please enter a Warehouse/Facility/Office")
         if type >= 32 and not form.vars.organisation_id:
-            # Internal Shipment needs from_site_id 
+            # Internal Shipment needs from_site_id
             # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
             form.errors.organisation_id = T("Please enter an Organisation/Supplier")
 
@@ -2406,10 +2406,12 @@ def inv_warehouse_rheader(r):
     # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
-    r.record = record
-    r.table = s3db[tablename]
+    table = s3db.table(tablename)
+
     rheader = None
     if tablename == "inv_warehouse":
+
+        # Tabs
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
@@ -2421,21 +2423,20 @@ def inv_warehouse_rheader(r):
         tabs.append((T("Attachments"), "document"))
         tabs.append((T("User Roles"), "roles"))
 
+        # Fields
         rheader_fields = [["name", "organisation_id", "email"],
-                              ["location_id", "phone1"],
-                              ]
+                          ["location_id", "phone1"],
+                         ]
 
-        rheader_fields, rheader_tabs  = S3ResourceHeader(rheader_fields, tabs)(r, as_div = True)
+        rheader = S3ResourceHeader(rheader_fields, tabs)
+        rheader_fields, rheader_tabs = rheader(r, table=table, record=record)
 
-        rheader = DIV()
-        
+        # Inject logo
         logo = s3db.org_organisation_logo(record.organisation_id)
         if logo:
             rheader = DIV(TABLE(TR(TD(logo),TD(rheader_fields))))
         else:
             rheader = DIV(rheader_fields)
-
-        rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader.append(rheader_tabs)
 
         #if r.component and r.component.name == "req":
@@ -2443,45 +2444,58 @@ def inv_warehouse_rheader(r):
             #rheader.append(s3.req_helptext_script)
 
     elif tablename == "inv_inv_item" and record != None:
+
+        # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
                ]
-        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
-        table = s3db[tablename]
-        rheader = DIV( TABLE(
-                           TR( TH("%s: " % table.item_id.label),
-                               table.item_id.represent(record.item_id),
-                               TH( "%s: " % table.item_pack_id.label),
-                               table.item_pack_id.represent(record.item_pack_id),
-                              ),
-                           TR( TH( "%s: " % table.site_id.label),
-                               TD(table.site_id.represent(record.site_id), _colspan=3),
-                              ),
-                             ),
-                        rheader_tabs
-                        )
+        rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
+
+        # Header
+        rheader = DIV(
+                    TABLE(
+                        TR(
+                            TH("%s: " % table.item_id.label),
+                            table.item_id.represent(record.item_id),
+                            TH( "%s: " % table.item_pack_id.label),
+                            table.item_pack_id.represent(record.item_pack_id),
+                        ),
+                        TR(
+                            TH( "%s: " % table.site_id.label),
+                            TD(table.site_id.represent(record.site_id), _colspan=3),
+                        ),
+                    ), rheader_tabs)
 
     elif tablename == "inv_track_item" and record != None:
-        table = s3db["inv_inv_item"]
-        irecord = table[record.item_id]
+
+        # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "inv_item/"),
                ]
-        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
-        rheader = DIV( TABLE(
-                           TR( TH("%s: " % table.item_id.label),
+        rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
+
+        # Get item data
+        table = s3db["inv_inv_item"]
+        irecord = table[record.item_id]
+
+        # Header
+        rheader = DIV(
+                    TABLE(
+                        TR(
+                            TH("%s: " % table.item_id.label),
                                table.item_id.represent(irecord.item_id),
                                TH( "%s: " % table.item_pack_id.label),
                                table.item_pack_id.represent(irecord.item_pack_id),
-                              ),
-                           TR( TH( "%s: " % table.site_id.label),
-                               TD(table.site_id.represent(irecord.site_id), _colspan=3),
-                              ),
-                             ),
-                        rheader_tabs
-                        )
+                        ),
+                        TR(
+                            TH( "%s: " % table.site_id.label),
+                            TD(table.site_id.represent(irecord.site_id), _colspan=3),
+                        ),
+                    ), rheader_tabs)
 
+    # Build footer
     if record and "site_id" in record:
+
         rfooter = TAG[""]()
         if (r.component and r.component.name == "inv_item"):
             if r.component_id:

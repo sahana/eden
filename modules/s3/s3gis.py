@@ -2301,6 +2301,171 @@ class GIS(object):
             return distance
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def export_admin_areas(countries=[],
+                           levels=["L0", "L1", "L2"],
+                           format="geojson",
+                           simplify=0.001,
+                           ):
+        """
+            Export admin areas to /static/cache for use by interactive web-mapping services
+            - designed for use by the Vulnerability Mapping
+
+            simplify = False to disable simplification
+
+            Only L0 supported for now
+            Only GeoJSON supported for now (may add KML &/or OSM later)
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
+        ifield = table.id
+        if countries:
+            ttable = s3db.gis_location_tag
+            cquery = (table.level == "L0") & \
+                     (ttable.location_id == ifield) & \
+                     (ttable.tag == "ISO2") & \
+                     (ttable.value.belongs(countries))
+        else:
+            # All countries
+            cquery = (table.level == "L0")
+
+        if current.deployment_settings.get_gis_spatialdb():
+            spatial = True
+            if simplify:
+                # Do the Simplify & GeoJSON direct from the DB
+                field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
+            else:
+                # Do the GeoJSON direct from the DB
+                field = table.the_geom.st_asgeojson(precision=4).with_alias("geojson")
+        else:
+            spatial = False
+            field = table.wkt
+            if simplify:
+                _simplify = GIS.simplify
+            else:
+                from shapely.wkt import loads as wkt_loads
+                from ..geojson import dumps
+
+        folder = os.path.join(current.request.folder, "static", "cache")
+
+        features = []
+        append = features.append
+
+        if "L0" in levels:
+            countries = db(cquery).select(ifield,
+                                          field,
+                                          )
+            for row in countries:
+                if spatial:
+                    geojson = row.geojson
+                elif simplify:
+                    geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                else:
+                    shape = wkt_loads(row.wkt)
+                    # Compact Encoding
+                    geojson = dumps(shape, separators=(",", ":"))
+                f = dict(
+                        type = "Feature",
+                        properties = {"id": row.id},
+                        geometry = json.loads(geojson) if geojson else {}
+                        )
+                append(f)
+
+            data = dict(
+                        type = "FeatureCollection",
+                        features = features
+                    )
+            # Output to file
+            filename = os.path.join(folder, "countries.geojson")
+            File = open(filename, "w")
+            File.write(json.dumps(data))
+            File.close()
+
+        if "L1" in levels:
+            if "L0" not in levels:
+                countries = db(cquery).select(ifield)
+            q = (table.level == "L1") & \
+                (table.deleted != True)
+            for country in countries:
+                query = q & (table.parent == country.id)
+                features = []
+                append = features.append
+                rows = db(query).select(ifield,
+                                        field,
+                                        )
+                for row in rows:
+                    if spatial:
+                        geojson = row.geojson
+                    elif simplify:
+                        geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                    else:
+                        shape = wkt_loads(row.wkt)
+                        # Compact Encoding
+                        geojson = dumps(shape, separators=(",", ":"))
+                    f = dict(
+                            type = "Feature",
+                            properties = {"id": row.id},
+                            geometry = json.loads(geojson) if geojson else {}
+                            )
+                    append(f)
+
+                data = dict(
+                            type = "FeatureCollection",
+                            features = features
+                        )
+                # Output to file
+                filename = os.path.join(folder, "1_%s.geojson" % country.id)
+                File = open(filename, "w")
+                File.write(json.dumps(data))
+                File.close()
+            
+        if "L2" in levels:
+            if "L0" not in levels and "L1" not in levels:
+                countries = db(cquery).select(ifield)
+            q = (table.level == "L1") & \
+                (table.deleted != True)
+            for country in countries:
+                query = q & (table.parent == country.id)
+                l1s = db(query).select(ifield)
+                q = (table.level == "L2") & \
+                    (table.deleted != True)
+                for l1 in l1s:
+                    query = q & (table.parent == l1.id)
+                    features = []
+                    append = features.append
+                    rows = db(query).select(ifield,
+                                            field,
+                                            )
+                    for row in rows:
+                        if spatial:
+                            geojson = row.geojson
+                        elif simplify:
+                            geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                        else:
+                            shape = wkt_loads(row.wkt)
+                            # Compact Encoding
+                            geojson = dumps(shape, separators=(",", ":"))
+                        f = dict(
+                                type = "Feature",
+                                properties = {"id": row.id},
+                                geometry = json.loads(geojson) if geojson else {}
+                                )
+                        append(f)
+
+                    data = dict(
+                                type = "FeatureCollection",
+                                features = features
+                            )
+                    # Output to file
+                    filename = os.path.join(folder, "2_%s.geojson" % l1.id)
+                    File = open(filename, "w")
+                    File.write(json.dumps(data))
+                    File.close()
+            
+
+    # -------------------------------------------------------------------------
     def import_admin_areas(self,
                            source="gadmv1",
                            countries=[],
@@ -3435,12 +3600,13 @@ class GIS(object):
                                           lon=L0_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3535,13 +3701,14 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3633,7 +3800,8 @@ class GIS(object):
                     L1_name = None
                     L2_name = None
                 else:
-                    raise ValueError
+                    s3_debug("S3GIS: Invalid level '%s'" % Lx.level)
+                    return
                 Lx_lat = Lx.lat
                 Lx_lon = Lx.lon
             else:
@@ -3672,6 +3840,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3679,7 +3848,7 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3844,6 +4013,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3852,7 +4022,7 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -4049,6 +4219,7 @@ class GIS(object):
                                       lon=Lx_lon)
         else:
             db(table.id == id).update(path=_path,
+                                      inherited=False,
                                       L0=L0_name,
                                       L1=L1_name,
                                       L2=L2_name,
@@ -4325,6 +4496,8 @@ class GIS(object):
         try:
             shape = wkt_loads(wkt)
         except:
+            wkt = wkt[10] if wkt else wkt
+            s3_debug("Invalid Shape: %s" % wkt)
             return None
         simplified = shape.simplify(tolerance, preserve_topology)
         if output == "wkt":

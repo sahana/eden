@@ -382,6 +382,134 @@ def inbound_email_settings():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def twilio_inbound_settings():
+    """
+        RESTful CRUD controller for twilio sms settings
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_twilio_inbound_settings"
+    table = s3db[tablename]
+
+    table.account_name.label = T("Account Name")
+    table.account_name.comment = DIV(DIV(_class="tooltip",
+            _title="%s|%s" % (T("Account Name"),
+                              T("Identifier Name for your Twilio Account."))))
+    
+    table.url.label = T("URL")
+    table.url.comment = DIV(DIV(_class="tooltip",
+            _title="%s|%s" % (T("URL"),
+                              T("URL for the twilio API."))))
+    
+    table.account_sid.label = "Account SID"
+    table.auth_token.label = T("AUTH TOKEN")
+    
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+    title_display = T("Twilio Setting Details"),
+    title_list = T("Twilio Settings"),
+    title_create = T("Add Twilio Settings"),
+    title_update = T("Edit Twilio Settings"),
+    title_search = T("Search Twilio Settings"),
+    label_list_button = T("View Twilio Settings"),
+    label_create_button = T("Add Twilio Settings"),
+    msg_record_created = T("Twilio Setting added"),
+    msg_record_deleted = T("Twilio Setting deleted"),
+    msg_list_empty = T("No Twilio Settings currently defined"),
+    msg_record_modified = T("Twilio settings updated")
+        )
+
+    #response.menu_options = admin_menu_options
+    s3db.configure(tablename, listadd=True, deletable=True)
+
+    def postp(r, output):
+        
+        stable = s3db.scheduler_task
+        ttable = r.table
+
+        s3_action_buttons(r)
+        query = (stable.enabled == False)
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account" in record.vars:
+                r = record.vars.split("\"account\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_e = [str(row.id) for row in rows]
+
+        query = (stable.enabled == True)
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account" in record.vars:
+                r = record.vars.split("\"account\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_d = [str(row.id) for row in rows]
+
+        rows = []
+        records = db(stable.id > 0).select()
+        tasks = [record.vars for record in records]
+        sources = []
+        for task in tasks:
+            if "account" in task:
+                u = task.split("\"account\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                sources += [v]
+
+        tsettings = db(ttable.deleted == False).select(ttable.ALL)
+        for tsetting in tsettings :
+            if tsetting.account_name:
+                if (tsetting.account_name not in sources):
+                    if tsetting:
+                        rows += [tsetting]
+
+        restrict_a = [str(row.id) for row in rows]
+
+        s3.actions = \
+        s3.actions + [
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_twilio_sms",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                       ]
+        s3.actions.append(dict(label=str(T("Disable")),
+                               _class="action-btn",
+                               url = URL(f = "disable_twilio_sms",
+                                         args = "[id]"),
+                               restrict = restrict_d)
+                          )
+        s3.actions.append(dict(label=str(T("Activate")),
+                               _class="action-btn",
+                               url = URL(f = "schedule_twilio_sms",
+                                         args = "[id]"),
+                               restrict = restrict_a)
+                          )
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def workflow():
     """
         RESTful CRUD controller for workflows
@@ -419,6 +547,42 @@ def workflow():
 
     s3db.configure("msg_workflow", listadd=True, deletable=True)
 
+    def prep(r):
+        if r.interactive:
+            import inspect
+            import sys
+
+            parser = settings.get_msg_parser()
+            module_name = "applications.%s.private.templates.%s.parser" % \
+                (appname, parser)
+            __import__(module_name)
+            mymodule = sys.modules[module_name]
+            S3Parsing = mymodule.S3Parsing()
+
+            mtable = s3db.msg_inbound_email_settings
+            ttable = s3db.msg_twilio_inbound_settings
+            source_opts = []
+            append = source_opts.append
+            records = db(mtable.id > 0).select(mtable.username)
+            for record in records:
+                append(record.username)
+
+            records = db(ttable.deleted == False).select(ttable.account_name)
+            for record in records:
+                append(record.account_name)
+
+            # Dynamic lookup of the parsing functions in S3Parsing class.
+            parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
+            parse_opts = []
+            for parser in parsers:
+                parse_opts += [parser[0]]
+
+            r.table.source_task_id.requires = IS_IN_SET(source_opts, zero=None)
+            r.table.workflow_task_id.requires = IS_IN_SET(parse_opts, \
+                                                          zero=None)
+        return True
+    s3.prep = prep
+    
     def postp(r, output):
 
         wtable = s3db.msg_workflow
@@ -438,7 +602,9 @@ def workflow():
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
 
-                record1 = db((wtable.workflow_task_id == s) &(wtable.source_task_id == v)).select(wtable.id)
+                query = (wtable.workflow_task_id == s) & \
+                        (wtable.source_task_id == v)
+                record1 = db(query).select(wtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
@@ -458,7 +624,9 @@ def workflow():
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
 
-                record1 = db((wtable.workflow_task_id == s) & (wtable.source_task_id == v)).select(wtable.id)
+                query = (wtable.workflow_task_id == s) & \
+                        (wtable.source_task_id == v)
+                record1 = db(query).select(wtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
@@ -466,7 +634,7 @@ def workflow():
         restrict_d = [str(row.id) for row in rows]
 
         rows = []
-        records = db(stable.id>0).select()
+        records = db(stable.id > 0).select(stable.vars)
         tasks = [record.vars for record in records]
         parser1 = []
         for task in tasks:
@@ -485,24 +653,26 @@ def workflow():
                 parser2 += [v]
 
 
-        workflows = db(wtable.id>0).select(wtable.id , wtable.workflow_task_id, wtable.source_task_id)
+        workflows = db(wtable.id > 0).select(wtable.id,
+                                             wtable.workflow_task_id,
+                                             wtable.source_task_id)
 
         for workflow in workflows :
             if workflow.workflow_task_id and workflow.source_task_id:
-                if (workflow.workflow_task_id not in parser1) or (workflow.source_task_id not in parser2) :
-                    if workflow:
-                        rows += [workflow]
+                if (workflow.workflow_task_id not in parser1) or \
+                   (workflow.source_task_id not in parser2):
+                    rows += [workflow]
 
         restrict_a = [str(row.id) for row in rows]
 
         s3.actions = \
         s3.actions + [
-                               dict(label=str(T("Enable")),
-                                    _class="action-btn",
-                                    url=URL(f="enable_parser",
-                                            args="[id]"),
-                                    restrict = restrict_e)
-                              ]
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_parser",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                      ]
 
         s3.actions.append(dict(label=str(T("Disable")),
                                         _class="action-btn",
@@ -578,6 +748,32 @@ def schedule_email():
     redirect(URL(f="inbound_email_settings"))
 
 # -----------------------------------------------------------------------------
+def schedule_twilio_sms():
+    """
+        Schedules different Twilio SMS Sources.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="twilio_inbound_settings"))
+
+    ttable = s3db.msg_twilio_inbound_settings
+    record = db(ttable.id == id).select(ttable.account_name,
+                                        limitby=(0, 1)).first()
+    account_name = record.account_name
+
+    s3task.schedule_task("msg_twilio_inbound_sms",
+                         vars={"account": account_name},
+                         period=300,  # seconds
+                         timeout=300, # seconds
+                         repeats=0    # unlimited
+                         )
+
+    redirect(URL(f="twilio_inbound_settings"))
+
+# -----------------------------------------------------------------------------
 def disable_parser():
     """
         Disables different parsing workflows.
@@ -640,6 +836,34 @@ def disable_email():
     redirect(URL(f="inbound_email_settings"))
 
 # -----------------------------------------------------------------------------
+def disable_twilio_sms():
+    """
+        Disables different Twilio SMS Sources.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="twilio_inbound_settings"))
+
+    stable = s3db.scheduler_task
+    ttable = s3db.msg_twilio_inbound_settings
+
+    records = db(stable.id > 0).select()
+    tsettings = db(ttable.id == id).select(limitby=(0, 1)).first()
+    for record in records:
+        if "account" in record.vars:
+            r = record.vars.split("\"account\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+
+            if (s == tsettings.account_name) :
+                db(stable.id == record.id).update(enabled = False)
+
+    redirect(URL(f="twilio_inbound_settings"))
+
+# -----------------------------------------------------------------------------
 def enable_email():
     """
         Enables different Email Sources.
@@ -666,6 +890,34 @@ def enable_email():
                 db(stable.id == record.id).update(enabled = True)
 
     redirect(URL(f="inbound_email_settings"))
+
+# -----------------------------------------------------------------------------
+def enable_twilio_sms():
+    """
+        Enables different Twilio SMS Sources.
+    """
+
+    try:
+        id = request.args[0]
+    except:
+        session.error = T("Source not specified!")
+        redirect(URL(f="twilio_inbound_settings"))
+
+    stable = s3db.scheduler_task
+    ttable = s3db.msg_twilio_inbound_settings
+
+    records = db(stable.id > 0).select()
+    tsettings = db(ttable.id == id).select(ttable.ALL).first()
+    for record in records:
+        if "account" in record.vars:
+            r = record.vars.split("\"account\":")[1]
+            s = r.split("}")[0]
+            s = s.split("\"")[1].split("\"")[0]
+
+            if (s == tsettings.account_name) :
+                db(stable.id == record.id).update(enabled = True)
+
+    redirect(URL(f="twilio_inbound_settings"))
 
 # -----------------------------------------------------------------------------
 def enable_parser():
@@ -718,6 +970,36 @@ def email_inbox():
     table = s3db[tablename]
 
     s3db.configure(tablename, listadd=False)
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twilio_inbox():
+    """
+        RESTful CRUD controller for the Twilio SMS Inbox
+        - all Inbound SMS Messages from Twilio go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_twilio_inbox"
+    table = s3db[tablename]
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+    title_display = T("Twilio SMS Inbox"),
+    title_list = T("Twilio SMS Inbox"),
+    title_update = T("Edit SMS Message"),
+    title_search = T("Search Twilio SMS Inbox"),
+    label_list_button = T("View Twilio SMS"),
+    msg_record_deleted = T("Twilio SMS deleted"),
+    msg_list_empty = T("Twilio SMS Inbox empty. "),
+    msg_record_modified = T("Twilio SMS updated")
+        )
+
+    s3db.configure(tablename, listadd=False)
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -905,7 +1187,7 @@ def twitter_settings():
     try:
         import tweepy
     except:
-        session.error =  T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
+        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
         redirect(URL(c="admin", f="index"))
 
     tablename = "%s_%s" % (module, resourcename)
@@ -918,11 +1200,11 @@ def twitter_settings():
     )
 
     def prep(r):
-        if not (deployment_settings.twitter.oauth_consumer_key and deployment_settings.twitter.oauth_consumer_secret):
+        if not (settings.twitter.oauth_consumer_key and settings.twitter.oauth_consumer_secret):
             session.error = T("You should edit Twitter settings in models/000_config.py")
             return True
-        oauth = tweepy.OAuthHandler(deployment_settings.twitter.oauth_consumer_key,
-                                    deployment_settings.twitter.oauth_consumer_secret)
+        oauth = tweepy.OAuthHandler(settings.twitter.oauth_consumer_key,
+                                    settings.twitter.oauth_consumer_secret)
 
         #tablename = "%s_%s" % (module, resourcename)
         #table = db[tablename]
@@ -1189,7 +1471,6 @@ def load_search(id):
     output = r()
     #extract the updates
     return output
-
 
 # -----------------------------------------------------------------------------
 def check_updates(user_id):

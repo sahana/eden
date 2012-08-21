@@ -131,12 +131,16 @@
                                     <xsl:attribute name="k">amenity</xsl:attribute>
                                     <xsl:attribute name="v">hospital</xsl:attribute>
                                 </xsl:when>
+                                <xsl:when test="@name='transport_airport'">
+                                    <xsl:attribute name="k">aeroway</xsl:attribute>
+                                    <xsl:attribute name="v">aerodrome</xsl:attribute>
+                                </xsl:when>
+                                <xsl:when test="@name='transport_seaport'">
+                                    <xsl:attribute name="k">harbour</xsl:attribute>
+                                    <xsl:attribute name="v">yes</xsl:attribute>
+                                </xsl:when>
                                 <xsl:when test="@name='org_facility'">
                                     <xsl:choose>
-                                        <xsl:when test="reference[@field='facility_type_id']='Airport'">
-                                            <xsl:attribute name="k">aeroway</xsl:attribute>
-                                            <xsl:attribute name="v">aerodrome</xsl:attribute>
-                                        </xsl:when>
                                         <xsl:when test="reference[@field='facility_type_id']='Church'">
                                             <xsl:attribute name="k">amenity</xsl:attribute>
                                             <xsl:attribute name="v">place_of_worship</xsl:attribute>

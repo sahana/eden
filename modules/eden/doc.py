@@ -94,15 +94,13 @@ class S3DocumentLibrary(S3Model):
         #
         tablename = "doc_document"
         table = define_table(tablename,
-                             # Component not instance
-                             super_link("site_id", "org_site"),
-                             # Component not instance
-                             super_link("doc_id", doc_entity),
                              # Instance
                              super_link("source_id", "doc_source_entity"),
+                             # Component not instance
+                             super_link("site_id", "org_site"),
+                             super_link("doc_id", doc_entity),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
-                                   notnull=True,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
                                    label=T("Name")),
@@ -177,7 +175,6 @@ class S3DocumentLibrary(S3Model):
                              # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
-                             # Component not instance
                              super_link("doc_id", doc_entity),
                              Field("file", "upload", autodelete=True,
                                    requires = IS_NULL_OR(
@@ -188,7 +185,6 @@ class S3DocumentLibrary(S3Model):
                                                                "uploads",
                                                                "images")),
                              Field("name", length=128,
-                                   notnull=True,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
                                    label=T("Name")),
@@ -390,15 +386,16 @@ class S3DocumentSourceModel(S3Model):
 
         tablename = "doc_source_entity"
 
-        table = self.super_entity(tablename,
-                                  "source_id",
-                                  source_types
+        table = self.super_entity(tablename, "source_id", source_types,
+                                  Field("name",
+                                        label=T("Name")),
                                   )
         # Reusable Field
         source_id = S3ReusableField("source_id", table,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(current.db,
-                                                          "doc_source_entity.source_id")),
+                                                          "doc_source_entity.source_id",
+                                                          doc_source_represent)),
                                     represent = doc_source_represent,
                                     label = T("Source"),
                                     ondelete = "CASCADE")
@@ -481,19 +478,20 @@ def doc_checksum(docstr):
     converted = hashlib.sha1(docstr).hexdigest()
     return converted
 
+# =============================================================================
 def doc_source_represent(id, row=None):
     """ FK representation """
 
     if row:
-        return row.instance_type
+        return row.name
     elif not id:
         return current.messages.NONE
     elif isinstance(id, Row):
-        return id.instance_type
+        return id.name
 
     db = current.db
     table = db.doc_source_entity
-    r = db(table._id == id).select(table.instance_type,
+    r = db(table._id == id).select(table.name,
                                    limitby = (0, 1)).first()
     try:
         return r.name
