@@ -698,6 +698,7 @@ class S3Request(object):
         components = component_name
         if components is None:
             components = cnames
+
         self.resource = manager.define_resource(self.prefix,
                                                 self.name,
                                                 id=self.id,
@@ -1025,6 +1026,7 @@ class S3Request(object):
             self.custom_action = s3db.get_method(self.prefix, self.name,
                                                           component_name=self.component_name,
                                                           method=self.method)
+
         # Method handling
         http = self.http
         handler = None
@@ -1131,7 +1133,7 @@ class S3Request(object):
         elif method == "delete":
             return self.__DELETE()
 
-        elif method == "clear" and not r.component:
+        elif method == "clear" and not self.component:
             manager.clear_session(self.prefix, self.name)
             if "_next" in self.vars:
                 request_vars = dict(_next=self._next)
@@ -1251,7 +1253,7 @@ class S3Request(object):
         if "maxbounds" in _vars:
             if _vars["maxbounds"].lower() == "true":
                 maxbounds = True
-        if r.representation == "gpx":
+        if r.representation in ("gpx", "osm"):
             maxbounds = True
 
         # Components of the master resource (tablenames)

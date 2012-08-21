@@ -118,14 +118,22 @@ if len(pop_list) > 0:
                              period=120,  # seconds
                              timeout=120, # seconds
                              repeats=0    # unlimited
-                            )
+                             )
         # Emails every 5 minutes
         s3task.schedule_task("msg_process_outbox",
                              vars={"contact_method":"EMAIL"},
                              period=300,  # seconds
                              timeout=300, # seconds
                              repeats=0    # unlimited
-                            )
+                             )
+
+    # Daily maintenance
+    s3task.schedule_task("maintenance",
+                         vars={"period":"daily"},
+                         period=86400, # seconds, so 1/day
+                         timeout=600,  # seconds
+                         repeats=0     # unlimited
+                         )
 
     # =========================================================================
     # Import PrePopulate data
@@ -160,7 +168,7 @@ if len(pop_list) > 0:
     # L0 Countries
     resource = s3mgr.define_resource("gis", "location")
     stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "gis", "location.xsl")
-    import_file = os.path.join(request.folder, "private", "templates", "default", "countries.csv")
+    import_file = os.path.join(request.folder, "private", "templates", "locations", "countries.csv")
     File = open(import_file, "r")
     resource.import_xml(File, format="csv", stylesheet=stylesheet)
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)

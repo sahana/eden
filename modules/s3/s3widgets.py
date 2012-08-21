@@ -2393,8 +2393,9 @@ class CheckboxesWidgetS3(OptionsWidget):
     """
         S3 version of gluon.sqlhtml.CheckboxesWidget:
         - supports also integer-type keys in option sets
+        - has an identifiable class
 
-        Used in s3aaa & S3SearchOptionsWidget
+        Used in Sync, Projects
     """
 
     @staticmethod
@@ -2405,8 +2406,8 @@ class CheckboxesWidgetS3(OptionsWidget):
         see also: :meth:`FormWidget.widget`
         """
 
-        # was values = re.compile("[\w\-:]+").findall(str(value))
-        values = not isinstance(value,(list,tuple)) and [value] or value
+        #values = re.compile("[\w\-:]+").findall(str(value))
+        values = not isinstance(value, (list, tuple)) and [value] or value
         values = [str(v) for v in values]
 
         attr = OptionsWidget._attributes(field, {}, **attributes)
@@ -2450,6 +2451,11 @@ class CheckboxesWidgetS3(OptionsWidget):
             for k, v in options[r_index * cols:(r_index + 1) * cols]:
                 input_id = "id-%s-%s" % (field.name, input_index)
                 option_help = options_help.get(str(k), "")
+                if option_help:
+                    label = LABEL(v, _for=input_id, _title=option_help)
+                else:
+                    # Don't provide empty client-side popups
+                    label = LABEL(v, _for=input_id)
 
                 tds.append(TD(INPUT(_type="checkbox",
                                     _name=field.name,
@@ -2458,7 +2464,7 @@ class CheckboxesWidgetS3(OptionsWidget):
                                     hideerror=True,
                                     _value=k,
                                     value=(str(k) in values)),
-                              LABEL(v, _for=input_id, _title=option_help)))
+                              label))
 
                 input_index += 1
             opts.append(TR(tds))
@@ -2564,7 +2570,9 @@ class S3AddPersonWidget(FormWidget):
                   ptable.date_of_birth,
                   ptable.gender]
 
-        if request.controller == "hrm":
+        if controller == "hrm":
+            emailRequired = current.deployment_settings.get_hrm_email_required()
+        elif controller == "vol":
             fields.append(ptable.occupation)
             emailRequired = current.deployment_settings.get_hrm_email_required()
         else:
@@ -2595,7 +2603,8 @@ class S3AddPersonWidget(FormWidget):
         for tr in form[0]:
             if not tr.attributes["_id"].startswith("submit_record"):
                 if "_class" in tr.attributes:
-                    tr.attributes["_class"] = "%s box_middle" % tr.attributes["_class"]
+                    tr.attributes["_class"] = "%s box_middle" % \
+                                                tr.attributes["_class"]
                 else:
                     tr.attributes["_class"] = "box_middle"
                 trs.append(tr)
@@ -2605,7 +2614,7 @@ class S3AddPersonWidget(FormWidget):
         # Divider
         divider = TR(TD(_class="subheading"),
                      TD(),
-                    _class="box_bottom")
+                     _class="box_bottom")
 
         # JavaScript
         if s3.debug:
@@ -3263,7 +3272,7 @@ def s3_richtext_widget(field, value):
 
 # =============================================================================
 def s3_grouped_checkboxes_widget(field,
-                                 field_value,
+                                 value,
                                  size=20,
                                  **attributes):
     """
@@ -3279,6 +3288,8 @@ def s3_grouped_checkboxes_widget(field,
 
         @type size: int
         @param size: number of input elements for each group
+
+        Used by S3SearchOptionsWidget
     """
     import locale
 
@@ -3311,7 +3322,7 @@ def s3_grouped_checkboxes_widget(field,
         letters = []
         letters_options = {}
 
-        for value, label in options:
+        for val, label in options:
             letter = label and label[0]
 
             if letter:
@@ -3319,9 +3330,9 @@ def s3_grouped_checkboxes_widget(field,
 
                 if letter not in letters_options:
                     letters.append(letter)
-                    letters_options[letter] = [(value, label)]
+                    letters_options[letter] = [(val, label)]
                 else:
-                    letters_options[letter].append((value, label))
+                    letters_options[letter].append((val, label))
 
         widget = DIV(_class=attributes.pop("_class",
                                            "s3-grouped-checkboxes-widget"))
@@ -3364,7 +3375,7 @@ def s3_grouped_checkboxes_widget(field,
                                                  multiple=True)
 
                 letter_widget = s3_checkboxes_widget(group_field,
-                                                     field_value,
+                                                     value,
                                                      start_at_id=input_index,
                                                      **attributes)
 
@@ -3379,7 +3390,7 @@ def s3_grouped_checkboxes_widget(field,
         # not enough options to form groups
 
         try:
-            widget = s3_checkboxes_widget(field, field_value, **attributes)
+            widget = s3_checkboxes_widget(field, value, **attributes)
         except:
             # some versions of gluon/sqlhtml.py don't support non-integer keys
             if s3_debug:
@@ -3545,7 +3556,7 @@ class S3SliderWidget(FormWidget):
                             _class="hide",
                             _value=self.value)
 
-        response.s3.jquery_ready.append("S3.slider('%s','%f','%f','%f','%f');\n" % \
+        response.s3.jquery_ready.append('''S3.slider('%s','%f','%f','%f','%f')''' % \
           (fieldname,
            self.minval,
            self.maxval,
@@ -3626,11 +3637,12 @@ class S3OptionsMatrixWidget(FormWidget):
                                     ))
             grid_rows.append(TR(row_cells))
 
-        current.response.s3.scripts.append( "/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application )
+        s3 = current.response.s3
+        s3.scripts.append("/%s/static/scripts/S3/s3.optionsmatrix.js" % current.request.application)
 
         # If the table has an id attribute, activate the jQuery plugin for it.
         if "_id" in attributes:
-            current.response.s3.jquery_ready.append("$('#{0}').s3optionsmatrix();".format(attributes.get('_id')))
+            s3.jquery_ready.append('''$('#{0}').s3optionsmatrix()'''.format(attributes.get("_id")))
 
         return TABLE(header, TBODY(grid_rows), **attributes)
 
@@ -3644,75 +3656,71 @@ class S3KeyValueWidget(ListWidget):
         """
             Returns a widget with key-value fields
         """
-        self._class = 'key-value-pairs'
+        self._class = "key-value-pairs"
         self.delimiter = delimiter
         T = current.T
 
         if key_label == None:
-            self.key_label = T("Key: ")
+            self.key_label = "%s: " % T("Key")
         else:
             self.key_label = key_label
 
         if value_label == None:
-            self.value_label = T("Value: ")
+            self.value_label = "%s: " % T("Value")
         else:
             self.value_label = value_label
 
     def __call__(self, field, value, **attributes):
         T = current.T
-        _id = '%s_%s' % (field._tablename, field.name)
+        _id = "%s_%s" % (field._tablename, field.name)
         _name = field.name
-        _class = 'string'
+        _class = "string"
         requires = field.requires if isinstance(field.requires, (IS_NOT_EMPTY, IS_LIST_OF)) else None
         items = []
 
-        for val in value or ['']:
+        for val in value or [""]:
             kv = val.split(self.delimiter)
             k = kv[0]
             if len(kv)>1: v = kv[1]
-            else: v = ''
+            else: v = ""
 
             items.append(LI(
                 INPUT(_id=_id, _class=_class, _name=_name, _type="hidden", value=val, hideerror=True, requires=requires),
                 self.key_label,
-                INPUT(_class="key",   _type="text", _value=k), " ",
+                INPUT(_class="key", _type="text", _value=k), " ",
                 self.value_label,
                 INPUT(_class="value", _type="text", _value=v)
             ))
 
-        script = SCRIPT("""
-(function($){
+        script = SCRIPT(
+'''(function($){
 $.fn.kv_pairs = function (keyl, vall, delim) {
-    var self=$(this),
-        ref = self.find(":hidden:first").clone(),
-        plus=$('<a href="javascript:void(0)">+</a>').click(function() {new_item();});
-
-    function new_item () {
-        self.find("li").each(function() {
-          var trimmed = $.trim($(this).find(":hidden").val());
-          if (trimmed=='' || trimmed == delim) $(this).remove();
-        });
-
-        self.append($("<li>").append(ref.clone().val(''))
-            .append(keyl + ' <input class="key" type="text"> ' + vall + ' <input class="value" type="text">')
-            .append(plus)).find(".key:last").focus();
-        return false;
-    }
-
-    self.find(".value,.key").live('keypress', function (e) {
-        return (e.which == 13) ? $(this).is(".value") && new_item() : true;
-    }).live('blur', function () {
-        var li = $(this).parents().eq(0)
-        li.find(":hidden").val(li.find(".key").val() + delim + li.find(".value").val())
-    })
-
-    self.find(".value:last").after(plus);
+ var self=$(this),
+     ref=self.find(':hidden:first').clone(),
+     plus=$('<a href="javascript:void(0)">+</a>').click(function(){new_item()})
+ function new_item(){
+  self.find('li').each(function(){
+   var trimmed=$.trim($(this).find(":hidden").val())
+   if(trimmed==''||trimmed==delim) $(this).remove()
+  })
+  self.append($("<li>").append(ref.clone().val(''))
+   .append(keyl+' <input class="key" type="text"> '+vall+' <input class="value" type="text">')
+   .append(plus)).find('.key:last').focus()
+  return false
+ }
+ self.find('.value,.key').live('keypress',function(e){
+  return (e.which == 13)?$(this).is(".value")&&new_item():true
+ }).live('blur',function(){
+  var li=$(this).parents().eq(0)
+  li.find(':hidden').val(li.find('.key').val()+delim+li.find('.value').val())
+ })
+ self.find('.value:last').after(plus)
 }
-})(jQuery);
-jQuery(document).ready(function(){jQuery('#%s_kv_pairs').kv_pairs("%s", "%s", "%s");});
-""" % (_id, self.key_label, self.value_label, self.delimiter))
-        attributes['_id']=_id+'_kv_pairs'
+})(jQuery)
+jQuery(document).ready(function(){jQuery('#%s_kv_pairs').kv_pairs('%s','%s','%s')})''' % \
+    (_id, self.key_label, self.value_label, self.delimiter))
+        attributes["_id"] = _id + "_kv_pairs"
 
-        return TAG[''](UL(*items,**attributes),script)
+        return TAG[""](UL(*items, **attributes), script)
 
 # END =========================================================================

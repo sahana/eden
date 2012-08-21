@@ -37,8 +37,9 @@ __all__ = ["S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
+           "gis_location_filter",
            "gis_location_represent",
-           'gis_location_lx_represent',
+           "gis_location_lx_represent",
            "gis_layer_represent",
            "gis_rheader",
            ]
@@ -370,7 +371,10 @@ class S3LocationModel(S3Model):
         """
 
         # Update the Path (async if-possible)
-        feature = json.dumps(dict(id=form.vars.id))
+        vars = form.vars
+        feature = json.dumps(dict(id=vars.id,
+                                  level=vars.get("level", False),
+                                  ))
         current.s3task.async("gis_update_location_tree",
                              args=[feature])
         return
@@ -667,7 +671,9 @@ class S3LocationTagModel(S3Model):
         - flexible Key-Value component attributes to Locations
     """
 
-    names = ["gis_location_tag"]
+    names = ["gis_location_tag",
+             "gis_country_opts",
+            ]
 
     def model(self):
 
@@ -705,7 +711,31 @@ class S3LocationTagModel(S3Model):
         # Pass variables back to global scope (s3db.*)
         #
         return Storage(
+                    gis_country_opts = self.gis_country_opts,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_country_opts(countries):
+        """
+            Provide the options for a Search widget
+            - countries is a list of ISO2 codes
+            - normally provided via settings.get_gis_countries()
+        """
+
+        db = current.db
+        table = db.gis_location
+        ttable = db.gis_location_tag
+        query = (ttable.tag == "ISO2") & \
+                (ttable.value.belongs(countries)) & \
+                (ttable.location_id == table.id)
+        opts = db(query).select(table.id,
+                                table.name,
+                                orderby=table.name)
+        od = OrderedDict()
+        for opt in opts:
+            od[opt.id] = opt.name
+        return od
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1862,6 +1892,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_js = T("JS Layer"),
                               gis_layer_kml = T("KML Layer"),
                               gis_layer_mgrs = T("MGRS Layer"),
+                              gis_layer_openweathermap = T("OpenWeatherMap Layer"),
                               gis_layer_theme = T("Theme Layer"),
                               gis_layer_tms = T("TMS Layer"),
                               gis_layer_wfs = T("WFS Layer"),
@@ -2278,6 +2309,7 @@ class S3MapModel(S3Model):
              "gis_layer_kml",
              "gis_layer_mgrs",
              "gis_layer_openstreetmap",
+             "gis_layer_openweathermap",
              "gis_layer_tms",
              "gis_layer_wfs",
              "gis_layer_wms",
@@ -2846,6 +2878,40 @@ class S3MapModel(S3Model):
                                     autodelete=False))
 
         # ---------------------------------------------------------------------
+        # OpenWeatherMap
+        #
+
+        openweathermap_layer_types = ["station", "city"]
+
+        tablename = "gis_layer_openweathermap"
+        table = define_table(tablename,
+                             layer_id,
+                             name_field()(),
+                             Field("description", label=T("Description")),
+                             Field("type", length=16, label=T("Type"),
+                                   requires=IS_IN_SET(openweathermap_layer_types)),
+                             gis_layer_folder()(),
+                             s3_role_required(),       # Single Role
+                             #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept=gis_layer_onaccept,
+                  super_entity="gis_layer_entity")
+
+        # Components
+        # Configs
+        add_component("gis_config",
+                      gis_layer_openweathermap=Storage(
+                                    link="gis_layer_config",
+                                    pkey="layer_id",
+                                    joinby="layer_id",
+                                    key="config_id",
+                                    actuate="hide",
+                                    autocomplete="name",
+                                    autodelete=False))
+
+        # ---------------------------------------------------------------------
         # TMS
         #
 
@@ -2947,7 +3013,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              #gis_refresh()(),
                              gis_opacity()(),
-                              cluster_distance()(),
+                             cluster_distance()(),
                              cluster_threshold()(),
                              #Field("editable", "boolean", default=False, label=T("Editable?")),
                              s3_role_required(),       # Single Role
@@ -3453,7 +3519,55 @@ def gis_layer_onaccept(form):
     return
 
 # =============================================================================
-def gis_location_represent(id, row=None, showlink=True, simpletext=False):
+def gis_location_filter(r):
+    """
+        Filter resources to those for a specific location
+    """
+
+    lfilter = current.session.s3.location_filter
+    if not lfilter:
+        return
+
+    db = current.db
+    s3db = current.s3db
+    gtable = s3db.gis_location
+    query = (gtable.id == lfilter)
+    row = current.db(query).select(gtable.id,
+                                   gtable.name,
+                                   gtable.level,
+                                   gtable.path,
+                                   limitby=(0, 1)).first()
+    if row and row.level:
+        resource = r.resource
+        if resource.name == "organisation":
+            selector = "organisation.country"
+            if row.level != "L0":
+                code = current.gis.get_parent_country(row, key_type="code")
+            else:
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.location_id == row.id)
+                tag = db(query).select(ttable.value,
+                                       limitby=(0, 1)).first()
+                code = tag.value
+            filter = (S3FieldSelector(selector) == code)
+            resource.add_filter(filter)
+        elif resource.name == "project":
+            selector = "project.countries_id"
+            if row.level != "L0":
+                id = current.gis.get_parent_country(row)
+            else:
+                id = lfilter
+            filter = (S3FieldSelector(selector).contains(id))
+            resource.add_filter(filter)
+        else:
+            # Normal case: resource with location_id
+            selector = "%s.location_id$%s" % (resource.name, row.level)
+            filter = (S3FieldSelector(selector) == row.name)
+            resource.add_filter(filter)
+
+# =============================================================================
+def gis_location_represent(id, row=None, show_link=True, simpletext=False):
     """ FK representation """
 
     if row:
@@ -3533,9 +3647,9 @@ def gis_location_represent(id, row=None, showlink=True, simpletext=False):
         row.parent == None):
         # Map popups don't support iframes (& meaningless anyway), and if there
         # is no lat, lon or parent, there's no way to place this on a map.
-        showlink = False
+        show_link = False
 
-    if showlink and simpletext:
+    if show_link and simpletext:
         # We aren't going to use the represent, so skip making it.
         represent_text = current.T("Show on Map")
     elif row.level == "L0":
@@ -3592,7 +3706,7 @@ def gis_location_represent(id, row=None, showlink=True, simpletext=False):
             if not represent_text:
                 represent_text = row.name or row.id
 
-    if showlink:
+    if show_link:
         # ToDo: Convert to popup? (HTML again!)
         represent = A(represent_text,
                       _style="cursor:pointer;cursor:hand",
@@ -3861,6 +3975,7 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_bing" or \
          resourcename == "layer_empty" or \
          resourcename == "layer_google" or \
+         resourcename == "layer_openweathermap" or \
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \
          resourcename == "layer_wfs" or \

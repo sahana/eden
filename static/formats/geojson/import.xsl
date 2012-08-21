@@ -8,9 +8,9 @@
 
          http://geojson.org/geojson-spec.html
 
-         Version 0.2 / 2010-12-02 / by flavour
+         Version 0.2 / 2010-12-02
 
-         Copyright (c) 2010-11 Sahana Software Foundation
+         Copyright (c) 2010-12 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -43,7 +43,6 @@
         </s3xml>
     </xsl:template>
 
-
     <!-- ****************************************************************** -->
     <xsl:template match="geojson">
         <xsl:choose>
@@ -61,15 +60,19 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="location">
+
+        <xsl:variable name="ID" select="./properties/id/text()"/>
+        <xsl:variable name="Name" select="./properties/name/text()"/>
+
         <resource name="gis_location">
 
-            <xsl:attribute name="uuid">
-                <xsl:value-of select="./properties/id/text()"/>
-            </xsl:attribute>
+            <xsl:if test="$ID!=''">
+                <xsl:attribute name="uuid"><xsl:value-of select="$ID"/></xsl:attribute>
+            </xsl:if>
 
-            <data field="name">
-                <xsl:value-of select="./properties/name/text()"/>
-            </data>
+            <xsl:if test="$Name!=''">
+                <data field="name"><xsl:value-of select="$Name"/></data>
+            </xsl:if>
 
             <xsl:choose>
 

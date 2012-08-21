@@ -53,11 +53,6 @@ class CreateProject(SeleniumUnitTest):
         self.create("project_project", 
                     [( "name",
                        "Community Strengthening through Dance" ),
-                     ( "organisation_id",
-                       "Timor-Leste Red Cross Society",
-                       "autocomplete"),
-                     ( "currency",
-                       "USD",),
                      ( "comments",
                        "Host National Society")
                     ]

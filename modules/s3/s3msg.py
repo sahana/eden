@@ -9,9 +9,6 @@
     Messages get sent to the Outbox (& Log)
     From there, Cron tasks collect them & send them
 
-    @author: Praneeth Bodduluri <lifeeth[at]gmail.com>
-    @author: Fran Boon <fran[at]aidiq.com>
-
     @copyright: 2009-2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -38,8 +35,7 @@
 
 """
 
-__all__ = ["S3Msg",
-           "S3Compose"]
+__all__ = ["S3Msg", "S3Compose"]
 
 import datetime
 import string
@@ -116,6 +112,7 @@ class S3Msg(object):
                 "SMS":      current.deployment_settings.get_ui_label_mobile_phone(),
                 "TWITTER":  T("Twitter"),
                 #"XMPP":    "XMPP",
+                "TWILIO":   T("Twilio SMS")
             }
 
         self.GATEWAY_OPTS = {
@@ -202,11 +199,19 @@ class S3Msg(object):
         wtable = s3db.msg_workflow
         otable = s3db.msg_outbox
         ctable = s3db.pr_contact
+        parser = S3Parsing.parser
+        linsert = ltable.insert
+        oinsert = otable.insert
+        contact_method = ctable.contact_method
+        value = ctable.value
+        lid = ltable.id
         
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
         records = db(query).select(wtable.source_task_id)
         reply = ""
+        wflow = ""
+        contact = ""
         for record in records:
             query = (ltable.is_parsed == False) & \
                     (ltable.inbound == True) & \
@@ -215,24 +220,48 @@ class S3Msg(object):
             
             for row in rows:
                 message = row.message
-                reply = S3Parsing.parser(workflow, message)
-                db(ltable.id == row.id).update(reply = reply,
-                                               is_parsed = True)
-                reply = ltable.insert(recipient = row.sender,
+                try:
+                    contact = row.sender.split("<")[1].split(">")[0]
+                    query = (contact_method == "EMAIL") & \
+                        (value == contact) 
+                    pe_ids = db(query).select(ctable.pe_id)
+                    if not pe_ids:
+                        query = (contact_method == "SMS") & \
+                            (value == contact) 
+                        pe_ids = db(query).select(ctable.pe_id)
+
+                except:
+                    raise ValueError("Source not defined!")
+                
+                reply = parser(workflow, message, contact)
+                if reply:
+                    db(lid == row.id).update(reply = reply,
+                                                   is_parsed = True)
+                else:
+                    flow = db(lid == row.id).select(ltable.reply, \
+                                                    limitby=(0,1)).first()
+                    try:
+                        wflow = flow.reply.split("Workflow:")[1].split(".")[0]
+                    except:
+                        pass                            
+                    if wflow == workflow:
+                        reply = "Send help to see how to respond !"
+                        db(lid == row.id).update(reply = reply,
+                                                is_parsed = True)
+                    else:
+                        reply = "Workflow:%s.Send help to see how to respond!"\
+                                %workflow
+                        db(lid == row.id).update(reply = flow.reply+reply)
+                        db.commit()
+                        return                    
+                reply = linsert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
-                try:
-                    email = row.sender.split("<")[1].split(">")[0]
-                    query = (ctable.contact_method == "EMAIL") & \
-                        (ctable.value == email) 
-                    pe_ids = db(query).select(ctable.pe_id)
-                except:
-                    raise ValueError("Email address not defined!")
                 
                 if pe_ids:
                     for pe_id in pe_ids:
-                        otable.insert(message_id = reply.id,
-                                      address = row.sender, pe_id = pe_id.pe_id)
+                        oinsert(message_id = reply.id,
+                                      address = contact, pe_id = pe_id.pe_id)
                 db.commit()
 
         return    
@@ -779,7 +808,7 @@ class S3Msg(object):
         code = "GeoSMS=%s" % code
 
         if map == "google":
-            url = "http://maps.google.com/maps?q=%f,%f" % (lat, lon)
+            url = "http://maps.google.com/?q=%f,%f" % (lat, lon)
         elif map == "osm":
             # NB Not sure how this will work in OpenGeoSMS client
             url = "http://openstreetmap.org?mlat=%f&mlon=%f&zoom=14" % (lat, lon)
@@ -788,6 +817,35 @@ class S3Msg(object):
 
         return opengeosms
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_opengeosms(message):
+        """
+           Function to parse an OpenGeoSMS
+           @param: message - Inbound message to be parsed for OpenGeoSMS.
+           Returns the lat, lon, code and text contained in the message.
+        """
+        
+        lat = ""
+        lon = ""
+        code = ""
+        text = ""
+           
+        s3db = current.s3db
+        words = string.split(message)
+        if "http://maps.google.com/?q" in words[0]:
+            # Parse OpenGeoSMS
+            pwords = words[0].split("?q=")[1].split(",")
+            lat = pwords[0]
+            lon = pwords[1].split("&")[0]
+            code = pwords[1].split("&")[1].split("=")[1]
+            text = ""
+            for a in range(1, len(words)):
+                text = text + words[a] + " "
+                
+                    
+        return lat, lon, code, text
+                
     # -------------------------------------------------------------------------
     # Send SMS
     # -------------------------------------------------------------------------
@@ -1356,6 +1414,61 @@ class S3Msg(object):
         for record in records:
             if record.vars.split(":") == ["{\"username\""," \"%s\"}" %username] :
                 return record.id
+    # =============================================================================
+    @staticmethod
+    def twilio_inbound_sms(account_name):
+        """ Fetches the inbound sms from twilio API."""
+        
+        s3db = current.s3db
+        db = current.db
+        ttable = s3db.msg_twilio_inbound_settings
+        query = (ttable.account_name == account_name) & \
+            (ttable.deleted == False)
+        account = db(query).select(limitby=(0,1)).first()
+        if account:
+            url = account.url
+            account_sid = account.account_sid
+            auth_token = account.auth_token
+            
+            url += "/%s/SMS/Messages.json"%str(account_sid)
+            
+            import urllib, urllib2
+            # this creates a password manager 
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(None, url, account_sid, auth_token)
+  
+            # create the AuthHandler
+            authhandler = urllib2.HTTPBasicAuthHandler(passman)
+            opener = urllib2.build_opener(authhandler)            
+            urllib2.install_opener(opener)
+            
+            downloaded_sms = []
+            itable = s3db.msg_twilio_inbox
+            ltable = s3db.msg_log
+            query = itable.deleted == False
+            messages = db(query).select(itable.sid)
+            downloaded_sms = [message.sid for message in messages]
+            try:
+                smspage = urllib2.urlopen(url)
+                import json
+                minsert = itable.insert
+                linsert = ltable.insert
+                sms_list = json.loads(smspage.read())
+                for sms in  sms_list["sms_messages"]:
+                    if (sms["direction"] == "inbound") and \
+                       (sms["sid"] not in downloaded_sms):
+                        sender = "<" + sms["from"] + ">"
+                        minsert(sid=sms["sid"],body=sms["body"], \
+                                status=sms["status"],sender=sender, \
+                                received_on=sms["date_sent"])
+                        linsert(sender=sender, message=sms["body"], \
+                                 source_task_id=account_name, inbound=True)
+                                        
+            except urllib2.HTTPError, e:
+                return "Error:" + str(e.code)
+            db.commit()
+            return
+        
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """

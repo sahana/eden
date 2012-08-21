@@ -1522,16 +1522,25 @@ class S3ResourceHeader:
         self.tabs = tabs
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, tabs=None):
+    def __call__(self, r, tabs=None, table=None, record=None, as_div = True):
         """
             Return the HTML representation of this rheader
 
             @param r: the S3Request instance to render the header for
             @param tabs: the tabs (overrides the original tabs definition)
+            @param table: override r.table
+            @param record: override r.record
+            @param as_div: True: will return the rheader_fields and the
+                           rheader_tabs together as a DIV
+                           False will return the rheader_fields and the
+                           rheader_tabs as a tuple
+                           (rheader_fields, rheader_tabs)
         """
 
-        table = r.table
-        record = r.record
+        if table is None:
+            table = r.table
+        if record is None:
+            record = r.record
 
         if tabs is None:
             tabs = self.tabs
@@ -1591,7 +1600,10 @@ class S3ResourceHeader:
                             pass
                     tr.append(TD(v))
                 trs.append(tr)
-            rheader = DIV(TABLE(trs), rheader_tabs)
+            if as_div:
+                rheader = DIV(TABLE(trs), rheader_tabs)
+            else:
+                rheader = (TABLE(trs), rheader_tabs)
             return rheader
 
         return None

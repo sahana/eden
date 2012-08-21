@@ -56,8 +56,8 @@ class S3DVIModel(S3Model):
         person_id = self.pr_person_id
         location_id = self.gis_location_id
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        datetime_represent = S3DateTime.datetime_represent
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -78,12 +78,11 @@ class S3DVIModel(S3Model):
 
         tablename = "dvi_recreq"
         table = define_table(tablename,
-                             Field("date", "datetime",
-                                   label = T("Date/Time of Find"),
-                                   default = request.utcnow,
-                                   requires = IS_UTC_DATETIME(allow_future=False),
-                                   represent = lambda val: datetime_represent(val, utc=True),
-                                   widget = S3DateTimeWidget(future=0)),
+                             s3_datetime(label = T("Date/Time of Find"),
+                                         empty=False,
+                                         default = "now",
+                                         future=0
+                                         ),
                              Field("marker", length=64,
                                    label = T("Marker"),
                                    comment = DIV(_class="tooltip",
@@ -163,6 +162,13 @@ class S3DVIModel(S3Model):
                              Field("description",
                                    label = T("Description")),
                              location_id(),
+                             Field("obsolete", "boolean",
+                                label = T("Obsolete"),
+                                represent = lambda bool: \
+                                  (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                default = False,
+                                readable = False,
+                                writable = False),
                              *s3_meta_fields())
 
         # Reusable Field
@@ -209,10 +215,12 @@ class S3DVIModel(S3Model):
                                                           IS_NOT_ONE_OF(db, "dvi_body.pe_label")]),
                              morgue_id(),
                              dvi_recreq_id(label = T("Recovery Request")),
-                             Field("date_of_recovery", "datetime",
-                                   default = request.utcnow,
-                                   requires = IS_UTC_DATETIME(allow_future=False),
-                                   represent = lambda val: datetime_represent(val, utc=True)),
+                             s3_datetime("date_of_recovery",
+                                         label = T("Date of Recovery"),
+                                         empty=False,
+                                         default = "now",
+                                         future=0
+                                         ),
                              Field("recovery_details","text"),
                              Field("incomplete", "boolean",
                                    label = T("Incomplete"),

@@ -105,6 +105,18 @@ def morgue():
     rheader = S3ResourceHeader([
                     [(T("Morgue"), "name")]
               ], tabs=morgue_tabs)
+
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
+        if r.interactive and r.id and not r.component:
+            field = r.table.obsolete
+            field.readable = field.writable = True
+        return True
+    s3.prep = prep
+
     output = s3_rest_controller(rheader=rheader)
     return output
 
@@ -279,5 +291,4 @@ def tooltip():
         response.view = "pr/ajaxtips/%s.html" % formfield
     return dict()
 
-# -----------------------------------------------------------------------------
-
+# END =========================================================================

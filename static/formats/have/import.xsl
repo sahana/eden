@@ -7,9 +7,9 @@
             xmlns:xal="urn:oasis:names:tc:ciq:xal:3"
             xmlns:xpil="urn:oasis:names:tc:ciq:xpil:3">
 
-    <!-- EDXL-HAVE Import Templates / by nursix
+    <!-- EDXL-HAVE Import Templates
 
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-2012 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -75,11 +75,10 @@
             </xsl:if>
             <!-- Sub-Elements -->
             <xsl:apply-templates select="./have:Organization"/>
-            <xsl:apply-templates select="./have:EmergencyDepartmentStatus"/>
+            <xsl:call-template name="StatusReport"/>
+            <xsl:apply-templates select="have:HospitalFacilityStatus/have:Activity24Hr"/>
             <xsl:apply-templates select="./have:HospitalBedCapacityStatus"/>
             <xsl:apply-templates select="./have:ServiceCoverageStatus[1]"/>
-            <xsl:apply-templates select="./have:HospitalFacilityStatus"/>
-            <xsl:apply-templates select="./have:HospitalResourceStatus"/>
         </resource>
     </xsl:template>
 
@@ -89,6 +88,19 @@
         <!-- Sub-Elements -->
         <xsl:apply-templates select="./have:OrganizationInformation"/>
         <xsl:apply-templates select="./have:OrganizationGeoLocation"/>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Status report -->
+    <xsl:template name="StatusReport">
+        <resource name="hms_status">
+            <xsl:apply-templates select="./have:EmergencyDepartmentStatus"/>
+            <xsl:apply-templates select="have:HospitalFacilityStatus/have:FacilityStatus"/>
+            <xsl:apply-templates select="have:HospitalFacilityStatus/have:ClinicalStatus"/>
+            <xsl:apply-templates select="have:HospitalFacilityStatus/have:MorgueCapacity"/>
+            <xsl:apply-templates select="have:HospitalFacilityStatus/have:SecurityStatus"/>
+            <xsl:apply-templates select="./have:HospitalResourceStatus"/>
+        </resource>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -221,16 +233,6 @@
                 <data field='emsd' value="True"/>
             </xsl:if>
         </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- HospitalFacilityStatus -->
-    <xsl:template match="have:HospitalFacilityStatus">
-        <xsl:apply-templates select="./have:FacilityStatus"/>
-        <xsl:apply-templates select="./have:ClinicalStatus"/>
-        <xsl:apply-templates select="./have:MorgueCapacity"/>
-        <xsl:apply-templates select="./have:SecurityStatus"/>
-        <xsl:apply-templates select="./have:Activity24Hr"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->

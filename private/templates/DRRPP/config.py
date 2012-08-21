@@ -68,29 +68,37 @@ settings.gis.map_width = 854
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
 settings.gis.display_L0 = True
+# Deployment only covers Asia-Pacific
+settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "MH", "MM", "MN", "MV", "MY", "NP", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "SL", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]
 
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
+
+# Organisations
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+settings.org.summary = True
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project
-settings.project.multiple_budgets = True
+#settings.project.multiple_budgets = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
+# Uncomment this to disable Sectors in projects
+settings.project.sectors = False
 # Uncomment this to customise
-#settings.project.organisation_roles = {
-#    1: T("Host National Society"),
-#    2: T("Partner National Society"),
-#    3: T("Donor"),
-#    #4: T("Customer"), # T("Beneficiary")?
-#    5: T("Partner")
-#}
+settings.project.organisation_roles = {
+    1: T("Lead Organization"),
+    2: T("Partner Organization"),
+    3: T("Donor"),
+}
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

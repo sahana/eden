@@ -1,0 +1,17 @@
+{{# Include dynamically added Scripts at the end of the body}}
+{{for script in s3.scripts:}}
+ {{=SCRIPT(_src=script)}}
+{{pass}}
+<script type="text/javascript">//<![CDATA[
+{{for script in s3.js_global:}}
+ {{=XML(script)}}
+{{pass}}
+{{if s3.jquery_ready:}}
+$(document).ready(function(){
+ {{for script in s3.jquery_ready:}}
+  {{=XML(script)}}
+ {{pass}}
+})
+{{pass}}
+//]]></script>
+{{if response.google_analytics_id:}}<script>/* http://mathiasbynens.be/notes/async-analytics-snippet */ var _gaq=[['_setAccount','{{=response.google_analytics_id}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script'))</script>{{pass}}

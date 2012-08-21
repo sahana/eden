@@ -56,11 +56,11 @@ class ReceiveItem(InvTestFunctions):
                       "PO_TEST_000001",
                      ),
                      ("site_id",
-                      "Same Warehouse",
+                      "Same Warehouse (Warehouse)",
                       "option",
                      ),
                      ("type",
-                      "Other Warehouse",
+                      "Internal Shipment",
                       "option",
                      )
                     ]

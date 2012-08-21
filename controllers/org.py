@@ -22,6 +22,13 @@ def index():
 def sector():
     """ RESTful CRUD controller """
 
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -34,6 +41,13 @@ def subsector():
 def site():
     """ RESTful CRUD controller """
 
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -44,7 +58,6 @@ def site_org_json():
     table = s3db.org_site
     otable = s3db.org_organisation
     response.headers["Content-Type"] = "application/json"
-    #db.req_commit.date.represent = lambda dt: dt[:10]
     query = (table.site_id == request.args[0]) & \
             (table.organisation_id == otable.id)
     records = db(query).select(otable.id,
@@ -54,18 +67,37 @@ def site_org_json():
 # -----------------------------------------------------------------------------
 def facility():
     """ RESTful CRUD controller """
+    
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
 
-    # remove CRUD generated buttons in the tabs
-    s3db.configure("inv_inv_item",
-                    create=False,
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                   )
+        if r.interactive:
+            if r.component:
+                # remove CRUD generated buttons in the tabs
+                s3db.configure("inv_inv_item",
+                               create=False,
+                               listadd=False,
+                               editable=False,
+                               deletable=False,
+                               )
+            elif r.method == "update":
+                field = r.table.obsolete
+                field.readable = field.writable = True
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def facility_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def office_type():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
@@ -134,7 +166,7 @@ def person():
         else:
             s3mgr.show_ids = True
         return True
-    response.s3.prep = prep
+    s3.prep = prep
 
     return s3_rest_controller("pr", "person")
 

@@ -83,7 +83,7 @@ class Volunteer(SeleniumUnitTest):
         browser.find_element_by_id("pr_person_occupation").send_keys("Social Worker")
         browser.find_element_by_id("pr_person_email").clear()
         browser.find_element_by_id("pr_person_email").send_keys("test@notavalidemail.com")
-        el = browser.find_element_by_id("hrm_human_resource_job_role_id")
+        el = browser.find_element_by_id("hrm_human_resource_job_title_id")
         for option in el.find_elements_by_tag_name("option"):
             if option.text == "Child Care Worker, Part Time":
                 option.click()

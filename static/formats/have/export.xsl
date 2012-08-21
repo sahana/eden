@@ -7,9 +7,9 @@
             xmlns:xal="urn:oasis:names:tc:ciq:xal:3"
             xmlns:xpil="urn:oasis:names:tc:ciq:xpil:3">
 
-    <!-- EDXL-HAVE Export Stylesheet / by nursix
+    <!-- EDXL-HAVE Export Stylesheet
 
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-2012 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -70,16 +70,15 @@
                 </have:Organization>
 
                 <!-- Services and Capacity -->
-                <xsl:call-template name="EmergencyDeptStatus"/>
+                <xsl:apply-templates select="./resource[@name='hms_status']"
+                                     mode="EmergencyDeptStatus"/>
                 <xsl:call-template name="BedCapacityStatus"/>
                 <xsl:call-template name="ServiceCoverageStatus"/>
 
                 <!-- Facility Status -->
                 <have:HospitalFacilityStatus>
-                    <xsl:call-template name="FacilityStatus"/>
-                    <xsl:call-template name="ClinicalStatus"/>
-                    <xsl:call-template name="MorgueCapacity"/>
-                    <xsl:call-template name="SecurityStatus"/>
+                    <xsl:apply-templates select="resource[@name='hms_status']"
+                                         mode="FacilityStatus"/>
                     <xsl:call-template name="Activity24Hr"/>
                 </have:HospitalFacilityStatus>
 
@@ -109,7 +108,8 @@
     <!-- ****************************************************************** -->
     <!-- GeoLocation -->
     <xsl:template name="GeoLocation">
-        <xsl:if test="./reference[@field='location_id']">
+        <xsl:if test="./reference[@field='location_id']/@lat!='' and
+                      ./reference[@field='location_id']/@lon!=''">
             <have:OrganizationGeoLocation>
                 <gml:Point>
                     <xsl:attribute name="gml:id">
@@ -254,37 +254,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Emergency Department Status -->
-    <xsl:template name="EmergencyDeptStatus">
-        <have:EmergencyDepartmentStatus>
-            <have:EMSTraffic>
-                <have:EMSTrafficStatus>
-                    <xsl:choose>
-                        <xsl:when test="./data[@field='ems_status']/@value='1'">
-                            <xsl:text>Normal</xsl:text>
-                        </xsl:when>
-                        <xsl:when test="./data[@field='ems_status']/@value='2'">
-                            <xsl:text>Advisory</xsl:text>
-                        </xsl:when>
-                        <xsl:when test="./data[@field='ems_status']/@value='3'">
-                            <xsl:text>Closed</xsl:text>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:text>Unknown</xsl:text>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </have:EMSTrafficStatus>
-                <xsl:if test="./data[@field='ems_reason']/text()!=''">
-                    <have:EMSTrafficReason>
-                        <xsl:value-of select="./data[@field='ems_reason']/text()"/>
-                    </have:EMSTrafficReason>
-                </xsl:if>
-            </have:EMSTraffic>
-        </have:EmergencyDepartmentStatus>
-    </xsl:template>
-
-
-    <!-- ****************************************************************** -->
     <!-- Bed Capacity -->
     <!-- @todo: export broken down by bed type -->
     <xsl:template name="BedCapacityStatus">
@@ -329,10 +298,119 @@
         <xsl:apply-templates select="./resource[@name='hms_services']"/>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <!-- Activites 24hrs -->
+    <!-- @todo: check for modification date - current? -->
+    <xsl:template name="Activity24Hr">
+        <xsl:for-each select="./resource[@name='hms_activity']">
+            <xsl:sort select="./data[@field='date']" order="descending"/>
+            <xsl:if test="position()=1">
+                <have:Activity24Hr>
+                    <have:Admissions>
+                        <xsl:value-of select="./data[@field='admissions24']"/>
+                    </have:Admissions>
+                    <have:Discharges>
+                        <xsl:value-of select="./data[@field='discharges24']"/>
+                    </have:Discharges>
+                    <have:Deaths>
+                        <xsl:value-of select="./data[@field='deaths24']"/>
+                    </have:Deaths>
+                </have:Activity24Hr>
+            </xsl:if>
+        </xsl:for-each>
+    </xsl:template>
+
 
     <!-- ****************************************************************** -->
+    <!-- Resource Information -->
+    <xsl:template name="HospitalResourceStatus">
+        <have:HospitalResourceStatus>
+            <xsl:apply-templates select="resource[@name='hms_status']"
+                                 mode="FacilityOperations"/>
+
+            <xsl:if test="./data[@field='doctors']/text()">
+                <have:ResourceInformationText>
+                    <xsl:text>Doctors: </xsl:text>
+                    <xsl:value-of select="./data[@field='doctors']/text()"/>
+                </have:ResourceInformationText>
+            </xsl:if>
+
+            <xsl:if test="./data[@field='nurses']/text()">
+                <have:ResourceInformationText>
+                    <xsl:text>Nurses: </xsl:text>
+                    <xsl:value-of select="./data[@field='nurses']/text()"/>
+                </have:ResourceInformationText>
+            </xsl:if>
+
+            <xsl:if test="./data[@field='non_medical_staff']/text()">
+                <have:ResourceInformationText>
+                    <xsl:text>Non-medical staff: </xsl:text>
+                    <xsl:value-of select="./data[@field='non_medical_staff']/text()"/>
+                </have:ResourceInformationText>
+            </xsl:if>
+
+            <!--
+            <xsl:if test="./resource[@name='hms_ctc_capability']/data[@field='ctc']/@value='True'">
+                <have:ResourceInformationText>
+                    <xsl:text>CTC Information: </xsl:text>
+                </have:ResourceInformationText>
+            </xsl:if>
+            -->
+
+            <xsl:apply-templates select="./resource[@name='hms_shortage']"/>
+        </have:HospitalResourceStatus>
+    </xsl:template>
+
+
+    <!-- ****************************************************************** -->
+    <!-- Status reports -->
+
+    <!-- Helper for Resource Status Options -->
+    <xsl:template name="ResourceStatusOptions">
+        <xsl:param name="value"/>
+        <xsl:choose>
+            <xsl:when test="$value='2'">
+                <xsl:text>Insufficient</xsl:text>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:text>Adequate</xsl:text>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Emergency Department Status -->
+
+    <xsl:template match="resource[@name='hms_status']" mode="EmergencyDeptStatus">
+        <have:EmergencyDepartmentStatus>
+            <have:EMSTraffic>
+                <have:EMSTrafficStatus>
+                    <xsl:choose>
+                        <xsl:when test="./data[@field='ems_status']/@value='1'">
+                            <xsl:text>Normal</xsl:text>
+                        </xsl:when>
+                        <xsl:when test="./data[@field='ems_status']/@value='2'">
+                            <xsl:text>Advisory</xsl:text>
+                        </xsl:when>
+                        <xsl:when test="./data[@field='ems_status']/@value='3'">
+                            <xsl:text>Closed</xsl:text>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:text>Unknown</xsl:text>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </have:EMSTrafficStatus>
+                <xsl:if test="./data[@field='ems_reason']/text()!=''">
+                    <have:EMSTrafficReason>
+                        <xsl:value-of select="./data[@field='ems_reason']/text()"/>
+                    </have:EMSTrafficReason>
+                </xsl:if>
+            </have:EMSTraffic>
+        </have:EmergencyDepartmentStatus>
+    </xsl:template>
+
     <!-- Facility Status -->
-    <xsl:template name="FacilityStatus">
+
+    <xsl:template match="resource[@name='hms_status']" mode="FacilityStatus">
         <have:FacilityStatus>
             <xsl:choose>
                 <xsl:when test="./data[@field='facility_status']/@value='1'">
@@ -352,12 +430,7 @@
                 </xsl:otherwise>
             </xsl:choose>
         </have:FacilityStatus>
-    </xsl:template>
 
-
-    <!-- ****************************************************************** -->
-    <!-- Clinical Status -->
-    <xsl:template name="ClinicalStatus">
         <have:ClinicalStatus>
             <xsl:choose>
                 <xsl:when test="./data[@field='clinical_status']/@value='1'">
@@ -374,12 +447,7 @@
                 </xsl:otherwise>
             </xsl:choose>
         </have:ClinicalStatus>
-    </xsl:template>
 
-
-    <!-- ****************************************************************** -->
-    <!-- Morgue Capacity and Status -->
-    <xsl:template name="MorgueCapacity">
         <xsl:if test="./data[@field='morgue_status']/@value or
                       ./data[@field='morgue_units']/text()!=''">
             <have:MorgueCapacity>
@@ -411,12 +479,7 @@
                 </xsl:if>
             </have:MorgueCapacity>
         </xsl:if>
-    </xsl:template>
 
-
-    <!-- ****************************************************************** -->
-    <!-- Security Status -->
-    <xsl:template name="SecurityStatus">
         <have:SecurityStatus>
             <xsl:choose>
                 <xsl:when test="./data[@field='security_status']/@value='1'">
@@ -444,97 +507,25 @@
         </have:SecurityStatus>
     </xsl:template>
 
+    <!-- Facility operations -->
 
-    <!-- ****************************************************************** -->
-    <!-- Activites 24hrs -->
-    <!-- @todo: check for modification date - current? -->
-    <xsl:template name="Activity24Hr">
-        <xsl:for-each select="./resource[@name='hms_activity']">
-            <xsl:sort select="./data[@field='date']" order="descending"/>
-            <xsl:if test="position()=1">
-                <have:Activity24Hr>
-                    <have:Admissions>
-                        <xsl:value-of select="./data[@field='admissions24']"/>
-                    </have:Admissions>
-                    <have:Discharges>
-                        <xsl:value-of select="./data[@field='discharges24']"/>
-                    </have:Discharges>
-                    <have:Deaths>
-                        <xsl:value-of select="./data[@field='deaths24']"/>
-                    </have:Deaths>
-                </have:Activity24Hr>
-            </xsl:if>
-        </xsl:for-each>
+    <xsl:template match="resource[@name='hms_status']" mode="FacilityOperations">
+        <have:FacilityOperations>
+            <xsl:call-template name="ResourceStatusOptions">
+                <xsl:with-param name="value" select="./data[@field='facility_operations']/@value"/>
+            </xsl:call-template>
+        </have:FacilityOperations>
+        <have:ClinicalOperations>
+            <xsl:call-template name="ResourceStatusOptions">
+                <xsl:with-param name="value" select="./data[@field='clinical_operations']/@value"/>
+            </xsl:call-template>
+        </have:ClinicalOperations>
+        <have:Staffing>
+            <xsl:call-template name="ResourceStatusOptions">
+                <xsl:with-param name="value" select="./data[@field='staffing']/@value"/>
+            </xsl:call-template>
+        </have:Staffing>
     </xsl:template>
-
-
-    <!-- ****************************************************************** -->
-    <!-- Resource Status -->
-    <xsl:template name="HospitalResourceStatus">
-        <have:HospitalResourceStatus>
-            <have:FacilityOperations>
-                <xsl:call-template name="ResourceStatusOptions">
-                    <xsl:with-param name="value" select="./data[@field='facility_operations']/@value"/>
-                </xsl:call-template>
-            </have:FacilityOperations>
-            <have:ClinicalOperations>
-                <xsl:call-template name="ResourceStatusOptions">
-                    <xsl:with-param name="value" select="./data[@field='clinical_operations']/@value"/>
-                </xsl:call-template>
-            </have:ClinicalOperations>
-            <have:Staffing>
-                <xsl:call-template name="ResourceStatusOptions">
-                    <xsl:with-param name="value" select="./data[@field='staffing']/@value"/>
-                </xsl:call-template>
-            </have:Staffing>
-
-            <xsl:if test="./data[@field='doctors']/text()">
-                <have:ResourceInformationText>
-                    <xsl:text>Doctors: </xsl:text>
-                    <xsl:value-of select="./data[@field='doctors']/text()"/>
-                </have:ResourceInformationText>
-            </xsl:if>
-
-            <xsl:if test="./data[@field='nurses']/text()">
-                <have:ResourceInformationText>
-                    <xsl:text>Nurses: </xsl:text>
-                    <xsl:value-of select="./data[@field='nurses']/text()"/>
-                </have:ResourceInformationText>
-            </xsl:if>
-
-            <xsl:if test="./data[@field='non_medical_staff']/text()">
-                <have:ResourceInformationText>
-                    <xsl:text>Non-medical staff: </xsl:text>
-                    <xsl:value-of select="./data[@field='non_medical_staff']/text()"/>
-                </have:ResourceInformationText>
-            </xsl:if>
-
-            <xsl:if test="./resource[@name='hms_ctc_capability']/data[@field='ctc']/@value='True'">
-                <have:ResourceInformationText>
-                    <xsl:text>CTC Information: </xsl:text>
-                    <!-- @todo: elaborate -->
-                </have:ResourceInformationText>
-            </xsl:if>
-
-            <xsl:apply-templates select="./resource[@name='hms_shortage']"/>
-        </have:HospitalResourceStatus>
-    </xsl:template>
-
-
-    <!-- ****************************************************************** -->
-    <!-- Helper for Resource Status Options -->
-    <xsl:template name="ResourceStatusOptions">
-        <xsl:param name="value"/>
-        <xsl:choose>
-            <xsl:when test="$value='2'">
-                <xsl:text>Insufficient</xsl:text>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:text>Adequate</xsl:text>
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-
 
     <!-- ****************************************************************** -->
     <!-- Helper for Comments -->

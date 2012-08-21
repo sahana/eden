@@ -14,13 +14,13 @@
     {{except:}}{{pass}}
 	{{try:}}
 	 <p>
-	 {{=edit_btn}}
+	 {{=buttons["edit_btn"]}}
 	 </p>
 	{{except:}}{{pass}}
 	<div id='map'></div>
 	<div class='item-container'>
 	{{try:}}{{=item}}{{except:}}{{pass}}
 	</div>
-	{{try:}}{{=list_btn}}{{except:}}{{pass}}
+	{{try:}}{{=buttons["list_btn"]}}{{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

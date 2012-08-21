@@ -49,7 +49,7 @@ def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
 
     # Add newly-registered users to Person Registry, add 'Authenticated' role
-    # If Organisation is provided, then: add HRM record & add to 'Org_X_Access' role
+    # If Organisation is provided, then add HRM record
     person_id = auth.s3_register(form)
 
     if form.vars.organisation_id and not settings.get_hrm_show_staff():
@@ -201,10 +201,11 @@ def index():
 
     # Menu Boxes
     menu_btns = [#div, label, app, function
-                ["facility", SHELTERS, "cr", "shelter"],
-                ["facility", T("Warehouses"), "inv", "warehouse"],
+                ["facility", T("Facilities"), "org", "facility"],
                 ["facility", T("Hospitals"), "hms", "hospital"],
                 ["facility", T("Offices"), "org", "office"],
+                ["facility", SHELTERS, "cr", "shelter"],
+                ["facility", T("Warehouses"), "inv", "warehouse"],
                 ["sit", T("Staff"), "hrm", "staff"],
                 ["sit", T("Volunteers"), "vol", "volunteer"],
                 ["sit", T("Incidents"), "irs", "ireport"],
@@ -451,6 +452,7 @@ def organisation():
                     list_fields = ["id",])
 
     return s3_rest_controller("org", "organisation")
+
 # -----------------------------------------------------------------------------
 def site():
     """

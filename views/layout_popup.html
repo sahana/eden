@@ -1,9 +1,9 @@
-{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
-{{if response.flash or response.confirmation:}}
-  {{# Close the pop up}}
-  {{s3.jquery_ready.append("self.parent.$('.TB_closeAjaxWindow').html('');")}}
-  {{# Refresh the DIV}}
-  {{s3.js_global.append("s3_tb_refresh();")}}
-{{pass}}
-</head>
-<body>
+{{# Close the pop up}}
+{{# Refresh the DIV}}
+{{s3.jquery_ready.append("""self.parent.$('.TB_closeAjaxWindow').html('')
+s3_tb_refresh()""")}}
+<div id='popup' class='cf'><center>
+ <p style='padding:20px 20px;'>
+ <h2>{{=T("Submission successful - please wait")}}...</h2>
+ <p>
+</center></div>

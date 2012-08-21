@@ -358,43 +358,6 @@ s3mgr.csv_formats = ["hrf", "s3csv"]
 
 s3mgr.ROWSPERPAGE = 20
 
-#######
-# Menus
-#######
-
-# Import menus and layouts
-from eden.layouts import *
-import eden.menus as default_menus
-
-S3MainMenu = default_menus.S3MainMenu
-S3OptionsMenu = default_menus.S3OptionsMenu
-
-current.menu = Storage(options=None, override={})
-if auth.permission.format in ("html"):
-    menus = "applications.%s.private.templates.%s.menus" % \
-            (appname, settings.get_theme())
-    try:
-        exec("import %s as deployment_menus" % menus)
-    except ImportError:
-        pass
-    else:
-        if "S3MainMenu" in deployment_menus.__dict__:
-            S3MainMenu = deployment_menus.S3MainMenu
-
-        if "S3OptionsMenu" in deployment_menus.__dict__:
-            S3OptionsMenu = deployment_menus.S3OptionsMenu
-
-    main = S3MainMenu.menu()
-else:
-    main = None
-
-menu = current.menu
-menu["main"] = main
-
-# Override controller menus
-# @todo: replace by current.menu.override
-s3_menu_dict = {}
-
 ##########
 # Messages
 ##########

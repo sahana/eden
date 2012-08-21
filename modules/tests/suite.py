@@ -10,32 +10,32 @@ import unittest
 import argparse
 
 def loadAllTests():
-    loadTests = unittest.TestLoader().loadTestsFromTestCase
+
     # Create Organisation
     loadTests = unittest.TestLoader().loadTestsFromTestCase
     suite = loadTests(CreateOrganisation)
-    
+
     # Shortcut
     addTests = suite.addTests
-    
+
     # Create Office
     addTests(loadTests(CreateOffice))
-    
+
     # Setup Staff
     addTests(loadTests(CreateStaff))
-    
+
     # Setup New Volunteer
     addTests(loadTests(CreateVolunteer))
-    
+
     # Create Staff & Volunteer Training
     addTests(loadTests(CreateStaffTraining))
     addTests(loadTests(CreateVolunteerTraining))
 
     # Inventory tests
-    addTests(loadTests(SendItem))
-    addTests(loadTests(ReceiveItem))
-    addTests(loadTests(SendReceiveItem))
-    
+    #addTests(loadTests(SendItem))
+    #addTests(loadTests(ReceiveItem))
+    #addTests(loadTests(SendReceiveItem))
+
     # Project Tests
     addTests(loadTests(CreateProject))
 
@@ -44,10 +44,10 @@ def loadAllTests():
 
     # Assign Staff to Organisation
     addTests(loadTests(AddStaffToOrganisation))
-    
+
     # Assign Staff to Office
     addTests(loadTests(AddStaffToOffice))
-    
+
     # Assign Staff to Warehouse
     addTests(loadTests(AddStaffToWarehouse))
     # Delete a prepop organisation
@@ -55,15 +55,21 @@ def loadAllTests():
 
     # Create a Warehouse
     addTests(loadTests(CreateWarehouse))
-    
+
     # Create an Item
     addTests(loadTests(CreateItem))
-    
+
     # Create a Catalog
     addTests(loadTests(CreateCatalog))
-    
+
     # Create a Category
     addTests(loadTests(CreateCategory))
+
+    # Create Members
+    addTests(loadTests(CreateMember))
+
+    # Search Staff (Simple & Advance)
+    #addTests(loadTests(SearchStaff))
 
     return suite
 
@@ -75,12 +81,16 @@ parser.add_argument("-C", "--class",
                    )
 method_desc = """Name of method to run, this is used in conjunction with the
 class argument or with the name of the class followed by the name of the method
-separated with a period, class.period.
+separated with a period, class.method.
 """
 parser.add_argument("-M",
                     "--method",
                     "--test",
                     help = method_desc
+                   )
+parser.add_argument("-A",
+                    "--auth",
+                    help = """Run an Auth test without the webdriver""",
                    )
 parser.add_argument("-V", "--verbose",
                     type = int,
@@ -113,7 +123,7 @@ full: This will run all test
 """
 parser.add_argument("--suite",
                     help = suite_desc,
-                    choices = ["smoke", "quick", "complete", "full"],
+                    choices = ["smoke", "auth", "quick", "complete", "full"],
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
@@ -132,6 +142,17 @@ parser.add_argument("--keep-browser-open",
                     help = "Keep the browser open once the tests have finished running",
                     action='store_const',
                     const = True)
+desc = """Run the smoke tests even if debug is set to true.
+
+With debug on it can add up to a second per link and given that a full run
+of the smoke tests will include thousands of links the difference of having
+this setting one can be measured in hours.
+"""
+parser.add_argument("--force-debug",
+                    action='store_const',
+                    const=True,
+                    help = desc
+                   )
 argsObj = parser.parse_args()
 args = argsObj.__dict__
 
@@ -165,8 +186,12 @@ test_dir = os.path.join(base_dir, "modules", "tests")
 config.base_dir = base_dir
 
 if not args["suite"] == "smoke" and settings.get_ui_navigate_away_confirm():
-    print "The tests will fail unless you change the navigate_away_confirm setting in 000_config.py to False"
+    print "The tests will fail unless you have settings.ui.navigate_away_confirm = False in models/000_config.py"
     exit()
+if args["suite"] == "smoke" or args["suite"] == "complete":
+    if settings.get_base_debug() and not args["force_debug"]:
+        print "settings.base.debug is set to True in 000_config.py, either set it to False or use the --force-debug switch"
+        exit()
 
 config.verbose = args["verbose"]
 browser_open = False
@@ -199,6 +224,25 @@ elif args["suite"] == "smoke":
         from s3 import s3_debug
         s3_debug("%s, unable to run the smoke tests." % msg)
         pass
+elif args["auth"]:
+    from tests.auth import *
+    create_role_test_data()
+    #suite = unittest.TestSuite()
+    suite = test_roles()
+    
+    #test_role = TestRole()
+    #test_role.set(org = "Org-A",
+    #              user = "asset_reader@Org-A.com",
+    #              row_num = 0,
+    #                     method = "create",
+    #                     table = "org_organisation",
+    #                     c = None,
+    #                     f = None,
+    #                     record_id = 42,
+    #                     uuid = "uuid",
+    #                     permission = True)
+    #suite.addTest(test_role)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(globals()[args["auth"]])
 elif args["suite"] == "complete":
     browser = config.browser = webdriver.Firefox()
     browser.implicitly_wait(config.timeout)

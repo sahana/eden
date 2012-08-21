@@ -7,7 +7,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ def index():
         - custom View
     """
 
-    module_name = deployment_settings.modules[module].name_nice
+    module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
@@ -27,6 +27,7 @@ def is_affiliated():
         Check if User is affiliated to an Organisation
         @ToDo: Move this elsewhere
     """
+
     if not auth.is_logged_in():
         return False
     elif s3_has_role(ADMIN):
@@ -62,12 +63,6 @@ def req():
         response.confirmation = T("%(item)s requested from %(site)s" % {"item":s3db.supply_item_represent(item_id, show_link = False),
                                                                         "site":s3db.org_site_represent(site_id, show_link=False)
                                                                         })
-
-    default_type = request.vars.default_type
-    if default_type:
-        type_field = req_table.type
-        type_field.default = int(default_type)
-        type_field.writable = False
 
     def prep(r):
 
@@ -284,7 +279,7 @@ def req_item():
     """ REST Controller """
 
     s3db.configure("req_req_item",
-                    insertable=False)
+                   insertable=False)
 
     def prep(r):
         if r.interactive:
@@ -430,8 +425,40 @@ def req_item_inv_item():
 def req_skill():
     """ REST Controller """
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return req_skill_controller()
+    tablename = "req_req_skill"
+    table = s3db[tablename]
+
+    s3db.configure(tablename,
+                   insertable=False)
+
+    def prep(r):
+        if r.interactive:
+            if r.method != "update" and r.method != "read":
+                # Hide fields which don't make sense in a Create form
+                # - includes one embedded in list_create
+                # - list_fields over-rides, so still visible within list itself
+                s3db.req_hide_quantities(r.table)
+
+        return True
+    s3.prep = prep
+
+    # Post-process
+    def postp(r, output):
+        if r.interactive:
+            response.s3.actions = [
+                dict(url = URL(c = "req",
+                               f = "req",
+                               args = ["req_skill", "[id]"]),
+                     _class = "action-btn",
+                     label = str(READ)
+                    )
+                ]
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("req", "req_skill")
+
+    return output
 
 # =============================================================================
 def commit():
@@ -446,7 +473,7 @@ def commit():
         # & can only make single-person commitments
         # (This should have happened in the main commitment)
         s3db.configure(tablename,
-                        insertable=False)
+                       insertable=False)
 
     def prep(r):
 
@@ -816,15 +843,15 @@ def commit_item_json():
             (ctable.id == itable.commit_id) & \
             (ctable.site_id == stable.id) & \
             (itable.deleted == False)
-    records =  db(query).select(ctable.id,
-                                ctable.date,
-                                stable.name,
-                                itable.quantity,
-                                orderby = db.req_commit.date)
+    records = db(query).select(ctable.id,
+                               ctable.date,
+                               stable.name,
+                               itable.quantity,
+                               orderby = db.req_commit.date)
 
-    json_str = "[%s,%s" % ( json.dumps(dict(id = str(T("Committed")),
-                                            quantity = "#")),
-                            records.json()[1:])
+    json_str = '''[%s,%s''' % (json.dumps(dict(id = str(T("Committed")),
+                                               quantity = "#")),
+                               records.json()[1:])
 
     response.headers["Content-Type"] = "application/json"
     return json_str

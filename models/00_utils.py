@@ -16,6 +16,52 @@ if not auth.permission.has_permission("read"):
     auth.permission.fail()
 
 # =============================================================================
+# Menus
+#
+from eden.layouts import *
+import eden.menus as default_menus
+
+S3MainMenu = default_menus.S3MainMenu
+S3OptionsMenu = default_menus.S3OptionsMenu
+
+current.menu = Storage(options=None, override={})
+if auth.permission.format in ("html"):
+    menus = None
+    theme = settings.get_theme()
+    if theme != "default":
+        # If there is a custom Theme, then attempot to load a custom menu from it
+        menus = "applications.%s.private.templates.%s.menus" % \
+                (appname, theme)
+    else:
+        template = settings.get_template()
+        if template != "default":
+            # If there is a custom Template, then attempt to load a custom menu from it
+            menus = "applications.%s.private.templates.%s.menus" % \
+                    (appname, template)
+    if menus:
+        try:
+            exec("import %s as deployment_menus" % menus)
+        except ImportError:
+            pass
+        else:
+            if "S3MainMenu" in deployment_menus.__dict__:
+                S3MainMenu = deployment_menus.S3MainMenu
+
+            if "S3OptionsMenu" in deployment_menus.__dict__:
+                S3OptionsMenu = deployment_menus.S3OptionsMenu
+
+    main = S3MainMenu.menu()
+else:
+    main = None
+
+menu = current.menu
+menu["main"] = main
+
+# Override controller menus
+# @todo: replace by current.menu.override
+s3_menu_dict = {}
+
+# =============================================================================
 def s3_get_utc_offset():
     """ Get the current UTC offset for the client """
 
@@ -209,6 +255,14 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("import", s3base.S3Importer())
     r.set_handler("map", s3base.S3Map())
 
+    # Activate record approval?
+    if deployment_settings.get_auth_record_approval():
+        prefix, name, table, tablename = r.target()
+        if "approved_by" in table.fields and \
+           s3db.get_config(tablename, "requires_approval", False):
+            r.set_handler(["approve", "reject"], s3base.S3ApproveRecords(),
+                          http = ["GET", "POST"])
+
     # Don't load S3PDF unless needed (very slow import with reportlab)
     if r.method == "import" and r.representation == "pdf":
         from s3.s3pdf import S3PDF
@@ -270,7 +324,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif r.method != "import":
+    elif r.method not in ("import", "approve", "reject"):
         s3.actions = None
 
     return output

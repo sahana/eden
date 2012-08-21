@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+    xmlns:project="http://eden.sahanafoundation.org/project">
 
     <!-- **********************************************************************
          Projects - CSV Import Stylesheet
@@ -13,6 +14,7 @@
          Description..........string..........Project short description
          Objectives...........string..........Project objectives
          Comments.............string..........Project comments
+         Status...............string..........Project status
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
          Countries............comma-sep list..List of country names or ISO codes
@@ -46,6 +48,10 @@
              match="row"
              use="col[@field='Organisation']"/>
 
+    <xsl:key name="statuses"
+             match="row"
+             use="col[@field='Status']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
@@ -54,6 +60,13 @@
                                         generate-id(key('orgs',
                                                         col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Statuses -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('statuses',
+                                                        col[@field='Status'])[1])]">
+                <xsl:call-template name="Status"/>
             </xsl:for-each>
 
             <!-- Themes -->
@@ -72,6 +85,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
         <!-- Optional Classifications -->
+        <xsl:variable name="Status" select="col[@field='Status']"/>
         <xsl:variable name="Countries" select="col[@field='Countries']"/>
         <xsl:variable name="Sectors" select="col[@field='Departments']"/>
         <xsl:variable name="Hazards" select="col[@field='Hazards']"/>
@@ -91,6 +105,15 @@
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             <xsl:if test="col[@field='Objectives']!=''">
                 <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
+            </xsl:if>
+
+            <!-- Status -->
+            <xsl:if test="$Status">
+                <reference field="status_id" resource="project_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Status"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- HFAs -->
@@ -201,7 +224,7 @@
                     </xsl:attribute>
                 </reference>
             </resource>
-            
+
             <!-- Project Budgets -->
             <xsl:variable name="Currency" select="col[@field='Currency']"/>
             <xsl:for-each select="col[starts-with(@field, 'Budget')]">
@@ -311,6 +334,19 @@
                 <xsl:value-of select="concat('ProjectOrganisation:', $OrgName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$OrgName"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Status">
+        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+
+        <resource name="project_status">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Status"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$Status"/></data>
         </resource>
 
     </xsl:template>

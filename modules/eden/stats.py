@@ -47,6 +47,7 @@ class S3StatsModel(S3Model):
              "stats_data",
              "stats_aggregate",
              "stats_param_id",
+             "stats_rebuild_aggregates",
              ]
 
     def model(self):
@@ -59,10 +60,11 @@ class S3StatsModel(S3Model):
         super_entity = self.super_entity
 
         #----------------------------------------------------------------------
-        # The super entity - stats_parameter
+        # Super entity: stats_parameter
         #
         sp_types = Storage(
                            vulnerability_indicator = T("Vulnerability Indicator"),
+                           vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
                            stats_demographic = T("Demographic"),
                            #survey_question_type = T("Survey Question Type"),
                            #project_beneficary_type = T("Project Beneficiary Type"),
@@ -91,7 +93,7 @@ class S3StatsModel(S3Model):
                                    )
 
         #----------------------------------------------------------------------
-        # The super entity - stats_data
+        # Super entity: stats_data
         #
         sd_types = Storage(
                            vulnerability_data = T("Vulnerability Data"),
@@ -106,46 +108,79 @@ class S3StatsModel(S3Model):
                              "data_id",
                              sd_types,
                              param_id(),
-                             location_id(),
-                             Field("value", "double"),
+                             location_id(
+                                    widget = S3LocationAutocompleteWidget(),
+                                    requires = IS_LOCATION()
+                                ),
+                             Field("value", "double",
+                                   label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
-                             # Time to come
                              )
 
+        self.configure("stats_data",
+                        onaccept = self.stats_data_onaccept,
+                        )
         #----------------------------------------------------------------------
         # Stats Aggregated data
         #
+
+        # The data can be aggregated against:
+        # time, all the stats_data values for the same time period.
+        #       currently this is just the latest value in the time period
+        # location, all the aggregated values across a number of locations
+        #           thus for an L3 it will aggregate all the L4 values
+        # copy, this is a copy of the previous time aggregation because no
+        #       data is currently available for this time period
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        aggregate_type = {1 : T("Time"),
+                          2 : T("Location"),
+                          3 : T("Copy"),
+                          4 : T("Indicator"),
+                         }
         tablename = "stats_aggregate"
         table = define_table(tablename,
                              param_id(),
-                             location_id(),
-                             #Field("start_date", "date",
-                             #      label = T("Start Date"),
-                             #      ),
-                             #Field("end_date", "date",
-                             #      label = T("End Date"),
-                             #      ),
+                             location_id(widget = S3LocationAutocompleteWidget(),
+                                        requires = IS_LOCATION()),
+                             Field("agg_type", "integer",
+                                   required = True,
+                                   requires = IS_IN_SET(aggregate_type),
+                                   represent = lambda opt: \
+                                            aggregate_type.get(opt, UNKNOWN_OPT),
+                                   default = 1,
+                                   ),
+                             Field("count", "integer",
+                                   label = T("The number of aggregated records")
+                                   ),
+                             Field("date", "date",
+                                   label = T("Start Date"),
+                                   ),
+                             Field("end_date", "date",
+                                   label = T("End Date"),
+                                   ),
                              Field("min", "double",
                                    label = T("Minimum"),
-                                  ),
+                                   ),
                              Field("max", "double",
                                    label = T("Maximum"),
-                                  ),
+                                   ),
                              Field("mean", "double",
                                    label = T("Mean"),
-                                  ),
+                                   ),
                              Field("median", "double",
                                    label = T("Median"),
-                                  ),
+                                   ),
                              #Field("mean_ad", "double",
                              #      label = T("Mean Absolute Deviation"),
-                             #     ),
+                             #      ),
                              #Field("std", "double",
                              #      label = T("Standard Deviation"),
-                             #     ),
+                             #      ),
                              #Field("variance", "double",
                              #      label = T("Variance"),
-                             #     ),
+                             #      ),
                              *s3_meta_fields()
                              )
 
@@ -153,7 +188,11 @@ class S3StatsModel(S3Model):
         # Pass model-global names to response.s3
         #
         return Storage(
-                stats_param_id = param_id
+                stats_param_id = param_id,
+                stats_rebuild_aggregates = self.stats_rebuild_aggregates,
+                stats_update_time_aggregate = self.stats_update_time_aggregate,
+                stats_update_aggregate_location = self.stats_update_aggregate_location,
+                stats_aggregated_period = self.stats_aggregated_period,
             )
 
     # -------------------------------------------------------------------------
@@ -161,11 +200,376 @@ class S3StatsModel(S3Model):
         """ Safe defaults if the module is disabled """
 
         param_id = S3ReusableField("parameter_id", "integer",
-                                    readable=False,
-                                    writable=False
+                                   readable=False,
+                                   writable=False
                                    )
 
         return Storage(stats_param_id = param_id)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_data_onaccept(form):
+        """
+           When a stats_data record is created then the related stats_aggregate
+           fields need to be updated so that the results are kept up to date.
+
+           This is done async as this can take some time
+
+           Where appropriate add test cases to modules/unit_tests/eden/stats.py
+        """
+
+        # calculate the aggregate for the location,
+        # when this has been done requests to calculate the aggregate for
+        # the parent locations will be made.
+        current.s3task.async("stats_update_time_aggregate",
+                             args = [form.vars.data_id],
+                             )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_rebuild_aggregates():
+        """
+            This will delete all the stats_aggregate records and then
+            rebuild them by triggering off a request for each stats_data
+            record.
+        """
+        resource = current.manager.define_resource("stats", "aggregate")
+        resource.delete()
+        table = current.s3db.stats_data
+        rows = current.db().select(table.data_id)
+        for row in rows:
+            current.s3task.async("stats_update_time_aggregate",
+                                 args = [row.data_id],
+                                 )
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_update_time_aggregate(data_id):
+        """
+            This will calculate the stats_aggregate for a specific parameter
+            at the specified location.
+
+            This will get the raw data from the stats_data and generate a
+            stats_aggregate record for this single item for the given time
+            period.
+
+            The reason for doing this is so that all aggregated data can be
+            obtained from a single table. So when displaying data for a
+            particular location it will not be necessary to try the aggregate
+            table, and if it's not there then try the data table. Rather just
+            look at the aggregate table.
+
+            Once this has run then a complete set of  aggregate records should
+            exists for this parameter_id and location for every time period from
+            the first data item until the current time period.
+
+           Where appropriate add test cases to modules/unit_tests/eden/stats.py
+        """
+
+        from dateutil.rrule import rrule, YEARLY
+
+        db = current.db
+        s3db = current.s3db
+        dtable = s3db.stats_data
+        atable = s3db.stats_aggregate
+        s3db.vulnerability_data
+
+        # First get the record that has just been added
+        record = db(dtable.data_id == data_id).select(limitby=(0, 1)).first()
+        location_id = record.location_id
+        parameter_id = record.parameter_id
+        (start_date, end_date) = s3db.stats_aggregated_period(record.date)
+
+        # Get all the stats_data record for this location and parameter
+        query = (dtable.location_id == location_id) & \
+                (dtable.parameter_id == parameter_id) & \
+                (dtable.deleted != True)
+        data_rows = db(query).select()
+        # Get each record and store them in a dict keyed on the start date of
+        # the aggregated period. The value stored is a list containing the date
+        # the data_id and the value. If a record already exists for the
+        # reporting period then the most recent value will be stored.
+        earliest_period = start_date
+        (last_period, end_date) = s3db.stats_aggregated_period(None)
+        data = dict()
+        data[start_date]=Storage(date = record.date,
+                                 id = data_id,
+                                 value = record.value)
+        for row in data_rows:
+            if row.data_id == record.data_id:
+                continue
+            (start_date, end_date) = s3db.stats_aggregated_period(row.date)
+            if start_date in data:
+                if row.date <= data[start_date]["date"]:
+                    # The indicator on the row is of the same time period as
+                    # another which is already stored in data but it is earlier
+                    # so ignore this particular record
+                    continue
+                elif data[start_date]["id"] == data_id:
+                    # The newly added indicator is the one currently stored
+                    # in data but a more recent value is held on the database
+                    # This will not change any of the aggregated data
+                    return
+            if start_date < earliest_period:
+                earliest_period = start_date
+            # Store the record from the db in the data storage
+            data[start_date] = Storage(date = row.date,
+                                       id = row.data_id,
+                                       value = row.value)
+        # Get all the aggregate record for this parameter and location
+        query = (atable.location_id == location_id) & \
+                (atable.parameter_id == parameter_id) & \
+                (atable.deleted != True)
+        aggr_rows = db(query).select()
+        aggr = dict()
+        for row in aggr_rows:
+            (start_date, end_date) = s3db.stats_aggregated_period(row.date)
+            aggr[start_date] = Storage(mean = row.mean,
+                                       id = row.id,
+                                       type = row.agg_type,
+                                       end_date = row.end_date)
+        # Step through each period and check that aggr is correct
+        last_data_period = earliest_period
+        last_type_agg = False # The type of previous non-copy record was aggr
+        last_data_value = None # The value of the previous aggr record
+        # used to keep track of which periods the
+        # aggr record has been changed on the database
+        changed_periods = []
+        for dt in rrule(YEARLY, dtstart=earliest_period, until=last_period):
+            # calculate the end of the dt period.
+            # (it will be None if this is the last period)
+            dt = dt.date()
+            if dt != last_period:
+                (start_date, end_date) = s3db.stats_aggregated_period(dt)
+            else:
+                start_date = dt
+                end_date = None
+            if dt in aggr:
+                # The query use to update aggr records
+                query = (atable.id == aggr[dt]["id"])
+                # Check that the stored aggr data is correct
+                type = aggr[dt]["type"]
+                if type == 2:
+                    # this is built using other location aggregates
+                    # So it can be ignored because only time or copy aggregates
+                    # are being calculated in this function
+                    last_type_agg = True
+                    last_data_value = aggr[dt]["mean"]
+                    continue
+                elif type == 3:
+                    # this is a copy aggregate and can be ignored if there is
+                    # no data in the data dictionary and the last type was aggr
+                    if (dt not in data) and last_type_agg:
+                        continue
+                    # if there is data in the data dictionary for this period
+                    # then then aggregate record needs to be changed
+                    if dt in data:
+                        value = data[dt]["value"]
+                        last_data_value = value
+                        db(query).update(agg_type = 1, # time
+                                         count = 1, # one record
+                                         min = value,
+                                         max = value,
+                                         mean = value,
+                                         median = value,
+                                         end_date = end_date,
+                                         )
+                        changed_periods.append((start_date, end_date))
+                    # Check that the data currently stored is correct
+                    elif aggr[dt]["mean"] != last_data_value:
+                        value = last_data_value
+                        db(query).update(agg_type = 3, # copy
+                                         count = 1, # one record
+                                         min = value,
+                                         max = value,
+                                         mean = value,
+                                         median = value,
+                                         end_date = end_date,
+                                         )
+                        changed_periods.append((start_date, end_date))
+                elif type == 1:
+                    # The value in the aggr should match the value in data
+                    if dt in data:
+                        value = data[dt]["value"]
+                        last_data_value = value
+                        if aggr[dt]["mean"] != value:
+                            db(query).update(agg_type = 1, # time
+                                             count = 1, # one record
+                                             min = value,
+                                             max = value,
+                                             mean = value,
+                                             median = value,
+                                             end_date = end_date,
+                                             )
+                            changed_periods.append((start_date, end_date))
+                    # If the data is not there then it must have been deleted
+                    # So copy the value from the previous record
+                    else:
+                        value = last_data_value
+                        db(query).update(agg_type = 3, # copy
+                                         count = 1, # one record
+                                         min = value,
+                                         max = value,
+                                         mean = value,
+                                         median = value,
+                                         end_date = end_date,
+                                         )
+                        changed_periods.append((start_date, end_date))
+            # No aggregate record for this time period exists
+            # So one needs to be inserted
+            else:
+                if dt in data:
+                    value = data[dt]["value"]
+                    type = 1 # time
+                    last_data_value = value
+                else:
+                    value = last_data_value
+                    type = 3 # copy
+                atable.insert(parameter_id = parameter_id,
+                              location_id = location_id,
+                              agg_type = type,
+                              count = 1, # one record
+                              min = value,
+                              max = value,
+                              mean = value,
+                              median = value,
+                              date = start_date,
+                              end_date = end_date,
+                              )
+                changed_periods.append((start_date, end_date))
+        # Now that the time aggregate types have been set up correctly
+        # Fire off requests for the location aggregates to be calculated
+        parents = current.gis.get_parents(location_id)
+        async = current.s3task.async
+        for (start_date, end_date) in changed_periods:
+            if parents:
+                for location in parents:
+                    # calculate the aggregates for each parent
+                    async("stats_update_aggregate_location",
+                          args = [location.id,
+                                  parameter_id,
+                                  str(start_date),
+                                  str(end_date),
+                                  ]
+                          )
+            if parameter_id in s3db.vulnerability_ids() or \
+               parameter_id == s3db.vulnerability_resilience_id():
+                s3db.vulnerability_update_resilience(location_id,
+                                                     start_date,
+                                                     end_date)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_update_aggregate_location(location_id,
+                                        parameter_id,
+                                        start_date,
+                                        end_date
+                                        ):
+        """
+           Calculates the stats_aggregate for a specific parameter at a
+           specific location.
+
+           Where appropriate add test cases to modules/unit_tests/eden/stats.py
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.stats_data
+        agg_table = s3db.stats_aggregate
+
+        # Get all the child locations
+        child_locations = current.gis.get_children(location_id)
+        child_ids = []
+        append = child_ids.append
+        for row in child_locations:
+            append(row.id)
+
+        # The dates have been converted to a string so the following is needed
+        if end_date == "None":
+            # Get the most recent stats_data record for each location
+            query = (table.location_id.belongs(child_ids)) & \
+                    (table.parameter_id == parameter_id) & \
+                    (table.deleted != True)
+            end_date = None
+        else:
+            query = (table.location_id.belongs(child_ids)) & \
+                    (table.parameter_id == parameter_id) & \
+                    (table.date <= end_date) & \
+                    (table.deleted != True)
+        rows = db(query).select(table.value,
+                                table.date,
+                                table.location_id,
+                                orderby=(table.location_id, ~table.date)
+                                )
+        # The query may return duplicate records for the same location
+        # Use the most recent, which because of the ordering will be the first
+        rec_cnt = 0
+        sum = 0
+        last_location = 0
+        num_list = []
+        append = num_list.append
+        for row in rows:
+            loc_id = row.location_id
+            if loc_id != last_location:
+                last_location = loc_id
+                value = row.value
+                append(value)
+                sum += value
+                rec_cnt += 1
+        if rec_cnt == 0:
+            return
+        num_list.sort()
+        mean = float(sum) / rec_cnt
+        min = num_list[0]
+        max = num_list[rec_cnt - 1]
+        if rec_cnt % 2 == 0:
+            median = float(num_list[rec_cnt / 2] + num_list[rec_cnt / 2 - 1]) / 2.0
+        else:
+            median = num_list[rec_cnt / 2]
+
+        # Add the value to the database
+        query = (agg_table.location_id == location_id) & \
+                (agg_table.parameter_id == parameter_id) & \
+                (agg_table.date == start_date) & \
+                (agg_table.end_date == end_date) & \
+                (agg_table.deleted == False)
+        exists = db(query).select(agg_table.id,
+                                  limitby=(0, 1)).first()
+        if exists:
+            db(query).update(agg_type = 2, # Location
+                             count = rec_cnt,
+                             min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             )
+        else:
+            agg_table.insert(parameter_id = parameter_id,
+                             location_id = location_id,
+                             date = start_date,
+                             end_date = end_date,
+                             agg_type = 2, # Location
+                             count = rec_cnt,
+                             min = min,
+                             max = max,
+                             mean = mean,
+                             median = median,
+                             )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def stats_aggregated_period(data_date = None):
+        """
+           This will return the start and end dates of the aggregated time period.
+           
+           Currently the time period is annually so it will return the
+           start and end of the current year.
+        """
+        from datetime import date
+        if data_date == None:
+            data_date = date.today()
+        soap = date(data_date.year, 1, 1)
+        eoap = date(data_date.year, 12, 31)
+        return  (soap, eoap)
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
@@ -198,7 +602,7 @@ class S3StatsDemographicModel(S3Model):
                              s3_comments("description",
                                          label = T("Description")),
                              *s3_meta_fields()
-                            )
+                             )
 
         # CRUD Strings
         ADD_DEMOGRAPHIC = T("Add Demographic")
@@ -237,9 +641,14 @@ class S3StatsDemographicModel(S3Model):
                                                          orderby="stats_parameter.name",
                                                          sort=True)
                                 ),
-                             self.gis_location_id(),
+                             self.gis_location_id(
+                                    widget = S3LocationAutocompleteWidget(),
+                                    requires = IS_LOCATION()
+                                ),
                              Field("value", "double",
                                    label = T("Value")),
+                             Field("date", "date",
+                                   label = T("Date")),
                              self.doc_source_id(),
                              *s3_meta_fields()
                              )

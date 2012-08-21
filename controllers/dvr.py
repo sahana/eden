@@ -3,7 +3,7 @@
 module = request.controller
 resourcename = request.function
 
-if not deployment_settings.has_module(module):
+if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
@@ -14,7 +14,7 @@ def index():
     response.title = module_name
 
     item = None
-    if deployment_settings.has_module("cms"):
+    if settings.has_module("cms"):
         table = s3db.cms_post
         _item = db(table.module == module).select(table.id,
                                                   table.body,

@@ -41,7 +41,6 @@ __all__ = ["single_phone_number_pattern",
            "IS_HTML_COLOUR",
            "IS_UTC_OFFSET",
            "IS_UTC_DATETIME",
-           "IS_UTC_DATETIME_IN_RANGE",
            "IS_ONE_OF",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
@@ -331,7 +330,6 @@ class IS_HTML_COLOUR(IS_MATCH):
                 ):
         IS_MATCH.__init__(self, "^[0-9a-fA-F]{6}$", error_message)
 
-
 # =============================================================================
 regex1 = re.compile("[\w_]+\.[\w_]+")
 regex2 = re.compile("%\((?P<name>[^\)]+)\)s")
@@ -373,7 +371,7 @@ class IS_ONE_OF_EMPTY(Validator):
                  left=None,
                  multiple=False,
                  zero="",
-                 sort=False,
+                 sort=True,
                  _and=None,
                 ):
 
@@ -518,6 +516,29 @@ class IS_ONE_OF_EMPTY(Validator):
                 else:
                     labels = map(lambda r: r[self.kfield], records)
             self.labels = labels
+
+            if labels and self.sort:
+                orig_labels = self.labels
+                orig_theset = self.theset
+
+                labels = []
+                theset = []
+
+                for label in orig_labels:
+                    try:
+                        labels.append(label.flatten())
+                    except:
+                        labels.append(label)
+                orig_labels = list(labels)
+                labels.sort()
+
+                for label in labels:
+                     orig_index = orig_labels.index(label)
+                     theset.append(orig_theset[orig_index])
+
+                self.labels = labels
+                self.theset = theset
+
         else:
             self.theset = None
             self.labels = None
@@ -1497,9 +1518,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                               limitby=(0, 1)).first()
 
                     # Add contact information as provided
-                    ctable.insert(pe_id=person.pe_id,
-                                  contact_method="EMAIL",
-                                  value=_vars.email)
+                    if _vars.email:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="EMAIL",
+                                      value=_vars.email)
                     if _vars.mobile_phone:
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
@@ -1570,123 +1592,17 @@ class IS_UTC_DATETIME(Validator):
 
         @param format:          strptime/strftime format template string, for
                                 directives refer to your strptime implementation
-        @param error_message:   dict of error messages to be returned
+        @param error_message:   error message to be returned
         @param utc_offset:      offset to UTC in seconds, if not specified, the
                                 value is considered to be UTC
-        @param allow_future:    whether future date/times are allowed or not,
-                                if set to False, all date/times beyond
-                                now+max_future will fail
-        @type allow_future:     boolean
-        @param max_future:      the maximum acceptable future time interval in
-                                seconds from now for unsynchronized local clocks
+        @param minimum:         the minimum acceptable datetime
+        @param maximum:         the maximum acceptable datetime
 
         @note:
             datetime has to be in the ISO8960 format YYYY-MM-DD hh:mm:ss,
             with an optional trailing UTC offset specified as +/-HHMM
             (+ for eastern, - for western timezones)
     """
-
-    def __init__(self,
-                 format=None,
-                 error_message=None,
-                 utc_offset=None,
-                 allow_future=True,
-                 max_future=900
-                ):
-
-        if format is None:
-            self.format = current.deployment_settings.get_L10n_datetime_format()
-        else:
-            self.format = format
-
-        self.error_message = dict(
-            format = "Required format: %s!" % self.format,
-            offset = "Invalid UTC offset!",
-            future = "Future times not allowed!")
-
-        if error_message and isinstance(error_message, dict):
-            self.error_message["format"] = error_message.get("format", None) or self.error_message["format"]
-            self.error_message["offset"] = error_message.get("offset", None) or self.error_message["offset"]
-            self.error_message["future"] = error_message.get("future", None) or self.error_message["future"]
-        elif error_message:
-            self.error_message["format"] = error_message
-
-        if utc_offset is None:
-            utc_offset = current.session.s3.utc_offset
-
-        validate = IS_UTC_OFFSET()
-        offset, error = validate(utc_offset)
-
-        if error:
-            self.utc_offset = "UTC +0000" # fallback to UTC
-        else:
-            self.utc_offset = offset
-
-        self.allow_future = allow_future
-        self.max_future = max_future
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-
-        _dtstr = value.strip()
-
-        if len(_dtstr) > 6 and \
-            (_dtstr[-6:-4] == " +" or _dtstr[-6:-4] == " -") and \
-            _dtstr[-4:].isdigit():
-            # UTC offset specified in dtstr
-            dtstr = _dtstr[0:-6]
-            _offset_str = _dtstr[-5:]
-        else:
-            # use default UTC offset
-            dtstr = _dtstr
-            _offset_str = self.utc_offset
-
-        offset_hrs = int(_offset_str[-5] + _offset_str[-4:-2])
-        offset_min = int(_offset_str[-5] + _offset_str[-2:])
-        offset = 3600 * offset_hrs + 60 * offset_min
-
-        # Offset must be in range -1439 to +1439 minutes
-        if offset < -86340 or offset > 86340:
-            return (dt, self.error_message["offset"])
-
-        try:
-            (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(dtstr, str(self.format))
-            dt = datetime(y, m, d, hh, mm, ss)
-        except:
-            try:
-                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(dtstr+":00", str(self.format))
-                dt = datetime(y, m, d, hh, mm, ss)
-            except:
-                return(value, self.error_message["format"])
-
-        if self.allow_future:
-            return (dt, None)
-        else:
-            latest = datetime.utcnow() + timedelta(seconds=self.max_future)
-            dt_utc = dt - timedelta(seconds=offset)
-            if dt_utc > latest:
-                return (dt_utc, self.error_message["future"])
-            else:
-                return (dt_utc, None)
-
-    # -------------------------------------------------------------------------
-    def formatter(self, value):
-
-        format = self.format
-        offset = IS_UTC_OFFSET.get_offset_value(self.utc_offset)
-
-        if not value:
-            return "-"
-        elif offset:
-            dt = value + timedelta(seconds=offset)
-            return dt.strftime(str(format))
-        else:
-            dt = value
-            return dt.strftime(str(format)) + " +0000"
-
-
-# =============================================================================
-class IS_UTC_DATETIME_IN_RANGE(Validator):
 
     def __init__(self,
                  format=None,
@@ -1718,8 +1634,8 @@ class IS_UTC_DATETIME_IN_RANGE(Validator):
             else:
                 error_message = "enter date and time in range %(min)s %(max)s"
 
-        d = dict(min = min_local, max = max_local)
-        self.error_message = error_message % d
+        self.error_message = error_message % dict(min = min_local,
+                                                  max = max_local)
 
     # -------------------------------------------------------------------------
     def delta(self, utc_offset=None):
@@ -1922,7 +1838,7 @@ class QUANTITY_INV_ITEM(object):
                              inv_item_record.supply_item_pack.quantity
             if send_quantity > inv_quantity:
                 return (value,
-                        "Only %s %s (%s) in the Inventory." %
+                        "Only %s %s (%s) in the Warehouse Stock." %
                         (inv_quantity,
                          inv_item_record.supply_item_pack.name,
                          inv_item_record.supply_item_pack.quantity)

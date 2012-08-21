@@ -169,33 +169,7 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
-    # Also do s3.locationselector.widget.js
-    print "Compressing s3.locationselector.widget.js"
-    inputFilename = os.path.join("..", "S3", "s3.locationselector.widget.js")
-    outputFilename = "s3.locationselector.widget.min.js"
-    input = open(inputFilename, "r").read()
-    minimized = minimize(input)
-    open(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../S3/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../S3")
-
-    # Also do s3.embed_component.js
-    print "Compressing s3.embed_component.js"
-    inputFilename = os.path.join("..", "S3", "s3.embed_component.js")
-    outputFilename = "s3.embed_component.min.js"
-    input = open(inputFilename, "r").read()
-    minimized = minimize(input)
-    open(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../S3/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../S3")
-
-    # Also do s3.contacts.js
+    # s3.contacts.js
     print "Compressing s3.contacts.js"
     inputFilename = os.path.join("..", "S3", "s3.contacts.js")
     outputFilename = "s3.contacts.min.js"
@@ -208,7 +182,46 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
-    # Also do s3.report.js
+    # s3.embed_component.js
+    print "Compressing s3.embed_component.js"
+    inputFilename = os.path.join("..", "S3", "s3.embed_component.js")
+    outputFilename = "s3.embed_component.min.js"
+    input = open(inputFilename, "r").read()
+    minimized = minimize(input)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
+    # s3.locationselector.widget.js
+    print "Compressing s3.locationselector.widget.js"
+    inputFilename = os.path.join("..", "S3", "s3.locationselector.widget.js")
+    outputFilename = "s3.locationselector.widget.min.js"
+    input = open(inputFilename, "r").read()
+    minimized = minimize(input)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
+    # s3.popup.js
+    print "Compressing s3.popup.js"
+    inputFilename = os.path.join("..", "S3", "s3.popup.js")
+    outputFilename = "s3.popup.min.js"
+    input = open(inputFilename, "r").read()
+    minimized = minimize(input)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
+    # s3.report.js
     print "Compressing s3.report.js"
     inputFilename = os.path.join("..", "S3", "s3.report.js")
     outputFilename = "s3.report.min.js"
@@ -246,6 +259,22 @@ def dojs(dogis = False, warnings = True):
     except:
         pass
     shutil.move(outputFilename, "../S3")
+
+    # Also do s3.vulnerability.js
+    print "Compressing s3.vulnerability.js"
+    sourceDirectoryVulnerability = ".."
+    configFilenameVulnerability = "sahana.js.vulnerability.cfg"
+    outputFilenameVulnerability = "s3.vulnerability.min.js"
+    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
+                                      None,
+                                      configFilenameVulnerability)
+    minimizedVulnerability = minimize(mergedVulnerability)
+    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    try:
+        os.remove("../S3/%s" % outputFilenameVulnerability)
+    except:
+        pass
+    shutil.move(outputFilenameVulnerability, "../S3")
 
     if dogis:
         sourceDirectoryGIS = "../S3"

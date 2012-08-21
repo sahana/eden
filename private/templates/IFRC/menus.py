@@ -9,6 +9,8 @@ except ImportError:
     pass
 import eden.menus as default
 
+red_cross_filter = {"organisation.organisation_type_id$name" : "Red Cross / Red Crescent"}
+
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
     """ Custom Application Main Menu """
@@ -43,7 +45,8 @@ class S3MainMenu(default.S3MainMenu):
                     vars=dict(group="staff"))(
                 MM("Staff", c="hrm", f="staff"),
                 #MM("Teams", c="hrm", f="group"),
-                MM("Organizations", c="org", f="organisation"),
+                MM("National Societies", c="org", f="organisation",
+                    vars = red_cross_filter),
                 MM("Offices", c="org", f="office"),
                 MM("Job Roles", c="hrm", f="job_role"),
                 #MM("Skill List", c="hrm", f="skill"),
@@ -85,6 +88,9 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
             ),
+            homepage("vulnerability")(
+                MM("Map", c="vulnerability", f="index"),
+            ),
             #homepage("event", "irs")(
             #    MM("Events", c="event", f="event"),
             #    MM("Incident Reports", c="irs", f="ireport"),
@@ -115,7 +121,7 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
-                    DB("Job Roles", f="job_role")
+                    DB("Job Roles", f="job_title")
                 ))
         elif request.controller in ("hrm", "org"):
             dashboard = DB()(
@@ -131,7 +137,7 @@ class S3MainMenu(default.S3MainMenu):
                     image = "graphic_office.png",
                     title = "Offices")(
                     DB("Manage Offices Data", f="office"),
-                    DB("Manage Organisations Data", f="organisation"),
+                    DB("Manage National Society Data", f="organisation"),
                 ),
                 DB("CATALOGS",
                     c="hrm",
@@ -140,7 +146,7 @@ class S3MainMenu(default.S3MainMenu):
                     DB("Certificates", f="certificate"),
                     DB("Training Courses", f="course"),
                     #DB("Skills", f="skill"),
-                    DB("Job Roles", f="job_role")
+                    DB("Job Roles", f="job_title")
                 ))
 
         elif request.controller == "default" and request.function == "index":
@@ -252,7 +258,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                  ADMIN in session.s3.roles
 
         staff = {"group":"staff"}
-        volunteers = {"group":"volunteer"}
 
         return M()(
                     M("Staff", c="hrm", f=("staff", "person"),
@@ -268,12 +273,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         # M("New Team", m="create"),
                         # M("List All"),
                     # ),
-                    M("Organizations", c="org", f="organisation",
+                    M("National Societies", c="org", 
+                                            f="organisation",
+                                            vars = red_cross_filter,
                       check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                        M("Search", m="search"),
-                        #M("Import", m="import", p="create")
+                        M("New", m="create",vars = red_cross_filter,),
+                        M("List All", vars = red_cross_filter,),
+                        M("Search", m="search", vars = red_cross_filter,),
+                        M("Import", m="import", p="create", check=is_org_admin)
                     ),
                     M("Offices", c="org", f="office",
                       check=manager_mode)(
@@ -282,7 +289,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Job Role Catalog", c="hrm", f="job_role",
+                    M("Job Role Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("New Job Role", m="create"),
                         M("List All"),
@@ -332,6 +339,108 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
+    def vol(self):
+        """ Volunteer Management """
+
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
+
+        # Custom conditions for the check-hook, as lambdas in order
+        # to have them checked only immediately before rendering:
+        manager_mode = lambda i: s3.hrm.mode is None
+        personal_mode = lambda i: s3.hrm.mode is not None
+        is_org_admin = lambda i: s3.hrm.orgs and True or \
+                                 ADMIN in s3.roles
+
+        settings = current.deployment_settings
+        job_roles = lambda i: settings.get_hrm_job_roles()
+        show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
+        show_tasks = lambda i: settings.has_module("project") and \
+                               settings.get_project_mode_task()
+        use_teams = lambda i: settings.get_hrm_use_teams()
+
+        if job_roles(""):
+            jt_catalog_label = "Job Title Catalog"
+        else:
+            jt_catalog_label = "Volunteer Role Catalog"
+
+        return M(c="vol")(
+                    M("Volunteers", f="volunteer",
+                      check=[manager_mode])(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Import", f="person", m="import",
+                          vars={"group":"volunteer"}, p="create"),
+                    ),
+                    M("Teams", f="group",
+                      check=[manager_mode, use_teams])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Job Role Catalog", f="job_role",
+                      check=[manager_mode, job_roles])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M(jt_catalog_label, f="job_title",
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    #M("Skill Catalog", f="skill",
+                    #  check=manager_mode)(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #    #M("Skill Provisions", f="skill_provision"),
+                    #),
+                    M("Training Events", f="training_event",
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Search", m="search"),
+                        M("Search Training Participants", f="training",
+                          m="search"),
+                        M("Import Participant List", f="training", m="import"),
+                    ),
+                    M("Training Course Catalog", f="course",
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Course Certificates", f="course_certificate"),
+                    ),
+                    M("Certificate Catalog", f="certificate",
+                      check=manager_mode)(
+                        M("New", m="create"),
+                        M("List All"),
+                        #M("Skill Equivalence", f="certificate_skill"),
+                    ),
+                    M("Programmes", f="programme",
+                      check=[manager_mode, show_programmes])(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Import Hours", f="programme_hours", m="import"),
+                    ),
+                    M("Reports", f="volunteer", m="report",
+                      check=manager_mode)(
+                        M("Volunteer Report", m="report"),
+                        M("Training Report", f="training", m="report"),
+                    ),
+                    M("My Profile", f="person",
+                      check=personal_mode, vars=dict(mode="personal")),
+                    M("My Tasks", f="task",
+                      check=[personal_mode, show_tasks],
+                      vars=dict(mode="personal",
+                                mine=1)),
+                    # This provides the link to switch to the manager mode:
+                    M("Volunteer Management", f="index",
+                      check=[personal_mode, is_org_admin]),
+                    # This provides the link to switch to the personal mode:
+                    M("Personal Profile", f="person",
+                      check=manager_mode, vars=dict(mode="personal"))
+                )
+
+    # -------------------------------------------------------------------------
     def irs(self):
         """ IRS Incident Reporting """
 
@@ -363,13 +472,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Same as HRM
         return self.hrm()
+    
+    # -------------------------------------------------------------------------
+    def req(self):
+        """ Organisation Management """
 
+        # Same as Inventory
+        return self.inv()
     # -------------------------------------------------------------------------
     def event(self):
         """ Event Management """
 
         # Same as IRS
         return self.irs()
+    
 
 # END =========================================================================
 

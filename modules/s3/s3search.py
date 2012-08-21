@@ -47,7 +47,7 @@ from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
 from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
-from s3widgets import CheckboxesWidgetS3, S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
 from s3resource import S3FieldSelector
 
@@ -595,26 +595,25 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 # Find unique values of options for that field
                 rows = resource.sqltable(fields=[field_name], as_rows=True)
 
-                if rows:
-                    if field_type.startswith("list"):
-                        for row in rows:
-                            # row == {field_name: [#, ...]}
-                            fk_list = row[field]
+                if field_type.startswith("list"):
+                    for row in rows:
+                        # row == {field_name: [#, ...]}
+                        fk_list = row[field]
 
-                            if fk_list != None:
-                                try:
-                                    fkeys = fk_list.split("|")
-                                except:
-                                    fkeys = fk_list
+                        if fk_list != None:
+                            try:
+                                fkeys = fk_list.split("|")
+                            except:
+                                fkeys = fk_list
 
-                                for fkey in fkeys:
-                                    if fkey not in opt_values:
-                                        opt_values.append(fkey)
-                    else:
-                        opt_values = [row[field] for row
-                                                 in rows
-                                                 if row[field] != None and
-                                                 row[field] not in opt_values]
+                            for fkey in fkeys:
+                                if fkey not in opt_values:
+                                    opt_values.append(fkey)
+                else:
+                    opt_values = [row[field] for row
+                                             in rows
+                                             if row[field] != None and
+                                             row[field] not in opt_values]
 
         if len(opt_values) < 2:
             msg = attr.get("_no_opts", T("No options available"))
@@ -1268,7 +1267,12 @@ class S3Search(S3CRUD):
                                            simple_form,
                                            advanced_form,
                                            form_values)
+
+        search_url = None
         if not errors:
+            if hasattr(query, "serialize_url"):
+                search_url = r.url(method = "",
+                                   vars = query.serialize_url(resource))
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
@@ -1386,7 +1390,18 @@ class S3Search(S3CRUD):
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
-            list_formats = DIV(T("Export to:"),
+
+            # Permalink
+            if search_url:
+                link = A(T("Link to this result"),
+                         _href=search_url,
+                         _class="permalink")
+                sep = " | "
+            else:
+                link = sep = ""
+
+            list_formats = DIV(link, sep,
+                               "%s: " % T("Export to"),
                                A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
                                  _title=T("Export in PDF format"),
                                  _href=r.url(method="", representation="pdf",
@@ -2064,17 +2079,29 @@ class S3LocationSearch(S3Search):
             fieldname = str.lower(_vars.field)
             field = table[fieldname]
 
-            # Default fields to return
-            fields = [table.id,
-                      table.name,
-                      table.level,
-                      table.parent,
-                      table.path,
-                      table.uuid,
-                      table.lat,
-                      table.lon,
-                      table.addr_street,
-                      table.addr_postcode]
+            if _vars.simple:
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.path,
+                          table.L0,
+                          table.L1,
+                          table.L2,
+                          table.L3
+                          ]
+            else:
+                # Default fields to return
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.parent,
+                          table.path,
+                          table.uuid,
+                          table.lat,
+                          table.lon,
+                          table.addr_street,
+                          table.addr_postcode
+                          ]
 
             # Optional fields
             if "level" in _vars and _vars.level:
@@ -2188,7 +2215,8 @@ class S3LocationSearch(S3Search):
                           table.lat,
                           table.lon,
                           table.addr_street,
-                          table.addr_postcode]
+                          table.addr_postcode
+                          ]
             else:
                 output = current.xml.json_message(
                                 False,
@@ -2477,7 +2505,7 @@ class S3HRSearch(S3Search):
                       "person_id$first_name",
                       "person_id$middle_name",
                       "person_id$last_name",
-                      "job_role_id$name",
+                      "job_title_id$name",
                       ]
             show_orgs = current.deployment_settings.get_hrm_show_organisation()
             if show_orgs:
@@ -2496,7 +2524,7 @@ class S3HRSearch(S3Search):
                             "middle" : row["pr_person"].middle_name or "",
                             "last"   : row["pr_person"].last_name or "",
                             "org"    : row["org_organisation"].name if show_orgs else "",
-                            "job"    : row["hrm_job_role"].name or "",
+                            "job"    : row["hrm_job_title"].name or "",
                         } for row in rows ]
             else:
                 items = []

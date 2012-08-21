@@ -58,7 +58,7 @@ from gluon.utils import web2py_uuid
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3fields import s3_uid, s3_timestamp, s3_deletion_status
+from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3method import S3Method
 from s3utils import s3_mark_required
 from s3error import S3PermissionError
@@ -160,6 +160,7 @@ class AuthS3(Auth):
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
+
         self.messages.lock_keys = False
         self.messages.registration_pending_approval = "Account registered, however registration is still pending approval - please wait until confirmation received."
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
@@ -201,6 +202,7 @@ class AuthS3(Auth):
         else:
             shelter = T("Shelter")
         self.org_site_types = Storage(
+                                      transport_airport = T("Airport"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"),
                                       #org_facility = T("Site"),
@@ -208,6 +210,8 @@ class AuthS3(Auth):
                                       hms_hospital = T("Hospital"),
                                       #fire_station = T("Fire Station"),
                                       dvi_morgue = T("Morgue"),
+                                      transport_seaport = T("Seaport"),
+                                      inv_warehouse = T("Warehouse"),
                                       )
 
     # -------------------------------------------------------------------------
@@ -269,6 +273,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -306,6 +311,7 @@ class AuthS3(Auth):
                           readable=False, default=False),
                     Field("timestmp", "datetime", writable=False,
                           readable=False, default=""),
+                    s3_comments(readable=False, writable=False),
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
@@ -3038,8 +3044,11 @@ class AuthS3(Auth):
             if OENT in fields:
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
-                # Check for type-specific handler to find the owner entity
-                handler = s3db.get_config(tablename, "owner_entity")
+                # Check for custom handler to find the owner entity
+                # (global setting overrides table-specific setting)
+                handler = current.deployment_settings.get_auth_owner_entity()
+                if handler is None:
+                    handler = s3db.get_config(tablename, "owner_entity")
                 if callable(handler):
                     owner_entity = handler(table, row)
                     data[OENT] = owner_entity
@@ -3756,7 +3765,8 @@ class S3Permission(object):
 
         db = current.db
 
-        if "approved_by" not in table.fields:
+        approve = current.s3db.get_config(table, "requires_approval", False)
+        if not approve or "approved_by" not in table.fields:
             return True
 
         if isinstance(record, (Row, dict)):
@@ -4014,7 +4024,8 @@ class S3Permission(object):
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
 
-        approve = current.deployment_settings.get_auth_record_approval()
+        approve = current.deployment_settings.get_auth_record_approval() & \
+                  current.s3db.get_config(table, "requires_approval", False)
         if approve and "approved_by" in table.fields:
             approver_role = current.session["approver_role"]
             if approver_role is None:
@@ -5056,7 +5067,7 @@ class S3RoleManager(S3Method):
                                            _name="role_desc",
                                            _rows="4"),
                                   "")
-            key_row = P(T("* Required Fields"), _class="red")
+            key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
             # Prepare ACL forms -----------------------------------------------
@@ -6240,7 +6251,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_role_modules()
+        return current.deployment_settings.get_auth_role_modules()
 
     # -------------------------------------------------------------------------
     def get_access_levels(self):
@@ -6250,7 +6261,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_access_levels()
+        return current.deployment_settings.get_auth_access_levels()
 
     # -------------------------------------------------------------------------
     def get_assigned_roles(self, entity_id=None, user_id=None):

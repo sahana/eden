@@ -1,13 +1,12 @@
 import unittest
 import sys
+import datetime
+import time
+
 # Selenium WebDriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 #from selenium.webdriver.common.keys import Keys
-
-import datetime
-import time
-
 
 from gluon import current
 
@@ -93,6 +92,13 @@ class SeleniumUnitTest(Web2UnitTest):
         
         date_format = str(current.deployment_settings.get_L10n_date_format())
         datetime_format = str(current.deployment_settings.get_L10n_datetime_format())
+        # if the logged in confirm is shown then try and clear it.
+        try:
+            elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem.click()
+        except:
+            pass
+
         # Fill in the Form
         for details in data:
             el_id = "%s_%s" % (tablename, details[0])
@@ -114,6 +120,10 @@ class SeleniumUnitTest(Web2UnitTest):
                                 pass
                             break
                     self.assertTrue(raw_value,"%s option cannot be found in %s" % (el_value, el_id))
+                elif el_type == "checkbox":
+                    for value in el_value:
+                        self.browser.find_element_by_xpath("//label[contains(text(),'%s')]" % value).click()
+                        # @ToDo: Add value to id_data to check for create function
                 elif el_type == "autocomplete":
                     raw_value = self.w_autocomplete(el_value,
                                                     el_id,
@@ -169,7 +179,8 @@ class SeleniumUnitTest(Web2UnitTest):
 
         result["before"] = self.getRows(table, id_data, dbcallback)
         # Submit the Form
-        browser.find_element_by_css_selector("input[type='submit']").click()
+        submit_btn = browser.find_element_by_css_selector("input[type='submit']")
+        submit_btn.click()
         # Check & Report the results
         confirm = True
         try:

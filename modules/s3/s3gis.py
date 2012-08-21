@@ -573,7 +573,7 @@ class GIS(object):
             else:
                 # This level is suitable
                 return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
-
+               
             return -90, -180, 90, 180, None
 
         # Minimum Bounding Box
@@ -642,7 +642,7 @@ class GIS(object):
 
         else:
             # no features
-            config = self.get_config()
+            config = GIS.get_config()
             if config.min_lat is not None:
                 min_lat = config.min_lat
             else:
@@ -911,7 +911,8 @@ class GIS(object):
                         table[level].label = labels[level]
 
     # -------------------------------------------------------------------------
-    def set_config(self, config_id=None, force_update_cache=False):
+    @staticmethod
+    def set_config(config_id=None, force_update_cache=False):
         """
             Reads the specified GIS config from the DB, caches it in response.
 
@@ -1101,7 +1102,8 @@ class GIS(object):
         return config_id if row else cache
 
     # -------------------------------------------------------------------------
-    def get_config(self):
+    @staticmethod
+    def get_config():
         """
             Returns the current GIS config structure.
 
@@ -1112,7 +1114,10 @@ class GIS(object):
 
         if not gis.config:
             # Ask set_config to put the appropriate config in response.
-            self.set_config()
+            if current.session.s3.gis_config_id:
+                GIS.set_config(current.session.s3.gis_config_id)
+            else:
+                GIS.set_config()
 
         return gis.config
 
@@ -1133,8 +1138,11 @@ class GIS(object):
 
         if not location and _levels:
             # Use cached value
-            if level and level in _levels:
-                return _levels[level]
+            if level:
+                if level in _levels:
+                    return _levels[level]
+                else:
+                    return level
             else:
                 return _levels
 
@@ -1157,7 +1165,7 @@ class GIS(object):
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
-            config = self.get_config()
+            config = GIS.get_config()
             location = config.region_location_id
         if location:
             # Try the Region, but ensure we have the fallback available in a single query
@@ -1395,6 +1403,8 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
 
+        # @ToDo: Avoid try/except here!
+        # - separate parameters best as even isinstance is expensive
         try:
             # location is passed as integer (location_id)
             table = s3db.gis_location
@@ -1448,7 +1458,7 @@ class GIS(object):
             @param: key_type: whether to return an id or code
         """
 
-        config = self.get_config()
+        config = GIS.get_config()
 
         if config.default_location_id:
             return self.get_parent_country(config.default_location_id)
@@ -1590,7 +1600,7 @@ class GIS(object):
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
-
+            
             Unused
         """
 
@@ -2289,6 +2299,171 @@ class GIS(object):
             # Convert radians to kilometers
             distance = RADIUS_EARTH * c
             return distance
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def export_admin_areas(countries=[],
+                           levels=["L0", "L1", "L2"],
+                           format="geojson",
+                           simplify=0.001,
+                           ):
+        """
+            Export admin areas to /static/cache for use by interactive web-mapping services
+            - designed for use by the Vulnerability Mapping
+
+            simplify = False to disable simplification
+
+            Only L0 supported for now
+            Only GeoJSON supported for now (may add KML &/or OSM later)
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.gis_location
+        ifield = table.id
+        if countries:
+            ttable = s3db.gis_location_tag
+            cquery = (table.level == "L0") & \
+                     (ttable.location_id == ifield) & \
+                     (ttable.tag == "ISO2") & \
+                     (ttable.value.belongs(countries))
+        else:
+            # All countries
+            cquery = (table.level == "L0")
+
+        if current.deployment_settings.get_gis_spatialdb():
+            spatial = True
+            if simplify:
+                # Do the Simplify & GeoJSON direct from the DB
+                field = table.the_geom.st_simplify(simplify).st_asgeojson(precision=4).with_alias("geojson")
+            else:
+                # Do the GeoJSON direct from the DB
+                field = table.the_geom.st_asgeojson(precision=4).with_alias("geojson")
+        else:
+            spatial = False
+            field = table.wkt
+            if simplify:
+                _simplify = GIS.simplify
+            else:
+                from shapely.wkt import loads as wkt_loads
+                from ..geojson import dumps
+
+        folder = os.path.join(current.request.folder, "static", "cache")
+
+        features = []
+        append = features.append
+
+        if "L0" in levels:
+            countries = db(cquery).select(ifield,
+                                          field,
+                                          )
+            for row in countries:
+                if spatial:
+                    geojson = row.geojson
+                elif simplify:
+                    geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                else:
+                    shape = wkt_loads(row.wkt)
+                    # Compact Encoding
+                    geojson = dumps(shape, separators=(",", ":"))
+                f = dict(
+                        type = "Feature",
+                        properties = {"id": row.id},
+                        geometry = json.loads(geojson) if geojson else {}
+                        )
+                append(f)
+
+            data = dict(
+                        type = "FeatureCollection",
+                        features = features
+                    )
+            # Output to file
+            filename = os.path.join(folder, "countries.geojson")
+            File = open(filename, "w")
+            File.write(json.dumps(data))
+            File.close()
+
+        if "L1" in levels:
+            if "L0" not in levels:
+                countries = db(cquery).select(ifield)
+            q1 = (table.level == "L1") & \
+                 (table.deleted != True)
+            for country in countries:
+                query = q1 & (table.parent == country.id)
+                features = []
+                append = features.append
+                rows = db(query).select(ifield,
+                                        field,
+                                        )
+                for row in rows:
+                    if spatial:
+                        geojson = row.geojson
+                    elif simplify:
+                        geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                    else:
+                        shape = wkt_loads(row.wkt)
+                        # Compact Encoding
+                        geojson = dumps(shape, separators=(",", ":"))
+                    f = dict(
+                            type = "Feature",
+                            properties = {"id": row.id},
+                            geometry = json.loads(geojson) if geojson else {}
+                            )
+                    append(f)
+
+                data = dict(
+                            type = "FeatureCollection",
+                            features = features
+                        )
+                # Output to file
+                filename = os.path.join(folder, "1_%s.geojson" % country.id)
+                File = open(filename, "w")
+                File.write(json.dumps(data))
+                File.close()
+            
+        if "L2" in levels:
+            if "L0" not in levels and "L1" not in levels:
+                countries = db(cquery).select(ifield)
+            q1 = (table.level == "L1") & \
+                 (table.deleted != True)
+            for country in countries:
+                query = q1 & (table.parent == country.id)
+                l1s = db(query).select(ifield)
+                q2 = (table.level == "L2") & \
+                     (table.deleted != True)
+                for l1 in l1s:
+                    query = q2 & (table.parent == l1.id)
+                    features = []
+                    append = features.append
+                    rows = db(query).select(ifield,
+                                            field,
+                                            )
+                    for row in rows:
+                        if spatial:
+                            geojson = row.geojson
+                        elif simplify:
+                            geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                        else:
+                            shape = wkt_loads(row.wkt)
+                            # Compact Encoding
+                            geojson = dumps(shape, separators=(",", ":"))
+                        f = dict(
+                                type = "Feature",
+                                properties = {"id": row.id},
+                                geometry = json.loads(geojson) if geojson else {}
+                                )
+                        append(f)
+
+                    data = dict(
+                                type = "FeatureCollection",
+                                features = features
+                            )
+                    # Output to file
+                    filename = os.path.join(folder, "2_%s.geojson" % l1.id)
+                    File = open(filename, "w")
+                    File.write(json.dumps(data))
+                    File.close()
+            
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
@@ -3235,22 +3410,6 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def layer_subtypes(layer="google"):
-        """ Return a lit of the subtypes available for a Layer """
-
-        if layer == "google":
-            return ["Satellite", "Maps", "Hybrid", "Terrain", "MapMaker",
-                    "MapMakerHybrid"]
-        elif layer == "yahoo":
-            return ["Satellite", "Maps", "Hybrid"]
-        elif layer == "bing":
-            return ["Satellite", "Maps", "Hybrid"]
-        else:
-            return None
-
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def parse_location(wkt, lon=None, lat=None):
         """
             Parses a location from wkt, returning wkt, lat, lon, bounding box and type.
@@ -3441,12 +3600,13 @@ class GIS(object):
                                           lon=L0_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3541,13 +3701,14 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=name)
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3639,7 +3800,8 @@ class GIS(object):
                     L1_name = None
                     L2_name = None
                 else:
-                    raise ValueError
+                    s3_debug("S3GIS: Invalid level '%s'" % Lx.level)
+                    return
                 Lx_lat = Lx.lat
                 Lx_lon = Lx.lon
             else:
@@ -3678,6 +3840,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3685,14 +3848,14 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
             for row in rows:
                 self.update_location_tree(row)
             return _path
-
+            
         # L4
         L4 = feature.get("L4", False)
         if level == "L4":
@@ -3850,6 +4013,7 @@ class GIS(object):
                                           lon=Lx_lon)
             else:
                 db(table.id == id).update(path=_path,
+                                          inherited=False,
                                           L0=L0_name,
                                           L1=L1_name,
                                           L2=L2_name,
@@ -3858,7 +4022,7 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) and \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.path, table.parent,
+            fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
@@ -3876,6 +4040,7 @@ class GIS(object):
                                                L4 is False:
             # Get the whole feature
             feature = db(table.id == id).select(table.name,
+                                                table.level,
                                                 table.parent,
                                                 table.path,
                                                 table.lat,
@@ -4017,7 +4182,10 @@ class GIS(object):
             Lx_lon = Lx.lon
         else:
             _path = id
-            L0_name = None
+            if feature.level == "L0":
+                L0_name = name
+            else:
+                L0_name = None
             L1_name = None
             L2_name = None
             L3_name = None
@@ -4055,6 +4223,7 @@ class GIS(object):
                                       lon=Lx_lon)
         else:
             db(table.id == id).update(path=_path,
+                                      inherited=False,
                                       L0=L0_name,
                                       L1=L1_name,
                                       L2=L2_name,
@@ -4331,6 +4500,8 @@ class GIS(object):
         try:
             shape = wkt_loads(wkt)
         except:
+            wkt = wkt[10] if wkt else wkt
+            s3_debug("Invalid Shape: %s" % wkt)
             return None
         simplified = shape.simplify(tolerance, preserve_topology)
         if output == "wkt":
@@ -4491,7 +4662,7 @@ class GIS(object):
         vars = request.vars
 
         # Read configuration
-        config = self.get_config()
+        config = GIS.get_config()
         if height:
             map_height = height
         else:
@@ -5240,6 +5411,7 @@ S3.gis.layers_feature_resources[%i]={
                 CoordinateLayer,
                 GeoRSSLayer,
                 KMLLayer,
+                OpenWeatherMapLayer,
                 WFSLayer,
                 FeatureLayer,
             ]
@@ -5732,9 +5904,12 @@ class BingLayer(Layer):
         if sublayers:
             if Projection().epsg != 900913:
                 raise Exception("Cannot display Bing layers unless we're using the Spherical Mercator Projection\n")
+            apikey = current.deployment_settings.get_gis_api_bing()
+            if not apikey:
+                raise Exception("Cannot display Bing layers unless we have an API key\n")
             # Mandatory attributes
             output = {
-                "ApiKey": current.deployment_settings.get_gis_api_bing()
+                "ApiKey": apikey
                 }
 
             for sublayer in sublayers:
@@ -5790,11 +5965,11 @@ class CoordinateLayer(Layer):
         if sublayers:
             sublayer = sublayers[0]
             name_safe = re.sub("'", "", sublayer.name)
-            if "visible" in sublayer and sublayer["visible"]:
+            if sublayer.visible:
                 visibility = "true"
             else:
                 visibility = "false"
-            output = '''S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s}''' % \
+            output = '''S3.gis.CoordinateGrid={name:'%s',visibility:%s,id:%s}\n''' % \
                 (name_safe, visibility, sublayer.layer_id)
             return output
         else:
@@ -6303,15 +6478,64 @@ class OSMLayer(Layer):
                 }
             self.add_attributes_if_not_default(
                 output,
-                base = (self.base, (False,)),
+                base = (self.base, (True,)),
                 _base = (self._base, (False,)),
-                url2 = (self.url2, (None,)),
-                url3 = (self.url3, (None,)),
+                url2 = (self.url2, ("",)),
+                url3 = (self.url3, ("",)),
                 zoomLevels = (self.zoom_levels, (9,)),
                 attribution = (self.attribution, (None,)),
             )
             self.setup_folder_and_visibility(output)
             return output
+
+# -----------------------------------------------------------------------------
+class OpenWeatherMapLayer(Layer):
+    """
+       OpenWeatherMap Layers from Catalogue
+    """
+
+    tablename = "gis_layer_openweathermap"
+    js_array = "S3.gis.OWM"
+
+    # -------------------------------------------------------------------------
+    def as_dict(self):
+        sublayers = self.sublayers
+        if sublayers:
+            if current.response.s3.debug:
+                # Non-debug has this included within OpenLayers.js
+                self.scripts.append("scripts/gis/OWM.OpenLayers.1.3.0.2.js")
+            output = {}
+            for sublayer in sublayers:
+                if sublayer.type == "station":
+                    output["station"] = {"name": sublayer.name or "Weather Stations",
+                                         "id": sublayer.layer_id,
+                                         "dir": sublayer.dir,
+                                         "visibility": sublayer.visible
+                                         }
+                elif sublayer.type == "city":
+                    output["city"] = {"name": sublayer.name or "Current Weather",
+                                      "id": sublayer.layer_id,
+                                      "dir": sublayer.dir,
+                                      "visibility": sublayer.visible
+                                      }
+            return output
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def as_javascript(self):
+        """
+            Output the Layer as Javascript
+            - suitable for inclusion in the HTML page
+        """
+
+        output = self.as_dict()
+        if output:
+            result = json.dumps(output, indent=4, sort_keys=True)
+            if result:
+                return '''%s=%s\n''' % (self.js_array, result)
+
+        return None
 
 # -----------------------------------------------------------------------------
 class ThemeLayer(Layer):

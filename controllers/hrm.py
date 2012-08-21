@@ -103,7 +103,7 @@ def staff():
     table.site_id.readable = True
     list_fields = ["id",
                    "person_id",
-                   "job_role_id",
+                   "job_title_id",
                    "organisation_id",
                    "department",
                    "site_id",
@@ -114,7 +114,7 @@ def staff():
                    (T("Certificates"), "certificate"),
                    (T("Contract End Date"), "end_date"),
                    "status",
-                  ]
+                   ]
     s3.crud_strings[tablename] = s3.crud_strings["hrm_staff"]
     if "expiring" in request.get_vars:
         s3.filter = s3.filter & \
@@ -128,8 +128,8 @@ def staff():
                                             "search_method")
     human_resource_search.advanced.pop(1)
     s3db.configure(tablename,
-                    list_fields = list_fields,
-                    search_method = human_resource_search)
+                   list_fields = list_fields,
+                   search_method = human_resource_search)
 
     def prep(r):
         if r.interactive:
@@ -142,8 +142,8 @@ def staff():
 
                 table = r.table
                 table.site_id.comment = DIV(DIV(_class="tooltip",
-                                                _title="%s|%s|%s" % (T("Facility"),
-                                                                     T("The site where this position is based."),
+                                                _title="%s|%s|%s" % (T("Office/Warehouse/Facility"),
+                                                                     T("The facility where this position is based."),
                                                                      T("Enter some characters to bring up a list of possible matches."))))
                 table.status.writable = False
                 table.status.readable = False
@@ -357,10 +357,6 @@ def person():
                                       s3db.org_site_represent,
                                       filterby="organisation_id",
                                       filter_opts=[session.s3.hrm.org]))
-                elif r.component_name == "address":
-                    _crud = s3.crud_strings.pr_address
-                    _crud.title_create = T("Add Home Address")
-                    _crud.title_update = T("Edit Home Address")
                 elif r.component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
@@ -591,6 +587,19 @@ def group():
 # =============================================================================
 def job_role():
     """ Job Roles Controller """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller()
+    return output
+
+def job_title():
+    """ Job Titles Controller """
 
     mode = session.s3.hrm.mode
     def prep(r):

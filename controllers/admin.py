@@ -234,6 +234,10 @@ def user():
                        _title="%s|%s|%s" % (T("Facility"),
                                             T("The default Facility for which this person is acting."),
                                             T("Enter some characters to bring up a list of possible matches")))
+    # Show comments
+    comments = table.comments
+    comments.readable = comments.writable = True
+
     # Pre-processor
     def prep(r):
         if r.interactive:
@@ -314,10 +318,10 @@ def user():
         s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
         # Translate the status values
-        values = [dict(col=7, key="", display=str(T("Active"))),
-                  dict(col=7, key="None", display=str(T("Active"))),
-                  dict(col=7, key="pending", display=str(T("Pending"))),
-                  dict(col=7, key="disabled", display=str(T("Disabled")))
+        values = [dict(col=6, key="", display=str(T("Active"))),
+                  dict(col=6, key="None", display=str(T("Active"))),
+                  dict(col=6, key="pending", display=str(T("Pending"))),
+                  dict(col=6, key="disabled", display=str(T("Disabled")))
                  ]
         s3.dataTableDisplay = values
 

@@ -156,9 +156,8 @@ settings.L10n.decimal_separator = "."
 # Currently unused
 #settings.gis.display_L1 = False
 # Set this if there will be multiple areas in which work is being done,
-# and a menu to select among them is wanted. With this on, any map
-# configuration that is designated as being available in the menu will appear
-#settings.gis.menu = T("Maps")
+# and a menu to select among them is wanted.
+#settings.gis.menu = "Maps"
 # Maximum Marker Size
 # (takes effect only on display)
 #settings.gis.marker_max_height = 35
@@ -294,12 +293,16 @@ settings.L10n.decimal_separator = "."
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
+# Uncomment to add summary fields for Organisations/Offices for # National/International staff
+#settings.org.summary = True
 
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 #settings.hrm.email_required = False
 # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
 #settings.hrm.deletable = True
+# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
+#settings.hrm.job_roles = True
 # Uncomment to hide the Staff resource
 #settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
@@ -310,12 +313,22 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
 #settings.hrm.show_organisation = True
+# Uncomment to disable the use of HR Certificates
+#settings.hrm.use_certificates = False
 # Uncomment to disable the use of HR Credentials
 #settings.hrm.use_credentials = False
+# Uncomment to disable the use of HR Description
+#settings.hrm.use_description = False
 # Uncomment to enable the use of HR Education
 #settings.hrm.use_education = True
+# Uncomment to disable the use of HR ID
+#settings.hrm.use_id = False
+# Uncomment to disable the use of HR Skills
+#settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 #settings.hrm.use_teams = False
+# Uncomment to disable the use of HR Trainings
+#settings.hrm.use_trainings = False
 
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -537,6 +550,11 @@ settings.modules = OrderedDict([
            restricted = True,
            module_type = 10,
        )),
+    ("transport", Storage(
+           name_nice = T("Transport"),
+           restricted = True,
+           module_type = 10,
+       )),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),
     #       #description = "Helps to report and search for missing persons",
@@ -555,15 +573,15 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    #("scenario", Storage(
-    #        name_nice = T("Scenarios"),
-    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
     #("event", Storage(
     #        name_nice = T("Events"),
     #        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+    #        restricted = True,
+    #        module_type = 10,
+    #    )),
+    #("scenario", Storage(
+    #        name_nice = T("Scenarios"),
+    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
     #        restricted = True,
     #        module_type = 10,
     #    )),

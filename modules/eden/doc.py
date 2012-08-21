@@ -28,8 +28,9 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "doc_image_represent",
            "S3DocumentSourceModel",
+           "doc_image_represent",
+           "doc_source_represent",
           ]
 
 import os
@@ -44,7 +45,7 @@ class S3DocumentLibrary(S3Model):
     names = ["doc_entity",
              "doc_document",
              "doc_image",
-            ]
+             ]
 
     def model(self):
 
@@ -66,36 +67,40 @@ class S3DocumentLibrary(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        super_key = self.super_key
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
+        entity_types = Storage(
+                               asset_asset=T("Asset"),
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
                                project_task=T("Task"),
-                               hms_hospital=T("Hospital"))
+                               hms_hospital=T("Hospital"),
+                               )
 
         tablename = "doc_entity"
         doc_entity = self.super_entity(tablename, "doc_id", entity_types)
 
         # Components
-        add_component("doc_document", doc_entity=self.super_key(doc_entity))
-        add_component("doc_image", doc_entity=self.super_key(doc_entity))
+        add_component("doc_document", doc_entity=super_key(doc_entity))
+        add_component("doc_image", doc_entity=super_key(doc_entity))
 
         # ---------------------------------------------------------------------
         # Documents
         #
         tablename = "doc_document"
         table = define_table(tablename,
+                             # Instance
+                             super_link("source_id", "doc_source_entity"),
+                             # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
-                             super_link("source_id", "doc_source_entity"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
-                                   notnull=True,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
                                    label=T("Name")),
@@ -143,10 +148,12 @@ class S3DocumentLibrary(S3Model):
             msg_list_empty = T("No Documents found")
         )
 
-        # Search Method?
+        # Search Method
 
         # Resource Configuration
         configure(tablename,
+                  super_entity = "doc_source_entity",
+                  deduplicate=self.document_duplicate,
                   onvalidation=self.document_onvalidation)
 
         # ---------------------------------------------------------------------
@@ -165,6 +172,7 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = define_table(tablename,
+                             # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
                              super_link("doc_id", doc_entity),
@@ -177,7 +185,6 @@ class S3DocumentLibrary(S3Model):
                                                                "uploads",
                                                                "images")),
                              Field("name", length=128,
-                                   notnull=True,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
                                    label=T("Name")),
@@ -222,6 +229,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  deduplicate=self.document_duplicate,
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
         # ---------------------------------------------------------------------
@@ -248,6 +256,36 @@ class S3DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def document_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename not in ("doc_document", "doc_image"):
+            return
+
+        data = item.data
+        query = None
+        file = data.get("file", None)
+        if file:
+            table = item.table
+            query = (table.file == file)
+        else:
+            url = data.get("url", None)
+            if url:
+                table = item.table
+                query = (table.url == url)
+
+        if query:
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def document_represent(id):
         """ Foreign key representation """
 
@@ -270,11 +308,16 @@ class S3DocumentLibrary(S3Model):
     def document_onvalidation(form, document=True):
         """ Form validation for both, documents and images """
 
+        vars = form.vars
+        doc = vars.file
+        if isinstance(doc, NoneType):
+            # This is a prepop, so file not in form
+            return
+
         import cgi
 
         T = current.T
         db = current.db
-        vars = form.vars
 
         if document:
             tablename = "doc_document"
@@ -285,7 +328,6 @@ class S3DocumentLibrary(S3Model):
 
         table = db[tablename]
 
-        doc = vars.file
         url = vars.url
         if not hasattr(doc, "file"):
             id = current.request.post_vars.id
@@ -300,27 +342,27 @@ class S3DocumentLibrary(S3Model):
             form.errors.url = msg
 
         # Do a checksum on the file to see if it's a duplicate
-        if isinstance(doc, cgi.FieldStorage) and doc.filename:
-            f = doc.file
-            vars.checksum = doc_checksum(f.read())
-            f.seek(0)
-            if not vars.name:
-                vars.name = doc.filename
+        #if isinstance(doc, cgi.FieldStorage) and doc.filename:
+        #    f = doc.file
+        #    vars.checksum = doc_checksum(f.read())
+        #    f.seek(0)
+        #    if not vars.name:
+        #        vars.name = doc.filename
 
-        if vars.checksum is not None:
-            # Duplicate allowed if original version is deleted
-            query = ((table.checksum == vars.checksum) & \
-                     (table.deleted == False))
-            result = db(query).select(table.name,
-                                      limitby=(0, 1)).first()
-            if result:
-                doc_name = result.name
-                form.errors["file"] = "%s %s" % \
-                                      (T("This file already exists on the server as"), doc_name)
+        #if vars.checksum is not None:
+        #    # Duplicate allowed if original version is deleted
+        #    query = ((table.checksum == vars.checksum) & \
+        #             (table.deleted == False))
+        #    result = db(query).select(table.name,
+        #                              limitby=(0, 1)).first()
+        #    if result:
+        #        doc_name = result.name
+        #        form.errors["file"] = "%s %s" % \
+        #                              (T("This file already exists on the server as"), doc_name)
+
         return
 
 # =============================================================================
-
 class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
@@ -344,15 +386,17 @@ class S3DocumentSourceModel(S3Model):
 
         tablename = "doc_source_entity"
 
-        table = self.super_entity(tablename,
-                                  "source_id",
-                                  source_types
+        table = self.super_entity(tablename, "source_id", source_types,
+                                  Field("name",
+                                        label=T("Name")),
                                   )
         # Reusable Field
         source_id = S3ReusableField("source_id", table,
                                     requires = IS_NULL_OR(
                                                 IS_ONE_OF(current.db,
-                                                          "doc_source_entity.source_id")),
+                                                          "doc_source_entity.source_id",
+                                                          doc_source_represent)),
+                                    represent = doc_source_represent,
                                     label = T("Source"),
                                     ondelete = "CASCADE")
         # Components
@@ -401,6 +445,9 @@ def doc_image_represent(filename):
         @param filename: name of the image file
     """
 
+    if not filename:
+        return current.messages.NONE
+
     return DIV(A(IMG(_src=URL(c="default", f="download",
                               args=filename),
                      _height=40),
@@ -430,5 +477,25 @@ def doc_checksum(docstr):
 
     converted = hashlib.sha1(docstr).hexdigest()
     return converted
+
+# =============================================================================
+def doc_source_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.name
+
+    db = current.db
+    table = db.doc_source_entity
+    r = db(table._id == id).select(table.name,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
 
 # END =========================================================================

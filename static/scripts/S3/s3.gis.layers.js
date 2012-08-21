@@ -110,6 +110,10 @@ function addLayers() {
             addKMLLayer(S3.gis.layers_kml[i - 1]);
         }
     }
+    // OpenWeatherMap
+    if (S3.gis.OWM) {
+        addOWMLayers();
+    }
     // WFS
     if (S3.gis.layers_wfs) {
         for (i = S3.gis.layers_wfs.length; i > 0; i--) {
@@ -232,7 +236,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'aerial') {
+        if (bing.Base == 'aerial') {
             map.setBaseLayer(layer);
         }
     }
@@ -246,7 +250,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'road') {
+        if (bing.Base == 'road') {
             map.setBaseLayer(layer);
         }
     }
@@ -260,7 +264,7 @@ function addBingLayers() {
             s3_layer_type: 'bing'
         });
         map.addLayer(layer);
-        if (Bing.Base == 'hybrid') {
+        if (bing.Base == 'hybrid') {
             map.setBaseLayer(layer);
         }
     }
@@ -1306,6 +1310,54 @@ function osm_getTileURL(bounds) {
             url = this.selectUrl(path, url);
         }
         return url + path;
+    }
+}
+
+// OpenWeatherMap
+function addOWMLayers() {
+    var owm = S3.gis.OWM;
+    var layer;
+    if (owm.station) {
+        layer = new OpenLayers.Layer.Vector.OWMStations(
+            owm.station.name,
+            {dir: owm.station.dir,
+             // This is used to Save State
+             s3_layer_id: owm.station.id,
+             s3_layer_type: 'openweathermap'
+            }
+        );
+        layer.setVisibility(owm.city.visibility);
+        layer.events.on({
+            'featureselected': layer.onSelect,
+            'featureunselected': layer.onUnselect,
+            'loadstart': showThrobber,
+            'loadend': hideThrobber,
+            'loadcancel': hideThrobber
+        });
+        map.addLayer(layer);
+        // Ensure Highlight & Popup Controls act on this layer
+        S3.gis.layers_all.push(layer);
+    }
+    if (owm.city) {
+        layer = new OpenLayers.Layer.Vector.OWMWeather(
+            owm.city.name,
+            {dir: owm.station.dir,
+             // This is used to Save State
+             s3_layer_id: owm.city.id,
+             s3_layer_type: 'openweathermap'
+            }
+        );
+        layer.setVisibility(owm.city.visibility);
+        layer.events.on({
+            'featureselected': layer.onSelect,
+            'featureunselected': layer.onUnselect,
+            'loadstart': showThrobber,
+            'loadend': hideThrobber,
+            'loadcancel': hideThrobber
+        });
+        map.addLayer(layer);
+        // Ensure Highlight & Popup Controls act on this layer
+        S3.gis.layers_all.push(layer);
     }
 }
 

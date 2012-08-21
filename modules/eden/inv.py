@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3InventoryModel",
+__all__ = ["S3WarehouseModel",
+           "S3InventoryModel",
            "S3TrackingModel",
            "S3AdjustModel",
            "inv_tabs",
@@ -110,6 +111,259 @@ send_type_opts.update(inv_item_status_opts)
 send_type_opts.update(settings.get_inv_send_types())
 recv_type_opts = settings.get_inv_shipment_types()
 recv_type_opts.update(settings.get_inv_recv_types())
+
+# =============================================================================
+class S3WarehouseModel(S3Model):
+
+    names = ["inv_warehouse",
+             #"inv_warehouse_type",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        messages = current.messages
+        add_component = self.add_component
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Warehouse Types
+        #
+        # tablename = "inv_warehouse_type"
+        # table = define_table(tablename,
+                             # Field("name", length=128,
+                                   # notnull=True, unique=True,
+                                   # label=T("Name")),
+                             # s3_comments(),
+                             # *s3_meta_fields())
+
+        # CRUD strings
+        #crud_strings[tablename] = Storage(
+        #    title_create = T("Add Warehouse Type"),
+        #    title_display = T("Warehouse Type Details"),
+        #    title_list = T("Warehouse Types"),
+        #    title_update = T("Edit Warehouse Type"),
+        #    title_search = T("Search Warehouse Types"),
+        #    subtitle_create = T("Add New Warehouse Type"),
+        #    label_list_button = T("List Warehouse Types"),
+        #    label_create_button = T("Add New Warehouse Type"),
+        #    label_delete_button = T("Delete Warehouse Type"),
+        #    msg_record_created = T("Warehouse Type added"),
+        #    msg_record_modified = T("Warehouse Type updated"),
+        #    msg_record_deleted = T("Warehouse Type deleted"),
+        #    msg_list_empty = T("No Warehouse Types currently registered"))
+
+        #warehouse_type_id = S3ReusableField("warehouse_type_id", table,
+        #                        sortby="name",
+        #                        requires = IS_NULL_OR(
+        #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
+        #                                              self.inv_warehouse_type_represent,
+        #                                              sort=True
+        #                                              )),
+        #                        represent = self.inv_warehouse_type_represent,
+        #                        label = T("Warehouse Type"),
+        #                        comment = S3AddResourceLink(c="inv",
+        #                                    f="warehouse_type",
+        #                                    label=T("Add Warehouse Type"),
+        #                                    title=T("Warehouse Type"),
+        #                                    tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Warehouse Type'.")),
+        #                        ondelete = "SET NULL")
+
+        #configure(tablename,
+        #          deduplicate = self.inv_warehouse_type_duplicate,
+        #          )
+
+        # Tags as component of Warehouse Types
+        #add_component("inv_warehouse_type_tag",
+        #              inv_warehouse_type=dict(joinby="warehouse_type_id",
+        #                                      name="tag"))
+
+        # ---------------------------------------------------------------------
+        # Warehouses
+        #
+        tablename = "inv_warehouse"
+        table = define_table(tablename,
+                             super_link("pe_id", "pr_pentity"),
+                             super_link("site_id", "org_site"),
+                             super_link("doc_id", "doc_entity"),
+                             Field("name", notnull=True,
+                                   length=64,           # Mayon Compatibility
+                                   label = T("Name")),
+                             Field("code", length=10, # Mayon compatibility
+                                   label=T("Code")
+                                   # Deployments that don't wants warehouse codes can hide them
+                                   #readable=False,
+                                   #writable=False,
+                                   # @ToDo: Deployment Setting to add validator to make these unique
+                                   ),
+                             self.org_organisation_id(widget = S3OrganisationAutocompleteWidget(
+                                default_from_profile=True)),
+                             #warehouse_type_id(),
+                             self.gis_location_id(),
+                             Field("phone1", label = T("Phone 1"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("phone2", label = T("Phone 2"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("email", label = T("Email"),
+                                   requires = IS_NULL_OR(IS_EMAIL())),
+                             Field("fax", label = T("Fax"),
+                                   requires = IS_NULL_OR(s3_phone_requires)),
+                             Field("obsolete", "boolean",
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
+                                    (bool and [T("Obsolete")] or [messages.NONE])[0],
+                                   default = False,
+                                   readable = False,
+                                   writable = False),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Warehouse"),
+            title_display = T("Warehouse Details"),
+            title_list = T("Warehouses"),
+            title_update = T("Edit Warehouse"),
+            title_search = T("Search Warehouses"),
+            title_upload = T("Import Warehouses"),
+            title_map = T("Map of Warehouses"),
+            subtitle_create = T("Add New Warehouse"),
+            label_list_button = T("List Warehouses"),
+            label_create_button = T("Add New Warehouse"),
+            label_delete_button = T("Delete Warehouse"),
+            msg_record_created = T("Warehouse added"),
+            msg_record_modified = T("Warehouse updated"),
+            msg_record_deleted = T("Warehouse deleted"),
+            msg_list_empty = T("No Warehouses currently registered"))
+
+        # Search Method
+        warehouse_search = S3Search(
+            advanced=(S3SearchSimpleWidget(
+                        name="warehouse_search_text",
+                        label=T("Search"),
+                        comment=T("Search for warehouse by text."),
+                        field=["name", "comments", "email"]
+                      ),
+                      S3SearchOptionsWidget(
+                        name="warehouse_search_org",
+                        label=T("Organization"),
+                        comment=T("Search for warehouse by organization."),
+                        field="organisation_id",
+                        represent ="%(name)s",
+                        cols = 3
+                      ),
+                      S3SearchOptionsWidget(
+                        name="warehouse_search_location",
+                        field="location_id$L1",
+                        location_level="L1",
+                        cols = 3
+                      ),
+                      S3SearchLocationWidget(
+                        name="warehouse_search_map",
+                        label=T("Map"),
+                      ),
+            ))
+
+        configure(tablename,
+                  super_entity=("pr_pentity", "org_site"),
+                  search_method = warehouse_search,
+                  deduplicate=self.inv_warehouse_duplicate,
+                  list_fields=["id",
+                               "name",
+                               "organisation_id",   # Filtered in Component views
+                               #"type",
+                               #(T("Address"), "location_id$addr_street"),
+                               (T("Country"), "location_id$L0"),
+                               "location_id$L1",
+                               "location_id$L2",
+                               "location_id$L3",
+                               #"location_id$L4",
+                               "phone1",
+                               "email"
+                               ])
+
+        # ---------------------------------------------------------------------
+        # Pass variables back to global scope (s3db.*)
+        #
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    #@staticmethod
+    #def inv_warehouse_type_duplicate(item):
+    #    """ Import item de-duplication """
+
+    #    if item.tablename == "inv_warehouse_type":
+    #        table = item.table
+    #        name = item.data.get("name", None)
+    #        query = (table.name.lower() == name.lower())
+    #        duplicate = current.db(query).select(table.id,
+    #                                             limitby=(0, 1)).first()
+    #        if duplicate:
+    #            item.id = duplicate.id
+    #            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    #@staticmethod
+    #def inv_warehouse_type_represent(id, row=None):
+    #    """ FK representation """
+
+    #    if row:
+    #        return row.name
+    #    elif not id:
+    #        return current.messages.NONE
+
+    #    db = current.db
+    #    table = db.inv_warehouse_type
+    #    r = db(table.id == id).select(table.name,
+    #                                  limitby = (0, 1)).first()
+    #    try:
+    #        return r.name
+    #    except:
+    #        return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_represent(id, row=None):
+        """ FK representation """
+
+        if row:
+            return row.name
+        elif not id:
+            return current.messages.NONE
+
+        db = current.db
+        table = db.inv_warehouse
+        r = db(table.id == id).select(table.name,
+                                      limitby = (0, 1)).first()
+        try:
+            return r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_warehouse_duplicate(item):
+        """
+            Import item deduplication, match by name
+                (Adding location_id doesn't seem to be a good idea)
+
+            @param item: the S3ImportItem instance
+        """
+
+        if item.tablename == "inv_warehouse":
+            table = item.table
+            name = "name" in item.data and item.data.name
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
 # =============================================================================
 class S3InventoryModel(S3Model):
     """
@@ -146,6 +400,8 @@ class S3InventoryModel(S3Model):
                           }
         # =====================================================================
         # Inventory Item
+        #
+        # Stock in a warehouse or other site's inventory store.
         #
         # ondelete references have been set to RESTRICT because the inv. items
         # should never be automatically deleted
@@ -484,10 +740,10 @@ $(document).ready(function(){
             elif r.component.name == "send":
                 # Default to the Search tab in the location selector
                 current.response.s3.gis.tab = "search"
-                if current.request.get_vars.get("select", "sent") == "incoming":
-                    # Display only incoming shipments which haven't been received yet
-                    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
-                    #r.resource.add_component_filter("send", filter)
+                #if current.request.get_vars.get("select", "sent") == "incoming":
+                #    # Display only incoming shipments which haven't been received yet
+                #    filter = (current.s3db.inv_send.status == SHIP_STATUS_SENT)
+                #    r.resource.add_component_filter("send", filter)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -620,6 +876,10 @@ class S3TrackingModel(S3Model):
         define_table = self.define_table
         set_method = self.set_method
 
+        is_logged_in = auth.is_logged_in
+        permitted_facilities = auth.permitted_facilities
+        user = auth.user
+
         s3_date_format = settings.get_L10n_date_format()
         s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
         s3_string_represent = lambda str: str if str else NONE
@@ -654,10 +914,15 @@ class S3TrackingModel(S3Model):
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              self.super_link("site_id", "org_site",
-                                              label = T("From Facility"),
-                                              default = auth.user.site_id if auth.is_logged_in() else None,
+                                              label = T("From Warehouse/Facility/Office"),
+                                              filterby = "site_id",
+                                              filter_opts = permitted_facilities(redirect_on_error=False),
+                                              not_filterby = "obsolete",
+                                              not_filter_opts = [True],
+                                              default = user.site_id if is_logged_in() else None,
                                               readable = True,
                                               writable = True,
+                                              empty = False,
                                               represent = org_site_represent,
                                               #widget = S3SiteAutocompleteWidget(),
                                               ),
@@ -680,11 +945,13 @@ class S3TrackingModel(S3Model):
                                    ),
                              # This is a reference, not a super-link, so we can override
                              Field("to_site_id", self.org_site,
-                                   label = T("To Facility"),
+                                   label = T("To Warehouse/Facility/Office"),
                                    requires = IS_ONE_OF(db, "org_site.site_id",
                                                         lambda id: \
                                                             org_site_represent(id, show_link = False),
                                                         sort=True,
+                                                        not_filterby = "obsolete",
+                                                        not_filter_opts = [True],
                                                         ),
                                    ondelete = "SET NULL",
                                    represent =  org_site_represent
@@ -809,27 +1076,23 @@ class S3TrackingModel(S3Model):
 
         tablename = "inv_recv"
         table = define_table(tablename,
-                             Field("site_id", "reference org_site", notnull = True,
-                                   label=T("By Facility"),
-                                   ondelete = "SET NULL",
-                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                   readable = True,
-                                   writable = True,
-                                   #widget = S3SiteAutocompleteWidget(),
-                                   requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
-                                                        sort=True,
-                                                        ),
-                                   represent=org_site_represent
-                                   ),
-                             Field("type", "integer",
-                                   requires = IS_NULL_OR(IS_IN_SET(recv_type_opts)),
-                                   represent = lambda opt: \
-                                    recv_type_opts.get(opt, UNKNOWN_OPT),
-                                   label = T("Type"),
-                                   default = 0,
-                                   ),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             # @ToDo: We really need to be able to filter this by permitted_facilities
+                             self.super_link("site_id", "org_site",
+                                              label = T("By Warehouse/Facility/Office"),
+                                              ondelete = "SET NULL",
+                                              filterby = "site_id",
+                                              filter_opts = permitted_facilities(redirect_on_error=False),
+                                              not_filterby = "obsolete",
+                                              not_filter_opts = [True],
+                                              default = user.site_id if is_logged_in() else None,
+                                              readable = True,
+                                              writable = True,
+                                              empty = False,
+                                              represent = org_site_represent,
+                                              #widget = S3SiteAutocompleteWidget(),
+                                              ),
                              Field("eta", "date",
                                    label = T("Date Expected"),
                                    writable = False,
@@ -847,15 +1110,28 @@ class S3TrackingModel(S3Model):
                                                                    T("Will be filled automatically when the Shipment has been Received"))
                                                  )
                                    ),
+                             Field("type", "integer",
+                                   requires = IS_IN_SET(recv_type_opts),
+                                   represent = lambda opt: \
+                                    recv_type_opts.get(opt, UNKNOWN_OPT),
+                                   label = T("Type"),
+                                   default = 0,
+                                   ),
+                             org_id( label = T("Organisation/Supplier")
+                                    ),
+                             # This is a reference, not a super-link, so we can override
                              Field("from_site_id", "reference org_site",
-                                   label = T("From Facility"),
+                                   label = T("From Warehouse/Facility/Office"),
                                    ondelete = "SET NULL",
                                    #widget = S3SiteAutocompleteWidget(),
-                                   requires = IS_ONE_OF(db, "org_site.site_id",
-                                                        lambda id: \
-                                                            org_site_represent(id, show_link = False),
-                                                        sort=True,
-                                                        ),
+                                   requires = IS_NULL_OR( IS_ONE_OF(db, "org_site.site_id",
+                                                                    lambda id: \
+                                                                            org_site_represent(id, show_link = False),
+                                                                    sort=True,
+                                                                    not_filterby = "obsolete",
+                                                                    not_filter_opts = [True],
+                                                                    )
+                                                         ),
                                    represent = org_site_represent
                                    ),
                              send_ref(),
@@ -923,8 +1199,7 @@ class S3TrackingModel(S3Model):
         # Reusable Field
         recv_id = S3ReusableField("recv_id", table, sortby="date",
                                   requires = IS_NULL_OR(
-                                                IS_ONE_OF(db,
-                                                          "inv_recv.id",
+                                                IS_ONE_OF(db, "inv_recv.id",
                                                           self.inv_recv_represent,
                                                           orderby="inv_recv.date",
                                                           sort=True)),
@@ -983,7 +1258,7 @@ class S3TrackingModel(S3Model):
                       ),
                       S3SearchOptionsWidget(
                         name="recv_search_site",
-                        label=T("Facility"),
+                        label=T("Warehouse/Facility/Office"),
                         field="site_id",
                         represent ="%(name)s",
                         cols = 2
@@ -1020,6 +1295,8 @@ class S3TrackingModel(S3Model):
                                  "send_ref",
                                  "purchase_ref",
                                  "recipient_id",
+                                 "organisation_id",
+                                 "from_site_id",
                                  "site_id",
                                  "date",
                                  "type",
@@ -1028,6 +1305,8 @@ class S3TrackingModel(S3Model):
                                  "sender_id",
                                  "comments"
                                  ],
+                  mark_required = ["from_site_id", "organisation_id"],
+                  onvalidation = self.inv_recv_onvalidation,
                   onaccept = self.inv_recv_onaccept,
                   search_method = recv_search,
                   create_next = recv_item_url,
@@ -1055,12 +1334,20 @@ class S3TrackingModel(S3Model):
         tablename = "inv_kit"
         table = define_table(tablename,
                              Field("site_id", "reference org_site",
-                                    label = T("By Facility"),
-                                    default = auth.user.site_id if auth.is_logged_in() else None,
+                                    label = T("By Warehouse/Facility/Office"),
+                                    requires = IS_ONE_OF(db, "org_site.site_id",
+                                                         lambda id: \
+                                                            org_site_represent(id, show_link = False),
+                                                         filterby = "site_id",
+                                                         filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                         sort=True,
+                                                         ),
+                                    default = user.site_id if is_logged_in() else None,
                                     readable = True,
                                     writable = True,
                                     widget = S3SiteAutocompleteWidget(),
-                                    represent = org_site_represent),
+                                    represent = org_site_represent
+                                    ),
                              item_id(label = T("Kit"),
                                      requires = IS_ONE_OF(db, "supply_item.id",
                                                           self.supply_item_represent,
@@ -1337,18 +1624,29 @@ $(document).ready(function(){
             db = current.db
             table = db.inv_send
             row = db(table.id == id).select(table.date,
-                                            table.site_id,
+                                            table.send_ref,
+                                            table.to_site_id,
                                             limitby=(0, 1)).first()
+
+            send_ref_string = table.send_ref.represent( row.send_ref,
+                                                        show_link = False)
+            to_string = table.to_site_id.represent( row.to_site_id,
+                                                     show_link = False)
+            date_string = table.date.represent( row.date )
+
+            represent  = "%s (To: %s on %s)" % (send_ref_string,
+                                                to_string,
+                                                date_string
+                                                )
             if show_link:
-                return SPAN(table.site_id.represent(row.site_id),
-                            " - ",
-                            table.date.represent(row.date)
-                            )
+                return A(represent,
+                         _href = URL(c="inv",
+                                     f = "send",
+                                     args = [id]
+                                     )
+                         )
             else:
-                return "%s - %s" % (table.site_id.represent(row.site_id,
-                                                            show_link = False),
-                                    table.date.represent(row.date),
-                                    )
+                return represent
         else:
             return current.messages.NONE
 
@@ -1460,28 +1758,40 @@ $(document).ready(function(){
     @staticmethod
     def inv_recv_represent(id, show_link=True):
         """
-            @ToDo: 'From Organisation' is great for Donations
-            (& Procurement if we make Suppliers Organisations), but isn't useful
-            for shipments between facilities within a single Org where
-            'From Facility' could be more appropriate
         """
 
         if id:
             db = current.db
             table = db.inv_recv
             row = db(table.id == id).select(table.date,
-                                            table.site_id,
+                                            table.recv_ref,
+                                            table.from_site_id,
+                                            table.organisation_id,
                                             limitby=(0, 1)).first()
-            if show_link:
-                return SPAN(table.site_id.represent(row.site_id),
-                            " - ",
-                            table.date.represent(row.date)
-                            )
+
+            recv_ref_string = table.send_ref.represent( row.recv_ref,
+                                                        show_link = False)
+            if row.from_site_id:
+                from_string = table.from_site_id.represent( row.from_site_id,
+                                                            show_link = False)
             else:
-                return "%s - %s" % (table.site_id.represent(row.site_id,
-                                                            show_link = False),
-                                    table.date.represent(row.date),
-                                    )
+                from_string = table.organisation_id.represent( row.organisation_id,
+                                                               show_link = False)
+            date_string = table.date.represent( row.date )
+
+            represent  = "%s (From: %s on %s)" % (recv_ref_string,
+                                                  from_string,
+                                                  date_string
+                                                  )
+            if show_link:
+                return A(represent,
+                         _href = URL(c="inv",
+                                     f = "recv",
+                                     args = [id]
+                                     )
+                         )
+            else:
+                return represent
         else:
             return current.messages.NONE
 
@@ -1504,6 +1814,22 @@ $(document).ready(function(){
                     rtable.recv_ref,
                 )
             db(rtable.id == id).update(recv_ref = code)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_recv_onvalidation(form):
+        """
+            Check that either organisation_id or from_site_id are filled according to the type
+        """
+        type = form.vars.type and int(form.vars.type)
+        if type == 11 and not form.vars.from_site_id:
+            # Internal Shipment needs from_site_id
+            # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
+            form.errors.from_site_id = T("Please enter a Warehouse/Facility/Office")
+        if type >= 32 and not form.vars.organisation_id:
+            # Internal Shipment needs from_site_id
+            # @ToDo: lookup this value instead of hardcoding it base on s3cfg.py
+            form.errors.organisation_id = T("Please enter an Organisation/Supplier")
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1610,9 +1936,9 @@ $(document).ready(function(){
                                         ),
                             )
                 else:
-                    return B(value)
+                    return value
             else:
-                return B(value)
+                return value
         else:
             return current.messages.NONE
 
@@ -1954,7 +2280,8 @@ $(document).ready(function(){
                                                   old_quantity = record.quantity,
                                                   new_quantity = record.recv_quantity,
                                                   currency = record.currency,
-                                                  pack_value = record.pack_value,
+                                                  old_pack_value = record.pack_value,
+                                                  new_pack_value = record.pack_value,
                                                   expiry_date = record.expiry_date,
                                                   bin = record.recv_bin,
                                                   comments = record.comments,
@@ -2022,8 +2349,7 @@ def inv_tabs(r):
         current.auth.s3_has_permission("read", "inv_inv_item"):
         collapse_tabs = settings.get_inv_collapse_tabs()
         tablename, record = s3_rheader_resource(r)
-        if collapse_tabs and not \
-            (tablename == "org_office" and record.type == 5): # 5 = Warehouse
+        if collapse_tabs and not (tablename == "inv_warehouse"):
             # Test if the tabs are collapsed
             show_collapse = True
             show_inv = r.get_vars.show_inv
@@ -2069,57 +2395,108 @@ def inv_tabs(r):
 
 # =============================================================================
 def inv_warehouse_rheader(r):
-    """ Resource Header for warehouse inv. item """
+    """ Resource Header for warehouses and inventory items """
 
     if r.representation != "html" or r.method == "import":
         # RHeaders only used in interactive views
         return None
 
     s3db = current.s3db
+
+    # Need to use this format as otherwise req_match?viewing=org_office.x
+    # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
+    table = s3db.table(tablename)
+
     rheader = None
-    if tablename == "org_organisation" or tablename == "org_office":
-        rheader = s3db.org_rheader(r)
-    if tablename == "inv_inv_item" and record != None:
+    if tablename == "inv_warehouse":
+
+        # Tabs
+        tabs = [(T("Basic Details"), None),
+                #(T("Contact Data"), "contact"),
+                (T("Staff"), "human_resource"),
+                (T("Assign Staff"), "human_resource_site"),
+               ]
+        tabs = tabs + s3db.inv_tabs(r)
+        if settings.has_module("req"):
+            tabs = tabs + s3db.req_tabs(r)
+        tabs.append((T("Attachments"), "document"))
+        tabs.append((T("User Roles"), "roles"))
+
+        # Fields
+        rheader_fields = [["name", "organisation_id", "email"],
+                          ["location_id", "phone1"],
+                         ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)
+        rheader_fields, rheader_tabs = rheader(r, table=table, record=record)
+
+        # Inject logo
+        logo = s3db.org_organisation_logo(record.organisation_id)
+        if logo:
+            rheader = DIV(TABLE(TR(TD(logo),TD(rheader_fields))))
+        else:
+            rheader = DIV(rheader_fields)
+        rheader.append(rheader_tabs)
+
+        #if r.component and r.component.name == "req":
+            # Inject the helptext script
+            #rheader.append(s3.req_helptext_script)
+
+    elif tablename == "inv_inv_item" and record != None:
+
+        # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "track_movement/"),
                ]
-        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
-        table = s3db[tablename]
-        rheader = DIV( TABLE(
-                           TR( TH("%s: " % table.item_id.label),
-                               table.item_id.represent(record.item_id),
-                               TH( "%s: " % table.item_pack_id.label),
-                               table.item_pack_id.represent(record.item_pack_id),
-                              ),
-                           TR( TH( "%s: " % table.site_id.label),
-                               TD(table.site_id.represent(record.site_id), _colspan=3),
-                              ),
-                             ),
-                        rheader_tabs
-                        )
-    if tablename == "inv_track_item" and record != None:
-        table = s3db["inv_inv_item"]
-        irecord = table[record.item_id]
+        rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
+
+        # Header
+        rheader = DIV(
+                    TABLE(
+                        TR(
+                            TH("%s: " % table.item_id.label),
+                            table.item_id.represent(record.item_id),
+                            TH( "%s: " % table.item_pack_id.label),
+                            table.item_pack_id.represent(record.item_pack_id),
+                        ),
+                        TR(
+                            TH( "%s: " % table.site_id.label),
+                            TD(table.site_id.represent(record.site_id), _colspan=3),
+                        ),
+                    ), rheader_tabs)
+
+    elif tablename == "inv_track_item" and record != None:
+
+        # Tabs
         tabs = [(T("Details"), None),
                 (T("Track Shipment"), "inv_item/"),
                ]
-        rheader_tabs = DIV (s3_rheader_tabs(r, tabs))
-        rheader = DIV( TABLE(
-                           TR( TH("%s: " % table.item_id.label),
+        rheader_tabs = DIV(s3_rheader_tabs(r, tabs))
+
+        # Get item data
+        table = s3db["inv_inv_item"]
+        irecord = table[record.item_id]
+
+        # Header
+        rheader = DIV(
+                    TABLE(
+                        TR(
+                            TH("%s: " % table.item_id.label),
                                table.item_id.represent(irecord.item_id),
                                TH( "%s: " % table.item_pack_id.label),
                                table.item_pack_id.represent(irecord.item_pack_id),
-                              ),
-                           TR( TH( "%s: " % table.site_id.label),
-                               TD(table.site_id.represent(irecord.site_id), _colspan=3),
-                              ),
-                             ),
-                        rheader_tabs
-                        )
+                        ),
+                        TR(
+                            TH( "%s: " % table.site_id.label),
+                            TD(table.site_id.represent(irecord.site_id), _colspan=3),
+                        ),
+                    ), rheader_tabs)
 
-    rfooter = TAG[""]()
+    # Build footer
     if record and "site_id" in record:
+
+        rfooter = TAG[""]()
         if (r.component and r.component.name == "inv_item"):
             if r.component_id:
                 asi_btn = A( T("Adjust Stock Item"),
@@ -2150,17 +2527,8 @@ def inv_warehouse_rheader(r):
                           _class = "action-btn"
                           )
             rfooter.append(ts_btn)
-    # else:
-        # ns_btn = A( T("Receive New Stock"),
-                      # _href = URL(c = "inv",
-                                  # f = "recv",
-                                  # args = ["create"]
-                                  # ),
-                      # _class = "action-btn"
-                      # )
-        # rfooter.append(ns_btn)
+            current.response.s3.rfooter = rfooter
 
-    current.response.s3.rfooter = rfooter
     return rheader
 
 # =============================================================================
@@ -2195,7 +2563,7 @@ def inv_recv_crud_strings():
             title_create = ADD_RECV,
             title_display = T("Received Shipment Details"),
             title_list = T("Received/Incoming Shipments"),
-            title_update = T("Edit Received Shipment"),
+            title_update = T("Shipment to Receive"),
             title_search = T("Search Received/Incoming Shipments"),
             subtitle_create = ADD_RECV,
             label_list_button = T("List Received/Incoming Shipments"),
@@ -2929,9 +3297,12 @@ class S3AdjustModel(S3Model):
                                             table.new_quantity,
                                             table.item_pack_id,
                                             limitby=(0, 1)).first()
+            changed_quantity = 0
+            if row.new_quantity and row.old_quantity:
+                changed_quantity = row.new_quantity - row.old_quantity
             repr = "%s:%s %s" % (table.item_id.represent(row.item_id,
                                                          show_link = show_link),
-                                 (row.new_quantity - row.old_quantity),
+                                 changed_quantity,
                                  table.item_pack_id.represent(row.item_pack_id),
                                  )
             if show_link:
@@ -3034,7 +3405,6 @@ class InvItemVirtualFields:
                     ]
 
     def total_value(self):
-        """ Year/Month of the start date of the training event """
         try:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
             # Need real numbers to use for Report calculations

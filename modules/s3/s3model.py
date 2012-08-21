@@ -179,7 +179,7 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def table(tablename, default=None):
+    def table(tablename, default=None, db_only=False):
         """
             Helper function to load a table definition by its name
         """
@@ -217,7 +217,7 @@ class S3Model(object):
                 [module.__dict__[n](prefix) for n in generic]
         if tablename in db:
             return db[tablename]
-        elif tablename in s3:
+        elif tablename in s3 and not db_only:
             return s3[tablename]
         elif isinstance(default, Exception):
             raise default
@@ -800,6 +800,8 @@ class S3Model(object):
                    sort=True,
                    filterby=None,
                    filter_opts=None,
+                   not_filterby=None,
+                   not_filter_opts=None,
                    groupby=None,
                    widget=None,
                    empty=True,
@@ -838,7 +840,9 @@ class S3Model(object):
                                  sort=sort,
                                  groupby=groupby,
                                  filterby=filterby,
-                                 filter_opts=filter_opts)
+                                 filter_opts=filter_opts,
+                                 not_filterby=not_filterby,
+                                 not_filter_opts=not_filter_opts,)
             if empty:
                 requires = IS_EMPTY_OR(requires)
 

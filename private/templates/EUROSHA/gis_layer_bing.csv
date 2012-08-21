@@ -1,0 +1,8 @@
+Name,Type,Config,Enabled
+Bing Aerial,aerial,Default,True
+Bing Aerial,aerial,Burundi,True
+Bing Aerial,aerial,CAR,True
+Bing Aerial,aerial,Chad,True
+Bing Aerial,aerial,Kenya,True
+Bing Hybrid,hybrid,,False
+Bing Road,road,,False

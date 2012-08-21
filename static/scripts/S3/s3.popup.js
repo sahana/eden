@@ -105,21 +105,29 @@ function s3_tb_refresh() {
     var dummy = self.parent.$('#dummy_' + caller);
     var has_dummy = (dummy.val() != undefined);
     s3_debug('has_dummy', has_dummy);
-    var options = self.parent.$('#' + caller + ' >option');
-    var dropdown = options.length;
-    /* S3SearchAutocompleteWidget should do something like this instead */
-    //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
-    //var has_dummy = (dummy.val() != undefined);
-    if (dropdown) {
+    var checkboxes = selector.hasClass('checkboxes-widget-s3');
+    if (checkboxes) {
+        // The number of columns
+        var cols = self.parent.$('#' + caller + ' tbody tr:first').children().length;
         var append = [];
     } else {
-        // Return only current record if field is autocomplete
-        url += '&only_last=1';
+        var options = self.parent.$('#' + caller + ' >option');
+        var dropdown = options.length;
+        /* S3SearchAutocompleteWidget should do something like this instead */
+        //var dummy = self.parent.$('input[name="item_id_search_simple_simple"]');
+        //var has_dummy = (dummy.val() != undefined);
+        if (dropdown) {
+            var append = [];
+        } else {
+            // Return only current record if field is autocomplete
+            url += '&only_last=1';
+        }
     }
     var value_high = 1;
     var represent_high = '';
     $.getJSONS3(url, function (data) {
-        var value, represent;
+        var value, represent, id;
+        var count = 0;
         $.each(data['option'], function() {
             value = this['@value'];
             represent = this['$'];
@@ -128,6 +136,10 @@ function s3_tb_refresh() {
             }
             if (dropdown) {
                 append.push(["<option value='", value, "'>", represent, "</option>"].join(''));
+            } else if (checkboxes) {
+                id = 'id_' + child_resource + '-' + count;
+                append.push(["<td><input id='", id, "' name='", child_resource, "' value='", value, "' type='checkbox'><label for='", id, "'>", represent, "</label></td>"].join(''));
+                count++;
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
             numeric_value = (+value)
@@ -142,10 +154,50 @@ function s3_tb_refresh() {
         }
         if (dropdown) {
             // We have been called next to a drop-down
+            // @ToDo: Read existing values for a multi-select
             // Clean up the caller
             options.remove();
             selector.append(append.join('')).change();
+            // Select the value we just added
             selector.val(value_high).change();
+        } else if (checkboxes) {
+            // We have been called next to a CheckboxesWidgetS3
+            // Read the current value(s)
+            var values = [];
+            self.parent.$('#' + caller + ' input').each(function(index) {
+                if ( $(this).prop('checked') ) {
+                    values.push($(this).val());
+                }
+            });
+            var output = [];
+            count = 0;
+            for ( var i = 0; i < append.length; i++ ) {
+                if (count == 0) {
+                    // Start the row
+                    output.push('<tr>');
+                    // Add a cell
+                    output.push(append[i]);
+                    count++;
+                } else if ( count == (cols - 1) ) {
+                    // Add a cell
+                    output.push(append[i]);
+                    // End the row
+                    output.push('</tr>');
+                    // Restart next time
+                    count = 0;
+                } else {
+                    // Add a cell
+                    output.push(append[i]);
+                    count++;
+                }
+            }
+            selector.html(output.join(''));
+            // Select the value we just added
+            values.push(value_high);
+            //selector.val(values).change();
+            for ( var i = 0; i < values.length; i++ ) {
+                self.parent.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
+            }
         }
 
         // IE6 needs time for DOM to settle: http://csharperimage.jeremylikness.com/2009/05/jquery-ie6-and-could-not-set-selected.html
@@ -166,9 +218,9 @@ function getQueryParams(qs) {
     var pairs = qs.split('&');
     var params = {};
     var check = [];
-    for( var i = 0; i < pairs.length; i++ ) {
-            check = pairs[i].split('=');
-            params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
-        }
+    for ( var i = 0; i < pairs.length; i++ ) {
+        check = pairs[i].split('=');
+        params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
+    }
     return params;
 }
