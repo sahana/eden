@@ -122,7 +122,7 @@ class S3SQLForm(object):
             # Default formstyle works best when we have no formatting
             formstyle = "table3cols"
         else:
-            formstyle = settings.formstyle
+            formstyle = lambda a, b, c, d: settings.formstyle(a, b, c, d)
 
         # Generate the form
         if record is None:
