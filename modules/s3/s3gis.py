@@ -2386,10 +2386,10 @@ class GIS(object):
         if "L1" in levels:
             if "L0" not in levels:
                 countries = db(cquery).select(ifield)
-            q = (table.level == "L1") & \
-                (table.deleted != True)
+            q1 = (table.level == "L1") & \
+                 (table.deleted != True)
             for country in countries:
-                query = q & (table.parent == country.id)
+                query = q1 & (table.parent == country.id)
                 features = []
                 append = features.append
                 rows = db(query).select(ifield,
@@ -2424,15 +2424,15 @@ class GIS(object):
         if "L2" in levels:
             if "L0" not in levels and "L1" not in levels:
                 countries = db(cquery).select(ifield)
-            q = (table.level == "L1") & \
-                (table.deleted != True)
+            q1 = (table.level == "L1") & \
+                 (table.deleted != True)
             for country in countries:
-                query = q & (table.parent == country.id)
+                query = q1 & (table.parent == country.id)
                 l1s = db(query).select(ifield)
-                q = (table.level == "L2") & \
-                    (table.deleted != True)
+                q2 = (table.level == "L2") & \
+                     (table.deleted != True)
                 for l1 in l1s:
-                    query = q & (table.parent == l1.id)
+                    query = q2 & (table.parent == l1.id)
                     features = []
                     append = features.append
                     rows = db(query).select(ifield,
@@ -4040,6 +4040,7 @@ class GIS(object):
                                                L4 is False:
             # Get the whole feature
             feature = db(table.id == id).select(table.name,
+                                                table.level,
                                                 table.parent,
                                                 table.path,
                                                 table.lat,
@@ -4181,7 +4182,10 @@ class GIS(object):
             Lx_lon = Lx.lon
         else:
             _path = id
-            L0_name = None
+            if feature.level == "L0":
+                L0_name = name
+            else:
+                L0_name = None
             L1_name = None
             L2_name = None
             L3_name = None

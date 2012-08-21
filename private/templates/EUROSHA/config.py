@@ -24,6 +24,20 @@ settings.base.system_name_short = T("EUROSHA")
 settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 settings.auth.registration_requires_approval = True
+# Uncomment this to request the Organisation when a user registers
+settings.auth.registration_requests_organisation = True
+
+settings.auth.role_modules = OrderedDict([
+        ("transport", "Airports and Seaports"),
+        ("hms", "Hospitals"),
+        ("org", "Organizations, Offices, and Facilities"),
+        ("inv", "Warehouses"),
+        ("staff", "Staff"),
+        ("vol", "Volunteers"),
+        ("project", "Projects"),
+        ("asset", "Assets"),
+        ("vehicle", "Vehicles"),
+    ])
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
