@@ -149,7 +149,7 @@ settings.modules = OrderedDict([
             name_nice = T("Map"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
-            module_type = 4,     # 4th item in the menu
+            module_type = 1,
         )),
     ("pr", Storage(
             name_nice = T("Person Registry"),
@@ -169,13 +169,13 @@ settings.modules = OrderedDict([
             name_nice = T("Staff"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 10,
+            module_type = 7,
         )),
     ("vol", Storage(
             name_nice = T("Volunteers"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 10,
+            module_type = 8,
         )),
     ("cms", Storage(
           name_nice = T("Content Management"),
@@ -206,32 +206,32 @@ settings.modules = OrderedDict([
             name_nice = T("Warehouses"),
             #description = "Receiving and Sending Items",
             restricted = True,
-            module_type = 10
+            module_type = 4
         )),
     ("asset", Storage(
             name_nice = T("Assets"),
             #description = "Recording and Assigning Assets",
             restricted = True,
-            module_type = 4,
+            module_type = 5,
         )),
     # Vehicle depends on Assets
     ("vehicle", Storage(
             name_nice = T("Vehicles"),
             #description = "Manage Vehicles",
             restricted = True,
-            module_type = 10,
+            module_type = 6,
         )),
     ("project", Storage(
             name_nice = T("Projects"),
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
-            module_type = 2
+            module_type = 9
         )),
     ("hms", Storage(
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
             restricted = True,
-            module_type = 10
+            module_type = 3
         )),
     ("transport", Storage(
            name_nice = T("Transport"),

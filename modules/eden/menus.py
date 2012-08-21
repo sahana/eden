@@ -81,7 +81,7 @@ class S3MainMenu(object):
         has_role = auth.s3_has_role
 
         # The Modules to display at the top level (in order)
-        for module_type in [1, 2, 3, 4, 5, 6]:
+        for module_type in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
             for module in all_modules:
                 if module in hidden_modules:
                     continue
