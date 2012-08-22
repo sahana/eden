@@ -742,7 +742,7 @@ class S3Resource(object):
                   no_ids=False,
                   format=None):
         """
-            Generate a data table from this resource
+            Generate a data table of this resource
 
             @todo: complete implementation
         """
@@ -780,6 +780,23 @@ class S3Resource(object):
             output = result
 
         return result
+
+    # -------------------------------------------------------------------------
+    def pivottable(self, rows, cols, layers):
+        """
+            Generate a pivot table of this resource.
+
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param layers: list of tuples (field selector, method) for
+                           the aggregation layers
+
+            @returns: an S3Pivottable instance
+
+            Supported methods: see S3Pivottable
+        """
+
+        return S3Pivottable(self, rows, cols, layers)
 
     # -------------------------------------------------------------------------
     def _select(self,
@@ -5020,6 +5037,511 @@ class S3ResourceFilter:
                 sub = q.serialize_url(resource=resource)
                 url_vars.update(sub)
         return url_vars
+
+# =============================================================================
+class S3Pivottable:
+    """ Class representing a pivot table of a resource """
+
+    #: Supported aggregation methods
+    METHODS = ["list", "count", "min", "max", "sum", "avg"] #, "std"]
+
+    def __init__(self, resource, rows, cols, layers):
+        """
+            Constructor
+
+            @param resource: the S3Resource
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param layers: list of tuples of (field selector, method)
+                           for the aggregation layers
+        """
+
+        # Initialize ----------------------------------------------------------
+        #
+        if not rows and not cols:
+            raise SyntaxError("No rows or columns specified for pivot table")
+
+        self.resource = resource
+
+        self.lfields = None
+        self.dfields = None
+        self.rfields = None
+
+        self.rows = rows
+        self.cols = cols
+        self.layers = layers
+
+        # API variables -------------------------------------------------------
+        #
+        self.records = None
+        """ All records in the pivot table as a Storage like:
+                {
+                 <record_id>: <Row>
+                }
+        """
+
+        self.empty = False
+        """ Empty-flag (True if no records could be found) """
+        self.numrows = None
+        """ The number of rows in the pivot table """
+        self.numcols = None
+        """ The number of columns in the pivot table """
+
+        self.cell = None
+        """ Array of pivot table cells in [rows[columns]]-order, each
+            cell is a Storage like:
+                {
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <aggregated_value>, ...per layer
+                }
+        """
+        self.row = None
+        """ List of row headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.col = None
+        """ List of column headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.totals = Storage()
+        """ The grand total values for each layer, as a Storage like:
+                {
+                 (<fact>, <method): <total value>, ...per layer
+                }
+        """
+
+        # Get the fields ------------------------------------------------------
+        #
+        s3db = current.s3db
+        tablename = resource.tablename
+        get_config = s3db.get_config
+
+        # The "report_fields" table setting defines which additional
+        # fields shall be included in the report base layer. This is
+        # useful to provide easy access to the record data behind a
+        # pivot table cell.
+        fields = get_config(tablename, "report_fields",
+                 get_config(tablename, "list_fields", []))
+
+        # We also want to include all rows/cols options which are
+        # defined for this resource
+        options = get_config(resource.tablename, "report_options")
+        if options is not None:
+            fields += report_options.get("rows", []) + \
+                      report_options.get("cols", [])
+
+        self._get_fields(fields=fields)
+
+        # Retrieve the records --------------------------------------------------
+        #
+        records = resource._select(self.dfields)
+
+        ## Generate the report -------------------------------------------------
+        ##
+        if records:
+            try:
+                pkey = resource.table._id
+                self.records = Storage([(i[pkey], i) for i in records])
+            except KeyError:
+                raise KeyError("Could not retrieve primary key values of %s" %
+                               resource.tablename)
+
+            # Generate the data frame -----------------------------------------
+            #
+            from pyvttbl import DataFrame
+            df = DataFrame()
+            insert = df.insert
+
+            item_list = []
+            seen = item_list.append
+
+            flatten = self._flatten
+            expand = self._expand
+
+            for row in records:
+                item = expand(flatten(row))
+                for i in item:
+                    if i not in item_list:
+                        seen(i)
+                        insert(i)
+
+            # Group the records -----------------------------------------------
+            #
+            tfields = self.tfields
+            hpkey = tfields[self.pkey]
+            hrows = self.rows and [tfields[self.rows]] or []
+            hcols = self.cols and [tfields[self.cols]] or []
+            pt = df.pivot(hpkey, hrows, hcols, aggregate="tolist")
+
+            # Initialize columns and rows -------------------------------------
+            #
+            if cols:
+                self.col = [Storage({"value": v != "__NONE__" and v or None})
+                            for v in [n[0][1] for n in pt.cnames]]
+                self.numcols = len(self.col)
+            else:
+                self.col = [Storage({"value": None})]
+                self.numcols = 1
+
+            if rows:
+                self.row = [Storage({"value": v != "__NONE__" and v or None})
+                            for v in [n[0][1] for n in pt.rnames]]
+                self.numrows = len(self.row)
+            else:
+                self.row = [Storage({"value": None})]
+                self.numrows = 1
+
+            # Add the layers --------------------------------------------------
+            #
+            add_layer = self._add_layer
+            layers = list(self.layers)
+            for f, m in self.layers:
+                add_layer(pt, f, m)
+
+        else:
+            # No items to report on -------------------------------------------
+            #
+            self.empty = True
+
+    # -------------------------------------------------------------------------
+    # API methods
+    # -------------------------------------------------------------------------
+    def __len__(self):
+        """ Total number of records in the report """
+
+        items = self.records
+        if items is None:
+            return 0
+        else:
+            return len(self.records)
+
+    # -------------------------------------------------------------------------
+    # Internal methods
+    # -------------------------------------------------------------------------
+    def _get_fields(self, fields=None):
+        """
+            Determine the fields needed to generate the report
+
+            @param fields: fields to include in the report (all fields)
+        """
+
+        resource = self.resource
+        table = resource.table
+
+        # Lambda to prefix all field selectors
+        alias = resource.alias
+        prefix = lambda s: "%s.%s" % (alias, s) \
+                           if "." not in s.split("$", 1)[0] else s
+
+        self.pkey = pkey = prefix(table._id.name)
+        self.rows = rows = self.rows and prefix(self.rows) or None
+        self.cols = cols = self.cols and prefix(self.cols) or None
+
+        if not fields:
+            fields = []
+
+        # dfields (data-fields): fields to generate the layers
+        dfields = [prefix(s) for s in fields]
+        if rows and rows not in dfields:
+            dfields.append(rows)
+        if cols and cols not in dfields:
+            dfields.append(cols)
+        if pkey not in dfields:
+            dfields.append(pkey)
+        for i in xrange(len(self.layers)):
+            f, m = self.layers[i]
+            s = prefix(f)
+            self.layers[i] = (s, m)
+            if s not in dfields:
+                dfields.append(f)
+        self.dfields = dfields
+
+        # rfields (resource-fields): dfields resolved into a ResourceFields map
+        rfields, joins, left, distinct = resource.resolve_selectors(dfields)
+        rfields = Storage([(f.selector, f) for f in rfields])
+        self.rfields = rfields
+
+        # tfields (transposition-fields): fields to group the records by
+        key = lambda s: str(hash(s)).replace("-", "_")
+        tfields = {pkey:key(pkey)}
+        if rows:
+            tfields[rows] = key(rows)
+        if cols:
+            tfields[cols] = key(cols)
+        self.tfields = tfields
+
+        return
+
+    # -------------------------------------------------------------------------
+    def _flatten(self, row):
+        """
+            Prepare a DAL Row for the data frame
+
+            The item must consist of
+            the primary key of the table, rows-value, cols-value
+
+            @param row: the row
+        """
+
+        item = {}
+        rfields = self.rfields
+        tfields = self.tfields
+
+        extract = lambda rf: S3FieldSelector.extract(self.resource, row, rf)
+        for f in tfields:
+            rfield = rfields[f]
+            value = extract(rfield)
+            if value is None and f != self.pkey:
+                value = "__NONE__"
+            if type(value) is str:
+                value = s3_unicode(value)
+            item[tfields[f]] = value
+        return item
+
+    # -------------------------------------------------------------------------
+    def _extract(self, row, field):
+        """
+            Extract a field value from a DAL row
+
+            @param row: the row
+            @param field: the fieldname (list_fields syntax)
+        """
+
+        rfields = self.rfields
+        if field not in rfields:
+            raise KeyError("Invalid field name: %s" % field)
+        lfield = rfields[field]
+        tname = lfield.tname
+        fname = lfield.fname
+        if fname in row:
+            value = row[fname]
+        elif tname in row and fname in row[tname]:
+            value = row[tname][fname]
+        else:
+            value = None
+        return value
+
+    # -------------------------------------------------------------------------
+    def _expand(self, row, field=None):
+        """
+            Expand a data frame row into a list of rows for list:type values
+
+            @param row: the row
+            @param field: the field to expand (None for all fields)
+        """
+
+        if field is None:
+            rows = [row]
+            for field in row:
+                rows = self._expand(rows, field=field)
+            return rows
+        else:
+            results = []
+            rows = row
+            for r in rows:
+                value = r[field]
+                if isinstance(value, (list, tuple)):
+                    if not len(value):
+                        # Always have at least a None-entry
+                        value.append(None)
+                    for v in value:
+                        result = Storage(r)
+                        result[field] = v
+                        results.append(result)
+                else:
+                    results.append(r)
+            return results
+
+    # -------------------------------------------------------------------------
+    def _add_layer(self, pt, fact, method):
+        """
+            Compute a new layer from the base layer (pt+items)
+
+            @param pt: the pivot table with record IDs
+            @param fact: the fact field for the layer
+            @param method: the aggregation method of the layer
+        """
+
+        if method not in self.METHODS:
+            raise SyntaxError("Unsupported aggregation method: %s" % method)
+
+        items = self.records
+        rfields = self.rfields
+        rows = self.row
+        cols = self.col
+        records = self.records
+        extract = self._extract
+        aggregate = self._aggregate
+        resource = self.resource
+
+        RECORDS = "records"
+        VALUES = "values"
+
+        table = resource.table
+        pkey = table._id.name
+
+        if method is None:
+            method = "list"
+        layer = (fact, method)
+
+        numcols = len(pt.cnames)
+        numrows = len(pt.rnames)
+
+        # Initialize cells
+        if self.cell is None:
+            self.cell = [[Storage()
+                          for i in xrange(numcols)]
+                         for j in xrange(numrows)]
+        cells = self.cell
+
+        all_values = []
+        for r in xrange(numrows):
+
+            # Initialize row header
+            row = rows[r]
+            row[RECORDS] = []
+            row[VALUES] = []
+
+            row_records = row[RECORDS]
+            row_values = row[VALUES]
+
+            for c in xrange(numcols):
+
+                # Initialize column header
+                col = cols[c]
+                if RECORDS not in col:
+                    col[RECORDS] = []
+                col_records = col[RECORDS]
+                if VALUES not in col:
+                    col[VALUES] = []
+                col_values = col[VALUES]
+
+                # Get the records
+                cell = cells[r][c]
+                if RECORDS in cell and cell[RECORDS] is not None:
+                    ids = cell[RECORDS]
+                else:
+                    data = pt[r][c]
+                    if data:
+                        remove = data.remove
+                        while None in data:
+                            remove(None)
+                        ids = data
+                    else:
+                        ids = []
+                    cell[RECORDS] = ids
+                row_records.extend(ids)
+                col_records.extend(ids)
+
+                # Get the values
+                if fact is None:
+                    fact = pkey
+                    values = ids
+                    row_values = row_records
+                    col_values = row_records
+                    all_values = self.records.keys()
+                else:
+                    values = []
+                    append = values.append
+                    for i in ids:
+                        value = extract(records[i], fact)
+                        if value is None:
+                            continue
+                        append(value)
+                    if len(values) and type(values[0]) is list:
+                        values = reduce(lambda x, y: x.extend(y) or x, values)
+                    if method in ("list", "count"):
+                        values =  list(set(values))
+                    row_values.extend(values)
+                    col_values.extend(values)
+                    all_values.extend(values)
+
+                # Aggregate values
+                value = aggregate(values, method)
+                cell[layer] = value
+
+            # Compute row total
+            row[layer] = aggregate(row_values, method)
+            del row[VALUES]
+
+        # Compute column total
+        for c in xrange(numcols):
+            col = cols[c]
+            col[layer] = aggregate(col[VALUES], method)
+            del col[VALUES]
+
+        # Compute overall total
+        self.totals[layer] = aggregate(all_values, method)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _aggregate(values, method):
+        """
+            Compute an aggregation of atomic values
+
+            @param values: the values
+            @param method: the aggregation method
+        """
+
+        if values is None:
+            return None
+
+        if method is None or method == "list":
+            if values:
+                return values
+            else:
+                return None
+
+        elif method == "count":
+            return len(values)
+
+        elif method == "min":
+            try:
+                return min(values)
+            except TypeError:
+                return None
+
+        elif method == "max":
+            try:
+                return max(values)
+            except TypeError, ValueError:
+                return None
+
+        elif method == "sum":
+            try:
+                return sum(values)
+            except TypeError, ValueError:
+                return None
+
+        elif method in ("avg"):
+            try:
+                if len(values):
+                    return sum(values) / float(len(values))
+                else:
+                    return 0.0
+            except TypeError, ValueError:
+                return None
+
+        #elif method == "std":
+            #import numpy
+            #if not values:
+                #return 0.0
+            #try:
+                #return numpy.std(values)
+            #except TypeError, ValueError:
+                #return None
+
+        else:
+            return None
 
 # =============================================================================
 # Utility classes - move?
