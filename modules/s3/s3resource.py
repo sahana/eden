@@ -5135,8 +5135,7 @@ class S3Pivottable:
         # defined for this resource
         options = get_config(resource.tablename, "report_options")
         if options is not None:
-            fields += report_options.get("rows", []) + \
-                      report_options.get("cols", [])
+            fields += options.get("rows", []) + options.get("cols", [])
 
         self._get_fields(fields=fields)
 
@@ -5238,8 +5237,11 @@ class S3Pivottable:
 
         # Lambda to prefix all field selectors
         alias = resource.alias
-        prefix = lambda s: "%s.%s" % (alias, s) \
-                           if "." not in s.split("$", 1)[0] else s
+        def prefix(s):
+            if isinstance(s, (tuple, list)):
+                return prefix(s[-1])
+            return "%s.%s" % (alias, s) \
+                   if "." not in s.split("$", 1)[0] else s
 
         self.pkey = pkey = prefix(table._id.name)
         self.rows = rows = self.rows and prefix(self.rows) or None
