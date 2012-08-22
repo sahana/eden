@@ -251,7 +251,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("barchart", s3_barchart)
     r.set_handler("compose", s3base.S3Compose())
     r.set_handler("copy", s3_copy)
-    r.set_handler("report", s3base.S3Cube())
+    r.set_handler("report", s3base.S3Report())
     r.set_handler("import", s3base.S3Importer())
     r.set_handler("map", s3base.S3Map())
 
