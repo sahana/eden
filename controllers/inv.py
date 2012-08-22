@@ -26,6 +26,202 @@ def index():
 
     module_name = settings.modules[module].name_nice
     response.title = module_name
+    if s3.debug:
+        # Start of TEST CODE for multiple dataTables,
+        #this also required views/inv/index.html to be modified
+        from s3.s3utils import S3DataTable
+        request = current.request
+        if request.extension == "html" or request.vars.id == "warehouse_list_1":
+            resource = current.manager.define_resource("inv", "warehouse")
+            list_fields = ["id",
+                           "name",
+                           "organisation_id",
+                           ]
+            limit = 6 if request.extension == "aaData" else 1
+            rows = resource._select(list_fields,
+                                    orderby="organisation_id",
+                                    start=0,
+                                    limit=limit,
+                                    )
+            data = resource._extract(rows,
+                                     list_fields,
+                                     represent=True,
+                                     )
+            rfields = resource.resolve_selectors(list_fields)[0]
+            dt = S3DataTable(rfields, data)
+            dt.defaultActionButtons(resource)
+            if request.extension == "html":
+                warehouses = dt.html("warehouse_list_1",
+                                     dt_bFilter="true",
+                                     dt_group=2,
+                                     dt_ajax_url=URL(c="inv",
+                                                  f="index",
+                                                  extension="aaData",
+                                                  vars={"id":"warehouse_list_1"},
+                                                  ),
+                                     dt_text_maximum_len = 16,
+                                     dt_text_condense_len = 12,
+                                     )
+            else:
+                warehouse = dt.json("warehouse_list_1",
+                                    int(request.vars.sEcho),
+                                    6,
+                                    6,
+                                    )
+                return warehouse
+        # Second Table
+        if request.extension == "html" or request.vars.id == "inventory_list_1":
+            if "Adjust" in request.post_vars:
+                if request.post_vars.selected == "":
+                    inventory = "Well you could have selected something :("
+                else:
+                    inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
+            else:
+                resource = current.manager.define_resource("inv", "inv_item")
+                table = resource.table
+                stable = s3db.supply_item
+                list_fields = ["id",
+                               "site_id",
+                               "item_id$name",
+                               "quantity",
+                               "pack_value",
+                               "total_value",
+                               ]
+                rfields = resource.resolve_selectors(list_fields)[0]
+                (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+                resource.add_filter(filter)
+                if isinstance(orderby, bool):
+                    orderby = table.site_id | stable.name | ~table.quantity
+                try:
+                    limit = int(current.request.get_vars["iDisplayLength"])
+                except:
+                    limit = 1
+                rows = resource._select(list_fields,
+                                        orderby=orderby,
+                                        start=0,
+                                        limit=limit,
+                                        )
+                data = resource._extract(rows,
+                                         list_fields,
+                                         represent=True,
+                                         )
+                dt = S3DataTable(rfields,
+                                 data,
+                                 orderby=orderby,
+                                 )
+                custom_actions = [dict(label=str("Warehouse"),
+                                  _class="action-icon",
+                                  icon="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
+                                  url=URL(c="inv", f="warehouse",
+                                          args=["[id]", "update"]
+                                          )
+                                  ),
+                                 ]
+                dt.defaultActionButtons(resource, custom_actions)
+                if request.extension == "html":
+                    rows = current.db(table.quantity<100.0).select(table.id, table.quantity)
+                    errorList = []
+                    warningList = []
+                    alertList = []
+                    for row in rows:
+                        if row.quantity < 0.0:
+                            errorList.append(row.id)
+                        elif row.quantity == 0.0:
+                            warningList.append(row.id)
+                        else:
+                            alertList.append(row.id)
+                    inventory = dt.html("inventory_list_1",
+                                        dt_bFilter="true",
+                                        dt_group=1,
+                                        dt_action_col=-1,
+                                        dt_ajax_url=URL(c="inv",
+                                                     f="index",
+                                                     extension="aaData",
+                                                     vars={"id":"inventory_list_1"},
+                                                     ),
+                                        dt_bulk_actions = "Adjust",
+                                        dt_styles = {"dtdisable": errorList,
+                                                     "dtwarning": warningList,
+                                                     "dtalert": alertList,
+                                                     },
+                                        dt_text_maximum_len = 10,
+                                        dt_text_condense_len = 8,
+                                        dt_shrink_groups = "true",
+                                        )
+                    
+                    current.response.s3.actions = None
+                elif request.extension == "aaData":
+                    inventory = dt.json("inventory_list_1",
+                                        int(request.vars.sEcho),
+                                        42,
+                                        42,
+                                        dt_action_col=-1,
+                                        dt_bulk_actions = "Adjust",
+                                        )
+                    return inventory
+                else:
+                    # Probably not the way to do it.... but
+                    s3db.configure("inv_inv_item",
+                                   list_fields=list_fields,
+                                   report_groupby="site_id",
+                                   pdf_groupby="site_id",
+                                   )
+                    current.response.s3.filter = filter
+                    r = s3mgr.parse_request("inv", "inv_item", vars={"orderby" : orderby})
+                    r.resource = resource
+                    output = r(
+                               pdf_groupby='site_id',
+                               dt_group=1,
+                               )
+                    return output
+        # Third table
+        if request.extension == "html" or request.vars.id == "supply_list_1":
+            resource = current.manager.define_resource("supply", "item")
+            list_fields = ["id",
+                           "name",
+                           "um",
+                           "model",
+                           ]
+            limit = 11 if request.extension == "aaData" else 1
+            rows = resource._select(list_fields,
+                                    start=0,
+                                    limit=limit,
+                                    )
+            data = resource._extract(rows,
+                                     list_fields,
+                                     represent=True,
+                                     )
+            rfields = resource.resolve_selectors(list_fields)[0]
+            dt = S3DataTable(rfields, data)
+            dt.defaultActionButtons(resource)
+            if request.extension == "html":
+                supply_items = dt.html("supply_list_1",
+                                       dt_displayLength=10,
+                                       dt_action_col=1,
+                                       dt_ajax_url=URL(c="inv",
+                                                    f="index",
+                                                    extension="aaData",
+                                                    vars={"id":"supply_list_1"},
+                                                    ),
+                                       dt_text_maximum_len = 16,
+                                       dt_text_condense_len = 12,
+                                       )
+            else:
+                supply_items = dt.json("supply_list_1",
+                                    int(request.vars.sEcho),
+                                    11,
+                                    11,
+                                    dt_action_col=1,
+                                    )
+                return supply_items
+        r = current.manager.parse_request(prefix = "inv", name = "inv_item")
+        return dict(module_name=module_name,
+                    warehouses = warehouses,
+                    inventory = inventory,
+                    supply_items = supply_items,
+                    r = r,
+                    )
+        # End of TEST CODE
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------

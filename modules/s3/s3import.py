@@ -824,8 +824,9 @@ class S3Importer(S3CRUD):
         """
 
         s3 = current.response.s3
+        T = current.T
 
-        represent = {"element" : self._item_element_represent}
+        represent = {"s3_import_item.element" : self._item_element_represent}
         self._use_import_item_table(job_id)
 
         # Add a filter to the dataTable query
@@ -843,11 +844,18 @@ class S3Importer(S3CRUD):
                 error_list.append(str(row.id))
             else:
                 select_list.append("%s" % row.id)
-        select_id = ",".join(select_list)
 
+        s3.actions = [
+                        dict(label= str(self.messages.item_show_details),
+                             _class="action-btn",
+                             _jqclick="$('.importItem.'+id).toggle();",
+                             ),
+                      ]
         output = self._dataTable(["id", "element", "error"],
                                  sort_by = [[1, "asc"]],
-                                 represent=represent)
+                                 represent=represent,
+                                 ajax_item_id=upload_id,
+                                 dt_bulk_select = select_list)
 
         self._use_controller_table()
 
@@ -857,25 +865,10 @@ class S3Importer(S3CRUD):
         # Highlight rows in error in red
         s3.dataTableStyleWarning = error_list
 
-        s3.dataTableSelectable = True
-        s3.dataTablePostMethod = True
-        table = output["items"]
+        form = output["items"]
         job = INPUT(_type="hidden", _id="importUploadID", _name="job",
                     _value="%s" % upload_id)
-        mode = INPUT(_type="hidden", _id="importMode", _name="mode",
-                     _value="Inclusive")
-        # only select the rows with no errors
-        selected = INPUT(_type="hidden", _id="importSelected",
-                         _name="selected", _value="[%s]" % select_id)
-        form = FORM(table, job, mode, selected)
-        output["items"] = form
-        s3.dataTableSelectSubmitURL = "import?job=%s&" % upload_id
-        s3.actions = [
-                        dict(label= str(self.messages.item_show_details),
-                             _class="action-btn",
-                             _jqclick="$('.importItem.'+id).toggle();",
-                             ),
-                      ]
+        form.append(job)
         return output
 
     # -------------------------------------------------------------------------
@@ -1177,9 +1170,11 @@ class S3Importer(S3CRUD):
 
     # -------------------------------------------------------------------------
     def _dataTable(self,
-                   list_fields = [],
+                   list_fields,
                    sort_by = [[1, "asc"]],
                    represent={},
+                   ajax_item_id=None,
+                   dt_bulk_select=[],
                   ):
         """
             Method to get the data for the dataTable
@@ -1191,6 +1186,7 @@ class S3Importer(S3CRUD):
             @param sort_by: list of sort by columns
             @param represent: a dict of field callback functions used
                               to change how the data will be displayed
+                              keyed on the field identifier
 
             @return: a dict()
                In html representations this will be a table of the data
@@ -1205,180 +1201,73 @@ class S3Importer(S3CRUD):
                NOTE: limit - totalDisplayRecords = total cached
         """
 
-        # ********************************************************************
-        # Common tasks
-        # ********************************************************************
-        db = current.db
-        session = current.session
+        from s3.s3utils import S3DataTable
         request = self.request
-        response = current.response
         resource = self.resource
-        s3 = response.s3
-        representation = request.representation
-        table = self.table
-        tablename = self.tablename
-        vars = request.get_vars
-        output = dict()
-
-        # Check permission to read this table
-        authorised = self.permit("read", tablename)
-        if not authorised:
-            request.unauthorised()
-
-        # List of fields to select from
-        # fields is a list of Field objects
-        # list_field is a string list of field names
-        if list_fields == []:
-            fields = resource.readable_fields()
-        else:
-            fields = [table[f] for f in list_fields if f in table.fields]
-        if not fields:
-            fields = []
-
-        # attach any represent callbacks
-        for f in fields:
-            if f.name in represent:
-                f.represent = represent[f.name]
-
-        # Make sure that we have the table id as the first column
-        if fields[0].name != table.fields[0]:
-            fields.insert(0, table[table.fields[0]])
-
-        list_fields = [f.name for f in fields]
-
+        s3 = current.response.s3
         # Filter
         if s3.filter is not None:
             self.resource.add_filter(s3.filter)
 
-        # ********************************************************************
-        # ajax call
-        # ********************************************************************
+        representation = self.request.representation
         if representation == "aadata":
+            vars = request.get_vars
             start = vars.get("iDisplayStart", None)
             limit = vars.get("iDisplayLength", None)
-            if limit is not None:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = None # use default
-            else:
-                start = None # use default
-            # Using the sort variables sent from dataTables
-            if vars.iSortingCols:
-                orderby = self.ssp_orderby(resource, list_fields)
-
-            # Echo
             sEcho = int(vars.sEcho or 0)
-
-            # Get the list
-            items = resource.sqltable(fields=list_fields,
-                                      start=start,
-                                      limit=limit,
-                                      orderby=orderby,
-                                      download_url=self.download_url,
-                                      as_page=True) or []
-            # Ugly hack to change any occurrence of [id] with the true id
-            # Needed because the represent doesn't know the id
-            for i in range(len(items)):
-                id = items[i][0]
-                for j in range(len(items[i])):
-                    new = items[i][j].replace("[id]",id)
-                    items[i][j] = new
-            totalrows = self.resource.count()
-            result = dict(sEcho = sEcho,
-                          iTotalRecords = totalrows,
-                          iTotalDisplayRecords = totalrows,
-                          aaData = items)
-
-            output = jsons(result)
-
-        # ********************************************************************
-        # html 'initial' call
-        # ********************************************************************
         else: # catch all
             start = 0
             limit = 1
-            # Sort by
-            vars["iSortingCols"] = len(sort_by)
-
-            # generate the dataTables.js variables for sorting
-            index = 0
-            for col in sort_by:
-                colName = "iSortCol_%s" % str(index)
-                colValue = col[0]
-                dirnName = "sSortDir_%s" % str(index)
-                if len(col) > 1:
-                    dirnValue = col[1]
-                else:
-                    dirnValue = "asc"
-                vars[colName] = colValue
-                vars[dirnName] = dirnValue
-            # Now using these sort variables generate the order by statement
-            orderby = self.ssp_orderby(resource, list_fields)
-
-            del vars["iSortingCols"]
-            for col in sort_by:
-                del vars["iSortCol_%s" % str(index)]
-                del vars["sSortDir_%s" % str(index)]
-
-            # Get the first row for a quick up load
-            items = resource.sqltable(fields=list_fields,
-                                      start=start,
-                                      limit=1,
-                                      orderby=orderby,
-                                      download_url=self.download_url)
-            totalrows = resource.count()
-            if items:
-                if totalrows:
-                    if s3.dataTable_iDisplayLength:
-                        limit = 2 * s3.dataTable_iDisplayLength
-                    else:
-                        limit = 50
-                # Add a test on the first call here:
-                # Now get the limit rows for ajax style update of table
-                sqltable = resource.sqltable(fields=list_fields,
-                                             start=start,
-                                             limit=limit,
-                                             orderby=orderby,
-                                             download_url=self.download_url,
-                                             as_page=True)
-                aadata = dict(aaData = sqltable or [])
-                # Ugly hack to change any occurrence of [id] with the true id
-                # Needed because the represent doesn't know the id
-                for i in range(len(aadata["aaData"])):
-                    id = aadata["aaData"][i][0]
-                    for j in range(len(aadata["aaData"][i])):
-                        new = aadata["aaData"][i][j].replace("[id]",id)
-                        aadata["aaData"][i][j] = new
-
-                aadata.update(iTotalRecords=totalrows,
-                              iTotalDisplayRecords=totalrows)
-                response.aadata = jsons(aadata)
-                s3.start = 0
-                s3.limit = limit
-            else: # No items in database
-                # s3import tables don't have a delete field but kept for the record
-                if "deleted" in table:
-                    available_records = db(table.deleted == False)
-                else:
-                    available_records = db(table.id > 0)
-                # check for any records on an unfiltered table
-                if available_records.select(table.id,
-                                            limitby=(0, 1)).first():
-                    items = self.crud_string(tablename, "msg_no_match")
-                else:
-                    items = self.crud_string(tablename, "msg_list_empty")
-
-            output.update(items=items, sortby=sort_by)
-            # Value to be added to the dataTable ajax call
-            s3.dataTable_Method = "import"
-
-        return output
+        if limit is not None:
+            try:
+                start = int(start)
+                limit = int(limit)
+            except ValueError:
+                start = None
+                limit = None # use default
+        else:
+            start = None # use default
+        rows = resource._select(list_fields,
+                                start=start,
+                                limit=limit,
+                                )
+        data = resource._extract(rows,
+                                 list_fields,
+                                 )
+        # put each value through the represent function
+        for row in data:
+            for (key, value) in row.items():
+                if key in represent:
+                    row[key] = represent[key](row["s3_import_item.id"], value);
+        rfields = resource.resolve_selectors(list_fields)[0]
+        dt = S3DataTable(rfields, data)
+        id = "s3import_1"
+        if representation == "aadata":
+            totalrows = self.resource.count()
+            return dt.json(id,
+                           sEcho,
+                           totalrows,
+                           totalrows,
+                           dt_bulk_actions = [current.T("Import")],
+                           )
+        else:
+            output = dict()
+            url = "/%s/%s/%s/import.aaData?job=%s" % (request.application,
+                                                      request.controller,
+                                                      request.function,
+                                                      ajax_item_id
+                                                      )
+            items =  dt.html(id,
+                            dt_ajax_url=url,
+                            dt_bulk_actions = [current.T("Import")],
+                            dt_bulk_selected = dt_bulk_select,
+                            )
+            current.response.s3.dataTableID = ["s3import_1"]
+            output.update(items=items)
+            return output
 
     # -------------------------------------------------------------------------
-    def _item_element_represent(self, value):
+    def _item_element_represent(self, id, value):
         """
             Represent the element in an import item for dataTable display
 
@@ -1399,7 +1288,7 @@ class S3Importer(S3CRUD):
         table = current.db[tablename]
 
         output = DIV()
-        details = TABLE(_class="importItem [id]")
+        details = TABLE(_class="importItem %s" % id)
         header, rows = self._add_item_details(element.findall("data"), table)
         if header is not None:
             output.append(header)
@@ -1421,7 +1310,7 @@ class S3Importer(S3CRUD):
             # At this stage we don't have anything to display to see if we can
             # find something to show. This could be the case when a table being
             # imported is a resolver for a many to many relationship
-            refdetail = TABLE(_class="importItem [id]")
+            refdetail = TABLE(_class="importItem %s" % id)
             references = element.findall("reference")
             for reference in references:
                 tuid = reference.get("tuid")
@@ -1550,7 +1439,7 @@ class S3Importer(S3CRUD):
         if "mode" in vars:
             mode = vars["mode"]
             if "selected" in vars:
-                selected = vars["selected"].split(",")
+                selected = vars["selected"]
             else:
                 selected = []
             if mode == "Inclusive":
@@ -1616,6 +1505,7 @@ class S3Importer(S3CRUD):
 
         if self.item_resource == None:
             from s3resource import S3Resource
+            self.table = S3ImportJob.define_item_table()
             (prefix, name) = S3ImportJob.ITEM_TABLE_NAME.split("_",1)
             self.item_resource = S3Resource(prefix, name)
         self.resource = self.item_resource

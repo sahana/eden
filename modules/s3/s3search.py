@@ -1190,6 +1190,7 @@ class S3Search(S3CRUD):
             @param attr: request parameters
         """
 
+        from s3.s3utils import S3DataTable
         # Get environment
         T = current.T
         session = current.session
@@ -1382,9 +1383,6 @@ class S3Search(S3CRUD):
         elif not items:
             items = self.crud_string(tablename, "msg_no_match")
 
-        output["items"] = items
-        output["sortby"] = sortby
-
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
@@ -1398,21 +1396,21 @@ class S3Search(S3CRUD):
             else:
                 link = sep = ""
 
-            list_formats = DIV(link, sep,
-                               "%s: " % T("Export to"),
-                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
-                                 _title=T("Export in PDF format"),
-                                 _href=r.url(method="", representation="pdf",
-                                             vars=filter)),
-                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
-                                 _title=T("Export in XLS format"),
-                                 _href=r.url(method="", representation="xls",
-                                             vars=filter)),
-                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
-                                 _title=T("Export in RSS format"),
-                                 _href=r.url(method="", representation="rss",
-                                             vars=filter)),
-                               _id="list_formats")
+#            list_formats = DIV(link, sep,
+#                               "%s: " % T("Export to"),
+#                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
+#                                 _title=T("Export in PDF format"),
+#                                 _href=r.url(method="", representation="pdf",
+#                                             vars=filter)),
+#                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
+#                                 _title=T("Export in XLS format"),
+#                                 _href=r.url(method="", representation="xls",
+#                                             vars=filter)),
+#                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
+#                                 _title=T("Export in RSS format"),
+#                                 _href=r.url(method="", representation="rss",
+#                                             vars=filter)),
+#                               _id="list_formats")
             tabs = []
 
             if "location_id" in table or \
@@ -1421,12 +1419,12 @@ class S3Search(S3CRUD):
                 # (this same map is also used by the Map Search Widget, if-present)
                 tabs.append((T("Map"), "map"))
                 app = request.application
-                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
-                                      _title=T("Export in KML format"),
-                                      _href=r.url(method="",
-                                                  representation="kml",
-                                                  vars=filter)),
-                                    )
+#                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
+#                                      _title=T("Export in KML format"),
+#                                      _href=r.url(method="",
+#                                                  representation="kml",
+#                                                  vars=filter)),
+#                                    )
                 # Build URL to load the features onto the map
                 if query:
                     vars = query.serialize_url(resource=resource)
@@ -1468,13 +1466,23 @@ class S3Search(S3CRUD):
             list_formats = ""
             tabs = []
 
+        attr = S3DataTable.getConfigData()
+        items = S3DataTable.htmlConfig(items,
+                                       "list",
+                                       sortby, # order by
+                                       "", # the filter string
+                                       None, # the rfields
+                                       **attr
+                                       )
+        output["items"] = items
+        output["sortby"] = sortby
 
         # Search Tabs
         search_tabs = s3_search_tabs(r, tabs)
         output["search_tabs"] = search_tabs
 
         # List Formats
-        output["list_formats"] = list_formats
+#        output["list_formats"] = list_formats
 
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
@@ -2503,7 +2511,7 @@ class S3HRSearch(S3Search):
                       "person_id$first_name",
                       "person_id$middle_name",
                       "person_id$last_name",
-                      "job_title_id$name",
+                      "job_role_id$name",
                       ]
             show_orgs = current.deployment_settings.get_hrm_show_organisation()
             if show_orgs:
@@ -2522,7 +2530,7 @@ class S3HRSearch(S3Search):
                             "middle" : row["pr_person"].middle_name or "",
                             "last"   : row["pr_person"].last_name or "",
                             "org"    : row["org_organisation"].name if show_orgs else "",
-                            "job"    : row["hrm_job_title"].name or "",
+                            "job"    : row["hrm_job_role"].name or "",
                         } for row in rows ]
             else:
                 items = []

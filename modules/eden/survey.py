@@ -755,6 +755,7 @@ def survey_build_template_summary(template_id):
     """
     """
 
+    from s3.s3utils import S3DataTable
     T = current.T
 
     table = TABLE(_id="template_summary",
@@ -814,12 +815,20 @@ def survey_build_template_summary(template_id):
     table.append(body)
     table.append(foot)
 
-    s3 = current.response.s3
     # Turn off server side pagination
+    s3 = current.response.s3
     s3.no_sspag = True
-    # Send the id of the table
-    s3.dataTableID = "template_summary"
-    return table
+
+    s3.dataTableID = None
+    attr = S3DataTable.getConfigData()
+    form = S3DataTable.htmlConfig(table,
+                                  "template_summary",
+                                  [[0, 'asc']], # order by
+                                  "", # the filter string
+                                  None, # the rfields
+                                  **attr
+                                  )
+    return form
 
 # =============================================================================
 class S3QuestionModel(S3Model):
@@ -1785,7 +1794,7 @@ class S3SeriesModel(S3Model):
             output["title"] = crud_strings.title_analysis_summary
             output["subtitle"] = crud_strings.subtitle_analysis_summary
             output["help"] = crud_strings.help_analysis_summary
-            s3.dataTableSubmitLabelPosn = "top"
+            s3.dataTableBulkActionPosn = "top"
             s3.actions = None
         current.response.view = "survey/series_summary.html"
         return output
@@ -2485,11 +2494,13 @@ def buildSeriesSummary(series_id, posn_offset):
     """
     """
 
+    from s3.s3utils import S3DataTable
     T = current.T
 
     table = TABLE(_id="series_summary",
                   _class="dataTable display")
-    hr = TR(TH(T("Position")),
+    hr = TR(TH(""), # Bulk action column
+            TH(T("Position")),
             TH(T("Question")),
             TH(T("Type")),
             TH(T("Summary"))
@@ -2505,7 +2516,12 @@ def buildSeriesSummary(series_id, posn_offset):
         question_id = question["qstn_id"]
         widgetObj = survey_getWidgetFromQuestion(question_id)
         br = TR()
-        br.append(int(question["posn"])+posn_offset) # add an offset to make all id's +ve
+        posn = int(question["posn"])+posn_offset
+        br.append(TD(INPUT(_id="select%s" % posn,
+                           _type="checkbox",
+                           _class="bulkcheckbox",
+                           )))
+        br.append(posn) # add an offset to make all id's +ve
         br.append(widgetObj.fullName())
         #br.append(question["name"])
         type = widgetObj.type_represent()
@@ -2530,19 +2546,20 @@ def buildSeriesSummary(series_id, posn_offset):
     s3 = current.response.s3
     # Turn off server side pagination
     s3.no_sspag = True
-    # Send the id of the table
-    s3.dataTableID = "series_summary"
     # Turn multi-select on
-    s3.dataTableSelectable = True
-    s3.dataTablePostMethod = True
-    s3.dataTableSubmitLabel = current.T("Display Selected Questions")
+    s3.dataTableBulkActions = [current.T("Display Selected Questions")]
+
+    attr = S3DataTable.getConfigData()
+    form = S3DataTable.htmlConfig(table,
+                                  "series_summary",
+                                  [[0, 'asc']], # order by
+                                  "", # the filter string
+                                  None, # the rfields
+                                  **attr
+                                  )
     series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
                 _value="%s" % series_id)
-    mode = INPUT(_type="hidden", _id="importMode", _name="mode",
-                 _value="Inclusive")
-    selected = INPUT(_type="hidden", _id="importSelected",
-                     _name="selected", _value="")
-    form = FORM(table, series, mode, selected)
+    form.append(series)
     return form
 
 # =============================================================================
@@ -3083,12 +3100,18 @@ def buildTableFromCompletedList(dataSource):
 
     table.append(header)
     table.append(body)
-    s3 = current.response.s3
     # Turn off server side pagination
-    s3.no_sspag = True
-    # Send the id of the table
-    s3.dataTableID = "completed_list"
-    return table
+    current.response.s3.no_sspag = True
+
+    attr = S3DataTable.getConfigData()
+    form = S3DataTable.htmlConfig(table,
+                                  "completed_list",
+                                  [[0, 'asc']], # order by
+                                  "", # the filter string
+                                  None, # the rfields
+                                  **attr
+                                  )
+    return form
 
 # =============================================================================
 def buildCompletedList(series_id, question_id_list):
