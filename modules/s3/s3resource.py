@@ -5054,22 +5054,6 @@ class S3Pivottable:
             @param cols: field selector for the columns dimension
             @param layers: list of tuples of (field selector, method)
                            for the aggregation layers
-
-            @ivar cell: array of pivot table cells, each cell is a Storage with
-                        {records: <list_of_record_ids_grouped_into_this_cell>,
-                         (<fact>, <method>):<aggregated_value>, ...per layer}
-            @ivar row: array of row headers, each header is a Storage with
-                       {records: <list_of_record_ids_grouped_into_this_row>,
-                        value: <dimension_value_for_this_row}
-            @ivar col: array of column headers, each header is a Storage with
-                       {records: <list_of_record_ids_grouped_into_this_column>,
-                        value: <dimension_value_for_this_column}
-            @ivar numrows: the number of rows in the pivot table
-            @ivar numcols: the number of columns in the pivot table
-            @ivar totals: the grand total values for each layer, as Storage
-                          {(<fact>, <method): <value>}
-            @ivar records: all records in the pivot table as Storage
-                           {<record_id>: <Row>}
         """
 
         # Initialize ----------------------------------------------------------
@@ -5087,18 +5071,52 @@ class S3Pivottable:
         self.cols = cols
         self.layers = layers
 
-        # API variables:
+        # API variables -------------------------------------------------------
+        #
         self.records = None
+        """ All records in the pivot table as a Storage like:
+                {
+                 <record_id>: <Row>
+                }
+        """
+
         self.empty = False
-
-        self.cell = None #: the cell array
-
+        """ Empty-flag (True if no records could be found) """
         self.numrows = None
+        """ The number of rows in the pivot table """
         self.numcols = None
+        """ The number of columns in the pivot table """
 
-        self.row = None #: row headers, records and totals
-        self.col = None #: column headers, records and totals
-        self.totals = Storage() #: grand total per layer
+        self.cell = None
+        """ Array of pivot table cells in [rows[columns]]-order, each
+            cell is a Storage like:
+                {
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <aggregated_value>, ...per layer
+                }
+        """
+        self.row = None
+        """ List of row headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.col = None
+        """ List of column headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.totals = Storage()
+        """ The grand total values for each layer, as a Storage like:
+                {
+                 (<fact>, <method): <total value>, ...per layer
+                }
+        """
 
         # Get the fields ------------------------------------------------------
         #
