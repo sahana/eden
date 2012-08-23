@@ -455,6 +455,7 @@ def organisation():
                              )
     dt = S3DataTable(rfields, data)
     dt.defaultActionButtons(resource)
+    response.s3.no_formats = True
     if request.extension == "html":
         items = dt.html("org_list_1",
                         dt_displayLength=10,
@@ -464,13 +465,19 @@ def organisation():
                                         vars={"id":"org_list_1"},
                                         ),
                        )
-    else:
+    elif request.extension.lower() == "aadata":
         limit = resource.count()
+        if "sEcho" in request.vars:
+            echo = int(request.vars.sEcho)
+        else:
+            echo = None
         items = dt.json("supply_list_1",
-                            int(request.vars.sEcho),
+                            echo,
                             limit,
                             limit,
                             )
+    else:
+        raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
     return items
 #    table = db.org_organisation
 #    table.id.label = T("Organization")

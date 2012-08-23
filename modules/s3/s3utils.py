@@ -2932,7 +2932,8 @@ class S3DataTable(object):
         config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
         # Wrap the table in a form and add some data in hidden fields
         form = FORM()
-        form.append (S3DataTable.listFormats(id, rfields))
+        if not s3.no_formats:
+            form.append (S3DataTable.listFormats(id, rfields))
         form.append (html)
         form.append(INPUT(_type="hidden",
                           _id="%s_dataTable_filter" %id,
