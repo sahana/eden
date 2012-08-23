@@ -32,8 +32,8 @@ class index():
 
         # Menu Boxes
         menu_btns = [#div, label, app, function
-                    ["col1", T("Staff"), "hrm", "staff"],
-                    ["col1", T("Volunteers"), "vol", "volunteer"],
+                    #["col1", T("Staff"), "hrm", "staff"],
+                    #["col1", T("Volunteers"), "vol", "volunteer"],
                     ["col1", T("Projects"), "project", "project"],
                     ["col2", T("Assets"), "asset", "asset"],
                     ["col2", T("Vehicles"), "vehicle", "vehicle"],
