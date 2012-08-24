@@ -74,12 +74,6 @@ class S3MessagingModel(S3Model):
             1:T("Low")
         }
 
-        mtable = self.msg_inbound_email_settings
-        source_opts = []
-        append = source_opts.append
-        records = db(mtable.id > 0).select(mtable.username)
-        for record in records:
-            append(record.username)
 
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
@@ -112,8 +106,7 @@ class S3MessagingModel(S3Model):
                              Field("reply", "text" ,
                                    label = T("Reply")),
                              Field("source_task_id",
-                                   requires = IS_IN_SET(source_opts,
-                                                        zero = None)),
+                                   label = T("Message Source")),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -694,20 +687,8 @@ class S3ParsingModel(S3Model):
 
     def model(self):
 
-        import inspect
-        import sys
-
         T = current.T
         
-        parser = current.deployment_settings.get_msg_parser()
-        module_name = "applications.%s.private.templates.%s.parser" % \
-            (current.request.application, parser)
-        __import__(module_name)
-        mymodule = sys.modules[module_name]
-        S3Parsing = mymodule.S3Parsing()
-        
-        mtable = self.msg_inbound_email_settings
-
         tablename = "msg_workflow"
         table = self.define_table(tablename,
                                   Field("source_task_id",
@@ -716,8 +697,9 @@ class S3ParsingModel(S3Model):
                                         self.source_represent(id, 
                                                               show_link=True)),
                                   Field("workflow_task_id",
-                                        label = T("Workflow")), 
-                                  *s3_meta_fields())
+                                        label = T("Workflow")),                                          
+                                        *s3_meta_fields())
+                                  
         # ---------------------------------------------------------------------
         # user_opts contains the available users.
         now = current.request.utcnow

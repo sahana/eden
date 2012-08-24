@@ -73,7 +73,7 @@ def update_check():
     try:
         import numpy
     except(ImportError):
-        warnings.append("S3Cube unresolved dependency: numpy required for pivot table reports")
+        warnings.append("S3Report unresolved dependency: numpy required for pivot table reports")
     try:
         import tweepy
     except(ImportError):
@@ -121,7 +121,7 @@ def update_check():
     # - rest are run in-place
     #
     template_folder = os.path.join(app_path, "private", "templates")
-    
+
     template_files = {
         # source : destination
         "000_config.py" : os.path.join("models", "000_config.py"),

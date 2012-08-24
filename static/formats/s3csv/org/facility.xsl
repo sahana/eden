@@ -7,8 +7,8 @@
          Facility - CSV Import Stylesheet
 
          CSV fields:
-         Name....................org_office
-         Organisation............org_organisation
+         Name....................org_facility.name
+         Organisation............org_organisation.name
          Country.................gis_location.L0 Name or ISO2
          Building................gis_location.name
          Address.................gis_location.addr_street
@@ -18,7 +18,9 @@
          L3......................gis_location.L3
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
-         Comments................org_office.comments
+         Comments................org_facility.comments
+
+         @ToDo: Add support for Types
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

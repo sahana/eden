@@ -35,10 +35,9 @@ def aggregate():
                 auth.permission.fail()
             s3db.stats_rebuild_aggregates()
             redirect(URL(c="stats",
-                        f="aggregate",
-                        args="",
-                        )
-                     )
+                         f="aggregate",
+                         args="",
+                         ))
         return True
     s3.prep = prep
 

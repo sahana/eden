@@ -421,8 +421,16 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["modified_on"] = last_update["modified_on"]
-                output["modified_by"] = last_update["modified_by"]
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
+                try:
+                    output["modified_by"] = last_update["modified_by"]
+                except:
+                    # Field not in table, such as auth_user
+                    pass
 
         elif representation == "plain":
             # Hide empty fields from popups on map
@@ -605,11 +613,15 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["modified_on"] = last_update["modified_on"]
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
                 try:
                     output["modified_by"] = last_update["modified_by"]
                 except:
-                    # Field not in table - e.g. auth_user
+                    # Field not in table, such as auth_user
                     pass
 
             # Redirection
@@ -790,7 +802,8 @@ class S3CRUD(S3Method):
         if not fields:
             fields = []
 
-        if fields[0].name != table.fields[0]:
+        if not fields or \
+           fields[0].name != table.fields[0]:
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])

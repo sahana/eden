@@ -113,8 +113,7 @@ class S3Sync(S3Method):
             Read the current sync status
         """
 
-        tablename = "sync_status"
-        table = current.s3db[tablename]
+        table = current.s3db.sync_status
         row = current.db().select(table.ALL, limitby=(0, 1)).first()
         if not row:
             row = Storage()
@@ -126,8 +125,7 @@ class S3Sync(S3Method):
             Update the current sync status
         """
 
-        tablename = "sync_status"
-        table = current.s3db[tablename]
+        table = current.s3db.sync_status
 
         data = Storage([(k, attr[k]) for k in attr if k in table.fields])
         data.update(timestmp = datetime.datetime.utcnow())
@@ -147,9 +145,7 @@ class S3Sync(S3Method):
 
         if not hasattr(self, "config"):
 
-            tablename = "sync_config"
-            table = current.s3db[tablename]
-
+            table = current.s3db.sync_config
             row = current.db().select(table.ALL, limitby=(0, 1)).first()
             self.config = row
 
@@ -182,21 +178,30 @@ class S3Sync(S3Method):
                 (rtable.deleted != True)
         tasks = current.db(query).select()
         for task in tasks:
-            now = datetime.datetime.utcnow()
+
+            # Pull
+            mtime = None
             if task.mode in (1, 3):
-                error = self.__pull(repository, task)
+                error, mtime = self.__pull(repository, task)
             if error:
                 _debug("S3Sync.synchronize: %s PULL error %s" %
                                     (task.resource_name, error))
                 continue
+            if mtime is not None:
+                task.update_record(last_pull=mtime)
+
+            # Push
+            mtime = None
             if task.mode in (2, 3):
-                error = self.__push(repository, task)
+                error, mtime = self.__push(repository, task)
             if error:
                 _debug("S3Sync.synchronize: %s PUSH error %s" %
                                     (task.resource_name, error))
                 continue
+            if mtime is not None:
+                task.update_record(last_push=mtime)
+
             _debug("S3Sync.synchronize: %s success" % task.resource_name)
-            task.update_record(last_sync=now)
 
         # Success
         return current.xml.json_message()
@@ -227,14 +232,14 @@ class S3Sync(S3Method):
 
         username = repository.username
         password = repository.password
-        last_sync = task.last_sync
+        last_pull = task.last_pull
 
         # Get the target resource for this task
         resource = manager.define_resource(prefix, name)
 
         # Add msince and deleted to the URL
-        if last_sync and task.update_policy not in ("THIS", "OTHER"):
-            url += "&msince=%s" % xml.encode_iso_datetime(last_sync)
+        if last_pull and task.update_policy not in ("THIS", "OTHER"):
+            url += "&msince=%s" % xml.encode_iso_datetime(last_pull)
         url += "&include_deleted=True"
 
         _debug("...pull from URL %s" % url)
@@ -326,6 +331,7 @@ class S3Sync(S3Method):
 
         # Try to import the response
         count = 0
+        mtime = None
         if response:
             success = True
             message = ""
@@ -340,7 +346,7 @@ class S3Sync(S3Method):
                                      strategy=strategy,
                                      update_policy=update_policy,
                                      conflict_policy=conflict_policy,
-                                     last_sync=last_sync,
+                                     last_sync=last_pull,
                                      onconflict=onconflict)
                 count = resource.import_count
             except IOError, e:
@@ -348,6 +354,7 @@ class S3Sync(S3Method):
                 message = "%s" % e
                 output = xml.json_message(False, 400, message)
 
+            mtime = resource.mtime
             if resource.error_tree is not None:
                 # Validation error (log in any case)
                 result = self.log.WARNING
@@ -370,6 +377,7 @@ class S3Sync(S3Method):
                     error = manager.error
                     message = "%s" % error
                 output = xml.json_message(False, 400, message)
+                mtime = None
 
             elif not message:
                 message = "data imported successfully (%s records)" % count
@@ -390,7 +398,7 @@ class S3Sync(S3Method):
                        message=message)
 
         _debug("S3Sync.__pull import %s: %s" % (result, message))
-        return output
+        return (output, mtime)
 
     # -------------------------------------------------------------------------
     def __push(self, repository, task):
@@ -427,11 +435,11 @@ class S3Sync(S3Method):
         conflict_policy = task.conflict_policy
         if conflict_policy:
             url += "&conflict_policy=%s" % conflict_policy
-        last_sync = task.last_sync
-        if last_sync and update_policy not in ("THIS", "OTHER"):
-            url += "&msince=%s" % xml.encode_iso_datetime(last_sync)
+        last_push = task.last_push
+        if last_push and update_policy not in ("THIS", "OTHER"):
+            url += "&msince=%s" % xml.encode_iso_datetime(last_push)
         else:
-            last_sync = None
+            last_push = None
 
         _debug("...push to URL %s" % url)
 
@@ -439,13 +447,14 @@ class S3Sync(S3Method):
         prefix, name = task.resource_name.split("_", 1)
         resource = manager.define_resource(prefix, name,
                                            include_deleted=True)
-        data = resource.export_xml(msince=last_sync)
-        count = resource.count()
+        data = resource.export_xml(msince=last_push)
+        count = resource.results or 0
+        mtime = resource.muntil
 
         remote = False
         output = None
 
-        if data:
+        if data and count:
             # Find the protocol
             url_split = url.split("://", 1)
             if len(url_split) == 2:
@@ -512,7 +521,7 @@ class S3Sync(S3Method):
         else:
             # No data to send
             result = self.log.WARNING
-            message = "No data to sent"
+            message = "No data to send"
 
         # log the operation
         self.log.write(repository_id=repository.id,
@@ -524,7 +533,9 @@ class S3Sync(S3Method):
                        result=result,
                        message=message)
 
-        return output
+        if output is not None:
+            mtime = None
+        return (output, mtime)
 
     # -------------------------------------------------------------------------
     def __register(self, r, **attr):
@@ -544,7 +555,7 @@ class S3Sync(S3Method):
         if "repository" in r.vars:
             ruid = r.vars["repository"]
             db = current.db
-            rtable = db.sync_repository
+            rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository_id = row.id
@@ -669,7 +680,7 @@ class S3Sync(S3Method):
             result = self.log.SUCCESS
             if ruid is not None:
                 db = current.db
-                rtable = db.sync_repository
+                rtable = current.s3db.sync_repository
                 try:
                     db(rtable.id == repository.id).update(uuid=ruid)
                 except:
@@ -701,9 +712,8 @@ class S3Sync(S3Method):
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            db = current.db
-            rtable = db.sync_repository
-            row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            rtable = current.s3db.sync_repository
+            row = current.db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository = row
 
@@ -736,7 +746,7 @@ class S3Sync(S3Method):
         output = resource.export_xml(start=start,
                                      limit=limit,
                                      msince=msince)
-        count = len(resource)
+        count = resource.results
 
         # Set content type header
         headers = current.response.headers
@@ -763,13 +773,14 @@ class S3Sync(S3Method):
 
         _debug("S3Sync.__receive")
 
+        s3db = current.s3db
         db = current.db
 
         # Identify the sending repository
         repository = Storage(id=None)
         if "repository" in r.vars:
             ruid = r.vars["repository"]
-            rtable = current.s3db.sync_repository
+            rtable = s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository = row
@@ -781,7 +792,7 @@ class S3Sync(S3Method):
         default_update_policy = S3ImportItem.POLICY.NEWER
         default_conflict_policy = S3ImportItem.POLICY.MASTER
 
-        ttable = db.sync_task
+        ttable = s3db.sync_task
         query = (ttable.repository_id == repository.id) & \
                 (ttable.resource_name == r.tablename) & \
                 (ttable.deleted != True)
@@ -792,7 +803,7 @@ class S3Sync(S3Method):
             update_policy = task.update_policy or default_update_policy
             conflict_policy = task.conflict_policy or default_conflict_policy
             if update_policy not in ("THIS", "OTHER"):
-                last_sync = task.last_sync
+                last_sync = task.last_pull
         else:
             policies = S3ImportItem.POLICY
             p = r.get_vars.get("update_policy", None)
@@ -1071,10 +1082,8 @@ class S3SyncLog(S3Method):
     @staticmethod
     def rheader(r, **attr):
 
-        T = current.T
-
         if r.id is None:
-            return DIV(T("Showing latest entries first"))
+            return DIV(current.T("Showing latest entries first"))
         else:
             return None
 

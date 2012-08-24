@@ -4240,31 +4240,56 @@ def hrm_rheader(r, tabs=[]):
         elif settings.get_hrm_staff_experience() == "experience":
             experience_tab = (T("Experience"), "experience")
 
+        if settings.get_hrm_use_certificates():
+            certificates_tab = (T("Certificates"), "certificate")
+        else:
+            certificates_tab = None
+
         if settings.get_hrm_use_credentials():
             credentials_tab = (T("Credentials"), "credential")
         else:
             credentials_tab = None
+
+        if settings.get_hrm_use_description():
+            description_tab = (T("Description"), "physical_description")
+        else:
+            description_tab = None
 
         if settings.get_hrm_use_education():
             education_tab = (T("Education"), "education")
         else:
             education_tab = None
 
-        # Tabs
+        if settings.get_hrm_use_id():
+            id_tab = (T("ID"), "identity")
+        else:
+            id_tab = None
+
+        if settings.get_hrm_use_skills():
+            skills_tab = (T("Skills"), "competency")
+        else:
+            skills_tab = None
+
         if settings.get_hrm_use_teams():
             teams_tab = (T("Teams"), "group_membership")
         else:
             teams_tab = None
+
+        if settings.get_hrm_use_trainings():
+            trainings_tab = (T("Trainings"), "training")
+        else:
+            trainings_tab = None
+
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
             tabs = [(T("Person Details"), None),
-                    (T("ID"), "identity"),
-                    (T("Description"), "physical_description"),
+                    id_tab,
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     (T("Positions"), "human_resource"),
@@ -4279,14 +4304,14 @@ def hrm_rheader(r, tabs=[]):
                 hr_record = T("Volunteer Record")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    (T("ID"), "identity"),
+                    id_tab,
                     education_tab,
-                    (T("Description"), "physical_description"),
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     teams_tab,

@@ -26,18 +26,29 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 
 current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
-    menus = "applications.%s.private.templates.%s.menus" % \
-            (appname, settings.get_theme())
-    try:
-        exec("import %s as deployment_menus" % menus)
-    except ImportError:
-        pass
+    menus = None
+    theme = settings.get_theme()
+    if theme != "default":
+        # If there is a custom Theme, then attempot to load a custom menu from it
+        menus = "applications.%s.private.templates.%s.menus" % \
+                (appname, theme)
     else:
-        if "S3MainMenu" in deployment_menus.__dict__:
-            S3MainMenu = deployment_menus.S3MainMenu
+        template = settings.get_template()
+        if template != "default":
+            # If there is a custom Template, then attempt to load a custom menu from it
+            menus = "applications.%s.private.templates.%s.menus" % \
+                    (appname, template)
+    if menus:
+        try:
+            exec("import %s as deployment_menus" % menus)
+        except ImportError:
+            pass
+        else:
+            if "S3MainMenu" in deployment_menus.__dict__:
+                S3MainMenu = deployment_menus.S3MainMenu
 
-        if "S3OptionsMenu" in deployment_menus.__dict__:
-            S3OptionsMenu = deployment_menus.S3OptionsMenu
+            if "S3OptionsMenu" in deployment_menus.__dict__:
+                S3OptionsMenu = deployment_menus.S3OptionsMenu
 
     main = S3MainMenu.menu()
 else:
@@ -240,7 +251,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     r.set_handler("barchart", s3_barchart)
     r.set_handler("compose", s3base.S3Compose())
     r.set_handler("copy", s3_copy)
-    r.set_handler("report", s3base.S3Cube())
+    r.set_handler("report", s3base.S3Report())
     r.set_handler("import", s3base.S3Importer())
     r.set_handler("map", s3base.S3Map())
 
