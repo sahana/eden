@@ -30,21 +30,21 @@ def compose():
 def process_email():
     """ Controller for Email processing - to be called via cron """
 
-    msg.process_outbox(contact_method = "EMAIL")
+    msg.process_outbox(contact_method="EMAIL")
     return
 
 # -----------------------------------------------------------------------------
 def process_sms():
     """ Controller for SMS processing - to be called via cron """
 
-    msg.process_outbox(contact_method = "SMS")
+    msg.process_outbox(contact_method="SMS")
     return
 
 # -----------------------------------------------------------------------------
 def process_twitter():
     """ Controller for Twitter message processing - to be called via cron """
 
-    msg.process_outbox(contact_method = "TWITTER")
+    msg.process_outbox(contact_method="TWITTER")
     return
 
 # =============================================================================
@@ -65,17 +65,17 @@ def outbox():
 
     # Subject works for Email but not SMS
     table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
-    table.pe_id.represent = lambda id: s3db.pr_pentity_represent(id, default_label = "")
+    table.pe_id.represent = lambda id: s3db.pr_pentity_represent(id, default_label="")
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_list = T("View Outbox"),
-        title_update = T("Edit Message"),
-        label_list_button = T("View Outbox"),
-        label_delete_button = T("Delete Message"),
-        msg_record_modified = T("Message updated"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("No Messages currently in Outbox")
+        title_list=T("View Outbox"),
+        title_update=T("Edit Message"),
+        label_list_button=T("View Outbox"),
+        label_delete_button=T("Delete Message"),
+        msg_record_modified=T("Message updated"),
+        msg_record_deleted=T("Message deleted"),
+        msg_list_empty=T("No Messages currently in Outbox")
     )
 
     add_btn = A(T("Compose"),
@@ -84,7 +84,7 @@ def outbox():
                 )
 
     s3db.configure(tablename, listadd=False)
-    return s3_rest_controller(module, resourcename, add_btn = add_btn)
+    return s3_rest_controller(module, resourcename, add_btn=add_btn)
 
 # =============================================================================
 def log():
@@ -105,18 +105,18 @@ def log():
     # CRUD Strings
     ADD_MESSAGE = T("Add Message")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_MESSAGE,
-        title_display = T("Message Details"),
-        title_list = T("Messages"),
-        title_update = T("Edit message"),
-        title_search = T("Search messages"),
-        subtitle_create = T("Send new message"),
-        label_list_button = T("List Messages"),
-        label_create_button = ADD_MESSAGE,
-        msg_record_created = T("Message added"),
-        msg_record_modified = T("Message updated"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("No messages in the system"))
+        title_create=ADD_MESSAGE,
+        title_display=T("Message Details"),
+        title_list=T("Messages"),
+        title_update=T("Edit message"),
+        title_search=T("Search messages"),
+        subtitle_create=T("Send new message"),
+        label_list_button=T("List Messages"),
+        label_create_button=ADD_MESSAGE,
+        msg_record_created=T("Message added"),
+        msg_record_modified=T("Message updated"),
+        msg_record_deleted=T("Message deleted"),
+        msg_list_empty=T("No messages in the system"))
 
     s3db.configure(tablename, listadd=False)
     return s3_rest_controller()
@@ -215,8 +215,8 @@ def setting():
                           T("Selects what type of gateway to use for outbound SMS"))))
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMS Settings"),
-        msg_record_modified = T("SMS settings updated")
+        title_update=T("Edit SMS Settings"),
+        msg_record_modified=T("SMS settings updated")
     )
 
     def prep(r):
@@ -226,23 +226,23 @@ def setting():
                                                          None)
             if outgoing_sms_handler == "WEB_API":
                 s3db.configure(tablename,
-                                update_next = URL(f="api_settings",
+                                update_next=URL(f="api_settings",
                                                   args=[1, "update"]))
             elif outgoing_sms_handler == "SMTP":
                 s3db.configure(tablename,
-                                update_next = URL(f="smtp_to_sms_settings",
+                                update_next=URL(f="smtp_to_sms_settings",
                                                   args=[1, "update"]))
             elif outgoing_sms_handler == "MODEM":
                 s3db.configure(tablename,
-                                update_next = URL(f="modem_settings",
+                                update_next=URL(f="modem_settings",
                                                   args=[1, "update"]))
             elif outgoing_sms_handler == "TROPO":
                 s3db.configure(tablename,
-                                update_next = URL(f="tropo_settings",
+                                update_next=URL(f="tropo_settings",
                                                   args=[1, "update"]))
             else:
                 s3db.configure(tablename,
-                                update_next = URL(args=[1, "update"]))
+                                update_next=URL(args=[1, "update"]))
         return True
     s3.prep = prep
 
@@ -282,17 +282,17 @@ def inbound_email_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-    title_display = T("Email Setting Details"),
-    title_list = T("Email Settings"),
-    title_create = T("Add Email Settings"),
-    title_update = T("Edit Email Settings"),
-    title_search = T("Search Email Settings"),
-    label_list_button = T("View Email Settings"),
-    label_create_button = T("Add Email Settings"),
-    msg_record_created = T("Setting added"),
-    msg_record_deleted = T("Email Setting deleted"),
-    msg_list_empty = T("No Settings currently defined"),
-    msg_record_modified = T("Email settings updated")
+    title_display=T("Email Setting Details"),
+    title_list=T("Email Settings"),
+    title_create=T("Add Email Settings"),
+    title_update=T("Edit Email Settings"),
+    title_search=T("Search Email Settings"),
+    label_list_button=T("View Email Settings"),
+    label_create_button=T("Add Email Settings"),
+    msg_record_created=T("Setting added"),
+    msg_record_deleted=T("Email Setting deleted"),
+    msg_list_empty=T("No Settings currently defined"),
+    msg_record_modified=T("Email settings updated")
         )
 
     #response.menu_options = admin_menu_options
@@ -320,7 +320,7 @@ def inbound_email_settings():
 
         restrict_e = [str(row.id) for row in rows]
 
-        query = (stable.enabled == True              )
+        query = (stable.enabled == True)
         records = db(query).select()
         rows = []
         for record in records:
@@ -362,19 +362,19 @@ def inbound_email_settings():
                             _class="action-btn",
                             url=URL(f="enable_email",
                                     args="[id]"),
-                            restrict = restrict_e)
+                            restrict=restrict_e)
                        ]
         s3.actions.append(dict(label=str(T("Disable")),
                                _class="action-btn",
-                               url = URL(f = "disable_email",
-                                         args = "[id]"),
-                               restrict = restrict_d)
+                               url=URL(f="disable_email",
+                                         args="[id]"),
+                               restrict=restrict_d)
                           )
         s3.actions.append(dict(label=str(T("Activate")),
                                _class="action-btn",
-                               url = URL(f = "schedule_email",
-                                         args = "[id]"),
-                               restrict = restrict_a)
+                               url=URL(f="schedule_email",
+                                         args="[id]"),
+                               restrict=restrict_a)
                           )
         return output
     s3.postp = postp
@@ -399,35 +399,35 @@ def twilio_inbound_settings():
     table.account_name.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Account Name"),
                               T("Identifier Name for your Twilio Account."))))
-    
+
     table.url.label = T("URL")
     table.url.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("URL"),
                               T("URL for the twilio API."))))
-    
+
     table.account_sid.label = "Account SID"
     table.auth_token.label = T("AUTH TOKEN")
-    
+
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-    title_display = T("Twilio Setting Details"),
-    title_list = T("Twilio Settings"),
-    title_create = T("Add Twilio Settings"),
-    title_update = T("Edit Twilio Settings"),
-    title_search = T("Search Twilio Settings"),
-    label_list_button = T("View Twilio Settings"),
-    label_create_button = T("Add Twilio Settings"),
-    msg_record_created = T("Twilio Setting added"),
-    msg_record_deleted = T("Twilio Setting deleted"),
-    msg_list_empty = T("No Twilio Settings currently defined"),
-    msg_record_modified = T("Twilio settings updated")
+    title_display=T("Twilio Setting Details"),
+    title_list=T("Twilio Settings"),
+    title_create=T("Add Twilio Settings"),
+    title_update=T("Edit Twilio Settings"),
+    title_search=T("Search Twilio Settings"),
+    label_list_button=T("View Twilio Settings"),
+    label_create_button=T("Add Twilio Settings"),
+    msg_record_created=T("Twilio Setting added"),
+    msg_record_deleted=T("Twilio Setting deleted"),
+    msg_list_empty=T("No Twilio Settings currently defined"),
+    msg_record_modified=T("Twilio settings updated")
         )
 
     #response.menu_options = admin_menu_options
     s3db.configure(tablename, listadd=True, deletable=True)
 
     def postp(r, output):
-        
+
         stable = s3db.scheduler_task
         ttable = r.table
 
@@ -490,19 +490,19 @@ def twilio_inbound_settings():
                             _class="action-btn",
                             url=URL(f="enable_twilio_sms",
                                     args="[id]"),
-                            restrict = restrict_e)
+                            restrict=restrict_e)
                        ]
         s3.actions.append(dict(label=str(T("Disable")),
                                _class="action-btn",
-                               url = URL(f = "disable_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_d)
+                               url=URL(f="disable_twilio_sms",
+                                         args="[id]"),
+                               restrict=restrict_d)
                           )
         s3.actions.append(dict(label=str(T("Activate")),
                                _class="action-btn",
-                               url = URL(f = "schedule_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_a)
+                               url=URL(f="schedule_twilio_sms",
+                                         args="[id]"),
+                               restrict=restrict_a)
                           )
         return output
     s3.postp = postp
@@ -532,17 +532,17 @@ def workflow():
 
     # CRUD Strings
     s3.crud_strings["msg_workflow"] = Storage(
-        title_display = T("Setting Details"),
-        title_list = T("Parser Settings"),
-        title_create = T("Add Parser Settings"),
-        title_update = T("Edit Parser Settings"),
-        title_search = T("Search Parser Settings"),
-        label_list_button = T("View Settings"),
-        label_create_button = T("Add Parser Settings"),
-        msg_record_created = T("Setting added"),
-        msg_record_deleted = T("Parser Setting deleted"),
-        msg_list_empty = T("No Settings currently defined"),
-        msg_record_modified = T("Message Parser settings updated")
+        title_display=T("Setting Details"),
+        title_list=T("Parser Settings"),
+        title_create=T("Add Parser Settings"),
+        title_update=T("Edit Parser Settings"),
+        title_search=T("Search Parser Settings"),
+        label_list_button=T("View Settings"),
+        label_create_button=T("Add Parser Settings"),
+        msg_record_created=T("Setting added"),
+        msg_record_deleted=T("Parser Setting deleted"),
+        msg_list_empty=T("No Settings currently defined"),
+        msg_record_modified=T("Message Parser settings updated")
     )
 
     s3db.configure("msg_workflow", listadd=True, deletable=True)
@@ -582,7 +582,7 @@ def workflow():
                                                           zero=None)
         return True
     s3.prep = prep
-    
+
     def postp(r, output):
 
         wtable = s3db.msg_workflow
@@ -671,21 +671,21 @@ def workflow():
                             _class="action-btn",
                             url=URL(f="enable_parser",
                                     args="[id]"),
-                            restrict = restrict_e)
+                            restrict=restrict_e)
                       ]
 
         s3.actions.append(dict(label=str(T("Disable")),
                                         _class="action-btn",
-                                        url = URL(f = "disable_parser",
-                                                  args = "[id]"),
-                                        restrict = restrict_d)
+                                        url=URL(f="disable_parser",
+                                                  args="[id]"),
+                                        restrict=restrict_d)
                                    )
 
         s3.actions.append(dict(label=str(T("Activate")),
                                         _class="action-btn",
-                                        url = URL(f = "schedule_parser",
-                                                  args = "[id]"),
-                                        restrict = restrict_a)
+                                        url=URL(f="schedule_parser",
+                                                  args="[id]"),
+                                        restrict=restrict_a)
                                    )
 
         return output
@@ -714,7 +714,7 @@ def schedule_parser():
 
     s3task.schedule_task("msg_parse_workflow",
                          vars={"workflow": workflow, "source": source},
-                         period=300,  # seconds
+                         period=300, # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
@@ -740,7 +740,7 @@ def schedule_email():
 
     s3task.schedule_task("msg_process_inbound_email",
                          vars={"username": username},
-                         period=300,  # seconds
+                         period=300, # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
@@ -766,7 +766,7 @@ def schedule_twilio_sms():
 
     s3task.schedule_task("msg_twilio_inbound_sms",
                          vars={"account": account_name},
-                         period=300,  # seconds
+                         period=300, # seconds
                          timeout=300, # seconds
                          repeats=0    # unlimited
                          )
@@ -803,7 +803,7 @@ def disable_parser():
             v = v.split("\"")[1]
 
             if (s == workflow.workflow_task_id) and (v == workflow.source_task_id) :
-                db(stable.id == record.id).update(enabled = False)
+                db(stable.id == record.id).update(enabled=False)
 
     redirect(URL(f="workflow"))
 
@@ -831,7 +831,7 @@ def disable_email():
             s = s.split("\"")[1].split("\"")[0]
 
             if (s == msettings.username) :
-                db(stable.id == record.id).update(enabled = False)
+                db(stable.id == record.id).update(enabled=False)
 
     redirect(URL(f="inbound_email_settings"))
 
@@ -859,7 +859,7 @@ def disable_twilio_sms():
             s = s.split("\"")[1].split("\"")[0]
 
             if (s == tsettings.account_name) :
-                db(stable.id == record.id).update(enabled = False)
+                db(stable.id == record.id).update(enabled=False)
 
     redirect(URL(f="twilio_inbound_settings"))
 
@@ -887,7 +887,7 @@ def enable_email():
             s = s.split("\"")[1].split("\"")[0]
 
             if (s == msettings.username) :
-                db(stable.id == record.id).update(enabled = True)
+                db(stable.id == record.id).update(enabled=True)
 
     redirect(URL(f="inbound_email_settings"))
 
@@ -915,7 +915,7 @@ def enable_twilio_sms():
             s = s.split("\"")[1].split("\"")[0]
 
             if (s == tsettings.account_name) :
-                db(stable.id == record.id).update(enabled = True)
+                db(stable.id == record.id).update(enabled=True)
 
     redirect(URL(f="twilio_inbound_settings"))
 
@@ -951,7 +951,7 @@ def enable_parser():
 
             if (s == workflow.workflow_task_id) and \
                (v == workflow.source_task_id):
-                db(stable.id == record.id).update(enabled = True)
+                db(stable.id == record.id).update(enabled=True)
 
     redirect(URL(f="workflow"))
 
@@ -988,14 +988,14 @@ def twilio_inbox():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-    title_display = T("Twilio SMS Inbox"),
-    title_list = T("Twilio SMS Inbox"),
-    title_update = T("Edit SMS Message"),
-    title_search = T("Search Twilio SMS Inbox"),
-    label_list_button = T("View Twilio SMS"),
-    msg_record_deleted = T("Twilio SMS deleted"),
-    msg_list_empty = T("Twilio SMS Inbox empty. "),
-    msg_record_modified = T("Twilio SMS updated")
+    title_display=T("Twilio SMS Inbox"),
+    title_list=T("Twilio SMS Inbox"),
+    title_update=T("Edit SMS Message"),
+    title_search=T("Search Twilio SMS Inbox"),
+    label_list_button=T("View Twilio SMS"),
+    msg_record_deleted=T("Twilio SMS deleted"),
+    msg_list_empty=T("Twilio SMS Inbox empty. "),
+    msg_record_modified=T("Twilio SMS updated")
         )
 
     s3db.configure(tablename, listadd=False)
@@ -1036,17 +1036,17 @@ def modem_settings():
     # CRUD Strings
     ADD_SETTING = T("Add Setting")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_SETTING,
-        title_display = T("Setting Details"),
-        title_list = T("Settings"),
-        title_update = T("Edit Modem Settings"),
-        title_search = T("Search Settings"),
-        label_list_button = T("View Settings"),
-        label_create_button = ADD_SETTING,
-        msg_record_created = T("Setting added"),
-        msg_record_modified = T("Modem settings updated"),
-        msg_record_deleted = T("Setting deleted"),
-        msg_list_empty = T("No Settings currently defined")
+        title_create=ADD_SETTING,
+        title_display=T("Setting Details"),
+        title_list=T("Settings"),
+        title_update=T("Edit Modem Settings"),
+        title_search=T("Search Settings"),
+        label_list_button=T("View Settings"),
+        label_create_button=ADD_SETTING,
+        msg_record_created=T("Setting added"),
+        msg_record_modified=T("Modem settings updated"),
+        msg_record_deleted=T("Setting deleted"),
+        msg_list_empty=T("No Settings currently defined")
     )
 
     s3db.configure(tablename,
@@ -1085,14 +1085,14 @@ def smtp_to_sms_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMTP to SMS Settings"),
-        msg_record_modified = T("SMTP to SMS settings updated"),
+        title_update=T("Edit SMTP to SMS Settings"),
+        msg_record_modified=T("SMTP to SMS settings updated"),
     )
 
     s3db.configure(tablename,
                     deletable=False,
                     listadd=False,
-                    update_next = URL(args=[1, "update"]))
+                    update_next=URL(args=[1, "update"]))
     #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
@@ -1131,14 +1131,14 @@ def api_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Web API Settings"),
-        msg_record_modified = T("Web API settings updated"),
+        title_update=T("Edit Web API Settings"),
+        msg_record_modified=T("Web API settings updated"),
     )
 
     s3db.configure(tablename,
                     deletable=False,
                     listadd=False,
-                    update_next = URL(args=[1, "update"]))
+                    update_next=URL(args=[1, "update"]))
     #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
@@ -1163,14 +1163,14 @@ def tropo_settings():
     #table.token_voice.comment = DIV(DIV(_class="stickytip",_title=T("Tropo Voice Token") + "|" + T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>"))
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Tropo Settings"),
-        msg_record_modified = T("Tropo settings updated"),
+        title_update=T("Edit Tropo Settings"),
+        msg_record_modified=T("Tropo settings updated"),
     )
 
     s3db.configure(tablename,
                     deletable=False,
                     listadd=False,
-                    update_next = URL(args=[1, "update"]))
+                    update_next=URL(args=[1, "update"]))
     #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
@@ -1195,8 +1195,8 @@ def twitter_settings():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Authenticate system's Twitter account"),
-        msg_record_modified = T("System's Twitter account updated"),
+        title_update=T("Authenticate system's Twitter account"),
+        msg_record_modified=T("System's Twitter account updated"),
     )
 
     def prep(r):
@@ -1324,7 +1324,7 @@ def contact():
                 return True
             else:
                 session.error = T("Access denied")
-                return dict(bypass = True, output = redirect(URL(r=request)))
+                return dict(bypass=True, output=redirect(URL(r=request)))
         else:
             return True
     s3.prep = msg_contact_restrict_access
@@ -1411,7 +1411,7 @@ def person_search(value, type=None):
         query = (groups["name"].lower().like("%" + value + "%")) & (groups.deleted == False)
         rows = db(query).select(groups.pe_id)
         for row in rows:
-            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label = "")})
+            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label="")})
 
     if type == "pr_person" or not type:
         # Check Persons
@@ -1421,19 +1421,19 @@ def person_search(value, type=None):
         query = (persons["first_name"].lower().like("%" + value + "%")) & deleted
         rows = db(query).select(persons.pe_id, cache=s3db.cache)
         for row in rows:
-            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label = "")})
+            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label="")})
 
         # Middle name
         query = (persons["middle_name"].lower().like("%" + value + "%")) & deleted
         rows = db(query).select(persons.pe_id, cache=s3db.cache)
         for row in rows:
-            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label = "")})
+            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label="")})
 
         # Last name
         query = (persons["last_name"].lower().like("%" + value + "%")) & deleted
         rows = db(query).select(persons.pe_id, cache=s3db.cache)
         for row in rows:
-            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label = "")})
+            items.append({"id":row.pe_id, "name":represent(row.pe_id, default_label="")})
 
     return items
 
@@ -1441,88 +1441,6 @@ def person_search(value, type=None):
 def subscription():
 
     return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def load_search(id):
-    var = {}
-    var["load"] = id
-    table = s3db.pr_save_search
-    rows = db(table.id == id).select()
-    import cPickle
-    for row in rows:
-        search_vars = cPickle.loads(row.search_vars)
-        prefix = str(search_vars["prefix"])
-        function = str(search_vars["function"])
-        date = str(row.modified_on)
-        break
-    field = "%s.modified_on__gt" %(function)
-    date = date.replace(" ","T")
-    date = date + "Z"
-    var[field] = date
-    #var["transform"] = "eden/static/formats/xml/import.xsl"
-    r = current.manager.parse_request(prefix,
-                                      function,
-                                      args=["search"],
-                                      #extension="xml",
-                                      get_vars=Storage(var)
-                                     )
-    #redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
-    s3.no_sspag=True
-    output = r()
-    #extract the updates
-    return output
-
-# -----------------------------------------------------------------------------
-def check_updates(user_id):
-    """
-        Check Updates for all the Saved Searches Subscribed by the User
-    """
-
-    message = "<h2>Saved Searches' Update</h2>"
-    flag = 0
-    table = s3db.pr_save_search
-    rows = db(table.user_id == user_id).select()
-    search_vars_represent = s3base.s3_search_vars_represent
-    for row in rows :
-        if row.subscribed:
-            records = load_search(row.id)
-            message = message + "<b>" + search_vars_represent(row.search_vars) + "</b>"
-            if str(records["items"]) != "No Matching Records":
-                message = message + str(records["items"]) + "<br />" #Include the Saved Search details
-                flag = 1
-            db.pr_save_search[row.id] = dict(modified_on = request.utcnow)
-    if flag == 0:
-        return
-    else:
-        return XML(message)
-
-# -----------------------------------------------------------------------------
-def subscription_messages():
-
-    table = s3db.msg_subscription
-    subs = None
-    if request.args[0] == "daily":
-        subs = db(table.subscription_frequency == "daily").select()
-    if request.args[0] == "weekly":
-        subs = db(table.subscription_frequency == "weekly").select()
-    if request.args[0] == "monthly":
-        subs = db(table.subscription_frequency == "monthly").select()
-    if subs:
-        for sub in subs:
-            # Check if the message is not empty
-            message = check_updates(sub.user_id)
-            if message == None:
-                continue
-            pe_id = auth.s3_user_pe_id(sub.user_id)
-            if pe_id:
-                msg.send_by_pe_id(pe_id,
-                                  subject="Subscription Updates",
-                                  message=message,
-                                  sender_pe_id = None,
-                                  pr_message_method = "EMAIL",
-                                  sender="noreply@sahana.com",
-                                  fromaddress="sahana@sahana.com")
-    return
 
 # =============================================================================
 # Enabled only for testing:

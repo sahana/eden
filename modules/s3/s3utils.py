@@ -2683,6 +2683,12 @@ class S3DataTable(object):
             attr.dt_ajax_url = s3.datatable_ajax_source
         if s3.actions:
             attr.dt_actions = s3.actions
+
+        if s3.datatable_ajax_source:
+            attr.dt_ajax_url = s3.datatable_ajax_source
+        else:
+            attr.dt_ajax_url = "%s.aaData" % current.request.url
+
         if s3.dataTableBulkActions:
             attr.dt_bulk_actions = s3.dataTableBulkActions
         if s3.dataTable_iDisplayLength:

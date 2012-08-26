@@ -1691,7 +1691,7 @@ class S3Resource(object):
         if UID in table.fields:
             fields = (table._id, table[UID])
         else:
-            fields = (table._id, )
+            fields = (table._id,)
 
         vfltr = self.get_filter()
         if vfltr is not None:
@@ -2161,7 +2161,7 @@ class S3Resource(object):
                     c.add_filter(mci_filter)
 
                 # Split fields
-                _skip = skip+[c.fkey]
+                _skip = skip + [c.fkey]
                 crfields, cdfields = c.split_fields(skip=_skip)
 
                 # Load records if necessary
@@ -2472,13 +2472,13 @@ class S3Resource(object):
             tree = None
 
         import_info = {"records":self.import_count}
-        created=self.import_created
+        created = self.import_created
         if created:
             import_info["created"] = created
-        updated=self.import_updated
+        updated = self.import_updated
         if updated:
             import_info["updated"] = updated
-        deleted=self.import_deleted
+        deleted = self.import_deleted
         if deleted:
             import_info["deleted"] = deleted
 
@@ -2728,7 +2728,7 @@ class S3Resource(object):
                     raise RuntimeError, "not isinstance(req, IS_ONE_OF)"
                 kfield = db[req.ktable][req.kfield]
                 rows = db().select(kfield,
-                                   orderby=~kfield,
+                                   orderby= ~kfield,
                                    limitby=(0, 1))
                 res = []
                 for row in rows:
@@ -3853,9 +3853,9 @@ class S3ResourceField(object):
         else:
             # Done, return the field
             field = Storage(selector=original,
-                            tname = tn,
-                            fname = fn,
-                            colname = "%s.%s" % (tn, fn),
+                            tname=tn,
+                            fname=fn,
+                            colname="%s.%s" % (tn, fn),
                             field=f,
                             join=join,
                             left=left,
@@ -5001,8 +5001,8 @@ class S3ResourceFilter:
             @note: does not support quotes within quoted strings
         """
 
-        if type(value) is list:
-            value = ",".join[value]
+        if isinstance(value, list):
+            value = ",".join(value)
         vlist = []
         w = ""
         quote = False
@@ -5617,7 +5617,7 @@ class S3Pivottable:
                     if len(values) and type(values[0]) is list:
                         values = reduce(lambda x, y: x.extend(y) or x, values)
                     if method in ("list", "count"):
-                        values =  list(set(values))
+                        values = list(set(values))
                     row_values.extend(values)
                     col_values.extend(values)
                     all_values.extend(values)
@@ -5918,10 +5918,10 @@ class S3RecordMerger(object):
     # -------------------------------------------------------------------------
     def update_record(self, table, id, row, data):
 
-        form = Storage(vars = Storage([(f, row[f])
+        form = Storage(vars=Storage([(f, row[f])
                               for f in table.fields if f in row]))
         form.vars.update(data)
-        success = current.db(table._id==row[table._id]).update(**data)
+        success = current.db(table._id == row[table._id]).update(**data)
         if success:
             current.s3db.update_super(table, form.vars)
             current.auth.s3_set_record_owner(table, row[table._id], force_update=True)
@@ -6017,9 +6017,9 @@ class S3RecordMerger(object):
         auth = current.auth
         has_permission = auth.s3_has_permission
         permitted = has_permission("update", table,
-                                   record_id = original_id) and \
+                                   record_id=original_id) and \
                     has_permission("delete", table,
-                                   record_id = duplicate_id)
+                                   record_id=duplicate_id)
         if not permitted:
             raise_error("Operation not permitted", auth.permission.error)
 
@@ -6073,7 +6073,7 @@ class S3RecordMerger(object):
             for f in t:
                 ftype = str(f.type)
                 if ftype[:14] == "list:reference" and \
-                   ftype[15:15+len(tablename)] == tablename:
+                   ftype[15:15 + len(tablename)] == tablename:
                     referenced_by.append((t._tablename, f.name))
 
         update_record = self.update_record
