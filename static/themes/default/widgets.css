@@ -110,6 +110,11 @@ div#table-container {
    margin-top: -1px;
    min-width: 640px;
 }
+table.dataTable thead th {
+    border: 1px solid #ccc;
+    border-bottom: 1px solid black;
+}
+
 div#table-container th {
 	text-align: left;
     border: 1px solid #ccc;
@@ -136,11 +141,11 @@ div#table-container td.totals_header {
     font-weight: bold;
 }
 
-#list_formats {
+.list_formats {
     float: right;
     padding-top: 5px;
 }
-#list_formats a {
+.list_formats img {
     padding: 1px;
 }
 /* msg_list_empty */

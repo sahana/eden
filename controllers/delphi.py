@@ -245,8 +245,6 @@ def problem():
         return output
     s3.postp = postp
 
-    s3.dataTableResize = True
-
     rheader = problem_rheader
     return s3_rest_controller(rheader=rheader)
 
