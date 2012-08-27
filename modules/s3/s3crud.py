@@ -420,8 +420,10 @@ class S3CRUD(S3Method):
 
             # Last update
             last_update = self.last_update()
-            if last_update:
+            if "modified_on" in last_update:
                 output["modified_on"] = last_update["modified_on"]
+            if "modified_by" in last_update:
+                # auth_user table doesn't have modified_by
                 output["modified_by"] = last_update["modified_by"]
 
         elif representation == "plain":

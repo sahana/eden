@@ -46,8 +46,8 @@ def human_resource():
         if r.interactive:
             if r.method == "create" and not r.component:
                 redirect(URL(f="volunteer",
-                             args=args,
-                             vars=vars))
+                             args=request.args,
+                             vars=request.vars))
             elif r.method == "delete":
                 # Don't redirect
                 pass

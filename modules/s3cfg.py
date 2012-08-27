@@ -167,9 +167,9 @@ class S3Config(Storage):
     def get_auth_registration_requests_organisation(self):
         " Have the registration form request the Organisation "
         return self.auth.get("registration_requests_organisation", False)
-    def get_auth_registration_organisation_mandatory(self):
-        " Make the selection of Organisation Mandatory during registration "
-        return self.auth.get("registration_organisation_mandatory", False)
+    def get_auth_registration_organisation_required(self):
+        " Make the selection of Organisation required during registration "
+        return self.auth.get("registration_organisation_required", False)
     def get_auth_registration_organisation_hidden(self):
         " Hide the Organisation field in the registration form unless an email is entered which isn't whitelisted "
         return self.auth.get("registration_organisation_hidden", False)
@@ -189,6 +189,12 @@ class S3Config(Storage):
         else:
             organisation_id = None
         return organisation_id
+    def get_auth_registration_requests_site(self):
+        " Have the registration form request the Site "
+        return self.auth.get("registration_requests_site", False)
+    def get_auth_registration_site_required(self):
+        " Make the selection of site required during registration "
+        return self.auth.get("registration_site_required", False)
     def get_auth_registration_pending(self):
         """ Message someone gets when they register & they need approving """
         return self.auth.get("registration_pending",

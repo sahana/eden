@@ -41,30 +41,31 @@ if len(pop_list) > 0:
     authenticated = create_role("Authenticated",
                                 "Authenticated - all logged-in users",
                                 # Authenticated users can see the Map
-                                dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
+                                # This should be done with "*,import_role,auth_roles.csv" in Pre-Populate
+                                #dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
                                 # Note the owning role for locations is set to Authenticated
                                 # by default, so this controls the access that logged in
                                 # users have. (In general, tables do not have a default
                                 # owning role.)
-                                dict(c="gis", f="location", uacl=acl.READ|acl.CREATE, oacl=acl.ALL),
+                                #dict(c="gis", f="location", uacl=acl.READ|acl.CREATE, oacl=acl.ALL),
                                 # Authenticated users can only see/edit their own PR records
-                                dict(c="pr", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                                dict(t="pr_person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                #dict(c="pr", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                #dict(t="pr_person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
                                 # But need to be able to add/edit addresses
-                                dict(c="pr", f="person", uacl=acl.CREATE, oacl=acl.READ|acl.UPDATE),
+                                #dict(c="pr", f="person", uacl=acl.CREATE, oacl=acl.READ|acl.UPDATE),
                                 # And access the Autocompletes
-                                dict(c="pr", f="person_search", uacl=acl.READ),
-                                dict(c="pr", f="pentity", uacl=acl.READ),
-                                dict(c="msg", f="search", uacl=acl.READ),
+                                #dict(c="pr", f="person_search", uacl=acl.READ),
+                                #dict(c="pr", f="pentity", uacl=acl.READ),
+                                #dict(c="msg", f="search", uacl=acl.READ),
                                 # Authenticated  users can see the Supply Catalogue
-                                dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
+                                #dict(c="supply", uacl=acl.READ|acl.CREATE, oacl=default_oacl),
                                 # HRM access is controlled to just HR Staff, except for:
                                 # Access to your own record
                                 # - requires security policy 4+
-                                dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
-                                dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
-                                dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
-                                dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                #dict(c="hrm", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
+                                #dict(c="hrm", f="staff", uacl=acl.NONE, oacl=acl.NONE),
+                                #dict(c="hrm", f="volunteer", uacl=acl.NONE, oacl=acl.NONE),
+                                #dict(c="hrm", f="person", uacl=acl.NONE, oacl=acl.READ|acl.UPDATE),
                                 uid=sysroles.AUTHENTICATED,
                                 protected=True)
 
@@ -241,8 +242,7 @@ if len(pop_list) > 0:
 
     # Additional settings for user table imports:
     s3db.configure("auth_user",
-                    onaccept = lambda form: \
-                        auth.s3_link_to_person(user=form.vars))
+                    onaccept = lambda form: auth.s3_link_user(form.vars))
     s3db.add_component("auth_membership", auth_user="user_id")
 
     # Allow population via shell scripts

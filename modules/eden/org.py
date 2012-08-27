@@ -2200,14 +2200,12 @@ def org_organisation_represent(id, row=None, show_link=False,
         @param parent: whether to show the parent Org for branches
     """
 
+    db = current.db
+    table = current.s3db.org_organisation
+
     if row:
         id = row.id
-        if parent:
-            db = current.db
-            table = db.org_organisation
     elif id:
-        db = current.db
-        table = db.org_organisation
         row = db(table.id == id).select(table.name,
                                         table.acronym,
                                         limitby=(0, 1)).first()
