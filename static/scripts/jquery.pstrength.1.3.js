@@ -37,7 +37,9 @@
 			},options);		
 			return this.each(function(){
 				var infoarea = $(this).attr('id');
-				$(this).after('<div class="pstrength-minchar" id="' + infoarea + '_minchar">'+options.minchar_label + options.minchar + '</div>');
+				if (options.minchar_label) {
+					$(this).after('<div class="pstrength-minchar" id="' + infoarea + '_minchar">'+options.minchar_label + options.minchar + '</div>');
+				}
 				$(this).after('<div class="pstrength-info" id="' + infoarea + '_text"></div>');
 				$(this).after('<div class="pstrength-bar" id="' + infoarea + '_bar" style="border: 1px solid white; font-size: 1px; height: 2px; width: 0px;"></div>');
 				$(this).keyup(function(){				

@@ -66,71 +66,6 @@ def role():
     return output
 
 # -----------------------------------------------------------------------------
-def user_onaccept(form):
-    """
-        Update HRM record, if-present
-    """
-
-    vars = form.vars
-    user_id = vars.id
-    organisation_id = vars.organisation_id
-
-    if organisation_id:
-        htable = s3db.table("hrm_human_resource")
-        if htable:
-            # Update HRM record
-            site_id = vars.site_id
-            ptable = s3db.pr_person
-            ltable = s3db.pr_person_user
-            query = (htable.deleted == False) & \
-                    (htable.status == 1) & \
-                    (htable.person_id == ptable.id) & \
-                    (ptable.pe_id == ltable.pe_id) & \
-                    (ltable.user_id == user_id)
-            rows = db(query).select(htable.id,
-                                    limitby=(0, 2))
-            if len(rows) == 1:
-                # We know which record we can update
-                hr_id = rows.first().id
-                db(htable.id == hr_id).update(organisation_id = organisation_id,
-                                              site_id = site_id)
-                # Update record ownership
-                auth.s3_set_record_owner(htable, hr_id, force_update=True)
-                # Update Site link
-                hstable = s3db.hrm_human_resource_site
-                query = (hstable.human_resource_id == hr_id)
-                this = db(query).select(hstable.id,
-                                        limitby=(0, 1)).first()
-                if this:
-                    db(query).update(site_id=site_id,
-                                     human_resource_id=id)
-                else:
-                    hstable.insert(site_id=site_id,
-                                   human_resource_id=hr_id)
-
-        # Update link to organisation
-        ltable = s3db.org_organisation_user
-        query = (ltable.user_id == user_id)
-        rows = db(query).select(ltable.organisation_id,
-                                limitby=(0, 2))
-        if len(rows) == 1:
-            if rows.first().organisation_id != organisation_id:
-                # We know which record we can update
-                db(query).update(organisation_id=organisation_id)
-            # No more action required
-            return
-        elif rows:
-            query = query & (ltable.organisation_id == organisation_id)
-            rows = db(query).select(ltable.id,
-                                    limitby=(0, 2)).first()
-            if len(rows) == 1:
-                # No action required
-                return
-        # Insert a new one
-        ltable.insert(user_id=user_id,
-                      organisation_id=organisation_id)
-
-# -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def user():
     """ RESTful CRUD controller """
@@ -138,14 +73,13 @@ def user():
     tablename = "auth_user"
     table = db[tablename]
 
+    auth.configure_user_fields()
+
     s3db.configure(tablename,
                    main="first_name",
-                   # Add users to Person Registry & 'Authenticated' role:
-                   create_onaccept = auth.s3_register,
-                   update_onaccept = user_onaccept,
                    )
 
-    def disable_user(r):
+    def disable_user(r, **args):
         if not r.id:
             session.error = T("Can only disable 1 record at a time!")
             redirect(URL(args=[]))
@@ -160,23 +94,26 @@ def user():
         session.confirmation = T("User Account has been Disabled")
         redirect(URL(args=[]))
 
-    def approve_user(r):
+    def approve_user(r, **args):
         if not r.id:
             session.error = T("Can only approve 1 record at a time!")
             redirect(URL(args=[]))
-
-        # Send them an email to let them know that their account has been approved
-        form = Storage()
-        form.vars = Storage()
-        form.vars.id = r.id
-        form.vars.email = r.record.email
-        user_approve(form)
-        # Allow them to login
-        table = auth.settings.table_user
-        query = (table.id == r.id)
-        db(query).update(registration_key = "")
+        
+        user = table[r.id]
+        auth.s3_approve_user(user)
 
         session.confirmation = T("User Account has been Approved")
+        redirect(URL(args=[]))
+        
+    def link_user(r, **args):
+        if not r.id:
+            session.error = T("Can only update 1 record at a time!")
+            redirect(URL(args=[]))
+        
+        user = table[r.id]
+        auth.s3_link_user(user)
+
+        session.confirmation = T("User has been (re)linked to Person and Human Resource record")
         redirect(URL(args=[]))
 
     # Custom Methods
@@ -190,6 +127,9 @@ def user():
 
     set_method("auth", "user", method="approve",
                action=approve_user)
+    
+    set_method("auth", "user", method="link",
+               action=link_user)
 
     # CRUD Strings
     ADD_USER = T("Add User")
@@ -208,35 +148,49 @@ def user():
         msg_record_deleted = T("User deleted"),
         msg_list_empty = T("No Users currently registered"))
 
-    # Allow the ability for admin to change a User's Organisation
-    org = table.organisation_id
-    org.writable = True
-    org.requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                        s3db.org_organisation_represent,
-                                        orderby="org_organisation.name",
-                                        sort=True))
-    org.represent = s3db.org_organisation_represent
-    org.widget = S3OrganisationAutocompleteWidget()
-    org.comment = DIV(_class="tooltip",
-                      _title="%s|%s|%s" % (T("Organization"),
-                                           T("The default Organization for whom this person is acting."),
-                                           T("Enter some characters to bring up a list of possible matches")))
-    # Allow the ability for admin to change a User's Facility
-    site = table.site_id
-    site.writable = True
-    site.requires = IS_NULL_OR(IS_ONE_OF(db, "org_site.id",
-                                         s3db.org_site_represent,
-                                         orderby="org_site.name",
-                                         sort=True))
-    site.represent = s3db.org_site_represent
-    site.widget = S3SiteAutocompleteWidget()
-    site.comment = DIV(_class="tooltip",
-                       _title="%s|%s|%s" % (T("Facility"),
-                                            T("The default Facility for which this person is acting."),
-                                            T("Enter some characters to bring up a list of possible matches")))
-    # Show comments
-    comments = table.comments
-    comments.readable = comments.writable = True
+    def rheader(r, tabs = []):
+        if not r.interactive or r.representation != "html":
+            return None
+        
+        id = r.id
+        
+        rheader = DIV()
+        
+        if r.record:
+            registration_key = r.record.registration_key
+            if not registration_key:
+                btn = A(T("Disable"),
+                        _class = "action-btn",
+                        _title = "Disable User",
+                        _href = URL(args=[id,
+                                          "disable"]
+                                    )
+                        )
+                rheader.append(btn)
+                btn = A(T("Link"),
+                        _class = "action-btn",
+                        _title = "Link (or refresh link) between User, Person & HR Record",
+                        _href = URL(args=[id,
+                                          "link"]
+                                    )
+                        )
+                rheader.append(btn)
+                
+            if registration_key == "pending":
+                btn = A(T("Approve"),
+                        _class = "action-btn",
+                        _title = "Approve User",
+                        _href = URL(args=[id,
+                                          "approve"]
+                                    )
+                        )
+                rheader.append(btn)
+
+            tabs = [ (T("User Details"), None),
+                     (T("Roles"), "roles")]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader.append(rheader_tabs)
+        return rheader
 
     # Pre-processor
     def prep(r):
@@ -250,19 +204,6 @@ def user():
                            # Password confirmation
                            create_onvalidation = user_create_onvalidation)
 
-            # Allow the ability for admin to Disable logins
-            reg = r.table.registration_key
-            reg.writable = True
-            reg.readable = True
-            reg.label = T("Status")
-            # In Controller to allow registration to work with UUIDs - only manual edits need this setting
-            reg.requires = IS_NULL_OR(IS_IN_SET(["disabled",
-                                                 "pending"]))
-
-        elif r.representation == "aadata":
-            # dataTables' columns need to match
-            r.table.registration_key.readable = True
-
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
                 request.get_vars.update({"user.id":str(r.id)})
@@ -271,11 +212,6 @@ def user():
                                delete_next = URL(c="default", f="user/logout"))
                 s3.crud.confirm_delete = T("You are attempting to delete your own account - are you sure you want to proceed?")
 
-        elif r.method == "update":
-            # Send an email to user if their account is approved
-            # (=moved from 'pending' to 'blank'(i.e. enabled))
-            s3db.configure(r.tablename,
-                           onvalidation = lambda form: user_approve(form))
         if r.http == "GET" and not r.method:
             session.s3.cancel = r.url()
         return True
@@ -291,6 +227,11 @@ def user():
                         dict(label=str(UPDATE), _class="action-btn",
                              url=URL(c="admin", f="user",
                                      args=["[id]", "update"])),
+                        dict(label=str(T("Link")), 
+                             _class="action-btn",
+                             _title = str(T("Link (or refresh link) between User, Person & HR Record")),
+                             url=URL(c="admin", f="user",
+                                     args=["[id]", "link"])),
                         dict(label=str(T("Roles")), _class="action-btn",
                              url=URL(c="admin", f="user",
                                      args=["[id]", "roles"])),
@@ -317,21 +258,22 @@ def user():
         s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
         s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
+        # Translate the status values
+        values = [dict(col=6, key="", display=str(T("Active"))),
+                  dict(col=6, key="None", display=str(T("Active"))),
+                  dict(col=6, key="pending", display=str(T("Pending"))),
+                  dict(col=6, key="disabled", display=str(T("Disabled")))
+                 ]
+        s3.dataTableDisplay = values
+
         # Add client-side validation
         s3base.s3_register_validation()
 
         return output
     s3.postp = postp
 
-    def registration_key_represent(value):
-        if value == "disabled":
-            return str(T("Disabled"))
-        elif value == "pending":
-            return str(T("Pending"))
-        else:
-            return str(T("Active"))
-    table.registration_key.represent = registration_key_represent
-    output = s3_rest_controller("auth", resourcename)
+    output = s3_rest_controller("auth", resourcename,
+                                rheader=rheader)
     return output
 
 # =============================================================================
@@ -408,37 +350,6 @@ def user_create_onvalidation (form):
         form.request_vars.password != form.request_vars.password_two):
         form.errors.password = T("Password fields don't match")
     return True
-
-# -----------------------------------------------------------------------------
-def user_approve(form):
-    """
-        Send an email to user if their account is approved (moved from 'pending' to 'blank'(i.e. enabled))
-    """
-
-    if form.vars.registration_key:
-        # Now non-blank
-        return
-    else:
-        # Now blank - lookup old value
-        table = db[auth.settings.table_user]
-        if "id" in form.vars:
-            # Approve action button
-            query = (table.id == form.vars.id)
-        else:
-            # Details screen
-            query = (table.id == request.vars.id)
-        status = db(query).select(table.registration_key,
-                                  limitby=(0, 1)).first().registration_key
-        if status == "pending":
-            # Send email to user confirming that they are now able to login
-            if not auth.settings.mailer or \
-                   not auth.settings.mailer.send(to=form.vars.email,
-                        subject=s3.messages.confirmation_email_subject,
-                        message=s3.messages.confirmation_email):
-                    session.warning = auth.messages.unable_send_email
-                    return
-        else:
-            return
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -720,12 +631,13 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
     return response.stream(portable_app)
 
 # -----------------------------------------------------------------------------
-# Selenium Test Result Reports list
-
 def result():
-    import os
+    """
+        Selenium Test Result Reports list
+    """
+
     file_list = UL()
-    static_path = os.path.join(current.request.folder,"static","test")
+    static_path = os.path.join(request.folder, "static", "test")
     for filename in os.listdir(static_path):
         link = A(filename,
                  _href = URL(c = "static",
@@ -735,8 +647,5 @@ def result():
                  )
         file_list.append(link)
     return dict(file_list=file_list)
-
-
-
 
 # END =========================================================================

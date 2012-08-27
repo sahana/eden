@@ -54,7 +54,7 @@ T = current.T
 # Uncomment this to request the Organisation when a user registers
 #settings.auth.registration_requests_organisation = True
 # Uncomment this to have the Organisation selection during registration be mandatory
-#settings.auth.registration_organisation_mandatory = True
+#settings.auth.registration_organisation_required = True
 # Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
 #settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration

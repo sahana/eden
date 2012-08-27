@@ -109,6 +109,9 @@
             <xsl:if test="$realm='0'">
                 <data field="pe_id" value="0"/>
             </xsl:if>
+            <xsl:if test="contains($realm, '=')">
+                <data field="pe_id"><xsl:value-of select="$realm"/></data>
+            </xsl:if>
         </resource>
 
     </xsl:template>
