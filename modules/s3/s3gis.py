@@ -2303,7 +2303,7 @@ class GIS(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def export_admin_areas(countries=[],
-                           levels=["L0", "L1", "L2"],
+                           levels=["L0", "L1", "L2", "L3"],
                            format="geojson",
                            simplify=0.001,
                            ):
@@ -2463,7 +2463,54 @@ class GIS(object):
                     File = open(filename, "w")
                     File.write(json.dumps(data))
                     File.close()
-            
+
+        if "L3" in levels:
+            if "L0" not in levels and "L1" not in levels and "L2" not in levels:
+                countries = db(cquery).select(ifield)
+            q1 = (table.level == "L1") & \
+                 (table.deleted != True)
+            for country in countries:
+                query = q1 & (table.parent == country.id)
+                l1s = db(query).select(ifield)
+                q2 = (table.level == "L2") & \
+                     (table.deleted != True)
+                for l1 in l1s:
+                    query = q2 & (table.parent == l1.id)
+                    l2s = db(query).select(ifield)
+                    q3 = (table.level == "L3") & \
+                         (table.deleted != True)
+                    for l2 in l2s:
+                        query = q3 & (table.parent == l2.id)
+                        features = []
+                        append = features.append
+                        rows = db(query).select(ifield,
+                                                field,
+                                                )
+                        for row in rows:
+                            if spatial:
+                                geojson = row.geojson
+                            elif simplify:
+                                geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
+                            else:
+                                shape = wkt_loads(row.wkt)
+                                # Compact Encoding
+                                geojson = dumps(shape, separators=(",", ":"))
+                            f = dict(
+                                    type = "Feature",
+                                    properties = {"id": row.id},
+                                    geometry = json.loads(geojson) if geojson else {}
+                                    )
+                            append(f)
+
+                        data = dict(
+                                    type = "FeatureCollection",
+                                    features = features
+                                )
+                        # Output to file
+                        filename = os.path.join(folder, "3_%s.geojson" % l2.id)
+                        File = open(filename, "w")
+                        File.write(json.dumps(data))
+                        File.close()
 
     # -------------------------------------------------------------------------
     def import_admin_areas(self,
