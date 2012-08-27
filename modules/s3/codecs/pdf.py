@@ -264,116 +264,40 @@ class S3RL_PDF(S3Codec):
         return result
 
     def get_resource_flowable(self, resource, doc):
-        fields = resource.readable_fields()
-        if not fields:
-            fields = [table.id]
-        fnames = []
-        flabel = []
-        fobjs = []
         # get a list of fields, if the list_fields attribute is provided
         # then use that to extract the fields that are required, otherwise
         # use the list of readable fields.
+        from s3.s3utils import S3DataTable
         if not self.list_fields:
             self.list_fields = []
+            fields = resource.readable_fields()
             for field in fields:
                 if field.type == "id":
                     continue
                 if self.pdf_hide_comments and field.name == "comments":
                     continue
                 self.list_fields.append(field.name)
-                fnames.append(field.name)
-                flabel.append(field.label)
-        else:
-            for lf in self.list_fields:
-                # if the list fields contains the label then use that
-                # otherwise look for the label in the list of fields
-                if isinstance(lf, (tuple, list)):
-                    if lf[1] == "id":
-                        continue
-                    fnames.append(lf[1])
-                    flabel.append(lf[0])
-                else:
-                    if lf == "id":
-                        continue
-                    for field in fields:
-                        if field.name == lf:
-                            fnames.append(field.name)
-                            flabel.append(field.label)
-                            break
-        # from the list of fields get a list of field objects, used to get the
-        # represent function for the data returned from the call to sqltable()
-        for field_name in fnames:
-            found = False
-            for field in fields:
-                if field.name == field_name:
-                    fobjs.append(field)
-                    found = True
-                    break
-            if not found:
-                if "$" in field_name:
-                    _field = resource.resolve_selector(field_name)["field"]
-                    fobjs.append(_field)
-                else:
-                    fobjs.append(Field(field_name))
-
-        # Merge the groupby and order by into a comma separated string
-        if self.pdf_groupby:
-            if self.pdf_orderby:
-                orderby = "%s,%s" % (self.pdf_groupby, self.pdf_orderby)
-            else:
-                orderby = self.pdf_groupby
-        else:
-            orderby = self.pdf_orderby
-        # Get the data...
-        sqltable = resource.sqltable(self.list_fields,
-                                     orderby = orderby,
-                                     start = None, # needs to be None to get all records
-                                     limit = None,
-                                    )
-        data = []
-        # Convert the data into the represent format
-        if sqltable:
-            for record in sqltable.sqlrows.records:
-                row = []
-                cnt = 0
-                for field in fobjs:
-                    repr = field.represent
-                    fname = field.name
-                    try:
-                        value = record[field._tablename][fname]
-                    except:
-                        # The above code doesn't work for virtual fields
-                        # So look through the results in the record
-                        value = ""
-                        tnames = record.keys()
-                        for tname in tnames:
-                            if fname in record[tname]:
-                                value = record[tname][fname]
-                                break
-                    if repr:
-                        try:
-                            row.append(repr(value, show_link=False))
-                        except TypeError:
-                            try:
-                                row.append(repr(value))
-                            except:
-                                row.append(value)
-                    else:
-                        row.append(value)
-                    cnt += 1
-                data.append(row)
-
+        rfields = resource.resolve_selectors(self.list_fields)[0]
+        (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+        resource.add_filter(filter)
+        current.manager.ROWSPERPAGE = None # needed to get all the data
+        rows = resource._select(self.list_fields,
+                                orderby=orderby,
+                                )
+        data = resource._extract(rows,
+                                 self.list_fields,
+                                 represent=True,
+                                 )
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
-                               raw_data = data,
-                               list_fields = fnames,
-                               labels=flabel,
+                               rfields,
+                               data,
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
                                ).build()
         return pdf_table
-        
+
 # -------------------------------------------------------------------------
 class EdenDocTemplate(BaseDocTemplate):
     """
@@ -639,9 +563,8 @@ class S3PDFTable(object):
 
     def __init__(self,
                  document,
+                 rfields,
                  raw_data,
-                 list_fields = None,
-                 labels = None,
                  groupby = None,
                  hide_comments = False,
                  autogrow = False,
@@ -667,9 +590,25 @@ class S3PDFTable(object):
             self.paper_size = A4
 
         self.pdf = document
-        self.raw_data = raw_data
-        self.list_fields = list_fields
-        self.labels = labels
+        # @todo: change the code to use raw_data directly rather than this
+        #        conversion to an ordered list of values
+        self.rfields = rfields
+        self.raw_data = []
+        for row in raw_data:
+            data = []
+            for value in rfields:
+                text = row[value.colname]
+                if isinstance(text, str):
+                    data.append(text)
+                else:
+                    try:
+                        # extract the text from the html tag
+                        data.append(text.components[0])
+                    except:
+                        data.append(str(text))
+            self.raw_data.append(data)
+        self.labels = [field.label for field in self.rfields]
+        self.list_fields = [field.fname for field in self.rfields]
         self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow

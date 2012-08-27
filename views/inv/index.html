@@ -5,7 +5,8 @@
 <p>{{=T("Inventory Items include both consumable supplies & those which will get turned into Assets at their destination.")}}</p>
 <div class='col2left'>
 <ul>
-  <li><a href='{{=URL(c="inv", f="warehouse")}}'>{{=T("Warehouses")}}</a>
+  <li><a href='{{=URL(c="inv", f="warehouse")}}'>{{=T("Warehouses")}}</a></li>
+  {{try:}}{{=XML(warehouses)}}{{except:}}{{pass}}
   <li>{{=T("Other Inventories")}}</a>
   <ul>
     <li><a href='{{=URL(c="org", f="office")}}'>{{=T("Offices")}}</a>
@@ -27,6 +28,7 @@
   <li><a href='{{=URL(c="inv", f="adj")}}'>{{=T("Adjust Stock Levels")}}</a>
   <li><a href='{{=URL(c="inv", f="inv_item", args="import")}}'>{{=T("Import")}}</a>
 </ul>
+{{try:}}{{=XML(inventory)}}{{except:}}{{pass}}
 </div>
 <h3>{{=T("Reports")}}:</h3>
 <ul>
@@ -60,6 +62,7 @@
   <li><a href='{{=URL(c="supply", f="item", args="create")}}'>{{=T("New")}}</a>
   <li><a href='{{=URL(c="supply", f="item")}}'>{{=T("List All")}}</a>
   <li><a href='{{=URL(c="supply", f="item", args="search")}}'>{{=T("Search")}}</a>
+      {{try:}}{{=XML(supply_items)}}{{except:}}{{pass}}
 </ul>
 <h4>{{=T("Catalogs")}}</h4>
 <ul>
@@ -77,3 +80,4 @@
 </div>
 {{pass}}
 </div>
+{{include "dataTables.html"}}

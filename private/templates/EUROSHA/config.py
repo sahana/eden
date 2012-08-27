@@ -183,13 +183,7 @@ settings.modules = OrderedDict([
             name_nice = T("Staff"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 7,
-        )),
-    ("vol", Storage(
-            name_nice = T("Volunteers"),
-            #description = "Human Resources Management",
-            restricted = True,
-            module_type = 8,
+            module_type = None,
         )),
     ("cms", Storage(
           name_nice = T("Content Management"),
@@ -239,7 +233,7 @@ settings.modules = OrderedDict([
             name_nice = T("Projects"),
             #description = "Tracking of Projects, Activities and Tasks",
             restricted = True,
-            module_type = 9
+            module_type = 7
         )),
     ("hms", Storage(
             name_nice = T("Hospitals"),

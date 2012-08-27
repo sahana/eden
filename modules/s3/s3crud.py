@@ -739,6 +739,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -934,6 +935,14 @@ class S3CRUD(S3Method):
                     items = ""
 
             # Update output
+            attr = S3DataTable.getConfigData()
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby, # order by
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **attr
+                                           )
             output["items"] = items
             output["sortby"] = sortby
 
@@ -1013,6 +1022,13 @@ class S3CRUD(S3Method):
             else:
                 items = resource.sqltable(fields=list_fields,
                                           as_list=True)
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby,
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **S3DataTable.getConfigData()
+                                           )
             response.view = "plain.html"
             return dict(item=items)
 
@@ -1884,6 +1900,7 @@ class S3ApproveRecords(S3CRUD):
             @param attr: controller parameters for the request
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -2045,6 +2062,13 @@ class S3ApproveRecords(S3CRUD):
                 s3.no_formats = True
 
             # Update output
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby,
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **S3DataTable.getConfigData()
+                                           )
             output["items"] = items
             output["sortby"] = sortby
 
