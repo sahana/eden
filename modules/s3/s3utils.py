@@ -1506,283 +1506,6 @@ class SQLTABLES3(SQLTABLE):
         components.append(TBODY(*tbody))
 
 # =============================================================================
-class S3SQLTable(object):
-    """
-    """
-
-    DEFAULT_PAGE_SIZE = 25
-
-    def __init__(self, cols, rows, **kwargs):
-        #super(S3SQLTable, self).__init__(**kwargs)
-
-        self.template = "_table.html" # not used yet
-
-        self.cols = cols
-        self.rows = rows
-        self.limit = kwargs.get("limit", None)
-        self.row_actions = kwargs.get("row_actions", None)
-        self.bulk_actions = kwargs.get("bulk_actions", None)
-
-        self.html_attributes = {}
-        for key, value in kwargs.items():
-            if key[0] == "_":
-                self.html_attributes[key] = value
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def from_resource(cls, resource, cols, limit=None, orderby=None, **kwargs):
-        """
-        """
-
-        from s3resource import S3FieldSelector
-        T = current.T
-
-        # columns
-        orderby_field = None
-
-        for col in cols:
-            fs = S3FieldSelector(col["name"])
-            lf = fs.resolve(resource)
-
-            if lf.field != None:
-                field = lf.field
-            else:
-                field = None
-
-            if "label" not in col:
-                if field is None:
-                    col["label"] = " ".join([w.capitalize() for w in col["name"].split(".")[-1].split("_")])
-                else:
-                    col["label"] = field.label
-
-            if "type" not in col:
-                if field is None:
-                    col["type"] = "string"
-                else:
-                    col["type"] = str(field.type)
-
-            if orderby and str(orderby) == col["name"]:
-                orderby_field = field # can't order by virtual fields?
-
-        # rows
-        rows = None
-
-        if limit is None or limit > 0:
-            fields = [col["name"] for col in cols]
-            rows = resource.sqltable(fields=fields,
-                                     start=None,
-                                     limit=limit,
-                                     orderby=orderby_field,
-                                     as_rows=True)
-
-        if rows:
-            # values from rows
-            r_rows = [] # rendered rows
-            represent = current.manager.represent
-            for row in rows:
-                r_row = {} # rendered row
-                for col in cols:
-                    try:
-                        lf = S3FieldSelector(col["name"]).resolve(resource)
-                    except:
-                        # invalid field selector
-                        r_row[col["name"]] = ""
-                        continue
-
-                    try:
-                        value = S3FieldSelector.extract(resource, row, lf)
-                    except:
-                        # field not found in row
-                        value = None
-
-                    field = lf.field
-                    if field is not None:
-                        r_row[col["name"]] = represent(field, value)
-                    else:
-                        r_row[col["name"]] = s3_unicode(value)
-
-                r_rows.append(r_row)
-            rows = r_rows
-        else:
-            rows = []
-
-        return cls(cols, rows, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def html(self):
-        """
-        """
-
-        T = current.T
-
-        # Columns
-        html_cols = []
-
-        for col in self.cols:
-            html_cols.append(TH(col["label"], _scope="col"))
-
-        # Rows
-        html_rows = []
-        for row in self.rows[:self.limit]:
-            html_cells = []
-
-            for col in self.cols:
-                if col['name']:
-                    cell_value = row[col["name"]]
-                    if cell_value is None:
-                        cell_value = ""
-                else:
-                    cell_value = ""
-
-                # some values are HTML, wrap in XML()
-                html_cells.append(TD(XML(cell_value)))
-
-            html_rows.append(TR(*html_cells))
-
-        # Table
-        html_table = TABLE(THEAD(TR(*html_cols)),
-                           TBODY(*html_rows),
-                           **self.html_attributes)
-
-        if self.bulk_actions:
-            actions = []
-            for action, label in self.bulk_actions:
-                actions.append(OPTION(label, _value=action))
-
-            html_table = FORM(SELECT(OPTION("", ""),
-                                     *actions,
-                                     _name="action"),
-                              INPUT(_type="submit", _value=T("Go")),
-                              html_table,
-                              _action="",
-                              _method="post",
-                              _class="dataTable-actions")
-
-        return html_table
-
-    # -------------------------------------------------------------------------
-    def xml(self):
-        return s3_unicode(self.html())
-
-# =============================================================================
-class S3DataTable(S3SQLTable):
-    """
-    """
-
-    def __init__(self, cols, rows, **kwargs):
-        super(S3DataTable, self).__init__(cols, rows, **kwargs)
-
-        html_classes = self.html_attributes.get("_class", "").split(" ")
-        html_classes += ["dataTable", "display"]
-        self.html_attributes["_class"] = " ".join(html_classes)
-
-        #self.page_size = kwargs.get("page_size", self.DEFAULT_PAGE_SIZE)
-        self.options = kwargs.get("options")
-        self.total_rows = kwargs.get("total_rows")
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def from_resource(cls, resource, cols, **kwargs):
-        """
-            @param page_size: number of rows to display per page
-            @param limit: number of rows to fetch from the database
-        """
-
-        options = kwargs.pop("options", {})
-        page_size = kwargs.pop("page_size", None)
-        limit = kwargs.pop("limit", None)
-
-        if kwargs.get("no_sspag", False):
-            page_size = None
-
-        if page_size is None:
-            options["bServerSide"] = False
-        elif "sAjaxSource" in options:
-            options["bServerSide"] = True
-            limit = page_size
-
-        if "bulk_actions" in kwargs:
-            cols.insert(0, {"name": "id",
-                            "label": "",
-                            "type": "int",
-                            "bSortable": False})
-        elif "row_actions" in kwargs:
-            cols.insert(0, {"name": "id",
-                            "label": "",
-                            "type": "int",
-                            "bSortable": False,
-                            "bVisible": False})
-
-        table = super(S3DataTable, cls).from_resource(resource, cols, limit, **kwargs)
-
-        if limit and len(table.rows) < limit:
-            table.total_rows = len(table.rows)
-        else:
-            table.total_rows = resource.count()
-
-        table.options = options
-        table.page_size = page_size
-
-        return table
-
-    # -------------------------------------------------------------------------
-    def xml(self):
-        """
-        """
-
-        # dataTable initialisation options
-        if self.page_size:
-            self.options["iDisplayLength"] = self.page_size
-            self.options["iDeferLoading"] = self.total_rows
-
-        # Page size drop-down
-        aLengthMenu = set([
-            (25, 25),
-            (50, 50),
-            (-1, "All"),
-        ])
-        aLengthMenu.add((self.page_size, self.page_size))
-        aLengthMenu = sorted(aLengthMenu, key=lambda x: x[1])
-        aLengthMenu = list(zip(*aLengthMenu))
-        self.options["aLengthMenu"] = aLengthMenu
-
-        if self.row_actions:
-            self.cols.append({"name": "",
-                              "label": "",
-                              "type": None,
-                              "mDataProp": None,
-                              "bSortable": False})
-
-        html_table = super(S3DataTable, self).html()
-
-        self.options["aoColumns"] = []
-        for col in self.cols:
-            dt_col = {
-                "sName": col["name"],
-                "sType": col["type"]
-            }
-            dt_col.update(col)
-            dt_col["name"] = None
-            del dt_col["label"]
-            self.options["aoColumns"].append(dt_col)
-
-        html_script = SCRIPT(
-'''if(S3.dataTablesInstances==undefined){
- S3.dataTablesInstances=new Array()
-}
-S3.dataTablesInstances.push({
- 'options':%s,
- 'row_actions':%s,
- 'bulk_actions':%s
-})
-S3.i18n.all="%s"''' % (json.dumps(self.options),
-                       self.row_actions,
-                       self.bulk_actions,
-                       current.T("All")))
-
-        return s3_unicode(TAG[""](html_table, html_script))
-
-# =============================================================================
 class S3BulkImporter(object):
     """
         Import CSV files of data to pre-populate the database.
@@ -2828,5 +2551,602 @@ def URL2(a=None, c=None, r=None):
     #other = ""
     url = "/%s/%s" % (application, controller)
     return url
+
+# =============================================================================
+class S3DataTable(object):
+    """
+        Generate a datatable from a list of Storages and a list of fields
+    """
+
+    # The dataTable id if no explicit value has been provided
+    id_counter = 1
+
+    def __init__(self,
+                 rfields,
+                 data,
+                 start=0,
+                 limit=None,
+                 filterString=None,
+                 orderby=None,
+                 ):
+        """
+            S3DataTable constructor
+
+            @param rfields: A list of S3Resourcefield
+            @param data: A list of Storages the key is of the form table.field
+                         The value is the data to be displayed in the dataTable
+            @param start: the first row to return from the data
+            @param limit: the (maximum) number of records to return
+            @param filterString: The string that was used in filtering the records
+            @param orderby: the DAL orderby construct
+        """
+        from gluon.dal import Expression
+        self.data = data
+        self.rfields = rfields
+        self.lfields = []
+        self.heading = {}
+        for field in rfields:
+            selector = "%s.%s" % (field.tname, field.fname)
+            self.lfields.append(selector)
+            self.heading[selector] = (field.label)
+        max = len(data)
+        if start < 0:
+            start == 0
+        if start > max:
+            start = max
+        if limit == None:
+            end = max
+        else:
+            end = start + limit
+            if end > max:
+                end = max
+        self.start = start
+        self.end = end
+        self.filterString = filterString
+
+        def selectAction(orderby):
+            if isinstance(orderby, tuple):
+                for el in orderby:
+                    selectAction(el)
+            if isinstance(orderby, Field):
+                extractField(orderby)
+            elif isinstance(orderby, Expression):
+                extractExpression(orderby)
+            else:
+                self.orderby.append([1, 'asc'])
+        def extractField(field):
+            cnt = 0
+            for rfield in rfields:
+                if str(field) == rfield.colname:
+                    self.orderby.append([cnt, 'asc'])
+                    break
+                cnt += 1
+        def extractExpression(exp):
+            cnt = 0
+            if isinstance(exp.first, Field):
+                for rfield in rfields:
+                    if str(exp.first) == rfield.colname:
+                        if exp.op == exp.db._adapter.INVERT:
+                            self.orderby.append([cnt, 'desc'])
+                        else:
+                            self.orderby.append([cnt, 'asc'])
+                        break
+                    cnt += 1
+            else:
+                extractExpression(exp.first)
+            if exp.second:
+                selectAction(exp.second)
+
+        self.orderby = []
+        selectAction(orderby)
+
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def getConfigData():
+        """
+            Method to extract the configuration data from S3 globals and
+            store them as an attr variable
+
+            @return: dictionary of attributes which can be passed into html()
+
+            @param attr: dictionary of attributes which can be passed in
+                   dt_displayLength : The default number of records that will be shown
+                   dt_pagination: Enable pagination
+                   dt_pagination_type: type of pagination, either:
+                                        (default) full_numbers
+                                        OR two_button
+                   dt_bFilter: Enable or disable filtering of data.
+                   dt_group: The colum that is used to group the data
+                   dt_ajax_url: The URL to be used for the Ajax call
+                   dt_action_col: The column where the action buttons will be placed
+                   dt_bulk_actions: list of labels for the bulk actions.
+                   dt_bulk_col: The column in which the checkboxes will appear,
+                                by default it will be the column immediately
+                                before the first data item
+                   dt_bulk_selected: A list of selected items
+                   dt_actions: dictionary of actions
+                   dt_styles: dictionary of styles to be applied to a list of ids
+                              for example:
+                              {"warning" : [1,3,6,7,9],
+                               "alert" : [2,10,13]}
+        """
+        attr = Storage()
+        s3 = current.response.s3
+        if s3.actions:
+            attr.dt_actions = s3.actions
+        if s3.dataTableBulkActions:
+            attr.dt_bulk_actions = s3.dataTableBulkActions
+        if s3.dataTable_iDisplayLength:
+            attr.dt_displayLength = s3.dataTable_iDisplayLength
+        attr.dt_pagination = "false" if s3.no_sspag else "true"
+        if s3.dataTable_sPaginationType:
+            attr.dt_pagination_type = s3.dataTable_sPaginationType
+        if s3.dataTable_group:
+            attr.dt_group = s3.dataTable_group
+        if s3.dataTable_NobFilter:
+            attr.dt_bFilter = not s3.dataTable_NobFilter
+        if s3.dataTable_sDom:
+            attr.dt_sDom = s3.dataTable_sDom
+        if s3.dataTableDisplay:
+            attr.dt_display = s3.dataTableDisplay
+        if s3.dataTableStyleDisabled or s3.dataTableStyleWarning or s3.dataTableStyleAlert:
+            attr.dt_styles = {}
+            if s3.dataTableStyleDisabled:
+                attr.dt_styles["dtdisable"] = s3.dataTableStyleDisabled
+            if s3.dataTableStyleWarning:
+                attr.dt_styles["dtwarning"] = s3.dataTableStyleWarning
+            if s3.dataTableStyleAlert:
+                attr.dt_styles["dtalert"] = s3.dataTableStyleAlert
+        return attr
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def getControlData(rfields, vars):
+        """
+            Method that will return the orderby and filter from the vars
+            returned by the browser, from an ajax call.
+
+            @param rfields: A list of S3Resourcefield
+            @param vars: A list of variables sent from the dataTable
+        """
+        if not vars.iSortingCols:
+            return (False, "")
+        sort_cols = int(vars.iSortingCols)
+        orderby = False
+        for x in range(sort_cols):
+            index = int(vars["iSortCol_%s" % x])
+            f = rfields[index].field
+            if vars["sSortDir_%s" % x] == "desc":
+                f = ~f
+            if not orderby:
+                orderby = f
+            else:
+                orderby |= f
+        words = vars.sSearch
+        if words == "":
+            return (orderby, "")
+        words = words.split()
+        query = None
+        for rf in rfields:
+            if rf.ftype in ("string", "text") :
+                    if not query:
+                        query = rf.field.contains(words)
+                    else:
+                        query &= (rf.field.contains(words))
+
+        return (orderby, query)
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def listFormats(id, rfields=None):
+        """
+            Calculate the export formats that can be added to the table
+
+            @param id: The unique dataTabel ID
+            @param rfields: optional list of rfields
+        """
+        s3 = current.response.s3
+        T = current.T
+        request = current.request
+        iconList = []
+        url = s3.formats.pdf if s3.formats.pdf else request.url
+        iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application,
+                            _onclick="s3FormatRequest('pdf', '%s', '%s');" % (id, url),
+                            _alt=T("Export in PDF format"),
+                              ))
+        url = s3.formats.xls if s3.formats.xls else request.url
+        iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % request.application,
+                            _onclick="s3FormatRequest('xls', '%s', '%s');" % (id, url),
+                            _alt=T("Export in XLS format"),
+                              ))
+        url = s3.formats.rss if s3.formats.rss else request.url
+        iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % request.application,
+                            _onclick="s3FormatRequest('rss', '%s', '%s');" % (id, url),
+                            _alt=T("Export in RSS format"),
+                              ))
+        div = DIV(_class='list_formats')
+        div.append(current.T("Export to:"))
+        if "have" in s3.formats:
+            iconList.append(IMG(_src="/%s/static/img/have_16.png" % request.application,
+                                _onclick="s3FormatRequest('have', '%s', '%s');" % (id, s3.formats.have),
+                                _alt=T("Export in HAVE format"),
+                                  ))
+        if "kml" in s3.formats:
+            iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % request.application,
+                                _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, s3.formats.kml),
+                                _alt=T("Export in KML format"),
+                                  ))
+        elif rfields:
+            kml_list = ["location_id",
+                        "site_id",
+                        ]
+            for r in rfields:
+                if r.fname in kml_list:
+                    iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % request.application,
+                                        _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, request.url),
+                                        _alt=T("Export in KML format"),
+                                          ))
+        if "map" in s3.formats:
+            iconList.append(IMG(_src="/%s/static/img/map_icon.png" % request.application,
+                                _onclick="s3FormatRequest('map', '%s', '%s');" % (id, s3.formats.map),
+                                _alt=T("Show on map"),
+                                  ))
+
+        for icon in iconList:
+            div.append(icon)
+        return div
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def defaultActionButtons(resource,
+                             custom_actions=None,
+                             ):
+        """
+            Calculate the default action buttons to be added to the table
+
+            Temp copy of S3CRUD.action_buttons()
+        """
+        from s3crud import S3CRUD
+        table = resource.table
+        s3 = current.response.s3
+
+        s3.actions = None
+
+        auth = current.auth
+        has_permission = auth.s3_has_permission
+        ownership_required = auth.permission.ownership_required
+
+        labels = current.manager.LABEL
+        args = ["[id]"]
+
+        if has_permission("update", table) and \
+           not ownership_required("update", table):
+            update_url = URL(c=resource.prefix,
+                             f=resource.name,
+                             args = args + ["update"])
+            S3CRUD.action_button(labels.UPDATE, update_url)
+        else:
+            read_url = URL(c=resource.prefix,
+                           f=resource.name,
+                           args = args)
+            S3CRUD.action_button(labels.READ, read_url)
+        deletable = current.s3db.get_config(resource.tablename,"deletable", True)
+        if deletable and \
+            has_permission("delete", table) and \
+            not ownership_required("delete", table):
+            delete_url = URL(c=resource.prefix,
+                             f=resource.name,
+                             args = args + ["delete"])
+            S3CRUD.action_button(labels.DELETE, delete_url)
+        # Append custom actions
+        if custom_actions:
+            s3.actions = s3.actions + custom_actions
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def htmlConfig(html,
+                   id,
+                   orderby,
+                   filterString,
+                   rfields = None,
+                   **attr
+                   ):
+        """
+            Method to wrap the html for a dataTable in a form, the list of formats
+            used for data export and add the config details required by dataTables,
+
+            @param html: The html table
+            @param id: The id of the table
+            @param orderby: the sort details see aaSort at http://datatables.net/ref
+            @param filterString: The string used to filter the data response
+            @param rfields: The list of resource fields
+            @param attr: dictionary of attributes which can be passed in
+                   dt_displayLength : The default number of records that will be shown
+                   dt_sDom : The Datatable DOM initialisation variable, describing
+                             the order in which elements are displayed.
+                             See http://datatables.net/ref for more details.
+                   dt_pagination : Is pagination enabled, dafault 'true'
+                   dt_pagination_type : How the pagination buttons are displayed
+                   dt_bFilter: Enable or disable filtering of data.
+                   dt_ajax_url: The URL to be used for the Ajax call
+                   dt_action_col: The column where the action buttons will be placed
+                   dt_bulk_actions: list of labels for the bulk actions.
+                   dt_bulk_col: The column in which the checkboxes will appear,
+                                by default it will be the column immediately
+                                before the first data item
+                   dt_group: The column that is used to group the data
+                   dt_bulk_selected: A list of selected items
+                   dt_actions: dictionary of actions
+                   dt_styles: dictionary of styles to be applied to a list of ids
+                              for example:
+                              {"warning" : [1,3,6,7,9],
+                               "alert" : [2,10,13]}
+                   dt_text_maximum_len: The maximum length of text before it is condensed
+                   dt_text_condense_len: The length displayed text is condensed down to
+                   dt_shrink_groups: If true then the rows within a group will be hidden
+            @global current.response.s3.actions used to get the RowActions
+        """
+        from gluon.serializers import json
+        from gluon.storage import Storage
+        s3 = current.response.s3
+
+        if not s3.dataTableID or not isinstance(s3.dataTableID, list):
+            s3.dataTableID = [id]
+        elif id not in s3.dataTableID:
+            s3.dataTableID.append(id)
+        # The configuration parameter from the server to the client will be
+        # sent in a json object stored in an hidden input field. This object
+        # will then be parsed by s3.dataTable.js and the values used.
+        config = Storage()
+        config.id = id
+        config.displayLength = attr.get("dt_displayLength",current.manager.ROWSPERPAGE)
+        config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
+        config.pagination = attr.get("dt_pagination", "true")
+        config.paginationType = attr.get("dt_pagination_type", "full_numbers")
+        config.bFilter = attr.get("dt_bFilter", "true")
+        config.ajaxUrl = attr.get("dt_ajax_url", URL(c=current.request.controller,
+                                                     f=current.request.function,
+                                                     extension="aaData",
+                                                     vars={"id":"%s" % id},
+                                                     ))
+        config.rowStyles = attr.get("dt_styles", [])
+
+
+        rowActions = current.response.s3.actions
+        if rowActions:
+            config.rowActions = rowActions
+        else:
+            config.rowActions = []
+        bulkActions = attr.get("dt_bulk_actions", None)
+        if bulkActions and not isinstance(bulkActions, list):
+            bulkActions = [bulkActions]
+        config.bulkActions = bulkActions
+        config.bulkCol = attr.get("dt_bulk_col", 0)
+        group = attr.get("dt_group", [])
+        action_col = attr.get("dt_action_col",0)
+        if bulkActions and config.bulkCol <= action_col:
+            action_col += 1
+        config.actionCol = action_col
+        if group:
+            if bulkActions and config.bulkCol <= group:
+                group += 1
+            if action_col >= group:
+                group -= 1
+            group = [[group, "asc"]]
+        config.group = group
+        if bulkActions:
+            for order in orderby:
+                if config.bulkCol <= order[0]:
+                    order[0] += 1
+                if action_col >= order[0]:
+                    order[0] -= 1
+        config.aaSort = orderby
+        config.textMaxLength = attr.get("dt_text_maximum_len", 80)
+        config.textShrinkLength = attr.get("dt_text_condense_len", 75)
+        config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
+        # Wrap the table in a form and add some data in hidden fields
+        form = FORM()
+        if not s3.no_formats:
+            form.append (S3DataTable.listFormats(id, rfields))
+        form.append (html)
+        form.append(INPUT(_type="hidden",
+                          _id="%s_dataTable_filter" %id,
+                          _name="filterString",
+                          _value=filterString))
+
+        # Add the configuration details for this dataTable
+        form.append(INPUT(_type="hidden",
+                          _id="%s_configurations" %id,
+                          _name="config",
+                          _value=json(config)))
+        # If we have bulk actions then add the hidden fields
+        if config.bulkActions:
+            form.append(INPUT(_type="hidden",
+                              _id="%s_dataTable_bulkMode" %id,
+                              _name="mode",
+                              _value="Inclusive"))
+            bulk_selected = attr.get("dt_bulk_selected", "")
+            if isinstance(bulk_selected, list):
+                bulk_selected = ",".join(bulk_selected)
+            form.append(INPUT(_type="hidden",
+                              _id="%s_dataTable_bulkSelection" %id,
+                              _name="selected",
+                              _value="[%s]" % bulk_selected))
+        return form
+
+    # ---------------------------------------------------------------------
+    def table(self, id, flist=None, action_col=0):
+        """
+            Method to render the data as an html table. This is of use if
+            and html table is required without the dataTable goodness. However
+            if you want html for a dataTable then use the html() method
+
+            @param id: The id of the table
+            @param flist: The list of fields
+            @param action_col: The column where action columns will be displayed
+                               (this is required by dataTables)
+        """
+        data = self.data
+        heading = self.heading
+        start = self.start
+        end = self.end
+        if not flist:
+            flist = self.lfields
+
+        # Build the header row
+        header = THEAD()
+        tr = TR()
+        for field in flist:
+            if field == "BULK":
+                tr.append(TH(""))
+            else:
+                tr.append(TH(heading[field]))
+        header.append(tr)
+
+        # Build the body rows (the actual data)
+        body = TBODY()
+        rc = 0
+        for i in xrange(start, end):
+            row = data[i]
+            if rc % 2 == 0:
+                _class = "even"
+            else:
+                _class = "odd"
+            rc += 1
+            tr = TR(_class=_class)
+            for field in flist:
+                # Insert a checkbox for bulk select
+                if field == "BULK":
+                    tr.append(TD(INPUT(_id="select%s" % row[flist[action_col]],
+                                       _type="checkbox",
+                                       _class="bulkcheckbox",
+                                       )))
+                else:
+                    tr.append(TD(row[field]))
+            body.append(tr)
+        table = TABLE([header,body], _id=id, _class="dataTable display")
+        return table
+
+    # ---------------------------------------------------------------------
+    def html(self,
+             id = None,
+             **attr
+             ):
+        """
+            Method to render the data into html
+
+            @param id: The id of the table these need to be unique if more
+                       than one dataTable is to be rendered on the same page.
+                           If this is not passed in then a unique id will be
+                           generated. Regardless the id is stored in self.id
+                           so it can be easily accessed after rendering.
+            @param attr: dictionary of attributes which can be passed in
+        """
+        flist = self.lfields
+
+        if not id:
+            id = "list_%s" % self.id_counter
+            self.id_counter += 1
+        self.id = id
+
+        bulkActions = attr.get("dt_bulk_actions", None)
+        bulkCol = attr.get("dt_bulk_col", 0)
+        if bulkCol > len(flist):
+            bulkCol = len(flist)
+        action_col = attr.get("dt_action_col",0)
+        if action_col != 0:
+            if action_col == -1 or action_col >= len(flist):
+                action_col = len(flist) -1
+                attr["dt_action_col"] = action_col
+            flist = flist[1:action_col+1] + [flist[0]] + flist[action_col+1:]
+
+        # Get the details for any bulk actions. If we have at least one bulk
+        # action then a column will be added, either at the start or in the
+        # column identified by dt_bulk_col
+        if bulkActions:
+            flist.insert(bulkCol,"BULK")
+            if bulkCol <= action_col:
+                action_col += 1
+
+        table = self.table(id, flist, action_col)
+
+        html = self.htmlConfig(table,
+                               id,
+                               self.orderby,
+                               self.filterString,
+                               self.rfields,
+                               **attr
+                               )
+
+        return html
+
+    # ---------------------------------------------------------------------
+    def json(self,
+             id,
+             sEcho,
+             totalrows,
+             displayrows,
+             **attr
+             ):
+        """
+            Method to render the data into a json object
+
+            @param id: The id of the table for which this ajax call will
+                       respond to.
+            @param sEcho: An unaltered copy of sEcho sent from the client used
+                          by dataTables as a draw count.
+            @param totalrows: The total rows in the unfiltered query.
+            @param displayrows: The total rows in the filtered query.
+            @param attr: dictionary of attributes which can be passed in
+                   dt_action_col: The column where the action buttons will be placed
+                   dt_bulk_actions: list of labels for the bulk actions.
+                   dt_bulk_col: The column in which the checkboxes will appear,
+                                by default it will be the column immediately
+                                before the first data item
+        """
+        from gluon.serializers import json
+        data = self.data
+        flist = self.lfields
+        start = self.start
+        end = self.end
+
+        action_col = attr.get("dt_action_col",0)
+        if action_col != 0:
+            if action_col == -1 or action_col >= len(flist):
+                action_col = len(flist) -1
+            flist = flist[1:action_col+1] + [flist[0]] + flist[action_col+1:]
+        # Get the details for any bulk actions. If we have at least one bulk
+        # action then a column will be added, either at the start or in the
+        # column identified by dt_bulk_col
+        bulkActions = attr.get("dt_bulk_actions", None)
+        bulkCol = attr.get("dt_bulk_col", 0)
+        if bulkActions:
+            if bulkCol > len(flist):
+                bulkCol = len(flist)
+            flist.insert(bulkCol,"BULK")
+            if bulkCol <= action_col:
+                action_col += 1
+
+        structure = {}
+        aadata = []
+        for i in xrange(start, end):
+            row = data[i]
+            details = []
+            for field in flist:
+                if field == "BULK":
+                    details.append('<INPUT id="select%s" type="checkbox" class="bulkcheckbox">' % row[flist[action_col]])
+                else:
+                    details.append(s3_unicode(row[field]))
+            aadata.append(details)
+        structure["dataTable_id"] = id
+        structure["dataTable_filter"] = self.filterString
+        structure["dataTable_sort"] = self.orderby
+        structure["aaData"] = aadata
+        structure["iTotalRecords"] = totalrows
+        structure["iTotalDisplayRecords"] = displayrows
+        structure["sEcho"] = sEcho
+        return json(structure)
+
 
 # END =========================================================================

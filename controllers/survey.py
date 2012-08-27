@@ -73,6 +73,17 @@ def template():
                 s3.actions[1]["restrict"] = [str(row.id) for row in rows]
             except IndexError: # the delete buttons doesn't exist
                 pass
+            # Add some highlighting to the rows
+            query = (r.table.status == 3) # Status of closed
+            rows = db(query).select(r.table.id)
+            s3.dataTableStyleDisabled = [str(row.id) for row in rows]
+            s3.dataTableStyleWarning = [str(row.id) for row in rows]
+            query = (r.table.status == 1) # Status of Pending
+            rows = db(query).select(r.table.id)
+            s3.dataTableStyleAlert = [str(row.id) for row in rows]
+            query = (r.table.status == 4) # Status of Master
+            rows = db(query).select(r.table.id)
+            s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
             s3db.configure(r.tablename,
                             orderby = "%s.status" % r.tablename,
                             create_next = URL(c="survey", f="template"),
@@ -123,17 +134,6 @@ def template():
         #                           ),
         #                      ]
 
-        # Add some highlighting to the rows
-        query = (r.table.status == 3) # Status of closed
-        rows = db(query).select(r.table.id)
-        s3.dataTableStyleDisabled = [str(row.id) for row in rows]
-        s3.dataTableStyleWarning = [str(row.id) for row in rows]
-        query = (r.table.status == 1) # Status of Pending
-        rows = db(query).select(r.table.id)
-        s3.dataTableStyleAlert = [str(row.id) for row in rows]
-        query = (r.table.status == 4) # Status of Master
-        rows = db(query).select(r.table.id)
-        s3.dataTableStyleWarning.extend(str(row.id) for row in rows)
         return output
     s3.postp = postp
 

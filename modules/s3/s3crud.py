@@ -420,11 +420,17 @@ class S3CRUD(S3Method):
 
             # Last update
             last_update = self.last_update()
-            if "modified_on" in last_update:
-                output["modified_on"] = last_update["modified_on"]
-            if "modified_by" in last_update:
-                # auth_user table doesn't have modified_by
-                output["modified_by"] = last_update["modified_by"]
+            if last_update:
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
+                try:
+                    output["modified_by"] = last_update["modified_by"]
+                except:
+                    # Field not in table, such as auth_user
+                    pass
 
         elif representation == "plain":
             # Hide empty fields from popups on map
@@ -607,11 +613,15 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["modified_on"] = last_update["modified_on"]
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
                 try:
                     output["modified_by"] = last_update["modified_by"]
                 except:
-                    # Field not in table - e.g. auth_user
+                    # Field not in table, such as auth_user
                     pass
 
             # Redirection
@@ -729,6 +739,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -792,7 +803,8 @@ class S3CRUD(S3Method):
         if not fields:
             fields = []
 
-        if fields[0].name != table.fields[0]:
+        if not fields or \
+           fields[0].name != table.fields[0]:
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
@@ -923,6 +935,14 @@ class S3CRUD(S3Method):
                     items = ""
 
             # Update output
+            attr = S3DataTable.getConfigData()
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby, # order by
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **attr
+                                           )
             output["items"] = items
             output["sortby"] = sortby
 
@@ -1002,6 +1022,13 @@ class S3CRUD(S3Method):
             else:
                 items = resource.sqltable(fields=list_fields,
                                           as_list=True)
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby,
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **S3DataTable.getConfigData()
+                                           )
             response.view = "plain.html"
             return dict(item=items)
 
@@ -1873,6 +1900,7 @@ class S3ApproveRecords(S3CRUD):
             @param attr: controller parameters for the request
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -2034,6 +2062,13 @@ class S3ApproveRecords(S3CRUD):
                 s3.no_formats = True
 
             # Update output
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby,
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **S3DataTable.getConfigData()
+                                           )
             output["items"] = items
             output["sortby"] = sortby
 

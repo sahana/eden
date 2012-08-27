@@ -48,46 +48,44 @@ def repository():
             if r.component and r.id:
                 if r.component.alias == "job":
                     s3.jquery_ready.append(
-'''
-sync_show_row = function(id) {
-    $('#' + id + '__row1').removeClass('hide');
-    $('#' + id + '__row').removeClass('hide');
-    val = $('#sync_job_repeat_interval').val();
-    $('#intvstr').remove();
+'''sync_show_row = function(id) {
+    $('#' + id + '__row1').removeClass('hide')
+    $('#' + id + '__row').removeClass('hide')
+    val = $('#sync_job_repeat_interval').val()
+    $('#intvstr').remove()
     if (val == 1) {
-        intvstr = '%(minutes)s';
+        intvstr = '%(minutes)s'
     } else if (val == 2) {
-        intvstr = '%(hours)s';
+        intvstr = '%(hours)s'
     } else if (val == 3 ) {
-        intvstr = '%(days)s';
+        intvstr = '%(days)s'
     } else if (val == 4 ) {
-        intvstr = '%(weeks)s';
+        intvstr = '%(weeks)s'
     } else {
-        return;
+        return
     }
-    $('#sync_job_repeat_rate').after('<span id="intvstr">&nbsp;' + intvstr + '</span>');
+    $('#sync_job_repeat_rate').after('<span id="intvstr">&nbsp;' + intvstr + '</span>')
 }
 sync_hide_row = function(id) {
-    $('#' + id + '__row1').addClass('hide');
-    $('#' + id + '__row').addClass('hide');
+    $('#' + id + '__row1').addClass('hide')
+    $('#' + id + '__row').addClass('hide')
 }
 sync_toggle_rows = function() {
-    val = $('#sync_job_repeat_interval').val();
+    val = $('#sync_job_repeat_interval').val()
     if (val in [1, 2, 3, 4]) {
         // time interval
-        sync_show_row('sync_job_repeat_rate');
+        sync_show_row('sync_job_repeat_rate')
     } else {
         // once
-        sync_hide_row('sync_job_repeat_rate');
+        sync_hide_row('sync_job_repeat_rate')
     }
 }
-$('#sync_job_repeat_interval').change(sync_toggle_rows);
-sync_toggle_rows();
-''' % dict (minutes = T("minutes"),
-            hours=T("hours"),
-            days=T("days"),
-            weeks=T("weeks")))
-                    current.s3task.configure_tasktable_crud(
+$('#sync_job_repeat_interval').change(sync_toggle_rows)
+sync_toggle_rows()''' % dict (minutes = T("minutes"),
+                              hours=T("hours"),
+                              days=T("days"),
+                              weeks=T("weeks")))
+                    s3task.configure_tasktable_crud(
                         function="sync_synchronize",
                         args = [r.id],
                         vars = dict(user_id = auth.user is not None and auth.user.id or 0))

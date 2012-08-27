@@ -39,11 +39,21 @@ class AddStaffToOffice(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        
-        self.login(account="admin", nexturl="org/office/15/human_resource")
+        browser = self.browser
+        config = self.config
+        self.login(account="admin", nexturl="org/office")
+        self.dt_filter("AP Zone")
+        self.dt_action()
+        url = browser.current_url
+        url_parts = url.split("/")
+        try:
+            org_id = int(url_parts[-2])
+        except:
+            org_id = int(url_parts[-1])
+        browser.get("%s/org/office/%s/human_resource" % (config.url, org_id))
+        self.browser.find_element_by_id("show-add-btn").click()
         self.browser.find_element_by_id("select_from_registry").click()
-        
-        
+
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",

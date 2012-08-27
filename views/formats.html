@@ -1,8 +1,14 @@
+{{########################################################################
+# Deprecated for use with dataTables, please see S3DataTable.listFormats #
+########################################################################}}
 {{if not s3.no_formats:}}
 <div id='list_formats'>Export to:
 <a href="{{=s3.formats.pdf or r.url(representation="pdf")}}" title="{{=T("Export in PDF format")}}"><img src="/{{=appname}}/static/img/pdficon_small.gif"/></a>
 <a href="{{=s3.formats.xls or r.url(representation="xls")}}" title="{{=T("Export in XLS format")}}"><img src="/{{=appname}}/static/img/icon-xls.png"/></a>
 <a href="{{=s3.formats.rss or r.url(representation="rss")}}" title="{{=T("Export in RSS format")}}"><img src="/{{=appname}}/static/img/RSS_16.png"/></a>
+{{if "have" in s3.formats:}}
+  <a href="{{=s3.formats.have}}" title="{{=T("Export in EDXL-HAVE format")}}"><img src="/{{=appname}}/static/img/have_16.png"/></a>
+{{pass}}
 {{if "kml" in s3.formats:}}
   <a href="{{=s3.formats.kml}}" title="{{=T("Export in KML format")}}"><img src="/{{=appname}}/static/img/kml_icon.png"/></a>
 {{elif ("location_id" in r.table) or ("site_id" in r.table) or (r.component and (("location_id" in r.component.table) or ("site_id" in r.component.table))):}}

@@ -276,20 +276,20 @@ def user():
         s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
         s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
-        # Translate the status values
-        values = [dict(col=6, key="", display=str(T("Active"))),
-                  dict(col=6, key="None", display=str(T("Active"))),
-                  dict(col=6, key="pending", display=str(T("Pending"))),
-                  dict(col=6, key="disabled", display=str(T("Disabled")))
-                 ]
-        s3.dataTableDisplay = values
-
         # Add client-side validation
         s3base.s3_register_validation()
 
         return output
     s3.postp = postp
 
+    def registration_key_represent(value):
+        if value == "disabled":
+            return str(T("Disabled"))
+        elif value == "pending":
+            return str(T("Pending"))
+        else:
+            return str(T("Active"))
+    table.registration_key.represent = registration_key_represent
     output = s3_rest_controller("auth", resourcename, rheader = rheader)
     return output
 

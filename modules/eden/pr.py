@@ -3027,9 +3027,19 @@ def pr_person_represent(person_id, show_link=False):
                                  lambda: s3_fullname(person_id),
                                  time_expire=60)
     if show_link:
-        # @ToDo: Use pr controller for other usecases
+        request = current.request
+        group = request.get_vars.get("group", None)
+        c = request.controller
+        if group == "staff" or \
+           c == "hrm":
+            controller = "hrm"
+        elif group == "volunteer" or \
+             c == "vol":
+            controller = "vol"
+        else:
+            controller = "pr"
         name = A(name,
-                 _href = URL(c="hrm", f="person", args=[person_id]))
+                 _href = URL(c=controller, f="person", args=[person_id]))
     return name
 
 # =============================================================================

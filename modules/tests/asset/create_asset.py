@@ -56,7 +56,7 @@ class CreateAsset(SeleniumUnitTest):
                        "Blankets",
                        "autocomplete"),
                      ( "site_id",
-                       "AP Zone",
+                       "AP Zone (Office)",
                        "option"),
                      ( "sn",
                        "WPU-4536-9381"),

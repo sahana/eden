@@ -219,7 +219,7 @@ def index():
                           _id = "add-btn",
                           _class = "action-btn",
                           _style = "margin-right: 10px;"),
-                        org_items["items"],
+                        org_items,
                         _id = "org_box",
                         _class = "menu_box fleft"
                         )
@@ -332,24 +332,69 @@ def organisation():
     """
         Function to handle pagination for the org list on the homepage
     """
-
+    from s3.s3utils import S3DataTable
     table = db.org_organisation
-    table.id.label = T("Organization")
-    table.id.represent = organisation_represent
+    resource = current.manager.define_resource("org", "organisation")
+    list_fields = ["id","name"]
+    limit = int(current.request.get_vars["iDisplayLength"]) if request.extension == "aaData" else 1
+    rfields = resource.resolve_selectors(list_fields)[0]
+    (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+    resource.add_filter(filter)
+    if isinstance(orderby, bool):
+        orderby = table.name
+    rows = resource._select(list_fields,
+                            orderby=orderby,
+                            start=0,
+                            limit=limit,
+                            )
+    data = resource._extract(rows,
+                             list_fields,
+                             represent=True,
+                             )
+    dt = S3DataTable(rfields, data)
+    dt.defaultActionButtons(resource)
+    response.s3.no_formats = True
+    if request.extension == "html":
+        items = dt.html("org_list_1",
+                        dt_displayLength=10,
+                        dt_ajax_url=URL(c="default",
+                                        f="organisation",
+                                        extension="aaData",
+                                        vars={"id":"org_list_1"},
+                                        ),
+                       )
+    elif request.extension.lower() == "aadata":
+        limit = resource.count()
+        if "sEcho" in request.vars:
+            echo = int(request.vars.sEcho)
+        else:
+            echo = None
+        items = dt.json("supply_list_1",
+                            echo,
+                            limit,
+                            limit,
+                            )
+    else:
+        raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+    return items
+#    table = db.org_organisation
+#    table.id.label = T("Organization")
+#    table.id.represent = organisation_represent
+#
+#    s3.dataTable_sPaginationType = "two_button"
+#    s3.dataTable_sDom = "rtip" #"frtip" - filter broken
+#    s3.dataTable_iDisplayLength = 25
+#
+#    s3db.configure("org_organisation",
+#                    listadd = False,
+#                    addbtn = True,
+#                    super_entity = db.pr_pentity,
+#                    linkto = "/%s/org/organisation/%s" % (appname,
+#                                                          "%s"),
+#                    list_fields = ["id",])
+#
+#    return s3_rest_controller("org", "organisation")
 
-    s3.dataTable_sPaginationType = "two_button"
-    s3.dataTable_sDom = "rtip" #"frtip" - filter broken
-    s3.dataTable_iDisplayLength = 25
-
-    s3db.configure("org_organisation",
-                    listadd = False,
-                    addbtn = True,
-                    super_entity = db.pr_pentity,
-                    linkto = "/%s/org/organisation/%s" % (appname,
-                                                          "%s"),
-                    list_fields = ["id",])
-
-    return s3_rest_controller("org", "organisation")
 # -----------------------------------------------------------------------------
 def site():
     """

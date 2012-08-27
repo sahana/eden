@@ -166,6 +166,7 @@ class AuthS3(Auth):
         self.settings.lock_keys = False
         self.settings.username_field = False
         self.settings.lock_keys = True
+
         self.messages.lock_keys = False
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
@@ -3380,8 +3381,11 @@ class AuthS3(Auth):
             if OENT in fields:
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
-                # Check for type-specific handler to find the owner entity
-                handler = s3db.get_config(tablename, "owner_entity")
+                # Check for custom handler to find the owner entity
+                # (global setting overrides table-specific setting)
+                handler = current.deployment_settings.get_auth_owner_entity()
+                if handler is None:
+                    handler = s3db.get_config(tablename, "owner_entity")
                 if callable(handler):
                     owner_entity = handler(table, row)
                     data[OENT] = owner_entity
@@ -6579,7 +6583,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_role_modules()
+        return current.deployment_settings.get_auth_role_modules()
 
     # -------------------------------------------------------------------------
     def get_access_levels(self):
@@ -6589,7 +6593,7 @@ class S3EntityRoleManager(S3Method):
 
             @return: OrderedDict
         """
-        return current.deployment_settings.get_aaa_access_levels()
+        return current.deployment_settings.get_auth_access_levels()
 
     # -------------------------------------------------------------------------
     def get_assigned_roles(self, entity_id=None, user_id=None):

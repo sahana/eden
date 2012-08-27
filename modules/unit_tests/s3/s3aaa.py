@@ -12,7 +12,7 @@ from gluon.storage import Storage
 from s3.s3aaa import S3EntityRoleManager
 
 # =============================================================================
-class S3RoleTests(unittest.TestCase):
+class RoleTests(unittest.TestCase):
     """
         Example how one could easily prepare a complex resource
         in order to test permissions
@@ -74,7 +74,7 @@ class S3RoleTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
-class S3AuthTests(unittest.TestCase):
+class AuthTests(unittest.TestCase):
     """ S3Auth Tests """
 
     def setUp(self):
@@ -587,7 +587,7 @@ class S3AuthTests(unittest.TestCase):
         self.assertFalse(auth.s3_session_owns(table2, 2))
 
 # =============================================================================
-class S3PermissionTests(unittest.TestCase):
+class PermissionTests(unittest.TestCase):
     """ S3Permission Tests """
 
     def setUp(self):
@@ -1114,7 +1114,7 @@ class S3PermissionTests(unittest.TestCase):
         return
 
 # =============================================================================
-class S3HasPermissionTests(unittest.TestCase):
+class HasPermissionTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -1638,7 +1638,7 @@ class S3HasPermissionTests(unittest.TestCase):
         auth.s3_delete_role("TESTDVIADMIN")
 
 # =============================================================================
-class S3AccessibleQueryTests(unittest.TestCase):
+class AccessibleQueryTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -2205,7 +2205,7 @@ class S3AccessibleQueryTests(unittest.TestCase):
         auth.s3_delete_role("TESTDVIADMIN")
 
 # =============================================================================
-class S3RecordApprovalTests(unittest.TestCase):
+class RecordApprovalTests(unittest.TestCase):
 
     def setUp(self):
 
@@ -2684,7 +2684,7 @@ class S3RecordApprovalTests(unittest.TestCase):
         current.db.rollback()
 
 # =============================================================================
-class S3DelegationTests(unittest.TestCase):
+class DelegationTests(unittest.TestCase):
 
 
     @classmethod
@@ -2894,7 +2894,7 @@ class S3DelegationTests(unittest.TestCase):
         auth.s3_delete_role("TESTDVIADMIN")
 
 # =============================================================================
-class S3AccessibleQueryTests(unittest.TestCase):
+class AccessibleQueryTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -3463,7 +3463,7 @@ class S3AccessibleQueryTests(unittest.TestCase):
 
 
 # =============================================================================
-class S3EntityRoleManagerTests(unittest.TestCase):
+class EntityRoleManagerTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -3542,6 +3542,107 @@ class S3EntityRoleManagerTests(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
+# =============================================================================
+class OwnerEntityTests(unittest.TestCase):
+    """ Test customization hooks for owner entity """
+
+    def setUp(self):
+
+        db = current.db
+        s3db = current.s3db
+
+        # Create a dummy record
+        otable = s3db.org_organisation
+        org = Storage(name="Ownership Test Organisation")
+        org_id = otable.insert(**org)
+        org.update(id=org_id)
+        s3db.update_super(otable, org)
+
+        self.org_id = org_id
+
+        # Clear the hooks
+        tname = "org_organisation"
+        settings = current.deployment_settings
+        self.ghook = settings.get_auth_owner_entity()
+        self.shook = s3db.get_config(tname, "owner_entity")
+        settings.auth.owner_entity = None
+        s3db.clear_config(tname, "owner_entity")
+
+        self.owned_record = None
+
+    def testTableSpecificOwnerEntity(self):
+        """ Test table-specific owner_entity hook """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        s3db.configure(tname, owner_entity = self.owner_entity)
+
+        auth.s3_set_record_owner(otable, record, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+
+    def testGlobalOwnerEntity(self):
+        """ Test global owner_entity hook """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.owner_entity = self.owner_entity
+
+        auth.s3_set_record_owner(otable, record, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+
+    def testOwnerEntityOverride(self):
+        """ Check whether global owner_entity hook overrides any table-specific setting """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        s3db.configure(tname, owner_entity = self.owner_entity)
+        settings.auth.owner_entity = self.owner_entity_override
+
+        auth.s3_set_record_owner(otable, record, force_update=True)
+        self.assertEqual(self.owned_record, "checked")
+
+    def owner_entity(self, table, row):
+        """ Dummy method for hook testing """
+
+        self.owned_record = (table._tablename, row.id)
+        return None
+
+    def owner_entity_override(self, table, row):
+        """ Dummy method for hook testing """
+
+        self.owned_record = "checked"
+        return None
+
+    def tearDown(self):
+
+        s3db = current.s3db
+        settings = current.deployment_settings
+
+        # Rollback DB
+        current.db.rollback()
+
+        # Restore the hooks
+        settings.auth.owner_entity = self.ghook
+        if self.shook is not None:
+            s3db.configure("org_organisation", owner_entity=self.shook)
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -3559,14 +3660,15 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        #S3RoleTests,
-        S3AuthTests,
-        S3PermissionTests,
-        S3HasPermissionTests,
-        S3AccessibleQueryTests,
-        S3DelegationTests,
-        S3EntityRoleManagerTests,
-        S3RecordApprovalTests,
+        #RoleTests,
+        AuthTests,
+        PermissionTests,
+        HasPermissionTests,
+        AccessibleQueryTests,
+        DelegationTests,
+        EntityRoleManagerTests,
+        RecordApprovalTests,
+        OwnerEntityTests,
     )
 
 # END ========================================================================

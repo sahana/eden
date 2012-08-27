@@ -374,7 +374,7 @@ class S3FireStationModel(S3Model):
                                                     fact = "minutes",
                                                     aggregate = "sum"
                                                 ))
-            req.set_handler("report", S3Cube())
+            req.set_handler("report", S3Report())
             req.resource.add_filter(query)
             return req(rheader=rheader)
 

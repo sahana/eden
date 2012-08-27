@@ -32,9 +32,9 @@ def loadAllTests():
     addTests(loadTests(CreateVolunteerTraining))
 
     # Inventory tests
-    addTests(loadTests(SendItem))
-    addTests(loadTests(ReceiveItem))
-    addTests(loadTests(SendReceiveItem))
+    #addTests(loadTests(SendItem))
+    #addTests(loadTests(ReceiveItem))
+    #addTests(loadTests(SendReceiveItem))
 
     # Project Tests
     addTests(loadTests(CreateProject))
@@ -69,7 +69,7 @@ def loadAllTests():
     addTests(loadTests(CreateMember))
 
     # Search Staff (Simple & Advance)
-    addTests(loadTests(SearchStaff))
+    #addTests(loadTests(SearchStaff))
 
     return suite
 
