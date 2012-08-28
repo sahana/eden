@@ -988,7 +988,11 @@ class S3Resource(object):
         multiple = [c._alias for c in self.components.values() if c.multiple]
 
         rfields = []
-        for f in fields:
+        for i in fields:
+            if isinstance(i, tuple) and len(i) > 1:
+                f = i[-1]
+            else:
+                f = i
             if isinstance(f, S3ResourceField):
                 rfields.append(f)
             elif isinstance(f, str):
@@ -1137,13 +1141,18 @@ class S3Resource(object):
 
             # Find all deletable rows
             references = table._referenced_by
-            rfields = [(tn, fn) for tn, fn in references
-                                if db[tn][fn].ondelete == "RESTRICT"]
+            try:
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+            except AttributeError:
+                # older web2py
+                references = [db[tn][fn] for tn, fn in references]
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+
             restricted = []
             ids = [row[pkey] for row in rows]
-            for tn, fn in rfields:
+            for rfield in rfields:
+                fn, tn = rfield.name, rfield.tablename
                 rtable = db[tn]
-                rfield = rtable[fn]
                 query = (rfield.belongs(ids))
                 if DELETED in rtable:
                     query &= (rtable[DELETED] != True)
@@ -1188,9 +1197,9 @@ class S3Resource(object):
                     continue
 
                 # Run automatic ondelete-cascade
-                for tn, fn in references:
+                for rfield in references:
+                    fn, tn = rfield.name, rfield.tablename
                     rtable = db[tn]
-                    rfield = rtable[fn]
                     query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
                         rprefix, rname = tn.split("_", 1)
@@ -1424,7 +1433,12 @@ class S3Resource(object):
                     callback(ondelete_cascade, row, tablename=tablename)
 
                 # Automatic cascade
-                for tn, fn in references:
+                for ref in references:
+                    try:
+                        tn, fn = ref.tablename, ref.name
+                    except:
+                        # old web2py < 2.0
+                        tn, fn = ref
                     rtable = db[tn]
                     rfield = rtable[fn]
                     query = (rfield == row[pkey])
@@ -5921,7 +5935,7 @@ class S3RecordMerger(object):
                           "instance_type" in table.fields
 
         # Find all references
-        referenced_by = table._referenced_by
+        referenced_by = list(table._referenced_by)
 
         # Append virtual references
         virtual_references = s3db.get_config(tablename, "referenced_by")
@@ -5941,7 +5955,12 @@ class S3RecordMerger(object):
         fieldname = self.fieldname
 
         # Update all references
-        for tn, fn in referenced_by:
+        for referee in referenced_by:
+
+            if isinstance(referee, Field):
+                tn, fn = referee.tablename, referee.name
+            else:
+                tn, fn = referee
 
             se = s3db.get_config(tn, "super_entity")
             if is_super_entity and \

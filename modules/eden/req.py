@@ -1998,7 +1998,7 @@ def req_match():
 
     s3.filter = (s3db.req_req.site_id != site_id)
     s3db.configure("req_req", insertable=False)
-    
+
     # Post-process
     def postp(r, output):
         if r.representation == "html":
