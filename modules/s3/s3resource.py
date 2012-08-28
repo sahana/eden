@@ -363,6 +363,22 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def select(self, *fields, **attributes):
         """
+            Wrapper for backward compatibility, use-cases outside of
+            S3Resource should use .sqltable() instead.
+
+            @see: S3Resource._load()
+        """
+
+        import warnings
+        warnings.showwarning("The parameter format and behavior of the "
+                             "S3Resource.select() method will change in "
+                             "future versions of the API, please consider "
+                             "to use either .sqltable() or ._load() instead.",
+                             FutureWarning, "s3resource.py", "364")
+        return self._load(*fields, **attributes)
+
+    def _load(self, *fields, **attributes):
+        """
             Select records with the current query
 
             @param fields: fields to select
@@ -474,9 +490,9 @@ class S3Resource(object):
             if not limitby:
                 self._length = len(rows)
         else:
-            rows = self.select(limitby=limitby,
-                               orderby=orderby,
-                               *fields)
+            rows = self._load(limitby=limitby,
+                              orderby=orderby,
+                              *fields)
             self._length = len(rows)
         id = table._id.name
         self._ids = [row[id] for row in rows]
@@ -1106,9 +1122,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self.select(table._id, table.uuid)
+            rows = self._load(table._id, table.uuid)
         else:
-            rows = self.select(table._id)
+            rows = self._load(table._id)
 
         if not rows:
             # No rows? => that was it already :)
@@ -1387,9 +1403,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self.select(table._id, table.uuid)
+            rows = self._load(table._id, table.uuid)
         else:
-            rows = self.select(table._id)
+            rows = self._load(table._id)
         if not rows:
             return True
 

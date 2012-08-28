@@ -114,7 +114,7 @@ class S3RequestManager(object):
             BAD_RESOURCE = T("Nonexistent or invalid resource"),
             PARSE_ERROR = T("XML parse error"),
             TRANSFORMATION_ERROR = T("XSLT transformation error"),
-            BAD_SOURCE = T("Invalid XML source"),
+            BAD_SOURCE = T("Invalid source"),
             NO_MATCH = T("No matching element found in the data source"),
             VALIDATION_ERROR = T("Validation error"),
             DATA_IMPORT_ERROR = T("Data import error"),

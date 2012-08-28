@@ -1067,7 +1067,8 @@ class S3OrganisationVirtualFields:
         s3db = current.s3db
         otable = s3db.org_office
         gtable = db.gis_location
-        if hasattr(self, "org_organisation"):
+        if hasattr(self, "org_organisation") and \
+           "id" in self.org_organisation:
             query = (otable.deleted != True) & \
                     (otable.organisation_id == self.org_organisation.id) & \
                     (otable.location_id == gtable.id)

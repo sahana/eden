@@ -824,10 +824,7 @@ class S3PersonModel(S3Model):
                 ag = 6
 
             if age != ag:
-                form.errors.age_group = T("Age group does not match actual age.")
-                return False
-
-        return True
+                form.errors.age_group = current.T("Age group does not match actual age.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1316,7 +1313,7 @@ class S3ContactModel(S3Model):
         if form.vars.contact_method == "EMAIL":
             email, error = IS_EMAIL()(form.vars.value)
             if error:
-                form.errors.value = T("Enter a valid email")
+                form.errors.value = current.T("Enter a valid email")
         return False
 
     # -------------------------------------------------------------------------

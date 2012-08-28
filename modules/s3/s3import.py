@@ -1500,7 +1500,7 @@ class S3Importer(S3CRUD):
     # -------------------------------------------------------------------------
     def _use_import_item_table(self, job_id):
         """
-            Set the resource and the table to being s3_import_item 
+            Set the resource and the table to being s3_import_item
         """
 
         if self.item_resource == None:
