@@ -3255,6 +3255,8 @@ class S3Permission(object):
             @param tablename: the name for the permissions table
         """
 
+        db = current.db
+
         # Instantiated once per request, but before Auth tables
         # are defined and authentication is checked, thus no use
         # to check permissions in the constructor
@@ -3284,7 +3286,10 @@ class S3Permission(object):
 
         # Permissions table
         self.tablename = tablename or self.TABLENAME
-        self.table = current.db.get(self.tablename, None)
+        if self.tablename in db:
+            self.table = db[self.tablename]
+        else:
+            self.table = None
 
         # Error messages
         T = current.T
@@ -4631,7 +4636,10 @@ class S3Audit(object):
         """
 
         db = current.db
-        self.table = db.get(tablename, None)
+        if tablename in db:
+            self.table = db[tablename]
+        else:
+            self.table = None
         if not self.table:
             self.table = db.define_table(tablename,
                             Field("timestmp", "datetime"),

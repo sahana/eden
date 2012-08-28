@@ -916,7 +916,7 @@ class S3Model(object):
             else:
                 row = Storage()
             _tablename = s._tablename
-            form = Storage(vars=row)
+            form = Storage(vars=Storage(row))
             if row:
                 onaccept = get_config(_tablename, "update_onaccept",
                            get_config(_tablename, "onaccept", None))
