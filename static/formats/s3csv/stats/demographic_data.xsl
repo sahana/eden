@@ -11,8 +11,8 @@
          Description....................optional.....demographic.description
          Value..........................required.....demographic_data.value
          Date...........................optional.....demographic_data.name
-         Source Name....................optional.....doc_document.name
-         Source URL.....................optional.....doc_document.url
+         Source Name....................optional.....stats_source.name
+         Source URL.....................optional.....stats_source.url
          Country........................optional.....gis_location.L0
          L1.............................optional.....gis_location.L1
          L2.............................optional.....gis_location.L2
@@ -46,6 +46,12 @@
     <xsl:template match="/">
 
         <s3xml>
+            <!-- Create the Doc Source Type -->
+            <resource name="doc_source_type">
+                <xsl:attribute name="tuid">doc_source_type_stats_demographic</xsl:attribute>
+                <data field="name">stats_demographic</data>
+            </resource>
+
             <!-- Create the Demographics -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('demographic',
@@ -94,9 +100,9 @@
             </reference>
 
             <!-- Link to Source -->
-            <reference field="source_id" resource="doc_document">
+            <reference field="source_id" resource="stats_source">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('doc_document/',col[@field='Source Name'])"/>
+                    <xsl:value-of select="concat('stats_source/',col[@field='Source Name'])"/>
                 </xsl:attribute>
             </reference>
 
@@ -129,13 +135,22 @@
         <xsl:variable name="name" select="col[@field='Source Name']"/>
 
         <xsl:if test="$name!=''">
-            <resource name="doc_document">
+            <resource name="stats_source">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('doc_document/',$name)"/>
+                    <xsl:value-of select="concat('stats_source/',$name)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$name"/></data>
                 <data field="url"><xsl:value-of select="col[@field='Source URL']"/></data>
                 <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+                <data field="status">Approval pending</data>
+                <data field="created_by">1</data>
+                <!-- Link to Location -->
+                <xsl:call-template name="LocationReference"/>
+
+                <!-- Link to Source Type -->
+                <reference field="source_type_id" resource="doc_source_type">
+                    <xsl:attribute name="tuid">doc_source_type_stats_demographic</xsl:attribute>
+                </reference>
             </resource>
         </xsl:if>
 

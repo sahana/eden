@@ -31,6 +31,7 @@ __all__ = ["S3DocumentLibrary",
            "S3DocumentSourceModel",
            "doc_image_represent",
            "doc_source_represent",
+           "doc_source_type_represent",
           ]
 
 import os
@@ -114,8 +115,11 @@ class S3DocumentLibrary(S3Model):
                              organisation_id(
                                 widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
                                 ),
+                             Field("status",
+                                    label=T("Status")),
                              s3_date(label = T("Date Published")),
                              location_id(),
+                             self.doc_source_type_id(),
                              s3_comments(),
                              #Field("entered", "boolean", label=T("Entered")),
                              Field("checksum", readable=False, writable=False),
@@ -172,6 +176,8 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = define_table(tablename,
+                             # Instance
+                             super_link("source_id", "doc_source_entity"),
                              # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
@@ -199,8 +205,11 @@ class S3DocumentLibrary(S3Model):
                              organisation_id(
                                 widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
                                 ),
-                             location_id(),
+                             Field("status",
+                                    label=T("Status")),
                              s3_date(label = T("Date Taken")),
+                             location_id(),
+                             self.doc_source_type_id(),
                              s3_comments(),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())
@@ -367,19 +376,50 @@ class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
              "doc_source_id",
-             "doc_source"
+             "doc_source",
+             "doc_source_type",
              ]
 
     def model(self):
 
+        from s3.s3fields import s3_authorstamp
         T = current.T
 
+        location_id = self.gis_location_id
+        # ---------------------------------------------------------------------
+        # The type of document held as a  document_source_entity.
+        #
+        tablename = "doc_source_type"
+        table = self.define_table(tablename,
+                                  Field("doc_source_instance",
+                                        label=T("Instance Type")),
+                                  Field("name",
+                                        label=T("Name")),
+                                  Field("display",
+                                        label=T("Display")),
+                                  *s3_meta_fields()
+                                  )
+        # Reusable Field
+        source_type_id = S3ReusableField("source_type_id", table,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(current.db,
+                                                          "doc_source_type.id",
+                                                          doc_source_type_represent)),
+                                    represent = doc_source_type_represent,
+                                    label = T("Source Type"),
+                                    ondelete = "CASCADE")
+        # Resource Configuration
+        self.configure(tablename,
+                       deduplicate=self.doc_source_type_duplicate,
+                       )
         # ---------------------------------------------------------------------
         # Document-source entities
         #
         source_types = Storage(
                                #pr_pentity = T("Person"),
+                               doc_image = T("Image"),
                                doc_document = T("Document"),
+                               stats_source = T("Stats"),
                                #flood_gauge = T("Flood Gauge"),
                                #survey_series = T("Survey")
                                )
@@ -389,6 +429,12 @@ class S3DocumentSourceModel(S3Model):
         table = self.super_entity(tablename, "source_id", source_types,
                                   Field("name",
                                         label=T("Name")),
+                                  Field("status",
+                                        label=T("Status")),
+                                  s3_date(label = T("Date Published")),
+                                  location_id(),
+                                  source_type_id(),
+                                  *s3_authorstamp()
                                   )
         # Reusable Field
         source_id = S3ReusableField("source_id", table,
@@ -423,7 +469,8 @@ class S3DocumentSourceModel(S3Model):
         # Pass model-global names to response.s3
         #
         return Storage(
-                doc_source_id = source_id
+                doc_source_id = source_id,
+                doc_source_type_id = source_type_id,
             )
 
     # -------------------------------------------------------------------------
@@ -433,9 +480,29 @@ class S3DocumentSourceModel(S3Model):
                                     readable=False,
                                     writable=False)
 
+        source_type_id = S3ReusableField("source_type_id", "integer",
+                                         readable=False,
+                                         writable=False)
+
         return Storage(
-                doc_source_id = source_id
+                doc_source_id = source_id,
+                doc_source_type_id = source_type_id,
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def doc_source_type_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "doc_source_type":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def doc_image_represent(filename):
@@ -495,6 +562,26 @@ def doc_source_represent(id, row=None):
                                    limitby = (0, 1)).first()
     try:
         return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def doc_source_type_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.display
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.display
+
+    db = current.db
+    table = db.doc_source_type
+    r = db(table._id == id).select(table.display,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.display
     except:
         return current.messages.UNKNOWN_OPT
 

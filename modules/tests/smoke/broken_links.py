@@ -38,7 +38,8 @@ class BrokenLinkTest(Web2UnitTest):
         self.include_ignore = ("_language=",
                                "logout",
                                "appadmin",
-                               "admin"
+                               "admin",
+                               "delete",
                               )
         # tuple of strings that should be removed from the URL before storing
         # Typically this will be some variables passed in via the URL 
