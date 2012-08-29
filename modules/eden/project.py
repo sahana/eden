@@ -4847,6 +4847,7 @@ def project_task_controller():
     table = s3db[tablename]
     statuses = s3.project_task_active_statuses
     crud_strings = s3.crud_strings[tablename]
+
     if "mine" in request.get_vars:
         # Show the Open Tasks for this User
         crud_strings.title_list = T("My Open Tasks")
@@ -4865,14 +4866,11 @@ def project_task_controller():
             list_fields.remove("status")
             s3db.configure(tablename,
                            # Override the 'show read-only view of record after update'
-                           create_next=URL(vars={"mine":1}),
+                           #create_next=URL(vars={"mine":1}),
+                           #update_next=URL(vars={"mine":1}),
                            list_fields=list_fields)
         except:
             pass
-        if auth.user:
-            pe_id = auth.user.pe_id
-            s3.filter = (table.pe_id == pe_id) & \
-                        (table.status.belongs(statuses))
     elif "project" in request.get_vars:
         # Show Open Tasks for this Project
         project = request.get_vars.project
@@ -4897,10 +4895,6 @@ def project_task_controller():
                        copyable=False,
                        #search_method=task_search,
                        list_fields=list_fields)
-        ltable = s3db.project_task_project
-        s3.filter = (ltable.project_id == project) & \
-                    (ltable.task_id == table.id) & \
-                    (table.status.belongs(statuses))
     else:
         crud_strings.title_list = T("All Tasks")
         crud_strings.title_search = T("All Tasks")
@@ -4920,20 +4914,37 @@ def project_task_controller():
                        ),
                        list_fields=list_fields
                        )
-        if "open" in request.get_vars:
-            # Show Only Open Tasks
-            crud_strings.title_list = T("All Open Tasks")
-            s3.filter = (table.status.belongs(statuses))
 
     # Pre-process
     def prep(r):
         if r.interactive:
+            statuses = s3.project_task_active_statuses
+            table = s3db.project_task
+
             if r.record:
                 # Put the Comments in the RFooter
                 project_ckeditor()
                 s3.rfooter = LOAD("project", "comments.load",
                                   args=[r.id],
                                   ajax=True)
+
+            elif "mine" in request.get_vars:
+                if auth.user:
+                    pe_id = auth.user.pe_id
+                    s3.filter = (table.pe_id == pe_id) & \
+                                (table.status.belongs(statuses))
+
+            elif "project" in request.get_vars:
+                project = request.get_vars.project
+                ltable = s3db.project_task_project
+                s3.filter = (ltable.project_id == project) & \
+                            (ltable.task_id == table.id) & \
+                            (table.status.belongs(statuses))
+            elif "open" in request.get_vars:
+                # Show Only Open Tasks
+                crud_strings.title_list = T("All Open Tasks")
+                s3.filter = (table.status.belongs(statuses))
+
             if r.component:
                 if r.component_name == "req":
                     if current.deployment_settings.has_module("hrm"):
