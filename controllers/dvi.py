@@ -96,6 +96,11 @@ def inline():
                     ),
                     "age_group",
                     "date_of_birth",
+                    S3SQLInlineComponent(
+                        "note",
+                        label=T("Notes"),
+                        fields=["timestmp", "note_text"]
+                    ),
                     "identification.status"
                     )
 

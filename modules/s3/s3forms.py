@@ -1328,7 +1328,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         else:
                             value = None
                             text = ""
-                        item[fname] = {"value": value, "text": text}
+                        # @todo: using s3_unicode here may not be enough,
+                        # this must produce the exact input format for
+                        # the respective field validator and thus probably
+                        # rather use the formatter of the validator than
+                        # just s3_unicode.
+                        item[fname] = {"value": s3_unicode(value),
+                                       "text": text}
                     items.append(item)
             else:
                 items = []
@@ -1590,8 +1596,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
             for item in data["data"]:
 
                 # Get the values
-                values = dict([(f, item[f]["value"])
-                               for f in item if isinstance(item[f], dict)])
+                values = Storage([(f, item[f]["value"])
+                                  for f in item if isinstance(item[f], dict)])
 
                 if "_id" in item:
                     record_id = item["_id"]
@@ -1765,13 +1771,18 @@ class S3SQLInlineComponent(S3SQLSubForm):
         data = dict()
         formfields = []
         formname = self._formname()
+        validate = current.manager.validate
         for f in fields:
             fname = f["name"]
             idxname = "%s_%s_%s_%s" % (formname, fname, rowtype, index)
             formfield = self._rename_field(table[fname], idxname,
                                            skip_post_validation=True)
             if index is not None and item and fname in item:
-                data[idxname] = item[fname]["value"]
+                value = item[fname]["value"]
+                value, error = validate(table, None, fname, value)
+                if error:
+                    value = None
+                data[idxname] = value
             formfields.append(formfield)
         if not data:
             data = None
