@@ -973,6 +973,8 @@ class S3Resource(object):
 
         rfields = []
         for f in fields:
+            if isinstance(f, tuple):
+                f = f[1]
             if isinstance(f, S3ResourceField):
                 rfields.append(f)
             elif isinstance(f, str):
