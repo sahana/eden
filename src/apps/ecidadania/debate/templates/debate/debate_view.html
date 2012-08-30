@@ -80,13 +80,14 @@
                                                     <p class="note-text">{{ note.title }}</p>
                                                     <span id="view-note" class="label label-info hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
                                                     {% if note.author == request_user or request_user.is_staff %}
-                                                        <span id="edit-note" class="label label-info hidden"><a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a></span>
-																												{% endif %}
-																												<br />{% get_comment_count for note as comment_count %}
-																												<span class="comments">{{ comment_count	}} comments</span>
-																											</div>
+                                                        <span id="edit-note" class="label label-info hidden">
+                                                            <a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a>
+                                                        </span>
+                                                    {% endif %}<br />
+                                                    {% get_comment_count for note as comment_count %}
+                                                    <span class="comments">{{ comment_count	}} comments</span>
+												</div>
 
-                                                </div>
                                             {% endif %}
                                         {% endfor %}
                                         {% endwith %}
@@ -145,32 +146,30 @@
                         <h3 id="view-note-title"></h3>
                     </div>
                     <div class="modal-body">
-                    <p id="view-note-desc"></p>
-                    <span id="num-comments"></span>
-                    <div id="comments"></div>
+                        <p id="view-note-desc"></p>
+                        <span id="num-comments"></span>
+                        <div id="comments"></div>
                     </div>
                     <div class="modal-footer">
-{% if user.is_authenticated %}
-<h5 class="note-comment-title">Comment</h5><div id="note-comment">
-<form id="form_comments" action="{% comment_form_target %}" method="post">
-   {% csrf_token %}
-<table>
-<tr>
-     <td colspan="2">
-       <div class="kopce"></div>
-       <input type="submit" name="submit" value="Submit">
-       <input type="submit" name="preview" value="Preview">
-     </td>
-   </tr>
-</table>
-</form>
-{% endif %}
+                        {% if user.is_authenticated %}
+                            <h5 class="note-comment-title">Comment</h5>
+                            <div id="note-comment">
+                                <form id="form_comments" action="{% comment_form_target %}" method="post">{% csrf_token %}
+                                    <table>
+                                        <tr>
+                                            <td colspan="2">
+                                                <div class="kopce"></div>
+                                                <input type="submit" name="submit" value="Submit">
+                                                <input type="submit" name="preview" value="Preview">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </form>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
-
-
             </div>
-
         </div>
     </div>
 
