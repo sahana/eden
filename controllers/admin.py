@@ -719,4 +719,24 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 
     return response.stream(portable_app)
 
+# -----------------------------------------------------------------------------
+# Selenium Test Result Reports list
+
+def result():
+    import os
+    file_list = UL()
+    static_path = os.path.join(current.request.folder,"static","test")
+    for filename in os.listdir(static_path):
+        link = A(filename,
+                 _href = URL(c = "static",
+                             f = "test",
+                             args = [filename]
+                             )
+                 )
+        file_list.append(link)
+    return dict(file_list=file_list)
+
+
+
+
 # END =========================================================================
