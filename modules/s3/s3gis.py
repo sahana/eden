@@ -30,7 +30,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS", "S3Map", "GoogleGeocoder", "YahooGeocoder"]
+__all__ = ["GIS", "S3Map", "GoogleGeocoder", "YahooGeocoder", "S3ExportPOI"]
 
 import os
 import re
