@@ -90,6 +90,7 @@ class SpaceFeed(Feed):
             Post.objects.filter(space=obj).order_by('-pub_date')[:10],
             Proposal.objects.filter(space=obj).order_by('-pub_date')[:10],
             Event.objects.filter(space=obj).order_by('-pub_date')[:10],
+            Debate.objects.filter(space=obj).order_by('-date')[:10]
         )
         return results
 
