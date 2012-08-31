@@ -3383,17 +3383,17 @@ def hrm_active(person_id):
         else:
             #start from a year before the latest record
             start = last_year
-        
+
         # Total hours between start and end
         programme_hours = 0
         for programme in programmes:
             if programme.date >= start and programme.date <= end and programme.hours:
                 programme_hours += programme.hours
-        
+
         # Average hours per month
         months = max(1, (end - start).days / 30.5)
         average = programme_hours / months
-        
+
         # Active?
         if average >= 8:
             return True

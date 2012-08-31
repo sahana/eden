@@ -183,6 +183,7 @@ _settings.verify_email_onaccept = auth.s3_verify_email_onaccept
 
 # Auth Messages
 _messages = auth.messages
+_messages.lock_keys = False
 _messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
     dict(url="%s/default/user/verify_email/" % s3.base_url,
          key="%(key)s")
@@ -244,6 +245,7 @@ else:
     field.writable = False
 
 _settings.lock_keys = True
+_messages.lock_keys = True
 
 ######
 # Mail

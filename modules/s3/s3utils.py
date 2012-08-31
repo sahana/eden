@@ -2658,6 +2658,10 @@ class S3DataTable(object):
         """
         attr = Storage()
         s3 = current.response.s3
+        if s3.datatable_ajax_source:
+            attr.dt_ajax_url = s3.datatable_ajax_source
+        else:
+            attr.dt_ajax_url = "%s.aaData" % current.request.url
         if s3.actions:
             attr.dt_actions = s3.actions
         if s3.dataTableBulkActions:

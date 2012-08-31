@@ -77,6 +77,38 @@ def index():
                 status=json.dumps(status))
 
 # -----------------------------------------------------------------------------
+def inline():
+    """
+        Demo/test case for inline component subforms, to be removed
+        after implementation is complete.
+    """
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
+    crud_form = S3SQLCustomForm(
+                    "first_name",
+                    "last_name",
+                    S3SQLInlineComponent(
+                        "contact",
+                        name="test",
+                        label=T("Contact Information"),
+                        fields=["contact_method", "value"]
+                    ),
+                    "age_group",
+                    "date_of_birth",
+                    S3SQLInlineComponent(
+                        "note",
+                        label=T("Notes"),
+                        fields=["timestmp", "note_text"]
+                    ),
+                    "identification.status"
+                    )
+
+    s3db.configure("pr_person", crud_form=crud_form)
+
+    return s3_rest_controller("pr", "person")
+
+# -----------------------------------------------------------------------------
 def recreq():
     """ Recovery Requests List """
 
