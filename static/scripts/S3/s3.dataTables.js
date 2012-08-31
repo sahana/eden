@@ -5,6 +5,7 @@
  */
 
 var oDataTable = new Array();
+var fnInitDataTable;
 
 var tableCnt = 1;
 var tableId = new Array();
@@ -65,7 +66,7 @@ $(document).ready(function() {
         sPaginationType[t] = aoTableConfig[t]["paginationType"];
 
         fnActionCallBacks[t] = new Array();
-        var ColumnCount = myList[t].find("tbody tr").first().children().length;
+        var ColumnCount = myList[t].find("thead tr").first().children().length;
 
         ColumnSettings[t] = new Array();
         // Buffer the array so that the default settings are preserved for the rest of the columns
@@ -353,16 +354,18 @@ $(document).ready(function() {
     }
 
     for (var tcnt=0; tcnt < tableCnt; tcnt++) {
-      initDataTable(myList[tcnt], tcnt);
+      initDataTable(myList[tcnt], tcnt, false);
       // Delay in milliseconds to prevent too many AJAX calls
       oDataTable[tcnt].fnSetFilteringDelay(450);
     } // end of loop through for each table
 
-    function initDataTable(oTable, t) {
+    function initDataTable(oTable, t, bReplace) {
       oDataTable[t] = $(oTable).dataTable({
+        'bDestroy': bReplace,
         'sDom': sDom[t],
         'sPaginationType': sPaginationType[t],
         'bServerSide': bServerSide,
+        'bAutoWidth' : false,
         'bFilter': aoTableConfig[t]["bFilter"]=='true',
         'bSort': true,
         'bDeferRender': true,
@@ -516,6 +519,9 @@ $(document).ready(function() {
         }
       });
     } // end of initDataTable function
+
+    // Allow dataTables to be initialised outside of this function.
+    fnInitDataTable = initDataTable;
 
     if (S3.dataTables.Resize) {
         // Resize the Columns after hiding extra data

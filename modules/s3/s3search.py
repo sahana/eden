@@ -1395,22 +1395,6 @@ class S3Search(S3CRUD):
                 sep = " | "
             else:
                 link = sep = ""
-
-#            list_formats = DIV(link, sep,
-#                               "%s: " % T("Export to"),
-#                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
-#                                 _title=T("Export in PDF format"),
-#                                 _href=r.url(method="", representation="pdf",
-#                                             vars=filter)),
-#                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
-#                                 _title=T("Export in XLS format"),
-#                                 _href=r.url(method="", representation="xls",
-#                                             vars=filter)),
-#                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
-#                                 _title=T("Export in RSS format"),
-#                                 _href=r.url(method="", representation="rss",
-#                                             vars=filter)),
-#                               _id="list_formats")
             tabs = []
 
             if "location_id" in table or \
@@ -1419,12 +1403,6 @@ class S3Search(S3CRUD):
                 # (this same map is also used by the Map Search Widget, if-present)
                 tabs.append((T("Map"), "map"))
                 app = request.application
-#                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
-#                                      _title=T("Export in KML format"),
-#                                      _href=r.url(method="",
-#                                                  representation="kml",
-#                                                  vars=filter)),
-#                                    )
                 # Build URL to load the features onto the map
                 if query:
                     vars = query.serialize_url(resource=resource)
@@ -1474,6 +1452,8 @@ class S3Search(S3CRUD):
                                        None, # the rfields
                                        **attr
                                        )
+        items[0].insert(0, sep)
+        items[0].insert(0, link)
         output["items"] = items
         output["sortby"] = sortby
 

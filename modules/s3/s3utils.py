@@ -1700,11 +1700,11 @@ class S3BulkImporter(object):
             extra_data = None
             if task[5]:
                 try:
-                    extradata = unescape(task[5], {"'": '"'})
+                    extradata = self.unescape(task[5], {"'": '"'})
                     extradata = json.loads(extradata)
                     extra_data = extradata
                 except:
-                    pass
+                    self.errorList.append("WARNING:5th parameter invalid, parameter %s ignored" % task[5])
             try:
                 # @todo: add extra_data and file attachments
                 result = resource.import_xml(csv,
