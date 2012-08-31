@@ -60,6 +60,7 @@ from apps.ecidadania.staticpages.models import StaticPage
 from apps.ecidadania.debate.models import Debate
 from helpers.cache import get_or_insert_object_in_cache
 from apps.ecidadania.voting.models import Poll, Voting
+from core.permissions import has_space_permission, has_all_permissions
 #
 # RSS FEED
 #
@@ -76,7 +77,7 @@ class SpaceFeed(Feed):
         return current_space
 
     def title(self, obj):
-        return _("%s feed") % obj.name
+        return _("%s") % obj.name
 
     def link(self, obj):
         return obj.get_absolute_url()
@@ -86,11 +87,17 @@ class SpaceFeed(Feed):
 
     def items(self, obj):
         results = itertools.chain(
-            Post.objects.all().filter(space=obj).order_by('-pub_date')[:10],
-            Proposal.objects.all().filter(space=obj)
-                .order_by('-pub_date')[:10],
-            Event.objects.all().filter(space=obj).order_by('-pub_date')[:10],
-        ) 
+            Post.objects.filter(space=obj).order_by('-pub_date')[:10],
+            Proposal.objects.filter(space=obj).order_by('-pub_date')[:10],
+            Event.objects.filter(space=obj).order_by('-pub_date')[:10],
+        )
+        return results
+
+    def item_title(self, item):
+        return type(item).__name__ + ": " + item.title
+
+    def item_description(self, item):
+        return item.description
         
         return sorted(results, key=lambda x: x.pub_date, reverse=True)
 
@@ -101,38 +108,37 @@ class SpaceFeed(Feed):
 @login_required
 def add_intent(request, space_url):
 
-     """
-     Returns a page where the logged in user can click on a "I want to
-     participate" button, which after sends an email to the administrator of
-     the space with a link to approve the user to use the space.
-     
-     :attributes:  space, intent, token
-     :rtype: Multiple entity objects.
-     :context: space_url, heading
-     """
-     space = get_object_or_404(Space, url=space_url)
-     try:
-         intent = Intent.objects.get(user=request.user, space=space)
-         heading = _("Access has been already authorized")
-     except Intent.DoesNotExist:
-         token = hashlib.md5("%s%s%s" % (request.user, space,
-                             datetime.datetime.now())).hexdigest()
-         intent = Intent(user=request.user, space=space, token=token)
-         intent.save()
-         subject = _("New participation request")
-         body = _("User {0} wants to participate in space {1}.\n \
-                  Please click on the link below to approve.\n {2}"\
-                  .format(request.user.username, space.name,
-                  intent.get_approve_url()))
-         heading = _("Your request is being processed.")
-         send_mail(subject=subject, message=body,
-                   from_email="noreply@ecidadania.org",
-                   recipient_list=[space.author.email])
+    """
+    Returns a page where the logged in user can click on a "I want to
+    participate" button, which after sends an email to the administrator of
+    the space with a link to approve the user to use the space.
+    
+    :attributes:  space, intent, token
+    :rtype: Multiple entity objects.
+    :context: space_url, heading
+    """
+    space = get_object_or_404(Space, url=space_url)
+    try:
+        intent = Intent.objects.get(user=request.user, space=space)
+        heading = _("Access has been already authorized")
+    except Intent.DoesNotExist:
+        token = hashlib.md5("%s%s%s" % (request.user, space,
+                            datetime.datetime.now())).hexdigest()
+        intent = Intent(user=request.user, space=space, token=token)
+        intent.save()
+        subject = _("New participation request")
+        body = _("User {0} wants to participate in space {1}.\n \
+                 Please click on the link below to approve.\n {2}"\
+                 .format(request.user.username, space.name,
+                 intent.get_approve_url()))
+        heading = _("Your request is being processed.")
+        send_mail(subject=subject, message=body,
+                  from_email="noreply@ecidadania.org",
+                  recipient_list=[space.author.email])
 
-
-     return render_to_response('space_intent.html', \
-             {'space_name': space.name, 'heading': heading}, \
-                               context_instance=RequestContext(request))
+    return render_to_response('space_intent.html', \
+            {'space_name': space.name, 'heading': heading}, \
+            context_instance=RequestContext(request))
 
 
 class ValidateIntent(DetailView):
@@ -249,9 +255,7 @@ class ViewSpaceIndex(DetailView):
         space_object = get_or_insert_object_in_cache(Space, space_url,
             url=space_url)
         
-        if space_object.public == True \
-        or self.request.user.is_staff \
-        or self.request.user.is_superuser:
+        if space_object.public or has_all_permissions(self.request.user):
             if self.request.user.is_anonymous():
                 messages.info(self.request, _("Hello anonymous user. Remember \
                     that this space is public to view, but you must \
@@ -260,9 +264,8 @@ class ViewSpaceIndex(DetailView):
             return space_object
 
         # Check if the user is in the admitted user groups of the space
-        if self.request.user in space_object.users.all() \
-        or self.request.user in space_object.admins.all() \
-        or self.request.user in space_object.mods.all():
+        if has_space_permission(self.request.user, space_object,
+                                allow=['admins', 'mods', 'users']):
             return space_object
 
         # If the user does not meet any of the conditions, it's not allowed to
@@ -301,7 +304,7 @@ class ViewSpaceIndex(DetailView):
         context['publication'] = Post.objects.filter(space=place.id) \
                                                     .order_by('-pub_date')[:5]
         context['mostviewed'] = Post.objects.filter(space=place.id) \
-                                                    .order_by('views')[:5]
+                                                    .order_by('-views')[:5]
         context['mostcommented'] = top_posts
         # context['mostcommented'] = sorted(o_list,
         #     key=lambda k: k['ocount'])[:10]
