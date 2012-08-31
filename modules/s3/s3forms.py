@@ -1513,7 +1513,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if s3.debug:
             script = "s3.inline_component.js"
         else:
-            script = "s3.inline_component.js" #"s3.inline_component.min.js"
+            script = "s3.inline_component.min.js"
 
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
 
