@@ -73,6 +73,7 @@ from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
+from s3method import S3Method
 
 DEBUG = False
 if DEBUG:
@@ -573,7 +574,7 @@ class GIS(object):
             else:
                 # This level is suitable
                 return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
-               
+
             return -90, -180, 90, 180, None
 
         # Minimum Bounding Box
@@ -1600,7 +1601,7 @@ class GIS(object):
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
-            
+
             Unused
         """
 
@@ -2420,7 +2421,7 @@ class GIS(object):
                 File = open(filename, "w")
                 File.write(json.dumps(data))
                 File.close()
-            
+
         if "L2" in levels:
             if "L0" not in levels and "L1" not in levels:
                 countries = db(cquery).select(ifield)
@@ -3902,7 +3903,7 @@ class GIS(object):
             for row in rows:
                 self.update_location_tree(row)
             return _path
-            
+
         # L4
         L4 = feature.get("L4", False)
         if level == "L4":
@@ -7025,5 +7026,214 @@ class YahooGeocoder(Geocoder):
         url = self.url
         page = fetch(url)
         return page
+
+# -----------------------------------------------------------------------------
+class S3ExportPOI(S3Method):
+    """ Export point-of-interest resources for a location """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        manager = current.manager
+        output = dict()
+
+        if r.http == "GET":
+            output = self.export(r, **attr)
+        else:
+            r.error(405, manager.ERROR.BAD_METHOD)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def export(self, r, **attr):
+        """
+            Export POI resources.
+
+            URL options:
+
+                - "resources"   list of tablenames to export records from
+
+                - "msince"      datetime in ISO format, to override the
+                                feed's last update datetime, "off" to turn off
+                                msince completely
+
+                - "update_feed" false to skip the update of the feed's last
+                                update datetime, useful for trial exports
+
+            Supported formats:
+
+                .xml            S3XML
+                .osm            OSM XML Format
+                .kml            Google KML
+
+            (other formats can be requested, but may give unexpected results)
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        import datetime, time
+        tfmt = current.xml.ISOFORMAT
+
+        # Determine request Lx
+        current_lx = r.record
+        if not current_lx: # or not current_lx.level:
+            # Must have a location
+            r.error(400, current.manager.error.BAD_REQUEST)
+        else:
+            self.lx = current_lx.id
+
+        # Parse the ?resources= parameter
+        tables = []
+        if "resources" in r.get_vars:
+            resources = r.get_vars["resources"]
+            if not isinstance(resources, list):
+                resources = [resources]
+            [tables.extend(t.split(",")) for t in resources]
+
+        # Parse the ?update_feed= parameter
+        update_feed = True
+        if "update_feed" in r.get_vars:
+            update_feed = r.get_vars["update_feed"]
+            if update_feed.lower() == "false":
+                update_feed = False
+            else:
+                update_feed = True
+
+        # Parse the ?msince= parameter
+        msince = "auto"
+        if "msince" in r.get_vars:
+            msince = r.get_vars["msince"]
+            if msince.lower() == "off":
+                msince = None
+            else:
+                try:
+                    (y, m, d, hh, mm, ss, t0, t1, t2) = \
+                        time.strptime(msince, tfmt)
+                    msince = datetime.datetime(y, m, d, hh, mm, ss)
+                except ValueError:
+                    msince = None
+
+        # Export a combined three
+        tree = self.export_combined_tree(tables,
+                                         msince=msince,
+                                         update_feed=update_feed)
+
+        xml = current.xml
+        manager = current.manager
+
+        # Set response headers
+        headers = current.response.headers
+        representation = r.representation
+        if r.representation in manager.json_formats:
+            as_json = True
+            default = "application/json"
+        else:
+            as_json = False
+            default = "text/xml"
+        headers["Content-Type"] = manager.content_type.get(representation,
+                                                           default)
+
+        # Find XSLT stylesheet and transform
+        stylesheet = r.stylesheet()
+        if tree and stylesheet is not None:
+            args = Storage(domain=manager.domain,
+                           base_url=manager.s3.base_url,
+                           utcnow=datetime.datetime.utcnow().strftime(tfmt))
+            tree = xml.transform(tree, stylesheet, **args)
+        if tree:
+            if as_json:
+                output = xml.tree2json(tree, pretty_print=True)
+            else:
+                output = xml.tostring(tree, pretty_print=True)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def export_combined_tree(self, tables, msince="auto", update_feed=False):
+        """
+            Export a combined tree of all records in tables, which
+            are in Lx, and have been updated since msince.
+
+            @param tables: list of table names
+            @param msince: minimum modified_on datetime, "auto" for
+                           automatic from feed data, None to turn it off
+            @param update_feed: update the last_update datetime in the feed
+        """
+
+        manager = current.manager
+
+        elements = []
+        results = 0
+        for tablename in tables:
+
+            # Define the resource
+            # @todo: use new-style resource constructor
+            prefix, name = tablename.split("_", 1)
+            try:
+                resource = manager.define_resource(prefix, name,
+                                                   components=[])
+            except AttributeError:
+                # Table not defined (module deactivated?)
+                continue
+
+            # Check
+            if "location_id" not in resource.fields:
+                # Hardly a POI resource without location_id
+                continue
+
+            # Add Lx filter
+            self._add_lx_filter(resource)
+
+            # Get the feed data
+            ftable = current.s3db.gis_poi_feed
+            query = (ftable.tablename == tablename) & \
+                    (ftable.location_id == self.lx)
+            feed = current.db(query).select(limitby=(0, 1)).first()
+            if msince == "auto" and feed is not None:
+                _msince = feed.last_update
+            else:
+                _msince = msince
+
+            # Export the tree and append its element to the element list
+            tree = resource.export_tree(msince=_msince,
+                                        references=["location_id"])
+
+            # Update the feed data
+            if update_feed:
+                muntil = resource.muntil
+                if feed is None:
+                    ftable.insert(location_id = self.lx,
+                                  tablename = tablename,
+                                  last_update = muntil)
+                else:
+                    feed.update_record(last_update = muntil)
+
+            elements.extend([c for c in tree.getroot()])
+
+        # Combine all elements in one tree and return it
+        tree = current.xml.tree(elements, results=len(elements))
+        return tree
+
+    # -------------------------------------------------------------------------
+    def _add_lx_filter(self, resource):
+        """
+            Add a Lx filter for the current location to this
+            resource.
+
+            @param resource: the resource
+        """
+
+        from s3resource import S3FieldSelector as FS
+        query = (FS("location_id$path").contains("/%s/" % self.lx)) | \
+                (FS("location_id$path").like("%s/%%" % self.lx))
+        resource.add_filter(query)
+        return
 
 # END =========================================================================
