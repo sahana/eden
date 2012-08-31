@@ -83,7 +83,7 @@
                                 <h6>{% trans "News"%}</h6>
                                 <ul class="unstyled">
                                     {% for news in publication|slice:":3" %}
-                                        <li><a href="{% url 'profile_public' news.author %}">{{ news.author }}</a> {% trans "posted" %} <a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a> {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
+                                        <li><a href="{% url 'profile_public' news.author %}">{{ news.author }}</a> {% trans "posted" %} <a href="{{ news.get_absolute_url }}">{{ news.title }}</a> {% trans "on" %} {{ news.pub_date|date:"d F Y" }}</li>
                                     {% empty %}
                                         <li>{% trans "Nothing published yet." %}</li>
                                     {% endfor %}
@@ -246,7 +246,7 @@
                     <div class="row">
                         <div class="span8">
                             {% for news in publication %}
-                                <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.post_title }}</a>
+                                <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.title }}</a>
                                     {% if user_is_admin %}
                                         {% if perms.news.change_post %}
                                             <a href="{% url 'edit-post' get_place.url news.id %}">
@@ -262,7 +262,7 @@
                                 </h2>
                                 {% get_comment_count for news as comment_count %}
                                 <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | {{ news.views }} {% trans "views" %} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
-                                {{ news.post_message|safe }}
+                                {{ news.description|safe }}
                                 <div style="margin-bottom:30px;"></div>
                             {% empty %}
                                 <ul class="unstyled">
@@ -284,7 +284,7 @@
                             <h4>{% trans "Most viewed" %}</h4>
                                 {% for p in mostviewed %}
                                     <ul class="unstyled">
-                                        <li><a href="{% url 'view-post' get_place.url p.id %}">{{ p.post_title }}</a></li>
+                                        <li><a href="{% url 'view-post' get_place.url p.id %}">{{ p.title }}</a></li>
                                     </ul>
                                 {% endfor %}
                             <h4>{% trans "Most commented" %}</h4>

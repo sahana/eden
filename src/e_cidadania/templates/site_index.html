@@ -114,7 +114,7 @@ about if the user is autheticated or not didn't work
             <h3>{% trans "Recent news" %} <a href="/rss/"><img src="{{ STATIC_URL }}/assets/icons/rss16.png" alt="Feed RSS"/></a></h3>
             <ul class="unstyled">
                 {% for post in publication %}
-                    <li><a href="{{ post.get_absolute_url }}">{{ post.post_title }}</a></li>
+                    <li><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></li>
                 {% empty %}
                     <p>{% trans "No public news." %}</p>
                 {% endfor %}

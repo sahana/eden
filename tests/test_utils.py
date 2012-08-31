@@ -118,12 +118,12 @@ class ECDTestCase(TestCase):
         self.bar_note = Note(**note_properties)
         self.bar_note.save()
         
-        post_properties = {'post_title': 'Foo news post', 'author': self.foo_user,
+        post_properties = {'title': 'Foo news post', 'author': self.foo_user,
                            'pub_index': True, 'space': self.foo_space}
         self.foo_post = Post(**post_properties)
         self.foo_post.save()
         
-        post_properties.update({'post_title': 'Bar news post',
+        post_properties.update({'title': 'Bar news post',
                                 'author': self.bar_user, 'space': self.bar_space})
         self.bar_post = Post(**post_properties)
         self.bar_post.save()

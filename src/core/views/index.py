@@ -86,7 +86,7 @@ class IndexEntriesFeed(Feed):
         return Post.objects.all().order_by('-pub_date')[:10]
 
     def item_title(self, item):
-        return item.post_title
+        return item.title
 
     def item_description(self, item):
-        return item.post_message
+        return item.description
