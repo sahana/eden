@@ -75,7 +75,18 @@
                                 <p><strong>{% trans "Description:" %}</strong> {{ get_place.description|removetags:'p'|safe }}</p>
                             {% endif %}
                             <p><strong>{% trans "Current status:" %}</strong> Not implemented</p>
-                            <p><strong>{% trans "Participants:" %}</strong> {{ get_place.users.count }}</p>
+                            <p><strong><a href="#myModal" role="button" data-toggle="modal">{% trans "Participants:" %}</a></strong> {{ get_place.users.count|add:get_place.admins.count|add:get_place.mods.count }}</p>
+                            <div class="modal hide fade" id="myModal">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                                    <h3>{% trans "Participants for" %} {{ get_place.name }}</h3>
+                                </div>
+                                <div class="modal-body">
+                                    <p>{% trans "Administrators:" %} {{ get_place.admins.count }}</p>
+                                    <p>{% trans "Moderators:" %} {{ get_place.mods.count }}</p>
+                                    <p>{% trans "Users:" %} {{ get_place.users.count }}</p>
+                                </div>
+                            </div>
                             <hr />
                             <h4>{% trans "Recent activity" %}</h4>
                             
