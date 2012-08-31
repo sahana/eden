@@ -272,7 +272,7 @@
                                     {% endif %}
                                 </h2>
                                 {% get_comment_count for news as comment_count %}
-                                <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | {{ news.views }} {% trans "views" %} | <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
+                                <p class="postinfo">{% trans "Written by" %} {{ news.author }} {% trans "on" %} {{ news.pub_date }} | {% if news.views %}{{ news.views }} {% trans "views" %} |{% endif %} <a href="{{ news.get_absolute_url }}">{{ comment_count }} {% trans "comments" %}</a></p>
                                 {{ news.description|safe }}
                                 <div style="margin-bottom:30px;"></div>
                             {% empty %}
