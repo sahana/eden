@@ -2491,7 +2491,7 @@ class S3HRSearch(S3Search):
                       "person_id$first_name",
                       "person_id$middle_name",
                       "person_id$last_name",
-                      "job_role_id$name",
+                      "job_title_id$name",
                       ]
             show_orgs = current.deployment_settings.get_hrm_show_organisation()
             if show_orgs:
@@ -2510,7 +2510,7 @@ class S3HRSearch(S3Search):
                             "middle" : row["pr_person"].middle_name or "",
                             "last"   : row["pr_person"].last_name or "",
                             "org"    : row["org_organisation"].name if show_orgs else "",
-                            "job"    : row["hrm_job_role"].name or "",
+                            "job"    : row["hrm_job_title"].name or "",
                         } for row in rows ]
             else:
                 items = []

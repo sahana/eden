@@ -2369,7 +2369,7 @@ class GIS(object):
                     geojson = dumps(shape, separators=(",", ":"))
                 f = dict(
                         type = "Feature",
-                        properties = {"id": row.id},
+                        properties = {"id": row["gis_location"].id},
                         geometry = json.loads(geojson) if geojson else {}
                         )
                 append(f)
@@ -2390,7 +2390,7 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country.id)
+                query = q1 & (table.parent == country["gis_location"].id)
                 features = []
                 append = features.append
                 rows = db(query).select(ifield,
@@ -2407,7 +2407,7 @@ class GIS(object):
                         geojson = dumps(shape, separators=(",", ":"))
                     f = dict(
                             type = "Feature",
-                            properties = {"id": row.id},
+                            properties = {"id": row["gis_location"].id},
                             geometry = json.loads(geojson) if geojson else {}
                             )
                     append(f)
@@ -2417,7 +2417,7 @@ class GIS(object):
                             features = features
                         )
                 # Output to file
-                filename = os.path.join(folder, "1_%s.geojson" % country.id)
+                filename = os.path.join(folder, "1_%s.geojson" % country["gis_location"].id)
                 File = open(filename, "w")
                 File.write(json.dumps(data))
                 File.close()
@@ -2428,7 +2428,7 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country.id)
+                query = q1 & (table.parent == country["gis_location"].id)
                 l1s = db(query).select(ifield)
                 q2 = (table.level == "L2") & \
                      (table.deleted != True)
@@ -2450,7 +2450,7 @@ class GIS(object):
                             geojson = dumps(shape, separators=(",", ":"))
                         f = dict(
                                 type = "Feature",
-                                properties = {"id": row.id},
+                                properties = {"id": row["gis_location"].id},
                                 geometry = json.loads(geojson) if geojson else {}
                                 )
                         append(f)
@@ -2471,7 +2471,7 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country.id)
+                query = q1 & (table.parent == country["gis_location"].id)
                 l1s = db(query).select(ifield)
                 q2 = (table.level == "L2") & \
                      (table.deleted != True)
@@ -2498,7 +2498,7 @@ class GIS(object):
                                 geojson = dumps(shape, separators=(",", ":"))
                             f = dict(
                                     type = "Feature",
-                                    properties = {"id": row.id},
+                                    properties = {"id": row["gis_location"].id},
                                     geometry = json.loads(geojson) if geojson else {}
                                     )
                             append(f)

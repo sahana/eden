@@ -104,6 +104,8 @@ settings.hrm.staff_experience = False
 settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = True
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 #settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
