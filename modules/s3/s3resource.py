@@ -147,9 +147,16 @@ class S3Resource(object):
             tablename = "%s_%s" % (prefix, name)
 
         self.prefix = prefix
+        """ Module prefix of the tablename """
         self.name = name
+        """ Tablename without module prefix """
         self.tablename = tablename
+        """ Tablename """
         self.alias = alias or name
+        """
+            Alias of the resource, defaults to tablename
+            without module prefix
+        """
 
         manager = current.manager
 
@@ -162,6 +169,8 @@ class S3Resource(object):
 
         # Table alias (needed for self-joins)
         self._alias = tablename
+        """ Table alias (the tablename used in joins/queries) """
+
         if parent is not None:
             if parent.tablename == self.tablename:
                 alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
@@ -407,469 +416,15 @@ class S3Resource(object):
                 components[c].clear_query()
 
     # -------------------------------------------------------------------------
-    # Data access
+    # Data access (new API)
     # -------------------------------------------------------------------------
-    def select(self, *fields, **attributes):
-        """
-            Wrapper for backward compatibility, use-cases outside of
-            S3Resource should use .sqltable() instead.
-
-            @see: S3Resource._load()
-        """
-
-        import warnings
-        warnings.showwarning("The parameter format and behavior of the "
-                             "S3Resource.select() method will change in "
-                             "future versions of the API, please consider "
-                             "to use either .sqltable() or ._load() instead.",
-                             FutureWarning, "s3resource.py", "364")
-        return self._load(*fields, **attributes)
-
-    def _load(self, *fields, **attributes):
-        """
-            Select records with the current query
-
-            @param fields: fields to select
-            @param attributes: select attributes
-        """
-
-        attr = Storage(attributes)
-        rfilter = self.rfilter
-
-        if rfilter is None:
-            rfilter = self.build_query()
-        query = rfilter.get_query()
-        vfltr = rfilter.get_filter()
-
-        distinct = attr.pop("distinct", False) and True or False
-        distinct = rfilter.distinct or distinct
-        attr["distinct"] = distinct
-
-        # Add the left joins from the filter
-        left_joins = []
-        joined_tables = []
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-        if left_joins:
-            try:
-                left_joins.sort(self.sortleft)
-            except:
-                pass
-            left = left_joins
-            attr["left"] = left
-
-        if vfltr is not None:
-            if "limitby" in attr:
-                limitby = attr["limitby"]
-                start = limitby[0]
-                limit = limitby[1]
-                if limit is not None:
-                    limit = limit - start
-                del attr["limitby"]
-            else:
-                start = limit = None
-            # @todo: override fields => needed for vfilter
-
-        # Get the rows
-        rows = current.db(query).select(*fields, **attr)
-        if vfltr is not None:
-            rows = rfilter(rows, start=start, limit=limit)
-
-        # Audit
-        current.manager.audit("list", self.prefix, self.name)
-
-        # Keep the rows for later access
-        self._rows = rows
-        return rows
-
-    # -------------------------------------------------------------------------
-    def load(self, start=None, limit=None, orderby=None):
-        """
-            Load records from this resource
-
-            @param start: the index of the first record to load
-            @param limit: the maximum number of records to load
-        """
-
-        table = self.table
-
-        if DEBUG:
-            _start = datetime.datetime.now()
-
-        if self.tablename == "gis_location":
-            # Filter out bulky Polygons
-            fields = [f for f in table if f.name not in ("wkt", "the_geom")]
-        else:
-            fields = [f for f in table]
-        fnames = [f.name for f in fields]
-
-        if self._rows is not None:
-            self.clear()
-
-        query = self.get_query()
-        vfltr = self.get_filter()
-        rfilter = self.rfilter
-
-        limitby = None
-        multiple = rfilter.multiple
-        if not multiple:
-            if self.parent and self.parent.count() == 1:
-                start = 0
-                limit = 1
-                limitby = (0, 1)
-        else:
-            limitby = self.limitby(start=start, limit=limit)
-
-        if vfltr:
-            if not limitby:
-                start = None
-                limit = None
-            rows = self.sqltable(fnames,
-                                 start=start,
-                                 limit=limit,
-                                 orderby=orderby,
-                                 as_rows=True)
-            if rows is None:
-                rows = []
-            if not limitby:
-                self._length = len(rows)
-        else:
-            rows = self._load(limitby=limitby,
-                              orderby=orderby,
-                              *fields)
-            self._length = len(rows)
-        id = table._id.name
-        self._ids = [row[id] for row in rows]
-        uid = current.xml.UID
-        if uid in table.fields:
-            self._uids = [row[uid] for row in rows]
-        self._rows = rows
-
-        if DEBUG:
-            end = datetime.datetime.now()
-            duration = end - _start
-            duration = '{:.2f}'.format(duration.total_seconds())
-            _debug("load of resource %s completed in %s seconds" % \
-                    (self.tablename, duration))
-
-        return rows
-
-    # -------------------------------------------------------------------------
-    def sqltable(self,
-                 fields=None,
-                 start=0,
-                 limit=None,
-                 left=None,
-                 orderby=None,
-                 distinct=False,
-                 linkto=None,
-                 download_url=None,
-                 no_ids=False,
-                 as_rows=False,
-                 as_page=False,
-                 as_list=False,
-                 as_json=False,
-                 format=None):
-        """
-            DRY helper function for SQLTABLEs in REST and CRUD
-
-            @param fields: list of field selectors
-            @param start: index of the first record
-            @param limit: maximum number of records
-            @param left: left outer joins
-            @param orderby: orderby for the query
-            @param distinct: distinct for the query
-            @param linkto: hook to link record IDs
-            @param download_url: the default download URL of the application
-            @param as_rows: return bare Rows, no representations
-            @param as_page: return the list as JSON page
-            @param as_list: return the list as Python list
-            @param format: the representation format
-        """
-
-        db = current.db
-        table = self.table
-
-        # Get the query and filters
-        query = self.get_query()
-        vfltr = self.get_filter()
-        rfilter = self.rfilter
-
-        # Handle distinct-attribute (must respect rfilter.distinct)
-        distinct = self.rfilter.distinct | distinct
-
-        # Resolve the fields
-        if fields is None:
-            fields = [f.name for f in self.readable_fields()]
-        if table._id.name not in fields and not no_ids:
-            fields.insert(0, table._id.name)
-        ffields = rfilter.get_fields()
-        for f in ffields:
-            if f not in fields:
-                fields.append(f)
-        lfields, joins, ljoins, d = self.resolve_selectors(fields)
-
-        distinct = distinct | d
-        attributes = dict(distinct=distinct)
-
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
-
-        # Add the left joins from the field query
-        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
-        for join in ljoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-
-        # Add the left joins from the filter
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-
-        # Sort left joins and add to attributes
-        if left_joins:
-            try:
-                left_joins.sort(self.sortleft)
-            except:
-                pass
-            attributes.update(left=left_joins)
-
-        # Joins
-        for join in joins.values():
-            if str(join) not in str(query):
-                query &= join
-
-        # Orderby
-        if orderby is not None:
-            attributes.update(orderby=orderby)
-
-        # Limitby
-        if vfltr is None:
-            limitby = self.limitby(start=start, limit=limit)
-            if limitby is not None:
-                attributes.update(limitby=limitby)
-        else:
-            # Retrieve all records when filtering for virtual fields
-            # => apply start/limit in vfltr instead
-            limitby = None
-
-        # Column names and headers
-        colnames = [f.colname for f in lfields]
-        headers = dict(map(lambda f: (f.colname, f.label), lfields))
-
-        # Fields in the query
-        load = current.s3db.table
-        qfields = []
-        qtables = []
-        for f in lfields:
-            field = f.field
-            tname = f.tname
-            if field is None:
-                continue
-            qtable = load(tname)
-            if qtable is None:
-                continue
-            if tname not in qtables:
-                # Make sure the primary key of the table this field
-                # belongs to is included in the SELECT
-                qtables.append(tname)
-                pkey = qtable._id
-                qfields.append(pkey)
-                if str(field) == str(pkey):
-                    continue
-            qfields.append(field)
-
-        # Add orderby fields which are not in qfields
-        # @todo: this could need some cleanup/optimization
-        if distinct and orderby is not None:
-            qf = [str(f) for f in qfields]
-            if isinstance(orderby, str):
-                of = orderby.split(",")
-            elif not isinstance(orderby, (list, tuple)):
-                of = [orderby]
-            else:
-                of = orderby
-            for e in of:
-                if isinstance(e, Field) and str(e) not in qf:
-                    qfields.append(e)
-                    qf.append(str(e))
-                elif isinstance(e, str):
-                    fn = e.strip().split()[0].split(".", 1)
-                    tn, fn = ([table._tablename] + fn)[-2:]
-                    try:
-                        t = db[tn]
-                        f = t[fn]
-                    except:
-                        continue
-                    if str(f) not in qf:
-                        qfields.append(f)
-                        qf.append(str(e))
-
-        # Retrieve the rows
-        rows = db(query).select(*qfields, **attributes)
-        if not rows:
-            return None
-
-        # Apply virtual filter
-        if vfltr is not None:
-            rows = rfilter(rows, start=start, limit=limit)
-
-        if not rows:
-            # No records found
-            return None
-        if as_rows:
-            # No rendering - return bare Rows
-            return rows
-
-        # Fields to show
-        row = rows.first()
-        def __expand(tablename, row, lfields=lfields):
-            columns = []
-            if not row:
-                return columns
-            for f in lfields:
-                tname = f.tname
-                fname = f.fname
-                # @todo: this is not clean - it could even be Rows
-                if tname in row and type(row[tname]) is Row:
-                    columns += __expand(tname, row[tname], lfields=lfields)
-                elif (tname, fname) not in columns and fname in row:
-                    columns.append((tname, fname))
-            return columns
-        columns = __expand(table._tablename, row)
-        lfields = [lf for lf in lfields
-                   if lf.show and (lf.tname, lf.fname) in columns]
-        colnames = [f.colname for f in lfields]
-        rows.colnames = colnames
-
-        # Representation
-        repr_row = current.manager.represent
-        def __represent(f, row, columns=columns):
-            field = f.field
-            if field is not None:
-                return repr_row(field, record=row, linkto=linkto)
-            else:
-                tname = f.tname
-                fname = f.fname
-                if (tname, fname) in columns:
-                    if tname in row:
-                        row = row[tname]
-                    if fname in row:
-                        return str(row[fname])
-                    else:
-                        return None
-                else:
-                    return None
-
-        # Render as...
-        if as_page:
-            # ...JSON page (for pagination)
-            items = [[__represent(f, row) for f in lfields] for row in rows]
-        elif as_list:
-            # ...Python list
-            items = rows.as_list()
-        elif as_json:
-            # ...simple flat JSON (with prefixed field names)
-            items = self.convert_json(rows, lfields)
-        else:
-            # ...SQLTABLE
-            items = SQLTABLES3(rows,
-                               headers=headers,
-                               linkto=linkto,
-                               upload=download_url,
-                               _id="list",
-                               _class="dataTable display")
-        return items
-
-    # -------------------------------------------------------------------------
-    def datatable(self,
-                  fields=None,
-                  start=0,
-                  limit=None,
-                  left=None,
-                  orderby=None,
-                  distinct=False,
-                  no_ids=False,
-                  format=None):
-        """
-            Generate a data table of this resource
-
-            @todo: complete implementation
-        """
-
-        raise NotImplementedError
-
-        table = self.table
-
-        if fields is None:
-            fields = [f.name for f in self.readable_fields()]
-        selectors = list(fields)
-        if table._id.name not in selectors and not no_ids:
-            fields.insert(0, table._id.name)
-            selectors.insert(0, table._id.name)
-
-        rows = self._select(fields=selectors,
-                            start=start,
-                            limit=limit,
-                            left=left,
-                            orderby=orderby,
-                            distinct=distinct)
-
-        rfields = self.resolve_selectors(fields,
-                                         skip_components=False)[0]
-
-        if format == "json":
-            result = self._extract(rows, rfields)
-            output = result
-        elif format == "aadata":
-            result = self._extract(rows, rfields)
-            output = result
-        else:
-            # Default to HTML representation
-            result = self._extract(rows, rfields, represent=True)
-            output = result
-
-        return result
-
-    # -------------------------------------------------------------------------
-    def pivottable(self, rows, cols, layers):
-        """
-            Generate a pivot table of this resource.
-
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param layers: list of tuples (field selector, method) for
-                           the aggregation layers
-
-            @returns: an S3Pivottable instance
-
-            Supported methods: see S3Pivottable
-        """
-
-        return S3Pivottable(self, rows, cols, layers)
-
-    # -------------------------------------------------------------------------
-    def _select(self,
-                fields=None,
-                start=0,
-                limit=None,
-                left=None,
-                orderby=None,
-                distinct=False):
+    def select(self,
+               fields=None,
+               start=0,
+               limit=None,
+               left=None,
+               orderby=None,
+               distinct=False):
         """
             Select records from this resource, applying the current filters.
 
@@ -879,6 +434,8 @@ class S3Resource(object):
             @param left: left joins
             @param orderby: SQL orderby
             @param distinct: SQL distinct
+
+            @todo: authorization
         """
 
         db = current.db
@@ -1022,88 +579,6 @@ class S3Resource(object):
         return rows
 
     # -------------------------------------------------------------------------
-    def _extract(self, rows, fields, represent=False):
-        """
-            Extract the fields corresponding to rfields from the given
-            rows and return them as a list of Storages, with ambiguous
-            rows collapsed and the original order retained.
-
-            @param rows: the Rows
-            @param fields: list of fields
-        """
-
-        pkey = self.table._id
-        multiple = [c._alias for c in self.components.values() if c.multiple]
-
-        rfields = []
-        for i in fields:
-            if isinstance(i, tuple) and len(i) > 1:
-                f = i[-1]
-            else:
-                f = i
-            if isinstance(f, S3ResourceField):
-                rfields.append(f)
-            elif isinstance(f, str):
-                try:
-                    rfield = S3ResourceField(self, f)
-                except:
-                    continue
-                else:
-                    rfields.append(rfield)
-            elif isinstance(f, S3FieldSelector):
-                try:
-                    rfield = f.resolve(resource)
-                    rfield.op = f.op
-                except:
-                    continue
-                else:
-                    rfields.append(rfield)
-            else:
-                raise SyntaxError("Invalid field: %s" % str(f))
-
-        ids = []
-        duplicates = []
-        records = []
-        for row in rows:
-            _id = row[pkey]
-            if _id in ids:
-                idx = ids.index(_id)
-                data = records[idx]
-                for rfield in rfields:
-                    if rfield.tname in multiple:
-                        key = rfield.colname
-                        try:
-                            value = rfield.extract(row, represent=represent)
-                        except KeyError:
-                            if represent:
-                                value = ""
-                            else:
-                                value = None
-                        if represent:
-                            data[key] = ", ".join([s3_unicode(data[key]),
-                                                   s3_unicode(value)])
-                        else:
-                            if _id in duplicates:
-                                data[key].append(value)
-                            else:
-                                data[key] = [data[key], value]
-                duplicates.append(_id)
-            else:
-                data = Storage()
-                for rfield in rfields:
-                    try:
-                        value = rfield.extract(row, represent=represent)
-                    except KeyError:
-                        if represent:
-                            value = ""
-                        else:
-                            value = None
-                    data[rfield.colname] = value
-                ids.append(_id)
-                records.append(data)
-        return records
-
-    # -------------------------------------------------------------------------
     def insert(self, **fields):
         """
             Insert a record into this resource
@@ -1126,6 +601,11 @@ class S3Resource(object):
             self.audit("create", self.prefix, self.name, form=record)
 
         return record_id
+
+    # -------------------------------------------------------------------------
+    def update(self):
+
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def delete(self,
@@ -1596,6 +1076,448 @@ class S3Resource(object):
                                           replace=replace,
                                           update=update,
                                           main=main)
+
+    # -------------------------------------------------------------------------
+    # Exports
+    # -------------------------------------------------------------------------
+    def datatable(self,
+                  fields=None,
+                  start=0,
+                  limit=None,
+                  left=None,
+                  orderby=None,
+                  distinct=False,
+                  no_ids=False,
+                  format=None):
+        """
+            Generate a data table of this resource
+
+            @todo: complete implementation
+        """
+
+        raise NotImplementedError
+
+        table = self.table
+
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        selectors = list(fields)
+        if table._id.name not in selectors and not no_ids:
+            fields.insert(0, table._id.name)
+            selectors.insert(0, table._id.name)
+
+        rows = self.select(fields=selectors,
+                           start=start,
+                           limit=limit,
+                           left=left,
+                           orderby=orderby,
+                           distinct=distinct)
+
+        rfields = self.resolve_selectors(fields,
+                                         skip_components=False)[0]
+
+        if format == "json":
+            result = self.extract(rows, rfields)
+            output = result
+        elif format == "aadata":
+            result = self.extract(rows, rfields)
+            output = result
+        else:
+            # Default to HTML representation
+            result = self.extract(rows, rfields, represent=True)
+            output = result
+
+        return result
+
+    # -------------------------------------------------------------------------
+    def pivottable(self, rows, cols, layers):
+        """
+            Generate a pivot table of this resource.
+
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param layers: list of tuples (field selector, method) for
+                           the aggregation layers
+
+            @returns: an S3Pivottable instance
+
+            Supported methods: see S3Pivottable
+        """
+
+        return S3Pivottable(self, rows, cols, layers)
+
+    # -------------------------------------------------------------------------
+    # Deprecated API methods (retained for backward-compatiblity reasons)
+    # -------------------------------------------------------------------------
+    def _load(self, *fields, **attributes):
+        """
+            Select records with the current query
+
+            @param fields: fields to select
+            @param attributes: select attributes
+        """
+
+        attr = Storage(attributes)
+        rfilter = self.rfilter
+
+        if rfilter is None:
+            rfilter = self.build_query()
+        query = rfilter.get_query()
+        vfltr = rfilter.get_filter()
+
+        distinct = attr.pop("distinct", False) and True or False
+        distinct = rfilter.distinct or distinct
+        attr["distinct"] = distinct
+
+        # Add the left joins from the filter
+        left_joins = []
+        joined_tables = []
+        fjoins = rfilter.get_left_joins()
+        for join in fjoins:
+            tn = str(join.first)
+            if tn not in joined_tables:
+                joined_tables.append(str(join.first))
+                left_joins.append(join)
+        if left_joins:
+            try:
+                left_joins.sort(self.sortleft)
+            except:
+                pass
+            left = left_joins
+            attr["left"] = left
+
+        if vfltr is not None:
+            if "limitby" in attr:
+                limitby = attr["limitby"]
+                start = limitby[0]
+                limit = limitby[1]
+                if limit is not None:
+                    limit = limit - start
+                del attr["limitby"]
+            else:
+                start = limit = None
+            # @todo: override fields => needed for vfilter
+
+        # Get the rows
+        rows = current.db(query).select(*fields, **attr)
+        if vfltr is not None:
+            rows = rfilter(rows, start=start, limit=limit)
+
+        # Audit
+        current.manager.audit("list", self.prefix, self.name)
+
+        # Keep the rows for later access
+        self._rows = rows
+        return rows
+
+    # -------------------------------------------------------------------------
+    def load(self, start=None, limit=None, orderby=None):
+        """
+            Load records from this resource
+
+            @param start: the index of the first record to load
+            @param limit: the maximum number of records to load
+        """
+
+        table = self.table
+
+        if DEBUG:
+            _start = datetime.datetime.now()
+
+        if self.tablename == "gis_location":
+            # Filter out bulky Polygons
+            fields = [f for f in table if f.name not in ("wkt", "the_geom")]
+        else:
+            fields = [f for f in table]
+        fnames = [f.name for f in fields]
+
+        if self._rows is not None:
+            self.clear()
+
+        query = self.get_query()
+        vfltr = self.get_filter()
+        rfilter = self.rfilter
+
+        limitby = None
+        multiple = rfilter.multiple
+        if not multiple:
+            if self.parent and self.parent.count() == 1:
+                start = 0
+                limit = 1
+                limitby = (0, 1)
+        else:
+            limitby = self.limitby(start=start, limit=limit)
+
+        if vfltr:
+            if not limitby:
+                start = None
+                limit = None
+            rows = self.sqltable(fnames,
+                                 start=start,
+                                 limit=limit,
+                                 orderby=orderby,
+                                 as_rows=True)
+            if rows is None:
+                rows = []
+            if not limitby:
+                self._length = len(rows)
+        else:
+            rows = self._load(limitby=limitby,
+                              orderby=orderby,
+                              *fields)
+            self._length = len(rows)
+        id = table._id.name
+        self._ids = [row[id] for row in rows]
+        uid = current.xml.UID
+        if uid in table.fields:
+            self._uids = [row[uid] for row in rows]
+        self._rows = rows
+
+        if DEBUG:
+            end = datetime.datetime.now()
+            duration = end - _start
+            duration = '{:.2f}'.format(duration.total_seconds())
+            _debug("load of resource %s completed in %s seconds" % \
+                    (self.tablename, duration))
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def sqltable(self,
+                 fields=None,
+                 start=0,
+                 limit=None,
+                 left=None,
+                 orderby=None,
+                 distinct=False,
+                 linkto=None,
+                 download_url=None,
+                 no_ids=False,
+                 as_rows=False,
+                 as_page=False,
+                 as_list=False,
+                 as_json=False,
+                 format=None):
+        """
+            DRY helper function for SQLTABLEs in REST and CRUD
+
+            @param fields: list of field selectors
+            @param start: index of the first record
+            @param limit: maximum number of records
+            @param left: left outer joins
+            @param orderby: orderby for the query
+            @param distinct: distinct for the query
+            @param linkto: hook to link record IDs
+            @param download_url: the default download URL of the application
+            @param as_rows: return bare Rows, no representations
+            @param as_page: return the list as JSON page
+            @param as_list: return the list as Python list
+            @param format: the representation format
+        """
+
+        db = current.db
+        table = self.table
+
+        # Get the query and filters
+        query = self.get_query()
+        vfltr = self.get_filter()
+        rfilter = self.rfilter
+
+        # Handle distinct-attribute (must respect rfilter.distinct)
+        distinct = self.rfilter.distinct | distinct
+
+        # Resolve the fields
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        if table._id.name not in fields and not no_ids:
+            fields.insert(0, table._id.name)
+        ffields = rfilter.get_fields()
+        for f in ffields:
+            if f not in fields:
+                fields.append(f)
+        lfields, joins, ljoins, d = self.resolve_selectors(fields)
+
+        distinct = distinct | d
+        attributes = dict(distinct=distinct)
+
+        # Left joins
+        left_joins = left
+        if left_joins is None:
+            left_joins = []
+        elif not isinstance(left, list):
+            left_joins = [left_joins]
+        joined_tables = [str(join.first) for join in left_joins]
+
+        # Add the left joins from the field query
+        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
+        for join in ljoins:
+            tn = str(join.first)
+            if tn not in joined_tables:
+                joined_tables.append(str(join.first))
+                left_joins.append(join)
+
+        # Add the left joins from the filter
+        fjoins = rfilter.get_left_joins()
+        for join in fjoins:
+            tn = str(join.first)
+            if tn not in joined_tables:
+                joined_tables.append(str(join.first))
+                left_joins.append(join)
+
+        # Sort left joins and add to attributes
+        if left_joins:
+            try:
+                left_joins.sort(self.sortleft)
+            except:
+                pass
+            attributes.update(left=left_joins)
+
+        # Joins
+        for join in joins.values():
+            if str(join) not in str(query):
+                query &= join
+
+        # Orderby
+        if orderby is not None:
+            attributes.update(orderby=orderby)
+
+        # Limitby
+        if vfltr is None:
+            limitby = self.limitby(start=start, limit=limit)
+            if limitby is not None:
+                attributes.update(limitby=limitby)
+        else:
+            # Retrieve all records when filtering for virtual fields
+            # => apply start/limit in vfltr instead
+            limitby = None
+
+        # Column names and headers
+        colnames = [f.colname for f in lfields]
+        headers = dict(map(lambda f: (f.colname, f.label), lfields))
+
+        # Fields in the query
+        load = current.s3db.table
+        qfields = []
+        qtables = []
+        for f in lfields:
+            field = f.field
+            tname = f.tname
+            if field is None:
+                continue
+            qtable = load(tname)
+            if qtable is None:
+                continue
+            if tname not in qtables:
+                # Make sure the primary key of the table this field
+                # belongs to is included in the SELECT
+                qtables.append(tname)
+                pkey = qtable._id
+                qfields.append(pkey)
+                if str(field) == str(pkey):
+                    continue
+            qfields.append(field)
+
+        # Add orderby fields which are not in qfields
+        # @todo: this could need some cleanup/optimization
+        if distinct and orderby is not None:
+            qf = [str(f) for f in qfields]
+            if isinstance(orderby, str):
+                of = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                of = [orderby]
+            else:
+                of = orderby
+            for e in of:
+                if isinstance(e, Field) and str(e) not in qf:
+                    qfields.append(e)
+                    qf.append(str(e))
+                elif isinstance(e, str):
+                    fn = e.strip().split()[0].split(".", 1)
+                    tn, fn = ([table._tablename] + fn)[-2:]
+                    try:
+                        t = db[tn]
+                        f = t[fn]
+                    except:
+                        continue
+                    if str(f) not in qf:
+                        qfields.append(f)
+                        qf.append(str(e))
+
+        # Retrieve the rows
+        rows = db(query).select(*qfields, **attributes)
+        if not rows:
+            return None
+
+        # Apply virtual filter
+        if vfltr is not None:
+            rows = rfilter(rows, start=start, limit=limit)
+
+        if not rows:
+            # No records found
+            return None
+        if as_rows:
+            # No rendering - return bare Rows
+            return rows
+
+        # Fields to show
+        row = rows.first()
+        def __expand(tablename, row, lfields=lfields):
+            columns = []
+            if not row:
+                return columns
+            for f in lfields:
+                tname = f.tname
+                fname = f.fname
+                # @todo: this is not clean - it could even be Rows
+                if tname in row and type(row[tname]) is Row:
+                    columns += __expand(tname, row[tname], lfields=lfields)
+                elif (tname, fname) not in columns and fname in row:
+                    columns.append((tname, fname))
+            return columns
+        columns = __expand(table._tablename, row)
+        lfields = [lf for lf in lfields
+                   if lf.show and (lf.tname, lf.fname) in columns]
+        colnames = [f.colname for f in lfields]
+        rows.colnames = colnames
+
+        # Representation
+        repr_row = current.manager.represent
+        def __represent(f, row, columns=columns):
+            field = f.field
+            if field is not None:
+                return repr_row(field, record=row, linkto=linkto)
+            else:
+                tname = f.tname
+                fname = f.fname
+                if (tname, fname) in columns:
+                    if tname in row:
+                        row = row[tname]
+                    if fname in row:
+                        return str(row[fname])
+                    else:
+                        return None
+                else:
+                    return None
+
+        # Render as...
+        if as_page:
+            # ...JSON page (for pagination)
+            items = [[__represent(f, row) for f in lfields] for row in rows]
+        elif as_list:
+            # ...Python list
+            items = rows.as_list()
+        elif as_json:
+            # ...simple flat JSON (with prefixed field names)
+            items = self.convert_json(rows, lfields)
+        else:
+            # ...SQLTABLE
+            items = SQLTABLES3(rows,
+                               headers=headers,
+                               linkto=linkto,
+                               upload=download_url,
+                               _id="list",
+                               _class="dataTable display")
+        return items
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):
@@ -2986,6 +2908,88 @@ class S3Resource(object):
             return (None, None)
         else:
             return (value, error)
+
+    # -------------------------------------------------------------------------
+    def extract(self, rows, fields, represent=False):
+        """
+            Extract the fields corresponding to rfields from the given
+            rows and return them as a list of Storages, with ambiguous
+            rows collapsed and the original order retained.
+
+            @param rows: the Rows
+            @param fields: list of fields
+        """
+
+        pkey = self.table._id
+        multiple = [c._alias for c in self.components.values() if c.multiple]
+
+        rfields = []
+        for i in fields:
+            if isinstance(i, tuple) and len(i) > 1:
+                f = i[-1]
+            else:
+                f = i
+            if isinstance(f, S3ResourceField):
+                rfields.append(f)
+            elif isinstance(f, str):
+                try:
+                    rfield = S3ResourceField(self, f)
+                except:
+                    continue
+                else:
+                    rfields.append(rfield)
+            elif isinstance(f, S3FieldSelector):
+                try:
+                    rfield = f.resolve(resource)
+                    rfield.op = f.op
+                except:
+                    continue
+                else:
+                    rfields.append(rfield)
+            else:
+                raise SyntaxError("Invalid field: %s" % str(f))
+
+        ids = []
+        duplicates = []
+        records = []
+        for row in rows:
+            _id = row[pkey]
+            if _id in ids:
+                idx = ids.index(_id)
+                data = records[idx]
+                for rfield in rfields:
+                    if rfield.tname in multiple:
+                        key = rfield.colname
+                        try:
+                            value = rfield.extract(row, represent=represent)
+                        except KeyError:
+                            if represent:
+                                value = ""
+                            else:
+                                value = None
+                        if represent:
+                            data[key] = ", ".join([s3_unicode(data[key]),
+                                                   s3_unicode(value)])
+                        else:
+                            if _id in duplicates:
+                                data[key].append(value)
+                            else:
+                                data[key] = [data[key], value]
+                duplicates.append(_id)
+            else:
+                data = Storage()
+                for rfield in rfields:
+                    try:
+                        value = rfield.extract(row, represent=represent)
+                    except KeyError:
+                        if represent:
+                            value = ""
+                        else:
+                            value = None
+                    data[rfield.colname] = value
+                ids.append(_id)
+                records.append(data)
+        return records
 
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
@@ -5291,7 +5295,7 @@ class S3Pivottable:
 
         # Retrieve the records --------------------------------------------------
         #
-        records = resource._select(self.dfields)
+        records = resource.select(self.dfields)
 
         ## Generate the report -------------------------------------------------
         ##

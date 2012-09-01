@@ -778,7 +778,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         resource = s3db.resource("org_organisation",
                                  uid="DATESTORG")
 
-        rows = resource._select(["name", "office.name"], start=0, limit=1)
+        rows = resource.select(["name", "office.name"], start=0, limit=1)
         self.assertEqual(len(rows), 1)
         row = rows[0]
 
@@ -792,7 +792,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testCollapseRows(self):
-        """ Test correct handling of ambiguous rows in _extract() """
+        """ Test correct handling of ambiguous rows in extract() """
 
         s3db = current.s3db
 
@@ -811,7 +811,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         list_fields = ["name", "office.name"]
         lfields = resource.resolve_selectors(list_fields,
                                              skip_components=False)[0]
-        collapsed = resource._extract(rows, lfields)
+        collapsed = resource.extract(rows, lfields)
         self.assertEqual(len(collapsed), 1)
 
         office_names = collapsed[0]["org_office.name"]
@@ -820,7 +820,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         self.assertTrue("DATestOffice1" in office_names)
         self.assertTrue("DATestOffice2" in office_names)
 
-        collapsed = resource._extract(rows, lfields, represent=True)
+        collapsed = resource.extract(rows, lfields, represent=True)
         self.assertEqual(len(collapsed), 1)
 
         office_names = collapsed[0]["org_office.name"]

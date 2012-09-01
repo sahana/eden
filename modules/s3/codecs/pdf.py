@@ -279,13 +279,13 @@ class S3RL_PDF(S3Codec):
         (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
         resource.add_filter(filter)
         current.manager.ROWSPERPAGE = None # needed to get all the data
-        rows = resource._select(self.list_fields,
-                                orderby=orderby,
+        rows = resource.select(self.list_fields,
+                               orderby=orderby,
+                               )
+        data = resource.extract(rows,
+                                self.list_fields,
+                                represent=True,
                                 )
-        data = resource._extract(rows,
-                                 self.list_fields,
-                                 represent=True,
-                                 )
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
                                rfields,

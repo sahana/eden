@@ -344,15 +344,15 @@ def organisation():
     resource.add_filter(filter)
     if isinstance(orderby, bool):
         orderby = table.name
-    rows = resource._select(list_fields,
-                            orderby=orderby,
-                            start=0,
-                            limit=limit,
+    rows = resource.select(list_fields,
+                           orderby=orderby,
+                           start=0,
+                           limit=limit,
+                           )
+    data = resource.extract(rows,
+                            list_fields,
+                            represent=True,
                             )
-    data = resource._extract(rows,
-                             list_fields,
-                             represent=True,
-                             )
     dt = S3DataTable(rfields, data)
     dt.defaultActionButtons(resource)
     response.s3.no_formats = True

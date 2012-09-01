@@ -1228,13 +1228,13 @@ class S3Importer(S3CRUD):
                 limit = None # use default
         else:
             start = None # use default
-        rows = resource._select(list_fields,
-                                start=start,
-                                limit=limit,
+        rows = resource.select(list_fields,
+                               start=start,
+                               limit=limit,
+                               )
+        data = resource.extract(rows,
+                                list_fields,
                                 )
-        data = resource._extract(rows,
-                                 list_fields,
-                                 )
         # put each value through the represent function
         for row in data:
             for (key, value) in row.items():

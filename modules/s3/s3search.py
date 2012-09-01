@@ -1974,7 +1974,7 @@ class S3Search(S3CRUD):
                           distinct=True)
 
         # Get the rows
-        rows = resource.select(field, **attributes)
+        rows = resource._load(field, **attributes)
 
         if not errors:
             output = [{ "id"   : row[get_fieldname],
@@ -2311,7 +2311,7 @@ class S3OrganisationSearch(S3Search):
             limitby = resource.limitby(start=0, limit=limit)
             if limitby is not None:
                 attributes["limitby"] = limitby
-            rows = resource.select(*fields, **attributes)
+            rows = resource._load(*fields, **attributes)
             output = []
             append = output.append
             db = current.db

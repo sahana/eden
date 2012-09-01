@@ -37,15 +37,15 @@ def index():
                            "organisation_id",
                            ]
             limit = 6 if request.extension == "aaData" else 1
-            rows = resource._select(list_fields,
-                                    orderby="organisation_id",
-                                    start=0,
-                                    limit=limit,
+            rows = resource.select(list_fields,
+                                   orderby="organisation_id",
+                                   start=0,
+                                   limit=limit,
+                                   )
+            data = resource.extract(rows,
+                                    list_fields,
+                                    represent=True,
                                     )
-            data = resource._extract(rows,
-                                     list_fields,
-                                     represent=True,
-                                     )
             rfields = resource.resolve_selectors(list_fields)[0]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
@@ -91,8 +91,8 @@ def index():
                 resource.add_filter(filter)
                 filteredrows = resource.count()
                 site_list = {}
-                rows = resource._select(["id","site_id"],
-                                        limit=filteredrows)
+                rows = resource.select(["id","site_id"],
+                                       limit=filteredrows)
                 for row in rows:
                     site_id = row.site_id
                     if site_id not in site_list:
@@ -109,15 +109,15 @@ def index():
                     limit = int(current.request.get_vars["iDisplayLength"])
                 except:
                     limit = 1
-                rows = resource._select(list_fields,
-                                        orderby=orderby,
-                                        start=0,
-                                        limit=limit,
+                rows = resource.select(list_fields,
+                                       orderby=orderby,
+                                       start=0,
+                                       limit=limit,
+                                       )
+                data = resource.extract(rows,
+                                        list_fields,
+                                        represent=True,
                                         )
-                data = resource._extract(rows,
-                                         list_fields,
-                                         represent=True,
-                                         )
                 dt = S3DataTable(rfields,
                                  data,
                                  orderby=orderby,
@@ -198,14 +198,14 @@ def index():
                            "model",
                            ]
             limit = 11 if request.extension == "aaData" else 1
-            rows = resource._select(list_fields,
-                                    start=0,
-                                    limit=limit,
+            rows = resource.select(list_fields,
+                                   start=0,
+                                   limit=limit,
+                                   )
+            data = resource.extract(rows,
+                                    list_fields,
+                                    represent=True,
                                     )
-            data = resource._extract(rows,
-                                     list_fields,
-                                     represent=True,
-                                     )
             rfields = resource.resolve_selectors(list_fields)[0]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
