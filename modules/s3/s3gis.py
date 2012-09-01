@@ -2360,16 +2360,19 @@ class GIS(object):
                                           )
             for row in countries:
                 if spatial:
+                    id = row["gis_location"].id
                     geojson = row.geojson
                 elif simplify:
+                    id = row.id
                     geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
                 else:
+                    id = row.id
                     shape = wkt_loads(row.wkt)
                     # Compact Encoding
                     geojson = dumps(shape, separators=(",", ":"))
                 f = dict(
                         type = "Feature",
-                        properties = {"id": row["gis_location"].id},
+                        properties = {"id": id},
                         geometry = json.loads(geojson) if geojson else {}
                         )
                 append(f)
@@ -2390,7 +2393,11 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country["gis_location"].id)
+                if not spatial or "L0" not in levels:
+                    _id = country.id
+                else:
+                    _id = country["gis_location"].id
+                query = q1 & (table.parent == _id)
                 features = []
                 append = features.append
                 rows = db(query).select(ifield,
@@ -2398,16 +2405,19 @@ class GIS(object):
                                         )
                 for row in rows:
                     if spatial:
+                        id = row["gis_location"].id
                         geojson = row.geojson
                     elif simplify:
+                        id = row.id
                         geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
                     else:
+                        id = row.id
                         shape = wkt_loads(row.wkt)
                         # Compact Encoding
                         geojson = dumps(shape, separators=(",", ":"))
                     f = dict(
                             type = "Feature",
-                            properties = {"id": row["gis_location"].id},
+                            properties = {"id": id},
                             geometry = json.loads(geojson) if geojson else {}
                             )
                     append(f)
@@ -2417,7 +2427,7 @@ class GIS(object):
                             features = features
                         )
                 # Output to file
-                filename = os.path.join(folder, "1_%s.geojson" % country["gis_location"].id)
+                filename = os.path.join(folder, "1_%s.geojson" % _id)
                 File = open(filename, "w")
                 File.write(json.dumps(data))
                 File.close()
@@ -2428,7 +2438,11 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country["gis_location"].id)
+                if not spatial or "L0" not in levels:
+                    id = country.id
+                else:
+                    id = country["gis_location"].id
+                query = q1 & (table.parent == id)
                 l1s = db(query).select(ifield)
                 q2 = (table.level == "L2") & \
                      (table.deleted != True)
@@ -2441,16 +2455,19 @@ class GIS(object):
                                             )
                     for row in rows:
                         if spatial:
+                            id = row["gis_location"].id
                             geojson = row.geojson
                         elif simplify:
+                            id = row.id
                             geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
                         else:
+                            id = row.id
                             shape = wkt_loads(row.wkt)
                             # Compact Encoding
                             geojson = dumps(shape, separators=(",", ":"))
                         f = dict(
                                 type = "Feature",
-                                properties = {"id": row["gis_location"].id},
+                                properties = {"id": id},
                                 geometry = json.loads(geojson) if geojson else {}
                                 )
                         append(f)
@@ -2471,7 +2488,11 @@ class GIS(object):
             q1 = (table.level == "L1") & \
                  (table.deleted != True)
             for country in countries:
-                query = q1 & (table.parent == country["gis_location"].id)
+                if not spatial or "L0" not in levels:
+                    id = country.id
+                else:
+                    id = country["gis_location"].id
+                query = q1 & (table.parent == id)
                 l1s = db(query).select(ifield)
                 q2 = (table.level == "L2") & \
                      (table.deleted != True)
@@ -2489,16 +2510,19 @@ class GIS(object):
                                                 )
                         for row in rows:
                             if spatial:
+                                id = row["gis_location"].id
                                 geojson = row.geojson
                             elif simplify:
+                                id = row.id
                                 geojson = _simplify(row.wkt, tolerance=simplify, output="geojson")
                             else:
+                                id = row.id
                                 shape = wkt_loads(row.wkt)
                                 # Compact Encoding
                                 geojson = dumps(shape, separators=(",", ":"))
                             f = dict(
                                     type = "Feature",
-                                    properties = {"id": row["gis_location"].id},
+                                    properties = {"id": id},
                                     geometry = json.loads(geojson) if geojson else {}
                                     )
                             append(f)
