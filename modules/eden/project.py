@@ -4844,8 +4844,9 @@ def project_task_controller():
     # Pre-process
     def prep(r):
         if r.interactive:
-            statuses = s3.project_task_active_statuses
+            tablename = "project_task"
             table = s3db.project_task
+            statuses = s3.project_task_active_statuses
             crud_strings = s3.crud_strings["project_task"]
 
             if r.record:
