@@ -32,9 +32,9 @@ def loadAllTests():
     addTests(loadTests(CreateVolunteerTraining))
 
     # Inventory tests
-    #addTests(loadTests(SendItem))
-    #addTests(loadTests(ReceiveItem))
-    #addTests(loadTests(SendReceiveItem))
+    addTests(loadTests(SendItem))
+    addTests(loadTests(ReceiveItem))
+    addTests(loadTests(SendReceiveItem))
 
     # Project Tests
     addTests(loadTests(CreateProject))

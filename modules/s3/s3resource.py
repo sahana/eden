@@ -363,6 +363,22 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def select(self, *fields, **attributes):
         """
+            Wrapper for backward compatibility, use-cases outside of
+            S3Resource should use .sqltable() instead.
+
+            @see: S3Resource._load()
+        """
+
+        import warnings
+        warnings.showwarning("The parameter format and behavior of the "
+                             "S3Resource.select() method will change in "
+                             "future versions of the API, please consider "
+                             "to use either .sqltable() or ._load() instead.",
+                             FutureWarning, "s3resource.py", "364")
+        return self._load(*fields, **attributes)
+
+    def _load(self, *fields, **attributes):
+        """
             Select records with the current query
 
             @param fields: fields to select
@@ -474,9 +490,9 @@ class S3Resource(object):
             if not limitby:
                 self._length = len(rows)
         else:
-            rows = self.select(limitby=limitby,
-                               orderby=orderby,
-                               *fields)
+            rows = self._load(limitby=limitby,
+                              orderby=orderby,
+                              *fields)
             self._length = len(rows)
         id = table._id.name
         self._ids = [row[id] for row in rows]
@@ -972,7 +988,11 @@ class S3Resource(object):
         multiple = [c._alias for c in self.components.values() if c.multiple]
 
         rfields = []
-        for f in fields:
+        for i in fields:
+            if isinstance(i, tuple) and len(i) > 1:
+                f = i[-1]
+            else:
+                f = i
             if isinstance(f, S3ResourceField):
                 rfields.append(f)
             elif isinstance(f, str):
@@ -1106,9 +1126,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self.select(table._id, table.uuid)
+            rows = self._load(table._id, table.uuid)
         else:
-            rows = self.select(table._id)
+            rows = self._load(table._id)
 
         if not rows:
             # No rows? => that was it already :)
@@ -1121,13 +1141,18 @@ class S3Resource(object):
 
             # Find all deletable rows
             references = table._referenced_by
-            rfields = [(tn, fn) for tn, fn in references
-                                if db[tn][fn].ondelete == "RESTRICT"]
+            try:
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+            except AttributeError:
+                # older web2py
+                references = [db[tn][fn] for tn, fn in references]
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+
             restricted = []
             ids = [row[pkey] for row in rows]
-            for tn, fn in rfields:
+            for rfield in rfields:
+                fn, tn = rfield.name, rfield.tablename
                 rtable = db[tn]
-                rfield = rtable[fn]
                 query = (rfield.belongs(ids))
                 if DELETED in rtable:
                     query &= (rtable[DELETED] != True)
@@ -1172,9 +1197,9 @@ class S3Resource(object):
                     continue
 
                 # Run automatic ondelete-cascade
-                for tn, fn in references:
+                for rfield in references:
+                    fn, tn = rfield.name, rfield.tablename
                     rtable = db[tn]
-                    rfield = rtable[fn]
                     query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
                         rprefix, rname = tn.split("_", 1)
@@ -1387,9 +1412,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self.select(table._id, table.uuid)
+            rows = self._load(table._id, table.uuid)
         else:
-            rows = self.select(table._id)
+            rows = self._load(table._id)
         if not rows:
             return True
 
@@ -1408,7 +1433,12 @@ class S3Resource(object):
                     callback(ondelete_cascade, row, tablename=tablename)
 
                 # Automatic cascade
-                for tn, fn in references:
+                for ref in references:
+                    try:
+                        tn, fn = ref.tablename, ref.name
+                    except:
+                        # old web2py < 2.0
+                        tn, fn = ref
                     rtable = db[tn]
                     rfield = rtable[fn]
                     query = (rfield == row[pkey])
@@ -5905,7 +5935,7 @@ class S3RecordMerger(object):
                           "instance_type" in table.fields
 
         # Find all references
-        referenced_by = table._referenced_by
+        referenced_by = list(table._referenced_by)
 
         # Append virtual references
         virtual_references = s3db.get_config(tablename, "referenced_by")
@@ -5925,7 +5955,12 @@ class S3RecordMerger(object):
         fieldname = self.fieldname
 
         # Update all references
-        for tn, fn in referenced_by:
+        for referee in referenced_by:
+
+            if isinstance(referee, Field):
+                tn, fn = referee.tablename, referee.name
+            else:
+                tn, fn = referee
 
             se = s3db.get_config(tn, "super_entity")
             if is_super_entity and \

@@ -179,10 +179,6 @@ _settings.on_failed_authorization = URL(c="default", f="user",
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
 
-# Notify Approver of new pending user registration. Action may be required.
-# @ToDo: Not Required
-#_settings.verify_email_onaccept = auth.s3_verify_email_onaccept
-
 # Auth Messages
 _messages = auth.messages
 

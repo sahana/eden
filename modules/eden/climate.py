@@ -536,14 +536,17 @@ class station_parameters_virtualfields(dict, object):
 
     # -------------------------------------------------------------------------
     def range_from(self):
-        query = (
-            "SELECT MIN(time_period) "
-            "from climate_sample_table_%(parameter_id)i "
-            "WHERE place_id = %(station_id)i;"
-        ) % dict(
-            parameter_id = self.climate_station_parameter.parameter_id,
-            station_id = self.climate_station_parameter.station_id,
-        )
+        try:
+            query = (
+                "SELECT MIN(time_period) "
+                "from climate_sample_table_%(parameter_id)i "
+                "WHERE place_id = %(station_id)i;"
+            ) % dict(
+                parameter_id = self.climate_station_parameter.parameter_id,
+                station_id = self.climate_station_parameter.station_id,
+            )
+        except AttributeError:
+            return current.messages.NONE
         date  = current.db.executesql(query)[0][0]
         if date is not None:
             import ClimateDataPortal
@@ -554,14 +557,17 @@ class station_parameters_virtualfields(dict, object):
 
     # -------------------------------------------------------------------------
     def range_to(self):
-        query = (
-            "SELECT MAX(time_period) "
-            "from climate_sample_table_%(parameter_id)i "
-            "WHERE place_id = %(station_id)i;"
-        ) % dict(
-            parameter_id = self.climate_station_parameter.parameter_id,
-            station_id = self.climate_station_parameter.station_id,
-        )
+        try:
+            query = (
+                "SELECT MAX(time_period) "
+                "from climate_sample_table_%(parameter_id)i "
+                "WHERE place_id = %(station_id)i;"
+            ) % dict(
+                parameter_id = self.climate_station_parameter.parameter_id,
+                station_id = self.climate_station_parameter.station_id,
+            )
+        except AttributeError:
+            return current.messages.NONE
         date  = current.db.executesql(query)[0][0]
         if date is not None:
             import ClimateDataPortal

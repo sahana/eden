@@ -37,6 +37,7 @@ __all__ = ["S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
+           "S3POIFeedModel",
            "gis_location_filter",
            "gis_location_represent",
            "gis_location_lx_represent",
@@ -282,6 +283,10 @@ class S3LocationModel(S3Model):
                                        "lon"
                                        ]
                         )
+
+        from s3.s3gis import S3ExportPOI
+        self.set_method("gis", "location",
+                        method="export_poi", action=S3ExportPOI())
 
         # Tags as component of Locations
         add_component("gis_location_tag",
@@ -3429,6 +3434,27 @@ class S3GISThemeModel(S3Model):
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
+class S3POIFeedModel(S3Model):
+    """ Data Model for POI feeds """
+
+    names = ["gis_poi_feed"]
+
+    def model(self):
+
+        # =====================================================================
+        # Table to store last update time for a POI feed
+        #
+        tablename = "gis_poi_feed"
+        table = self.define_table(tablename,
+                                  self.gis_location_id(),
+                                  Field("tablename"),
+                                  Field("last_update", "datetime"),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        return Storage()
+
+# =============================================================================
 def name_field():
     T = current.T
     return S3ReusableField("name", length=64, notnull=True,
@@ -3715,7 +3741,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
         represent = represent_text
 
     return represent
-            
+
 
 # =============================================================================
 def gis_location_lx_represent(record):

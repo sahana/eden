@@ -29,7 +29,7 @@
 
 __all__ = ["S3SupplyModel",
            "supply_item_rheader",
-           "supply_item_pack_virtualfields",
+           "SupplyItemPackVirtualFields",
            "supply_item_controller",
            "supply_item_entity_controller",
           ]
@@ -854,7 +854,7 @@ S3FilterFieldChange({
                 supply_item_pack_id = item_pack_id,
                 supply_item_represent = self.supply_item_represent,
                 supply_item_category_represent = self.item_category_represent,
-                supply_item_pack_virtualfields = supply_item_pack_virtualfields,
+                supply_item_pack_virtualfields = SupplyItemPackVirtualFields,
                 supply_item_duplicate_fields = item_duplicate_fields,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
@@ -874,12 +874,12 @@ S3FilterFieldChange({
         item_pack_id = S3ReusableField("item_pack_id", "integer",
                                        writable=False,
                                        readable=False)
-        supply_item_pack_virtualfields = None
+
         return Storage(
                 supply_item_id = supply_item_id,
                 supply_item_entity_id = item_id,
                 supply_item_pack_id = item_pack_id,
-                supply_item_pack_virtualfields = supply_item_pack_virtualfields,
+                supply_item_pack_virtualfields = None,
                 )
 
     # -------------------------------------------------------------------------
@@ -960,7 +960,7 @@ S3FilterFieldChange({
 
             # Feed the loop
             item_category_id = r.parent_item_category_id
-            
+
         catalog = s3_get_db_field_value(tablename = "supply_catalog",
                                         fieldname = "name",
                                         look_up_value = r.catalog_id)
@@ -1310,25 +1310,27 @@ def supply_item_rheader(r):
     return None
 
 # =============================================================================
-class supply_item_pack_virtualfields(dict, object):
+class SupplyItemPackVirtualFields(dict, object):
     """ Virtual Field for pack_quantity """
 
-    def __init__(self,
-                 tablename):
+    def __init__(self, tablename):
         self.tablename = tablename
 
     def pack_quantity(self):
-        if self.tablename == "inv_inv_item":
-            item_pack = self.inv_inv_item.item_pack_id
-        elif self.tablename == "req_req_item":
-            item_pack = self.req_req_item.item_pack_id
-        elif self.tablename == "req_commit_item":
-            item_pack = self.req_commit_item.item_pack_id
-        elif self.tablename == "inv_recv_item":
-            item_pack = self.inv_recv_item.item_pack_id
-        elif self.tablename == "inv_send_item":
-            item_pack = self.inv_send_item.item_pack_id
-        else:
+        try:
+            if self.tablename == "inv_inv_item":
+                item_pack = self.inv_inv_item.item_pack_id
+            elif self.tablename == "req_req_item":
+                item_pack = self.req_req_item.item_pack_id
+            elif self.tablename == "req_commit_item":
+                item_pack = self.req_commit_item.item_pack_id
+            elif self.tablename == "inv_recv_item":
+                item_pack = self.inv_recv_item.item_pack_id
+            elif self.tablename == "inv_send_item":
+                item_pack = self.inv_send_item.item_pack_id
+            else:
+                item_pack = None
+        except AttributeError:
             item_pack = None
         if item_pack:
             return item_pack.quantity

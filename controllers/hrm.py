@@ -455,7 +455,12 @@ def person():
                                 native=False,
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
-                                replace_option=T("Remove existing data before import"))
+                                replace_option=T("Remove existing data before import"),
+                                csv_extra_fields=[
+                                    dict(label="Type",
+                                         field=s3db.hrm_human_resource.type)
+                                                  ],
+                                )
     return output
 
 # -----------------------------------------------------------------------------

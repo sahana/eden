@@ -75,12 +75,10 @@ def user():
     
     auth.configure_user_fields()
 
+    auth.configure_user_fields()
+
     s3db.configure(tablename,
                    main="first_name",
-                   # Only needed if image & mobile fields get added to admin user form
-                   #create_onaccept = auth.s3_user_create_onaccept,
-                   # This is called from the Link action button
-                   # update_onaccept = auth.s3_user_onaccept,
                    )
 
     def disable_user(r, **args):
@@ -208,20 +206,6 @@ def user():
                            # Password confirmation
                            create_onvalidation = user_create_onvalidation)
 
-            # Add specifc buttons to enable/disable users
-            # Allow the ability for admin to Disable logins
-            #reg = r.table.registration_key
-            #reg.writable = True
-            #reg.readable = True
-            #reg.label = T("Status")
-            # In Controller to allow registration to work with UUIDs - only manual edits need this setting
-            #reg.requires = IS_NULL_OR(IS_IN_SET(["disabled",
-            #                                     "pending"]))
-
-        elif r.representation == "aadata":
-            # dataTables' columns need to match
-            r.table.registration_key.readable = True
-
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
                 request.get_vars.update({"user.id":str(r.id)})
@@ -276,21 +260,22 @@ def user():
         s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
         s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
+        # Translate the status values
+        values = [dict(col=6, key="", display=str(T("Active"))),
+                  dict(col=6, key="None", display=str(T("Active"))),
+                  dict(col=6, key="pending", display=str(T("Pending"))),
+                  dict(col=6, key="disabled", display=str(T("Disabled")))
+                 ]
+        s3.dataTableDisplay = values
+
         # Add client-side validation
         s3base.s3_register_validation()
 
         return output
     s3.postp = postp
 
-    def registration_key_represent(value):
-        if value == "disabled":
-            return str(T("Disabled"))
-        elif value == "pending":
-            return str(T("Pending"))
-        else:
-            return str(T("Active"))
-    table.registration_key.represent = registration_key_represent
-    output = s3_rest_controller("auth", resourcename, rheader = rheader)
+    output = s3_rest_controller("auth", resourcename,
+                                rheader=rheader)
     return output
 
 # =============================================================================
@@ -646,5 +631,23 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
                             "attachment; filename=portable-sahana.zip"
 
     return response.stream(portable_app)
+
+# -----------------------------------------------------------------------------
+def result():
+    """
+        Selenium Test Result Reports list
+    """
+
+    file_list = UL()
+    static_path = os.path.join(request.folder, "static", "test")
+    for filename in os.listdir(static_path):
+        link = A(filename,
+                 _href = URL(c = "static",
+                             f = "test",
+                             args = [filename]
+                             )
+                 )
+        file_list.append(link)
+    return dict(file_list=file_list)
 
 # END =========================================================================
