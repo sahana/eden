@@ -3374,7 +3374,7 @@ class S3ProjectTaskModel(S3Model):
         if row:
             if show_link:
                 return A(row.name,
-                         _href=URL(c="project", f="task", extension=None,
+                         _href=URL(c="project", f="task", extension="html",
                                    args=[row.id]))
             else:
                 return row.name
@@ -3388,7 +3388,7 @@ class S3ProjectTaskModel(S3Model):
         try:
             if show_link:
                 return A(r.name,
-                         _href=URL(c="project", f="task", extension=None,
+                         _href=URL(c="project", f="task", extension="html",
                                    args=[id]))
             else:
                 return r.name
@@ -4845,7 +4845,7 @@ def project_task_controller():
 
     # Pre-process
     def prep(r):
-        if r.interactive or r.extension == "aadata":
+        if r.interactive or r.extension == "aaData":
             tablename = "project_task"
             table = s3db.project_task
             statuses = s3.project_task_active_statuses
