@@ -830,9 +830,9 @@ class S3PersonModel(S3Model):
    # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
-        """ Onaccept callback 
+        """ Onaccept callback
             Update any user associated with this person
-        
+
         """
 
         db = current.db
@@ -841,11 +841,11 @@ class S3PersonModel(S3Model):
 
         vars = form.vars
         person_id = vars.id
-        
+
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         utable = auth.settings.table_user
-        
+
         # Find a user for this person
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id) & \
@@ -3937,7 +3937,7 @@ def pr_delete_role(role_id):
         @param role_id: the role ID
     """
 
-    resource = current.manager.define_resource("pr", "role", id=role_id)
+    resource = s3db.resource("pr_role", role_id)
     return resource.delete()
 
 # =============================================================================

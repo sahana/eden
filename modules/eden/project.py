@@ -3502,7 +3502,6 @@ class S3ProjectTaskModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        define_resource = current.manager.define_resource
 
         vars = form.vars
         id = vars.id
@@ -3548,10 +3547,10 @@ class S3ProjectTaskModel(S3Model):
             filter = (ltable.task_id == id)
             if vars.project_id:
                 # Create the link to the Project
-                #master = define_resource("project", "task", id=id)
+                #master = s3db.resource("project_task", id=id)
                 #record = db(ptable.id == vars.project_id).select(ptable.id,
                 #                                                 limitby=(0, 1)).first()
-                #link = define_resource("project", "task_project")
+                #link = s3db.resource("project_task_project")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == id) & \
                         (ltable.project_id == vars.project_id)
@@ -3563,10 +3562,8 @@ class S3ProjectTaskModel(S3Model):
                                             project_id = vars.project_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = define_resource("project", "task_project",
-                                    filter=filter)
-            ondelete = s3db.get_config("project_task_project",
-                                       "ondelete")
+            links = s3db.resource("project_task_project", filter=filter)
+            ondelete = s3db.get_config("project_task_project", "ondelete")
             links.delete(ondelete=ondelete)
 
         if "activity_id" in vars:
@@ -3575,10 +3572,10 @@ class S3ProjectTaskModel(S3Model):
             filter = (ltable.task_id == id)
             if vars.activity_id:
                 # Create the link to the Activity
-                #master = s3mgr.define_resource("project", "task", id=id)
+                #master = s3db.resource("project_task", id=id)
                 #record = db(atable.id == vars.activity_id).select(atable.id,
                 #                                                  limitby=(0, 1)).first()
-                #link = s3mgr.define_resource("project", "task_activity")
+                #link = s3db.resource("project_task_activity")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == id) & \
                         (ltable.activity_id == vars.activity_id)
@@ -3590,10 +3587,8 @@ class S3ProjectTaskModel(S3Model):
                                             activity_id = vars.activity_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = define_resource("project", "task_activity",
-                                    filter=filter)
-            ondelete = s3db.get_config("project_task_activity",
-                                       "ondelete")
+            links = s3db.resource("project_task_activity", filter=filter)
+            ondelete = s3db.get_config("project_task_activity", "ondelete")
             links.delete(ondelete=ondelete)
 
         # Notify Assignee

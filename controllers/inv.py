@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """
     Inventory Management
@@ -32,7 +31,7 @@ def index():
         from s3.s3utils import S3DataTable
         request = current.request
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
-            resource = current.manager.define_resource("inv", "warehouse")
+            resource = s3db.resource("inv_warehouse")
             list_fields = ["id",
                            "name",
                            "organisation_id",
@@ -77,7 +76,7 @@ def index():
                 else:
                     inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
             else:
-                resource = current.manager.define_resource("inv", "inv_item")
+                resource = s3db.resource("inv_inv_item")
                 table = resource.table
                 stable = s3db.supply_item
                 list_fields = ["id",
@@ -164,7 +163,7 @@ def index():
                                         dt_shrink_groups = "accordion",
                                         #dt_shrink_groups = "individual",
                                         )
-                    
+
                     current.response.s3.actions = None
                 elif request.extension == "aaData":
                     inventory = dt.json("inventory_list_1",
@@ -192,7 +191,7 @@ def index():
                     return output
         # Third table
         if request.extension == "html" or request.vars.id == "supply_list_1":
-            resource = current.manager.define_resource("supply", "item")
+            resource = s3db.resource("supply_item")
             list_fields = ["id",
                            "name",
                            "um",
@@ -432,7 +431,7 @@ def inv_item():
                         query = (otable.name == org_name) & \
                                 (stable.organisation_id == otable.id) & \
                                 (itable.site_id == stable.id)
-                        resource = s3mgr.define_resource("inv", "inv_item", filter=query)
+                        resource = s3db.resource("inv_inv_item", filter=query)
                         ondelete = s3db.get_config("inv_inv_item", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml")
             resource.skip_import = True

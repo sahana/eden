@@ -65,7 +65,6 @@ from gluon.tools import callback
 
 from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3validators import IS_ONE_OF
-from s3import import S3ImportJob
 
 DEBUG = False
 if DEBUG:
@@ -77,10 +76,26 @@ else:
 
 # =============================================================================
 class S3Resource(object):
-    """ API for resources """
+    """
+        API for resources.
 
-    # -------------------------------------------------------------------------
-    def __init__(self, prefix, name,
+        A "resource" is a set of records in a database table including their
+        references in certain related resources (components). A resource can
+        be defined like:
+
+            resource = S3Resource(table)
+
+        A resource defined like this would include all records in the table.
+        Further parameters for the resource constructor as well as methods
+        of the resource instance can be used to filter for particular subsets.
+
+        This API provides extended standard methods to access and manipulate
+        data in resources while respecting current authorization and other
+        S3 framework rules.
+    """
+
+    def __init__(self, prefix,
+                 name=None,
                  id=None,
                  uid=None,
                  filter=None,
@@ -107,7 +122,57 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
+
+        # Table properties ----------------------------------------------------
+
+        self.table = None
+        if id is None and \
+           (isinstance(name, (int, long, list, tuple)) or \
+            isinstance(name, str) and name.isdigit()):
+            id, name = name, id
+        if name is None:
+            if isinstance(prefix, Table):
+                self.table = prefix
+                tablename = prefix._tablename
+            elif isinstance(prefix, S3Resource):
+                self.table = prefix.table
+                tablename = prefix.tablename
+            else:
+                tablename = prefix
+            if "_" in tablename:
+                prefix, name = tablename.split("_", 1)
+            else:
+                prefix, name = None, tablename
+        else:
+            tablename = "%s_%s" % (prefix, name)
+
+        self.prefix = prefix
+        self.name = name
+        self.tablename = tablename
+        self.alias = alias or name
+
         manager = current.manager
+
+        if self.table is None:
+            try:
+                self.table = s3db[tablename]
+            except:
+                manager.error = "Undefined table: %s" % tablename
+                raise # KeyError(manager.error)
+
+        # Table alias (needed for self-joins)
+        self._alias = tablename
+        if parent is not None:
+            if parent.tablename == self.tablename:
+                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
+                pkey = self.table._id.name
+                self.table = self.table.with_alias(alias)
+                self.table._id = self.table[pkey]
+                self._alias = alias
+        self.fields = self.table.fields
+        self._id = self.table._id
+
+        # Hooks ---------------------------------------------------------------
 
         self.ERROR = manager.ERROR
 
@@ -121,31 +186,7 @@ class S3Resource(object):
         # Audit hook
         self.audit = manager.audit
 
-        # Basic properties
-        self.prefix = prefix
-        self.name = name
-        self.alias = alias or name
-
-        # Table properties
-        tablename = "%s_%s" % (prefix, name)
-        try:
-            table = s3db[tablename]
-        except:
-            manager.error = "Undefined table: %s" % tablename
-            raise # KeyError(manager.error)
-        self.tablename = tablename
-        self.table = table
-        # Table alias (needed for self-joins)
-        self._alias = tablename
-        if parent is not None:
-            if parent.tablename == self.tablename:
-                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
-                pkey = table._id.name
-                self.table = table.with_alias(alias)
-                self.table._id = self.table[pkey]
-                self._alias = alias
-        self.fields = self.table.fields
-        self._id = self.table._id
+        # Filter --------------------------------------------------------------
 
         # Resource Filter
         self.rfilter = None
@@ -163,10 +204,13 @@ class S3Resource(object):
         self._uids = []
         self._length = None
 
-        # Request attributes
+        # Request attributes --------------------------------------------------
+
         self.vars = None # set during build_query
         self.lastid = None
         self.files = Storage()
+
+        # Components ----------------------------------------------------------
 
         # Component properties
         self.link = None
@@ -202,9 +246,7 @@ class S3Resource(object):
                                    linked=self,
                                    include_deleted=self.include_deleted)
 
-        # CRUD
-        self.crud = manager.crud()
-        self.crud.resource = self
+        # Export and Import ---------------------------------------------------
 
         # Pending Imports
         self.skip_import = False
@@ -220,6 +262,12 @@ class S3Resource(object):
         # Export meta data
         self.muntil = None      # latest mtime of the exported records
         self.results = None     # number of exported records
+
+        # Standard methods ----------------------------------------------------
+
+        # CRUD
+        self.crud = manager.crud()
+        self.crud.resource = self
 
         # Search
         self.search = s3db.get_config(self.tablename, "search_method", None)
@@ -1100,12 +1148,12 @@ class S3Resource(object):
 
         db = current.db
         manager = current.manager
-        define_resource = manager.define_resource
         get_session = manager.get_session
         clear_session = manager.clear_session
         DELETED = manager.DELETED
 
         s3db = current.s3db
+        define_resource = s3db.resource
         get_config = s3db.get_config
         delete_super = s3db.delete_super
 
@@ -1202,8 +1250,7 @@ class S3Resource(object):
                     rtable = db[tn]
                     query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
-                        rprefix, rname = tn.split("_", 1)
-                        rresource = define_resource(rprefix, rname, filter=query)
+                        rresource = define_resource(tn, filter=query)
                         rondelete = get_config(tn, "ondelete")
                         rresource.delete(ondelete=rondelete, cascade=True)
                         if manager.error:
@@ -1245,8 +1292,7 @@ class S3Resource(object):
                                                          limitby=(0, 1)).first()
                             if not remaining:
                                 query = linked.table[fkey] == this[rkey]
-                                linked = define_resource(linked.prefix,
-                                                         linked.name,
+                                linked = define_resource(linked.table,
                                                          filter=query)
                                 ondelete = get_config(linked.tablename, "ondelete")
                                 linked.delete(ondelete=ondelete, cascade=True)
@@ -1390,7 +1436,7 @@ class S3Resource(object):
 
         manager = current.manager
 
-        define_resource = manager.define_resource
+        define_resource = s3db.resource
         get_session = manager.get_session
         clear_session = manager.clear_session
         DELETED = manager.DELETED
@@ -1444,8 +1490,7 @@ class S3Resource(object):
                     query = (rfield == row[pkey])
                     # Ignore RESTRICTs => reject anyway
                     if rfield.ondelete in ("CASCADE", "RESTRICT"):
-                        rprefix, rname = tn.split("_", 1)
-                        rresource = define_resource(rprefix, rname, filter=query)
+                        rresource = define_resource(tn, filter=query)
                         rresource.reject(cascade=True)
                         if manager.error:
                             break
@@ -1926,6 +1971,8 @@ class S3Resource(object):
 
         """
 
+        define_resource = current.s3db.resource
+
         manager = current.manager
         xml = current.xml
 
@@ -2054,9 +2101,9 @@ class S3Resource(object):
             for tablename in load_map:
                 load_list = load_map[tablename]
                 prefix, name = tablename.split("_", 1)
-                rresource = manager.define_resource(prefix, name,
-                                                    id=load_list,
-                                                    components=[])
+                rresource = define_resource(tablename,
+                                            id=load_list,
+                                            components=[])
                 table = rresource.table
                 if manager.s3.base_url:
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
@@ -2544,6 +2591,8 @@ class S3Resource(object):
             @todo: update for link table support
         """
 
+        from s3import import S3ImportJob
+
         manager = current.manager
         db = current.db
         xml = current.xml
@@ -2866,6 +2915,78 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     # Utility functions
+    # -------------------------------------------------------------------------
+    def validate(self, field, value, record=None):
+        """
+            Validates a value for a field
+
+            @param fieldname: name of the field
+            @param value: value to validate
+            @param record: the existing database record, if available
+        """
+
+        table = self.table
+
+        default = (value, None)
+
+        if isinstance(field, str):
+            fieldname = field
+            if fieldname in table.fields:
+                field = table[fieldname]
+            else:
+                return default
+        else:
+            fieldname = field.name
+
+        self_id = None
+
+        if record is not None:
+
+            try:
+                v = record[field]
+            except KeyError:
+                v = None
+            if v and v == value:
+                return default
+
+            try:
+                self_id = record[table._id]
+            except KeyError:
+                pass
+
+        requires = field.requires
+
+        if field.unique and not requires:
+            # Prevent unique-constraint violations
+            field.requires = IS_NOT_IN_DB(current.db, str(field))
+            if self_id:
+                field.requires.set_self_id(self_id)
+
+        elif self_id:
+
+            # Initialize all validators for self_id
+            if not isinstance(requires, (list, tuple)):
+                requires = [requires]
+            for r in requires:
+                if hasattr(r, "set_self_id"):
+                    r.set_self_id(self_id)
+                if hasattr(r, "other") and \
+                    hasattr(r.other, "set_self_id"):
+                    r.other.set_self_id(self_id)
+
+        try:
+            value, error = field.validate(value)
+        except:
+            # Oops - something went wrong in the validator:
+            # write out a debug message, and continue anyway
+            if current.response.s3.debug:
+                from s3utils import s3_debug
+                s3_debug("Validate %s: %s (ignored)" %
+                         (field, sys.exc_info()[1]))
+            return (None, None)
+        else:
+            return (value, error)
+
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
         """
@@ -3717,8 +3838,7 @@ class S3ResourceField(object):
                 left[ktablename] = [ktable.on(j)]
 
             # Resolve the tail
-            prefix, name = ktablename.split("_", 1)
-            kresource = manager.define_resource(prefix, name, vars=[])
+            kresource = s3db.resource(ktablename, vars=[])
             field = S3ResourceField.resolve(kresource, tail, join=join, left=left)
             field.update(selector=original,
                          distinct=field.distinct or distinct)
@@ -5808,12 +5928,12 @@ class S3RecordMerger(object):
     # -------------------------------------------------------------------------
     def delete_record(self, table, id, replaced_by=None):
 
+        s3db = current.s3db
+
         if replaced_by is not None:
             replaced_by = {str(id): replaced_by}
-
-        prefix, name = table._tablename.split("_", 1)
-        resource = current.manager.define_resource(prefix, name, id=id)
-        ondelete = current.s3db.get_config(resource.tablename, "ondelete")
+        resource = s3db.resource(table, id=id)
+        ondelete = s3db.get_config(resource.tablename, "ondelete")
         success = resource.delete(ondelete=ondelete,
                                   replaced_by=replaced_by,
                                   cascade=True)
@@ -5955,6 +6075,7 @@ class S3RecordMerger(object):
         fieldname = self.fieldname
 
         # Update all references
+        define_resource = s3db.resource
         for referee in referenced_by:
 
             if isinstance(referee, Field):
@@ -6009,10 +6130,11 @@ class S3RecordMerger(object):
                         # Two records => merge them
                         osub_id = osub[component.table._id]
                         dsub_id = dsub[component.table._id]
-                        cresource = manager.define_resource(component.prefix,
-                                                            component.name)
+                        cresource = define_resource(component.tablename)
                         cresource.merge(osub_id, dsub_id,
-                                        replace=replace, update=update, main=resource)
+                                        replace=replace,
+                                        update=update,
+                                        main=resource)
                     continue
 
             # Find the foreign key
@@ -6055,8 +6177,7 @@ class S3RecordMerger(object):
                 skey_o = original[superkey]
                 skey_d = duplicate[superkey]
                 # Merge the super-records
-                prefix, name = entity.split("_", 1)
-                sresource = manager.define_resource(prefix, name)
+                sresource = define_resource(entity)
                 sresource.merge(skey_o, skey_d,
                                 replace=replace,
                                 update=update,

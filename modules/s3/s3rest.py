@@ -170,41 +170,7 @@ class S3RequestManager(object):
         self.content_type = Storage()
 
     # -------------------------------------------------------------------------
-    # REST interface wrappers
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def define_resource(prefix, name,
-                        id=None,
-                        uid=None,
-                        filter=None,
-                        vars=None,
-                        parent=None,
-                        components=None,
-                        include_deleted=False):
-        """
-            Defines a resource
-
-            @param prefix: the application prefix
-            @param name: the resource name (without application prefix)
-            @param id: record ID or list of record IDs
-            @param uid: record UID or list of record UIDs
-            @param filter: web2py query to filter the resource query
-            @param vars: dict of URL query parameters
-            @param parent: the parent resource (if this is a component)
-            @param components: list of component (names)
-        """
-
-        resource = S3Resource(prefix, name,
-                              id=id,
-                              uid=uid,
-                              filter=filter,
-                              vars=vars,
-                              parent=parent,
-                              components=components,
-                              include_deleted=include_deleted)
-
-        return resource
-
+    # REST interface wrapper
     # -------------------------------------------------------------------------
     def parse_request(self, *args, **vars):
         """
@@ -308,6 +274,8 @@ class S3RequestManager(object):
             @param record: the existing database record, if available
             @param fieldname: name of the field
             @param value: value to check
+
+            @status: deprecated, use S3Resource.validate instead
         """
 
         try:
@@ -566,6 +534,9 @@ class S3Request(object):
         Class to handle RESTful requests
     """
 
+    INTERACTIVE_FORMATS = ("html", "iframe", "popup")
+    DEFAULT_REPRESENTATION = "html"
+
     # -------------------------------------------------------------------------
     def __init__(self,
                  manager,
@@ -602,8 +573,6 @@ class S3Request(object):
 
         # Common settings
         self.UNAUTHORISED = current.T("Not Authorized")
-        self.INTERACTIVE_FORMATS = manager.s3.interactive_view_formats
-        self.DEFAULT_REPRESENTATION = "html"
         self.ERROR = manager.ERROR
         self.HOOKS = manager.HOOKS # HOOKS = "s3"
 
@@ -699,13 +668,13 @@ class S3Request(object):
         if components is None:
             components = cnames
 
-        self.resource = manager.define_resource(self.prefix,
-                                                self.name,
-                                                id=self.id,
-                                                filter=_filter,
-                                                vars=vars,
-                                                components=components,
-                                                include_deleted=include_deleted)
+        tablename = "%s_%s" % (self.prefix, self.name)
+        self.resource = S3Resource(tablename,
+                                   id=self.id,
+                                   filter=_filter,
+                                   vars=vars,
+                                   components=components,
+                                   include_deleted=include_deleted)
 
         self.tablename = self.resource.tablename
         table = self.table = self.resource.table

@@ -779,7 +779,7 @@ def s3_register_validation():
     """
         JavaScript client-side validation for Register form
         - needed to check for passwords being same
-        @ToDo: Move this to JS. Internationalisation (T()) can be provided in 
+        @ToDo: Move this to JS. Internationalisation (T()) can be provided in
                views/l10n.js
     """
 
@@ -789,7 +789,7 @@ def s3_register_validation():
     s3 = current.response.s3
     appname = current.request.application
     auth = current.auth
-    
+
     if s3.debug:
         s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
         s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)
@@ -1677,7 +1677,7 @@ class S3BulkImporter(object):
                     name = details["name"]
 
             try:
-                resource = current.manager.define_resource(prefix, name)
+                resource = current.s3db.resource(tablename)
             except AttributeError:
                 # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)

@@ -37,7 +37,7 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
-from ..s3rest import S3Request
+from ..s3resource import S3Resource
 from ..s3codec import S3Codec
 
 try:
@@ -180,7 +180,7 @@ class S3RL_PDF(S3Codec):
             header_flowable = self.get_html_flowable(header,
                                                      doc.printable_width)
             if self.pdf_header_padding:
-                header_flowable.append(Spacer(1,self.pdf_header_padding))    
+                header_flowable.append(Spacer(1,self.pdf_header_padding))
         # Get the footer
         footer_flowable = None
         footer = attr.get("pdf_footer")
@@ -190,7 +190,7 @@ class S3RL_PDF(S3Codec):
             footer_flowable = self.get_html_flowable(footer,
                                                      doc.printable_width)
             if self.pdf_footer_padding:
-                footer_flowable.append(Spacer(1, self.pdf_footer_padding))    
+                footer_flowable.append(Spacer(1, self.pdf_footer_padding))
         # Build report template
 
         # Get data for the body of the text
@@ -204,12 +204,10 @@ class S3RL_PDF(S3Codec):
                                                    doc.printable_width)
         elif attr.get("pdf_componentname"):
             componentname = attr.get("pdf_componentname")
-            (prefix, component) = componentname.split("_", 1) 
-            resource = current.manager.define_resource(request.controller,
-                                                       request.function,
-                                                       components = component,
-                                                       id = r.id,
-                                                      )
+            (prefix, component) = componentname.split("_", 1)
+            resource = S3Resource(r.tablename,
+                                  components = [component],
+                                  id = r.id)
 
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
@@ -1083,7 +1081,7 @@ class S3html2pdf():
             else:
                 para = [Paragraph(html, self.normalstyle)]
             self.normalstyle = self.plainstyle
-            return para 
+            return para
         return None
 
     def exclude_tag(self, html):

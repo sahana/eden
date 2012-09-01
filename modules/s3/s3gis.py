@@ -74,6 +74,7 @@ from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
 from s3method import S3Method
+from s3resource import S3Resource
 
 DEBUG = False
 if DEBUG:
@@ -7198,11 +7199,8 @@ class S3ExportPOI(S3Method):
         for tablename in tables:
 
             # Define the resource
-            # @todo: use new-style resource constructor
-            prefix, name = tablename.split("_", 1)
             try:
-                resource = manager.define_resource(prefix, name,
-                                                   components=[])
+                resource = S3Resource(prefix, name, components=[])
             except AttributeError:
                 # Table not defined (module deactivated?)
                 continue

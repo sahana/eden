@@ -66,7 +66,7 @@ class S3DataTableTests(unittest.TestCase):
             Set up the list of fields each time since the call to S3DataTables
             could change it.
         """
-        self.resource = current.manager.define_resource("org", "office")
+        self.resource = current.s3db.resource("org_office")
         list_fields = ["id",
                        "organisation_id$name",
                        "organisation_id$address",

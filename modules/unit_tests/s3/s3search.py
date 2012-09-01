@@ -17,7 +17,7 @@ class TestS3SearchSimpleWidget(unittest.TestCase):
 
     def setUp(self):
         # This is where I should create a resource and filters
-        self.resource = current.manager.define_resource("hrm", "human_resource")
+        self.resource = current.s3db.resource("hrm_human_resource")
         self.widget = S3SearchSimpleWidget(field="person_id$first_name", _size=20)
         self.virtual_field_widget = S3SearchSimpleWidget(field="course")
 
@@ -60,7 +60,7 @@ class TestS3SearchOptionsWidget(unittest.TestCase):
     """
 
     def setUp(self):
-        self.resource = current.manager.define_resource("hrm", "human_resource")
+        self.resource = current.s3db.resource("hrm_human_resource")
 
     def testQuery(self):
         # Test the query method
@@ -117,7 +117,7 @@ class TestS3SearchMinMaxWidget(unittest.TestCase):
     """
 
     def setUp(self):
-        #self.resource = current.manager.define_resource("inv", "track_item")
+        #self.resource = current.s3db.resource("inv_track_item")
         pass
 
     def testQuery(self):

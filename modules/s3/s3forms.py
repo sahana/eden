@@ -1604,8 +1604,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # Delete..?
                     if "_delete" in item:
-                        c = manager.define_resource(prefix, name,
-                                                    id=record_id)
+                        c = s3db.resource(tablename, id=record_id)
                         ondelete = s3db.get_config(tablename, "ondelete")
                         # @todo: audit
                         success = c.delete(ondelete=ondelete,

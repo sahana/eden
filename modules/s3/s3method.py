@@ -110,9 +110,8 @@ class S3Method(object):
                #self.resource.table._id.name != "id":
                 #record = self.resource[self.record_id]
                 #tablename = record.instance_type
-                #prefix, name = tablename.split("_", 1)
-                #resource = manager.define_resource(prefix, name,
-                                                   #uid=record.uuid)
+                #resource = current.s3db.resource(tablename
+                                                 #uid=record.uuid)
                 #resource.load()
                 #if resource.count() == 1:
                     #self.resource = resource

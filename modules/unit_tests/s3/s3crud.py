@@ -17,10 +17,10 @@ class S3CRUDValidateTests(unittest.TestCase):
 
     def setUp(self):
 
-        manager = current.manager
+        s3db = current.s3db
 
         # Create a fake request
-        self.resource = manager.define_resource("org", "organisation")
+        self.resource = s3db.resource("org_organisation")
         self.request = Storage(prefix="org",
                                name="organisation",
                                resource=self.resource,

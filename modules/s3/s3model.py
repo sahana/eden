@@ -37,6 +37,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3validators import IS_ONE_OF
+from s3resource import S3Resource
 
 DEFAULT = lambda: None
 
@@ -333,6 +334,12 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     # Resource configuration
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def resource(table, **attr):
+
+        return S3Resource(table, **attr)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def configure(tablename, **attr):
@@ -962,15 +969,14 @@ class S3Model(object):
 
         uid = record.get("uuid", None)
         if uid:
-            define_resource = current.manager.define_resource
+            define_resource = current.s3db.resource
             for s in supertable:
                 if isinstance(s, str):
                     s = cls.table(s)
                 if s is None:
                     continue
                 tn = s._tablename
-                prefix, name = tn.split("_", 1)
-                resource = define_resource(prefix, name, uid=uid)
+                resource = define_resource(tn, uid=uid)
                 ondelete = get_config(tn, "ondelete")
                 resource.delete(ondelete=ondelete, cascade=True)
         return True
