@@ -165,10 +165,31 @@ table.dataTable {
 table.dataTable tr td {
     vertical-align: top;
 }
-table.dataTable .group {
+table.dataTable.group {
 	background-color: #ddd;
 	border: 1px solid #aaa;
 }
+table.dataTable tr.level_1{
+	background-color: #999;
+    color: #DDEEFF;
+}
+table.dataTable tr.level_1 a{
+    color: #DDEEFF;
+}
+table.dataTable tr.activeRow.level_1 {
+	background-color: #1D70CF;
+}
+table.dataTable tr.level_2{
+	background-color: #ddd;
+    color: #248;
+}
+table.dataTable tr.level_2 a{
+    color: #248;
+}
+table.dataTable tr.activeRow.level_2{
+	background-color: #528DD1;
+}
+
 div.dataTables_filter {
     width: auto;
     float: left;

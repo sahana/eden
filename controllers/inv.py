@@ -90,6 +90,20 @@ def index():
                 rfields = resource.resolve_selectors(list_fields)[0]
                 (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
                 resource.add_filter(filter)
+                filteredrows = resource.count()
+                site_list = {}
+                rows = resource._select(["id","site_id"],
+                                        limit=filteredrows)
+                for row in rows:
+                    site_id = row.site_id
+                    if site_id not in site_list:
+                        site_list[site_id] = 1
+                    else:
+                        site_list[site_id] += 1
+                formatted_site_list = {}
+                repr = table.site_id.represent
+                for (key,value) in site_list.items():
+                    formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = table.site_id | stable.name | ~table.quantity
                 try:
@@ -132,7 +146,8 @@ def index():
                             alertList.append(row.id)
                     inventory = dt.html("inventory_list_1",
                                         dt_bFilter="true",
-                                        dt_group=1,
+                                        dt_group=[1,2],
+                                        dt_group_totals=[formatted_site_list],
                                         dt_action_col=-1,
                                         dt_ajax_url=URL(c="inv",
                                                      f="index",
@@ -146,7 +161,8 @@ def index():
                                                      },
                                         dt_text_maximum_len = 10,
                                         dt_text_condense_len = 8,
-                                        dt_shrink_groups = "true",
+                                        dt_shrink_groups = "accordion",
+                                        #dt_shrink_groups = "individual",
                                         )
                     
                     current.response.s3.actions = None

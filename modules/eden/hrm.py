@@ -3368,13 +3368,8 @@ def hrm_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        year = now.year
-        month = now.month - 3
-        if month <= 0:
-            month += 12
-            year -= 1
-        three_months_prior = datetime.date(year, month - 3, now.day)
-        end = max(programmes.last().date, three_months_prior)
+        three_months_prior = (now - datetime.timedelta(days=92))
+        end = max(programmes.last().date, three_months_prior.date())
         last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:

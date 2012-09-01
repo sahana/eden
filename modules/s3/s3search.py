@@ -1440,29 +1440,31 @@ class S3Search(S3CRUD):
 
             if tabs:
                 tabs.insert(0, ((T("List"), None)))
+            s3.datatable_ajax_source = URL(extension="aaData",
+                                           args=None,
+                                           vars=vars)
+            s3.formats.pdf = r.url(method="")
+            s3.formats.xls = r.url(method="")
+            s3.formats.rss = r.url(method="")
+            attr = S3DataTable.getConfigData()
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby, # order by
+                                           filter, # the filter string
+                                           None, # the rfields
+                                           **attr
+                                           )
+            items[0].insert(0,sep)
+            items[0].insert(0,link)
         else:
-            list_formats = ""
             tabs = []
 
-        attr = S3DataTable.getConfigData()
-        items = S3DataTable.htmlConfig(items,
-                                       "list",
-                                       sortby, # order by
-                                       "", # the filter string
-                                       None, # the rfields
-                                       **attr
-                                       )
-        items[0].insert(0, sep)
-        items[0].insert(0, link)
         output["items"] = items
         output["sortby"] = sortby
 
         # Search Tabs
         search_tabs = s3_search_tabs(r, tabs)
         output["search_tabs"] = search_tabs
-
-        # List Formats
-#        output["list_formats"] = list_formats
 
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
