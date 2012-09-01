@@ -1454,8 +1454,8 @@ class S3Search(S3CRUD):
                                            None, # the rfields
                                            **attr
                                            )
-            items[0].insert(0,sep)
-            items[0].insert(0,link)
+            items[0].insert(0, sep)
+            items[0].insert(0, link)
         else:
             tabs = []
 

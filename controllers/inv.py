@@ -52,13 +52,13 @@ def index():
             dt.defaultActionButtons(resource)
             if request.extension == "html":
                 warehouses = dt.html("warehouse_list_1",
-                                     dt_bFilter="true",
-                                     dt_group=2,
-                                     dt_ajax_url=URL(c="inv",
-                                                  f="index",
-                                                  extension="aaData",
-                                                  vars={"id":"warehouse_list_1"},
-                                                  ),
+                                     dt_bFilter = "true",
+                                     dt_group = 2,
+                                     dt_ajax_url = URL(c="inv",
+                                                       f="index",
+                                                       extension="aaData",
+                                                       vars={"id": "warehouse_list_1"},
+                                                       ),
                                      dt_text_maximum_len = 16,
                                      dt_text_condense_len = 12,
                                      )
