@@ -3303,7 +3303,7 @@ def hrm_human_resource_onaccept(form):
                             limitby=(0, 1)).first()
     if user:
         user_id = user.id
-        data.owned_by_user = user.id
+        data.owned_by_user = user_id
 
     if data:
         record.update_record(**data)

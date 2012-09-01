@@ -779,11 +779,23 @@ def s3_register_validation():
     """
         JavaScript client-side validation for Register form
         - needed to check for passwords being same
+        @ToDo: Move this to JS. Internationalisation (T()) can be provided in 
+               views/l10n.js
     """
 
     T = current.T
     request = current.request
     settings = current.deployment_settings
+    s3 = current.response.s3
+    appname = current.request.application
+    auth = current.auth
+    
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)
+    else:
+        s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)
 
     if request.cookies.has_key("registered"):
         password_position = '''last'''
@@ -798,7 +810,7 @@ def s3_register_validation():
     else:
         mobile = ""
 
-    if settings.get_auth_registration_organisation_mandatory():
+    if settings.get_auth_registration_organisation_required():
         org1 = '''
   organisation_id:{
    required: true
@@ -885,8 +897,11 @@ $('#regform').validate({
  submitHandler:function(form){
   form.submit()
  }
-})''' ))
-    current.response.s3.jquery_ready.append(script)
+})
+var MinPasswordChar = ''', str(auth.settings.password_min_length), ''';
+   $('.password:''', password_position, '''').pstrength({ minchar: MinPasswordChar, minchar_label: null } );
+''' ))
+    s3.jquery_ready.append(script)
 
 # =============================================================================
 def s3_filename(filename):
@@ -1700,11 +1715,11 @@ class S3BulkImporter(object):
             extra_data = None
             if task[5]:
                 try:
-                    extradata = unescape(task[5], {"'": '"'})
+                    extradata = self.unescape(task[5], {"'": '"'})
                     extradata = json.loads(extradata)
                     extra_data = extradata
                 except:
-                    pass
+                    self.errorList.append("WARNING:5th parameter invalid, parameter %s ignored" % task[5])
             try:
                 # @todo: add extra_data and file attachments
                 result = resource.import_xml(csv,

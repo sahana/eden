@@ -29,6 +29,7 @@
 
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
+           "S3StatsSourceModel",
            "stats_parameter_represent",
            ]
 
@@ -654,9 +655,9 @@ class S3StatsDemographicModel(S3Model):
                              )
 
         # CRUD Strings
-        ADD_DATA = T("Add Demographic Data")
+        ADD_DEMOGRAPHIC = T("Add Demographic Data")
         crud_strings[tablename] = Storage(
-            title_create = ADD_DATA,
+            title_create = ADD_DEMOGRAPHIC,
             title_display = T("Demographic Data Details"),
             title_list = T("Demographic Data"),
             title_update = T("Edit Demographic Data"),
@@ -664,7 +665,7 @@ class S3StatsDemographicModel(S3Model):
             title_upload = T("Import Demographic Data"),
             subtitle_create = T("Add New Demographic Data"),
             label_list_button = T("List Demographic Data"),
-            label_create_button = ADD_DATA,
+            label_create_button = ADD_DEMOGRAPHIC,
             msg_record_created = T("Demographic Data added"),
             msg_record_modified = T("Demographic Data updated"),
             msg_record_deleted = T("Demographic Data deleted"),
@@ -699,6 +700,112 @@ class S3StatsDemographicModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3StatsSourceModel(S3Model):
+    """
+        Table to hold the source details of the different stats records
+    """
+
+    names = ["stats_source",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Source
+        #
+        tablename = "stats_source"
+        table = self.define_table(tablename,
+                                  # Instance
+                                  self.super_link("source_id", "doc_source_entity"),
+                                  Field("name",
+                                        label = T("Name")),
+                                  Field("url",
+                                        label = T("URL"),
+                                        requires = IS_NULL_OR(IS_URL()),
+                                        represent = lambda url: \
+                                            url and A(url,_href=url) or current.messages.NONE),
+                                  Field("status",
+                                        label=T("Status")),
+                                  s3_date(label = T("Date Published")),
+                                  self.gis_location_id(),
+                                  self.doc_source_type_id(),
+                                  s3_comments("description",
+                                              label = T("Description")),
+                                  *s3_meta_fields()
+                                  )
+
+        # CRUD Strings
+        ADD_STAT_SOURCE = T("Add Demographic Source")
+        demographic_crud_strings = Storage(
+            title_create = ADD_STAT_SOURCE,
+            title_display = T("Demographic Source Details"),
+            title_list = T("Demographic Sources"),
+            title_update = T("Edit Demographic Source"),
+            title_search = T("Search Demographic Sources"),
+            title_upload = T("Import Demographic Sources"),
+            subtitle_create = T("Add New Demographic Source"),
+            label_list_button = T("List Demographic Sources"),
+            label_create_button = ADD_STAT_SOURCE,
+            msg_record_created = T("Demographic source added"),
+            msg_record_modified = T("Demographic source updated"),
+            msg_record_deleted = T("Demographic source deleted"),
+            msg_list_empty = T("No demographic sources currently defined"))
+
+
+        ADD_VULNERABILITY = T("Add Vulnerability Indicator Source")
+        vulnerability_crud_strings = Storage(
+            title_create = ADD_VULNERABILITY,
+            title_display = T("Vulnerability Indicator Source Details"),
+            title_list = T("Vulnerability Indicator Sources"),
+            title_update = T("Edit Vulnerability Indicator Sources"),
+            title_search = T("Search Vulnerability Indicator Sources"),
+            title_upload = T("Import Vulnerability Indicator Sources"),
+            subtitle_create = T("Add New Vulnerability Indicator Sources"),
+            label_list_button = T("List Vulnerability Indicator Sources"),
+            label_create_button = ADD_VULNERABILITY,
+            msg_record_created = T("Vulnerability indicator sources added"),
+            msg_record_modified = T("Vulnerability indicator sources updated"),
+            msg_record_deleted = T("Vulnerability indicator sources deleted"),
+            msg_list_empty = T("No vulnerability indicator Sources currently defined"))
+
+        current.response.s3.crud_strings[tablename] = demographic_crud_strings
+        self.configure(tablename,
+                       super_entity = "doc_source_entity",
+                       deduplicate = self.stats_source_duplicate,
+                       )
+        # ---------------------------------------------------------------------
+        # Pass model-global names to response.s3
+        #
+        return Storage(
+                       demographic_source_crud_strings = demographic_crud_strings,
+                       vulnerability_source_crud_strings = vulnerability_crud_strings,
+                       )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if the module is disabled """
+
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def stats_source_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "stats_source":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
 
 # =============================================================================
 def stats_parameter_represent(id, row=None):

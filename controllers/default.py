@@ -45,100 +45,7 @@ def register_validation(form):
     return
 
 # -----------------------------------------------------------------------------
-def register_onaccept(form):
-    """ Tasks to be performed after a new user registers """
-
-    # Add newly-registered users to Person Registry, add 'Authenticated' role
-    # If Organisation is provided, then add HRM record
-    person_id = auth.s3_register(form)
-
-    if form.vars.organisation_id and not settings.get_hrm_show_staff():
-        # Convert HRM record to a volunteer
-        htable = s3db.hrm_human_resource
-        query = (htable.person_id == person_id)
-        db(query).update(type=2)
-
-    # Add to required roles:
-    roles = settings.get_auth_registration_roles()
-    if roles or settings.has_module("delphi"):
-        utable = auth.settings.table_user
-        ptable = s3db.pr_person
-        ltable = s3db.pr_person_user
-        query = (ptable.id == person_id) & \
-                (ptable.pe_id == ltable.pe_id) & \
-                (ltable.user_id == utable.id)
-        user = db(query).select(utable.id,
-                                ltable.user_id,
-                                limitby=(0, 1)).first()
-
-    if roles:
-        gtable = auth.settings.table_group
-        mtable = auth.settings.table_membership
-        query = (gtable.uuid.belongs(roles))
-        rows = db(query).select(gtable.id)
-        for role in rows:
-            mtable.insert(user_id=user[ltable._tablename].user_id,
-                          group_id=role.id)
-
-    if settings.has_module("delphi"):
-        # Add user as a participant of the default problem group
-        table = s3db.delphi_group
-        query = (table.uuid == "DEFAULT")
-        group = db(query).select(table.id,
-                                 limitby=(0, 1)).first()
-        if group:
-            table = s3db.delphi_membership
-            table.insert(group_id=group.id,
-                         user_id=user[utable._tablename].id,
-                         status=3)
-
-# -----------------------------------------------------------------------------
 auth.settings.register_onvalidation = register_validation
-auth.settings.register_onaccept = register_onaccept
-
-_table_user = auth.settings.table_user
-_table_user.first_name.label = T("First Name")
-_table_user.first_name.comment = SPAN("*", _class="req")
-_table_user.last_name.label = T("Last Name")
-if settings.get_L10n_mandatory_lastname():
-    _table_user.last_name.comment = SPAN("*", _class="req")
-_table_user.email.label = T("E-mail")
-_table_user.email.comment = SPAN("*", _class="req")
-_table_user.password.comment = SPAN("*", _class="req")
-_table_user.language.label = T("Language")
-_table_user.language.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Language"),
-                                                     T("The language you wish the site to be displayed in.")))
-_table_user.language.represent = lambda opt: s3_languages.get(opt, UNKNOWN_OPT)
-
-# Organisation widget for use in Registration Screen
-# NB User Profile is only editable by Admin - using User Management
-organisation_represent = s3db.org_organisation_represent
-org_widget = IS_ONE_OF(db, "org_organisation.id",
-                       organisation_represent,
-                       orderby="org_organisation.name",
-                       sort=True)
-if settings.get_auth_registration_organisation_mandatory():
-    _table_user.organisation_id.requires = org_widget
-else:
-    _table_user.organisation_id.requires = IS_NULL_OR(org_widget)
-
-# For the User Profile:
-_table_user.utc_offset.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (auth.messages.label_utc_offset,
-                                                       auth.messages.help_utc_offset))
-_table_user.organisation_id.represent = organisation_represent
-_table_user.organisation_id.comment = DIV(_class="tooltip",
-                                          _title="%s|%s|%s" % (T("Organization"),
-                                                               T("The default Organization for whom you are acting."),
-                                                               T("This setting can only be controlled by the Administrator.")))
-
-org_site_represent = s3db.org_site_represent
-_table_user.site_id.represent = org_site_represent
-_table_user.site_id.comment = DIV(_class="tooltip",
-                                  _title="%s|%s|%s" % (T("Facility"),
-                                                       T("The default Facility for which you are acting."),
-                                                       T("This setting can only be controlled by the Administrator.")))
 
 # =============================================================================
 def index():
@@ -335,12 +242,7 @@ def index():
 
         if self_registration:
             # Provide a Registration box on front page
-            request.args = ["register"]
-            if settings.get_terms_of_service():
-                auth.messages.submit_button = T("I accept. Create my account.")
-            else:
-                auth.messages.submit_button = T("Register")
-            register_form = auth()
+            register_form = auth.register()
             register_div = DIV(H3(T("Register")),
                                P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                         dict(sign_up_now=B(T("sign-up now"))))))
@@ -348,10 +250,6 @@ def index():
              # Add client-side validation
             s3base.s3_register_validation()
 
-            if s3.debug:
-                s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-            else:
-                s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
             if request.env.request_method == "POST":
                 post_script = \
 '''$('#register_form').removeClass('hide')
@@ -546,24 +444,48 @@ def rapid():
     return dict(item=str(session.s3.rapid_data_entry))
 
 # -----------------------------------------------------------------------------
-def user_profile_onaccept(form):
-    """ Update the UI locale from user profile """
-
-    if form.vars.language:
-        session.s3.language = form.vars.language
-    return
-
-# -----------------------------------------------------------------------------
 def user():
     """ Auth functions based on arg. See gluon/tools.py """
 
+    arg = request.args(0)
     auth.settings.on_failed_authorization = URL(f="error")
+    
+    auth.configure_user_fields()
 
     _table_user = auth.settings.table_user
-    if request.args and request.args(0) == "profile":
-        #_table_user.organisation.writable = False
-        _table_user.utc_offset.readable = True
-        _table_user.utc_offset.writable = True
+
+    auth.settings.profile_onaccept = auth.s3_user_profile_onaccept
+
+    self_registration = settings.get_security_self_registration()
+    login_form = register_form = None
+
+    if request.args:
+        arg = request.args(0)
+    else:
+        arg = None
+
+    if arg == "login":
+        # @ToDo: move this code to /modules/s3/s3aaa.py:def login?
+        auth.messages.submit_button = T("Login")
+        form = auth()
+        #form = auth.login()
+        login_form = form
+        if s3.crud.submit_style:
+            form[0][-1][1][0]["_class"] = s3.crud.submit_style
+    elif arg == "register":
+        # @ToDo: move this code to /modules/s3/s3aaa.py:def register?
+        if not self_registration:
+            session.error = T("Registration not permitted")
+            redirect(URL(f="index"))
+
+        form = auth.register()
+        register_form = form
+        # Add client-side validation
+        s3base.s3_register_validation()
+    elif arg == "change_password":
+        form = auth()
+    elif arg == "profile":
+        # @ToDo: move this code to /modules/s3/s3aaa.py:def profile?
 
         # If we have an opt_in and some post_vars then update the opt_in value
         if settings.get_auth_opt_in_to_email() and request.post_vars:
@@ -608,39 +530,10 @@ def user():
                         team_id = team_rec.id
                     gm_table.insert(group_id = team_id,
                                     person_id = person_id)
-
-    auth.settings.profile_onaccept = user_profile_onaccept
-
-    self_registration = settings.get_security_self_registration()
-
-    login_form = register_form = None
-    if request.args and request.args(0) == "login":
-        auth.messages.submit_button = T("Login")
-        form = auth()
-        login_form = form
-        if s3.crud.submit_style:
-            form[0][-1][1][0]["_class"] = s3.crud.submit_style
-    elif request.args and request.args(0) == "register":
-        if not self_registration:
-            session.error = T("Registration not permitted")
-            redirect(URL(f="index"))
-        if settings.get_terms_of_service():
-            auth.messages.submit_button = T("I accept. Create my account.")
-        else:
-            auth.messages.submit_button = T("Register")
-        # Default the profile language to the one currently active
-        _table_user.language.default = T.accepted_language
-        form = auth()
-        register_form = form
-        # Add client-side validation
-        s3base.s3_register_validation()
-    elif request.args and request.args(0) == "change_password":
-        form = auth()
-    elif request.args and request.args(0) == "profile":
         if settings.get_auth_openid():
             form = DIV(form, openid_login_form.list_user_openids())
         else:
-            form = auth()
+            form = auth.profile()
         # add an opt in clause to receive emails depending on the deployment settings
         if settings.get_auth_opt_in_to_email():
             ptable = s3db.pr_person
@@ -663,7 +556,7 @@ def user():
                                      INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
                                _id=field_id + SQLFORM.ID_ROW_SUFFIX))
     else:
-        # Retrieve Password
+        # Retrieve Password / Logout
         form = auth()
 
     # Use Custom Ext views
