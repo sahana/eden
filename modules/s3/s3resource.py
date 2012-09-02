@@ -1431,7 +1431,7 @@ class S3Resource(object):
                 if isinstance(e, Field) and str(e) not in qf:
                     qfields.append(e)
                     qf.append(str(e))
-                elif isinstance(e, str):
+                elif isinstance(e, str) and e:
                     fn = e.strip().split()[0].split(".", 1)
                     tn, fn = ([table._tablename] + fn)[-2:]
                     try:
