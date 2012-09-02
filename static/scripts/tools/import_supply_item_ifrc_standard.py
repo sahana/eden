@@ -30,7 +30,7 @@ import_dir = os.path.join(request.folder, "private", "templates", "Standard")
 
 import_file = os.path.join(import_dir, "supply_item_category_ifrc_standard.csv")
 stylesheet = os.path.join(stylesheet_dir, "item_category_ifrc_standard.xsl")
-resource = s3mgr.define_resource("supply", "item_category")
+resource = s3db.resource("supply_item_category")
 File = open(import_file, "r")
 resource.import_xml(File,
                     format="csv",
@@ -48,7 +48,7 @@ elif set == "complete":
     import_file = os.path.join(import_dir, "supply_item_ifrc_standard.csv")
 
 stylesheet = os.path.join(stylesheet_dir, "item_ifrc_standard.xsl")
-resource = s3mgr.define_resource("supply", "item")
+resource = s3db.resource("supply_item")
 File = open(import_file, "r")
 resource.import_xml(File,
                     format="csv",

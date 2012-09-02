@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """
     Inventory Management
@@ -32,33 +31,33 @@ def index():
         from s3.s3utils import S3DataTable
         request = current.request
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
-            resource = current.manager.define_resource("inv", "warehouse")
+            resource = s3db.resource("inv_warehouse")
             list_fields = ["id",
                            "name",
                            "organisation_id",
                            ]
             limit = 6 if request.extension == "aaData" else 1
-            rows = resource._select(list_fields,
-                                    orderby="organisation_id",
-                                    start=0,
-                                    limit=limit,
+            rows = resource.select(list_fields,
+                                   orderby="organisation_id",
+                                   start=0,
+                                   limit=limit,
+                                   )
+            data = resource.extract(rows,
+                                    list_fields,
+                                    represent=True,
                                     )
-            data = resource._extract(rows,
-                                     list_fields,
-                                     represent=True,
-                                     )
             rfields = resource.resolve_selectors(list_fields)[0]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
                 warehouses = dt.html("warehouse_list_1",
-                                     dt_bFilter="true",
-                                     dt_group=2,
-                                     dt_ajax_url=URL(c="inv",
-                                                  f="index",
-                                                  extension="aaData",
-                                                  vars={"id":"warehouse_list_1"},
-                                                  ),
+                                     dt_bFilter = "true",
+                                     dt_group = 2,
+                                     dt_ajax_url = URL(c="inv",
+                                                       f="index",
+                                                       extension="aaData",
+                                                       vars={"id": "warehouse_list_1"},
+                                                       ),
                                      dt_text_maximum_len = 16,
                                      dt_text_condense_len = 12,
                                      )
@@ -77,7 +76,7 @@ def index():
                 else:
                     inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
             else:
-                resource = current.manager.define_resource("inv", "inv_item")
+                resource = s3db.resource("inv_inv_item")
                 table = resource.table
                 stable = s3db.supply_item
                 list_fields = ["id",
@@ -90,21 +89,35 @@ def index():
                 rfields = resource.resolve_selectors(list_fields)[0]
                 (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
                 resource.add_filter(filter)
+                filteredrows = resource.count()
+                site_list = {}
+                rows = resource.select(["id","site_id"],
+                                       limit=filteredrows)
+                for row in rows:
+                    site_id = row.site_id
+                    if site_id not in site_list:
+                        site_list[site_id] = 1
+                    else:
+                        site_list[site_id] += 1
+                formatted_site_list = {}
+                repr = table.site_id.represent
+                for (key,value) in site_list.items():
+                    formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = table.site_id | stable.name | ~table.quantity
                 try:
                     limit = int(current.request.get_vars["iDisplayLength"])
                 except:
                     limit = 1
-                rows = resource._select(list_fields,
-                                        orderby=orderby,
-                                        start=0,
-                                        limit=limit,
+                rows = resource.select(list_fields,
+                                       orderby=orderby,
+                                       start=0,
+                                       limit=limit,
+                                       )
+                data = resource.extract(rows,
+                                        list_fields,
+                                        represent=True,
                                         )
-                data = resource._extract(rows,
-                                         list_fields,
-                                         represent=True,
-                                         )
                 dt = S3DataTable(rfields,
                                  data,
                                  orderby=orderby,
@@ -132,7 +145,8 @@ def index():
                             alertList.append(row.id)
                     inventory = dt.html("inventory_list_1",
                                         dt_bFilter="true",
-                                        dt_group=1,
+                                        dt_group=[1,2],
+                                        dt_group_totals=[formatted_site_list],
                                         dt_action_col=-1,
                                         dt_ajax_url=URL(c="inv",
                                                      f="index",
@@ -146,9 +160,10 @@ def index():
                                                      },
                                         dt_text_maximum_len = 10,
                                         dt_text_condense_len = 8,
-                                        dt_shrink_groups = "true",
+                                        dt_shrink_groups = "accordion",
+                                        #dt_shrink_groups = "individual",
                                         )
-                    
+
                     current.response.s3.actions = None
                 elif request.extension == "aaData":
                     inventory = dt.json("inventory_list_1",
@@ -176,21 +191,21 @@ def index():
                     return output
         # Third table
         if request.extension == "html" or request.vars.id == "supply_list_1":
-            resource = current.manager.define_resource("supply", "item")
+            resource = s3db.resource("supply_item")
             list_fields = ["id",
                            "name",
                            "um",
                            "model",
                            ]
             limit = 11 if request.extension == "aaData" else 1
-            rows = resource._select(list_fields,
-                                    start=0,
-                                    limit=limit,
+            rows = resource.select(list_fields,
+                                   start=0,
+                                   limit=limit,
+                                   )
+            data = resource.extract(rows,
+                                    list_fields,
+                                    represent=True,
                                     )
-            data = resource._extract(rows,
-                                     list_fields,
-                                     represent=True,
-                                     )
             rfields = resource.resolve_selectors(list_fields)[0]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
@@ -416,7 +431,7 @@ def inv_item():
                         query = (otable.name == org_name) & \
                                 (stable.organisation_id == otable.id) & \
                                 (itable.site_id == stable.id)
-                        resource = s3mgr.define_resource("inv", "inv_item", filter=query)
+                        resource = s3db.resource("inv_inv_item", filter=query)
                         ondelete = s3db.get_config("inv_inv_item", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml")
             resource.skip_import = True

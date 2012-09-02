@@ -46,8 +46,8 @@ def human_resource():
         if r.interactive:
             if r.method == "create" and not r.component:
                 redirect(URL(f="volunteer",
-                             args=args,
-                             vars=vars))
+                             args=request.args,
+                             vars=request.vars))
             elif r.method == "delete":
                 # Don't redirect
                 pass
@@ -329,7 +329,7 @@ def person():
                         query = (otable.name == org_name) & \
                                 (htable.organisation_id == otable.id) & \
                                 (htable.type == group)
-                        resource = s3mgr.define_resource("hrm", "human_resource", filter=query)
+                        resource = S3Resource("hrm_human_resource", filter=query)
                         ondelete = s3db.get_config("hrm_human_resource", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
 
@@ -455,7 +455,12 @@ def person():
                                 native=False,
                                 rheader=s3db.hrm_rheader,
                                 orgname=orgname,
-                                replace_option=T("Remove existing data before import"))
+                                replace_option=T("Remove existing data before import"),
+                                csv_extra_fields=[
+                                    dict(label="Type",
+                                         field=s3db.hrm_human_resource.type)
+                                                  ],
+                                )
     return output
 
 # -----------------------------------------------------------------------------

@@ -36,9 +36,6 @@ s3.download_url = "%s/default/download" % s3.base_url
 # Global variables
 ##################
 
-# Interactive view formats
-s3.interactive_view_formats = ("html", "popup", "iframe")
-
 # Strings to i18n
 messages["UNAUTHORISED"] = "Not authorised!"
 messages["BADFORMAT"] = "Unsupported data format!"
@@ -178,11 +175,10 @@ _settings.on_failed_authorization = URL(c="default", f="user",
                                         args="not_authorized")
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
-# Notify Approver of new pending user registration. Action may be required.
-_settings.verify_email_onaccept = auth.s3_verify_email_onaccept
 
 # Auth Messages
 _messages = auth.messages
+
 _messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
     dict(url="%s/default/user/verify_email/" % s3.base_url,
          key="%(key)s")
@@ -197,7 +193,6 @@ _messages.help_mobile_phone = T("Entering a phone number is optional, but doing 
 # Require Admin approval for self-registered users
 _settings.registration_requires_approval = settings.get_auth_registration_requires_approval()
 _messages.registration_pending = settings.get_auth_registration_pending()
-_messages.registration_pending_approval = settings.get_auth_registration_pending_approval()
 
 _messages["approve_user"] = \
 """Your action is required to approve a New User for %(system_name)s:
@@ -217,6 +212,14 @@ No action is required.""" \
        name_format = \
 """%(first_name)s %(last_name)s
 %(email)s""")
+
+_messages["confirmation_email_subject"] = "%s %s" % (settings.get_system_name(),
+                                                    T("access granted"))
+_messages["confirmation_email"] = "%s %s %s %s. %s." % (T("Welcome to the"),
+                                                       settings.get_system_name(),
+                                                       T("Portal at"),
+                                                       s3.base_url,
+                                                       T("Thanks for your assistance"))
 
 # We don't wish to clutter the groups list with 1 per user.
 _settings.create_user_groups = False
@@ -357,19 +360,6 @@ s3mgr.json_formats = ["geojson", "s3json"]
 s3mgr.csv_formats = ["hrf", "s3csv"]
 
 s3mgr.ROWSPERPAGE = 20
-
-##########
-# Messages
-##########
-s3.messages = Messages(T)
-system_name = settings.get_system_name_short()
-s3.messages.confirmation_email_subject = "%s %s" % (system_name,
-                                                    T("access granted"))
-s3.messages.confirmation_email = "%s %s %s %s. %s." % (T("Welcome to the"),
-                                                       system_name,
-                                                       T("Portal at"),
-                                                       s3.base_url,
-                                                       T("Thanks for your assistance"))
 
 # Valid Extensions for Image Upload fields
 s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]

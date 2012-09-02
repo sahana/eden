@@ -779,11 +779,23 @@ def s3_register_validation():
     """
         JavaScript client-side validation for Register form
         - needed to check for passwords being same
+        @ToDo: Move this to JS. Internationalisation (T()) can be provided in
+               views/l10n.js
     """
 
     T = current.T
     request = current.request
     settings = current.deployment_settings
+    s3 = current.response.s3
+    appname = current.request.application
+    auth = current.auth
+
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)
+    else:
+        s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)
 
     if request.cookies.has_key("registered"):
         password_position = '''last'''
@@ -798,7 +810,7 @@ def s3_register_validation():
     else:
         mobile = ""
 
-    if settings.get_auth_registration_organisation_mandatory():
+    if settings.get_auth_registration_organisation_required():
         org1 = '''
   organisation_id:{
    required: true
@@ -885,8 +897,11 @@ $('#regform').validate({
  submitHandler:function(form){
   form.submit()
  }
-})''' ))
-    current.response.s3.jquery_ready.append(script)
+})
+var MinPasswordChar = ''', str(auth.settings.password_min_length), ''';
+   $('.password:''', password_position, '''').pstrength({ minchar: MinPasswordChar, minchar_label: null } );
+''' ))
+    s3.jquery_ready.append(script)
 
 # =============================================================================
 def s3_filename(filename):
@@ -1662,7 +1677,7 @@ class S3BulkImporter(object):
                     name = details["name"]
 
             try:
-                resource = current.manager.define_resource(prefix, name)
+                resource = current.s3db.resource(tablename)
             except AttributeError:
                 # Table cannot be loaded
                 self.errorList.append("WARNING: Unable to find table %s import job skipped" % tablename)
@@ -1700,11 +1715,11 @@ class S3BulkImporter(object):
             extra_data = None
             if task[5]:
                 try:
-                    extradata = unescape(task[5], {"'": '"'})
+                    extradata = self.unescape(task[5], {"'": '"'})
                     extradata = json.loads(extradata)
                     extra_data = extradata
                 except:
-                    pass
+                    self.errorList.append("WARNING:5th parameter invalid, parameter %s ignored" % task[5])
             try:
                 # @todo: add extra_data and file attachments
                 result = resource.import_xml(csv,
@@ -2658,6 +2673,14 @@ class S3DataTable(object):
         """
         attr = Storage()
         s3 = current.response.s3
+        request = current.request
+        if s3.datatable_ajax_source:
+            attr.dt_ajax_url = s3.datatable_ajax_source
+        else:
+            attr.dt_ajax_url = "%s.aaData" % request.url
+            if "viewing" in request.get_vars:
+                attr.dt_ajax_url = "%s?viewing=%s" % (attr.dt_ajax_url,
+                                                      request.get_vars.viewing)
         if s3.actions:
             attr.dt_actions = s3.actions
         if s3.dataTableBulkActions:
@@ -2733,32 +2756,37 @@ class S3DataTable(object):
         """
         s3 = current.response.s3
         T = current.T
-        request = current.request
+        application = current.request.application
+        if s3.datatable_ajax_source:
+            end = s3.datatable_ajax_source.find(".aaData")
+            default_url = s3.datatable_ajax_source[:end] # strip '.aaData' extension
+        else:
+            default_url = current.request.url
         iconList = []
-        url = s3.formats.pdf if s3.formats.pdf else request.url
-        iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % request.application,
+        url = s3.formats.pdf if s3.formats.pdf else default_url
+        iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
                             _onclick="s3FormatRequest('pdf', '%s', '%s');" % (id, url),
                             _alt=T("Export in PDF format"),
                               ))
-        url = s3.formats.xls if s3.formats.xls else request.url
-        iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % request.application,
+        url = s3.formats.xls if s3.formats.xls else default_url
+        iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
                             _onclick="s3FormatRequest('xls', '%s', '%s');" % (id, url),
                             _alt=T("Export in XLS format"),
                               ))
-        url = s3.formats.rss if s3.formats.rss else request.url
-        iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % request.application,
+        url = s3.formats.rss if s3.formats.rss else default_url
+        iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
                             _onclick="s3FormatRequest('rss', '%s', '%s');" % (id, url),
                             _alt=T("Export in RSS format"),
                               ))
         div = DIV(_class='list_formats')
         div.append(current.T("Export to:"))
         if "have" in s3.formats:
-            iconList.append(IMG(_src="/%s/static/img/have_16.png" % request.application,
+            iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
                                 _onclick="s3FormatRequest('have', '%s', '%s');" % (id, s3.formats.have),
                                 _alt=T("Export in HAVE format"),
                                   ))
         if "kml" in s3.formats:
-            iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % request.application,
+            iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
                                 _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, s3.formats.kml),
                                 _alt=T("Export in KML format"),
                                   ))
@@ -2768,12 +2796,12 @@ class S3DataTable(object):
                         ]
             for r in rfields:
                 if r.fname in kml_list:
-                    iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % request.application,
-                                        _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, request.url),
+                    iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
+                                        _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, default_url),
                                         _alt=T("Export in KML format"),
                                           ))
         if "map" in s3.formats:
-            iconList.append(IMG(_src="/%s/static/img/map_icon.png" % request.application,
+            iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
                                 _onclick="s3FormatRequest('map', '%s', '%s');" % (id, s3.formats.map),
                                 _alt=T("Show on map"),
                                   ))
@@ -2908,18 +2936,22 @@ class S3DataTable(object):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
         config.bulkCol = attr.get("dt_bulk_col", 0)
-        group = attr.get("dt_group", [])
         action_col = attr.get("dt_action_col",0)
         if bulkActions and config.bulkCol <= action_col:
             action_col += 1
         config.actionCol = action_col
-        if group:
+        group_list = attr.get("dt_group", [])
+        if not isinstance(group_list, list):
+            group_list = [group_list]
+        dt_group = []
+        for group in group_list:
             if bulkActions and config.bulkCol <= group:
                 group += 1
             if action_col >= group:
                 group -= 1
-            group = [[group, "asc"]]
-        config.group = group
+            dt_group.append([group, "asc"])
+        config.group = dt_group
+        config.groupTitles = attr.get("dt_group_totals", [])
         if bulkActions:
             for order in orderby:
                 if config.bulkCol <= order[0]:
@@ -2932,7 +2964,7 @@ class S3DataTable(object):
         config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
         # Wrap the table in a form and add some data in hidden fields
         form = FORM()
-        if not s3.no_formats:
+        if not s3.no_formats and len(html) > 0:
             form.append (S3DataTable.listFormats(id, rfields))
         form.append (html)
         form.append(INPUT(_type="hidden",

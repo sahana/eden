@@ -566,8 +566,13 @@ class SyncRepositoryVirtualFields:
     def last_pull_time(self):
         """ Last pull synchronization date/time for this repository """
 
+        try:
+            repository_id = self.sync_repository.id
+        except AttributeError:
+            return "-"
+
         table = current.s3db.sync_task
-        query = (table.repository_id == self.sync_repository.id)
+        query = (table.repository_id == repository_id)
         task = current.db(query).select(orderby=~table.last_pull,
                                         limitby=(0,1)).first()
         if task:
@@ -578,8 +583,13 @@ class SyncRepositoryVirtualFields:
     def last_push_time(self):
         """ Last push synchronization date/time for this repository """
 
+        try:
+            repository_id = self.sync_repository.id
+        except AttributeError:
+            return "-"
+
         table = current.s3db.sync_task
-        query = (table.repository_id == self.sync_repository.id)
+        query = (table.repository_id == repository_id)
         task = current.db(query).select(orderby=~table.last_push,
                                         limitby=(0,1)).first()
         if task:

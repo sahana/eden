@@ -217,6 +217,7 @@ class S3MainMenu(object):
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Tickets", f="errors"),
+                            MM("View Test Result Reports", f="result"),
                         )
 
         return menu_admin
@@ -380,6 +381,7 @@ class S3OptionsMenu(object):
                     #M("Edit Application", a="admin", c="default", f="design",
                       #args=[request.application]),
                     M("Tickets", c="admin", f="errors"),
+                    M("View Test Result Reports", c="admin", f="result"),
                     M("Portable App", c="admin", f="portable")
                 )
 

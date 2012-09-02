@@ -94,13 +94,19 @@ class AuthS3(Auth):
             - requires_membership
 
         - S3 extension for user registration:
+            - s3_user_create_onaccept
 
-            - s3_register
-            - s3_link_to_organisation
+        - S3 extension for user administration:
+            - configure_user_fields
+            - s3_user_create_onaccept
+            - s3_verify_user
+            - s3_approve_user
+            - s3_link_user
+            - s3_user_profile_onaccept
             - s3_link_to_person
+            - s3_link_to_organisation
+            - s3_link_to_human_resource
             - s3_approver
-            - s3_verify_email_onaccept
-            - s3_register_staff
 
         - S3 custom authentication methods:
             - s3_impersonate
@@ -162,7 +168,6 @@ class AuthS3(Auth):
         self.settings.lock_keys = True
 
         self.messages.lock_keys = False
-        self.messages.registration_pending_approval = "Account registered, however registration is still pending approval - please wait until confirmation received."
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
@@ -177,7 +182,7 @@ class AuthS3(Auth):
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         self.messages.label_organisation_id = "Organization"
-        self.messages.label_site_id = "Facility"
+        self.messages.label_site_id = "Office/Warehouse/Facility"
         self.messages.label_utc_offset = "UTC Offset"
         self.messages.label_image = "Profile Image"
         self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
@@ -240,17 +245,21 @@ class AuthS3(Auth):
         # User table
         if not settings.table_user:
             passfield = settings.password_field
+            # @ToDo - remove duplicate of table definitions
             if settings.username_field:
                 # with username (not used by default in Sahana)
                 settings.table_user = db.define_table(
                     settings.table_user_name,
                     Field("first_name", length=128, default="",
-                          label=messages.label_first_name),
+                          notnull = True,),
                     Field("last_name", length=128, default="",
                           label=messages.label_last_name),
                     Field("username", length=128, default="",
                           unique=True),
                     Field(passfield, "password", length=512,
+                          requires = [ CRYPT( key = settings.hmac_key,
+                                     min_length = settings.password_min_length,
+                                     digest_alg = "sha512") ],
                           readable=False, label=messages.label_password),
                     Field("email", length=512, default="",
                           label=messages.label_email),
@@ -258,10 +267,10 @@ class AuthS3(Auth):
                     Field("utc_offset", length=16,
                           readable=False, writable=False),
                     Field("organisation_id", "integer",
-                          writable=False,
+                          writable=False, readable=False,
                           label=messages.label_organisation_id),
                     Field("site_id", "integer",
-                          writable=False,
+                          writable=False, readable=False,
                           label=messages.label_site_id),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
@@ -282,13 +291,19 @@ class AuthS3(Auth):
                 settings.table_user = db.define_table(
                     settings.table_user_name,
                     Field("first_name", length=128, default="",
-                          label=messages.label_first_name),
+                          label=messages.label_first_name,
+                          requires = \
+                          IS_NOT_EMPTY(error_message=messages.is_empty),
+                          notnull = True,),
                     Field("last_name", length=128, default="",
                           label=messages.label_last_name),
                     Field("email", length=512, default="",
                           label=messages.label_email,
                           unique=True),
                     Field(passfield, "password", length=512,
+                          requires = [ CRYPT( key = settings.hmac_key,
+                                     min_length = settings.password_min_length,
+                                     digest_alg = "sha512") ],
                           readable=False, label=messages.label_password),
                     Field("language", length=16),
                     Field("utc_offset", length=16,
@@ -296,10 +311,10 @@ class AuthS3(Auth):
                           writable=False,
                           label=messages.label_utc_offset),
                     Field("organisation_id", "integer",
-                          writable=False,
+                          writable=False, readable=False,
                           label=messages.label_organisation_id),
                     Field("site_id", "integer",
-                          writable=False,
+                          writable=False, readable=False,
                           label=messages.label_site_id),
                     Field("registration_key", length=512,
                           writable=False, readable=False, default="",
@@ -315,37 +330,19 @@ class AuthS3(Auth):
                     migrate = migrate,
                     fake_migrate=fake_migrate,
                     *(s3_uid()+s3_timestamp()))
+                
+        # Fields configured in configure_user_fields
 
-            table = settings.table_user
-            table.first_name.notnull = True
-            table.first_name.requires = \
-                IS_NOT_EMPTY(error_message=messages.is_empty)
-            if current.deployment_settings.get_L10n_mandatory_lastname():
-                table.last_name.notnull = True
-                table.last_name.requires = \
-                    IS_NOT_EMPTY(error_message=messages.is_empty)
-            table.utc_offset.comment = A(SPAN("[Help]"),
-                                         _class="tooltip",
-                                         _title="%s|%s" % (messages.label_utc_offset,
-                                                           messages.help_utc_offset))
-            try:
-                from s3validators import IS_UTC_OFFSET
-                table.utc_offset.requires = IS_EMPTY_OR(IS_UTC_OFFSET())
-            except:
-                pass
-            table[passfield].requires = [CRYPT(key=settings.hmac_key,
-                                               min_length=self.settings.password_min_length,
-                                               digest_alg="sha512")]
-            if settings.username_field:
-                table.username.requires = IS_NOT_IN_DB(db,
-                                                       "%s.username" % settings.table_user._tablename)
-            table.email.requires = \
-                [IS_EMAIL(error_message=messages.invalid_email),
-                 IS_LOWER(),
-                 IS_NOT_IN_DB(db,
-                              "%s.email" % settings.table_user._tablename,
-                              error_message=messages.duplicate_email)]
-            table.registration_key.default = ""
+        # Temporary User Table
+        # for storing User Data that will be used to create records for 
+        # the user once they are approved
+        db.define_table(
+                "auth_user_temp",
+                Field("user_id", settings.table_user,
+                      label=messages.label_user_id),
+                Field("mobile"),
+                Field("image", "upload"),
+                *(s3_uid()+s3_timestamp()) )
 
         # Group table (roles)
         if not settings.table_group:
@@ -476,23 +473,23 @@ class AuthS3(Auth):
                 - extended to understand session.s3.roles
         """
 
-        table_user = self.settings.table_user
+        utable = self.settings.table_user
         table_membership = self.settings.table_membership
 
         if self.settings.login_userfield:
             userfield = self.settings.login_userfield
-        elif "username" in table_user.fields:
+        elif "username" in utable.fields:
             userfield = "username"
         else:
             userfield = "email"
         passfield = self.settings.password_field
-        query = (table_user[userfield] == username)
+        query = (utable[userfield] == username)
         user = current.db(query).select(limitby=(0, 1)).first()
-        password = table_user[passfield].validate(password)[0]
+        password = utable[passfield].validate(password)[0]
         if user:
             user_id = user.id
             if not user.registration_key and user[passfield] == password:
-                user = Storage(table_user._filter_fields(user, id=True))
+                user = Storage(utable._filter_fields(user, id=True))
                 current.session.auth = Storage(user=user,
                                                last_visit=current.request.now,
                                                expiration=self.settings.expiration)
@@ -528,21 +525,23 @@ class AuthS3(Auth):
         """
 
         db = current.db
-        table_user = self.settings.table_user
+        T = current.T
+        
+        utable = self.settings.table_user
         if self.settings.login_userfield:
             username = self.settings.login_userfield
-        elif "username" in table_user.fields:
+        elif "username" in utable.fields:
             username = "username"
         else:
             username = "email"
-        old_requires = table_user[username].requires
-        table_user[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
+        old_requires = utable[username].requires
+        utable[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
         request = current.request
         response = current.response
         session = current.session
         passfield = self.settings.password_field
         try:
-            table_user[passfield].requires[-1].min_length = 0
+            utable[passfield].requires[-1].min_length = 0
         except:
             pass
         if next is DEFAULT:
@@ -559,11 +558,11 @@ class AuthS3(Auth):
         # Do we use our own login form, or from a central source?
         if self.settings.login_form == self:
             form = SQLFORM(
-                table_user,
+                utable,
                 fields=[username, passfield],
                 hidden=dict(_next=request.vars._next),
                 showid=self.settings.showid,
-                submit_button=self.messages.submit_button,
+                submit_button=T("Login"),
                 delete_label=self.messages.delete_label,
                 formstyle=self.settings.formstyle,
                 separator=self.settings.label_separator
@@ -607,7 +606,7 @@ class AuthS3(Auth):
                             self.settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
                 # Check for username in db
-                query = (table_user[username] == form.vars[username])
+                query = (utable[username] == form.vars[username])
                 user = db(query).select(limitby=(0, 1)).first()
                 if user:
                     # user in db, check if registration pending or disabled
@@ -668,7 +667,7 @@ class AuthS3(Auth):
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
-                user = self.get_or_create_user(table_user._filter_fields(cas_user))
+                user = self.get_or_create_user(utable._filter_fields(cas_user))
                 form = Storage()
                 form.vars = user
                 self.s3_register(form)
@@ -681,7 +680,7 @@ class AuthS3(Auth):
 
         # Process authenticated users
         if user:
-            user = Storage(table_user._filter_fields(user, id=True))
+            user = Storage(utable._filter_fields(user, id=True))
             # If the user hasn't set a personal UTC offset,
             # then read the UTC offset from the form:
             if not user.utc_offset:
@@ -698,13 +697,13 @@ class AuthS3(Auth):
             self.s3_set_roles()
             # Read their language from the Profile
             language = user.language
-            current.T.force(language)
+            T.force(language)
             session.s3.language = language
             session.confirmation = self.messages.logged_in
             # Set a Cookie to present user with login box by default
             self.set_cookie()
             # Update the timestamp of the User so we know when they last logged-in
-            db(table_user.id == self.user.id).update(timestmp = request.utcnow)
+            db(utable.id == self.user.id).update(timestmp = request.utcnow)
         if log and self.user:
             self.log_event(log % self.user)
 
@@ -719,7 +718,7 @@ class AuthS3(Auth):
                 if next and not next[0] == "/" and next[:4] != "http":
                     next = self.url(next.replace("[id]", str(form.vars.id)))
                 redirect(next)
-            table_user[username].requires = old_requires
+            utable[username].requires = old_requires
             return form
         else:
             redirect(next)
@@ -750,6 +749,10 @@ class AuthS3(Auth):
         request = current.request
         session = current.session
         deployment_settings = current.deployment_settings
+        T = current.T
+        
+        utable = self.settings.table_user
+        passfield = settings.password_field
 
         # S3: Don't allow registration if disabled
         self_registration = deployment_settings.get_security_self_registration()
@@ -769,59 +772,46 @@ class AuthS3(Auth):
         if log == DEFAULT:
             log = messages.register_log
 
-        user = settings.table_user
-
-        passfield = settings.password_field
-
-        # S3: Organisation field in form?
-        if deployment_settings.get_auth_registration_requests_organisation():
-            # Widget set in controllers/default.py
-            #user.organisation_id.widget =
-            user.organisation_id.writable = True
-            if deployment_settings.get_auth_registration_organisation_mandatory():
-                user.organisation_id.comment = SPAN("*", _class="req")
-            else:
-                user.organisation_id.comment = DIV(_class="tooltip",
-                                                   _title="%s|%s" % (messages.label_organisation_id,
-                                                                     messages.help_organisation))
+        labels, required = s3_mark_required(utable)
+        
+        if deployment_settings.get_terms_of_service():
+            submit_button = T("I accept. Create my account.")
         else:
-            user.organisation_id.readable = False
-            user.organisation_id.writable = False
-        user.organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
-        # @ToDo: Option to request Facility during Registration
-        user.site_id.readable = False
-        labels, required = s3_mark_required(user)
+            submit_button = T("Register")
+        
         #formstyle = current.manager.s3.crud.formstyle
-        form = SQLFORM(user, hidden=dict(_next=request.vars._next),
+        form = SQLFORM(utable, hidden=dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
                        showid=settings.showid,
-                       submit_button=messages.submit_button,
+                       submit_button=submit_button,
                        delete_label=messages.delete_label,
                        #formstyle = formstyle
                        )
         for i, row in enumerate(form[0].components):
             item = row[1][0]
             if isinstance(item, INPUT) and item["_name"] == passfield:
-                field_id = "%s_password_two" % user._tablename
+                field_id = "%s_password_two" % utable._tablename
                 #row = formstyle(...)
-                form[0].insert(i + 1, TR(
-                        TD(LABEL("%s:" % messages.verify_password,
-                                 _for="password_two",
-                                 _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
-                           _class="w2p_fl"),
-                        INPUT(_name="password_two",
-                              _id=field_id,
-                              _type="password",
-                              requires=IS_EXPR("value==%s" % \
-                              repr(request.vars.get(passfield, None)),
-                              error_message=messages.mismatched_password)),
-                        SPAN("*", _class="req"),
-                "", _id=field_id + SQLFORM.ID_ROW_SUFFIX))
+                form[0].insert(i + 1, 
+                    TR( TD( LABEL("%s:" % messages.verify_password,
+                                  _for="password_two",
+                                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                            SPAN("*", _class="req"),
+                            _class="w2p_fl"),
+                        INPUT( _name="password_two",
+                               _id=field_id,
+                               _type="password",
+                               requires=IS_EXPR("value==%s" % \
+                               repr(request.vars.get(passfield, None)),
+                               error_message=messages.mismatched_password)
+                              ),
+                        "", 
+                        _id=field_id + SQLFORM.ID_ROW_SUFFIX))
                 #form[0].insert(i + 1, row)
         # add an opt in clause to receive emails depending on the deployment settings
         if deployment_settings.get_auth_opt_in_to_email():
-            field_id = "%s_opt_in" % user._tablename
+            field_id = "%s_opt_in" % utable._tablename
             comment = DIV(DIV(_class="tooltip",
                             _title="%s|%s" % ("Mailing list",
                                               "By selecting this you agree that we may contact you.")))
@@ -838,7 +828,7 @@ class AuthS3(Auth):
 
         # S3: Insert Mobile phone field into form
         if deployment_settings.get_auth_registration_requests_mobile_phone():
-            field_id = "%s_mobile" % user._tablename
+            field_id = "%s_mobile" % utable._tablename
             if deployment_settings.get_auth_registration_mobile_phone_mandatory():
                 comment = SPAN("*", _class="req")
             else:
@@ -864,7 +854,7 @@ class AuthS3(Auth):
                                                 dict(gravatar = A("Gravatar",
                                                                   _target="top",
                                                                   _href="http://gravatar.com"))))
-            field_id = "%s_image" % user._tablename
+            field_id = "%s_image" % utable._tablename
             widget = SQLFORM.widgets["upload"].widget(current.s3db.pr_image.image, None)
             form[0].insert(-1,
                            TR(TD(LABEL("%s:" % label,
@@ -879,36 +869,24 @@ class AuthS3(Auth):
         if settings.captcha != None:
             form[0].insert(-1, TR("", settings.captcha, ""))
 
-        user.registration_key.default = key = str(uuid4())
+        utable.registration_key.default = key = str(uuid4())
 
         if form.accepts(request.vars, session, formname="register",
                         onvalidation=onvalidation):
 
-            if settings.create_user_groups:
-                # Not used in S3
-                description = \
-                    "group uniquely assigned to %(first_name)s %(last_name)s"\
-                     % form.vars
-                group_id = self.add_group("user_%s" % form.vars.id,
-                                          description)
-                self.add_membership(group_id, form.vars.id)
-
-            approved = False
-            users = db(settings.table_user.id > 0).count()
+            # Save temporary user fields 
+            self.s3_user_create_onaccept(form)
+            
+            users = db(utable.id > 0).count()
             if users == 1:
-                # 1st user to register shouldn't need verification/approval
-                approved = True
+                # 1st user to register does need verification/approval
+                self.s3_approve_user(form.vars)
+
+                # And become admin
+                admin_group_id = 1
+                self.add_membership(admin_group_id, user.id)
 
             elif settings.registration_requires_verification:
-                # Ensure that we add to the correct Organization
-                approver, organisation_id = self.s3_approver(form.vars)
-
-                if organisation_id:
-                    # @ToDo: Is it correct to override the organisation entered by the user?
-                    #        Ideally (if the deployment_settings.auth.registration_requests_organisation = True
-                    #        the org could be selected based on the email and the user could then override
-                    form.vars.organisation = organisation_id
-
                 # Send the Verification email
                 if not settings.mailer or \
                    not settings.mailer.send(to=form.vars.email,
@@ -923,66 +901,22 @@ class AuthS3(Auth):
                            args = ["verify_email_sent"],
                            vars = {"email": form.vars.email})
 
-            elif settings.registration_requires_approval:
-                # Identify the Approver &
-                # ensure that we add to the correct Organization
-                approver, organisation_id = self.s3_approver(form.vars)
-                if organisation_id:
-                    form.vars.organisation_id = organisation_id
-
-                if approver:
-                    # Send the Authorisation email
-                    form.vars.approver = approver
-                    if not settings.mailer or \
-                        not settings.verify_email_onaccept(form.vars):
-                        # We don't wish to prevent registration if the approver mail fails to send
-                        #db.rollback()
-                        session.error = messages.email_approver_failed
-                        #return form
-                    user[form.vars.id] = dict(registration_key="pending")
-                    session.warning = messages.registration_pending_approval
-                else:
-                    # The domain is Whitelisted
-                    approved = True
             else:
-                # No verification or approval needed
-                approved = True
-                approver, organisation_id = self.s3_approver(form.vars)
-                if organisation_id:
-                    form.vars.organisation = organisation_id
-                form.vars.registration_key = ""
-                form.vars.approver = approver
-                settings.verify_email_onaccept(form.vars)
+                # Does the user need to be approved
+                approved = self.s3_verify_user(form.vars)
+                
+                # Has the use been approved
+                if approved:
+                    # Log them in
+                    user = utable[form.vars.id]
+                    session.auth = Storage(user=user, last_visit=request.now,
+                                           expiration=self.settings.expiration)
+                    self.user = user
+                    session.flash = self.messages.logged_in
+                
 
             # Set a Cookie to present user with login box by default
             self.set_cookie()
-
-            if approved:
-                user[form.vars.id] = dict(registration_key="")
-                session.confirmation = messages.registration_successful
-
-                table_user = settings.table_user
-                if "username" in table_user.fields:
-                    username = "username"
-                else:
-                    username = "email"
-                query = (table_user[username] == form.vars[username])
-                user = db(query).select(limitby=(0, 1)).first()
-                user = Storage(table_user._filter_fields(user, id=True))
-
-                if users == 1:
-                    # Add the first user to admin group
-                    admin_group_id = 1
-                    self.add_membership(admin_group_id, user.id)
-
-                # If the user hasn't set a personal UTC offset,
-                # then read the UTC offset from the form:
-                if not user.utc_offset:
-                    user.utc_offset = session.s3.utc_offset
-                session.auth = Storage(user=user, last_visit=request.now,
-                                       expiration=settings.expiration)
-                self.user = user
-                session.flash = messages.logged_in
 
             if log:
                 self.log_event(log % form.vars)
@@ -1002,13 +936,12 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     def verify_email(self,
                      next=DEFAULT,
-                     onaccept=DEFAULT,
                      log=DEFAULT):
         """
             action user to verify the registration email, XXXXXXXXXXXXXXXX
 
             .. method:: Auth.verify_email([next=DEFAULT [, onvalidation=DEFAULT
-                [, onaccept=DEFAULT [, log=DEFAULT]]]])
+                [, log=DEFAULT]]])
         """
 
         settings = self.settings
@@ -1016,31 +949,21 @@ class AuthS3(Auth):
         deployment_settings = current.deployment_settings
 
         key = current.request.args[-1]
-        table_user = settings.table_user
-        query = (table_user.registration_key == key)
+        utable = settings.table_user
+        query = (utable.registration_key == key)
         user = current.db(query).select(limitby=(0, 1)).first()
         if not user:
             redirect(settings.verify_email_next)
-        # S3: Lookup the Approver
-        approver, organisation_id = self.s3_approver(user)
-        if settings.registration_requires_approval and approver:
-            user.update_record(registration_key = "pending")
-            current.session.flash = messages.registration_pending_approval
-        else:
-            user.update_record(registration_key = "")
-            current.session.flash = messages.email_verified
+
         if log == DEFAULT:
             log = messages.verify_email_log
         if next == DEFAULT:
             next = settings.verify_email_next
-        if onaccept == DEFAULT:
-            onaccept = settings.verify_email_onaccept
+        
+        self.s3_verify_user(user)
+
         if log:
             self.log_event(log % user)
-
-        if approver:
-            user.approver = approver
-            callback(onaccept, user)
 
         redirect(next)
 
@@ -1059,12 +982,17 @@ class AuthS3(Auth):
 
             Patched for S3 to use s3_mark_required
         """
+        utable = self.settings.table_user
 
-        table_user = self.settings.table_user
+        utable.utc_offset.readable = True
+        utable.utc_offset.writable = True
+
+
         if not self.is_logged_in():
             redirect(self.settings.login_url)
         passfield = self.settings.password_field
-        self.settings.table_user[passfield].writable = False
+        utable[passfield].writable = False
+        
         request = current.request
         session = current.session
         if next == DEFAULT:
@@ -1077,9 +1005,9 @@ class AuthS3(Auth):
             onaccept = self.settings.profile_onaccept
         if log == DEFAULT:
             log = self.messages.profile_log
-        labels, required = s3_mark_required(table_user)
+        labels, required = s3_mark_required(utable)
         form = SQLFORM(
-            table_user,
+            utable,
             self.user.id,
             fields = self.settings.profile_fields,
             labels = labels,
@@ -1094,7 +1022,7 @@ class AuthS3(Auth):
         if form.accepts(request, session,
                         formname='profile',
                         onvalidation=onvalidation,hideerror=self.settings.hideerror):
-            self.user.update(table_user._filter_fields(form.vars))
+            self.user.update(utable._filter_fields(form.vars))
             session.flash = self.messages.profile_updated
             if log:
                 self.log_event(log % self.user)
@@ -1109,168 +1037,419 @@ class AuthS3(Auth):
         return form
 
     # -------------------------------------------------------------------------
-    # S3 User Registration Post-Processing
+    # Configure User Fields - for registration & user administration
+    def configure_user_fields(self):
+        messages = self.messages
+        settings = self.settings
+        deployment_settings = current.deployment_settings
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        
+        utable = self.settings.table_user
+
+        first_name = utable.first_name
+        first_name.label = T("First Name")
+        first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty),
+
+        last_name = utable.last_name
+        last_name.label = T("Last Name")
+        if deployment_settings.get_L10n_mandatory_lastname():  
+            last_name.notnull = True
+            last_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
+
+        if settings.username_field:
+            table.username.requires = IS_NOT_IN_DB(db,
+                                                   "%s.username" % 
+                                                   utable._tablename)
+
+        email = utable.email
+        email.label = T("E-mail")
+        email.requires = [IS_EMAIL(error_message=messages.invalid_email),
+                          IS_LOWER(),
+                          IS_NOT_IN_DB(db,
+                                       "%s.email" % utable._tablename,
+                                       error_message=messages.duplicate_email)
+                          ]
+
+        language = utable.language
+        language.label = T("Language")
+        language.comment = DIV(_class="tooltip",
+                               _title="%s|%s" % (T("Language"),
+                                                 T("The language you wish the site to be displayed in.")))
+        languages = current.deployment_settings.get_L10n_languages()
+        language.represent = lambda opt: \
+            languages.get(opt, current.messages.UNKNOWN_OPT)
+        # Default the profile language to the one currently active
+        language.default = T.accepted_language
+        
+        utc_offset = utable.utc_offset
+        utc_offset.comment = DIV(_class="tooltip",
+                                 _title="%s|%s" % (messages.label_utc_offset,
+                                                   messages.help_utc_offset)
+                                 )
+        try:
+            from s3validators import IS_UTC_OFFSET
+            utc_offset.requires = IS_EMPTY_OR(IS_UTC_OFFSET())
+        except:
+            pass
+
+        if deployment_settings.get_auth_registration_requests_organisation():
+            organisation_id = utable.organisation_id
+            organisation_id.writable = True
+            organisation_id.readable = True
+            from s3validators import IS_ONE_OF
+            organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
+                                                s3db.org_organisation_represent,
+                                                orderby="org_organisation.name",
+                                                sort=True)
+            organisation_id.represent = s3db.org_organisation_represent
+            organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            #from s3widgets import S3OrganisationAutocompleteWidget
+            #organisation_id.widget = S3OrganisationAutocompleteWidget()
+            # no permissions for autocomplete on registration page
+            organisation_id.comment = DIV(_class="tooltip",
+                              _title="%s|%s" % (T("Organization"),
+                                                   T("Enter some characters to bring up a list of possible matches")))
+            
+            if not deployment_settings.get_auth_registration_organisation_required():
+                organisation_id.requires = IS_NULL_OR(organisation_id.requires)
+                
+        if deployment_settings.get_auth_registration_requests_site():
+            site_id = utable.site_id
+            site_id.writable = True
+            site_id.readable = True
+            from s3validators import IS_ONE_OF
+            site_id.requires = IS_ONE_OF( db, "org_site.site_id",
+                                          s3db.org_site_represent,
+                                          orderby="org_site.name",
+                                          sort=True )
+            site_id.represent = s3db.org_site_represent
+            site_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            #from s3widgets import S3SiteAutocompleteWidget
+            #site_id.widget = S3SiteAutocompleteWidget()
+            # no permissions for autocomplete on registration page
+            site_id.comment = DIV(_class="tooltip",
+                              _title="%s|%s" % (T("Office/Warehouse/Facility"),
+                                                   T("Enter some characters to bring up a list of possible matches")))
+            
+            if not deployment_settings.get_auth_registration_site_required():
+                site_id.requires = IS_NULL_OR(site_id.requires)
+
     # -------------------------------------------------------------------------
-    def s3_register(self, form):
+    # S3 Create User OnAccept 
+    def s3_membership_import_prep(self, data, group = None):
         """
             S3 framework function
-
-            Designed to be used as an onaccept callback for register()
-
-            Whenever someone registers, it:
-                - adds them to the 'Authenticated' role
-                - adds their name to the Person Registry
-                - creates their profile picture
-                - creates an HRM record
-                - adds them to the Org_x Access role
-
-            @param form: the registration form
+            
+            Designed to be called when a user is imported.
+            Because the auth.membership.pe_id fields is a 
+            integer not reference this function is used to lookup
+            the pe_id
+                
+            Does the following:
+                - Looks up auth.membership.pe_id
+                
+            organisation.name=<Org Name>
         """
+
+        db = current.db
+        s3db = current.s3db
+
+        resource, tree = data
+        xml = current.xml
+        tag = xml.TAG
+        att = xml.ATTRIBUTE
+        
+        elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
+        for element in elements:
+            pe_string = element.text
+
+            if pe_string:
+                pe_type, pe_value =  pe_string.split("=")
+                pe_tablename, pe_field =  pe_type.split(".")
+                
+                table = s3db[pe_tablename]
+                record = db(table[pe_field] == pe_value).select(table.pe_id).first()
+                if record:
+                    element.text = str(record.pe_id)
+                else:
+                    # Add a new record
+                    id = table.insert(**{pe_field: pe_value})
+                    s3db.update_super(table, table[id])
+                    element.text = str( table[id].pe_id )
+
+    # -------------------------------------------------------------------------
+    # S3 Create User OnAccept 
+    def s3_user_create_onaccept(self, form):
+        """
+            S3 framework function
+            
+            Designed to be called when a user is created through: 
+                - registration
+                
+            Does the following:
+                - Stores the user's email & profile image in a auth_user_temp
+                  to be added to their person record when created on approval
+                  
+            @ToDo: If these fields are implement with the InlineForms functionality, 
+            this function may become redundant
+
+        """
+        
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+
+        utable = self.settings.table_user
+        temptable = s3db.auth_user_temp
 
         vars = form.vars
         user_id = vars.id
+        
         if not user_id:
             return None
+        
+                
+        # If the user hasn't set a personal UTC offset,
+        # then read the UTC offset from the form:
+        if not vars.utc_offset:
+            db(utable.id == user_id).update(utc_offset = session.s3.utc_offset)
+        
+        record  = dict(user_id = user_id)
+
+        # Add the mobile to pr_contact
+        mobile = vars.mobile
+        if mobile:
+            record["mobile"] = mobile
+
+        # Insert the profile picture
+        image = vars.image
+        if image != None and  hasattr(image, "file"):
+            # @ToDo: DEBUG!!!
+            source_file = image.file
+            original_filename = image.filename
+
+            field = temptable.image
+            newfilename = field.store(source_file,
+                                      original_filename,
+                                      field.uploadfolder)
+            if isinstance(field.uploadfield, str):
+                fields[field.uploadfield] = source_file.read()
+            record["image"] = newfilename
+
+        if len(record) > 1:
+            temptable.update_or_insert( **record )
+
+    # -------------------------------------------------------------------------
+    def s3_verify_user(self, user):
+        """"
+            S3 framework function
+            
+            Designed to be called when a user is verified through: 
+                - responding to their verification email
+                - if verification isn't required
+                
+            Does the following:
+                - Sends a message to the approver to notify them if a user needs approval
+                - If deployment_settings.auth.always_notify_approver = True,
+                    send them notification regardless
+                - If approval isn't required - calls s3_approve_user
+                
+            @returns - if the user has been approved
+        """
+
+        db = current.db
+        deployment_settings = current.deployment_settings
+        T = current.T
+
+        utable = self.settings.table_user
+
+        user_id = user.id
+
+        # S3: Lookup the Approver
+        approver, organisation_id = self.s3_approver(user)
+
+        if deployment_settings.get_auth_registration_requires_approval() and approver:
+            approved = False
+            db(utable.id == user_id).update(registration_key = "pending")
+            
+            if user.registration_key:
+                # User has just been verified
+                current.session.flash = deployment_settings.get_auth_registration_pending_approval()
+            else:
+                #No Verification needed
+                current.session.flash = deployment_settings.get_auth_registration_pending()
+            # @ToDo: include link to user 
+            subject = T("%(system_name)s - New User Registration Approval Pending") % \
+                      {"system_name": deployment_settings.get_system_name()}
+            message = self.messages.approve_user % \
+                        dict( first_name = user.first_name,
+                              last_name = user.last_name,
+                              email = user.email)
+        else:
+            approved = True
+            self.s3_approve_user(user)
+            current.session.flash = self.messages.email_verified
+            
+            if not deployment_settings.get_auth_always_notify_approver():
+                return True
+            subject = T("%(system_name)s - New User Registered") % \
+                      {"system_name": deployment_settings.get_system_name()}
+            message = self.messages.new_user % dict( first_name = user.first_name,
+                                                     last_name = user.last_name,
+                                                     email = user.email)
+
+        result = self.settings.mailer.send(to = approver,
+                                           subject = subject,
+                                           message = message)
+        if not result:
+            db.rollback()
+            current.response.error = self.messages.email_send_failed
+            return False
+        
+        return approved
+
+    # -------------------------------------------------------------------------
+    # S3 Approve User OnAccept 
+    def s3_approve_user(self, user):
+        """
+            S3 framework function
+            
+            Designed to be called when a user is created through: 
+                - approved automatically during registration
+                - approved by admin
+                - added by admin
+                - updated by admin
+            
+            Does the following:
+                - Adds user to the 'Authenticated' role
+                - Adds any default roles for the user
+                - @ToDo: adds them to the Org_x Access role
+        """
+
+        session = current.session
+        request = current.request
+        db = current.db
+        s3db = current.s3db
+        deployment_settings = current.deployment_settings
+
+        utable = self.settings.table_user
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+
+        user_id = user.id
+        if not user_id:
+            return None
+
+        # User just been approved
+        # Allow them to login
+        db(utable.id == user_id).update(registration_key = "")
+
+        # Send email to user confirming that they are now able to login
+        if not self.settings.mailer or \
+               not self.settings.mailer.send(to=user.email,
+                    subject = self.messages.confirmation_email_subject,
+                    message = self.messages.confirmation_email):
+                db.rollback()
+                session.warning = self.messages.unable_send_email
+                return
 
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
         self.add_membership(authenticated, user_id)
 
-        db = current.db
-        s3db = current.s3db
+        # Get required registration roles
+        roles = deployment_settings.get_auth_registration_roles()
+        
+        # @ToDo: MH: What's this for - we already have the user_id?
+        if roles or deployment_settings.has_module("delphi"):
+            query = (ptable.id == person_id) & \
+                    (ptable.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id)
+            user = db(query).select(utable.id,
+                                    ltable.user_id,
+                                    limitby=(0, 1)).first()
+        
+        # Add User to required registration roles
+        if roles:
+            gtable = self.settings.table_group
+            mtable = self.settings.table_membership
+            query = (gtable.uuid.belongs(roles))
+            rows = db(query).select(gtable.id)
+            for role in rows:
+                mtable.insert(user_id=user[ltable._tablename].user_id,
+                              group_id=role.id)
+    
+        # @ToDo: Move this to Templates settings.get_auth_registration_roles?
+        if deployment_settings.has_module("delphi"):
+            # Add user as a participant of the default problem group
+            table = s3db.delphi_group
+            query = (table.uuid == "DEFAULT")
+            group = db(query).select(table.id,
+                                     limitby=(0, 1)).first()
+            if group:
+                table = s3db.delphi_membership
+                table.insert(group_id=group.id,
+                             user_id=user[utable._tablename].id,
+                             status=3)
 
-        # Link to organisation, lookup the pe_id of the organisation
-        organisation_id = self.s3_link_to_organisation(vars)
-        if organisation_id:
-            otable = s3db.org_organisation
-            query = (otable.id == organisation_id)
-            org = db(query).select(otable.pe_id,
-                                   limitby=(0, 1)).first()
-            if org:
-                owned_by_entity = org.pe_id
-        else:
-            owned_by_entity = None
+        session.confirmation = self.messages.registration_successful
 
-        # Add to Person Registry and Email/Mobile to pr_contact
-        person_id = self.s3_link_to_person(vars, # user
-                                           owned_by_entity)
-
-        # Insert the profile picture
-        if "image" in vars:
-            if hasattr(vars.image, "file"):
-                source_file = vars.image.file
-                original_filename = vars.image.filename
-                ptable = s3db.pr_person
-                query = (ptable.id == person_id)
-                pe_id = db(query).select(ptable.pe_id,
-                                         limitby=(0, 1)).first()
-                if pe_id:
-                    pe_id = pe_id.pe_id
-                    itable = s3db.pr_image
-                    field = itable.image
-                    newfilename = field.store(source_file,
-                                              original_filename,
-                                              field.uploadfolder)
-                    url = URL(c="default", f="download", args=newfilename)
-                    fields = dict(pe_id=pe_id,
-                                  profile=True,
-                                  image=newfilename,
-                                  url = url,
-                                  title=current.T("Profile Picture"))
-                    if isinstance(field.uploadfield, str):
-                        fields[field.uploadfield] = source_file.read()
-                    itable.insert(**fields)
-
-        # Create an HRM entry, if one doesn't already exist
-        htablename = "hrm_human_resource"
-        htable = s3db.table(htablename)
-        if htable and organisation_id:
-
-            query = (htable.person_id == person_id) & \
-                    (htable.organisation_id == organisation_id)
-            row = db(query).select(htable.id, limitby=(0, 1)).first()
-
-            if not row:
-                if current.deployment_settings.get_hrm_show_staff():
-                    type = 1 # Staff
-                else:
-                    type = 2 # Volunteer
-                record = Storage(person_id=person_id,
-                                 organisation_id=organisation_id,
-                                 type=type,
-                                 owned_by_user=user_id,
-                                 owned_by_entity=owned_by_entity)
-                record_id = htable.insert(**record)
-                if record_id:
-                    record["id"] = record_id
-                    s3db.update_super(htable, record)
-                    current.manager.onaccept(htablename, record,
-                                             method="create")
-
-        # Return person_id for init scripts
-        return person_id
+        
+        self.s3_link_user(user)
 
     # -------------------------------------------------------------------------
-    def s3_link_to_organisation(self, user):
+    # S3 Approve User OnAccept 
+    def s3_link_user(self, user):
         """
-            Link a user account to an organisation
-
-            @param user: the user account record (= form.vars in s3_register)
+            S3 framework function
+            
+            Designed to be called when a user is created & approved through: 
+                - approved automatically during registration
+                - approved by admin
+                - added by admin
+                - updated by admin
+            
+            Does the following:
+                - Calls s3_link_to_organisation: 
+                  Creates (if not existing) User's Organisation and links User
+                - Calls s3_link_to_person:
+                  Creates (if not existing) User's Person Record and links User
+                - Calls s3_link_to_human_resource:
+                  Creates (if not existing) User's Human Resource Record and links User
         """
 
-        db = current.db
-        s3db = current.s3db
+        # Create/Update/Link to organisation, 
+        organisation_id = self.s3_link_to_organisation(user)
 
-        organisation_id = user.organisation_id
-        if not organisation_id:
-            otable = s3db.org_organisation
-            name = user.get("organisation_name", None)
-            acronym = user.get("organisation_acronym", None)
-            if name:
-                # Create new organisation
-                record = Storage(name=name,
-                                 acronym=acronym)
-                organisation_id = otable.insert(**record)
+        # Add to user Person Registry and Email/Mobile to pr_contact
+        person_id = self.s3_link_to_person(user, organisation_id)
 
-                # Callbacks
-                if organisation_id:
-                    record["id"] = organisation_id
-                    s3db.update_super(otable, record)
-                    current.manager.onaccept(otable, record, method="create")
-                    self.s3_set_record_owner(otable, organisation_id)
+        human_resource_id = self.s3_link_to_human_resource(user, person_id)
 
-                # Update user
-                user.organisation_id = organisation_id
-                query = (utable.id == user_id)
-                db(query).update(organisation_id=organisation_id)
-
-        if not organisation_id:
-            return None
-
-        # Create link (if it doesn't exist)
-        user_id = user.id
-        ltable = s3db.org_organisation_user
-        if ltable:
-            query = (ltable.user_id == user_id) & \
-                    (ltable.organisation_id == organisation_id)
-            row = db(query).select(ltable.id, limitby=(0, 1)).first()
-            if not row:
-                ltable.insert(user_id=user_id,
-                              organisation_id=organisation_id)
-
-        return organisation_id
+    # -----------------------------------------------------------------------------
+    def s3_user_profile_onaccept(form):
+        """ Update the UI locale from user profile """
+        if form.vars.language:
+            current.session.s3.language = form.vars.language
 
     # -------------------------------------------------------------------------
     def s3_link_to_person(self,
                           user=None,
-                          owned_by_entity=None):
+                          organisation_id=None):
         """
             Links user accounts to person registry entries
 
             @param user: the user record
-            @param owned_by_entity: the pe_id of the owner organisation
+            @param organisation_id: the user's orgnaisation_id 
+                                    to get the person's owned_by_entity
 
             Policy for linking to pre-existing person records:
+
+            If this user is already linked to a person record with a different
+            first_name, last_name, email or owned_by_entity these will be 
+            updated to those of the user.
 
             If a person record with exactly the same first name and
             last name exists, which has a contact information record
@@ -1281,11 +1460,14 @@ class AuthS3(Auth):
             Otherwise, a new person record is created, and a new email
             contact record with the email address from the user record
             is registered for that person.
+            
+            @ToDo: MH: Under what circumstances will this return a list of person_ids?
         """
 
         db = current.db
         s3db = current.s3db
         utable = self.settings.table_user
+        uttable = s3db.auth_user_temp
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
         atable = s3db.pr_address
@@ -1295,85 +1477,122 @@ class AuthS3(Auth):
 
         ltable = s3db.pr_person_user
 
+        # Find the pe_id of the user's organisation 
+        # for the person's owned_by_entity 
+        if organisation_id:
+            otable = s3db.org_organisation
+            query = (otable.id == organisation_id)
+            org = db(query).select(otable.pe_id,
+                                   limitby=(0, 1)).first()
+            if org:
+                owned_by_entity = org.pe_id
+            else:
+                owned_by_entity = None
+        else:
+            owned_by_entity = None
+            
         left = [ltable.on(ltable.user_id == utable.id),
-                ptable.on(ptable.pe_id == ltable.pe_id)]
+                ptable.on(ptable.pe_id == ltable.pe_id),
+                uttable.on(utable.id == uttable.user_id)]
         if user is not None:
+            # @ToDo: MH: When is user ever a list/tuple?
             if not isinstance(user, (list, tuple)):
                 user = [user]
             user_ids = [u.id for u in user]
-            query = (utable.id.belongs(user_ids))
+            query = ( utable.id.belongs(user_ids) )
         else:
             query = (utable.id != None)
-        users = db(query).select(utable.id,
+        rows = db(query).select(utable.id,
                                  utable.first_name,
                                  utable.last_name,
                                  utable.email,
                                  ltable.pe_id,
                                  ptable.id,
+                                 ptable.first_name,
+                                 ptable.last_name,
+                                 uttable.mobile,
+                                 uttable.image,
                                  left=left, distinct=True)
 
-        utn = utable._tablename
-
         person_ids = [] # Collect the person IDs
-        for u in users:
+        for row in rows:
 
-            person = u.pr_person
-            if person.id is not None:
+            person = row.pr_person
+            person_id = person.id
+            pe_id = row.pr_person_user.pe_id
+            user = row[utable._tablename]
+            tuser = row.auth_user_temp
+
+            if person_id is not None:
+                # There is an existing person record for the user
+                if user.first_name != person.first_name or \
+                   user.last_name != person.first_name:
+                    # Update the person record if the user details have changed
+                    query = (ptable.id == person_id)
+                    db(query).update( first_name = user.first_name,
+                                      last_name = user.last_name )
+                
+                # Update the person record email
+                query = ( (ctable.pe_id == pe_id ) & 
+                          (ctable.contact_method == "EMAIL" )
+                          )
+                db(query).update(value = user.email,
+                                 )
+                
+                #@ToDo: Also update mobile phone? profile image? Groups?
+                
                 person_ids.append(person.id)
                 continue
-
-            user = u[utn]
+            
+            if "email" not in user:
+                # Cannot find a matching person record without an email
+                continue
 
             owner = Storage(owned_by_user=user.id,
                             owned_by_entity=owned_by_entity)
 
-            if "email" in user:
+            # Try to find a matching person record
+            first_name = user.first_name
+            last_name = user.last_name
+            email = user.email.lower()
+            query = (ptable.first_name == first_name) & \
+                    (ptable.last_name == last_name) & \
+                    (ctable.pe_id == ptable.pe_id) & \
+                    (ctable.contact_method == "EMAIL") & \
+                    (ctable.value.lower() == email)
+            person = db(query).select(ptable.id,
+                                      ptable.pe_id,
+                                      limitby=(0, 1)).first()
 
-                # Try to find a matching person record
-                first_name = user.first_name
-                last_name = user.last_name
-                email = user.email.lower()
-                query = (ptable.first_name == first_name) & \
-                        (ptable.last_name == last_name) & \
-                        (ctable.pe_id == ptable.pe_id) & \
-                        (ctable.contact_method == "EMAIL") & \
-                        (ctable.value.lower() == email)
-                person = db(query).select(ptable.id,
-                                          ptable.pe_id,
-                                          limitby=(0, 1)).first()
+            if person and \
+               not db(ltable.pe_id == person.pe_id).count():
+                # Match found, and it isn't linked to another user account
 
-                if person and \
-                   not db(ltable.pe_id == person.pe_id).count():
-                    # Match found, and it isn't linked to another user account
+                # Insert a link
+                ltable.insert(user_id=user.id, pe_id=person.pe_id)
 
-                    # Insert a link
-                    ltable.insert(user_id=user.id, pe_id=person.pe_id)
+                # Assign ownership of the Person record
+                person.update_record(**owner)
 
-                    # Assign ownership of the Person record
-                    person.update_record(**owner)
+                # Assign ownership of the Contact record(s)
+                query = (ctable.pe_id == person.pe_id)
+                db(query).update(**owner)
 
-                    # Assign ownership of the Contact record(s)
-                    query = (ctable.pe_id == person.pe_id)
-                    db(query).update(**owner)
+                # Assign ownership of the Address record(s)
+                query = (atable.pe_id == person.pe_id)
+                db(query).update(**owner)
 
-                    # Assign ownership of the Address record(s)
-                    query = (atable.pe_id == person.pe_id)
-                    db(query).update(**owner)
+                # Assign ownership of the Config record(s)
+                query = (gtable.pe_id == person.pe_id)
+                db(query).update(**owner)
 
-                    # Assign ownership of the Config record(s)
-                    query = (gtable.pe_id == person.pe_id)
-                    db(query).update(**owner)
+                # Set pe_id if this is the current user
+                if self.user and self.user.id == user.id:
+                    self.user.pe_id = person.pe_id
 
-                    # HR records
-                    self.s3_register_staff(user.id, person.id)
+                person_ids.append(person.id)
 
-                    # Set pe_id if this is the current user
-                    if self.user and self.user.id == user.id:
-                        self.user.pe_id = person.pe_id
-
-                    person_ids.append(person.id)
-                    continue
-
+            else:
                 # Create a PE
                 pe_id = etable.insert(instance_type="pr_person",
                                       deleted=False)
@@ -1412,17 +1631,8 @@ class AuthS3(Auth):
                                       value = email,
                                       **owner)
 
-                        # Add the mobile to pr_contact
-                        mobile = current.request.vars.get("mobile", None)
-                        if mobile:
-                            ctable.insert(
-                                    pe_id = pe_id,
-                                    contact_method = "SMS",
-                                    priority = 2,
-                                    value = mobile,
-                                    **owner)
                         person_ids.append(new_id)
-
+                        
                         # Add the user to each team if they have chosen to opt-in
                         g_table = s3db["pr_group"]
                         gm_table = s3db["pr_group_membership"]
@@ -1438,14 +1648,191 @@ class AuthS3(Auth):
                             gm_table.insert(group_id = team_id,
                                             person_id = new_id)
 
-                    # Set pe_id if this is the current user
-                    if self.user and self.user.id == user.id:
-                        self.user.pe_id = pe_id
+            # Add the mobile to pr_contact
+            mobile = tuser.mobile
+            if mobile:
+                ctable.insert(
+                        pe_id = pe_id,
+                        contact_method = "SMS",
+                        priority = 2,
+                        value = mobile,
+                        **owner)
+
+            # Insert the profile picture
+            image = tuser.image
+            if image: # and hasattr(image, "file"):
+                itable = s3db.pr_image
+                #field = itable.image
+                url = URL(c="default", f="download", args=image)
+                fields = dict(pe_id=pe_id,
+                              profile=True,
+                              image=image,
+                              url = url,
+                              description=current.T("Profile Picture"))
+                itable.insert(**fields)
+
+            # Set pe_id if this is the current user
+            if self.user and self.user.id == user.id:
+                self.user.pe_id = pe_id
 
         if len(person_ids) == 1:
             return person_ids[0]
         else:
             return person_ids
+
+    # -------------------------------------------------------------------------
+    def s3_link_to_organisation(self, user):
+        """
+            Link a user account to an organisation
+
+            @param user: the user account record
+            
+            @ToDo: MH: What does this function ever do except return the organisation_id?
+        """
+
+        db = current.db
+        s3db = current.s3db
+        
+        user_id = user.id
+        
+        approver, organisation_id = self.s3_approver(user)
+        if not organisation_id:
+            # @ToDo: Is it correct to override the organisation entered by the user?
+            #        Ideally (if the deployment_settings.auth.registration_requests_organisation = True
+            #        the org could be selected based on the email and the user could then override
+            organisation_id = user.organisation_id
+
+        if not organisation_id:
+            # Create a new Organisation
+            otable = s3db.org_organisation
+            name = user.get("organisation_name", None)
+            acronym = user.get("organisation_acronym", None)
+            if name:
+                # Create new organisation
+                record = Storage(name=name,
+                                 acronym=acronym)
+                organisation_id = otable.insert(**record)
+
+                # Callbacks
+                if organisation_id:
+                    record["id"] = organisation_id
+                    s3db.update_super(otable, record)
+                    current.manager.onaccept(otable, record, method="create")
+                    self.s3_set_record_owner(otable, organisation_id)
+
+                # Update user record
+                user.organisation_id = organisation_id
+                query = (utable.id == user_id)
+                db(query).update(organisation_id=organisation_id)
+
+        if not organisation_id:
+            return None
+
+        # Update link to Organisation 
+        ltable = s3db.org_organisation_user
+        
+        # Update if the User's Organisation has changed 
+        query = (ltable.user_id == user_id)
+        rows = db(query).select(ltable.organisation_id,
+                                limitby=(0, 2))
+        if len(rows) == 1:
+            # We know which record to update - this should always be 1
+            if rows.first().organisation_id != organisation_id:
+                db(query).update(organisation_id=organisation_id)
+            # No more action required
+            return organisation_id
+        else:
+            # Create link (if it doesn't exist)
+            query = (ltable.user_id == user_id) & \
+                    (ltable.organisation_id == organisation_id)
+            row = db(query).select(ltable.id, limitby=(0, 1)).first()
+            if not row:
+                ltable.insert(user_id=user_id,
+                              organisation_id=organisation_id)
+
+        return organisation_id
+
+    # -------------------------------------------------------------------------
+    def s3_link_to_human_resource(self,
+                                  user,
+                                  person_id = None
+                                  ):
+        """
+        Take ownership of the HR records of the person record,
+        @ToDo: Add user to the Org Access role.
+        """
+
+        db = current.db
+        s3db = current.s3db
+        
+        user_id = user.id
+        organisation_id = user.organisation_id
+
+        htablename = "hrm_human_resource"
+        htable = s3db.table(htablename)
+
+        if not htable or not organisation_id:
+            return None
+
+        # Update existing HR record for this user
+        site_id = user.site_id
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        query = (htable.deleted == False) & \
+                (htable.status == 1) & \
+                (htable.person_id == ptable.id) & \
+                (ptable.pe_id == ltable.pe_id) & \
+                (ltable.user_id == user_id)
+        rows = db(query).select(htable.id,
+                                limitby=(0, 2))
+        if len(rows) == 1:
+            # Only update if there is a single HR Record
+            hr_id = rows.first().id
+            db(htable.id == hr_id).update(organisation_id = organisation_id,
+                                          site_id = site_id)
+            # Update record ownership
+            self.s3_set_record_owner(htable, hr_id, force_update=True)
+
+            # Update Site link
+            hstable = s3db.hrm_human_resource_site
+            query = (hstable.human_resource_id == hr_id)
+            row = db(query).select(hstable.id,
+                                    limitby=(0, 1)).first()
+            if row:
+                db(query).update(site_id = site_id,
+                                 human_resource_id = hr_id,
+                                 owned_by_user = user_id)
+            else:
+                hstable.insert(site_id=site_id,
+                               human_resource_id=hr_id,
+                               owned_by_user=user_id)
+
+        # Create an HR record, if one doesn't already exist
+        query = (htable.person_id == person_id) & \
+                (htable.organisation_id == organisation_id)
+        row = db(query).select(htable.id, limitby=(0, 1)).first()
+
+        if row:
+            hr_id = row.id 
+        else:
+            # @ToDo: control this with deployment settings
+            if current.deployment_settings.get_hrm_show_staff():
+                type = 1 # Staff
+            else:
+                type = 2 # Volunteer
+            record = Storage(person_id=person_id,
+                             organisation_id=organisation_id,
+                             type=type,
+                             owned_by_user=user_id,
+                             )
+            hr_id = htable.insert(**record)
+            if hr_id:
+                record["id"] = hr_id
+                s3db.update_super(htable, record)
+                current.manager.onaccept(htablename, record,
+                                         method="create")
+        
+        return hr_id
 
     # -------------------------------------------------------------------------
     def s3_approver(self, user):
@@ -1454,6 +1841,10 @@ class AuthS3(Auth):
             the organisation_id field
 
             @param: user - the user record (form.vars when done direct)
+            @ToDo: Support multiple approvers per Org - via Org Admin (or specific Role?) 
+                   Split into separate functions to returning approver & finding users' org from auth_organisations
+                   
+            @returns approver, organisation_id - if approver = False, user is automatically approved by whitelist
         """
 
         db = current.db
@@ -1487,61 +1878,7 @@ class AuthS3(Auth):
 
         return approver, organisation_id
 
-    # -------------------------------------------------------------------------
-    def s3_verify_email_onaccept(self, form):
-        """"
-            Sends a message to the approver to notify them if a user needs approval
-            If deployment_settings.auth.always_notify_approver = True,
-            send them notification regardless
-        """
 
-        if form.registration_key == "": # User Approved
-            if not current.deployment_settings.get_auth_always_notify_approver():
-                return
-            subject = current.T("%(system_name)s - New User Registered") % \
-                      {"system_name": current.deployment_settings.get_system_name()}
-            message = self.messages.new_user % dict(first_name = form.first_name,
-                                                        last_name = form.last_name,
-                                                        email = form.email)
-        else:
-            subject = current.T("%(system_name)s - New User Registration Approval Pending") % \
-                      {"system_name": current.deployment_settings.get_system_name()}
-            message = self.messages.approve_user % \
-                        dict(first_name=form.first_name,
-                             last_name=form.last_name,
-                             email=form.email)
-
-        result = self.settings.mailer.send(to=form.approver,
-                                           subject=subject,
-                                           message=message)
-
-        return result
-
-    # -------------------------------------------------------------------------
-    def s3_register_staff(self, user_id, person_id):
-        """
-            Take ownership of the HR records of the person record,
-            and add user to the Org Access role.
-
-            To be called by s3_link_to_person in case a newly registered
-            user record gets linked to a prior existing person record.
-
-            @param user_id: the user record ID
-            @param person_id: the person record ID
-        """
-
-        htable = current.s3db.table("hrm_human_resource")
-        if htable is None:
-            # HR module disabled: skip
-            return
-        settings = self.settings
-        rtable = settings.table_group
-        mtable = settings.table_membership
-        utable = settings.table_user
-
-        # User owns their own HRM records
-        query = (htable.person_id == person_id)
-        current.db(query).update(owned_by_user=user_id)
 
     # -------------------------------------------------------------------------
     def s3_send_welcome_email(self, user):
@@ -1575,18 +1912,18 @@ class AuthS3(Auth):
             @param user_id: auth.user.id or auth.user.email
         """
 
-        table_user = self.settings.table_user
+        utable = self.settings.table_user
         query = None
         if not user_id:
             # Anonymous
             user = None
         elif isinstance(user_id, basestring) and not user_id.isdigit():
             if self.settings.username_field:
-                query = (table_user.username == user_id)
+                query = (utable.username == user_id)
             else:
-                query = (table_user.email == user_id)
+                query = (utable.email == user_id)
         else:
-            query = (table_user.id == user_id)
+            query = (utable.id == user_id)
 
         if query is not None:
             user = current.db(query).select(limitby=(0, 1)).first()
@@ -1594,7 +1931,7 @@ class AuthS3(Auth):
                 # Invalid user ID
                 raise ValueError("User not found")
             else:
-                user = Storage(table_user._filter_fields(user, id=True))
+                user = Storage(utable._filter_fields(user, id=True))
 
         self.user = user
         session = current.session
@@ -5679,10 +6016,6 @@ class S3RoleManager(S3Method):
                 list_btn = A(T("Back to Users List"),
                              _href=URL(c="admin", f="user"),
                              _class="action-btn")
-                edit_btn = A(T("Edit User Account %s" % user_name),
-                             _href=URL(c="admin", f="user",
-                                       args=[user_id]),
-                             _class="action-lnk")
                 add_btn = A(T("Create New Role"),
                             _href=URL(c="admin", f="role",
                                       args="create"),
@@ -5695,7 +6028,6 @@ class S3RoleManager(S3Method):
                               help_txt=help_txt,
                               addform=addform,
                               list_btn=list_btn,
-                              edit_btn=edit_btn,
                               add_btn=add_btn)
 
                 current.response.view = "admin/membership_manage.html"

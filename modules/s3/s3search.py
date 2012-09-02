@@ -49,7 +49,7 @@ from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
-from s3resource import S3FieldSelector
+from s3resource import S3FieldSelector, S3Resource
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
@@ -528,9 +528,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         if field_name.find("$") != -1:
             kfield_name, field_name = field_name.split("$")
             tablename = resource.table[kfield_name].type[10:]
-            prefix, resource_name = tablename.split("_", 1)
-            resource = current.manager.define_resource(prefix,
-                                                       resource_name)
+            resource = S3Resource(tablename)
         return resource, field_name, kfield_name
 
     # -------------------------------------------------------------------------
@@ -867,7 +865,7 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
 
     def widget(self, resource, vars):
-        c = current.manager.define_resource("hrm", "credential")
+        c = S3Resource("hrm_credential")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -901,7 +899,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
 
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
-        c = current.manager.define_resource("hrm", "competency")
+        c = S3Resource("hrm_competency")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -1397,22 +1395,6 @@ class S3Search(S3CRUD):
                 sep = " | "
             else:
                 link = sep = ""
-
-#            list_formats = DIV(link, sep,
-#                               "%s: " % T("Export to"),
-#                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
-#                                 _title=T("Export in PDF format"),
-#                                 _href=r.url(method="", representation="pdf",
-#                                             vars=filter)),
-#                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
-#                                 _title=T("Export in XLS format"),
-#                                 _href=r.url(method="", representation="xls",
-#                                             vars=filter)),
-#                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
-#                                 _title=T("Export in RSS format"),
-#                                 _href=r.url(method="", representation="rss",
-#                                             vars=filter)),
-#                               _id="list_formats")
             tabs = []
 
             if "location_id" in table or \
@@ -1421,12 +1403,6 @@ class S3Search(S3CRUD):
                 # (this same map is also used by the Map Search Widget, if-present)
                 tabs.append((T("Map"), "map"))
                 app = request.application
-#                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
-#                                      _title=T("Export in KML format"),
-#                                      _href=r.url(method="",
-#                                                  representation="kml",
-#                                                  vars=filter)),
-#                                    )
                 # Build URL to load the features onto the map
                 if query:
                     vars = query.serialize_url(resource=resource)
@@ -1464,27 +1440,31 @@ class S3Search(S3CRUD):
 
             if tabs:
                 tabs.insert(0, ((T("List"), None)))
+            s3.datatable_ajax_source = URL(extension="aaData",
+                                           args=None,
+                                           vars=vars)
+            s3.formats.pdf = r.url(method="")
+            s3.formats.xls = r.url(method="")
+            s3.formats.rss = r.url(method="")
+            attr = S3DataTable.getConfigData()
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby, # order by
+                                           filter, # the filter string
+                                           None, # the rfields
+                                           **attr
+                                           )
+            items[0].insert(0, sep)
+            items[0].insert(0, link)
         else:
-            list_formats = ""
             tabs = []
 
-        attr = S3DataTable.getConfigData()
-        items = S3DataTable.htmlConfig(items,
-                                       "list",
-                                       sortby, # order by
-                                       "", # the filter string
-                                       None, # the rfields
-                                       **attr
-                                       )
         output["items"] = items
         output["sortby"] = sortby
 
         # Search Tabs
         search_tabs = s3_search_tabs(r, tabs)
         output["search_tabs"] = search_tabs
-
-        # List Formats
-#        output["list_formats"] = list_formats
 
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
@@ -1996,7 +1976,7 @@ class S3Search(S3CRUD):
                           distinct=True)
 
         # Get the rows
-        rows = resource.select(field, **attributes)
+        rows = resource._load(field, **attributes)
 
         if not errors:
             output = [{ "id"   : row[get_fieldname],
@@ -2333,7 +2313,7 @@ class S3OrganisationSearch(S3Search):
             limitby = resource.limitby(start=0, limit=limit)
             if limitby is not None:
                 attributes["limitby"] = limitby
-            rows = resource.select(*fields, **attributes)
+            rows = resource._load(*fields, **attributes)
             output = []
             append = output.append
             db = current.db
@@ -2513,7 +2493,7 @@ class S3HRSearch(S3Search):
                       "person_id$first_name",
                       "person_id$middle_name",
                       "person_id$last_name",
-                      "job_role_id$name",
+                      "job_title_id$name",
                       ]
             show_orgs = current.deployment_settings.get_hrm_show_organisation()
             if show_orgs:
@@ -2532,7 +2512,7 @@ class S3HRSearch(S3Search):
                             "middle" : row["pr_person"].middle_name or "",
                             "last"   : row["pr_person"].last_name or "",
                             "org"    : row["org_organisation"].name if show_orgs else "",
-                            "job"    : row["hrm_job_role"].name or "",
+                            "job"    : row["hrm_job_title"].name or "",
                         } for row in rows ]
             else:
                 items = []

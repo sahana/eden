@@ -66,7 +66,7 @@ class S3DataTableTests(unittest.TestCase):
             Set up the list of fields each time since the call to S3DataTables
             could change it.
         """
-        self.resource = current.manager.define_resource("org", "office")
+        self.resource = current.s3db.resource("org_office")
         list_fields = ["id",
                        "organisation_id$name",
                        "organisation_id$address",
@@ -80,8 +80,8 @@ class S3DataTableTests(unittest.TestCase):
                        "email"
                        ]
         self.list_fields = list_fields
-        rows = self.resource._select(list_fields)
-        self.data = self.resource._extract(rows, list_fields)
+        rows = self.resource.select(list_fields)
+        self.data = self.resource.extract(rows, list_fields)
         self.rfields = self.resource.resolve_selectors(list_fields)[0]
         self.lfields, self.row = self.get_display_fields(list_fields)
 

@@ -3303,7 +3303,7 @@ def hrm_human_resource_onaccept(form):
                             limitby=(0, 1)).first()
     if user:
         user_id = user.id
-        data.owned_by_user = user.id
+        data.owned_by_user = user_id
 
     if data:
         record.update_record(**data)
@@ -3368,13 +3368,8 @@ def hrm_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        year = now.year
-        month = now.month - 3
-        if month <= 0:
-            month += 12
-            year -= 1
-        three_months_prior = datetime.date(year, month - 3, now.day)
-        end = max(programmes.last().date, three_months_prior)
+        three_months_prior = (now - datetime.timedelta(days=92))
+        end = max(programmes.last().date, three_months_prior.date())
         last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:
@@ -3383,17 +3378,17 @@ def hrm_active(person_id):
         else:
             #start from a year before the latest record
             start = last_year
-        
+
         # Total hours between start and end
         programme_hours = 0
         for programme in programmes:
             if programme.date >= start and programme.date <= end and programme.hours:
                 programme_hours += programme.hours
-        
+
         # Average hours per month
         months = max(1, (end - start).days / 30.5)
         average = programme_hours / months
-        
+
         # Active?
         if average >= 8:
             return True
