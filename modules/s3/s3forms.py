@@ -939,7 +939,7 @@ class S3SQLCustomForm(S3SQLForm):
                        get_config(tablename, "onaccept", None))
 
         prefix, name = tablename.split("_", 1)
-        form = Storage(vars=data)
+        form = Storage(vars=Storage(data))
 
         # Audit
         if record_id is None:
@@ -1226,6 +1226,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @returns: a tuple (self, None, Field instance)
         """
 
+        selector = self.selector
+
+        # Check selector
+        if selector not in resource.components:
+            raise SyntaxError("Undefined component: %s" % selector)
+        else:
+            component = resource.components[selector]
+
+        # Check permission
+        permitted = component.permit("read", component.tablename)
+        if not permitted:
+            return (None, None, None)
+
         options = self.options
 
         if "name" in options:
@@ -1426,20 +1439,34 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Add the header row
         labels = self._render_headers(data,
-                                      #extra_columns = 1,
                                       _class="label-row")
 
         fields = data["fields"]
         items = data["data"]
 
+        # Flag whether there are any rows (at least an add-row) in the widget
+        has_rows = False
+
         # Add the item rows
         item_rows = []
+        permit = component.permit
+        tablename = component.tablename
         for i in xrange(len(items)):
+            has_rows = True
             item = items[i]
+            # Get the item record ID
+            if "_id" in item:
+                record_id = item["_id"]
+            else:
+                continue
+            # Check permissions to edit this item
+            editable = permit("update", tablename, record_id)
+            deletable = permit("delete", tablename, record_id)
+            # Render read-row accordingly
             rowname = "%s-%s" % (formname, i)
             read_row = self._render_item(table, item, fields,
-                                         editable=True,
-                                         deletable=True,
+                                         editable=editable,
+                                         deletable=deletable,
                                          readonly=True,
                                          index=i,
                                          _id="read-row-%s" % rowname,
@@ -1460,13 +1487,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
         action_rows.append(edit_row)
 
         # Add-row
-        add_row = self._render_item(table, None, fields,
-                                    editable=True,
-                                    deletable=True,
-                                    readonly=False,
-                                    _id="add-row-%s" % formname,
-                                    _class="add-row")
-        action_rows.append(add_row)
+        permitted = component.permit("create", component.tablename)
+        if permitted:
+            has_rows = True
+            add_row = self._render_item(table, None, fields,
+                                        editable=True,
+                                        deletable=True,
+                                        readonly=False,
+                                        _id="add-row-%s" % formname,
+                                        _class="add-row")
+            action_rows.append(add_row)
 
         # Empty edit row
         empty_row = self._render_item(table, None, fields,
@@ -1495,16 +1525,22 @@ class S3SQLInlineComponent(S3SQLSubForm):
         attr["_class"] = attr["_class"] + " hide"
         attr["_id"] = real_input
 
-        # Render output HTML
-        output = DIV(
-                    INPUT(**attr),
-                    TABLE(
+        if has_rows:
+            widget = TABLE(
                         THEAD(labels),
                         TBODY(item_rows),
                         TFOOT(action_rows),
                         _class="embeddedComponent",
                         _style="border: 1px solid black;"
-                    ),
+                     )
+        else:
+            widget = current.T("No entries currently available")
+
+
+        # Render output HTML
+        output = DIV(
+                    INPUT(**attr),
+                    widget,
                     _id=self._formname(separator="-"),
                     _field=real_input
                 )
@@ -1674,7 +1710,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_headers(self, data, extra_columns=0, **attributes):
+    def _render_headers(self, data, extra_columns=2, **attributes):
         """
             Render the header row with field labels
 
@@ -1736,10 +1772,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param item: the data
             @param fields: the fields to render (list of strings)
             @param readonly: render a read-row (otherwise edit-row)
-            @param editable: indicates whether records can be edited in
-                             this subform
-            @param deletable: indicates whether records can be deleted
-                              in this subform
+            @param editable: whether the record can be edited
+            @param deletable: whether the record can be deleted
             @param index: the row index
             @param attributes: HTML attributes for the row
         """
@@ -1805,19 +1839,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if readonly:
             if editable:
                 columns.append(edt)
+            else:
+                columns.append(TD())
             if deletable:
                 columns.append(rmv)
             else:
                 columns.append(TD())
         else:
             if index != "none" or item:
-                if editable:
-                    columns.append(rdy)
-                    columns.append(cnc)
+                columns.append(rdy)
+                columns.append(cnc)
             else:
-                if editable:
-                    columns.append(TD())
-                    columns.append(add)
+                columns.append(TD())
+                columns.append(add)
 
         return TR(columns, **attributes)
 
