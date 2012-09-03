@@ -68,8 +68,8 @@ from core.permissions import has_space_permission, has_all_permissions
 class SpaceFeed(Feed):
 
     """
-    Returns a space feed with the content of various applications. In the future
-    this function must detect applications and returns their own feeds.
+    Returns a space feed with the content of various applications. In the
+    future this function must detect applications and returns their own feeds.
     """
 
     def get_object(self, request, space_url):
