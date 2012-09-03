@@ -225,7 +225,7 @@
                                 {% if perms.voting.add_poll %}
                                     <ul class="unstyled">
                                         <li><i class="icon-plus" style="font-size:16px;"></i> <a href="{% url 'add-poll' get_place.url %}" title="{% trans 'Add new poll' %}">
-                                        º{% trans 'Add new poll' %}
+                                        {% trans 'Add new poll' %}
                                         </a></li>
                                     </ul>
                                 {% endif %}
@@ -255,22 +255,21 @@
                 </div>
                 {% endif %}
                 
-                
                 {% if get_place.mod_news %}
                 <div class="tab-pane" id="news">
                     <div class="row">
                         <div class="span8">
                             {% for news in publication %}
-                                <h2 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.title }}</a>
+                                <h3 class="posttitle"><a href="{{ news.get_absolute_url }}">{{ news.title }}</a>
                                     {% if user_is_admin %}
                                         {% if perms.news.change_post %}
-                                            <a href="{% url 'edit-post' get_place.url news.id %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                            <a href="{% url 'edit-post' get_place.url news.id %}" title="{% trans 'Edit post' %}">
+                                                <i class="icon-edit" style="font-size:16px;"></i>
                                             </a>
                                         {% endif %}
                                         {% if perms.news.delete_post %}
-                                            <a href="{% url 'delete-post' get_place.url news.id %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                            <a href="{% url 'delete-post' get_place.url news.id %}" title="{% trans 'Delete post' %}">
+                                                <i class="icon-trash" style="font-size:16px;"></i>
                                             </a>
                                         {% endif %}
                                     {% endif %}
@@ -290,8 +289,8 @@
                                 {% if perms.news.add_post %}
                                     <h4>{% trans "Administration" %}</h4>
                                     <ul class="unstyled">
-                                        <li><a href="{% url 'add-post' get_place.url %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans 'Add new post' %}
+                                        <li><a href="{% url 'add-post' get_place.url %}" title="{% trans 'Add new post' %}">
+                                            <i class="icon-plus" style="font-size:16px;"></i> {% trans 'Add new post' %}
                                         </a></li>
                                     </ul>
                                 {% endif %}
@@ -347,19 +346,19 @@
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.debate.add_debate %}
-                                        <li><a href="{% url 'add-debate' get_place.url %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add' %}" title="{% trans 'Add' %}"/>{% trans "Add debate" %}
+                                        <li><a href="{% url 'add-debate' get_place.url %}" title="{% trans 'Add debate' %}">
+                                            <i class="icon-plus" style="font-size:16px;"></i> {% trans "Add debate" %}
                                         </a></li>
                                     {% endif %}
                                     {% comment %}
                                     {% if perms.debate.change_debate %}
-                                        <li><a href="{% url 'edit-debate' get_place.url debate.id %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                        <li><a href="{% url 'edit-debate' get_place.url debate.id %}" title="{% trans 'Edit debate' %}">
+                                            <i class="icon-edit" style="font-size:16px;"></i> {% trans 'Edit debate' %}
                                         </a></li>
                                     {% endif %}
                                     {% if perms.debate.delete_debate %}
-                                        <li><a href="{% url 'delete-debate' get_place.url %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                        <li><a href="{% url 'delete-debate' get_place.url %}" title="{% trans 'Delete debate' %}">
+                                            <i class="icon-trash" style="font-size:16px;"></i>
                                         </a></li>
                                     {% endif %}
                                     {% endcomment %}
@@ -419,8 +418,8 @@
                                 <ul class="unstyled">
                                     {% if perms.proposalsets.add_proposalset %}
                                         <li>
-                                            <a href="{% url 'add-proposalset' get_place.url %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new proposal' %}" title="{% trans 'Add new proposal' %}"/>{% trans "Add proposal set" %}
+                                            <a href="{% url 'add-proposalset' get_place.url %}" title="{% trans 'Add proposal set' %}">
+                                                <i class="icon-plus" style="font-size:16px;"></i> {% trans "Add proposal set" %}
                                             </a>
                                         </li>
                                     {% endif %}
@@ -428,8 +427,8 @@
                                 <ul class="unstyled">
                                     {% if perms.proposals.add_proposal %}
                                         <li>
-                                            <a href="{% url 'select_set' get_place.url %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans "Add proposal" %}
+                                            <a href="{% url 'select_set' get_place.url %}" title="{% trans 'Add new proposal' %}">
+                                                <i class="icon-plus" style="font-size:16px;"></i> {% trans 'Add new proposal' %}
                                             </a>
                                         </li>
                                     {% endif %}
@@ -437,8 +436,8 @@
                                 <ul class="unstyled">
                                     {% if perms.proposals.add_proposalset %}
                                         <li>
-                                            <a href="{% url 'merge_proposal' get_place.url %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Merge proposal' %}" title="{% trans 'Merge Proposal' %}"/>{% trans "Create merged proposal" %}
+                                            <a href="{% url 'merge_proposal' get_place.url %}" title="{% trans 'Merge proposal' %}">
+                                                <i class="icon-plus" style="font-size:16px;"></i> {% trans "Create merged proposal" %}
                                             </a>
                                         </li>
                                     {% endif %}
@@ -462,13 +461,13 @@
                                 {% for doc in documents %}
                                     <li><a href="{{ doc.docfile.url }}">{{ doc.title }} ({{ doc.get_file_ext }}, {{ doc.get_file_size }})</a>
                                     {% if perms.spaces.change_document %}
-                                        <a href="{% url 'edit-document' get_place.url doc.id %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/edit16.png" alt="{% trans 'Edit' %}" title="{% trans 'Edit' %}"/>
+                                        <a href="{% url 'edit-document' get_place.url doc.id %}" title="{% trans 'Edit document' %}">
+                                            <i class="icon-edit" style="font-size:16px;"></i>
                                         </a>
                                     {% endif %}
                                     {% if perms.spaces.delete_document %}
-                                        <a href="{% url 'delete-document' get_place.url doc.id %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/delete16.png" alt="{% trans 'Delete' %}" title="{% trans 'Delete' %}"/>
+                                        <a href="{% url 'delete-document' get_place.url doc.id %}" title="{% trans 'Delete document' %}">
+                                            <i class="icon-trash" style="font-size:16px;"></i>
                                         </a>
                                     {% endif %}
                                     </li>
@@ -482,8 +481,8 @@
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_document %}
-                                        <li><a href="{% url 'add-document' get_place.url %}">
-                                                <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new post' %}" title="{% trans 'Add new post' %}"/>{% trans "Add documents"%}
+                                        <li><a href="{% url 'add-document' get_place.url %}" title="{% trans 'Add new document' %}">
+                                                <i class="icon-plus" style="font-size:16px;"></i> {% trans "Add documents"%}
                                             </a>
                                         </li>
                                     {% endif %}
@@ -545,8 +544,8 @@
                                 <h4>{% trans "Administration" %}</h4>
                                 <ul class="unstyled">
                                     {% if perms.spaces.add_event %}
-                                        <li><a href="{% url 'add-event' get_place.url %}">
-                                            <img src="{{ STATIC_URL }}/assets/icons/add16.png" alt="{% trans 'Add new event' %}" title="{% trans 'Add new event' %}"/>{% trans "Add event"%}
+                                        <li><a href="{% url 'add-event' get_place.url %}" title="{% trans 'Add new event' %}">
+                                            <i class="icon-plus" style="font-size:16px;"></i> {% trans "Add event"%}
                                         </a></li>
                                     {% endif %}
                                 </ul>
