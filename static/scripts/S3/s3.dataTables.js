@@ -19,7 +19,7 @@ function toggleDiv(divId) {
 function hideSubRows(groupid){
     var sublevel = '.sublevel' + groupid.substr(6);
     $(sublevel).each(function (){
-        obj = $(this)
+        obj = $(this);
         if (obj.hasClass('group') && obj.is(':visible')){
             // Get the group_xxx class
             var classList = obj.attr('class').split(/\s+/);
@@ -137,7 +137,7 @@ function tableIdReverse(id) {
             return t;
         }
     }
-    return -1
+    return -1;
 }
 $(document).ready(function() {
     /* dataTables handling */
@@ -201,7 +201,9 @@ $(document).ready(function() {
                 'bSortable': false
             }
         }
-        textDisplay[t] = [aoTableConfig[t]['textMaxLength'],aoTableConfig[t]['textShrinkLength']];
+        textDisplay[t] = [aoTableConfig[t]['textMaxLength'],
+                          aoTableConfig[t]['textShrinkLength']
+                          ];
 
 
         cache[t] = { iCacheLower: -1 };
@@ -211,9 +213,15 @@ $(document).ready(function() {
             for (var gCnt=0; gCnt<groupList.length; gCnt++) {
                 gList.push(groupList[gCnt][0]);
             }
-            oGroupColumns[t] = { 'bVisible': false, 'aTargets': gList }
+            oGroupColumns[t] = {
+                'bVisible': false,
+                'aTargets': gList
+            };
         } else {
-            oGroupColumns[t] = { 'bVisible': false, 'aTargets': [ ] }
+            oGroupColumns[t] = {
+                'bVisible': false,
+                'aTargets': [ ]
+            };
         }
 
         /* Code to calculate the bulk action buttons
@@ -334,9 +342,6 @@ $(document).ready(function() {
                         if (oCache.iDisplayLength !== -1) {
                             json.aaData.splice( oCache.iDisplayLength, json.aaData.length );
                         }
-                        if (json.dataTable_groupTotals.length > 0){
-                            aoTableConfig[t]['groupTotals'] = json.dataTable_groupTotals;
-                        }
                         fnCallback(json)
                     } );
                 } else {
@@ -371,7 +376,7 @@ $(document).ready(function() {
                     }
                 } );
             }
-            fnAjaxCallback[t] = fnDataTablesPipeline
+            fnAjaxCallback[t] = fnDataTablesPipeline;
 
         } // end of no pagination code
     } // end of loop for each dataTable
@@ -646,11 +651,11 @@ $(document).ready(function() {
                 if (aoTableConfig[t]['group'].length > 0) {
                     groupList = aoTableConfig[t]['group'];
                     var gList = [];
-                    for (var gCnt=0; gCnt<groupList.length; gCnt++) {
+                    for (var gCnt=0; gCnt < groupList.length; gCnt++) {
                         gList.push(groupList[gCnt][0]);
                     }
                 }
-                for (var i=0; i<aData.length; i++) {
+                for (var i=0; i < aData.length; i++) {
                     // Ignore any columns used for groups
                     if ($.inArray(i, gList) != -1) { continue; }
                     // Ignore if the data starts with an html open tag
@@ -679,7 +684,7 @@ $(document).ready(function() {
                 }
                 if (aoTableConfig[t]['group'].length > 0) {
                     groupList = aoTableConfig[t]['group'];
-                    for (var gCnt=0; gCnt<groupList.length; gCnt++) {
+                    for (var gCnt=0; gCnt < groupList.length; gCnt++) {
                         group = groupList[gCnt];
                         groupTotals = [];
                         if (aoTableConfig[t]['groupTotals'].length > gCnt) {
@@ -693,10 +698,10 @@ $(document).ready(function() {
                     if (shrink || accordion) {
                         var nTrs = $(tableId[t] + ' tbody tr');
                         var sublevel = '';
-                        for (var i=0; i<nTrs.length; i++) {
+                        for (var i=0; i < nTrs.length; i++) {
                             obj = $(nTrs[i]);
                             // If the row is a headerRow get the level
-                            if (obj.hasClass('headerRow')){
+                            if (obj.hasClass('headerRow')) {
                                 var classList = obj.attr('class').split(/\s+/);
                                 $.each( classList, function(index, item){
                                     if (item.substr(0, 6) == 'group_'){
@@ -715,7 +720,7 @@ $(document).ready(function() {
                    } // end of collapsable rows
                 }
                 if (Math.ceil((oSettings.fnRecordsDisplay()) / oSettings._iDisplayLength) > 1)  {
-                    $(tableId[t] + '_paginate').css('display', "block");
+                    $(tableId[t] + '_paginate').css('display', 'block');
                 } else {
                     $(tableId[t] + '_paginate').css('display', 'none');
                 }
@@ -744,7 +749,7 @@ $(document).ready(function() {
     }); */
 });
 
-function s3FormatRequest(representation, tableid, url){
+function s3FormatRequest(representation, tableid, url) {
     t = tableIdReverse('#' + tableid);
     dt = oDataTable[t];
     oSetting = dt.dataTableSettings[t];

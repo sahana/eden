@@ -1434,7 +1434,7 @@ class SQLTABLES3(SQLTABLE):
                 (tablename, fieldname) = colname.split(".")
                 try:
                     field = sqlrows.db[tablename][fieldname]
-                except KeyError:
+                except (KeyError, AttributeError):
                     field = None
                 if tablename in record \
                         and isinstance(record, Row) \

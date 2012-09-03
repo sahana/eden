@@ -98,18 +98,18 @@ def user():
         if not r.id:
             session.error = T("Can only approve 1 record at a time!")
             redirect(URL(args=[]))
-        
+
         user = table[r.id]
         auth.s3_approve_user(user)
 
         session.confirmation = T("User Account has been Approved")
         redirect(URL(args=[]))
-        
+
     def link_user(r, **args):
         if not r.id:
             session.error = T("Can only update 1 record at a time!")
             redirect(URL(args=[]))
-        
+
         user = table[r.id]
         auth.s3_link_user(user)
 
@@ -127,7 +127,7 @@ def user():
 
     set_method("auth", "user", method="approve",
                action=approve_user)
-    
+
     set_method("auth", "user", method="link",
                action=link_user)
 
@@ -151,11 +151,11 @@ def user():
     def rheader(r, tabs = []):
         if not r.interactive or r.representation != "html":
             return None
-        
+
         id = r.id
-        
+
         rheader = DIV()
-        
+
         if r.record:
             registration_key = r.record.registration_key
             if not registration_key:
@@ -175,7 +175,7 @@ def user():
                                     )
                         )
                 rheader.append(btn)
-                
+
             if registration_key == "pending":
                 btn = A(T("Approve"),
                         _class = "action-btn",
@@ -227,7 +227,7 @@ def user():
                         dict(label=str(UPDATE), _class="action-btn",
                              url=URL(c="admin", f="user",
                                      args=["[id]", "update"])),
-                        dict(label=str(T("Link")), 
+                        dict(label=str(T("Link")),
                              _class="action-btn",
                              _title = str(T("Link (or refresh link) between User, Person & HR Record")),
                              url=URL(c="admin", f="user",
@@ -367,7 +367,7 @@ def acl():
     table.group_id.requires = IS_ONE_OF(db, "auth_group.id", "%(role)s")
     table.group_id.represent = lambda opt: opt and db.auth_group[opt].role or opt
 
-    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(auth.permission.modules.keys(),
+    table.controller.requires = IS_EMPTY_OR(IS_IN_SET(current.deployment_settings.modules.keys(),
                                                       zero="ANY"))
     table.controller.represent = lambda opt: opt and \
         "%s (%s)" % (opt,
