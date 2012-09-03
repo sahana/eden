@@ -1845,6 +1845,21 @@ class S3SQLInlineComponent(S3SQLSubForm):
             idxname = "%s_%s_%s_%s" % (formname, fname, rowtype, index)
             formfield = self._rename_field(table[fname], idxname,
                                            skip_post_validation=True)
+
+            # Get reduced options set
+            options = self._filterby_options(fname)
+            if options:
+                if len(options) < 2:
+                    formfield.requires = IS_IN_SET(options, zero=None)
+                else:
+                    formfield.requires = IS_IN_SET(options)
+
+            # Get filterby-default
+            defaults = self._filterby_defaults()
+            if defaults and fname in defaults:
+                default = defaults[fname]["value"]
+                formfield.default = default
+
             if index is not None and item and fname in item:
                 value = item[fname]["value"]
                 value, error = validate(table, None, fname, value)
@@ -1984,15 +1999,84 @@ class S3SQLInlineComponent(S3SQLSubForm):
         return defaults
 
     # -------------------------------------------------------------------------
-    def _filterby_options(self, field):
+    def _filterby_options(self, fieldname):
         """
-            Re-render the options list for this field if there is a
+            Re-render the options list for a field if there is a
             filterby-restriction.
 
-            Not Implemented Yet
+            @param fieldname: the name of the field
         """
 
-        return None
+        if "filterby" in self.options:
+            filterby = self.options["filterby"]
+        else:
+            return None
+        if not isinstance(filterby, (list, tuple)):
+            filterby = [filterby]
+
+        component = self.resource.components[self.selector]
+        table = component.table
+
+        if fieldname not in table.fields:
+            return None
+        field = table[fieldname]
+
+        filter_fields = dict([(f["field"], f) for f in filterby])
+        if fieldname not in filter_fields:
+            return None
+
+        filterby = filter_fields[fieldname]
+        if "options" not in filterby:
+            return None
+
+        # Get the options list for the original validator
+        requires = field.requires
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        if requires:
+            r = requires[0]
+            if isinstance(r, IS_EMPTY_OR):
+                empty = True
+                r = r.other
+            # Currently only supporting IS_IN_SET
+            if not isinstance(r, IS_IN_SET):
+                return None
+        else:
+            return None
+        r_opts = r.options()
+
+        # Get the filter options
+        options = f["options"]
+        if not isinstance(options, (list, tuple)):
+            options = [options]
+        subset = []
+        if "invert" in f:
+            invert = f["invert"]
+        else:
+            invert = False
+
+        # Compute reduced options list
+        for o in r_opts:
+            if invert:
+                if isinstance(o, (list, tuple)):
+                    if o[0] not in options:
+                        subset.append(o)
+                elif isinstance(r_opts, dict):
+                    if o not in options:
+                        subset.append((o, r_opts[o]))
+                elif o not in options:
+                    subset.append(o)
+            else:
+                if isinstance(o, (list, tuple)):
+                    if o[0] in options:
+                        subset.append(o)
+                elif isinstance(r_opts, dict):
+                    if o in options:
+                        subset.append((o, r_opts[o]))
+                elif o in options:
+                    subset.append(o)
+
+        return subset
 
     # -------------------------------------------------------------------------
     @staticmethod
