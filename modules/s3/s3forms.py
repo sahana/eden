@@ -1308,6 +1308,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 # Build the query
                 query = (resource.table._id == record_id) & component.get_join()
 
+                # Filter
+                f = self._filterby_query()
+                if f is not None:
+                    query &= f
+
                 # Get the rows:
                 # @todo: should not need to extract ALL here!
                 rows = current.db(query).select(*qfields)
@@ -1364,6 +1369,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     "function": f,
                     "component": component_name,
                     "fields": headers,
+                    "defaults": self._filterby_defaults(),
                     "data": items}
         else:
             raise AttributeError("undefined component")
@@ -1883,6 +1889,110 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 columns.append(add)
 
         return TR(columns, **attributes)
+
+    # -------------------------------------------------------------------------
+    def _filterby_query(self):
+        """
+            Render the filterby-options as Query to apply when retrieving
+            the existing rows in this inline-component
+        """
+
+        if "filterby" in self.options:
+            filterby = self.options["filterby"]
+        else:
+            return None
+
+        if not isinstance(filterby, (list, tuple)):
+            filterby = [filterby]
+
+        component = self.resource.components[self.selector]
+        table = component.table
+
+        query = None
+        for f in filterby:
+            fieldname = f["field"]
+            if fieldname not in table.fields:
+                continue
+            field = table[fieldname]
+            if "options" in f:
+                options = f["options"]
+            else:
+                continue
+            if "invert" in f:
+                invert = f["invert"]
+            else:
+                invert = False
+            if not isinstance(options, (list, tuple)):
+                if invert:
+                    q = (field != options)
+                else:
+                    q = (field == options)
+            else:
+                if invert:
+                    q = (~(field.belongs(options)))
+                else:
+                    q = (field.belongs(options))
+            if query is None:
+                query = q
+            else:
+                query &= q
+
+        return query
+
+    # -------------------------------------------------------------------------
+    def _filterby_defaults(self):
+        """
+            Render the defaults for this inline-component as a dict
+            for the real-input JSON
+        """
+
+        if "filterby" in self.options:
+            filterby = self.options["filterby"]
+        else:
+            return None
+
+        if not isinstance(filterby, (list, tuple)):
+            filterby = [filterby]
+
+        component = self.resource.components[self.selector]
+        table = component.table
+
+        defaults = dict()
+        for f in filterby:
+            fieldname = f["field"]
+            if fieldname not in table.fields:
+                continue
+            if "default" in f:
+                default = f["default"]
+            elif "options" in f:
+                options = f["options"]
+                if "invert" in f and f["invert"]:
+                    continue
+                if isinstance(options, (list, tuple)):
+                    if len(options) != 1:
+                        continue
+                    else:
+                        default = options[0]
+                else:
+                    default = options
+            else:
+                continue
+
+            if default is not None:
+                defaults[fieldname] = {"value":default}
+
+        return defaults
+
+    # -------------------------------------------------------------------------
+    def _filterby_options(self, field):
+        """
+            Re-render the options list for this field if there is a
+            filterby-restriction.
+
+            Not Implemented Yet
+        """
+
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod

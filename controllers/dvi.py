@@ -88,11 +88,29 @@ def inline():
     crud_form = S3SQLCustomForm(
                     "first_name",
                     "last_name",
+                    # Email Addresses
                     S3SQLInlineComponent(
                         "contact",
-                        name="test",
+                        name="email",
+                        label=T("Email Addresses"),
+                        fields=["value"],
+                        filterby = dict(
+                            field = "contact_method",
+                            options = "EMAIL"
+                        )
+                    ),
+                    # Other Contact Information
+                    S3SQLInlineComponent(
+                        "contact",
+                        name="all",
                         label=T("Contact Information"),
-                        fields=["contact_method", "value"]
+                        fields=["contact_method", "value"],
+                        filterby = dict(
+                            field = "contact_method",
+                            options = "EMAIL",
+                            invert = True,
+                            default = "SMS"
+                        )
                     ),
                     "age_group",
                     "date_of_birth",
