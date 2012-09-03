@@ -1449,6 +1449,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Add the item rows
         item_rows = []
+        prefix = component.prefix
+        name = component.name
+        audit = component.audit
         permit = component.permit
         tablename = component.tablename
         for i in xrange(len(items)):
@@ -1471,6 +1474,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                          index=i,
                                          _id="read-row-%s" % rowname,
                                          _class="read-row")
+            audit("read", prefix, name,
+                  record=record_id, representation="html")
             item_rows.append(read_row)
 
         # Add the action rows
@@ -1575,7 +1580,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         fields = data["fields"]
         items = data["data"]
+
+        component = self.resource.components[data["component"]]
+
+        audit = component.audit
+        prefix, name = component.prefix, component.name
+
         for item in items:
+            if "_id" in item:
+                record_id = item["_id"]
+            else:
+                continue
+            audit("read", prefix, name,
+                  record=record_id, representation="html")
             columns = [TD(item[f["name"]]["text"]) for f in fields]
             trs.append(TR(columns, _class="read-row"))
 
@@ -1629,6 +1646,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
             table = component.table
 
             # Process each item
+            permit = component.permit
+            audit = component.audit
             for item in data["data"]:
 
                 # Get the values
@@ -1640,26 +1659,36 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # Delete..?
                     if "_delete" in item:
+                        authorized = permit("delete", tablename, record_id)
+                        if not authorized:
+                            continue
                         c = s3db.resource(tablename, id=record_id)
                         ondelete = s3db.get_config(tablename, "ondelete")
-                        # @todo: audit
+                        # Audit happens inside .delete()
                         success = c.delete(ondelete=ondelete,
-                                           cascade=True)
+                                           cascade=True, format="html")
 
                     # ...or update?
                     else:
+                        authorized = permit("update", tablename, record_id)
+                        if not authorized:
+                            continue
                         values[table._id.name] = record_id
                         query = (table._id == record_id)
                         success = db(query).update(**values)
 
                         # Post-process update
                         if success:
-                            # @todo: audit
+                            audit("update", prefix, name,
+                                  record=record_id, representation=format)
                             s3db.update_super(table, values)
                             manager.onaccept(table, Storage(vars=values),
                                              method="update")
                 else:
                     # Create a new record
+                    authorized = permit("create", tablename)
+                    if not authorized:
+                        continue
                     # Update the master table foreign key
                     pkey = component.pkey
                     mastertable = resource.table
@@ -1678,13 +1707,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # Post-process create
                     if record_id:
-                        # @todo: audit
+                        audit("create", prefix, name,
+                              record=record_id, representation=format)
                         values[table._id.name] = record_id
                         s3db.update_super(table, values)
                         auth.s3_set_record_owner(table, record_id)
                         manager.onaccept(table, Storage(vars=values),
                                          method="create")
-
         else:
             return False
 
