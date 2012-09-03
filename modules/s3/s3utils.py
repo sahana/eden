@@ -2889,6 +2889,9 @@ class S3DataTable(object):
                                 by default it will be the column immediately
                                 before the first data item
                    dt_group: The column that is used to group the data
+                   dt_group_totals: The number of record in each group.
+                                    This will be displayed in parenthesis
+                                    after the group title.
                    dt_bulk_selected: A list of selected items
                    dt_actions: dictionary of actions
                    dt_styles: dictionary of styles to be applied to a list of ids
@@ -2951,7 +2954,7 @@ class S3DataTable(object):
                 group -= 1
             dt_group.append([group, "asc"])
         config.group = dt_group
-        config.groupTitles = attr.get("dt_group_totals", [])
+        config.groupTotals = attr.get("dt_group_totals", [])
         if bulkActions:
             for order in orderby:
                 if config.bulkCol <= order[0]:
@@ -3121,6 +3124,9 @@ class S3DataTable(object):
                    dt_bulk_col: The column in which the checkboxes will appear,
                                 by default it will be the column immediately
                                 before the first data item
+                   dt_group_totals: The number of record in each group.
+                                    This will be displayed in parenthesis
+                                    after the group title.
         """
         from gluon.serializers import json
         data = self.data
@@ -3158,6 +3164,7 @@ class S3DataTable(object):
             aadata.append(details)
         structure["dataTable_id"] = id
         structure["dataTable_filter"] = self.filterString
+        structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
         structure["dataTable_sort"] = self.orderby
         structure["aaData"] = aadata
         structure["iTotalRecords"] = totalrows

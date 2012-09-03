@@ -31,27 +31,37 @@ def index():
         #this also required views/inv/index.html to be modified
         from s3.s3utils import S3DataTable
         request = current.request
+        vars = current.request.get_vars
+        define_resource = current.manager.define_resource
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
-            resource = current.manager.define_resource("inv", "warehouse")
+            resource = define_resource("inv", "warehouse")
+            totalrows = resource.count()
             list_fields = ["id",
                            "name",
                            "organisation_id",
                            ]
-            limit = 6 if request.extension == "aaData" else 1
+            initial_limit = current.manager.ROWSPERPAGE
+            start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
+            limit = int(vars.iDisplayLength) if vars.iDisplayLength else initial_limit
+            rfields = resource.resolve_selectors(list_fields)[0]
+            (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+            resource.add_filter(filter)
+            filteredrows = resource.count()
             rows = resource._select(list_fields,
                                     orderby="organisation_id",
-                                    start=0,
+                                    start=start,
                                     limit=limit,
                                     )
             data = resource._extract(rows,
                                      list_fields,
                                      represent=True,
                                      )
-            rfields = resource.resolve_selectors(list_fields)[0]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
-                warehouses = dt.html("warehouse_list_1",
+                warehouses = dt.html(#totalrows,
+                                     #filteredrows,
+                                     "warehouse_list_1",
                                      dt_bFilter="true",
                                      dt_group=2,
                                      dt_ajax_url=URL(c="inv",
@@ -65,8 +75,8 @@ def index():
             else:
                 warehouse = dt.json("warehouse_list_1",
                                     int(request.vars.sEcho),
-                                    6,
-                                    6,
+                                    totalrows,
+                                    filteredrows,
                                     )
                 return warehouse
         # Second Table
@@ -78,6 +88,7 @@ def index():
                     inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
             else:
                 resource = current.manager.define_resource("inv", "inv_item")
+                totalrows = resource.count()
                 table = resource.table
                 stable = s3db.supply_item
                 list_fields = ["id",
@@ -90,12 +101,13 @@ def index():
                 rfields = resource.resolve_selectors(list_fields)[0]
                 (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
                 resource.add_filter(filter)
-                filteredrows = resource.count()
+                (rfields, joins, left, distinct) = resource.resolve_selectors(list_fields)
                 site_list = {}
-                rows = resource._select(["id","site_id"],
-                                        limit=filteredrows)
+                rows = resource._select(list_fields,
+                                        limit=resource.count())
+                filteredrows = len(rows.records)
                 for row in rows:
-                    site_id = row.site_id
+                    site_id = row.inv_inv_item.site_id
                     if site_id not in site_list:
                         site_list[site_id] = 1
                     else:
@@ -106,13 +118,12 @@ def index():
                     formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = table.site_id | stable.name | ~table.quantity
-                try:
-                    limit = int(current.request.get_vars["iDisplayLength"])
-                except:
-                    limit = 1
+                start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
+                initial_limit = current.manager.ROWSPERPAGE
+                limit = int(vars.iDisplayLength) if vars.iDisplayLength else initial_limit
                 rows = resource._select(list_fields,
                                         orderby=orderby,
-                                        start=0,
+                                        start=start,
                                         limit=limit,
                                         )
                 data = resource._extract(rows,
@@ -144,7 +155,9 @@ def index():
                             warningList.append(row.id)
                         else:
                             alertList.append(row.id)
-                    inventory = dt.html("inventory_list_1",
+                    inventory = dt.html(#totalrows,
+                                        #filteredrows,
+                                        "inventory_list_1",
                                         dt_bFilter="true",
                                         dt_group=[1,2],
                                         dt_group_totals=[formatted_site_list],
@@ -169,10 +182,11 @@ def index():
                 elif request.extension == "aaData":
                     inventory = dt.json("inventory_list_1",
                                         int(request.vars.sEcho),
-                                        42,
-                                        42,
+                                        totalrows,
+                                        filteredrows,
                                         dt_action_col=-1,
                                         dt_bulk_actions = "Adjust",
+                                        dt_group_totals=[formatted_site_list],
                                         )
                     return inventory
                 else:

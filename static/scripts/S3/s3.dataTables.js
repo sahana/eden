@@ -332,6 +332,9 @@ $(document).ready(function() {
                         if (oCache.iDisplayLength !== -1) {
                             json.aaData.splice( oCache.iDisplayLength, json.aaData.length );
                         }
+                        if (json.dataTable_groupTotals.length > 0){
+                            aoTableConfig[t]["groupTotals"] = json.dataTable_groupTotals;
+                        }
                         fnCallback(json)
                     } );
                 } else {
@@ -468,7 +471,7 @@ $(document).ready(function() {
     }
 
 
-    function buildGroups(oSettings, t, group, groupTitles, level) {
+    function buildGroups(oSettings, t, group, groupTotals, level) {
         var shrink = aoTableConfig[t]["shrinkGroupedRows"] == 'individual';
         var accordion = aoTableConfig[t]["shrinkGroupedRows"] == 'accordion';
         var nTrs = $(tableId[t] + ' tbody tr');
@@ -503,8 +506,8 @@ $(document).ready(function() {
                 if (level > 1) { levelDisplay += "<div class='ui-icon ui-icon-play' style='float:left;'></div>"; }
                 // Add the subtotal counts (if provided)
                 var groupCount = "";
-                if (groupTitles[sGroup]) {
-                    groupCount = " (" + groupTitles[sGroup] + ")";
+                if (groupTotals[sGroup]) {
+                    groupCount = " (" + groupTotals[sGroup] + ")";
                 }
                 // Create the new HTML elements
                 var nGroup = document.createElement( 'tr' );
@@ -552,6 +555,8 @@ $(document).ready(function() {
     } // end of loop through for each table
 
     function initDataTable(oTable, t, bReplace) {
+      config = jQuery.parseJSON($(tableId[t] + '_configurations').val());
+      aoTableConfig[t]["groupTotals"] = config["groupTotals"];
       oDataTable[t] = $(oTable).dataTable({
         'bDestroy': bReplace,
         'sDom': sDom[t],
@@ -675,11 +680,11 @@ $(document).ready(function() {
                 groupList = aoTableConfig[t]["group"];
                 for (var gCnt=0; gCnt<groupList.length; gCnt++) {
                     group = groupList[gCnt];
-                    groupTitles = [];
-                    if (aoTableConfig[t]["groupTitles"].length > gCnt) {
-                        groupTitles = aoTableConfig[t]["groupTitles"][gCnt];
+                    groupTotals = [];
+                    if (aoTableConfig[t]["groupTotals"].length > gCnt) {
+                        groupTotals = aoTableConfig[t]["groupTotals"][gCnt];
                     }
-                    buildGroups(oSettings, t, group[0], groupTitles, gCnt+1);
+                    buildGroups(oSettings, t, group[0], groupTotals, gCnt+1);
                 }
                 // Now loop through each row and add the subLevel controls for row collapsing
                 var shrink = aoTableConfig[t]["shrinkGroupedRows"] == 'individual';
