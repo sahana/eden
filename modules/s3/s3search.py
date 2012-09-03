@@ -1438,9 +1438,8 @@ class S3Search(S3CRUD):
 
             if tabs:
                 tabs.insert(0, ((T("List"), None)))
-            s3.datatable_ajax_source = URL(extension="aaData",
-                                           args=None,
-                                           vars=vars)
+            if not s3.datatable_ajax_source:
+                s3.datatable_ajax_source = str(r.url(representation = "aaData"))
             s3.formats.pdf = r.url(method="")
             s3.formats.xls = r.url(method="")
             s3.formats.rss = r.url(method="")

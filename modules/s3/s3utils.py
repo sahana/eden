@@ -2676,11 +2676,6 @@ class S3DataTable(object):
         request = current.request
         if s3.datatable_ajax_source:
             attr.dt_ajax_url = s3.datatable_ajax_source
-        else:
-            attr.dt_ajax_url = "%s.aaData" % request.url
-            if "viewing" in request.get_vars:
-                attr.dt_ajax_url = "%s?viewing=%s" % (attr.dt_ajax_url,
-                                                      request.get_vars.viewing)
         if s3.actions:
             attr.dt_actions = s3.actions
         if s3.dataTableBulkActions:
@@ -2889,6 +2884,9 @@ class S3DataTable(object):
                                 by default it will be the column immediately
                                 before the first data item
                    dt_group: The column that is used to group the data
+                   dt_group_totals: The number of record in each group.
+                                    This will be displayed in parenthesis
+                                    after the group title.
                    dt_bulk_selected: A list of selected items
                    dt_actions: dictionary of actions
                    dt_styles: dictionary of styles to be applied to a list of ids
@@ -2900,8 +2898,10 @@ class S3DataTable(object):
                    dt_shrink_groups: If true then the rows within a group will be hidden
             @global current.response.s3.actions used to get the RowActions
         """
+
         from gluon.serializers import json
         from gluon.storage import Storage
+        request = current.request
         s3 = current.response.s3
 
         if not s3.dataTableID or not isinstance(s3.dataTableID, list):
@@ -2913,20 +2913,21 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
-        config.displayLength = attr.get("dt_displayLength",current.manager.ROWSPERPAGE)
+        config.displayLength = attr.get("dt_displayLength", current.manager.ROWSPERPAGE)
         config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
         config.pagination = attr.get("dt_pagination", "true")
         config.paginationType = attr.get("dt_pagination_type", "full_numbers")
         config.bFilter = attr.get("dt_bFilter", "true")
-        config.ajaxUrl = attr.get("dt_ajax_url", URL(c=current.request.controller,
-                                                     f=current.request.function,
+        config.ajaxUrl = attr.get("dt_ajax_url", URL(c=request.controller,
+                                                     f=request.function,
                                                      extension="aaData",
-                                                     vars={"id":"%s" % id},
+                                                     args=request.args,
+                                                     vars=request.get_vars,
                                                      ))
         config.rowStyles = attr.get("dt_styles", [])
 
 
-        rowActions = current.response.s3.actions
+        rowActions = s3.actions
         if rowActions:
             config.rowActions = rowActions
         else:
@@ -2936,7 +2937,7 @@ class S3DataTable(object):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
         config.bulkCol = attr.get("dt_bulk_col", 0)
-        action_col = attr.get("dt_action_col",0)
+        action_col = attr.get("dt_action_col", 0)
         if bulkActions and config.bulkCol <= action_col:
             action_col += 1
         config.actionCol = action_col
@@ -2951,7 +2952,7 @@ class S3DataTable(object):
                 group -= 1
             dt_group.append([group, "asc"])
         config.group = dt_group
-        config.groupTitles = attr.get("dt_group_totals", [])
+        config.groupTotals = attr.get("dt_group_totals", [])
         if bulkActions:
             for order in orderby:
                 if config.bulkCol <= order[0]:
@@ -2968,26 +2969,26 @@ class S3DataTable(object):
             form.append (S3DataTable.listFormats(id, rfields))
         form.append (html)
         form.append(INPUT(_type="hidden",
-                          _id="%s_dataTable_filter" %id,
+                          _id="%s_dataTable_filter" % id,
                           _name="filterString",
                           _value=filterString))
 
         # Add the configuration details for this dataTable
         form.append(INPUT(_type="hidden",
-                          _id="%s_configurations" %id,
+                          _id="%s_configurations" % id,
                           _name="config",
                           _value=json(config)))
         # If we have bulk actions then add the hidden fields
         if config.bulkActions:
             form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_bulkMode" %id,
+                              _id="%s_dataTable_bulkMode" % id,
                               _name="mode",
                               _value="Inclusive"))
             bulk_selected = attr.get("dt_bulk_selected", "")
             if isinstance(bulk_selected, list):
                 bulk_selected = ",".join(bulk_selected)
             form.append(INPUT(_type="hidden",
-                              _id="%s_dataTable_bulkSelection" %id,
+                              _id="%s_dataTable_bulkSelection" % id,
                               _name="selected",
                               _value="[%s]" % bulk_selected))
         return form
@@ -3071,7 +3072,7 @@ class S3DataTable(object):
         bulkCol = attr.get("dt_bulk_col", 0)
         if bulkCol > len(flist):
             bulkCol = len(flist)
-        action_col = attr.get("dt_action_col",0)
+        action_col = attr.get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
                 action_col = len(flist) -1
@@ -3082,7 +3083,7 @@ class S3DataTable(object):
         # action then a column will be added, either at the start or in the
         # column identified by dt_bulk_col
         if bulkActions:
-            flist.insert(bulkCol,"BULK")
+            flist.insert(bulkCol, "BULK")
             if bulkCol <= action_col:
                 action_col += 1
 
@@ -3121,6 +3122,9 @@ class S3DataTable(object):
                    dt_bulk_col: The column in which the checkboxes will appear,
                                 by default it will be the column immediately
                                 before the first data item
+                   dt_group_totals: The number of record in each group.
+                                    This will be displayed in parenthesis
+                                    after the group title.
         """
         from gluon.serializers import json
         data = self.data
@@ -3152,12 +3156,14 @@ class S3DataTable(object):
             details = []
             for field in flist:
                 if field == "BULK":
-                    details.append('<INPUT id="select%s" type="checkbox" class="bulkcheckbox">' % row[flist[action_col]])
+                    details.append('<INPUT id="select%s" type="checkbox" class="bulkcheckbox">' % \
+                        row[flist[action_col]])
                 else:
                     details.append(s3_unicode(row[field]))
             aadata.append(details)
         structure["dataTable_id"] = id
         structure["dataTable_filter"] = self.filterString
+        structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
         structure["dataTable_sort"] = self.orderby
         structure["aaData"] = aadata
         structure["iTotalRecords"] = totalrows

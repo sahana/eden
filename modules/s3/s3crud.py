@@ -949,12 +949,8 @@ class S3CRUD(S3Method):
                     items = ""
 
             # Update output
-            if r.method:
-                url = URL(c=r.controller,
-                          f=r.function,
-                          extension = "aaData",
-                          vars = r.vars)
-                s3.datatable_ajax_source = str(url)
+            if not s3.datatable_ajax_source:
+                s3.datatable_ajax_source = str(r.url(representation = "aaData"))
             attr = S3DataTable.getConfigData()
             items = S3DataTable.htmlConfig(items,
                                            "list",

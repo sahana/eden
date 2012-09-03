@@ -216,8 +216,8 @@ class S3MainMenu(object):
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
+                            MM("Test Results", f="result"),
                             MM("Tickets", f="errors"),
-                            MM("View Test Result Reports", f="result"),
                         )
 
         return menu_admin
