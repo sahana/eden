@@ -350,7 +350,7 @@ def edit_space(request, space_url):
     """
     place = get_object_or_404(Space, url=space_url)
 
-    if request.user in place.admins.all():
+    if has_space_permission(request.user, place, allow=['admins']):
         form = SpaceForm(request.POST or None, request.FILES or None,
             instance=place)
         entity_forms = EntityFormSet(request.POST or None, request.FILES
@@ -618,9 +618,8 @@ class ListDocs(ListView):
             .order_by('pub_date')
 
         cur_user = self.request.user
-        if cur_user in place.admins or \
-           cur_user in place.mods or \
-           cur_user in place.users:
+        if has_space_permission(cur_user, place,
+                                allow=['admins', 'mods', 'users']):
             return objects
         
         if self.request.user.is_anonymous():
