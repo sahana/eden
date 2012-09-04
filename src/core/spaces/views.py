@@ -433,6 +433,9 @@ class ListSpaces(ListView):
     """
     paginate_by = 10
     
+    public_spaces = Space.objects.filter(public=True)
+    all_spaces = Space.objects.all()
+
     def get_queryset(self):
 
         # I think I should explain this mess. What we want to obtain here is:
@@ -444,23 +447,22 @@ class ListSpaces(ListView):
         # combine the data of the user spaces and public ones with the '|'
         # operand.
         current_user = self.request.user
-        public_spaces = Space.objects.filter(public=True)
-        all_spaces = Space.objects.all()
         user_spaces = set()
 
         if not current_user.is_anonymous():
-            for space in all_spaces:
+            for space in self.all_spaces:
                 if has_space_permission(current_user, space,
                                         allow=['users','admins','mods']):
                     user_spaces.add(space.pk)
             user_spaces = Space.objects.filter(pk__in = user_spaces)
-            return public_spaces | user_spaces
+            return self.public_spaces | user_spaces
 
-        return public_spaces
+        return self.public_spaces
 
     def get_context_data(self, **kwargs):
         context = super(ListSpaces, self).get_context_data(**kwargs)
-        context['all_spaces'] = Space.objects.all()
+        context['all_spaces'] = self.all_spaces
+        context['public_spaces'] = self.public_spaces
         return context
 
 
@@ -831,5 +833,3 @@ class ListPosts(ListView):
             url=self.kwargs['space_url'])
         context['messages'] = messages.get_messages(self.request)
         return context
-    
-    
