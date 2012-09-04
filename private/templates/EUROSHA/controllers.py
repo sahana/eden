@@ -81,7 +81,7 @@ class index():
         system_roles = auth.get_system_roles()
         AUTHENTICATED = system_roles.AUTHENTICATED
         if AUTHENTICATED in roles and \
-           auth.s3_has_permission("read", db.org_organisation):
+           auth.s3_has_permission("read", current.s3db.org_organisation):
             org_items = self.organisation()
             datatable_ajax_source = "/%s/default/organisation.aaData" % \
                                     appname
@@ -98,19 +98,20 @@ class index():
                                  for opt in facility_list]
                 if facility_list:
                     manage_facility_box = DIV(H3(T("Manage Your Facilities")),
-                                        SELECT(_id = "manage_facility_select",
-                                                _style = "max-width:400px;",
-                                                *facility_opts
+                                              SELECT(_id = "manage_facility_select",
+                                                     _style = "max-width:400px;",
+                                                     *facility_opts
+                                                     ),
+                                              A(T("Go"),
+                                                _href = URL(c="default", f="site",
+                                                            args=[facility_list[0][0]]),
+                                                #_disabled = "disabled",
+                                                _id = "manage_facility_btn",
+                                                _class = "action-btn"
                                                 ),
-                                        A(T("Go"),
-                                            _href = URL(c="default", f="site",
-                                                        args=[facility_list[0][0]]),
-                                            #_disabled = "disabled",
-                                            _id = "manage_facility_btn",
-                                            _class = "action-btn"
-                                            ),
-                                        _id = "manage_facility_box",
-                                        _class = "menu_box fleft")
+                                              _id = "manage_facility_box",
+                                              _class = "menu_box fleft"
+                                              )
                     s3.jquery_ready.append(
 '''$('#manage_facility_select').change(function(){
  $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
@@ -118,17 +119,17 @@ class index():
                 else:
                     manage_facility_box = DIV()
 
-            org_box = DIV( H3(T("Organizations")),
-                           A(T("Add Organization"),
-                              _href = URL(c="org", f="organisation",
-                                          args=["create"]),
-                              _id = "add-btn",
-                              _class = "action-btn",
-                              _style = "margin-right: 10px;"),
-                            org_items["items"],
-                            _id = "org_box",
-                            _class = "menu_box fleft"
-                            )
+            org_box = DIV(H3(T("Organizations")),
+                          A(T("Add Organization"),
+                            _href = URL(c="org", f="organisation",
+                                        args=["create"]),
+                            _id = "add-btn",
+                            _class = "action-btn",
+                            _style = "margin-right: 10px;"),
+                          org_items,
+                          _id = "org_box",
+                          _class = "menu_box fleft"
+                          )
         else:
             manage_facility_box = ""
             org_box = ""
@@ -148,23 +149,14 @@ class index():
 
             if self_registration:
                 # Provide a Registration box on front page
-                request.args = ["register"]
-                if settings.get_terms_of_service():
-                    auth.messages.submit_button = T("I accept. Create my account.")
-                else:
-                    auth.messages.submit_button = T("Register")
-                register_form = auth()
+                register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
-                # Add client-side validation
-                s3_register_validation()
+                 # Add client-side validation
+                s3base.s3_register_validation()
 
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-                else:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
                 if request.env.request_method == "POST":
                     post_script = \
 '''$('#register_form').removeClass('hide')
@@ -257,25 +249,52 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             Function to handle pagination for the org list on the homepage
         """
 
-        db = current.db
-        s3db = current.s3db
-        table = db.org_organisation
-        table.id.label = current.T("Organization")
-        table.id.represent = s3db.org_organisation_represent
+        request = current.request
+        resource = current.s3db.resource("org_organisation")
+        table = resource.table
 
-        s3 = current.response.s3
-        s3.dataTable_sPaginationType = "two_button"
-        s3.dataTable_sDom = "rtip" #"frtip" - filter broken
-        s3.dataTable_iDisplayLength = 25
-
-        s3db.configure("org_organisation",
-                       listadd = False,
-                       addbtn = True,
-                       super_entity = db.pr_pentity,
-                       linkto = "/%s/org/organisation/%s" % \
-                            (current.request.application, "%s"),
-                       list_fields = ["id",])
-
-        return current.rest_controller("org", "organisation")
+        list_fields = ["id", "name"]
+        limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aaData" else 1
+        rfields = resource.resolve_selectors(list_fields)[0]
+        (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
+        resource.add_filter(filter)
+        if isinstance(orderby, bool):
+            orderby = table.name
+        rows = resource.select(list_fields,
+                               orderby=orderby,
+                               start=0,
+                               limit=limit,
+                               )
+        data = resource.extract(rows,
+                                list_fields,
+                                represent=True,
+                                )
+        dt = S3DataTable(rfields, data)
+        dt.defaultActionButtons(resource)
+        current.response.s3.no_formats = True
+        if request.extension == "html":
+            items = dt.html("org_list_1",
+                            dt_displayLength=10,
+                            dt_ajax_url=URL(c="default",
+                                            f="organisation",
+                                            extension="aaData",
+                                            vars={"id": "org_list_1"},
+                                            ),
+                           )
+        elif request.extension.lower() == "aadata":
+            limit = resource.count()
+            if "sEcho" in request.vars:
+                echo = int(request.vars.sEcho)
+            else:
+                echo = None
+            items = dt.json("supply_list_1",
+                            echo,
+                            limit,
+                            limit,
+                            )
+        else:
+            from gluon.http import HTTP
+            raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+        return items
 
 # END =========================================================================
