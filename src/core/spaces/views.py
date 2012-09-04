@@ -163,9 +163,9 @@ class ValidateIntent(DetailView):
         space_object = get_or_insert_object_in_cache(Space, space_url, 
             url=space_url)
 
-        if self.request.user in space_object.admins.all() \
-        or self.request.user in space_object.mods.all() \
-        or self.request.user.is_staff or self.request.user.is_superuser:
+        if has_space_permission(self.request.user, space_object,
+                                 allow=['admins','mods']) \
+        or has_all_permissions(self.request.user):
             try:
                 intent = Intent.objects.get(token=self.kwargs['token'])
                 intent.space.users.add(intent.user)
@@ -434,22 +434,34 @@ class ListSpaces(ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        current_user = self.request.user
-        public_spaces = Space.objects.all().filter(public=True)
-        all_spaces = Space.objects.all()
-        
-        if not current_user.is_anonymous():
-            user_spaces = []
-            for space in all_spaces:
-                if current_user in space.users.all() \
-                    or current_user in space.admins.all() \
-                    or current_user in space.mods.all():
-                    user_spaces.append(space)
-                    public_spaces._result_cache(space)
 
-            return public_spaces
-            
+        # I think I should explain this mess. What we want to obtain here is:
+        # a list of public spaces in case the user is anonymous, or a list of
+        # the public spaces plus the spaces the user is registered to if the
+        # user is logged in.
+        # To do the second, we create a set of PK objects, and outside of the
+        # 'for' loop we make a queryset for those PK objects, after that we
+        # combine the data of the user spaces and public ones with the '|'
+        # operand.
+        current_user = self.request.user
+        public_spaces = Space.objects.filter(public=True)
+        all_spaces = Space.objects.all()
+        user_spaces = set()
+
+        if not current_user.is_anonymous():
+            for space in all_spaces:
+                if has_space_permission(current_user, space,
+                                        allow=['users','admins','mods']):
+                    user_spaces.add(space.pk)
+            user_spaces = Space.objects.filter(pk__in = user_spaces)
+            return public_spaces | user_spaces
+
         return public_spaces
+
+    def get_context_data(self, **kwargs):
+        context = super(ListSpaces, self).get_context_data(**kwargs)
+        context['all_spaces'] = Space.objects.all()
+        return context
 
 
 class EditRole(UpdateView):
