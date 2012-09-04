@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-28 11:27+0200\n"
+"POT-Creation-Date: 2012-09-04 15:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -122,12 +122,8 @@ msgstr ""
 msgid "^news/(?P<post_id>\\w+)/$"
 msgstr ""
 
-#: urls.py:90
+#: urls.py:90 urls.py:106
 msgid "^comments/"
-msgstr ""
-
-#: urls.py:97
-msgid "role/"
 msgstr ""
 
 #: templates/404.html:9
@@ -152,32 +148,32 @@ msgid ""
 "to the index."
 msgstr ""
 
-#: templates/base.html:105
+#: templates/base.html:111
 msgid "Pages"
 msgstr ""
 
-#: templates/base.html:115
+#: templates/base.html:121
 msgid "Help"
 msgstr ""
 
-#: templates/base.html:116
+#: templates/base.html:122
 msgid "Mailing lists"
 msgstr ""
 
-#: templates/base.html:117
+#: templates/base.html:123
 msgid "Issues"
 msgstr ""
 
-#: templates/base.html:118
+#: templates/base.html:124
 msgid "E-mail"
 msgstr ""
 
-#: templates/base.html:119 templates/invite.html:15
+#: templates/base.html:125 templates/invite.html:15
 #: templates/invite_done.html:10
 msgid "Invite your friends"
 msgstr ""
 
-#: templates/base.html:131
+#: templates/base.html:137
 msgid "created by"
 msgstr ""
 
@@ -247,7 +243,7 @@ msgid "Language"
 msgstr ""
 
 #: templates/menu.html:33
-msgid "Profile"
+msgid "My profile"
 msgstr ""
 
 #: templates/menu.html:45
@@ -255,22 +251,18 @@ msgid "Administration"
 msgstr ""
 
 #: templates/menu.html:46
-msgid "Create new space"
-msgstr ""
-
-#: templates/menu.html:47
 msgid "Add news"
 msgstr ""
 
-#: templates/menu.html:48
-msgid "Manage User Roles"
+#: templates/menu.html:50
+msgid "Create new space"
 msgstr ""
 
-#: templates/menu.html:51
+#: templates/menu.html:52
 msgid "Edit profile"
 msgstr ""
 
-#: templates/menu.html:53
+#: templates/menu.html:54
 msgid "Logout"
 msgstr ""
 
@@ -292,45 +284,45 @@ msgid ""
 "profile</a>"
 msgstr ""
 
-#: templates/site_index.html:4
+#: templates/site_index.html:8
 msgid "e-cidadania"
 msgstr ""
 
-#: templates/site_index.html:23
+#: templates/site_index.html:31
 msgid "Sign up <i>-it's free!-</i>"
 msgstr ""
 
-#: templates/site_index.html:23
+#: templates/site_index.html:31
 msgid "or"
 msgstr ""
 
-#: templates/site_index.html:23
+#: templates/site_index.html:31
 msgid "Log in"
 msgstr ""
 
-#: templates/site_index.html:38
+#: templates/site_index.html:51
 msgid "Features"
 msgstr ""
 
-#: templates/site_index.html:41
-msgid "Advanced debate system"
+#: templates/site_index.html:54
+msgid "Advanced Debate System"
 msgstr ""
 
-#: templates/site_index.html:42
+#: templates/site_index.html:55
 msgid ""
 "A new kind of debating system, based on a two-dimensional grid.\n"
-"            This will allow people to organize the ideas and also get "
-"conclusions for the debate.\n"
+"            This feature will help the people to organize thier ideas and "
+"also to get conclusions for the debate.\n"
 "            The usual threaded debate systems are very unconclusive and "
-"innefective. Let's start\n"
+"ineffective. Let's start\n"
 "            getting conclusions!"
 msgstr ""
 
-#: templates/site_index.html:49
-msgid "Automated reports"
+#: templates/site_index.html:62
+msgid "Automated Reports"
 msgstr ""
 
-#: templates/site_index.html:50
+#: templates/site_index.html:63
 msgid ""
 "After every participative process, e-cidadania will generate an automatic\n"
 "            report based on all the data gathered during the process. After "
@@ -338,11 +330,11 @@ msgid ""
 "            be available for all participants of the process."
 msgstr ""
 
-#: templates/site_index.html:56
-msgid "Proposals and voting"
+#: templates/site_index.html:69
+msgid "Proposals and Voting"
 msgstr ""
 
-#: templates/site_index.html:57
+#: templates/site_index.html:70
 msgid ""
 "e-cidadania provides a way to do a complete participative process, from\n"
 "            the debates, passing by proposals system, a secure voting "
@@ -350,44 +342,36 @@ msgid ""
 "            process at any point. e-cidadania will manage to follow it."
 msgstr ""
 
-#: templates/site_index.html:69
+#: templates/site_index.html:83
 msgid "Recent processes"
 msgstr ""
 
-#: templates/site_index.html:76
+#: templates/site_index.html:90
 msgid "Public"
 msgstr ""
 
-#: templates/site_index.html:78
+#: templates/site_index.html:92
 msgid "Private"
 msgstr ""
 
-#: templates/site_index.html:82
+#: templates/site_index.html:96
 msgid "There are no spaces."
 msgstr ""
 
-#: templates/site_index.html:92
+#: templates/site_index.html:106
 msgid "View all the spaces"
 msgstr ""
 
-#: templates/site_index.html:97
+#: templates/site_index.html:111
 msgid "Recent news"
 msgstr ""
 
-#: templates/site_index.html:102
+#: templates/site_index.html:116
 msgid "No public news."
 msgstr ""
 
-#: templates/site_index.html:108
+#: templates/site_index.html:122
 msgid "Most active"
-msgstr ""
-
-#: templates/site_index.html:117
-msgid "Share"
-msgstr ""
-
-#: templates/site_index.html:154
-msgid "Tweet"
 msgstr ""
 
 #: templates/space_intent.html:4
@@ -397,10 +381,6 @@ msgstr ""
 #: templates/space_intent.html:11
 msgid ""
 "If the administrator approves your request, you will be notified by email"
-msgstr ""
-
-#: templates/validate_intent.html:4
-msgid "Validate participation"
 msgstr ""
 
 #: templates/comments/approve.html:4

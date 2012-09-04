@@ -9,9 +9,6 @@
 
 {% block logo %}{% endblock %}
 {% block banner %}{% endblock %}
-{% block space %}
-    <a class="brand" href="{% url 'site-index' %}">e-cidadania {% if debug_mode %}<span style="font-size:0.5em;color:#F00;">debug mode v{{ version }} {{ status }}</span>{% endif %}</a>
-{% endblock %}
 {% endcache %}
 
 {% comment %}
@@ -51,10 +48,10 @@ about if the user is autheticated or not didn't work
 {% cache cache_timeout index_cache_block_3 LANGUAGE_CODE %}
 <div class="indexblock one">
     <div class="row indexrow">
-        <p style="font-size: 2em;line-height:30px;font-weight: bold;color:#FEFEFE;">{% trans "Features" %}</p>
+        <h2 style="line-height:30px;font-weight: bold;color:#FEFEFE;">{% trans "Features" %}</h2>
 
         <div class="span4" style="color:#FEFEFE; text-align: justify;">
-            <h3 style="color:#FEFEFE;">{% trans "Advanced Debate System" %}</h3>
+            <h4 style="color:#FEFEFE;">{% trans "Advanced Debate System" %}</h4>
             <p>{% blocktrans %}A new kind of debating system, based on a two-dimensional grid.
             This feature will help the people to organize thier ideas and also to get conclusions for the debate.
             The usual threaded debate systems are very unconclusive and ineffective. Let's start
@@ -62,14 +59,14 @@ about if the user is autheticated or not didn't work
         </div>
 
         <div class="span4" style="color:#FEFEFE; text-align: justify;">
-            <h3 style="color:#FEFEFE;">{% trans "Automated Reports" %}</h3>
+            <h4 style="color:#FEFEFE;">{% trans "Automated Reports" %}</h4>
             <p>{% blocktrans %}After every participative process, e-cidadania will generate an automatic
             report based on all the data gathered during the process. After it's generated it will
             be available for all participants of the process.{% endblocktrans %}</p>
         </div>
 
         <div class="span4" style="color:#FEFEFE; text-align: justify;">
-            <h3 style="color:#FEFEFE;">{% trans "Proposals and Voting" %}</h3>
+            <h4 style="color:#FEFEFE;">{% trans "Proposals and Voting" %}</h4>
             <p>{% blocktrans %}e-cidadania provides a way to do a complete participative process, from
             the debates, passing by proposals system, a secure voting system, and you can start your
             process at any point. e-cidadania will manage to follow it.{% endblocktrans %}</p>
@@ -83,7 +80,7 @@ about if the user is autheticated or not didn't work
     <div class="row indexrow">
 
         <div class="span4">
-            <h3>{% trans "Recent processes"%}</h3><br />
+            <h4>{% trans "Recent processes"%}</h4><br />
             <ul class="unstyled">
                 {% for space in spaces %}
                     <li><a href="{{ space.get_absolute_url }}" rel="popover"
@@ -111,7 +108,7 @@ about if the user is autheticated or not didn't work
         </div>
 
         <div class="span4">
-            <h3>{% trans "Recent news" %} <a href="/rss/"><img src="{{ STATIC_URL }}/assets/icons/rss16.png" alt="Feed RSS"/></a></h3>
+            <h4>{% trans "Recent news" %} <a href="/rss/"><img src="{{ STATIC_URL }}/assets/icons/rss16.png" alt="Feed RSS"/></a></h4>
             <ul class="unstyled">
                 {% for post in publication %}
                     <li><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></li>
@@ -122,7 +119,7 @@ about if the user is autheticated or not didn't work
         </div>
 
         <div class="span4">
-            <h3>{% trans "Most active" %}</h3>
+            <h4>{% trans "Most active" %}</h4>
             <p>List of most active spaces within e-cidadania. Not implemented yet.</p>
         </div>
     </div>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-28 11:27+0200\n"
+"POT-Creation-Date: 2012-09-04 15:48+0200\n"
 "PO-Revision-Date: 2012-01-05 10:57\n"
 "Last-Translator:   <a@a.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,8 +31,8 @@ msgid "Max: 200 characters"
 msgstr ""
 
 #: models.py:35
-msgid "Text"
-msgstr "Texto"
+msgid "Description"
+msgstr ""
 
 #: models.py:36
 msgid "Date"
@@ -75,6 +75,10 @@ msgid ""
 "the post"
 msgstr ""
 
+#: models.py:48
+msgid "Views"
+msgstr ""
+
 #: urls.py:28
 msgid "^add/$"
 msgstr ""
@@ -112,7 +116,7 @@ msgid "next"
 msgstr "siguiente"
 
 #: templates/news/news_list.html:64 templates/news/post_confirm_delete.html:37
-#: templates/news/post_form.html:180
+#: templates/news/post_form.html:186
 msgid "Go back"
 msgstr "Volver"
 
@@ -164,22 +168,25 @@ msgstr "Entradas relacionadas"
 msgid "Share this post"
 msgstr "Compartir esta entrada"
 
-#: templates/news/post_form.html:14 templates/news/post_form.html.py:44
+#: templates/news/post_form.html:14 templates/news/post_form.html.py:50
 msgid "Edit post"
 msgstr "Editar entrada"
 
-#: templates/news/post_form.html:16 templates/news/post_form.html.py:46
+#: templates/news/post_form.html:16 templates/news/post_form.html.py:52
 #, fuzzy
 msgid "Create new post"
 msgstr "Añadir nueva entrada"
 
-#: templates/news/post_form.html:118
+#: templates/news/post_form.html:124
 msgid "Staff members options"
 msgstr ""
 
-#: templates/news/post_form.html:181
+#: templates/news/post_form.html:187
 msgid "Publish"
 msgstr "Publicar"
+
+#~ msgid "Text"
+#~ msgstr "Texto"
 
 #~ msgid "Publish in index page"
 #~ msgstr "Publicar en el página principal"

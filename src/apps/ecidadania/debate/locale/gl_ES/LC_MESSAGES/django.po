@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: e-cidadania\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-28 11:27+0200\n"
+"POT-Creation-Date: 2012-09-04 15:48+0200\n"
 "PO-Revision-Date: 2012-05-24 08:16+0000\n"
 "Last-Translator: Oscar Carballal <oscar.carballal@cidadania.coop>\n"
 "Language-Team: Galician (Spain) (http://www.transifex.net/projects/p/"
@@ -19,11 +19,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: models.py:42 models.py:107
+#: models.py:42 models.py:111
 msgid "Title"
 msgstr "Título"
 
-#: models.py:43 templates/debate/debate_view.html:119
+#: models.py:43
 msgid "Description"
 msgstr "Descrición"
 
@@ -31,7 +31,7 @@ msgstr "Descrición"
 msgid "Theme"
 msgstr ""
 
-#: models.py:47 models.py:110
+#: models.py:47 models.py:114
 msgid "Date created"
 msgstr "Data de creación"
 
@@ -47,15 +47,15 @@ msgstr "Data de comezo"
 msgid "End date"
 msgstr "Data de fin"
 
-#: models.py:76 models.py:89
+#: models.py:80 models.py:93
 msgid "Criteria"
 msgstr "Criterio"
 
-#: models.py:108
+#: models.py:112
 msgid "Message"
 msgstr "Mensaxe"
 
-#: models.py:113
+#: models.py:117
 msgid "Last modification time"
 msgstr "Hora da última modificación"
 
@@ -124,7 +124,7 @@ msgstr "Eliminar fila"
 msgid "Add row"
 msgstr "Engadir fila"
 
-#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:149
+#: templates/debate/debate_add.html:105 templates/debate/debate_view.html:104
 msgid "Add new note"
 msgstr "Engadir nova nota"
 
@@ -138,15 +138,15 @@ msgid "Other debate data"
 msgstr "Outros datos do debate"
 
 #: templates/debate/debate_add.html:215
-#: templates/debate/debate_add_simple.html:120
-#: templates/debate/debate_view.html:133
-msgid "Save"
-msgstr "Gardar"
-
-#: templates/debate/debate_add.html:216
 #: templates/debate/debate_add_simple.html:121
 msgid "Cancel"
 msgstr "Cancelar"
+
+#: templates/debate/debate_add.html:216
+#: templates/debate/debate_add_simple.html:120
+#: templates/debate/debate_view.html:140
+msgid "Save"
+msgstr "Gardar"
 
 #: templates/debate/debate_list.html:7
 msgid "Debates in "
@@ -229,25 +229,21 @@ msgstr "Borrar unha nota"
 msgid "View"
 msgstr "Ver"
 
-#: templates/debate/debate_view.html:84
+#: templates/debate/debate_view.html:85
 msgid "Edit"
 msgstr "Editar"
 
-#: templates/debate/debate_view.html:103
+#: templates/debate/debate_view.html:110
 msgid "Edit note"
 msgstr "Editar nota"
 
-#: templates/debate/debate_view.html:109
+#: templates/debate/debate_view.html:116
 msgid "Note title"
 msgstr "Título da nota"
 
-#: templates/debate/debate_view.html:113
+#: templates/debate/debate_view.html:120
 msgid "100 characters"
 msgstr "100 caracteres"
-
-#: templates/debate/debate_view.html:124
-msgid "Long description of the note"
-msgstr ""
 
 #~ msgid "View note"
 #~ msgstr "Ver a nota"
