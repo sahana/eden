@@ -85,7 +85,7 @@ about if the user is autheticated or not didn't work
                 {% for space in spaces %}
                     <li><a href="{{ space.get_absolute_url }}" rel="popover"
                            data-content="{{ space.description|removetags:'p'|safe }}"
-                           data-original-title="{{ space.name }}">{{ space.name }}</a>
+                           data-title="{{ space.name }}" data-trigger="hover">{{ space.name }}</a>
                         {% if space.public %}
                             <span class="label label-success">{% trans "Public" %}</span>
                         {% else %}
@@ -98,7 +98,8 @@ about if the user is autheticated or not didn't work
                 <script>
                     $(function () {
                         $("a[rel=popover]").popover({
-                            offset: 10
+                            offset: 10,
+                            trigger: 'hover'
                         })
                     })
                 </script>
