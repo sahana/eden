@@ -60,8 +60,8 @@ MEDIA_ROOT = cwd + '/uploads/'
 MEDIA_URL = '/uploads/'
 STATIC_ROOT = cwd + '/static/'
 #print "Static root: %s" % STATIC_ROOT
-STATIC_URL = '/static'
-ADMIN_MEDIA_PREFIX = STATIC_URL + '/grappelli/'
+STATIC_URL = '/static/'
+ADMIN_MEDIA_PREFIX = STATIC_URL
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -115,22 +115,13 @@ TEMPLATE_DIRS = (
     (cwd + '/templates'),
 )
 
-# The administration panel link is hardcoded because we can't handle other
-# way of doing it without messing with grappelli or django-admin. The extra HTML
-# tags bring the title a dropdown menu functionality'
-GRAPPELLI_ADMIN_TITLE = "<li class='user-options-container collapse closed'> \
-<a href='javascript://' class='user-options-handler collapse-handler'> \
-e-cidadania %s</a><ul class='user-options'><li><a href='/' \
-style='padding:10px;'>Back to site</a></li></ul></li>" % (__version__)
-GRAPPELLI_ADMIN_URL = '/admin'
-GRAPPELLI_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
-
 # We separate the applications so we can manage them through scripts
 # Please do not touch this unless you know very well what you're doing
 
 DJANGO_APPS = (
     # This list is from the builtin applications in django that are used in
     # e-cidadania
+    'core.prismriver',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -138,8 +129,6 @@ DJANGO_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.comments',
-    'grappelli.dashboard',
-    'grappelli',
     'django.contrib.admin',
     'django.contrib.comments',
 )
