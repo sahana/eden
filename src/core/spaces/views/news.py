@@ -24,7 +24,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 
 from core.spaces.models import Space
-from apps.news.models import Post
+from apps.ecidadania.news.models import Post
 from core.permissions import has_space_permission, has_all_permissions
 
 class ListPosts(ListView):
