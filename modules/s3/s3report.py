@@ -165,13 +165,10 @@ class S3Report(S3CRUD):
             # We only compare to the session if POSTing to prevent cross-site
             # scripting.
             if r.http == "POST" and \
-                form.accepts(form_values,
-                             session,
-                             formname="report",
-                             onvalidation=self._process_report_options) or \
-                form.accepts(form_values,
-                             formname="report",
-                             onvalidation=self._process_report_options):
+               form.accepts(form_values,
+                            session,
+                            formname="report",
+                            onvalidation=self._process_report_options):
 
                 # The form is valid so save the form values into the session
                 if "report_options" not in s3:

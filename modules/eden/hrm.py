@@ -4393,7 +4393,8 @@ def hrm_training_event_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if r.interactive and r.component:
+        if r.component and \
+           (r.interactive or r.extension == "aaData"):
             T = current.T
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(
@@ -4462,8 +4463,9 @@ def hrm_training_controller():
         redirect(URL(f="index"))
 
     def prep(r):
-        if r.interactive:
-            # Suitable liset_fields
+        if r.interactive or \
+           r.extension == "aaData":
+            # Suitable list_fields
             T = current.T
             list_fields = ["course_id",
                            "person_id",

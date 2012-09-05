@@ -152,7 +152,7 @@ def project():
                             crud_strings["project_human_resource"].update(
                                 subtitle_create = T("Add Staff Member to Project")
                                 )
-                            
+
                         elif group == "volunteer":
                             group = 2
                             table.human_resource_id.label = T("Volunteer")

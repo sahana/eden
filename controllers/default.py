@@ -192,19 +192,20 @@ def index():
                              for opt in facility_list]
             if facility_list:
                 manage_facility_box = DIV(H3(T("Manage Your Facilities")),
-                                    SELECT(_id = "manage_facility_select",
-                                            _style = "max-width:400px;",
-                                            *facility_opts
+                                          SELECT(_id = "manage_facility_select",
+                                                 _style = "max-width:400px;",
+                                                 *facility_opts
+                                                 ),
+                                          A(T("Go"),
+                                            _href = URL(c="default", f="site",
+                                                        args=[facility_list[0][0]]),
+                                            #_disabled = "disabled",
+                                            _id = "manage_facility_btn",
+                                            _class = "action-btn"
                                             ),
-                                    A(T("Go"),
-                                        _href = URL(c="default", f="site",
-                                                    args=[facility_list[0][0]]),
-                                        #_disabled = "disabled",
-                                        _id = "manage_facility_btn",
-                                        _class = "action-btn"
-                                        ),
-                                    _id = "manage_facility_box",
-                                    _class = "menu_box fleft")
+                                          _id = "manage_facility_box",
+                                          _class = "menu_box fleft"
+                                          )
                 s3.jquery_ready.append(
 '''$('#manage_facility_select').change(function(){
  $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
@@ -212,17 +213,17 @@ def index():
             else:
                 manage_facility_box = DIV()
 
-        org_box = DIV( H3(T("Organizations")),
-                       A(T("Add Organization"),
-                          _href = URL(c="org", f="organisation",
-                                      args=["create"]),
-                          _id = "add-btn",
-                          _class = "action-btn",
-                          _style = "margin-right: 10px;"),
-                        org_items,
-                        _id = "org_box",
-                        _class = "menu_box fleft"
-                        )
+        org_box = DIV(H3(T("Organizations")),
+                      A(T("Add Organization"),
+                        _href = URL(c="org", f="organisation",
+                                    args=["create"]),
+                        _id = "add-btn",
+                        _class = "action-btn",
+                        _style = "margin-right: 10px;"),
+                      org_items,
+                      _id = "org_box",
+                      _class = "menu_box fleft"
+                      )
     else:
         manage_facility_box = ""
         org_box = ""
@@ -332,16 +333,19 @@ def organisation():
     """
         Function to handle pagination for the org list on the homepage
     """
+
     from s3.s3utils import S3DataTable
 
     resource = s3db.resource("org_organisation")
+    totalrows = resource.count()
     table = resource.table
 
-    list_fields = ["id","name"]
-    limit = int(current.request.get_vars["iDisplayLength"]) if request.extension == "aaData" else 1
+    list_fields = ["id", "name"]
+    limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aaData" else 1
     rfields = resource.resolve_selectors(list_fields)[0]
-    (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
+    (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
     resource.add_filter(filter)
+    filteredrows = resource.count()
     if isinstance(orderby, bool):
         orderby = table.name
     rows = resource.select(list_fields,
@@ -355,14 +359,16 @@ def organisation():
                             )
     dt = S3DataTable(rfields, data)
     dt.defaultActionButtons(resource)
-    response.s3.no_formats = True
+    s3.no_formats = True
     if request.extension == "html":
-        items = dt.html("org_list_1",
+        items = dt.html(totalrows,
+                        filteredrows,
+                        "org_list_1",
                         dt_displayLength=10,
                         dt_ajax_url=URL(c="default",
                                         f="organisation",
                                         extension="aaData",
-                                        vars={"id":"org_list_1"},
+                                        vars={"id": "org_list_1"},
                                         ),
                        )
     elif request.extension.lower() == "aadata":
@@ -371,31 +377,13 @@ def organisation():
             echo = int(request.vars.sEcho)
         else:
             echo = None
-        items = dt.json("supply_list_1",
-                            echo,
-                            limit,
-                            limit,
-                            )
+        items = dt.json(totalrows,
+                        filteredrows,
+                        "supply_list_1",
+                        echo)
     else:
-        raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+        raise HTTP(501, s3mgr.ERROR.BAD_FORMAT)
     return items
-#    table = db.org_organisation
-#    table.id.label = T("Organization")
-#    table.id.represent = organisation_represent
-#
-#    s3.dataTable_sPaginationType = "two_button"
-#    s3.dataTable_sDom = "rtip" #"frtip" - filter broken
-#    s3.dataTable_iDisplayLength = 25
-#
-#    s3db.configure("org_organisation",
-#                    listadd = False,
-#                    addbtn = True,
-#                    super_entity = db.pr_pentity,
-#                    linkto = "/%s/org/organisation/%s" % (appname,
-#                                                          "%s"),
-#                    list_fields = ["id",])
-#
-#    return s3_rest_controller("org", "organisation")
 
 # -----------------------------------------------------------------------------
 def site():
