@@ -24,12 +24,19 @@ access to '/spaces/'.
 from django.conf.urls import *
 from django.utils.translation import ugettext_lazy as _
 
+from core.spaces.views.spaces import GoToSpace, ViewSpaceIndex, ListSpaces, \
+                                    DeleteSpace
+from core.spaces.views.documents import ListDocs, DeleteDocument, \
+                                    AddDocument, EditDocument
+from core.spaces.views.events import ListEvents, DeleteEvent, ViewEvent, \
+                                    AddEvent, EditEvent
+                                    
 from core.spaces.views import GoToSpace, ViewSpaceIndex, ListSpaces,\
-                                          DeleteSpace, ListDocs, DeleteDocument, \
-                                          ListEvents, DeleteEvent, ViewEvent, \
-                                          ListPosts, SpaceFeed, AddDocument, \
-                                          EditDocument, AddEvent, EditEvent, \
-                                          ValidateIntent, EditRole
+                            DeleteSpace, ListDocs, DeleteDocument, \
+                            ListEvents, DeleteEvent, ViewEvent, \
+                            ListPosts, SpaceFeed, AddDocument, \
+                            EditDocument, AddEvent, EditEvent, \
+                            ValidateIntent, EditRole
 
 # NOTICE: Don't change the order of urlpatterns or it will probably break.
 
@@ -56,7 +63,7 @@ urlpatterns = patterns('core.spaces.views',
 )
 
 # Document URLs
-urlpatterns += patterns('core.spaces.views',
+urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/docs/add/$'), AddDocument.as_view(), name='add-document'),
 
@@ -69,7 +76,7 @@ urlpatterns += patterns('core.spaces.views',
 )
 
 # Event URLs
-urlpatterns += patterns('core.spaces.views',
+urlpatterns += patterns('',
 
     url(_(r'^(?P<space_url>\w+)/event/add/$'), AddEvent.as_view(), name='add-event'),
 

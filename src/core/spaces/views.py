@@ -137,6 +137,9 @@ def add_intent(request, space_url):
                   from_email="noreply@ecidadania.org",
                   recipient_list=[space.author.email])
 
+        # Send a notification to all the admins in that space
+        #send_mass_mail()
+
     return render_to_response('space_intent.html', \
             {'space_name': space.name, 'heading': heading}, \
             context_instance=RequestContext(request))
