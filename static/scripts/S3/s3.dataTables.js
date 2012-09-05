@@ -172,7 +172,14 @@ $(document).ready(function() {
 
     for (var t=0; t < tableCnt; t++) {
         // First get the config details for each table
-        aoTableConfig[t] = jQuery.parseJSON($(tableId[t] + '_configurations').val());
+        var config_id = tableId[t] + '_configurations'
+        if ($(config_id).length > 0) {
+            aoTableConfig[t] = jQuery.parseJSON($(config_id).val());
+        } else {
+            // This table is not in the page (maybe empty)
+            aoTableConfig[t] = null;
+            continue;
+        }
         sDom[t] = aoTableConfig[t]['sDom'];
         sPaginationType[t] = aoTableConfig[t]['paginationType'];
 
@@ -206,7 +213,12 @@ $(document).ready(function() {
                           ];
 
 
-        cache[t] = { iCacheLower: -1 };
+        if ($(tableId[t] + '_dataTable_cache').length > 0) {
+            cache[t] = jQuery.parseJSON($(tableId[t] + '_dataTable_cache').val());
+        } else {
+            cache[t] = { iCacheLower: -1 };
+        }
+
         if (aoTableConfig[t]['group'].length > 0) {
             groupList = aoTableConfig[t]['group'];
             var gList = [];
@@ -294,6 +306,14 @@ $(document).ready(function() {
                 var iRequestEnd = iRequestStart + iRequestLength;
                 var oCache = cache[t];
                 oCache.iDisplayStart = iRequestStart;
+                // Prevent the Ajax lookup of the last page if we already know
+                // that there are no more records than we have in the cache.
+                if (oCache.hasOwnProperty('lastJson') &&
+                    oCache.lastJson.hasOwnProperty('iTotalDisplayRecords')) {
+                    if (oCache.lastJson.iTotalDisplayRecords < iRequestEnd) {
+                        iRequestEnd = oCache.lastJson.iTotalDisplayRecords;
+                    }
+                }
                 // outside pipeline?
                 if ( oCache.iCacheUpper !== -1 && /* If Display All oCache.iCacheUpper == -1 */
                      ( iRequestLength == -1 || oCache.iCacheLower < 0 || iRequestStart < oCache.iCacheLower || iRequestEnd > oCache.iCacheUpper )
@@ -556,77 +576,84 @@ $(document).ready(function() {
     for (var tcnt=0; tcnt < tableCnt; tcnt++) {
       initDataTable(myList[tcnt], tcnt, false);
       // Delay in milliseconds to prevent too many AJAX calls
-      oDataTable[tcnt].fnSetFilteringDelay(450);
+      if (null !== oDataTable[tcnt]) {
+        oDataTable[tcnt].fnSetFilteringDelay(450);
+      }
     } // end of loop through for each table
 
     function initDataTable(oTable, t, bReplace) {
-        config = jQuery.parseJSON($(tableId[t] + '_configurations').val());
-        aoTableConfig[t]["groupTotals"] = config["groupTotals"];
-        oDataTable[t] = $(oTable).dataTable({
-            'bDestroy': bReplace,
-            'sDom': sDom[t],
-            'sPaginationType': sPaginationType[t],
-            'bServerSide': bServerSide,
-            'bAutoWidth' : false,
-            'bFilter': aoTableConfig[t]['bFilter'] == 'true',
-            'bSort': true,
-            'bDeferRender': true,
-            'aaSorting': aoTableConfig[t]['aaSort'],
-            "aaSortingFixed": aoTableConfig[t]['group'],
-            "aoColumnDefs": [ oGroupColumns[t] ],
-            'aoColumns': ColumnSettings[t],
-            'iDisplayLength': aoTableConfig[t]['displayLength'],
-            'aLengthMenu': [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
-            'bProcessing': bProcessing,
-            'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
-            'fnServerData': fnAjaxCallback[t],
-            'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
-                $('#modeSelectionAll').on('click', setModeSelectionAll);
-                $('#modeSelectionNone').on('click', setModeSelectionNone);
-            },
-            'fnRowCallback': function( nRow, aData, iDisplayIndex ) {
-                // Extract the id # from the link
-                t = tableIdReverse(this.selector);
-                var actionCol = aoTableConfig[t]['actionCol'];
-                var re = />(.*)</i;
-                var result = re.exec(aData[actionCol]);
-                if (result == null) {
-                    var id = aData[actionCol];
-                } else {
-                    var id = result[1];
-                }
-                // Set the action buttons in the id column for each row
-                if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
-                    var Buttons = '';
-                    if (aoTableConfig[t]['rowActions'].length > 0) {
-                        var Actions = aoTableConfig[t]['rowActions'];
-                        // Loop through each action to build the button
-                        for (var i=0; i < Actions.length; i++) {
+        var config_id = tableId[t] + '_configurations'
+        if ($(config_id).length > 0) {
+            config = jQuery.parseJSON($(config_id).val());
+        } else {
+            oDataTable[t] = null;
+            return;
+        }
+      aoTableConfig[t]["groupTotals"] = config["groupTotals"];
+      oDataTable[t] = $(oTable).dataTable({
+        'bDestroy': bReplace,
+        'sDom': sDom[t],
+        'sPaginationType': sPaginationType[t],
+        'bServerSide': bServerSide,
+        'bAutoWidth' : false,
+        'bFilter': aoTableConfig[t]['bFilter'] == 'true',
+        'bSort': true,
+        'bDeferRender': true,
+        'aaSorting': aoTableConfig[t]['aaSort'],
+        "aaSortingFixed": aoTableConfig[t]['group'],
+        "aoColumnDefs": [ oGroupColumns[t] ],
+        'aoColumns': ColumnSettings[t],
+        'iDisplayLength': aoTableConfig[t]['displayLength'],
+        'aLengthMenu': [[ 25, 50, -1], [ 25, 50, S3.i18n.all]],
+        'bProcessing': bProcessing,
+        'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
+        'fnServerData': fnAjaxCallback[t],
+        'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
+            $('#modeSelectionAll').on('click', setModeSelectionAll);
+            $('#modeSelectionNone').on('click', setModeSelectionNone);
+        },
+        'fnRowCallback': function( nRow, aData, iDisplayIndex ) {
+            // Extract the id # from the link
+            t = tableIdReverse(this.selector);
+            var actionCol = aoTableConfig[t]['actionCol'];
+            var re = />(.*)</i;
+            var result = re.exec(aData[actionCol]);
+            if (result == null) {
+                var id = aData[actionCol];
+            } else {
+                var id = result[1];
+            }
+            // Set the action buttons in the id column for each row
+            if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
+                var Buttons = '';
+                if (aoTableConfig[t]['rowActions'].length > 0) {
+                    var Actions = aoTableConfig[t]['rowActions'];
+                    // Loop through each action to build the button
+                    for (var i=0; i < Actions.length; i++) {
 
-                            $('th:eq(0)').css( { 'width': 'auto' } );
+                        $('th:eq(0)').css( { 'width': 'auto' } );
 
-                            // Check if action is restricted to a subset of records
-                            if ('restrict' in Actions[i]) {
-                                if (inList(id, Actions[i].restrict) == -1) {
-                                    continue;
-                                }
+                        // Check if action is restricted to a subset of records
+                        if ('restrict' in Actions[i]) {
+                            if (inList(id, Actions[i].restrict) == -1) {
+                                continue;
                             }
-                            var c = Actions[i]._class;
-                            var label = S3.Utf8.decode(Actions[i].label);
-                            re = /%5Bid%5D/g;
-                            if (Actions[i]._onclick) {
-                                var oc = Actions[i]._onclick.replace(re, id);
-                                Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
-                            } else if (Actions[i]._jqclick) {
-                                Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
-                                fnActionCallBacks[t].push([id, S3ActionCallBack]);
-                            }else {
-                                if (Actions[i].icon) {
-                                    label = '<img src="'+Actions[i].icon+'" alt="'+label+'" title="'+label+'">';
-                                }
-                                var url = Actions[i].url.replace(re, id);
-                                Buttons = Buttons + '<a class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
+                        }
+                        var c = Actions[i]._class;
+                        var label = S3.Utf8.decode(Actions[i].label);
+                        re = /%5Bid%5D/g;
+                        if (Actions[i]._onclick) {
+                            var oc = Actions[i]._onclick.replace(re, id);
+                            Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
+                        } else if (Actions[i]._jqclick) {
+                            Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
+                            fnActionCallBacks[t].push([id, S3ActionCallBack]);
+                        }else {
+                            if (Actions[i].icon) {
+                                label = '<img src="'+Actions[i].icon+'" alt="'+label+'" title="'+label+'">';
                             }
+                            var url = Actions[i].url.replace(re, id);
+                            Buttons = Buttons + '<a class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
                         }
                     }
                     // Put the actions buttons in the actionCol
@@ -655,26 +682,29 @@ $(document).ready(function() {
                         gList.push(groupList[gCnt][0]);
                     }
                 }
-                for (var i=0; i < aData.length; i++) {
-                    // Ignore any columns used for groups
-                    if ($.inArray(i, gList) != -1) { continue; }
-                    // Ignore if the data starts with an html open tag
-                    if (aData[i][0] == '<') {
-                        tdposn++;
-                        continue;
+                tdposn++; // increment the count of the td tags (don't do this for groups)
+            }
+            return nRow;
+        }, // end of fnRowCallback
+        'fnDrawCallback': function(oSettings) {
+            table = '#' + oSettings.nTable.id;
+            t = tableIdReverse(table);
+            bindButtons(t);
+            if ( oSettings.aiDisplay.length == 0 ) {
+                return;
+            }
+            if (aoTableConfig[t]['group'].length > 0) {
+                groupList = aoTableConfig[t]['group'];
+                for (var gCnt=0; gCnt<groupList.length; gCnt++) {
+                    group = groupList[gCnt];
+                    groupTotals = [];
+                    if (aoTableConfig[t]['groupTotals'].length > gCnt) {
+                        groupTotals = aoTableConfig[t]['groupTotals'][gCnt];
                     }
-                    if (aData[i].length > textDisplay[t][0]) {
-                        uniqueid = '_' + t + iDisplayIndex + i;
-                        icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                        display = '<div id="display'+uniqueid+'">' + icon + aData[i].substr(0,textDisplay[t][1]) + "&hellip;</div>";
-                        icon = '<a href="javascript:toggleDiv(\''+uniqueid+'\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
-                        display += '<div  style="display:none" id="full'+uniqueid+'">' + icon + aData[i] + "</div>";
-                        $('td:eq(' + tdposn + ')', nRow).html( display );
-                    }
-                    tdposn++; // increment the count of the td tags (don't do this for groups)
+                    buildGroups(oSettings, t, group[0], groupTotals, gCnt + 1);
                 }
                 return nRow;
-            }, // end of fnRowCallback
+            }}, // end of fnRowCallback
             'fnDrawCallback': function(oSettings) {
                 table = '#' + oSettings.nTable.id;
                 t = tableIdReverse(table);

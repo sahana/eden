@@ -1447,7 +1447,7 @@ class S3Search(S3CRUD):
             items = S3DataTable.htmlConfig(items,
                                            "list",
                                            sortby, # order by
-                                           filter, # the filter string
+                                           #filter, # the filter string
                                            None, # the rfields
                                            **attr
                                            )
