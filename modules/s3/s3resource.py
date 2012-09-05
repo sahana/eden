@@ -63,7 +63,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable
 from s3validators import IS_ONE_OF
 
 DEBUG = False
@@ -1086,48 +1086,51 @@ class S3Resource(object):
                   limit=None,
                   left=None,
                   orderby=None,
-                  distinct=False,
-                  no_ids=False,
-                  format=None):
+                  distinct=False):
         """
             Generate a data table of this resource
 
-            @todo: complete implementation
+            @param fields: list of fields to include (field selector strings)
+            @param start: index of the first record to include
+            @param limit: maximum number of records to include
+            @param left: additional left joins for DB query
+            @param orderby: orderby for DB query
+            @param distinct: distinct-flag for DB query
+
+            @returns: an S3DataTable instance
         """
 
-        raise NotImplementedError
-
-        table = self.table
-
+        # Choose fields
         if fields is None:
             fields = [f.name for f in self.readable_fields()]
         selectors = list(fields)
-        if table._id.name not in selectors and not no_ids:
+
+        # Automatically include the record ID
+        table = self.table
+        if table._id.name not in selectors:
             fields.insert(0, table._id.name)
             selectors.insert(0, table._id.name)
 
-        rows = self.select(fields=selectors,
-                           start=start,
-                           limit=limit,
-                           left=left,
-                           orderby=orderby,
-                           distinct=distinct)
-
+        # Resolve the selectors
         rfields = self.resolve_selectors(fields,
                                          skip_components=False)[0]
 
-        if format == "json":
-            result = self.extract(rows, rfields)
-            output = result
-        elif format == "aadata":
-            result = self.extract(rows, rfields)
-            output = result
-        else:
-            # Default to HTML representation
-            result = self.extract(rows, rfields, represent=True)
-            output = result
+        # Retrieve the rows
+        rows = self.select(fields=selectors,
+                           start=start,
+                           limit=limit,
+                           orderby=orderby,
+                           left=left,
+                           distinct=distinct)
 
-        return result
+        # Generate the data table
+        if rows:
+            data = self.extract(rows,
+                                selectors,
+                                represent=True)
+            return S3DataTable(rfields, data)
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def pivottable(self, rows, cols, layers):
@@ -2921,7 +2924,6 @@ class S3Resource(object):
         """
 
         pkey = self.table._id
-        multiple = [c._alias for c in self.components.values() if c.multiple]
 
         rfields = []
         for i in fields:
@@ -2958,7 +2960,7 @@ class S3Resource(object):
                 idx = ids.index(_id)
                 data = records[idx]
                 for rfield in rfields:
-                    if rfield.tname in multiple:
+                    if rfield.tname != self.tablename and rfield.distinct:
                         key = rfield.colname
                         try:
                             value = rfield.extract(row, represent=represent)

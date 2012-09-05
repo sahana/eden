@@ -337,6 +337,7 @@ def organisation():
     from s3.s3utils import S3DataTable
 
     resource = s3db.resource("org_organisation")
+    totalrows = resource.count()
     table = resource.table
 
     list_fields = ["id", "name"]
@@ -344,6 +345,7 @@ def organisation():
     rfields = resource.resolve_selectors(list_fields)[0]
     (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
     resource.add_filter(filter)
+    filteredrows = resource.count()
     if isinstance(orderby, bool):
         orderby = table.name
     rows = resource.select(list_fields,
@@ -359,7 +361,9 @@ def organisation():
     dt.defaultActionButtons(resource)
     s3.no_formats = True
     if request.extension == "html":
-        items = dt.html("org_list_1",
+        items = dt.html(totalrows,
+                        filteredrows,
+                        "org_list_1",
                         dt_displayLength=10,
                         dt_ajax_url=URL(c="default",
                                         f="organisation",
@@ -373,11 +377,10 @@ def organisation():
             echo = int(request.vars.sEcho)
         else:
             echo = None
-        items = dt.json("supply_list_1",
-                        echo,
-                        limit,
-                        limit,
-                        )
+        items = dt.json(totalrows,
+                        filteredrows,
+                        "supply_list_1",
+                        echo)
     else:
         raise HTTP(501, s3mgr.ERROR.BAD_FORMAT)
     return items

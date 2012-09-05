@@ -833,31 +833,23 @@ class S3CRUD(S3Method):
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
+        left = []
+        distinct = self.method == "search"
+
         if r.interactive:
 
-            left = []
-
-            # SSPag?
-            if not s3.no_sspag:
-                limit = 1
-                session.s3.filter = vars
-                if orderby is None:
-                    # Default initial sorting
-                    scol = len(list_fields) > 1 and "1" or "0"
-                    vars.update(iSortingCols="1",
-                                iSortCol_0=scol,
-                                sSortDir_0="asc")
-                    orderby = self.ssp_orderby(resource, list_fields, left=left)
-                    del vars["iSortingCols"]
-                    del vars["iSortCol_0"]
-                    del vars["sSortDir_0"]
-                if r.method == "search" and not orderby:
-                    orderby = fields[0]
-
-            # Custom view
+            # View
             response.view = self._view(r, "list.html")
 
+            # Page title
             crud_string = self.crud_string
+            if r.component:
+                title = crud_string(r.tablename, "title_display")
+            else:
+                title = crud_string(self.tablename, "title_list")
+            output["title"] = title
+
+            # Add button and form
             if insertable:
                 if listadd:
                     # Add a hidden add-form and a button to activate it
@@ -881,91 +873,77 @@ class S3CRUD(S3Method):
                     if buttons:
                         output["buttons"] = buttons
 
-            # Get the list
-            items = resource.sqltable(fields=list_fields,
-                                      left=left,
-                                      start=start,
-                                      limit=limit,
-                                      orderby=orderby,
-                                      linkto=linkto,
-                                      download_url=self.download_url,
-                                      format=representation)
+            # Count rows
+            totalrows = resource.count()
+            displayrows = totalrows
 
-            # In SSPag, send the first 20 records together with the initial
-            # response (avoids the dataTables Ajax request unless the user
-            # tries nagivating around)
-            if not s3.no_sspag and items:
-                totalrows = resource.count()
-                if totalrows:
-                    if s3.dataTable_iDisplayLength:
-                        limit = 2 * s3.dataTable_iDisplayLength
-                    else:
-                        limit = 50
-                    sqltable =  resource.sqltable(left=left,
-                                                  fields=list_fields,
-                                                  start=0,
-                                                  limit=limit,
-                                                  orderby=orderby,
-                                                  linkto=linkto,
-                                                  download_url=self.download_url,
-                                                  as_page=True,
-                                                  format=representation)
-                    aadata = dict(aaData = sqltable or [])
-                    aadata.update(iTotalRecords=totalrows,
-                                  iTotalDisplayRecords=totalrows)
-                    response.aadata = jsons(aadata)
-                    s3.start = 0
-                    s3.limit = limit
-
-            # Title and subtitle
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
+            # How many records per page?
+            if s3.dataTable_iDisplayLength:
+                display_length = s3.dataTable_iDisplayLength
             else:
-                title = crud_string(self.tablename, "title_list")
-            #subtitle = crud_string(self.tablename, "subtitle_list")
-            output["title"] = title
-            #output["subtitle"] = subtitle
+                display_length = 25
+
+            # Server-side pagination?
+            if not s3.no_sspag:
+                dt_pagination = "true"
+                if limit is None:
+                    limit = 2 * display_length
+                session.s3.filter = vars
+                if orderby is None:
+                    # Default initial sorting
+                    scol = len(list_fields) > 1 and "1" or "0"
+                    vars.update(iSortingCols="1",
+                                iSortCol_0=scol,
+                                sSortDir_0="asc")
+                    orderby = self.ssp_orderby(resource,
+                                               list_fields,
+                                               left=left)
+                    del vars["iSortingCols"]
+                    del vars["iSortCol_0"]
+                    del vars["sSortDir_0"]
+                if r.method == "search" and not orderby:
+                    orderby = fields[0]
+            else:
+                dt_pagination = "false"
+
+            # Get the data table
+            dt = resource.datatable(fields=list_fields,
+                                    start=start,
+                                    limit=limit,
+                                    left=left,
+                                    orderby=orderby,
+                                    distinct=distinct)
 
             # Empty table - or just no match?
-            if not items:
-                if "deleted" in self.table:
-                    available_records = current.db(self.table.deleted == False)
+            if dt is None:
+
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
                 else:
-                    available_records = current.db(self.table._id > 0)
-                #if available_records.count():
-                # This is faster:
-                if available_records.select(self.table._id,
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
                                             limitby=(0, 1)).first():
-                    items = DIV(crud_string(self.tablename, "msg_no_match"),
-                                _class="empty")
+                    datatable = DIV(crud_string(tablename, "msg_no_match"),
+                                    _class="empty")
                 else:
-                    items = DIV(crud_string(self.tablename, "msg_list_empty"),
-                                _class="empty")
+                    datatable = DIV(crud_string(tablename, "msg_list_empty"),
+                                    _class="empty")
+
                 s3.no_formats = True
+
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    #del output["subtitle"]
-                    items = ""
+                    datatable = ""
+            else:
+                datatable = dt.html(totalrows, displayrows, "list",
+                                    dt_pagination=dt_pagination,
+                                    dt_displayLength=display_length)
 
-            # Update output
-            if not s3.datatable_ajax_source:
-                s3.datatable_ajax_source = str(r.url(representation = "aaData"))
-            attr = S3DataTable.getConfigData()
-            items = S3DataTable.htmlConfig(items,
-                                           "list",
-                                           sortby, # order by
-                                           "", # the filter string
-                                           None, # the rfields
-                                           **attr
-                                           )
-            output["items"] = items
-            output["sortby"] = sortby
+            # Add items to output
+            output["items"] = datatable
 
-        elif representation == "aadata":
-
-            left = []
-            distinct = r.method == "search"
+        elif r.representation == "aadata":
 
             # Get the master query for SSPag
             # FixMe: don't use session to store filters; also causes resource
@@ -974,9 +952,10 @@ class S3CRUD(S3Method):
                 resource.build_query(filter=s3.filter,
                                      vars=session.s3.filter)
 
-            displayrows = totalrows = resource.count(distinct=distinct)
+            # Count the rows
+            totalrows = displayrows = resource.count()
 
-            # SSPag dynamic filter?
+            # Apply data table filter (searchbox)
             if vars.sSearch:
                 squery = self.ssp_filter(table,
                                          fields=list_fields,
@@ -986,7 +965,7 @@ class S3CRUD(S3Method):
                     displayrows = resource.count(left=left,
                                                  distinct=distinct)
 
-            # SSPag sorting
+            # Apply datatable sorting
             if vars.iSortingCols:
                 orderby = self.ssp_orderby(resource, list_fields, left=left)
             if r.method == "search" and not orderby:
@@ -994,27 +973,29 @@ class S3CRUD(S3Method):
             if orderby is None:
                 orderby = _config("orderby", None)
 
+            # Get a data table
+            dt = resource.datatable(fields=list_fields,
+                                    start=start,
+                                    limit=limit,
+                                    left=left,
+                                    orderby=orderby,
+                                    distinct=distinct)
+
             # Echo
             sEcho = int(vars.sEcho or 0)
 
-            # Get the list
-            items = resource.sqltable(fields=list_fields,
-                                      left=left,
-                                      distinct=distinct,
-                                      start=start,
-                                      limit=limit,
-                                      orderby=orderby,
-                                      linkto=linkto,
-                                      download_url=self.download_url,
-                                      as_page=True,
-                                      format=representation) or []
-
-            result = dict(sEcho = sEcho,
-                          iTotalRecords = totalrows,
-                          iTotalDisplayRecords = displayrows,
-                          aaData = items)
-
-            output = jsons(result)
+            # Representation
+            if dt is not None:
+                output = dt.json(totalrows,
+                                 displayrows,
+                                 "list",
+                                 sEcho)
+            else:
+                output = '{"iTotalRecords": %s, ' \
+                         '"iTotalDisplayRecords": 0,' \
+                         '"dataTable_id": "list", ' \
+                         '"sEcho": %s, ' \
+                         '"aaData": []}' % (totalrows, sEcho)
 
         elif representation == "plain":
             if resource.count() == 1:
