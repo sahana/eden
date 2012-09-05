@@ -2580,7 +2580,9 @@ class S3DataTable(object):
             @param filterString: The string that was used in filtering the records
             @param orderby: the DAL orderby construct
         """
+
         from gluon.dal import Expression
+
         self.data = data
         self.rfields = rfields
         self.lfields = []
@@ -2613,23 +2615,25 @@ class S3DataTable(object):
             elif isinstance(orderby, Expression):
                 extractExpression(orderby)
             else:
-                self.orderby.append([1, 'asc'])
+                self.orderby.append([1, "asc"])
+
         def extractField(field):
             cnt = 0
             for rfield in rfields:
                 if str(field) == rfield.colname:
-                    self.orderby.append([cnt, 'asc'])
+                    self.orderby.append([cnt, "asc"])
                     break
                 cnt += 1
+
         def extractExpression(exp):
             cnt = 0
             if isinstance(exp.first, Field):
                 for rfield in rfields:
                     if str(exp.first) == rfield.colname:
                         if exp.op == exp.db._adapter.INVERT:
-                            self.orderby.append([cnt, 'desc'])
+                            self.orderby.append([cnt, "desc"])
                         else:
-                            self.orderby.append([cnt, 'asc'])
+                            self.orderby.append([cnt, "asc"])
                         break
                     cnt += 1
             else:
@@ -2639,7 +2643,6 @@ class S3DataTable(object):
 
         self.orderby = []
         selectAction(orderby)
-
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2671,9 +2674,11 @@ class S3DataTable(object):
                               {"warning" : [1,3,6,7,9],
                                "alert" : [2,10,13]}
         """
-        attr = Storage()
-        s3 = current.response.s3
+
         request = current.request
+        s3 = current.response.s3
+
+        attr = Storage()
         if s3.datatable_ajax_source:
             attr.dt_ajax_url = s3.datatable_ajax_source
         if s3.actions:
@@ -2713,8 +2718,10 @@ class S3DataTable(object):
             @param rfields: A list of S3Resourcefield
             @param vars: A list of variables sent from the dataTable
         """
+
         if not vars.iSortingCols:
             return (False, "")
+
         sort_cols = int(vars.iSortingCols)
         orderby = False
         for x in range(sort_cols):
@@ -2749,9 +2756,11 @@ class S3DataTable(object):
             @param id: The unique dataTabel ID
             @param rfields: optional list of rfields
         """
-        s3 = current.response.s3
+
         T = current.T
+        s3 = current.response.s3
         application = current.request.application
+
         if s3.datatable_ajax_source:
             end = s3.datatable_ajax_source.find(".aaData")
             default_url = s3.datatable_ajax_source[:end] # strip '.aaData' extension
@@ -2760,31 +2769,31 @@ class S3DataTable(object):
         iconList = []
         url = s3.formats.pdf if s3.formats.pdf else default_url
         iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
-                            _onclick="s3FormatRequest('pdf', '%s', '%s');" % (id, url),
+                            _onclick="s3FormatRequest('pdf','%s','%s');" % (id, url),
                             _alt=T("Export in PDF format"),
-                              ))
+                            ))
         url = s3.formats.xls if s3.formats.xls else default_url
         iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
-                            _onclick="s3FormatRequest('xls', '%s', '%s');" % (id, url),
+                            _onclick="s3FormatRequest('xls','%s','%s');" % (id, url),
                             _alt=T("Export in XLS format"),
-                              ))
+                            ))
         url = s3.formats.rss if s3.formats.rss else default_url
         iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
-                            _onclick="s3FormatRequest('rss', '%s', '%s');" % (id, url),
+                            _onclick="s3FormatRequest('rss','%s','%s');" % (id, url),
                             _alt=T("Export in RSS format"),
-                              ))
+                            ))
         div = DIV(_class='list_formats')
         div.append(current.T("Export to:"))
         if "have" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
-                                _onclick="s3FormatRequest('have', '%s', '%s');" % (id, s3.formats.have),
+                                _onclick="s3FormatRequest('have','%s','%s');" % (id, s3.formats.have),
                                 _alt=T("Export in HAVE format"),
-                                  ))
+                                ))
         if "kml" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
-                                _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, s3.formats.kml),
+                                _onclick="s3FormatRequest('kml','%s','%s');" % (id, s3.formats.kml),
                                 _alt=T("Export in KML format"),
-                                  ))
+                                ))
         elif rfields:
             kml_list = ["location_id",
                         "site_id",
@@ -2792,14 +2801,14 @@ class S3DataTable(object):
             for r in rfields:
                 if r.fname in kml_list:
                     iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
-                                        _onclick="s3FormatRequest('kml', '%s', '%s');" % (id, default_url),
+                                        _onclick="s3FormatRequest('kml','%s','%s');" % (id, default_url),
                                         _alt=T("Export in KML format"),
-                                          ))
+                                        ))
         if "map" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
-                                _onclick="s3FormatRequest('map', '%s', '%s');" % (id, s3.formats.map),
+                                _onclick="s3FormatRequest('map','%s','%s');" % (id, s3.formats.map),
                                 _alt=T("Show on map"),
-                                  ))
+                                ))
 
         for icon in iconList:
             div.append(icon)
@@ -2815,13 +2824,14 @@ class S3DataTable(object):
 
             Temp copy of S3CRUD.action_buttons()
         """
-        from s3crud import S3CRUD
-        table = resource.table
-        s3 = current.response.s3
 
-        s3.actions = None
+        from s3crud import S3CRUD
 
         auth = current.auth
+        s3 = current.response.s3
+
+        table = resource.table
+        s3.actions = None
         has_permission = auth.s3_has_permission
         ownership_required = auth.permission.ownership_required
 
@@ -2839,7 +2849,8 @@ class S3DataTable(object):
                            f=resource.name,
                            args = args)
             S3CRUD.action_button(labels.READ, read_url)
-        deletable = current.s3db.get_config(resource.tablename,"deletable", True)
+        deletable = current.s3db.get_config(resource.tablename, "deletable",
+                                            True)
         if deletable and \
             has_permission("delete", table) and \
             not ownership_required("delete", table):
@@ -2901,6 +2912,7 @@ class S3DataTable(object):
 
         from gluon.serializers import json
         from gluon.storage import Storage
+
         request = current.request
         s3 = current.response.s3
 
@@ -3005,6 +3017,7 @@ class S3DataTable(object):
             @param action_col: The column where action columns will be displayed
                                (this is required by dataTables)
         """
+
         data = self.data
         heading = self.heading
         start = self.start
@@ -3061,6 +3074,7 @@ class S3DataTable(object):
                            so it can be easily accessed after rendering.
             @param attr: dictionary of attributes which can be passed in
         """
+
         flist = self.lfields
 
         if not id:
@@ -3096,7 +3110,6 @@ class S3DataTable(object):
                                self.rfields,
                                **attr
                                )
-
         return html
 
     # ---------------------------------------------------------------------
@@ -3126,16 +3139,18 @@ class S3DataTable(object):
                                     This will be displayed in parenthesis
                                     after the group title.
         """
+
         from gluon.serializers import json
+
         data = self.data
         flist = self.lfields
         start = self.start
         end = self.end
 
-        action_col = attr.get("dt_action_col",0)
+        action_col = attr.get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
-                action_col = len(flist) -1
+                action_col = len(flist) - 1
             flist = flist[1:action_col+1] + [flist[0]] + flist[action_col+1:]
         # Get the details for any bulk actions. If we have at least one bulk
         # action then a column will be added, either at the start or in the
@@ -3145,7 +3160,7 @@ class S3DataTable(object):
         if bulkActions:
             if bulkCol > len(flist):
                 bulkCol = len(flist)
-            flist.insert(bulkCol,"BULK")
+            flist.insert(bulkCol, "BULK")
             if bulkCol <= action_col:
                 action_col += 1
 
@@ -3170,6 +3185,5 @@ class S3DataTable(object):
         structure["iTotalDisplayRecords"] = displayrows
         structure["sEcho"] = sEcho
         return json(structure)
-
 
 # END =========================================================================
