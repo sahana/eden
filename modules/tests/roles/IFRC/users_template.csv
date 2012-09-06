@@ -1,0 +1,33 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Asset,Reader (%(org)s),asset_reader@%(org)s.com,eden,"asset_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Asset,Data Entry (%(org)s),asset_data_entry@%(org)s.com,eden,"asset_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Asset,Editor (%(org)s),asset_editor@%(org)s.com,eden,"asset_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Asset,Super Editor (%(org)s),asset_super@%(org)s.com,eden,"asset_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Warehouse,Reader (%(org)s),inv_reader@%(org)s.com,eden,"inv_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Warehouse,Data Entry (%(org)s),inv_data_entry@%(org)s.com,eden,"inv_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Warehouse,Editor (%(org)s),inv_editor@%(org)s.com,eden,"inv_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Warehouse,Super Editor (%(org)s),inv_super@%(org)s.com,eden,"inv_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Incident,Reader (%(org)s),irs_reader@%(org)s.com,eden,"irs_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Incident,Data Entry (%(org)s),irs_data_entry@%(org)s.com,eden,"irs_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Incident,Editor (%(org)s),irs_editor@%(org)s.com,eden,"irs_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Incident,Super Editor (%(org)s),irs_super@%(org)s.com,eden,"irs_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Members,Reader (%(org)s),member_reader@%(org)s.com,eden,"member_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Members,Data Entry (%(org)s),member_data_entry@%(org)s.com,eden,"member_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Members,Editor (%(org)s),member_editor@%(org)s.com,eden,"member_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Members,Super Editor (%(org)s),member_super@%(org)s.com,eden,"member_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Project,Reader (%(org)s),project_reader@%(org)s.com,eden,"project_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Project,Data Entry (%(org)s),project_data_entry@%(org)s.com,eden,"project_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Project,Editor (%(org)s),project_editor@%(org)s.com,eden,"project_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Project,Super Editor (%(org)s),project_super@%(org)s.com,eden,"project_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Staff,Reader (%(org)s),staff_reader@%(org)s.com,eden,"staff_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Staff,Data Entry (%(org)s),staff_data_entry@%(org)s.com,eden,"staff_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Staff,Editor (%(org)s),staff_editor@%(org)s.com,eden,"staff_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Staff,Super Editor (%(org)s),staff_super@%(org)s.com,eden,"staff_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Volunteer,Reader (%(org)s),vol_reader@%(org)s.com,eden,"vol_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Volunteer,Data Entry (%(org)s),vol_data_entry@%(org)s.com,eden,"vol_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Volunteer,Editor (%(org)s),vol_editor@%(org)s.com,eden,"vol_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Volunteer,Super Editor (%(org)s),vol_super@%(org)s.com,eden,"vol_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Assessment,Reader (%(org)s),survey_reader@%(org)s.com,eden,"survey_reader/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Assessment,Data Entry (%(org)s),survey_data_entry@%(org)s.com,eden,"survey_data_entry/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Assessment,Editor (%(org)s),survey_editor@%(org)s.com,eden,"survey_editor/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s
+Assessment,Super Editor (%(org)s),survey_super@%(org)s.com,eden,"survey_super/org_organisation.name=%(org)s,org_user/org_organisation.name=%(org)s",%(org)s

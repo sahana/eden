@@ -37,15 +37,22 @@ __all__ = ["S3CRUD", "S3ApproveRecords"]
 
 from gluon import *
 from gluon.dal import Row
-from gluon.serializers import json
+from gluon.serializers import json as jsons
 from gluon.storage import Storage
 from gluon.tools import callback
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from s3method import S3Method
 from s3export import S3Exporter
-from s3utils import s3_mark_required
-from s3forms import S3SQLForm
+from s3forms import S3SQLDefaultForm
 from s3widgets import S3EmbedComponentWidget
+from s3utils import s3_unicode
 
 try:
     from lxml import etree
@@ -72,7 +79,8 @@ class S3CRUD(S3Method):
             @returns: output object to send to the view
         """
 
-        self.sqlform = S3SQLForm(self.resource)
+        self.sqlform = self._config("crud_form",
+                                    S3SQLDefaultForm())
         self.settings = current.response.s3.crud
 
         # Pre-populate create-form?
@@ -99,6 +107,8 @@ class S3CRUD(S3Method):
             output = self.update(r, **attr)
         elif self.method == "list":
             output = self.select(r, **attr)
+        elif self.method == "validate":
+            output = self.validate(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
 
@@ -242,6 +252,7 @@ class S3CRUD(S3Method):
 
             # Get the form
             form = self.sqlform(request=request,
+                                resource=self.resource,
                                 data=self.data,
                                 record_id=original,
                                 from_table=from_table,
@@ -394,6 +405,7 @@ class S3CRUD(S3Method):
             # Item
             if record_id:
                 item = self.sqlform(request=request,
+                                    resource=self.resource,
                                     record_id=record_id,
                                     readonly=True,
                                     subheadings=subheadings,
@@ -421,8 +433,16 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["modified_on"] = last_update["modified_on"]
-                output["modified_by"] = last_update["modified_by"]
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
+                try:
+                    output["modified_by"] = last_update["modified_by"]
+                except:
+                    # Field not in table, such as auth_user
+                    pass
 
         elif representation == "plain":
             # Hide empty fields from popups on map
@@ -434,6 +454,7 @@ class S3CRUD(S3Method):
 
             # Form
             item = self.sqlform(request=request,
+                                resource=self.resource,
                                 record_id=record_id,
                                 readonly=True,
                                 format=representation)
@@ -578,6 +599,7 @@ class S3CRUD(S3Method):
 
             # Get the form
             form = self.sqlform(request=self.request,
+                                resource=self.resource,
                                 record_id=record_id,
                                 onvalidation=onvalidation,
                                 onaccept=onaccept,
@@ -605,11 +627,15 @@ class S3CRUD(S3Method):
             # Last update
             last_update = self.last_update()
             if last_update:
-                output["modified_on"] = last_update["modified_on"]
+                try:
+                    output["modified_on"] = last_update["modified_on"]
+                except:
+                    # Field not in table
+                    pass
                 try:
                     output["modified_by"] = last_update["modified_by"]
                 except:
-                    # Field not in table - e.g. auth_user
+                    # Field not in table, such as auth_user
                     pass
 
             # Redirection
@@ -727,6 +753,7 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -790,7 +817,8 @@ class S3CRUD(S3Method):
         if not fields:
             fields = []
 
-        if fields[0].name != table.fields[0]:
+        if not fields or \
+           fields[0].name != table.fields[0]:
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
@@ -805,31 +833,23 @@ class S3CRUD(S3Method):
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
+        left = []
+        distinct = self.method == "search"
+
         if r.interactive:
 
-            left = []
-
-            # SSPag?
-            if not s3.no_sspag:
-                limit = 1
-                session.s3.filter = vars
-                if orderby is None:
-                    # Default initial sorting
-                    scol = len(list_fields) > 1 and "1" or "0"
-                    vars.update(iSortingCols="1",
-                                iSortCol_0=scol,
-                                sSortDir_0="asc")
-                    orderby = self.ssp_orderby(resource, list_fields, left=left)
-                    del vars["iSortingCols"]
-                    del vars["iSortCol_0"]
-                    del vars["sSortDir_0"]
-                if r.method == "search" and not orderby:
-                    orderby = fields[0]
-
-            # Custom view
+            # View
             response.view = self._view(r, "list.html")
 
+            # Page title
             crud_string = self.crud_string
+            if r.component:
+                title = crud_string(r.tablename, "title_display")
+            else:
+                title = crud_string(self.tablename, "title_list")
+            output["title"] = title
+
+            # Add button and form
             if insertable:
                 if listadd:
                     # Add a hidden add-form and a button to activate it
@@ -853,81 +873,77 @@ class S3CRUD(S3Method):
                     if buttons:
                         output["buttons"] = buttons
 
-            # Get the list
-            items = resource.sqltable(fields=list_fields,
-                                      left=left,
-                                      start=start,
-                                      limit=limit,
-                                      orderby=orderby,
-                                      linkto=linkto,
-                                      download_url=self.download_url,
-                                      format=representation)
+            # Count rows
+            totalrows = resource.count()
+            displayrows = totalrows
 
-            # In SSPag, send the first 20 records together with the initial
-            # response (avoids the dataTables Ajax request unless the user
-            # tries nagivating around)
-            if not s3.no_sspag and items:
-                totalrows = resource.count()
-                if totalrows:
-                    if s3.dataTable_iDisplayLength:
-                        limit = 2 * s3.dataTable_iDisplayLength
-                    else:
-                        limit = 50
-                    sqltable =  resource.sqltable(left=left,
-                                                  fields=list_fields,
-                                                  start=0,
-                                                  limit=limit,
-                                                  orderby=orderby,
-                                                  linkto=linkto,
-                                                  download_url=self.download_url,
-                                                  as_page=True,
-                                                  format=representation)
-                    aadata = dict(aaData = sqltable or [])
-                    aadata.update(iTotalRecords=totalrows,
-                                  iTotalDisplayRecords=totalrows)
-                    response.aadata = json(aadata)
-                    s3.start = 0
-                    s3.limit = limit
-
-            # Title and subtitle
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
+            # How many records per page?
+            if s3.dataTable_iDisplayLength:
+                display_length = s3.dataTable_iDisplayLength
             else:
-                title = crud_string(self.tablename, "title_list")
-            #subtitle = crud_string(self.tablename, "subtitle_list")
-            output["title"] = title
-            #output["subtitle"] = subtitle
+                display_length = 25
+
+            # Server-side pagination?
+            if not s3.no_sspag:
+                dt_pagination = "true"
+                if limit is None:
+                    limit = 2 * display_length
+                session.s3.filter = vars
+                if orderby is None:
+                    # Default initial sorting
+                    scol = len(list_fields) > 1 and "1" or "0"
+                    vars.update(iSortingCols="1",
+                                iSortCol_0=scol,
+                                sSortDir_0="asc")
+                    orderby = self.ssp_orderby(resource,
+                                               list_fields,
+                                               left=left)
+                    del vars["iSortingCols"]
+                    del vars["iSortCol_0"]
+                    del vars["sSortDir_0"]
+                if r.method == "search" and not orderby:
+                    orderby = fields[0]
+            else:
+                dt_pagination = "false"
+
+            # Get the data table
+            dt = resource.datatable(fields=list_fields,
+                                    start=start,
+                                    limit=limit,
+                                    left=left,
+                                    orderby=orderby,
+                                    distinct=distinct)
 
             # Empty table - or just no match?
-            if not items:
-                if "deleted" in self.table:
-                    available_records = current.db(self.table.deleted == False)
+            if dt is None:
+
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
                 else:
-                    available_records = current.db(self.table._id > 0)
-                #if available_records.count():
-                # This is faster:
-                if available_records.select(self.table._id,
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
                                             limitby=(0, 1)).first():
-                    items = DIV(crud_string(self.tablename, "msg_no_match"),
-                                _class="empty")
+                    datatable = DIV(crud_string(tablename, "msg_no_match"),
+                                    _class="empty")
                 else:
-                    items = DIV(crud_string(self.tablename, "msg_list_empty"),
-                                _class="empty")
+                    datatable = DIV(crud_string(tablename, "msg_list_empty"),
+                                    _class="empty")
+
                 s3.no_formats = True
+
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    #del output["subtitle"]
-                    items = ""
+                    datatable = ""
+            else:
+                datatable = dt.html(totalrows, displayrows, "list",
+                                    dt_pagination=dt_pagination,
+                                    dt_displayLength=display_length)
 
-            # Update output
-            output["items"] = items
-            output["sortby"] = sortby
+            # Add items to output
+            output["items"] = datatable
 
-        elif representation == "aadata":
-
-            left = []
-            distinct = r.method == "search"
+        elif r.representation == "aadata":
 
             # Get the master query for SSPag
             # FixMe: don't use session to store filters; also causes resource
@@ -936,9 +952,10 @@ class S3CRUD(S3Method):
                 resource.build_query(filter=s3.filter,
                                      vars=session.s3.filter)
 
-            displayrows = totalrows = resource.count(distinct=distinct)
+            # Count the rows
+            totalrows = displayrows = resource.count()
 
-            # SSPag dynamic filter?
+            # Apply data table filter (searchbox)
             if vars.sSearch:
                 squery = self.ssp_filter(table,
                                          fields=list_fields,
@@ -948,7 +965,7 @@ class S3CRUD(S3Method):
                     displayrows = resource.count(left=left,
                                                  distinct=distinct)
 
-            # SSPag sorting
+            # Apply datatable sorting
             if vars.iSortingCols:
                 orderby = self.ssp_orderby(resource, list_fields, left=left)
             if r.method == "search" and not orderby:
@@ -956,27 +973,29 @@ class S3CRUD(S3Method):
             if orderby is None:
                 orderby = _config("orderby", None)
 
+            # Get a data table
+            dt = resource.datatable(fields=list_fields,
+                                    start=start,
+                                    limit=limit,
+                                    left=left,
+                                    orderby=orderby,
+                                    distinct=distinct)
+
             # Echo
             sEcho = int(vars.sEcho or 0)
 
-            # Get the list
-            items = resource.sqltable(fields=list_fields,
-                                      left=left,
-                                      distinct=distinct,
-                                      start=start,
-                                      limit=limit,
-                                      orderby=orderby,
-                                      linkto=linkto,
-                                      download_url=self.download_url,
-                                      as_page=True,
-                                      format=representation) or []
-
-            result = dict(sEcho = sEcho,
-                          iTotalRecords = totalrows,
-                          iTotalDisplayRecords = displayrows,
-                          aaData = items)
-
-            output = json(result)
+            # Representation
+            if dt is not None:
+                output = dt.json(totalrows,
+                                 displayrows,
+                                 "list",
+                                 sEcho)
+            else:
+                output = '{"iTotalRecords": %s, ' \
+                         '"iTotalDisplayRecords": 0,' \
+                         '"dataTable_id": "list", ' \
+                         '"sEcho": %s, ' \
+                         '"aaData": []}' % (totalrows, sEcho)
 
         elif representation == "plain":
             if resource.count() == 1:
@@ -992,14 +1011,18 @@ class S3CRUD(S3Method):
                          items = self.update(r, **attr).get("form", None)
                     else:
                         items = self.sqlform(request=self.request,
+                                             resource=self.resource,
                                              record_id=r.id,
                                              readonly=True,
                                              format=representation)
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                items = resource.sqltable(fields=list_fields,
-                                          as_list=True)
+                rows = resource.select(list_fields)
+                if rows:
+                    items = rows.as_list()
+                else:
+                    items = []
             response.view = "plain.html"
             return dict(item=items)
 
@@ -1035,6 +1058,163 @@ class S3CRUD(S3Method):
             r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def validate(self, r, **attr):
+        """
+            Validate records (AJAX). This method reads a JSON object from
+            the request body, validates it against the current resource,
+            and returns a JSON object with either the validation errors or
+            the text representations of the data.
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+
+            Input JSON format:
+
+            {"<fieldname>":"<value>", "<fieldname>":"<value>"}
+
+            Output JSON format:
+
+            {"<fieldname>": {"value":"<value>",
+                             "text":"<representation>",
+                             "_error":"<error message>"}}
+
+            The input JSON can also be a list of multiple records. This
+            will return a list of results accordingly. Note that "text"
+            is not provided if there was a validation error, and vice
+            versa.
+
+            The record ID should always be present in the JSON to
+            avoid false duplicate errors.
+
+            Non-existent fields will return "invalid field" as _error.
+
+            Representations will be URL-escaped and any markup stripped.
+
+            The ?component=<alias> URL query can be used to specify a
+            component of the current resource rather than the main table.
+
+            This method does only accept .json format.
+        """
+
+        if r.representation != "json":
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        output = Storage()
+        resource = self.resource
+
+        if "component" in r.get_vars:
+            alias = r.get_vars["component"]
+            if alias in resource.components:
+                component = resource.components[alias]
+            else:
+                r.error(404, current.manager.ERROR.BAD_RESOURCE)
+        else:
+            component = resource
+
+        source = r.body
+        source.seek(0)
+
+        try:
+            data = json.load(source)
+        except ValueError:
+            r.error(501, current.manager.ERROR.BAD_SOURCE)
+
+        if not isinstance(data, list):
+            single = True
+            data = [data]
+        else:
+            single = False
+
+        table = component.table
+        pkey = table._id.name
+
+        manager = current.manager
+        validate = manager.validate
+        represent = manager.represent
+
+        get_config = current.s3db.get_config
+        tablename = component.tablename
+        onvalidation = get_config(tablename, "onvalidation")
+        update_onvalidation = get_config(tablename, "update_onvalidation",
+                                         onvalidation)
+        create_onvalidation = get_config(tablename, "create_onvalidation",
+                                         onvalidation)
+
+        output = []
+        for record in data:
+
+            has_errors = False
+
+            # Retrieve the record ID
+            if pkey in record:
+                original = {pkey: record[pkey]}
+            elif "_id" in record:
+                original = {pkey: record["_id"]}
+            else:
+                original = None
+
+            # Field validation
+            fields = Storage()
+            for fname in record:
+                if fname in (pkey, "_id"):
+                    continue
+                error = None
+                value = record[fname]
+                validated = fields[fname] = Storage(value = value)
+                if fname not in table.fields:
+                    validated._error = "invalid field"
+                    continue
+                field = table[fname]
+                try:
+                    value, error = validate(table, original, fname, value)
+                except AttributeError:
+                    error = "invalid field"
+                if error:
+                    has_errors = True
+                    validated._error = s3_unicode(error)
+                else:
+                    try:
+                        text = represent(field,
+                                         value = value,
+                                         strip_markup = True,
+                                         xml_escape = True)
+                    except:
+                        text = s3_unicode(value)
+                    validated.text = text
+
+            # Form validation (=onvalidation)
+            if not has_errors:
+                if original is not None:
+                    onvalidation = update_onvalidation
+                else:
+                    onvalidation = create_onvalidation
+                form = Storage(vars=Storage(record), errors=Storage())
+                if onvalidation is not None:
+                    callback(onvalidation, form, tablename=tablename)
+                for fn in form.errors:
+                    msg = s3_unicode(form.errors[fn])
+                    if fn in fields:
+                        validated = fields[fn]
+                        has_errors = True
+                        validated._error = msg
+                        if "text" in validated:
+                            del validated["text"]
+                    else:
+                        msg = "%s: %s" % (fn, msg)
+                        if "_error" in fields:
+                            fields["_error"] = "\n".join([msg,
+                                                          fields["_error"]])
+                        else:
+                            fields["_error"] = msg
+
+            output.append(fields)
+
+        if single and len(output) == 1:
+            output = output[0]
+
+        return json.dumps(output)
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -1871,6 +2051,7 @@ class S3ApproveRecords(S3CRUD):
             @param attr: controller parameters for the request
         """
 
+        from s3.s3utils import S3DataTable
         session = current.session
         response = current.response
         s3 = response.s3
@@ -2032,6 +2213,13 @@ class S3ApproveRecords(S3CRUD):
                 s3.no_formats = True
 
             # Update output
+            items = S3DataTable.htmlConfig(items,
+                                           "list",
+                                           sortby,
+                                           "", # the filter string
+                                           None, # the rfields
+                                           **S3DataTable.getConfigData()
+                                           )
             output["items"] = items
             output["sortby"] = sortby
 

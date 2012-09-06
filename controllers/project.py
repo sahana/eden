@@ -82,7 +82,10 @@ def project():
 
         if r.interactive:
             if not r.component:
-                if not r.id and r.function == "index":
+                if r.id:
+                    r.table.human_resource_id.represent = lambda id: \
+                        s3db.hrm_human_resource_represent(id, show_link=True)
+                elif r.function == "index":
                     r.method = "search"
                     # If just a few Projects, then a List is sufficient
                     #r.method = "list"
@@ -133,24 +136,26 @@ def project():
                                   filter_opts=[r.id])
                                 )
                 elif r.component_name == "human_resource":
-                    from eden.hrm import hrm_human_resource_represent
-
                     # We can pass the human resource type filter in the URL
                     group = r.vars.get("group", None)
 
+                    table = db.project_human_resource
+                    s3db.hrm_human_resource.person_id.represent = lambda id: \
+                        s3db.pr_person_represent(id, show_link=True)
                     # These values are defined in hrm_type_opts
                     if group:
                         crud_strings = s3.crud_strings
                         if group == "staff":
                             group = 1
-                            db.project_human_resource.human_resource_id.label = T("Staff")
+                            table.human_resource_id.label = T("Staff")
                             crud_strings["project_human_resource"] = crud_strings["hrm_staff"]
                             crud_strings["project_human_resource"].update(
                                 subtitle_create = T("Add Staff Member to Project")
                                 )
+
                         elif group == "volunteer":
                             group = 2
-                            db.project_human_resource.human_resource_id.label = T("Volunteer")
+                            table.human_resource_id.label = T("Volunteer")
                             crud_strings["project_human_resource"] = crud_strings["hrm_volunteer"]
                             crud_strings["project_human_resource"].update(
                                 subtitle_create = T("Add Volunteer to Project")
@@ -161,10 +166,10 @@ def project():
                         r.resource.add_component_filter("human_resource", filter_by_type)
 
                         # Use the group to filter the form widget for adding a new record
-                        r.component.table.human_resource_id.requires = IS_ONE_OF(
+                        table.human_resource_id.requires = IS_ONE_OF(
                             db,
                             "hrm_human_resource.id",
-                            hrm_human_resource_represent,
+                            s3db.hrm_human_resource_represent,
                             filterby="type",
                             filter_opts=(group,),
                             orderby="hrm_human_resource.person_id",

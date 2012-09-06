@@ -116,7 +116,7 @@ class S3SQLTableTests(unittest.TestCase):
         # need to be logged in to query resources
         auth.s3_impersonate('admin@example.com')
 
-        r = current.manager.define_resource('org', 'organisation')
+        r = current.s3db.resource("org_organisation")
         table = S3SQLTable.from_resource(r,
                                          [{'name': 'id'}],
                                          limit=1)
@@ -146,7 +146,7 @@ class S3DataTableTests(unittest.TestCase):
         # need to be logged in to query resources
         auth.s3_impersonate('admin@example.com')
 
-        r = current.manager.define_resource('org', 'organisation')
+        r = current.s3db.resource("org_organisation")
 
         # no limit
         table = S3DataTable.from_resource(r,

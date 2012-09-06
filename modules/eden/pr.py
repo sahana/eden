@@ -732,6 +732,7 @@ class S3PersonModel(S3Model):
                                        (T("Organization"), "hrm_human_resource:organisation_id$name")
                                        ],
                         onvalidation=self.pr_person_onvalidation,
+                        onaccept=self.pr_person_onaccept,
                         search_method=pr_person_search,
                         deduplicate=self.person_deduplicate,
                         main="first_name",
@@ -824,10 +825,45 @@ class S3PersonModel(S3Model):
                 ag = 6
 
             if age != ag:
-                form.errors.age_group = T("Age group does not match actual age.")
-                return False
+                form.errors.age_group = current.T("Age group does not match actual age.")
 
-        return True
+   # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_person_onaccept(form):
+        """ Onaccept callback
+            Update any user associated with this person
+
+        """
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+
+        vars = form.vars
+        person_id = vars.id
+
+        ptable = s3db.pr_person
+        ltable = s3db.pr_person_user
+        utable = auth.settings.table_user
+
+        # Find a user for this person
+        query = (ptable.id == person_id) & \
+                (ltable.pe_id == ptable.pe_id) & \
+                (utable.id == ltable.user_id)
+        user = db(query).select(utable.id,
+                                utable.first_name,
+                                utable.last_name,
+                                limitby=(0, 1)).first()
+
+        # If there is a user and their first or last name have changed
+        if user and \
+           ( user.first_name != vars.first_name or \
+             user.last_name != vars.last_name ):
+            # Update the user record
+            query = utable.id == user.id
+            db(query).update( first_name = vars.first_name,
+                              last_name = vars.last_name,
+                             )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1316,7 +1352,7 @@ class S3ContactModel(S3Model):
         if form.vars.contact_method == "EMAIL":
             email, error = IS_EMAIL()(form.vars.value)
             if error:
-                form.errors.value = T("Enter a valid email")
+                form.errors.value = current.T("Enter a valid email")
         return False
 
     # -------------------------------------------------------------------------
@@ -2988,9 +3024,19 @@ def pr_person_represent(person_id, show_link=False):
                                  lambda: s3_fullname(person_id),
                                  time_expire=60)
     if show_link:
-        # @ToDo: Use pr controller for other usecases
+        request = current.request
+        group = request.get_vars.get("group", None)
+        c = request.controller
+        if group == "staff" or \
+           c == "hrm":
+            controller = "hrm"
+        elif group == "volunteer" or \
+             c == "vol":
+            controller = "vol"
+        else:
+            controller = "pr"
         name = A(name,
-                 _href = URL(c="hrm", f="person", args=[person_id]))
+                 _href = URL(c=controller, f="person", args=[person_id]))
     return name
 
 # =============================================================================
@@ -3891,7 +3937,7 @@ def pr_delete_role(role_id):
         @param role_id: the role ID
     """
 
-    resource = current.manager.define_resource("pr", "role", id=role_id)
+    resource = s3db.resource("pr_role", role_id)
     return resource.delete()
 
 # =============================================================================

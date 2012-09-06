@@ -49,7 +49,7 @@ from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 
-from s3resource import S3FieldSelector
+from s3resource import S3FieldSelector, S3Resource
 
 __all__ = ["S3SearchWidget",
            "S3SearchSimpleWidget",
@@ -528,9 +528,7 @@ class S3SearchOptionsWidget(S3SearchWidget):
         if field_name.find("$") != -1:
             kfield_name, field_name = field_name.split("$")
             tablename = resource.table[kfield_name].type[10:]
-            prefix, resource_name = tablename.split("_", 1)
-            resource = current.manager.define_resource(prefix,
-                                                       resource_name)
+            resource = S3Resource(tablename)
         return resource, field_name, kfield_name
 
     # -------------------------------------------------------------------------
@@ -865,7 +863,7 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
     """
 
     def widget(self, resource, vars):
-        c = current.manager.define_resource("hrm", "credential")
+        c = S3Resource("hrm_credential")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -899,7 +897,7 @@ class S3SearchSkillsWidget(S3SearchOptionsWidget):
 
     # -------------------------------------------------------------------------
     def widget(self, resource, vars):
-        c = current.manager.define_resource("hrm", "competency")
+        c = S3Resource("hrm_competency")
         return S3SearchOptionsWidget.widget(self, c, vars)
 
     # -------------------------------------------------------------------------
@@ -1190,6 +1188,7 @@ class S3Search(S3CRUD):
             @param attr: request parameters
         """
 
+        from s3.s3utils import S3DataTable
         # Get environment
         T = current.T
         session = current.session
@@ -1267,16 +1266,28 @@ class S3Search(S3CRUD):
                                            form_values)
 
         search_url = None
+        search_url_vars = Storage()
         if not errors:
             if hasattr(query, "serialize_url"):
+                search_url_vars = query.serialize_url(resource)
                 search_url = r.url(method = "",
-                                   vars = query.serialize_url(resource))
+                                   vars = search_url_vars)
             resource.add_filter(query)
             search_vars = dict(simple=False,
                                advanced=True,
                                criteria=form_values)
         else:
             search_vars = dict()
+
+        s3.formats.pdf = r.url(method="",
+                               vars=search_url_vars,
+                               representation="pdf")
+        s3.formats.xls = r.url(method="",
+                               vars=search_url_vars,
+                               representation="xls")
+        s3.formats.rss = r.url(method="",
+                               vars=search_url_vars,
+                               representation="rss")
 
         if representation == "plain":
             # Map popup filter
@@ -1306,21 +1317,7 @@ class S3Search(S3CRUD):
             form.append(advanced_form)
         output["form"] = form
 
-        # Build session filter (for SSPag)
-        if not s3.no_sspag:
-            limit = 1
-            ids = resource.get_id()
-            if ids:
-                if not isinstance(ids, list):
-                    ids = str(ids)
-                else:
-                    ids = ",".join([str(i) for i in ids])
-                session.s3.filter = {"%s.id" % resource.name: ids}
-        else:
-            limit = None
-
         # List fields
-        linkto = self._linkto(r)
         if not list_fields:
             fields = resource.readable_fields()
             list_fields = [f.name for f in fields]
@@ -1332,6 +1329,36 @@ class S3Search(S3CRUD):
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
+
+        # Count rows
+        totalrows = resource.count()
+        displayrows = totalrows
+
+        # How many records per page?
+        if s3.dataTable_iDisplayLength:
+            display_length = s3.dataTable_iDisplayLength
+        else:
+            display_length = 25
+
+        # Server-side pagination?
+        if not s3.no_sspag:
+            dt_pagination = "true"
+            limit = 2 * display_length
+
+            # Build session filter for data tables
+            # @todo: do not use session to store filter
+            ids = resource.get_id()
+            if ids:
+                if not isinstance(ids, list):
+                    ids = str(ids)
+                else:
+                    ids = ",".join([str(i) for i in ids])
+                session.s3.filter = {"%s.id" % resource.name: ids}
+
+        else:
+            limit = None
+            dt_pagination = "false"
+
         if not orderby:
             orderby = fields[0]
 
@@ -1341,92 +1368,41 @@ class S3Search(S3CRUD):
                 if str(f.type) == "text" and not f.represent:
                     f.represent = self.truncate
 
-        # Get the result table
-        items = resource.sqltable(fields=list_fields,
-                                  limit=limit,
-                                  orderby=orderby,
-                                  distinct=True,
-                                  linkto=linkto,
-                                  download_url=self.download_url,
-                                  format=representation)
-
         # Remove the dataTables search box to avoid confusion
         s3.dataTable_NobFilter = True
 
-        if items:
-            if not s3.no_sspag:
-                # Pre-populate SSPag cache (avoids the 1st Ajax request)
-                totalrows = resource.count(distinct=True)
-                if totalrows:
-                    if s3.dataTable_iDisplayLength:
-                        limit = 2 * s3.dataTable_iDisplayLength
-                    else:
-                        limit = 50
-                    sqltable = resource.sqltable(fields=list_fields,
-                                                 start=0,
-                                                 limit=limit,
-                                                 orderby=orderby,
-                                                 distinct=True,
-                                                 linkto=linkto,
-                                                 download_url=self.download_url,
-                                                 as_page=True,
-                                                 format=representation)
+        # Get the data table
+        dt = resource.datatable(fields=list_fields,
+                                start=None,
+                                limit=limit,
+                                #left=left,
+                                #distinct=distinct,
+                                orderby=orderby)
 
-                    aadata = dict(aaData=sqltable or [])
-                    aadata.update(iTotalRecords=totalrows,
-                                  iTotalDisplayRecords=totalrows)
-                    response.aadata = jsons(aadata)
-                    s3.start = 0
-                    s3.limit = limit
+        if dt is None:
+            datatable = self.crud_string(tablename, "msg_no_match")
+            s3.no_formats = True
+        else:
+            datatable = dt.html(totalrows, displayrows, "list",
+                                dt_pagination=dt_pagination,
+                                dt_displayLength=display_length,
+                                dt_permalink=search_url)
 
-        elif not items:
-            items = self.crud_string(tablename, "msg_no_match")
+        # Add items to output
+        output["items"] = datatable
 
-        output["items"] = items
-        output["sortby"] = sortby
-
+        items = output["items"]
         if isinstance(items, DIV):
             filter = session.s3.filter
             app = request.application
 
-            # Permalink
-            if search_url:
-                link = A(T("Link to this result"),
-                         _href=search_url,
-                         _class="permalink")
-                sep = " | "
-            else:
-                link = sep = ""
-
-            list_formats = DIV(link, sep,
-                               "%s: " % T("Export to"),
-                               A(IMG(_src="/%s/static/img/pdficon_small.gif" % app),
-                                 _title=T("Export in PDF format"),
-                                 _href=r.url(method="", representation="pdf",
-                                             vars=filter)),
-                               A(IMG(_src="/%s/static/img/icon-xls.png" % app),
-                                 _title=T("Export in XLS format"),
-                                 _href=r.url(method="", representation="xls",
-                                             vars=filter)),
-                               A(IMG(_src="/%s/static/img/RSS_16.png" % app),
-                                 _title=T("Export in RSS format"),
-                                 _href=r.url(method="", representation="rss",
-                                             vars=filter)),
-                               _id="list_formats")
             tabs = []
-
             if "location_id" in table or \
                "site_id" in table:
                 # Add a map for search results
                 # (this same map is also used by the Map Search Widget, if-present)
                 tabs.append((T("Map"), "map"))
                 app = request.application
-                list_formats.append(A(IMG(_src="/%s/static/img/kml_icon.png" % app),
-                                      _title=T("Export in KML format"),
-                                      _href=r.url(method="",
-                                                  representation="kml",
-                                                  vars=filter)),
-                                    )
                 # Build URL to load the features onto the map
                 if query:
                     vars = query.serialize_url(resource=resource)
@@ -1464,17 +1440,38 @@ class S3Search(S3CRUD):
 
             if tabs:
                 tabs.insert(0, ((T("List"), None)))
+
+            # @todo: this needs rework
+            #        - s3FormatRequest must retain any URL filters
+            #        - s3FormatRequest must remove the "search" method
+            #        - other data formats could have other list_fields,
+            #          hence applying the datatable sorting/filters is
+            #          not transparent
+
+            #if not s3.datatable_ajax_source:
+                #s3.datatable_ajax_source = str(r.url(representation = "aaData"))
+            #s3.formats.pdf = r.url(method="")
+            #s3.formats.xls = r.url(method="")
+            #s3.formats.rss = r.url(method="")
+            #attr = S3DataTable.getConfigData()
+            #items = S3DataTable.htmlConfig(items,
+                                           #"list",
+                                           #sortby, # order by
+                                           ##filter, # the filter string
+                                           #None, # the rfields
+                                           #**attr
+                                           #)
+            #items[0].insert(0, sep)
+            #items[0].insert(0, link)
         else:
-            list_formats = ""
             tabs = []
 
+        output["items"] = items
+        output["sortby"] = sortby
 
         # Search Tabs
         search_tabs = s3_search_tabs(r, tabs)
         output["search_tabs"] = search_tabs
-
-        # List Formats
-        output["list_formats"] = list_formats
 
         # Title and subtitle
         output["title"] = self.crud_string(tablename, "title_search")
@@ -1986,7 +1983,7 @@ class S3Search(S3CRUD):
                           distinct=True)
 
         # Get the rows
-        rows = resource.select(field, **attributes)
+        rows = resource._load(field, **attributes)
 
         if not errors:
             output = [{ "id"   : row[get_fieldname],
@@ -2323,7 +2320,7 @@ class S3OrganisationSearch(S3Search):
             limitby = resource.limitby(start=0, limit=limit)
             if limitby is not None:
                 attributes["limitby"] = limitby
-            rows = resource.select(*fields, **attributes)
+            rows = resource._load(*fields, **attributes)
             output = []
             append = output.append
             db = current.db

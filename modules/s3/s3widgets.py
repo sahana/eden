@@ -3291,6 +3291,7 @@ def s3_grouped_checkboxes_widget(field,
 
         Used by S3SearchOptionsWidget
     """
+
     import locale
 
     requires = field.requires
@@ -3309,14 +3310,14 @@ def s3_grouped_checkboxes_widget(field,
 
     if total == 0:
         T = current.T
-        opts.append(TR(TD(SPAN(T("no options available"),
-                               _class="no-options-available"),
-                          INPUT(_type="hide",
-                                _name=field.name,
-                                _value=None))))
+        options.append(TR(TD(SPAN(T("no options available"),
+                                  _class="no-options-available"),
+                             INPUT(_type="hide",
+                                   _name=field.name,
+                                   _value=None))))
 
     if total > size:
-        #Options are put into groups of "size"
+        # Options are put into groups of "size"
 
         #letters = [u"A", u"Z"] # ToDo: localisation?
         letters = []

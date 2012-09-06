@@ -138,9 +138,8 @@ crud = s3base.CrudS3()
 current.crud = crud
 s3.crud = Storage()
 
-# S3 Custom Validators and Widgets
-# imported here into the global namespace in order
-# to access them without the s3base namespace prefix
+# S3 Custom Validators and Widgets, imported here into the global
+# namespace in order to access them without the s3base namespace prefix
 s3_action_buttons = s3base.S3CRUD.action_buttons
 s3_fullname = s3base.s3_fullname
 S3ResourceHeader = s3base.S3ResourceHeader

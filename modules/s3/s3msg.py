@@ -211,6 +211,7 @@ class S3Msg(object):
         records = db(query).select(wtable.source_task_id)
         reply = ""
         wflow = ""
+        contact = ""
         for record in records:
             query = (ltable.is_parsed == False) & \
                     (ltable.inbound == True) & \
@@ -220,14 +221,19 @@ class S3Msg(object):
             for row in rows:
                 message = row.message
                 try:
-                    email = row.sender.split("<")[1].split(">")[0]
+                    contact = row.sender.split("<")[1].split(">")[0]
                     query = (contact_method == "EMAIL") & \
-                        (value == email) 
+                        (value == contact) 
                     pe_ids = db(query).select(ctable.pe_id)
+                    if not pe_ids:
+                        query = (contact_method == "SMS") & \
+                            (value == contact) 
+                        pe_ids = db(query).select(ctable.pe_id)
+
                 except:
-                    raise ValueError("Email address not defined!")
+                    raise ValueError("Source not defined!")
                 
-                reply = parser(workflow, message, email)
+                reply = parser(workflow, message, contact)
                 if reply:
                     db(lid == row.id).update(reply = reply,
                                                    is_parsed = True)
@@ -255,7 +261,7 @@ class S3Msg(object):
                 if pe_ids:
                     for pe_id in pe_ids:
                         oinsert(message_id = reply.id,
-                                      address = row.sender, pe_id = pe_id.pe_id)
+                                      address = contact, pe_id = pe_id.pe_id)
                 db.commit()
 
         return    
@@ -802,7 +808,7 @@ class S3Msg(object):
         code = "GeoSMS=%s" % code
 
         if map == "google":
-            url = "http://maps.google.com/maps?q=%f,%f" % (lat, lon)
+            url = "http://maps.google.com/?q=%f,%f" % (lat, lon)
         elif map == "osm":
             # NB Not sure how this will work in OpenGeoSMS client
             url = "http://openstreetmap.org?mlat=%f&mlon=%f&zoom=14" % (lat, lon)
@@ -827,7 +833,7 @@ class S3Msg(object):
            
         s3db = current.s3db
         words = string.split(message)
-        if "http://maps.google.com/maps?q" in words[0]:
+        if "http://maps.google.com/?q" in words[0]:
             # Parse OpenGeoSMS
             pwords = words[0].split("?q=")[1].split(",")
             lat = pwords[0]
@@ -1451,10 +1457,11 @@ class S3Msg(object):
                 for sms in  sms_list["sms_messages"]:
                     if (sms["direction"] == "inbound") and \
                        (sms["sid"] not in downloaded_sms):
+                        sender = "<" + sms["from"] + ">"
                         minsert(sid=sms["sid"],body=sms["body"], \
-                                status=sms["status"],sender=sms["from"], \
+                                status=sms["status"],sender=sender, \
                                 received_on=sms["date_sent"])
-                        linsert(sender=sms["from"], message=sms["body"], \
+                        linsert(sender=sender, message=sms["body"], \
                                  source_task_id=account_name, inbound=True)
                                         
             except urllib2.HTTPError, e:

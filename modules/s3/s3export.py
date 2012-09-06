@@ -89,7 +89,7 @@ class S3Exporter(object):
             response.headers["Content-Type"] = contenttype(".csv")
             response.headers["Content-disposition"] = "attachment; filename=%s" % filename
 
-        rows = resource.select()
+        rows = resource._load()
         return str(rows)
 
     # -------------------------------------------------------------------------
@@ -124,7 +124,7 @@ class S3Exporter(object):
             attributes["limitby"] = limitby
 
         # Get the rows and return as json
-        rows = resource.select(*fields, **attributes)
+        rows = resource._load(*fields, **attributes)
 
         response = current.response
         if response:

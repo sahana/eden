@@ -626,7 +626,7 @@ class S3ProjectModel(S3Model):
 
         configure("project_human_resource",
                   onvalidation=self.project_human_resource_onvalidation,
-                  list_fields=["project_id",
+                  list_fields=[#"project_id",
                                "human_resource_id$person_id",
                                "human_resource_id$organisation_id",
                                "human_resource_id$job_title",
@@ -1727,7 +1727,7 @@ class S3Project3WModel(S3Model):
             msg_list_empty = T("No Organizations for Project(s)"))
 
         # Search Method?
-        
+
         # Report Options
         report_fields = ["project_id",
                          "organisation_id",
@@ -3235,7 +3235,7 @@ class S3ProjectTaskModel(S3Model):
                        "comments",
                        ]
         report_fields = list_fields + [(T("Day"), "day")]
-        
+
         configure(tablename,
                   onaccept=self.time_onaccept,
                   report_options=Storage(
@@ -3316,7 +3316,7 @@ class S3ProjectTaskModel(S3Model):
             return row.name
         elif not id:
             return current.messages.NONE
-            
+
         db = current.db
         table = db.project_milestone
         record = db(table.id == id).select(table.name,
@@ -3342,7 +3342,7 @@ class S3ProjectTaskModel(S3Model):
                 instance_type = None
         else:
             return current.messages.NONE
-        
+
         db = current.db
         s3db = current.s3db
         if not instance_type:
@@ -3374,12 +3374,13 @@ class S3ProjectTaskModel(S3Model):
         if row:
             if show_link:
                 return A(row.name,
-                         _href=URL(c="project", f="task", args=[row.id]))
+                         _href=URL(c="project", f="task", extension="html",
+                                   args=[row.id]))
             else:
                 return row.name
         elif not id:
             return current.messages.NONE
-            
+
         db = current.db
         table = db.project_task
         r = db(table.id == id).select(table.name,
@@ -3387,7 +3388,8 @@ class S3ProjectTaskModel(S3Model):
         try:
             if show_link:
                 return A(r.name,
-                         _href=URL(c="project", f="task", args=[id]))
+                         _href=URL(c="project", f="task", extension="html",
+                                   args=[id]))
             else:
                 return r.name
         except:
@@ -3500,7 +3502,6 @@ class S3ProjectTaskModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        define_resource = current.manager.define_resource
 
         vars = form.vars
         id = vars.id
@@ -3546,10 +3547,10 @@ class S3ProjectTaskModel(S3Model):
             filter = (ltable.task_id == id)
             if vars.project_id:
                 # Create the link to the Project
-                #master = define_resource("project", "task", id=id)
+                #master = s3db.resource("project_task", id=id)
                 #record = db(ptable.id == vars.project_id).select(ptable.id,
                 #                                                 limitby=(0, 1)).first()
-                #link = define_resource("project", "task_project")
+                #link = s3db.resource("project_task_project")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == id) & \
                         (ltable.project_id == vars.project_id)
@@ -3561,10 +3562,8 @@ class S3ProjectTaskModel(S3Model):
                                             project_id = vars.project_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = define_resource("project", "task_project",
-                                    filter=filter)
-            ondelete = s3db.get_config("project_task_project",
-                                       "ondelete")
+            links = s3db.resource("project_task_project", filter=filter)
+            ondelete = s3db.get_config("project_task_project", "ondelete")
             links.delete(ondelete=ondelete)
 
         if "activity_id" in vars:
@@ -3573,10 +3572,10 @@ class S3ProjectTaskModel(S3Model):
             filter = (ltable.task_id == id)
             if vars.activity_id:
                 # Create the link to the Activity
-                #master = s3mgr.define_resource("project", "task", id=id)
+                #master = s3db.resource("project_task", id=id)
                 #record = db(atable.id == vars.activity_id).select(atable.id,
                 #                                                  limitby=(0, 1)).first()
-                #link = s3mgr.define_resource("project", "task_activity")
+                #link = s3db.resource("project_task_activity")
                 #link_id = link.update_link(master, record)
                 query = (ltable.task_id == id) & \
                         (ltable.activity_id == vars.activity_id)
@@ -3588,10 +3587,8 @@ class S3ProjectTaskModel(S3Model):
                                             activity_id = vars.activity_id)
                 filter = filter & (ltable.id != link_id)
             # Remove any other links
-            links = define_resource("project", "task_activity",
-                                    filter=filter)
-            ondelete = s3db.get_config("project_task_activity",
-                                       "ondelete")
+            links = s3db.resource("project_task_activity", filter=filter)
+            ondelete = s3db.get_config("project_task_activity", "ondelete")
             links.delete(ondelete=ondelete)
 
         # Notify Assignee
@@ -4080,13 +4077,18 @@ class S3ProjectLocationVirtualFields:
     def organisation(self):
         """ Name of the lead organisation of the project """
 
+        try:
+            project_id = self.project_location.project_id
+        except AttributeError:
+            return None
+
         LEAD_ROLE = current.deployment_settings.get_project_organisation_lead_role()
 
         s3db = current.s3db
         otable = s3db.org_organisation
         ltable = s3db.project_organisation
         query = (ltable.deleted != True) & \
-                (ltable.project_id == self.project_location.project_id) & \
+                (ltable.project_id == project_id) & \
                 (ltable.role == LEAD_ROLE) & \
                 (ltable.organisation_id == otable.id)
         org = current.db(query).select(otable.name,
@@ -4098,10 +4100,14 @@ class S3ProjectLocationVirtualFields:
 
     def L0(self):
         parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_location.location_id,
-                                                   ids=False,
-                                                   names=True)
+        try:
+            parents = current.gis.get_parent_per_level(parents,
+                                                       self.project_location.location_id,
+                                                       ids=False,
+                                                       names=True)
+        except AttributeError:
+            pass
+
         if "L0" in parents:
             return parents["L0"]
         else:
@@ -4109,10 +4115,14 @@ class S3ProjectLocationVirtualFields:
 
     def L1(self):
         parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_location.location_id,
-                                                   ids=False,
-                                                   names=True)
+        try:
+            parents = current.gis.get_parent_per_level(parents,
+                                                       self.project_location.location_id,
+                                                       ids=False,
+                                                       names=True)
+        except AttributeError:
+            pass
+
         if "L1" in parents:
             return parents["L1"]
         else:
@@ -4120,10 +4130,14 @@ class S3ProjectLocationVirtualFields:
 
     def L2(self):
         parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_location.location_id,
-                                                   ids=False,
-                                                   names=True)
+        try:
+            parents = current.gis.get_parent_per_level(parents,
+                                                       self.project_location.location_id,
+                                                       ids=False,
+                                                       names=True)
+        except AttributeError:
+            pass
+
         if "L2" in parents:
             return parents["L2"]
         else:
@@ -4131,10 +4145,14 @@ class S3ProjectLocationVirtualFields:
 
     def L3(self):
         parents = Storage()
-        parents = current.gis.get_parent_per_level(parents,
-                                                   self.project_location.location_id,
-                                                   ids=False,
-                                                   names=True)
+        try:
+            parents = current.gis.get_parent_per_level(parents,
+                                                       self.project_location.location_id,
+                                                       ids=False,
+                                                       names=True)
+        except AttributeError:
+            pass
+
         if "L3" in parents:
             return parents["L3"]
         else:
@@ -4176,14 +4194,25 @@ class S3ProjectLocationVirtualFields:
         """
 
         record = self.project_location
+
+        try:
+            location_id = record.location_id
+        except AttributeError:
+            return None
+
+        location = current.s3db.gis_location_lx_represent(location_id)
+
         if current.deployment_settings.get_project_community():
             # Community is the primary resource
-            location = current.s3db.gis_location_lx_represent(record.location_id)
             return location
         else:
             # Location is just a way to display Projects
-            location = current.s3db.gis_location_lx_represent(record.location_id)
-            project = project_project_represent(record.project_id, show_link=False)
+            try:
+                project_id = record.project_id
+            except AttributeError:
+                return location
+            project = project_project_represent(record.project_id,
+                                                show_link=False)
             return "%s (%s)" % (project, location)
 
 # =============================================================================
@@ -4332,10 +4361,22 @@ class S3ProjectBeneficiaryVirtualFields:
 
     # -------------------------------------------------------------------------
     def year(self):
-        date = self.project_beneficiary.date
-        end_date = self.project_beneficiary.end_date
+
+        try:
+            project_id = self.project_beneficiary.project_id
+        except AttributeError:
+            return []
+        try:
+            date = self.project_beneficiary.date
+        except AttributeError:
+            date = None
+        try:
+            end_date = self.project_beneficiary.end_date
+        except AttributeError:
+            end_date = None
+
         if not date or not end_date:
-            project = current.s3db.project_project[self.project_beneficiary.project_id]
+            project = current.s3db.project_project[project_id]
             if project:
                 if not date:
                     date = project.date
@@ -4358,7 +4399,11 @@ class S3ProjectCommunityContactVirtualFields:
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
 
-        person_id = self.project_community_contact.person_id
+        try:
+            person_id = self.project_community_contact.person_id
+        except AttributeError:
+            return "-"
+
         query = (ctable.deleted != True) & \
                 (ptable.id == person_id) & \
                 (ctable.pe_id == ptable.pe_id) & \
@@ -4373,7 +4418,11 @@ class S3ProjectCommunityContactVirtualFields:
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
 
-        person_id = self.project_community_contact.person_id
+        try:
+            person_id = self.project_community_contact.person_id
+        except AttributeError:
+            return "-"
+
         query = (ctable.deleted != True) & \
                 (ptable.id == person_id) & \
                 (ctable.pe_id == ptable.pe_id) & \
@@ -4393,12 +4442,17 @@ class S3ProjectThemeVirtualFields:
             Themes associated with this Project
         """
 
+        try:
+            project_id = self.project_project.id
+        except AttributeError:
+            return ""
+
         s3db = current.s3db
         ptable = s3db.project_project
         ttable = s3db.project_theme
         ltable = s3db.project_theme_percentage
         query = (ltable.deleted != True) & \
-                (ltable.project_id == self.project_project.id) & \
+                (ltable.project_id == project_id) & \
                 (ltable.theme_id == ttable.id)
         themes = current.db(query).select(ttable.name,
                                           ltable.percentage)
@@ -4471,11 +4525,16 @@ class S3ProjectTimeVirtualFields:
             - used by the 'Project Time' report
         """
 
+        try:
+            task_id = self.project_time.task_id
+        except AttributeError:
+            return None
+
         s3db = current.s3db
         ptable = s3db.project_project
         ltable = s3db.project_task_project
         query = (ltable.deleted != True) & \
-                (ltable.task_id == self.project_time.task_id) & \
+                (ltable.task_id == task_id) & \
                 (ltable.project_id == ptable.id)
         project = current.db(query).select(ptable.name,
                                            limitby=(0, 1)).first()
@@ -4491,17 +4550,21 @@ class S3ProjectTimeVirtualFields:
             - used by the 'Last Week's Work' report
         """
 
-        thisdate = self.project_time.date
+        default = "-"
 
+        try:
+            thisdate = self.project_time.date
+        except AttributeError:
+            return default
         if not thisdate:
-            return "-"
+            return default
 
         now = current.request.utcnow
         week = datetime.timedelta(days=7)
         if thisdate < (now - week):
             # Ignore data older than the last week
             # - should already be filtered in controller anyway
-            return "-"
+            return default
 
         return thisdate.date().strftime("%d %B")
 
@@ -4771,130 +4834,129 @@ def project_task_controller():
     T = current.T
     auth = current.auth
     request = current.request
-    session = current.session
     s3 = current.response.s3
     db = current.db
     s3db = current.s3db
 
-    # Load model
-    tablename = "project_task"
-    table = s3db[tablename]
-    statuses = s3.project_task_active_statuses
-    crud_strings = s3.crud_strings[tablename]
-    if "mine" in request.get_vars:
-        # Show the Open Tasks for this User
-        crud_strings.title_list = T("My Open Tasks")
-        crud_strings.msg_list_empty = T("No Tasks Assigned")
-        s3db.configure(tablename,
-                       copyable=False,
-                       listadd=False)
-        try:
+    # Pre-process
+    def prep(r):
+        tablename = "project_task"
+        table = s3db.project_task
+        statuses = s3.project_task_active_statuses
+        crud_strings = s3.crud_strings["project_task"]
+
+        if r.record:
+            # Put the Comments in the RFooter
+            project_ckeditor()
+            s3.rfooter = LOAD("project", "comments.load",
+                                args=[r.id],
+                                ajax=True)
+
+        elif "mine" in request.get_vars:
+            # Show the Open Tasks for this User
+            if auth.user:
+                pe_id = auth.user.pe_id
+                s3.filter = (table.pe_id == pe_id) & \
+                            (table.status.belongs(statuses))
+            crud_strings.title_list = T("My Open Tasks")
+            crud_strings.msg_list_empty = T("No Tasks Assigned")
+            s3db.configure(tablename,
+                            copyable=False,
+                            listadd=False)
+            try:
+                # Add Virtual Fields
+                list_fields = s3db.get_config(tablename,
+                                                "list_fields")
+                list_fields.insert(4, (T("Project"), "project"))
+                # Hide the Assignee column (always us)
+                list_fields.remove("pe_id")
+                # Hide the Status column (always 'assigned' or 'reopened')
+                list_fields.remove("status")
+                s3db.configure(tablename,
+                                list_fields=list_fields)
+            except:
+                pass
+
+        elif "project" in request.get_vars:
+            # Show Open Tasks for this Project
+            project = request.get_vars.project
+            ptable = s3db.project_project
+            try:
+                name = db(ptable.id == project).select(ptable.name,
+                                                        limitby=(0, 1)).first().name
+            except:
+                current.session.error = T("Project not Found")
+                redirect(URL(args=None, vars=None))
+            ltable = s3db.project_task_project
+            s3.filter = (ltable.project_id == project) & \
+                        (ltable.task_id == table.id) & \
+                        (table.status.belongs(statuses))
+            crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
+            crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
+            crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
             # Add Virtual Fields
             list_fields = s3db.get_config(tablename,
-                                          "list_fields")
-            list_fields.insert(4, (T("Project"), "project"))
-            # Hide the Assignee column (always us)
-            list_fields.remove("pe_id")
-            # Hide the Status column (always 'assigned' or 'reopened')
-            list_fields.remove("status")
+                                            "list_fields")
+            list_fields.insert(2, (T("Activity"), "activity"))
             s3db.configure(tablename,
-                           # Override the 'show read-only view of record after update'
-                           create_next=URL(vars={"mine":1}),
-                           list_fields=list_fields)
-        except:
-            pass
-        if auth.user:
-            pe_id = auth.user.pe_id
-            s3.filter = (table.pe_id == pe_id) & \
-                        (table.status.belongs(statuses))
-    elif "project" in request.get_vars:
-        # Show Open Tasks for this Project
-        project = request.get_vars.project
-        ptable = s3db.project_project
-        try:
-            name = db(ptable.id == project).select(ptable.name,
-                                                   limitby=(0, 1)).first().name
-        except:
-            session.error = T("Project not Found")
-            redirect(URL(args=None, vars=None))
-        crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
-        crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
-        crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
-        # Add Virtual Fields
-        list_fields = s3db.get_config(tablename,
-                                      "list_fields")
-        list_fields.insert(2, (T("Activity"), "activity"))
-        s3db.configure(tablename,
-                       # Block Add until we get the injectable component lookups
-                       insertable=False,
-                       deletable=False,
-                       copyable=False,
-                       #search_method=task_search,
-                       list_fields=list_fields)
-        ltable = s3db.project_task_project
-        s3.filter = (ltable.project_id == project) & \
-                    (ltable.task_id == table.id) & \
-                    (table.status.belongs(statuses))
-    else:
-        crud_strings.title_list = T("All Tasks")
-        crud_strings.title_search = T("All Tasks")
-        list_fields = s3db.get_config(tablename,
-                                      "list_fields")
-        list_fields.insert(2, (T("Project"), "project"))
-        list_fields.insert(3, (T("Activity"), "activity"))
-        s3db.configure(tablename,
-                       report_options=Storage(
-                            search=[
-                                S3SearchOptionsWidget(
-                                    field="project",
-                                    name="project",
-                                    label=T("Project")
-                                )
-                            ]
-                       ),
-                       list_fields=list_fields
-                       )
-        if "open" in request.get_vars:
+                            # Block Add until we get the injectable component lookups
+                            insertable=False,
+                            deletable=False,
+                            copyable=False,
+                            #search_method=task_search,
+                            list_fields=list_fields)
+        elif "open" in request.get_vars:
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
             s3.filter = (table.status.belongs(statuses))
+        else:
+            crud_strings.title_list = T("All Tasks")
+            crud_strings.title_search = T("All Tasks")
+            list_fields = s3db.get_config(tablename,
+                                            "list_fields")
+            list_fields.insert(2, (T("Project"), "project"))
+            list_fields.insert(3, (T("Activity"), "activity"))
+            s3db.configure(tablename,
+                            report_options=Storage(
+                                search=[
+                                    S3SearchOptionsWidget(
+                                        field="project",
+                                        name="project",
+                                        label=T("Project")
+                                    )
+                                ]
+                            ),
+                            list_fields=list_fields
+                            )
 
-    # Pre-process
-    def prep(r):
-        if r.interactive:
-            if r.record:
-                # Put the Comments in the RFooter
-                project_ckeditor()
-                s3.rfooter = LOAD("project", "comments.load",
-                                  args=[r.id],
-                                  ajax=True)
-            if r.component:
-                if r.component_name == "req":
-                    if current.deployment_settings.has_module("hrm"):
-                        r.component.table.type.default = 3
-                    if r.method != "update" and r.method != "read":
-                        # Hide fields which don't make sense in a Create form
-                        s3db.req_create_form_mods()
-                elif r.component_name == "human_resource":
-                    r.component.table.type.default = 2
-            else:
-                if not auth.s3_has_role("STAFF"):
-                    # Hide fields to avoid confusion (both of inputters & recipients)
-                    table = r.table
-                    field = table.source
-                    field.readable = field.writable = False
-                    field = table.pe_id
-                    field.readable = field.writable = False
-                    field = table.date_due
-                    field.readable = field.writable = False
-                    field = table.milestone_id
-                    field.readable = field.writable = False
-                    field = table.time_estimated
-                    field.readable = field.writable = False
-                    field = table.time_actual
-                    field.readable = field.writable = False
-                    field = table.status
-                    field.readable = field.writable = False
+        if r.component:
+            if r.component_name == "req":
+                if current.deployment_settings.has_module("hrm"):
+                    r.component.table.type.default = 3
+                if r.method != "update" and r.method != "read":
+                    # Hide fields which don't make sense in a Create form
+                    s3db.req_create_form_mods()
+            elif r.component_name == "human_resource":
+                 r.component.table.type.default = 2
+        else:
+            if not auth.s3_has_role("STAFF"):
+                # Hide fields to avoid confusion (both of inputters & recipients)
+                table = r.table
+                field = table.source
+                field.readable = field.writable = False
+                field = table.pe_id
+                field.readable = field.writable = False
+                field = table.date_due
+                field.readable = field.writable = False
+                field = table.milestone_id
+                field.readable = field.writable = False
+                field = table.time_estimated
+                field.readable = field.writable = False
+                field = table.time_actual
+                field.readable = field.writable = False
+                field = table.status
+                field.readable = field.writable = False
+        print "%s=%s" % (r.representation, s3.filter)
         return True
     s3.prep = prep
 

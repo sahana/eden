@@ -38,19 +38,20 @@ class AddStaffToWarehouse(SeleniumUnitTest):
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
-        config = self.config
         browser = self.browser
-        self.login(account="admin", nexturl="inv/warehouse/")
+        config = self.config
+        self.login(account="admin", nexturl="inv/warehouse")
         self.dt_filter("Lospalos Warehouse")
         self.dt_action()
         url = browser.current_url
         url_parts = url.split("/")
         try:
-            wh_id = int(url_parts[-2])
+            org_id = int(url_parts[-2])
         except:
-            wh_id = int(url_parts[-1])
-        browser.get("%s/inv/warehouse/n/%s/human_resource_site" % (config.url, wh_id))
+            org_id = int(url_parts[-1])
+        browser.get("%s/inv/warehouse/%s/human_resource" % (config.url, org_id))
         
+        self.browser.find_element_by_id("select_from_registry").click()
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",

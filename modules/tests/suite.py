@@ -69,7 +69,7 @@ def loadAllTests():
     addTests(loadTests(CreateMember))
 
     # Search Staff (Simple & Advance)
-    addTests(loadTests(SearchStaff))
+    #addTests(loadTests(SearchStaff))
 
     return suite
 
@@ -87,10 +87,6 @@ parser.add_argument("-M",
                     "--method",
                     "--test",
                     help = method_desc
-                   )
-parser.add_argument("-A",
-                    "--auth",
-                    help = """Run an Auth test without the webdriver""",
                    )
 parser.add_argument("-V", "--verbose",
                     type = int,
@@ -123,7 +119,7 @@ full: This will run all test
 """
 parser.add_argument("--suite",
                     help = suite_desc,
-                    choices = ["smoke", "auth", "quick", "complete", "full"],
+                    choices = ["smoke", "roles", "quick", "complete", "full"],
                     default = "quick")
 parser.add_argument("--link-depth",
                     type = int,
@@ -224,8 +220,8 @@ elif args["suite"] == "smoke":
         from s3 import s3_debug
         s3_debug("%s, unable to run the smoke tests." % msg)
         pass
-elif args["auth"]:
-    from tests.auth import *
+elif args["suite"] == "roles":
+    from tests.roles import *
     create_role_test_data()
     #suite = unittest.TestSuite()
     suite = test_roles()

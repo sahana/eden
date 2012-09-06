@@ -53,11 +53,6 @@ class CreateProject(SeleniumUnitTest):
         self.create("project_project", 
                     [( "name",
                        "Community Strengthening through Dance" ),
-                     #( "organisation_id",
-                     #  "Timor-Leste Red Cross Society",
-                     #  "autocomplete"),
-                     ( "currency",
-                       "USD",),
                      ( "comments",
                        "Host National Society")
                     ]
@@ -120,7 +115,7 @@ class CreateProject(SeleniumUnitTest):
                     [( "beneficiary_type_id",
                        "Teachers",
                        "option"),
-                     ( "number",
+                     ( "value",
                        "100"),
                      ( "comments",
                        "Primary Beneficiary")
@@ -134,7 +129,7 @@ class CreateProject(SeleniumUnitTest):
                     [( "beneficiary_type_id",
                        "Pupils",
                        "option"),
-                     ( "number",
+                     ( "value",
                        "1000"),
                      ( "comments",
                        "Secondary Beneficiary")

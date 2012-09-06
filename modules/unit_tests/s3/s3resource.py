@@ -20,7 +20,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetJoinSimpleComponent(self):
         """ Test get_join for a simple component """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         # Master resource has no component join
         self.assertEqual(resource.get_join(), None)
         component = resource.components["identity"]
@@ -31,7 +31,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetJoinSuperComponent(self):
         """ Test get_join for a super-component """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         component = resource.components["contact"]
         ijoin = component.get_join()
         self.assertEqual(str(ijoin), "((pr_person.pe_id = pr_contact.pe_id) AND "
@@ -40,7 +40,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetJoinLinkTableComponent(self):
         """ Test get_join for a link-table component """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         component = resource.components["task"]
         ijoin = component.get_join()
         self.assertEqual(str(ijoin),
@@ -54,7 +54,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetLeftJoinSimpleComponent(self):
         """ Test get_left_join for a simple component """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         # Master Resource has no join!
         self.assertEqual(resource.get_left_join(), None)
         component = resource.components["identity"]
@@ -68,7 +68,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetLeftJoinSuperComponent(self):
         """ Test get_left_join for a super-component """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         component = resource.components["contact"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
@@ -80,7 +80,7 @@ class S3ResourceTests(unittest.TestCase):
     def testGetLeftJoinLinkTableComponent(self):
         """ Test get_left_join for a link-table component """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         component = resource.components["task"]
         ljoin = component.get_left_join()
         self.assertTrue(isinstance(ljoin, list))
@@ -96,7 +96,7 @@ class S3ResourceTests(unittest.TestCase):
     def testResolveSelectors(self):
         """ Test resolve_selectors """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selectors = ["id",
                      "name",
                      "organisation_id$name",
@@ -141,7 +141,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsInnerField(self):
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         q = S3FieldSelector("first_name") == "test"
 
         joins, distinct = q.joins(resource)
@@ -154,7 +154,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsReferencedTableField(self):
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         q = S3FieldSelector("organisation_id$name") == "test"
 
         joins, distinct = q.joins(resource)
@@ -171,7 +171,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsComponentField(self):
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         q = S3FieldSelector("identity.value") == "test"
 
         joins, distinct = q.joins(resource)
@@ -188,7 +188,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsSuperComponentField(self):
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         q = S3FieldSelector("contact.value") == "test"
 
         joins, distinct = q.joins(resource)
@@ -205,7 +205,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsLinkedComponentField(self):
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         q = S3FieldSelector("task.description") == "test"
 
         joins, distinct = q.joins(resource)
@@ -225,7 +225,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testGetQueryJoinsCombination(self):
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         q = (S3FieldSelector("organisation_id$name") == "test") & \
             (S3FieldSelector("task.description") == "test")
 
@@ -251,7 +251,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q = (S3FieldSelector("organisation_id$name") == "test") & \
             (S3FieldSelector("task.description") == "test")
-        resource = current.manager.define_resource("project", "project",
+        resource = current.s3db.resource("project_project",
                                          filter=q)
 
         rfilter = resource.rfilter
@@ -290,7 +290,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q1 = (S3FieldSelector("organisation_id$name") == "test")
         q2 = (S3FieldSelector("task.description") == "test")
-        resource = current.manager.define_resource("project", "project", filter=q1)
+        resource = current.s3db.resource("project_project", filter=q1)
 
         resource.add_filter(q2)
 
@@ -318,7 +318,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q1 = (S3FieldSelector("human_resource.organisation_id$name") == "test")
         q2 = (S3FieldSelector("identity.value") == "test")
-        resource = current.manager.define_resource("pr", "person", filter=q1)
+        resource = current.s3db.resource("pr_person", filter=q1)
 
         resource.add_filter(q2)
 
@@ -346,7 +346,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction3(self):
 
-        resource = current.manager.define_resource("project", "project", id=1)
+        resource = current.s3db.resource("project_project", id=1)
 
         component = resource.components["activity"]
         component.build_query()
@@ -368,7 +368,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testComponentFilterConstruction4(self):
 
-        resource = current.manager.define_resource("pr", "person",
+        resource = current.s3db.resource("pr_person",
                                          id=1,
                                          components=["competency"],
                                          filter=(S3FieldSelector("competency.id") == 1))
@@ -388,7 +388,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q = (S3FieldSelector("organisation_id$name") == "test") & \
             (S3FieldSelector("task.description") == "test")
-        resource = current.manager.define_resource("project", "project", filter=q)
+        resource = current.s3db.resource("project_project", filter=q)
 
         fjoins = resource.rfilter.get_left_joins()
         self.assertNotEqual(fjoins, None)
@@ -405,7 +405,7 @@ class S3ResourceFilterTests(unittest.TestCase):
         url_query = {"project.organisation_id$name__like": "*test*",
                      "task.description__like!": "*test*"}
 
-        resource = current.manager.define_resource("project", "project", vars=url_query)
+        resource = current.s3db.resource("project_project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -427,7 +427,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         url_query = {"project.organisation_id$name__like": "Test*,Other*"}
 
-        resource = current.manager.define_resource("project", "project", vars=url_query)
+        resource = current.s3db.resource("project_project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -446,7 +446,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         url_query = {"project.organisation_id$name|task.description__like": "Test*"}
 
-        resource = current.manager.define_resource("project", "project", vars=url_query)
+        resource = current.s3db.resource("project_project", vars=url_query)
 
         rfilter = resource.rfilter
         fjoins = rfilter.get_left_joins()
@@ -563,7 +563,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         q = FS("first_name").like(["Test%", "Other%"])
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         u = q.serialize_url(resource=resource)
         k = "person.first_name__like"
         self.assertNotEqual(u, None)
@@ -577,7 +577,7 @@ class S3ResourceFilterTests(unittest.TestCase):
         url_query = {"project.organisation_id$name__like": "*test*",
                      "task.description__like!": "*test*"}
 
-        resource = current.manager.define_resource("project", "project", vars=url_query)
+        resource = current.s3db.resource("project_project", vars=url_query)
         rfilter = resource.rfilter
         url_vars = rfilter.serialize_url()
         self.assertEqual(len(url_vars), len(url_query))
@@ -587,7 +587,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         FS = S3FieldSelector
         q = FS("first_name").like(["Test%", "Other%"])
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         resource.add_filter(q)
         rfilter = resource.rfilter
         u = rfilter.serialize_url()
@@ -612,7 +612,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
     def testAnyOf(self):
 
-        resource = current.manager.define_resource("org", "organisation")
+        resource = current.s3db.resource("org_organisation")
         FS = S3FieldSelector
         q = FS("sector_id").contains([1, 2])
         query = q.query(resource)
@@ -633,7 +633,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorInnerField(self):
         """ Resolution of a selector for a field in master table """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selector = "name"
 
         f = S3ResourceField(resource, selector)
@@ -650,7 +650,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorVirtualField(self):
         """ Resolution of a selector for a virtual field in master table """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selector = "virtual"
 
         f = S3ResourceField(resource, selector)
@@ -667,7 +667,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorComponentField(self):
         """ Resolution of a selector for a field in a component """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         selector = "identity.value"
 
         f = S3ResourceField(resource, selector)
@@ -690,7 +690,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorLinkedTableField(self):
         """ Resolution of a selector for a field in a link-table component """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selector = "task.description"
 
         f = S3ResourceField(resource, selector)
@@ -715,7 +715,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorReferencedTableField(self):
         """ Resolution of a selector for a field in a referenced table """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selector = "organisation_id$name"
 
         f = S3ResourceField(resource, selector)
@@ -735,7 +735,7 @@ class S3ResourceFieldTests(unittest.TestCase):
     def testResolveSelectorExceptions(self):
         """ Exception for invalid selectors """
 
-        resource = current.manager.define_resource("project", "project")
+        resource = current.s3db.resource("project_project")
         selector = "organisation_id.test"
         self.assertRaises(AttributeError,
                           S3ResourceField,
@@ -748,7 +748,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
 
     def setUp(self):
 
-        s3mgr = current.manager
+        s3db = current.s3db
         current.auth.override = True
 
         xmlstr = """
@@ -766,19 +766,19 @@ class S3ResourceDataAccessTests(unittest.TestCase):
 
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = s3mgr.define_resource("org", "organisation")
+        resource = s3db.resource("org_organisation")
         resource.import_xml(self.xmltree)
 
     # -------------------------------------------------------------------------
     def testResourceFieldExtract(self):
         """ Test value extraction from rows by S3ResourceFields """
 
-        s3mgr = current.manager
+        s3db = current.s3db
 
-        resource = s3mgr.define_resource("org", "organisation",
-                                         uid="DATESTORG")
+        resource = s3db.resource("org_organisation",
+                                 uid="DATESTORG")
 
-        rows = resource._select(["name", "office.name"], start=0, limit=1)
+        rows = resource.select(["name", "office.name"], start=0, limit=1)
         self.assertEqual(len(rows), 1)
         row = rows[0]
 
@@ -792,7 +792,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testCollapseRows(self):
-        """ Test correct handling of ambiguous rows in _extract() """
+        """ Test correct handling of ambiguous rows in extract() """
 
         s3db = current.s3db
 
@@ -807,11 +807,11 @@ class S3ResourceDataAccessTests(unittest.TestCase):
                                         ftable.name)
         self.assertEqual(len(rows), 2)
 
-        resource = current.manager.define_resource("org", "organisation")
+        resource = s3db.resource("org_organisation")
         list_fields = ["name", "office.name"]
         lfields = resource.resolve_selectors(list_fields,
                                              skip_components=False)[0]
-        collapsed = resource._extract(rows, lfields)
+        collapsed = resource.extract(rows, lfields)
         self.assertEqual(len(collapsed), 1)
 
         office_names = collapsed[0]["org_office.name"]
@@ -820,7 +820,7 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         self.assertTrue("DATestOffice1" in office_names)
         self.assertTrue("DATestOffice2" in office_names)
 
-        collapsed = resource._extract(rows, lfields, represent=True)
+        collapsed = resource.extract(rows, lfields, represent=True)
         self.assertEqual(len(collapsed), 1)
 
         office_names = collapsed[0]["org_office.name"]
@@ -847,7 +847,7 @@ class S3ResourceExportTests(unittest.TestCase):
         xml = current.xml
 
         current.auth.override = True
-        resource = current.manager.define_resource("org", "office", id=1)
+        resource = current.s3db.resource("org_office", id=1)
         tree = resource.export_tree(start=0, limit=1, dereference=False)
 
         root = tree.getroot()
@@ -875,7 +875,7 @@ class S3ResourceExportTests(unittest.TestCase):
         xml = current.xml
 
         current.auth.override = True
-        resource = current.manager.define_resource("org", "office", id=1)
+        resource = current.s3db.resource("org_office", id=1)
         tree = resource.export_tree(start=0, limit=1, dereference=False, maxbounds=True)
         root = tree.getroot()
         attrib = root.attrib
@@ -904,12 +904,12 @@ class S3ResourceExportTests(unittest.TestCase):
 
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = manager.define_resource("hms", "hospital")
+        resource = current.s3db.resource("hms_hospital")
         resource.import_xml(self.xmltree)
 
-        resource = manager.define_resource("hms", "hospital",
-                                           uid=["ORDERTESTHOSPITAL1",
-                                                "ORDERTESTHOSPITAL2"])
+        resource = current.s3db.resource(resource,
+                                         uid=["ORDERTESTHOSPITAL1",
+                                              "ORDERTESTHOSPITAL2"])
         resource.load()
         self.assertEqual(len(resource), 2)
         first = resource._rows[0]["uuid"]
@@ -981,7 +981,7 @@ class S3ResourceImportTests(unittest.TestCase):
     def testImportXML(self):
         """ Test JSON message after XML import """
 
-        resource = current.manager.define_resource("pr", "person")
+        resource = current.s3db.resource("pr_person")
         msg = resource.import_xml(self.tree)
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
@@ -1012,7 +1012,7 @@ class S3ResourceImportTests(unittest.TestCase):
 
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = manager.define_resource("hms", "hospital")
+        resource = current.s3db.resource("hms_hospital")
         resource.import_xml(self.xmltree)
         self.assertEqual(current.xml.as_utc(resource.mtime),
                          current.xml.as_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
@@ -1033,7 +1033,7 @@ class S3ResourceImportTests(unittest.TestCase):
 
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = manager.define_resource("hms", "hospital")
+        resource = current.s3db.resource("hms_hospital")
         resource.import_xml(self.xmltree)
         # Can't compare with exactly utcnow as these would be milliseconds apart,
         # assume equal dates are sufficient for this test
@@ -1059,7 +1059,7 @@ class S3ResourceImportTests(unittest.TestCase):
 
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = manager.define_resource("hms", "hospital")
+        resource = current.s3db.resource("hms_hospital")
         resource.import_xml(self.xmltree)
         self.assertEqual(current.xml.as_utc(resource.mtime).date(),
                          current.xml.as_utc(datetime.datetime.utcnow()).date())
@@ -1124,7 +1124,7 @@ class S3ResourceSQLTableTests(unittest.TestCase):
     def testJSONExport(self):
         """ Test JSON representation of sqltable """
 
-        resource = current.manager.define_resource("hrm", "human_resource")
+        resource = current.s3db.resource("hrm_human_resource")
         fields = ["id",
                   "person_id$first_name",
                   "person_id$middle_name",
@@ -1193,7 +1193,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
         self.id1 = org1_id
         self.id2 = org2_id
 
-        self.resource = current.manager.define_resource("org", "organisation")
+        self.resource = s3db.resource("org_organisation")
 
     def testMerge(self):
         """ Test merge """
@@ -1396,7 +1396,7 @@ class S3MergePersonsTests(unittest.TestCase):
         self.id1 = person1_id
         self.id2 = person2_id
 
-        self.resource = current.manager.define_resource("pr", "person")
+        self.resource = s3db.resource("pr_person")
 
     def testPermissionError(self):
         """ Check for exception if not authorized """
@@ -1617,7 +1617,7 @@ class S3MergeLocationsTests(unittest.TestCase):
         self.id1 = location1_id
         self.id2 = location2_id
 
-        self.resource = current.manager.define_resource("gis", "location")
+        self.resource = s3db.resource("gis_location")
 
     def testMerge(self):
         """ Test merge """

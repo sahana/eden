@@ -3303,7 +3303,7 @@ def hrm_human_resource_onaccept(form):
                             limitby=(0, 1)).first()
     if user:
         user_id = user.id
-        data.owned_by_user = user.id
+        data.owned_by_user = user_id
 
     if data:
         record.update_record(**data)
@@ -3368,13 +3368,8 @@ def hrm_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        year = now.year
-        month = now.month - 3
-        if month <= 0:
-            month += 12
-            year -= 1
-        three_months_prior = datetime.date(year, month - 3, now.day)
-        end = max(programmes.last().date, three_months_prior)
+        three_months_prior = (now - datetime.timedelta(days=92))
+        end = max(programmes.last().date, three_months_prior.date())
         last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:
@@ -3383,17 +3378,17 @@ def hrm_active(person_id):
         else:
             #start from a year before the latest record
             start = last_year
-        
+
         # Total hours between start and end
         programme_hours = 0
         for programme in programmes:
             if programme.date >= start and programme.date <= end and programme.hours:
                 programme_hours += programme.hours
-        
+
         # Average hours per month
         months = max(1, (end - start).days / 30.5)
         average = programme_hours / months
-        
+
         # Active?
         if average >= 8:
             return True
@@ -4240,31 +4235,56 @@ def hrm_rheader(r, tabs=[]):
         elif settings.get_hrm_staff_experience() == "experience":
             experience_tab = (T("Experience"), "experience")
 
+        if settings.get_hrm_use_certificates():
+            certificates_tab = (T("Certificates"), "certificate")
+        else:
+            certificates_tab = None
+
         if settings.get_hrm_use_credentials():
             credentials_tab = (T("Credentials"), "credential")
         else:
             credentials_tab = None
+
+        if settings.get_hrm_use_description():
+            description_tab = (T("Description"), "physical_description")
+        else:
+            description_tab = None
 
         if settings.get_hrm_use_education():
             education_tab = (T("Education"), "education")
         else:
             education_tab = None
 
-        # Tabs
+        if settings.get_hrm_use_id():
+            id_tab = (T("ID"), "identity")
+        else:
+            id_tab = None
+
+        if settings.get_hrm_use_skills():
+            skills_tab = (T("Skills"), "competency")
+        else:
+            skills_tab = None
+
         if settings.get_hrm_use_teams():
             teams_tab = (T("Teams"), "group_membership")
         else:
             teams_tab = None
+
+        if settings.get_hrm_use_trainings():
+            trainings_tab = (T("Trainings"), "training")
+        else:
+            trainings_tab = None
+
         if current.session.s3.hrm.mode is not None:
             # Configure for personal mode
             tabs = [(T("Person Details"), None),
-                    (T("ID"), "identity"),
-                    (T("Description"), "physical_description"),
+                    id_tab,
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     (T("Positions"), "human_resource"),
@@ -4279,14 +4299,14 @@ def hrm_rheader(r, tabs=[]):
                 hr_record = T("Volunteer Record")
             tabs = [(T("Person Details"), None),
                     (hr_record, "human_resource"),
-                    (T("ID"), "identity"),
+                    id_tab,
                     education_tab,
-                    (T("Description"), "physical_description"),
+                    description_tab,
                     (T("Address"), "address"),
                     (T("Contacts"), "contacts"),
-                    (T("Trainings"), "training"),
-                    (T("Certificates"), "certification"),
-                    (T("Skills"), "competency"),
+                    trainings_tab,
+                    certificates_tab,
+                    skills_tab,
                     credentials_tab,
                     experience_tab,
                     teams_tab,
@@ -4373,7 +4393,8 @@ def hrm_training_event_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if r.interactive and r.component:
+        if r.component and \
+           (r.interactive or r.extension == "aaData"):
             T = current.T
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(
@@ -4442,8 +4463,9 @@ def hrm_training_controller():
         redirect(URL(f="index"))
 
     def prep(r):
-        if r.interactive:
-            # Suitable liset_fields
+        if r.interactive or \
+           r.extension == "aaData":
+            # Suitable list_fields
             T = current.T
             list_fields = ["course_id",
                            "person_id",

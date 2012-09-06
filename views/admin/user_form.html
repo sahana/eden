@@ -1,11 +1,12 @@
+<!-- @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement  --->
 {{form.attributes["_id"] = "regform"}}
-{{form[0].insert(7, TR(
+{{form[0].insert(8, TR(
 	TD(
 		LABEL("%s:" % T("Verify password"))
 	, _class="w2p_fl"), 
 	TD()
 ))}}
-{{form[0].insert(7, TR(
+{{form[0].insert(9, TR(
 	TD(
 	 	INPUT(_name="password_two", _id="password_two", _type="password")
 	, _class="w2p_fw"),
@@ -25,40 +26,3 @@
 	TD(_class="w2p_fc")
   ))}}
 {{pass}}
-
-{{if s3.debug:}}
-  {{if s3.cdn:}}
-{{s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.js")}}
-  {{else:}}
-{{s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)}}""
-  {{pass}}
- {{else:}}
-  {{if s3.cdn:}}
-{{s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.8.1/jquery.validate.min.js")}}
-  {{else:}}
-{{s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)}}
- {{pass}}
-{{pass}}
-
-{{if s3.debug:}}
-  {{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)}}
-{{else:}}
-  {{s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)}}
-{{pass}}
-{{s3.jquery_ready.append("".join(("""
-$('.password:last').pstrength();
-if ($('#auth_user_password').val()) {
-    // Update form: don't want password_two validation
-    $('#password_two').rules('remove');
-    $('#auth_user_password').change( function() {
-        // unless the password is being changed
-        $('#password_two').rules('add', {
-            required: true,
-            equalTo: '.password:last',
-            messages: {
-                required: '""",  str(T("Repeat your password")), """',
-                equalTo: '""",  str(T("Enter the same password as above")), """'
-            },
-        });
-    });
-}""")))}}

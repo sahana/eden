@@ -85,10 +85,11 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         _href = item.url()
                         if item.is_first():
                             # 1st item, so display logo
-                            link = DIV(SPAN(A(_href=_href),
-                                            _class="S3menulogo"),
+                            link = DIV(SPAN(A("",
+                                              _href=_href),
+                                              _class="S3menulogo"),
                                        SPAN(A(item.label, _href=_href),
-                                            _class="S3menuHome"),
+                                              _class="S3menuHome"),
                                        _class="hoverable")
                         else:
                             link = DIV(A(item.label,

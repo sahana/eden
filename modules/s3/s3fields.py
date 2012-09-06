@@ -36,6 +36,7 @@ __all__ = ["S3ReusableField",
            "s3_meta_deletion_rb",
            "s3_deletion_status",
            "s3_timestamp",
+           "s3_authorstamp",
            "s3_ownerstamp",
            "s3_meta_fields",
            "s3_all_meta_field_names",   # Used by GIS
@@ -69,7 +70,7 @@ from gluon.storage import Storage
 from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_group_represent
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
-    
+
 try:
     db = current.db
 except:
@@ -291,21 +292,56 @@ def s3_timestamp():
 
 # =========================================================================
 # Record authorship meta-fields
+def s3_authorstamp():
+    """
+        Record ownership meta-fields
+    """
+
+    auth = current.auth
+    utable = auth.settings.table_user
+
+    if auth.is_logged_in():
+        current_user = current.session.auth.user.id
+    else:
+        current_user = None
+
+    # Author of a record
+    s3_meta_created_by = S3ReusableField("created_by", utable,
+                                         readable=False,
+                                         writable=False,
+                                         requires=None,
+                                         default=current_user,
+                                         represent=s3_auth_user_represent,
+                                         ondelete="RESTRICT")
+
+    # Last author of a record
+    s3_meta_modified_by = S3ReusableField("modified_by", utable,
+                                          readable=False,
+                                          writable=False,
+                                          requires=None,
+                                          default=current_user,
+                                          update=current_user,
+                                          represent=s3_auth_user_represent,
+                                          ondelete="RESTRICT")
+
+    return (s3_meta_created_by(),
+            s3_meta_modified_by())
+
+# =========================================================================
 def s3_ownerstamp():
     """
         Record ownership meta-fields
     """
 
-    db = current.db
     auth = current.auth
-    session = current.session
+    utable = auth.settings.table_user
 
     # Individual user who owns the record
-    s3_meta_owned_by_user = S3ReusableField("owned_by_user", db.auth_user,
+    s3_meta_owned_by_user = S3ReusableField("owned_by_user", utable,
                                             readable=False,
                                             writable=False,
                                             requires=None,
-                                            default=session.auth.user.id
+                                            default=current.session.auth.user.id
                                                         if auth.is_logged_in()
                                                         else None,
                                             represent=lambda id: \
@@ -341,36 +377,10 @@ def s3_meta_fields():
         Normal meta-fields added to every table
     """
 
-    db = current.db
-    auth = current.auth
-    session = current.session
-
-    if auth.is_logged_in():
-        current_user = session.auth.user.id
-    else:
-        current_user = None
-
-    # Author of a record
-    s3_meta_created_by = S3ReusableField("created_by", db.auth_user,
-                                         readable=False,
-                                         writable=False,
-                                         requires=None,
-                                         default=current_user,
-                                         represent=s3_auth_user_represent,
-                                         ondelete="RESTRICT")
-
-    # Last author of a record
-    s3_meta_modified_by = S3ReusableField("modified_by", db.auth_user,
-                                          readable=False,
-                                          writable=False,
-                                          requires=None,
-                                          default=current_user,
-                                          update=current_user,
-                                          represent=s3_auth_user_represent,
-                                          ondelete="RESTRICT")
+    utable = current.auth.settings.table_user
 
     # Approver of a record
-    s3_meta_approved_by = S3ReusableField("approved_by", db.auth_user,
+    s3_meta_approved_by = S3ReusableField("approved_by", utable,
                                           readable=False,
                                           writable=False,
                                           requires=None,
@@ -384,11 +394,9 @@ def s3_meta_fields():
               s3_meta_deletion_rb(),
               s3_meta_created_on(),
               s3_meta_modified_on(),
-              s3_meta_created_by(),
-              s3_meta_modified_by(),
               s3_meta_approved_by(),
               )
-    fields = (fields + s3_ownerstamp())
+    fields = (fields + s3_authorstamp() + s3_ownerstamp())
     return fields
 
 def s3_all_meta_field_names():
@@ -404,13 +412,13 @@ def s3_role_required():
     """
 
     T = current.T
-    db = current.db
-    f = S3ReusableField("role_required", db.auth_group,
+    gtable = current.auth.settings.table_group
+    f = S3ReusableField("role_required", gtable,
             sortby="role",
-            requires = IS_NULL_OR(IS_ONE_OF(db,
-                                            "auth_group.id",
-                                            "%(role)s",
-                                            zero=T("Public"))),
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "auth_group.id",
+                                  "%(role)s",
+                                  zero=T("Public"))),
             widget = S3AutocompleteWidget("admin",
                                           "group",
                                           fieldname="role"),

@@ -39,6 +39,12 @@ class CreateMember(SeleniumUnitTest):
         """
         print "\n"
         
+        import datetime
+        from dateutil.relativedelta import relativedelta
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
 
         self.login(account="admin", nexturl="member/membership/create")
         self.create("member_membership", 
@@ -52,40 +58,47 @@ class CreateMember(SeleniumUnitTest):
                        "Grey",
                        "pr_person"),
                      ( "email",
-                       "denise.grey@cvtl.tl",
+                       "denise.grey3@cvtl.tl",
                        "pr_person"),
                      ( "start_date",
-                       "2012-11-01",),
+                       today,),
                      ( "membership_fee",
                        "10.00"),
                      ( "membership_paid",
-                       "2012-11-01")]
+                       today)]
                      )
         
 
-    def test_mem001_create_member_registry(self):
-        """
-            @case: mem001
-            @description: Create Member from registery
-
-        """
-        print "\n"               
-
-        self.login(account="admin", nexturl="member/membership/create")
-        self.browser.find_element_by_id("select_from_registry").click()
-        self.create("member_membership", 
-                    [( "person_id",
-                       "Beatriz Albuquequer",
-                       "autocomplete"),
-                     ( "organisation_id",
-                       "Timor-Leste Red Cross Society",
-                       "autocomplete"),
-                     ( "start_date",
-                       "2012-09-01"),
-                     ( "membership_fee",
-                       "10.00"),
-                     ( "membership_paid",
-                       "2012-09-01")]
-                     )
+#    def test_mem001_create_member_registry(self):
+#        """
+#            @case: mem001
+#            @description: Create Member from registery
+#
+#        """
+#        print "\n"   
+#                    
+#        import datetime
+#        from dateutil.relativedelta import relativedelta
+#        today = datetime.date.today().strftime("%Y-%m-%d")
+#        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+#        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+#        self.login(account="admin", nexturl="member/membership/create")
+#        self.browser.find_element_by_id("select_from_registry").click()
+#        
+#        self.create("member_membership", 
+#                    [( "person_id",
+#                       "Beatriz Albuquequer",
+#                       "autocomplete"),
+#                     ( "organisation_id",
+#                       "Timor-Leste Red Cross Society",
+#                       "autocomplete"),
+#                     ( "start_date",
+#                       today),
+#                     ( "membership_fee",
+#                       "10.00"),
+#                     ( "membership_paid",
+#                       today)]
+#                     )
       
         

@@ -3409,22 +3409,23 @@ class InvItemVirtualFields:
             v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
             # Need real numbers to use for Report calculations
             #return IS_FLOAT_AMOUNT.represent(v, precision=2)
-            return v
-        except:
+        except (AttributeError,TypeError):
             # not available
             return current.messages.NONE
+        else:
+            return v
 
     def item_code(self):
         try:
             return self.inv_inv_item.item_id.code
-        except:
+        except AttributeError:
             # not available
             return current.messages.NONE
 
     def item_category(self):
         try:
             return self.inv_inv_item.item_id.item_category_id.name
-        except:
+        except AttributeError:
             # not available
             return current.messages.NONE
 
@@ -3442,7 +3443,7 @@ class InvTrackItemVirtualFields:
             # Need real numbers to use for Report calculations
             #return IS_FLOAT_AMOUNT.represent(v, precision=2)
             return v
-        except:
+        except AttributeError:
             # not available
             return current.messages.NONE
 

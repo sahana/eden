@@ -9,23 +9,39 @@ T = current.T
 """
     Template settings for IFRC
 """
+# =============================================================================
+# System Settings
+# -----------------------------------------------------------------------------
+# Authorization Settings
+settings.auth.registration_requires_approval = True
+settings.auth.registration_requires_verification = True
+settings.auth.registration_requests_organisation = True
+settings.auth.registration_organisation_required = True
+settings.auth.registration_requests_site = True
 
+# -----------------------------------------------------------------------------
+# Security Policy
+settings.security.policy = 8 # Delegations
+settings.security.map = True
+
+# -----------------------------------------------------------------------------
 # Pre-Populate
 settings.base.prepopulate = ["IFRC_Train"]
 
 settings.base.system_name = T("Resource Management System")
 settings.base.system_name_short = T("RMS")
 
+# -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "IFRC"
 settings.gis.map_height = 600
 settings.gis.map_width = 854
+# Display Resources recorded to Admin-Level Locations on the map
+# @ToDo: Move into gis_config?
+settings.gis.display_L0 = True
 
-# Security Policy
-settings.security.policy = 8 # Delegations
-settings.security.map = True
-
-# L10n settings
+# -----------------------------------------------------------------------------
+# L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
@@ -45,6 +61,7 @@ settings.L10n.datetime_format = T("%d-%b-%Y %H:%M:%S")
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
 
+# -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
     "AUD" : T("Australian Dollars"),
@@ -56,24 +73,26 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
-# Display Resources recorded to Admin-Level Locations on the map
-# @ToDo: Move into gis_config?
-settings.gis.display_L0 = True
-
+# -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
 settings.ui.camp = True
 
-settings.req.req_type = ["Stock"]
-#settings.req.use_commit = False
+# -----------------------------------------------------------------------------
+# Save Search Widget
+settings.save_search.widget = False
 
-#settings.inv.collapse_tabs = True
 
+# =============================================================================
+# Module Settings
+
+# -----------------------------------------------------------------------------
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10
 settings.org.site_code_len = 3
 
+# -----------------------------------------------------------------------------
 # Human Resource Management
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
@@ -85,11 +104,14 @@ settings.hrm.staff_experience = False
 settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = True
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
-settings.hrm.use_teams = False
+#settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
 settings.hrm.organisation_label = T("National Society / Branch")
 
+# -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
@@ -110,9 +132,14 @@ settings.project.organisation_roles = {
     5: T("Partner")
 }
 
-# Save Search Widget
-settings.save_search.widget = False
+# -----------------------------------------------------------------------------
+# Request Managemetn
+settings.req.req_type = ["Stock"]
+#settings.req.use_commit = False
+#settings.inv.collapse_tabs = True
 
+# =============================================================================
+# Template Modules
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
