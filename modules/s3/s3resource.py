@@ -63,9 +63,8 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3utils import SQLTABLES3, s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3DataTable
 from s3validators import IS_ONE_OF
-from s3import import S3ImportJob
 
 DEBUG = False
 if DEBUG:
@@ -77,10 +76,26 @@ else:
 
 # =============================================================================
 class S3Resource(object):
-    """ API for resources """
+    """
+        API for resources.
 
-    # -------------------------------------------------------------------------
-    def __init__(self, prefix, name,
+        A "resource" is a set of records in a database table including their
+        references in certain related resources (components). A resource can
+        be defined like:
+
+            resource = S3Resource(table)
+
+        A resource defined like this would include all records in the table.
+        Further parameters for the resource constructor as well as methods
+        of the resource instance can be used to filter for particular subsets.
+
+        This API provides extended standard methods to access and manipulate
+        data in resources while respecting current authorization and other
+        S3 framework rules.
+    """
+
+    def __init__(self, prefix,
+                 name=None,
                  id=None,
                  uid=None,
                  filter=None,
@@ -107,7 +122,66 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
+
+        # Table properties ----------------------------------------------------
+
+        self.table = None
+        if id is None and \
+           (isinstance(name, (int, long, list, tuple)) or \
+            isinstance(name, str) and name.isdigit()):
+            id, name = name, id
+        if name is None:
+            if isinstance(prefix, Table):
+                self.table = prefix
+                tablename = prefix._tablename
+            elif isinstance(prefix, S3Resource):
+                self.table = prefix.table
+                tablename = prefix.tablename
+            else:
+                tablename = prefix
+            if "_" in tablename:
+                prefix, name = tablename.split("_", 1)
+            else:
+                prefix, name = None, tablename
+        else:
+            tablename = "%s_%s" % (prefix, name)
+
+        self.prefix = prefix
+        """ Module prefix of the tablename """
+        self.name = name
+        """ Tablename without module prefix """
+        self.tablename = tablename
+        """ Tablename """
+        self.alias = alias or name
+        """
+            Alias of the resource, defaults to tablename
+            without module prefix
+        """
+
         manager = current.manager
+
+        if self.table is None:
+            try:
+                self.table = s3db[tablename]
+            except:
+                manager.error = "Undefined table: %s" % tablename
+                raise # KeyError(manager.error)
+
+        # Table alias (needed for self-joins)
+        self._alias = tablename
+        """ Table alias (the tablename used in joins/queries) """
+
+        if parent is not None:
+            if parent.tablename == self.tablename:
+                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
+                pkey = self.table._id.name
+                self.table = self.table.with_alias(alias)
+                self.table._id = self.table[pkey]
+                self._alias = alias
+        self.fields = self.table.fields
+        self._id = self.table._id
+
+        # Hooks ---------------------------------------------------------------
 
         self.ERROR = manager.ERROR
 
@@ -121,31 +195,7 @@ class S3Resource(object):
         # Audit hook
         self.audit = manager.audit
 
-        # Basic properties
-        self.prefix = prefix
-        self.name = name
-        self.alias = alias or name
-
-        # Table properties
-        tablename = "%s_%s" % (prefix, name)
-        try:
-            table = s3db[tablename]
-        except:
-            manager.error = "Undefined table: %s" % tablename
-            raise # KeyError(manager.error)
-        self.tablename = tablename
-        self.table = table
-        # Table alias (needed for self-joins)
-        self._alias = tablename
-        if parent is not None:
-            if parent.tablename == self.tablename:
-                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
-                pkey = table._id.name
-                self.table = table.with_alias(alias)
-                self.table._id = self.table[pkey]
-                self._alias = alias
-        self.fields = self.table.fields
-        self._id = self.table._id
+        # Filter --------------------------------------------------------------
 
         # Resource Filter
         self.rfilter = None
@@ -163,10 +213,13 @@ class S3Resource(object):
         self._uids = []
         self._length = None
 
-        # Request attributes
+        # Request attributes --------------------------------------------------
+
         self.vars = None # set during build_query
         self.lastid = None
         self.files = Storage()
+
+        # Components ----------------------------------------------------------
 
         # Component properties
         self.link = None
@@ -202,9 +255,7 @@ class S3Resource(object):
                                    linked=self,
                                    include_deleted=self.include_deleted)
 
-        # CRUD
-        self.crud = manager.crud()
-        self.crud.resource = self
+        # Export and Import ---------------------------------------------------
 
         # Pending Imports
         self.skip_import = False
@@ -220,6 +271,12 @@ class S3Resource(object):
         # Export meta data
         self.muntil = None      # latest mtime of the exported records
         self.results = None     # number of exported records
+
+        # Standard methods ----------------------------------------------------
+
+        # CRUD
+        self.crud = manager.crud()
+        self.crud.resource = self
 
         # Search
         self.search = s3db.get_config(self.tablename, "search_method", None)
@@ -359,24 +416,742 @@ class S3Resource(object):
                 components[c].clear_query()
 
     # -------------------------------------------------------------------------
-    # Data access
+    # Data access (new API)
     # -------------------------------------------------------------------------
-    def select(self, *fields, **attributes):
+    def select(self,
+               fields=None,
+               start=0,
+               limit=None,
+               left=None,
+               orderby=None,
+               distinct=False):
         """
-            Wrapper for backward compatibility, use-cases outside of
-            S3Resource should use .sqltable() instead.
+            Select records from this resource, applying the current filters.
 
-            @see: S3Resource._load()
+            @param fields: list of field selectors
+            @param start: index of the first record
+            @param limit: maximum number of records
+            @param left: left joins
+            @param orderby: SQL orderby
+            @param distinct: SQL distinct
+
+            @todo: authorization
         """
 
-        import warnings
-        warnings.showwarning("The parameter format and behavior of the "
-                             "S3Resource.select() method will change in "
-                             "future versions of the API, please consider "
-                             "to use either .sqltable() or ._load() instead.",
-                             FutureWarning, "s3resource.py", "364")
-        return self._load(*fields, **attributes)
+        db = current.db
+        table = self.table
 
+        # Get the query and filters
+        query = self.get_query()
+        vfltr = self.get_filter()
+        rfilter = self.rfilter
+
+        # Handle distinct-attribute (must respect rfilter.distinct)
+        distinct = self.rfilter.distinct | distinct
+
+        # Fields to select
+        fields = list(fields)
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        # Add fields needed for filters
+        for f in rfilter.get_fields():
+            if f not in fields:
+                fields.append(f)
+        # Resolve all field selectors
+        lfields, joins, ljoins, d = self.resolve_selectors(fields,
+                                                           skip_components=False)
+
+        distinct = distinct | d
+        attributes = dict(distinct=distinct)
+
+        # Left joins
+        left_joins = left
+        if left_joins is None:
+            left_joins = []
+        elif not isinstance(left, list):
+            left_joins = [left_joins]
+        joined_tables = [str(join.first) for join in left_joins]
+
+        # Add the left joins from the field query
+        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
+        for join in ljoins:
+            tn = str(join.first)
+            if tn not in joined_tables:
+                joined_tables.append(str(join.first))
+                left_joins.append(join)
+
+        # Add the left joins from the filter
+        fjoins = rfilter.get_left_joins()
+        for join in fjoins:
+            tn = str(join.first)
+            if tn not in joined_tables:
+                joined_tables.append(str(join.first))
+                left_joins.append(join)
+
+        # Sort left joins and add to attributes
+        if left_joins:
+            try:
+                left_joins.sort(self.sortleft)
+            except:
+                pass
+            attributes.update(left=left_joins)
+
+        # Joins
+        for join in joins.values():
+            if str(join) not in str(query):
+                query &= join
+
+        # Orderby
+        if orderby is not None:
+            attributes.update(orderby=orderby)
+
+        # Limitby
+        if vfltr is None:
+            limitby = self.limitby(start=start, limit=limit)
+            if limitby is not None:
+                attributes.update(limitby=limitby)
+        else:
+            # Retrieve all records when filtering for virtual fields
+            # => apply start/limit in vfltr instead
+            limitby = None
+
+        # Column names and headers
+        colnames = [f.colname for f in lfields]
+        headers = dict(map(lambda f: (f.colname, f.label), lfields))
+
+        # Fields in the query
+        load = current.s3db.table
+        qfields = []
+        qtables = []
+        for f in lfields:
+            field = f.field
+            tname = f.tname
+            if field is None:
+                continue
+            qtable = load(tname)
+            if qtable is None:
+                continue
+            if tname not in qtables:
+                # Make sure the primary key of the table this field
+                # belongs to is included in the SELECT
+                qtables.append(tname)
+                pkey = qtable._id
+                qfields.append(pkey)
+                if str(field) == str(pkey):
+                    continue
+            qfields.append(field)
+
+        # Add orderby fields which are not in qfields
+        # @todo: this could need some cleanup/optimization
+        if distinct and orderby is not None:
+            qf = [str(f) for f in qfields]
+            if isinstance(orderby, str):
+                of = orderby.split(",")
+            elif not isinstance(orderby, (list, tuple)):
+                of = [orderby]
+            else:
+                of = orderby
+            for e in of:
+                if isinstance(e, Field) and str(e) not in qf:
+                    qfields.append(e)
+                    qf.append(str(e))
+                elif isinstance(e, str):
+                    fn = e.strip().split()[0].split(".", 1)
+                    tn, fn = ([table._tablename] + fn)[-2:]
+                    try:
+                        t = db[tn]
+                        f = t[fn]
+                    except:
+                        continue
+                    if str(f) not in qf:
+                        qfields.append(f)
+                        qf.append(str(e))
+
+        # Retrieve the rows
+        rows = db(query).select(*qfields, **attributes)
+        if not rows:
+            return None
+
+        # Apply virtual filter
+        if vfltr is not None:
+            rows = rfilter(rows, start=start, limit=limit)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def insert(self, **fields):
+        """
+            Insert a record into this resource
+
+            @param fields: dict of field/value pairs to insert
+        """
+
+        # Check permission
+        authorised = self.permit("create", self.tablename)
+        if not authorised:
+            raise IOError("Operation not permitted: INSERT INTO %s" %
+                            self.tablename)
+
+        # Insert new record
+        record_id = self.table.insert(**fields)
+
+        # Audit
+        if record_id:
+            record = Storage(fields).update(id=record_id)
+            self.audit("create", self.prefix, self.name, form=record)
+
+        return record_id
+
+    # -------------------------------------------------------------------------
+    def update(self):
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def delete(self,
+               ondelete=None,
+               format=None,
+               cascade=False,
+               replaced_by=None):
+        """
+            Delete all (deletable) records in this resource
+
+            @param ondelete: on-delete callback
+            @param format: the representation format of the request (optional)
+            @param cascade: this is a cascade delete (prevents rollbacks/commits)
+
+            @returns: number of records deleted
+
+            @todo: Fix for Super Entities where we need row[table._id.name]
+            @todo: optimize
+        """
+
+        db = current.db
+        manager = current.manager
+        get_session = manager.get_session
+        clear_session = manager.clear_session
+        DELETED = manager.DELETED
+
+        s3db = current.s3db
+        define_resource = s3db.resource
+        get_config = s3db.get_config
+        delete_super = s3db.delete_super
+
+        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
+        permit = self.permit
+        audit = self.audit
+        prefix = self.prefix
+        name = self.name
+        tablename = self.tablename
+        table = self.table
+        pkey = table._id.name
+
+        # use current.deployment_settings.get_security_archive_not_delete()?
+        archive_not_delete = manager.s3.crud.archive_not_delete
+
+        # Reset error
+        manager.error = None
+
+        # Get all rows
+        if "uuid" in table.fields:
+            rows = self._load(table._id, table.uuid)
+        else:
+            rows = self._load(table._id)
+
+        if not rows:
+            # No rows? => that was it already :)
+            return 0
+
+        numrows = 0
+        deletable = []
+
+        if archive_not_delete and DELETED in table:
+
+            # Find all deletable rows
+            references = table._referenced_by
+            try:
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+            except AttributeError:
+                # older web2py
+                references = [db[tn][fn] for tn, fn in references]
+                rfields = [f for f in references if f.ondelete == "RESTRICT"]
+
+            restricted = []
+            ids = [row[pkey] for row in rows]
+            for rfield in rfields:
+                fn, tn = rfield.name, rfield.tablename
+                rtable = db[tn]
+                query = (rfield.belongs(ids))
+                if DELETED in rtable:
+                    query &= (rtable[DELETED] != True)
+                rrows = db(query).select(rfield)
+                restricted += [r[fn] for r in rrows if r[fn] not in restricted]
+            deletable = [row[pkey] for row in rows if row[pkey] not in restricted]
+
+            # Get custom ondelete-cascade
+            ondelete_cascade = get_config(tablename, "ondelete_cascade")
+
+            for row in rows:
+                if not permit("delete", table, record_id=row[pkey]):
+                    continue
+                error = manager.error
+                manager.error = None
+
+                # Run custom ondelete_cascade first
+                if ondelete_cascade:
+                    callback(ondelete_cascade, row, tablename=tablename)
+                    if manager.error:
+                        # Row is not deletable (custom RESTRICT)
+                        continue
+                    if row[pkey] not in deletable:
+                        # Check deletability again
+                        restrict = False
+                        for tn, fn in rfields:
+                            rtable = db[tn]
+                            rfield = rtable[fn]
+                            query = (rfield == row[pkey])
+                            if DELETED in rtable:
+                                query &= (rtable[DELETED] != True)
+                            rrow = db(query).select(rfield,
+                                                    limitby=(0, 1)).first()
+                            if rrow:
+                                restrict = True
+                        if not restrict:
+                            deletable.append(row[pkey])
+
+                if row[pkey] not in deletable:
+                    # Row is not deletable => skip with error status
+                    manager.error = INTEGRITY_ERROR
+                    continue
+
+                # Run automatic ondelete-cascade
+                for rfield in references:
+                    fn, tn = rfield.name, rfield.tablename
+                    rtable = db[tn]
+                    query = (rfield == row[pkey])
+                    if rfield.ondelete == "CASCADE":
+                        rresource = define_resource(tn, filter=query)
+                        rondelete = get_config(tn, "ondelete")
+                        rresource.delete(ondelete=rondelete, cascade=True)
+                        if manager.error:
+                            break
+                    elif rfield.ondelete == "SET NULL":
+                        try:
+                            db(query).update(**{fn:None})
+                        except:
+                            manager.error = INTEGRITY_ERROR
+                            break
+                    elif rfield.ondelete == "SET DEFAULT":
+                        try:
+                            db(query).update(**{fn:rfield.default})
+                        except:
+                            manager.error = INTEGRITY_ERROR
+                            break
+
+                if manager.error:
+                    # Error in ondelete-cascade: roll back + skip row
+                    if not cascade:
+                        db.rollback()
+                    continue
+                else:
+                    # Auto-delete linked records if this was the last link
+                    linked = self.linked
+                    if linked and self.autodelete and linked.autodelete:
+                        rkey = linked.rkey
+                        fkey = linked.fkey
+                        if rkey in table:
+                            query = (table._id == row[pkey])
+                            this = db(query).select(table._id,
+                                                    table[rkey],
+                                                    limitby=(0, 1)).first()
+                            query = (table._id != this[pkey]) & \
+                                    (table[rkey] == this[rkey])
+                            if DELETED in table:
+                                query != (table[DELETED] != True)
+                            remaining = db(query).select(table._id,
+                                                         limitby=(0, 1)).first()
+                            if not remaining:
+                                query = linked.table[fkey] == this[rkey]
+                                linked = define_resource(linked.table,
+                                                         filter=query)
+                                ondelete = get_config(linked.tablename, "ondelete")
+                                linked.delete(ondelete=ondelete, cascade=True)
+
+                    # Pull back prior error status
+                    manager.error = error
+                    error = None
+
+                    # "Park" foreign keys to resolve constraints, "un-delete"
+                    # would then restore any still-valid FKs from this field!
+                    fields = dict(deleted=True)
+                    if "deleted_fk" in table:
+                        record = table[row[pkey]]
+                        fk = {}
+                        for f in table.fields:
+                            if record[f] is not None and \
+                               s3_has_foreign_key(table[f]):
+                                fk[f] = record[f]
+                                fields[f] = None
+                            else:
+                                continue
+                        if fk:
+                            fields.update(deleted_fk=json.dumps(fk))
+
+                    # Annotate the replacement record
+                    record_id = str(row[pkey])
+                    if replaced_by and record_id in replaced_by and \
+                       "deleted_rb" in table.fields:
+                        fields.update(deleted_rb=replaced_by[record_id])
+
+                    # Update the row, finally
+                    db(table._id == row[pkey]).update(**fields)
+                    numrows += 1
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+                    # Audit
+                    audit("delete", prefix, name,
+                          record=row[pkey], representation=format)
+                    # Delete super-entity
+                    delete_super(table, row)
+                    # On-delete hook
+                    if ondelete:
+                        callback(ondelete, row)
+                    # Commit after each row to not have it rolled back by
+                    # subsequent cascade errors
+                    if not cascade:
+                        db.commit()
+        else:
+            # Hard delete
+            for row in rows:
+
+                # Check permission to delete this row
+                if not permit("delete", table, record_id=row[pkey]):
+                    continue
+                try:
+                    del table[row[pkey]]
+                except:
+                    # Row is not deletable
+                    manager.error = INTEGRITY_ERROR
+                    continue
+                else:
+                    # Successfully deleted
+                    numrows += 1
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+                    # Audit
+                    audit("delete", prefix, name,
+                          record=row[pkey], representation=format)
+                    # Delete super-entity
+                    delete_super(table, row)
+                    # On-delete hook
+                    if ondelete:
+                        callback(ondelete, row)
+                    # Commit after each row to not have it rolled back by
+                    # subsequent cascade errors
+                    if not cascade:
+                        db.commit()
+
+        if numrows == 0 and not deletable:
+            # No deletable rows found
+            manager.error = INTEGRITY_ERROR
+
+        return numrows
+
+    # -------------------------------------------------------------------------
+    def approve(self, components=[], approve=True):
+        """
+            Approve all records in this resource
+
+            @param components: list of component aliases to include, None
+                               for no components, empty list for all components
+            @param approve: set to approved (False for reset to unapproved)
+        """
+
+        auth = current.auth
+
+        if auth.s3_logged_in():
+            user_id = approve and auth.user.id or None
+        else:
+            return False
+
+        tablename = self.tablename
+
+        self.load()
+        for record in self._rows:
+
+            table = self.table
+            record_id = record[table._id]
+
+            if "approved_by" in table.fields:
+                query = (table._id == record_id)
+                success = current.db(query).update(approved_by=user_id)
+                if not success:
+                    db.rollback()
+                    return False
+                else:
+                    onapprove = current.s3db.get_config(tablename,
+                                                        "onapprove", None)
+                    if onapprove is not None:
+                        callback(onapprove, record, tablename=tablename)
+            if components is None:
+                continue
+            for alias in self.components:
+                if components and alias not in components:
+                    continue
+                component = self.components[alias]
+                success = component.approve(components=None, approve=approve)
+                if not success:
+                    db.rollback()
+                    return False
+        return True
+
+    # -------------------------------------------------------------------------
+    def reject(self, cascade=False):
+        """ Reject (delete) all records in this resource """
+
+        db = current.db
+        s3db = current.s3db
+
+        manager = current.manager
+
+        define_resource = s3db.resource
+        get_session = manager.get_session
+        clear_session = manager.clear_session
+        DELETED = manager.DELETED
+
+        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
+        permit = self.permit
+        audit = self.audit
+        prefix = self.prefix
+        name = self.name
+        tablename = self.tablename
+        table = self.table
+        pkey = table._id.name
+
+        # Get hooks configuration
+        get_config = s3db.get_config
+        ondelete = get_config(tablename, "ondelete")
+        onreject = get_config(tablename, "onreject")
+        ondelete_cascade = get_config(tablename, "ondelete_cascade")
+
+        # Get all rows
+        if "uuid" in table.fields:
+            rows = self._load(table._id, table.uuid)
+        else:
+            rows = self._load(table._id)
+        if not rows:
+            return True
+
+        delete_super = s3db.delete_super
+
+        if DELETED in table:
+
+            references = table._referenced_by
+
+            for row in rows:
+                error = manager.error
+                manager.error = None
+
+                # On-delete-cascade
+                if ondelete_cascade:
+                    callback(ondelete_cascade, row, tablename=tablename)
+
+                # Automatic cascade
+                for ref in references:
+                    try:
+                        tn, fn = ref.tablename, ref.name
+                    except:
+                        # old web2py < 2.0
+                        tn, fn = ref
+                    rtable = db[tn]
+                    rfield = rtable[fn]
+                    query = (rfield == row[pkey])
+                    # Ignore RESTRICTs => reject anyway
+                    if rfield.ondelete in ("CASCADE", "RESTRICT"):
+                        rresource = define_resource(tn, filter=query)
+                        rresource.reject(cascade=True)
+                        if manager.error:
+                            break
+                    elif rfield.ondelete == "SET NULL":
+                        try:
+                            db(query).update(**{fn:None})
+                        except:
+                            manager.error = INTEGRITY_ERROR
+                            break
+                    elif rfield.ondelete == "SET DEFAULT":
+                        try:
+                            db(query).update(**{fn:rfield.default})
+                        except:
+                            manager.error = INTEGRITY_ERROR
+                            break
+
+                if manager.error:
+                    db.rollback()
+                    raise RuntimeError("Reject failed for %s.%s" %
+                                      (resource.tablename, row[resource.table._id]))
+                else:
+                    # Pull back prior error status
+                    manager.error = error
+                    error = None
+
+                    # On-reject hook
+                    if onreject:
+                        callback(onreject, row, tablename=tablename)
+
+                    # Park foreign keys
+                    fields = dict(deleted=True)
+                    if "deleted_fk" in table:
+                        record = table[row[pkey]]
+                        fk = {}
+                        for f in table.fields:
+                            if record[f] is not None and \
+                               s3_has_foreign_key(table[f]):
+                                fk[f] = record[f]
+                                fields[f] = None
+                            else:
+                                continue
+                        if fk:
+                            fields.update(deleted_fk=json.dumps(fk))
+
+                    # Update the row, finally
+                    db(table._id == row[pkey]).update(**fields)
+
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+
+                    # Delete super-entity
+                    delete_super(table, row)
+
+                    # On-delete hook
+                    if ondelete:
+                        callback(ondelete, row, tablename=tablename)
+
+        else:
+            # Hard delete
+            for row in rows:
+
+                # On-delete-cascade
+                if ondelete_cascade:
+                    callback(ondelete_cascade, row, tablename=tablename)
+
+                # On-reject
+                if onreject:
+                    callback(onreject, row, tablename=tablename)
+
+                try:
+                    del table[row[pkey]]
+                except:
+                    # Row is not deletable
+                    manager.error = INTEGRITY_ERROR
+                    db.rollback()
+                    raise
+                else:
+                    # Clear session
+                    if get_session(prefix=prefix, name=name) == row[pkey]:
+                        clear_session(prefix=prefix, name=name)
+
+                    # Delete super-entity
+                    delete_super(table, row)
+
+                    # On-delete
+                    if ondelete:
+                        callback(ondelete, row, tablename=tablename)
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def merge(self,
+              original_id,
+              duplicate_id,
+              replace=None,
+              update=None,
+              main=None):
+        """ Merge two records, see also S3RecordMerger.merge """
+
+        return S3RecordMerger(self).merge(original_id,
+                                          duplicate_id,
+                                          replace=replace,
+                                          update=update,
+                                          main=main)
+
+    # -------------------------------------------------------------------------
+    # Exports
+    # -------------------------------------------------------------------------
+    def datatable(self,
+                  fields=None,
+                  start=0,
+                  limit=None,
+                  left=None,
+                  orderby=None,
+                  distinct=False):
+        """
+            Generate a data table of this resource
+
+            @param fields: list of fields to include (field selector strings)
+            @param start: index of the first record to include
+            @param limit: maximum number of records to include
+            @param left: additional left joins for DB query
+            @param orderby: orderby for DB query
+            @param distinct: distinct-flag for DB query
+
+            @returns: an S3DataTable instance
+        """
+
+        # Choose fields
+        if fields is None:
+            fields = [f.name for f in self.readable_fields()]
+        selectors = list(fields)
+
+        # Automatically include the record ID
+        table = self.table
+        if table._id.name not in selectors:
+            fields.insert(0, table._id.name)
+            selectors.insert(0, table._id.name)
+
+        # Resolve the selectors
+        rfields = self.resolve_selectors(fields,
+                                         skip_components=False)[0]
+
+        # Retrieve the rows
+        rows = self.select(fields=selectors,
+                           start=start,
+                           limit=limit,
+                           orderby=orderby,
+                           left=left,
+                           distinct=distinct)
+
+        # Generate the data table
+        if rows:
+            data = self.extract(rows,
+                                selectors,
+                                represent=True)
+            return S3DataTable(rfields, data)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def pivottable(self, rows, cols, layers):
+        """
+            Generate a pivot table of this resource.
+
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param layers: list of tuples (field selector, method) for
+                           the aggregation layers
+
+            @returns: an S3Pivottable instance
+
+            Supported methods: see S3Pivottable
+        """
+
+        return S3Pivottable(self, rows, cols, layers)
+
+    # -------------------------------------------------------------------------
+    # Deprecated API methods (retained for backward-compatiblity reasons)
+    # -------------------------------------------------------------------------
     def _load(self, *fields, **attributes):
         """
             Select records with the current query
@@ -659,7 +1434,7 @@ class S3Resource(object):
                 if isinstance(e, Field) and str(e) not in qf:
                     qfields.append(e)
                     qf.append(str(e))
-                elif isinstance(e, str):
+                elif isinstance(e, str) and e:
                     fn = e.strip().split()[0].split(".", 1)
                     tn, fn = ([table._tablename] + fn)[-2:]
                     try:
@@ -746,811 +1521,6 @@ class S3Resource(object):
                                _id="list",
                                _class="dataTable display")
         return items
-
-    # -------------------------------------------------------------------------
-    def datatable(self,
-                  fields=None,
-                  start=0,
-                  limit=None,
-                  left=None,
-                  orderby=None,
-                  distinct=False,
-                  no_ids=False,
-                  format=None):
-        """
-            Generate a data table of this resource
-
-            @todo: complete implementation
-        """
-
-        raise NotImplementedError
-
-        table = self.table
-
-        if fields is None:
-            fields = [f.name for f in self.readable_fields()]
-        selectors = list(fields)
-        if table._id.name not in selectors and not no_ids:
-            fields.insert(0, table._id.name)
-            selectors.insert(0, table._id.name)
-
-        rows = self._select(fields=selectors,
-                            start=start,
-                            limit=limit,
-                            left=left,
-                            orderby=orderby,
-                            distinct=distinct)
-
-        rfields = self.resolve_selectors(fields,
-                                         skip_components=False)[0]
-
-        if format == "json":
-            result = self._extract(rows, rfields)
-            output = result
-        elif format == "aadata":
-            result = self._extract(rows, rfields)
-            output = result
-        else:
-            # Default to HTML representation
-            result = self._extract(rows, rfields, represent=True)
-            output = result
-
-        return result
-
-    # -------------------------------------------------------------------------
-    def pivottable(self, rows, cols, layers):
-        """
-            Generate a pivot table of this resource.
-
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param layers: list of tuples (field selector, method) for
-                           the aggregation layers
-
-            @returns: an S3Pivottable instance
-
-            Supported methods: see S3Pivottable
-        """
-
-        return S3Pivottable(self, rows, cols, layers)
-
-    # -------------------------------------------------------------------------
-    def _select(self,
-                fields=None,
-                start=0,
-                limit=None,
-                left=None,
-                orderby=None,
-                distinct=False):
-        """
-            Select records from this resource, applying the current filters.
-
-            @param fields: list of field selectors
-            @param start: index of the first record
-            @param limit: maximum number of records
-            @param left: left joins
-            @param orderby: SQL orderby
-            @param distinct: SQL distinct
-        """
-
-        db = current.db
-        table = self.table
-
-        # Get the query and filters
-        query = self.get_query()
-        vfltr = self.get_filter()
-        rfilter = self.rfilter
-
-        # Handle distinct-attribute (must respect rfilter.distinct)
-        distinct = self.rfilter.distinct | distinct
-
-        # Fields to select
-        fields = list(fields)
-        if fields is None:
-            fields = [f.name for f in self.readable_fields()]
-        # Add fields needed for filters
-        for f in rfilter.get_fields():
-            if f not in fields:
-                fields.append(f)
-        # Resolve all field selectors
-        lfields, joins, ljoins, d = self.resolve_selectors(fields,
-                                                           skip_components=False)
-
-        distinct = distinct | d
-        attributes = dict(distinct=distinct)
-
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
-
-        # Add the left joins from the field query
-        ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
-        for join in ljoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-
-        # Add the left joins from the filter
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-
-        # Sort left joins and add to attributes
-        if left_joins:
-            try:
-                left_joins.sort(self.sortleft)
-            except:
-                pass
-            attributes.update(left=left_joins)
-
-        # Joins
-        for join in joins.values():
-            if str(join) not in str(query):
-                query &= join
-
-        # Orderby
-        if orderby is not None:
-            attributes.update(orderby=orderby)
-
-        # Limitby
-        if vfltr is None:
-            limitby = self.limitby(start=start, limit=limit)
-            if limitby is not None:
-                attributes.update(limitby=limitby)
-        else:
-            # Retrieve all records when filtering for virtual fields
-            # => apply start/limit in vfltr instead
-            limitby = None
-
-        # Column names and headers
-        colnames = [f.colname for f in lfields]
-        headers = dict(map(lambda f: (f.colname, f.label), lfields))
-
-        # Fields in the query
-        load = current.s3db.table
-        qfields = []
-        qtables = []
-        for f in lfields:
-            field = f.field
-            tname = f.tname
-            if field is None:
-                continue
-            qtable = load(tname)
-            if qtable is None:
-                continue
-            if tname not in qtables:
-                # Make sure the primary key of the table this field
-                # belongs to is included in the SELECT
-                qtables.append(tname)
-                pkey = qtable._id
-                qfields.append(pkey)
-                if str(field) == str(pkey):
-                    continue
-            qfields.append(field)
-
-        # Add orderby fields which are not in qfields
-        # @todo: this could need some cleanup/optimization
-        if distinct and orderby is not None:
-            qf = [str(f) for f in qfields]
-            if isinstance(orderby, str):
-                of = orderby.split(",")
-            elif not isinstance(orderby, (list, tuple)):
-                of = [orderby]
-            else:
-                of = orderby
-            for e in of:
-                if isinstance(e, Field) and str(e) not in qf:
-                    qfields.append(e)
-                    qf.append(str(e))
-                elif isinstance(e, str):
-                    fn = e.strip().split()[0].split(".", 1)
-                    tn, fn = ([table._tablename] + fn)[-2:]
-                    try:
-                        t = db[tn]
-                        f = t[fn]
-                    except:
-                        continue
-                    if str(f) not in qf:
-                        qfields.append(f)
-                        qf.append(str(e))
-
-        # Retrieve the rows
-        rows = db(query).select(*qfields, **attributes)
-        if not rows:
-            return None
-
-        # Apply virtual filter
-        if vfltr is not None:
-            rows = rfilter(rows, start=start, limit=limit)
-
-        return rows
-
-    # -------------------------------------------------------------------------
-    def _extract(self, rows, fields, represent=False):
-        """
-            Extract the fields corresponding to rfields from the given
-            rows and return them as a list of Storages, with ambiguous
-            rows collapsed and the original order retained.
-
-            @param rows: the Rows
-            @param fields: list of fields
-        """
-
-        pkey = self.table._id
-        multiple = [c._alias for c in self.components.values() if c.multiple]
-
-        rfields = []
-        for i in fields:
-            if isinstance(i, tuple) and len(i) > 1:
-                f = i[-1]
-            else:
-                f = i
-            if isinstance(f, S3ResourceField):
-                rfields.append(f)
-            elif isinstance(f, str):
-                try:
-                    rfield = S3ResourceField(self, f)
-                except:
-                    continue
-                else:
-                    rfields.append(rfield)
-            elif isinstance(f, S3FieldSelector):
-                try:
-                    rfield = f.resolve(resource)
-                    rfield.op = f.op
-                except:
-                    continue
-                else:
-                    rfields.append(rfield)
-            else:
-                raise SyntaxError("Invalid field: %s" % str(f))
-
-        ids = []
-        duplicates = []
-        records = []
-        for row in rows:
-            _id = row[pkey]
-            if _id in ids:
-                idx = ids.index(_id)
-                data = records[idx]
-                for rfield in rfields:
-                    if rfield.tname in multiple:
-                        key = rfield.colname
-                        try:
-                            value = rfield.extract(row, represent=represent)
-                        except KeyError:
-                            if represent:
-                                value = ""
-                            else:
-                                value = None
-                        if represent:
-                            data[key] = ", ".join([s3_unicode(data[key]),
-                                                   s3_unicode(value)])
-                        else:
-                            if _id in duplicates:
-                                data[key].append(value)
-                            else:
-                                data[key] = [data[key], value]
-                duplicates.append(_id)
-            else:
-                data = Storage()
-                for rfield in rfields:
-                    try:
-                        value = rfield.extract(row, represent=represent)
-                    except KeyError:
-                        if represent:
-                            value = ""
-                        else:
-                            value = None
-                    data[rfield.colname] = value
-                ids.append(_id)
-                records.append(data)
-        return records
-
-    # -------------------------------------------------------------------------
-    def insert(self, **fields):
-        """
-            Insert a record into this resource
-
-            @param fields: dict of field/value pairs to insert
-        """
-
-        # Check permission
-        authorised = self.permit("create", self.tablename)
-        if not authorised:
-            raise IOError("Operation not permitted: INSERT INTO %s" %
-                            self.tablename)
-
-        # Insert new record
-        record_id = self.table.insert(**fields)
-
-        # Audit
-        if record_id:
-            record = Storage(fields).update(id=record_id)
-            self.audit("create", self.prefix, self.name, form=record)
-
-        return record_id
-
-    # -------------------------------------------------------------------------
-    def delete(self,
-               ondelete=None,
-               format=None,
-               cascade=False,
-               replaced_by=None):
-        """
-            Delete all (deletable) records in this resource
-
-            @param ondelete: on-delete callback
-            @param format: the representation format of the request (optional)
-            @param cascade: this is a cascade delete (prevents rollbacks/commits)
-
-            @returns: number of records deleted
-
-            @todo: Fix for Super Entities where we need row[table._id.name]
-            @todo: optimize
-        """
-
-        db = current.db
-        manager = current.manager
-        define_resource = manager.define_resource
-        get_session = manager.get_session
-        clear_session = manager.clear_session
-        DELETED = manager.DELETED
-
-        s3db = current.s3db
-        get_config = s3db.get_config
-        delete_super = s3db.delete_super
-
-        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
-        permit = self.permit
-        audit = self.audit
-        prefix = self.prefix
-        name = self.name
-        tablename = self.tablename
-        table = self.table
-        pkey = table._id.name
-
-        # use current.deployment_settings.get_security_archive_not_delete()?
-        archive_not_delete = manager.s3.crud.archive_not_delete
-
-        # Reset error
-        manager.error = None
-
-        # Get all rows
-        if "uuid" in table.fields:
-            rows = self._load(table._id, table.uuid)
-        else:
-            rows = self._load(table._id)
-
-        if not rows:
-            # No rows? => that was it already :)
-            return 0
-
-        numrows = 0
-        deletable = []
-
-        if archive_not_delete and DELETED in table:
-
-            # Find all deletable rows
-            references = table._referenced_by
-            try:
-                rfields = [f for f in references if f.ondelete == "RESTRICT"]
-            except AttributeError:
-                # older web2py
-                references = [db[tn][fn] for tn, fn in references]
-                rfields = [f for f in references if f.ondelete == "RESTRICT"]
-
-            restricted = []
-            ids = [row[pkey] for row in rows]
-            for rfield in rfields:
-                fn, tn = rfield.name, rfield.tablename
-                rtable = db[tn]
-                query = (rfield.belongs(ids))
-                if DELETED in rtable:
-                    query &= (rtable[DELETED] != True)
-                rrows = db(query).select(rfield)
-                restricted += [r[fn] for r in rrows if r[fn] not in restricted]
-            deletable = [row[pkey] for row in rows if row[pkey] not in restricted]
-
-            # Get custom ondelete-cascade
-            ondelete_cascade = get_config(tablename, "ondelete_cascade")
-
-            for row in rows:
-                if not permit("delete", table, record_id=row[pkey]):
-                    continue
-                error = manager.error
-                manager.error = None
-
-                # Run custom ondelete_cascade first
-                if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=tablename)
-                    if manager.error:
-                        # Row is not deletable (custom RESTRICT)
-                        continue
-                    if row[pkey] not in deletable:
-                        # Check deletability again
-                        restrict = False
-                        for tn, fn in rfields:
-                            rtable = db[tn]
-                            rfield = rtable[fn]
-                            query = (rfield == row[pkey])
-                            if DELETED in rtable:
-                                query &= (rtable[DELETED] != True)
-                            rrow = db(query).select(rfield,
-                                                    limitby=(0, 1)).first()
-                            if rrow:
-                                restrict = True
-                        if not restrict:
-                            deletable.append(row[pkey])
-
-                if row[pkey] not in deletable:
-                    # Row is not deletable => skip with error status
-                    manager.error = INTEGRITY_ERROR
-                    continue
-
-                # Run automatic ondelete-cascade
-                for rfield in references:
-                    fn, tn = rfield.name, rfield.tablename
-                    rtable = db[tn]
-                    query = (rfield == row[pkey])
-                    if rfield.ondelete == "CASCADE":
-                        rprefix, rname = tn.split("_", 1)
-                        rresource = define_resource(rprefix, rname, filter=query)
-                        rondelete = get_config(tn, "ondelete")
-                        rresource.delete(ondelete=rondelete, cascade=True)
-                        if manager.error:
-                            break
-                    elif rfield.ondelete == "SET NULL":
-                        try:
-                            db(query).update(**{fn:None})
-                        except:
-                            manager.error = INTEGRITY_ERROR
-                            break
-                    elif rfield.ondelete == "SET DEFAULT":
-                        try:
-                            db(query).update(**{fn:rfield.default})
-                        except:
-                            manager.error = INTEGRITY_ERROR
-                            break
-
-                if manager.error:
-                    # Error in ondelete-cascade: roll back + skip row
-                    if not cascade:
-                        db.rollback()
-                    continue
-                else:
-                    # Auto-delete linked records if this was the last link
-                    linked = self.linked
-                    if linked and self.autodelete and linked.autodelete:
-                        rkey = linked.rkey
-                        fkey = linked.fkey
-                        if rkey in table:
-                            query = (table._id == row[pkey])
-                            this = db(query).select(table._id,
-                                                    table[rkey],
-                                                    limitby=(0, 1)).first()
-                            query = (table._id != this[pkey]) & \
-                                    (table[rkey] == this[rkey])
-                            if DELETED in table:
-                                query != (table[DELETED] != True)
-                            remaining = db(query).select(table._id,
-                                                         limitby=(0, 1)).first()
-                            if not remaining:
-                                query = linked.table[fkey] == this[rkey]
-                                linked = define_resource(linked.prefix,
-                                                         linked.name,
-                                                         filter=query)
-                                ondelete = get_config(linked.tablename, "ondelete")
-                                linked.delete(ondelete=ondelete, cascade=True)
-
-                    # Pull back prior error status
-                    manager.error = error
-                    error = None
-
-                    # "Park" foreign keys to resolve constraints, "un-delete"
-                    # would then restore any still-valid FKs from this field!
-                    fields = dict(deleted=True)
-                    if "deleted_fk" in table:
-                        record = table[row[pkey]]
-                        fk = {}
-                        for f in table.fields:
-                            if record[f] is not None and \
-                               s3_has_foreign_key(table[f]):
-                                fk[f] = record[f]
-                                fields[f] = None
-                            else:
-                                continue
-                        if fk:
-                            fields.update(deleted_fk=json.dumps(fk))
-
-                    # Annotate the replacement record
-                    record_id = str(row[pkey])
-                    if replaced_by and record_id in replaced_by and \
-                       "deleted_rb" in table.fields:
-                        fields.update(deleted_rb=replaced_by[record_id])
-
-                    # Update the row, finally
-                    db(table._id == row[pkey]).update(**fields)
-                    numrows += 1
-                    # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
-                    # Audit
-                    audit("delete", prefix, name,
-                          record=row[pkey], representation=format)
-                    # Delete super-entity
-                    delete_super(table, row)
-                    # On-delete hook
-                    if ondelete:
-                        callback(ondelete, row)
-                    # Commit after each row to not have it rolled back by
-                    # subsequent cascade errors
-                    if not cascade:
-                        db.commit()
-        else:
-            # Hard delete
-            for row in rows:
-
-                # Check permission to delete this row
-                if not permit("delete", table, record_id=row[pkey]):
-                    continue
-                try:
-                    del table[row[pkey]]
-                except:
-                    # Row is not deletable
-                    manager.error = INTEGRITY_ERROR
-                    continue
-                else:
-                    # Successfully deleted
-                    numrows += 1
-                    # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
-                    # Audit
-                    audit("delete", prefix, name,
-                          record=row[pkey], representation=format)
-                    # Delete super-entity
-                    delete_super(table, row)
-                    # On-delete hook
-                    if ondelete:
-                        callback(ondelete, row)
-                    # Commit after each row to not have it rolled back by
-                    # subsequent cascade errors
-                    if not cascade:
-                        db.commit()
-
-        if numrows == 0 and not deletable:
-            # No deletable rows found
-            manager.error = INTEGRITY_ERROR
-
-        return numrows
-
-    # -------------------------------------------------------------------------
-    def approve(self, components=[], approve=True):
-        """
-            Approve all records in this resource
-
-            @param components: list of component aliases to include, None
-                               for no components, empty list for all components
-            @param approve: set to approved (False for reset to unapproved)
-        """
-
-        auth = current.auth
-
-        if auth.s3_logged_in():
-            user_id = approve and auth.user.id or None
-        else:
-            return False
-
-        tablename = self.tablename
-
-        self.load()
-        for record in self._rows:
-
-            table = self.table
-            record_id = record[table._id]
-
-            if "approved_by" in table.fields:
-                query = (table._id == record_id)
-                success = current.db(query).update(approved_by=user_id)
-                if not success:
-                    db.rollback()
-                    return False
-                else:
-                    onapprove = current.s3db.get_config(tablename,
-                                                        "onapprove", None)
-                    if onapprove is not None:
-                        callback(onapprove, record, tablename=tablename)
-            if components is None:
-                continue
-            for alias in self.components:
-                if components and alias not in components:
-                    continue
-                component = self.components[alias]
-                success = component.approve(components=None, approve=approve)
-                if not success:
-                    db.rollback()
-                    return False
-        return True
-
-    # -------------------------------------------------------------------------
-    def reject(self, cascade=False):
-        """ Reject (delete) all records in this resource """
-
-        db = current.db
-        s3db = current.s3db
-
-        manager = current.manager
-
-        define_resource = manager.define_resource
-        get_session = manager.get_session
-        clear_session = manager.clear_session
-        DELETED = manager.DELETED
-
-        INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
-        permit = self.permit
-        audit = self.audit
-        prefix = self.prefix
-        name = self.name
-        tablename = self.tablename
-        table = self.table
-        pkey = table._id.name
-
-        # Get hooks configuration
-        get_config = s3db.get_config
-        ondelete = get_config(tablename, "ondelete")
-        onreject = get_config(tablename, "onreject")
-        ondelete_cascade = get_config(tablename, "ondelete_cascade")
-
-        # Get all rows
-        if "uuid" in table.fields:
-            rows = self._load(table._id, table.uuid)
-        else:
-            rows = self._load(table._id)
-        if not rows:
-            return True
-
-        delete_super = s3db.delete_super
-
-        if DELETED in table:
-
-            references = table._referenced_by
-
-            for row in rows:
-                error = manager.error
-                manager.error = None
-
-                # On-delete-cascade
-                if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=tablename)
-
-                # Automatic cascade
-                for ref in references:
-                    try:
-                        tn, fn = ref.tablename, ref.name
-                    except:
-                        # old web2py < 2.0
-                        tn, fn = ref
-                    rtable = db[tn]
-                    rfield = rtable[fn]
-                    query = (rfield == row[pkey])
-                    # Ignore RESTRICTs => reject anyway
-                    if rfield.ondelete in ("CASCADE", "RESTRICT"):
-                        rprefix, rname = tn.split("_", 1)
-                        rresource = define_resource(rprefix, rname, filter=query)
-                        rresource.reject(cascade=True)
-                        if manager.error:
-                            break
-                    elif rfield.ondelete == "SET NULL":
-                        try:
-                            db(query).update(**{fn:None})
-                        except:
-                            manager.error = INTEGRITY_ERROR
-                            break
-                    elif rfield.ondelete == "SET DEFAULT":
-                        try:
-                            db(query).update(**{fn:rfield.default})
-                        except:
-                            manager.error = INTEGRITY_ERROR
-                            break
-
-                if manager.error:
-                    db.rollback()
-                    raise RuntimeError("Reject failed for %s.%s" %
-                                      (resource.tablename, row[resource.table._id]))
-                else:
-                    # Pull back prior error status
-                    manager.error = error
-                    error = None
-
-                    # On-reject hook
-                    if onreject:
-                        callback(onreject, row, tablename=tablename)
-
-                    # Park foreign keys
-                    fields = dict(deleted=True)
-                    if "deleted_fk" in table:
-                        record = table[row[pkey]]
-                        fk = {}
-                        for f in table.fields:
-                            if record[f] is not None and \
-                               s3_has_foreign_key(table[f]):
-                                fk[f] = record[f]
-                                fields[f] = None
-                            else:
-                                continue
-                        if fk:
-                            fields.update(deleted_fk=json.dumps(fk))
-
-                    # Update the row, finally
-                    db(table._id == row[pkey]).update(**fields)
-
-                    # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
-
-                    # Delete super-entity
-                    delete_super(table, row)
-
-                    # On-delete hook
-                    if ondelete:
-                        callback(ondelete, row, tablename=tablename)
-
-        else:
-            # Hard delete
-            for row in rows:
-
-                # On-delete-cascade
-                if ondelete_cascade:
-                    callback(ondelete_cascade, row, tablename=tablename)
-
-                # On-reject
-                if onreject:
-                    callback(onreject, row, tablename=tablename)
-
-                try:
-                    del table[row[pkey]]
-                except:
-                    # Row is not deletable
-                    manager.error = INTEGRITY_ERROR
-                    db.rollback()
-                    raise
-                else:
-                    # Clear session
-                    if get_session(prefix=prefix, name=name) == row[pkey]:
-                        clear_session(prefix=prefix, name=name)
-
-                    # Delete super-entity
-                    delete_super(table, row)
-
-                    # On-delete
-                    if ondelete:
-                        callback(ondelete, row, tablename=tablename)
-
-        return True
-
-    # -------------------------------------------------------------------------
-    def merge(self,
-              original_id,
-              duplicate_id,
-              replace=None,
-              update=None,
-              main=None):
-        """ Merge two records, see also S3RecordMerger.merge """
-
-        return S3RecordMerger(self).merge(original_id,
-                                          duplicate_id,
-                                          replace=replace,
-                                          update=update,
-                                          main=main)
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):
@@ -1926,6 +1896,8 @@ class S3Resource(object):
 
         """
 
+        define_resource = current.s3db.resource
+
         manager = current.manager
         xml = current.xml
 
@@ -2054,9 +2026,9 @@ class S3Resource(object):
             for tablename in load_map:
                 load_list = load_map[tablename]
                 prefix, name = tablename.split("_", 1)
-                rresource = manager.define_resource(prefix, name,
-                                                    id=load_list,
-                                                    components=[])
+                rresource = define_resource(tablename,
+                                            id=load_list,
+                                            components=[])
                 table = rresource.table
                 if manager.s3.base_url:
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
@@ -2544,6 +2516,8 @@ class S3Resource(object):
             @todo: update for link table support
         """
 
+        from s3import import S3ImportJob
+
         manager = current.manager
         db = current.db
         xml = current.xml
@@ -2866,6 +2840,159 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     # Utility functions
+    # -------------------------------------------------------------------------
+    def validate(self, field, value, record=None):
+        """
+            Validates a value for a field
+
+            @param fieldname: name of the field
+            @param value: value to validate
+            @param record: the existing database record, if available
+        """
+
+        table = self.table
+
+        default = (value, None)
+
+        if isinstance(field, str):
+            fieldname = field
+            if fieldname in table.fields:
+                field = table[fieldname]
+            else:
+                return default
+        else:
+            fieldname = field.name
+
+        self_id = None
+
+        if record is not None:
+
+            try:
+                v = record[field]
+            except KeyError:
+                v = None
+            if v and v == value:
+                return default
+
+            try:
+                self_id = record[table._id]
+            except KeyError:
+                pass
+
+        requires = field.requires
+
+        if field.unique and not requires:
+            # Prevent unique-constraint violations
+            field.requires = IS_NOT_IN_DB(current.db, str(field))
+            if self_id:
+                field.requires.set_self_id(self_id)
+
+        elif self_id:
+
+            # Initialize all validators for self_id
+            if not isinstance(requires, (list, tuple)):
+                requires = [requires]
+            for r in requires:
+                if hasattr(r, "set_self_id"):
+                    r.set_self_id(self_id)
+                if hasattr(r, "other") and \
+                    hasattr(r.other, "set_self_id"):
+                    r.other.set_self_id(self_id)
+
+        try:
+            value, error = field.validate(value)
+        except:
+            # Oops - something went wrong in the validator:
+            # write out a debug message, and continue anyway
+            if current.response.s3.debug:
+                from s3utils import s3_debug
+                s3_debug("Validate %s: %s (ignored)" %
+                         (field, sys.exc_info()[1]))
+            return (None, None)
+        else:
+            return (value, error)
+
+    # -------------------------------------------------------------------------
+    def extract(self, rows, fields, represent=False):
+        """
+            Extract the fields corresponding to rfields from the given
+            rows and return them as a list of Storages, with ambiguous
+            rows collapsed and the original order retained.
+
+            @param rows: the Rows
+            @param fields: list of fields
+        """
+
+        pkey = self.table._id
+
+        rfields = []
+        for i in fields:
+            if isinstance(i, tuple) and len(i) > 1:
+                f = i[-1]
+            else:
+                f = i
+            if isinstance(f, S3ResourceField):
+                rfields.append(f)
+            elif isinstance(f, str):
+                try:
+                    rfield = S3ResourceField(self, f)
+                except:
+                    continue
+                else:
+                    rfields.append(rfield)
+            elif isinstance(f, S3FieldSelector):
+                try:
+                    rfield = f.resolve(resource)
+                    rfield.op = f.op
+                except:
+                    continue
+                else:
+                    rfields.append(rfield)
+            else:
+                raise SyntaxError("Invalid field: %s" % str(f))
+
+        ids = []
+        duplicates = []
+        records = []
+        for row in rows:
+            _id = row[pkey]
+            if _id in ids:
+                idx = ids.index(_id)
+                data = records[idx]
+                for rfield in rfields:
+                    if rfield.tname != self.tablename and rfield.distinct:
+                        key = rfield.colname
+                        try:
+                            value = rfield.extract(row, represent=represent)
+                        except KeyError:
+                            if represent:
+                                value = ""
+                            else:
+                                value = None
+                        if represent:
+                            data[key] = ", ".join([s3_unicode(data[key]),
+                                                   s3_unicode(value)])
+                        else:
+                            if _id in duplicates:
+                                data[key].append(value)
+                            else:
+                                data[key] = [data[key], value]
+                duplicates.append(_id)
+            else:
+                data = Storage()
+                for rfield in rfields:
+                    try:
+                        value = rfield.extract(row, represent=represent)
+                    except KeyError:
+                        if represent:
+                            value = ""
+                        else:
+                            value = None
+                    data[rfield.colname] = value
+                ids.append(_id)
+                records.append(data)
+        return records
+
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
         """
@@ -3717,8 +3844,7 @@ class S3ResourceField(object):
                 left[ktablename] = [ktable.on(j)]
 
             # Resolve the tail
-            prefix, name = ktablename.split("_", 1)
-            kresource = manager.define_resource(prefix, name, vars=[])
+            kresource = s3db.resource(ktablename, vars=[])
             field = S3ResourceField.resolve(kresource, tail, join=join, left=left)
             field.update(selector=original,
                          distinct=field.distinct or distinct)
@@ -5171,7 +5297,7 @@ class S3Pivottable:
 
         # Retrieve the records --------------------------------------------------
         #
-        records = resource._select(self.dfields)
+        records = resource.select(self.dfields)
 
         ## Generate the report -------------------------------------------------
         ##
@@ -5808,12 +5934,12 @@ class S3RecordMerger(object):
     # -------------------------------------------------------------------------
     def delete_record(self, table, id, replaced_by=None):
 
+        s3db = current.s3db
+
         if replaced_by is not None:
             replaced_by = {str(id): replaced_by}
-
-        prefix, name = table._tablename.split("_", 1)
-        resource = current.manager.define_resource(prefix, name, id=id)
-        ondelete = current.s3db.get_config(resource.tablename, "ondelete")
+        resource = s3db.resource(table, id=id)
+        ondelete = s3db.get_config(resource.tablename, "ondelete")
         success = resource.delete(ondelete=ondelete,
                                   replaced_by=replaced_by,
                                   cascade=True)
@@ -5955,6 +6081,7 @@ class S3RecordMerger(object):
         fieldname = self.fieldname
 
         # Update all references
+        define_resource = s3db.resource
         for referee in referenced_by:
 
             if isinstance(referee, Field):
@@ -6009,10 +6136,11 @@ class S3RecordMerger(object):
                         # Two records => merge them
                         osub_id = osub[component.table._id]
                         dsub_id = dsub[component.table._id]
-                        cresource = manager.define_resource(component.prefix,
-                                                            component.name)
+                        cresource = define_resource(component.tablename)
                         cresource.merge(osub_id, dsub_id,
-                                        replace=replace, update=update, main=resource)
+                                        replace=replace,
+                                        update=update,
+                                        main=resource)
                     continue
 
             # Find the foreign key
@@ -6055,8 +6183,7 @@ class S3RecordMerger(object):
                 skey_o = original[superkey]
                 skey_d = duplicate[superkey]
                 # Merge the super-records
-                prefix, name = entity.split("_", 1)
-                sresource = manager.define_resource(prefix, name)
+                sresource = define_resource(entity)
                 sresource.merge(skey_o, skey_d,
                                 replace=replace,
                                 update=update,

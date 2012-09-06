@@ -52,7 +52,7 @@ class S3ComponentDisambiguationTests(unittest.TestCase):
         s3db = current.s3db
 
         current.auth.override = True
-        resource = current.manager.define_resource("org", "organisation")
+        resource = s3db.resource("org_organisation")
         msg = resource.import_xml(self.branch_tree)
 
         table = resource.table
@@ -78,7 +78,7 @@ class S3ComponentDisambiguationTests(unittest.TestCase):
         s3db = current.s3db
 
         current.auth.override = True
-        resource = current.manager.define_resource("org", "organisation")
+        resource = s3db.resource("org_organisation")
         msg = resource.import_xml(self.parent_tree)
 
         table = resource.table

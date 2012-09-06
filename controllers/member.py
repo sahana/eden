@@ -145,7 +145,7 @@ def person():
                         otable = s3db.org_organisation
                         query = (otable.name == org_name) & \
                                 (mtable.organisation_id == otable.id)
-                        resource = s3mgr.define_resource("member", "membership", filter=query)
+                        resource = S3Resource("member", "membership", filter=query)
                         ondelete = s3db.get_config("member_membership", "ondelete")
                         resource.delete(ondelete=ondelete, format="xml", cascade=True)
 

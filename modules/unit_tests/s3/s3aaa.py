@@ -41,30 +41,32 @@ class RoleTests(unittest.TestCase):
         from lxml import etree
         self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         auth.override = True
-        resource = current.manager.define_resource("org", "organisation")
+        resource = current.s3db.resource("org_organisation")
         success = resource.import_xml(self.xmltree)
 
     def testImport(self):
 
-        resource = current.manager.define_resource("org", "organisation", uid="TESTORGA")
+        s3db = current.s3db
+
+        resource = s3db.resource("org_organisation", uid="TESTORGA")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.name, "Org-A")
 
-        resource = current.manager.define_resource("org", "office", uid="TESTOFFICEA")
+        resource = current.s3db.resource("org_office", uid="TESTOFFICEA")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.name, "Office-A")
 
-        resource = current.manager.define_resource("inv", "inv_item", uid="TESTITEMA")
+        resource = s3db.resource("inv_inv_item", uid="TESTITEMA")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.quantity, 10)
 
-        resource = current.manager.define_resource("supply", "item", uid="TESTSUPPLYITEMA")
+        resource = s3db.resource("supply_item", uid="TESTSUPPLYITEMA")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
@@ -2326,7 +2328,7 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertTrue(unapproved(ftable, office_id))
 
             # Approve
-            resource = current.manager.define_resource("org", "organisation", id=org_id)
+            resource = s3db.resource("org_organisation", id=org_id)
             self.assertTrue(resource.approve(components=["office"]))
 
             # Check record
@@ -2415,7 +2417,7 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertTrue(unapproved(ftable, office_id))
 
             # Approve
-            resource = current.manager.define_resource("org", "organisation", id=org_id)
+            resource = s3db.resource("org_organisation", id=org_id)
             self.assertTrue(resource.approve(components=None))
 
             # Check record
@@ -2509,7 +2511,7 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertTrue(unapproved(ftable, office_id))
 
             # Reject
-            resource = current.manager.define_resource("org", "organisation", id=org_id)
+            resource = s3db.resource("org_organisation", id=org_id)
             self.assertTrue(resource.reject())
 
             # Check records

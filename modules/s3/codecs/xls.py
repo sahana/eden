@@ -115,13 +115,13 @@ class S3XLS(S3Codec):
         (orderby, filter) = S3DataTable.getControlData(rfields, current.request.vars)
         resource.add_filter(filter)
         current.manager.ROWSPERPAGE = None # needed to get all the data
-        rows = resource._select(list_fields,
-                                orderby=orderby,
-                                )
-        items = resource._extract(rows,
-                                  list_fields,
-                                  represent=True,
-                                  )
+        rows = resource.select(list_fields,
+                               orderby=orderby,
+                               )
+        items = resource.extract(rows,
+                                 list_fields,
+                                 represent=True,
+                                 )
 
         return (title, types, lfields,  heading, items)
 
@@ -160,7 +160,7 @@ class S3XLS(S3Codec):
         # Environment
         request = current.request
 
-        # The xlwt library supports a maximum of 182 character in a single cell 
+        # The xlwt library supports a maximum of 182 character in a single cell
         max_cell_size = 182
 
         # Get the attributes

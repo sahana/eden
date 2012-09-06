@@ -2818,7 +2818,7 @@ class S3CompleteModel(S3Model):
                            "s3csv",
                            "survey",
                            "answer.xsl")
-        resource = current.manager.define_resource("survey", "answer")
+        resource = current.s3db.resource("survey_answer")
         resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
 
     # -------------------------------------------------------------------------
@@ -2874,7 +2874,7 @@ class S3CompleteModel(S3Model):
                            "s3csv",
                            "gis",
                            "location.xsl")
-        resource = current.manager.define_resource("gis", "location")
+        resource = current.s3db.resource("gis_location")
         resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
 
     # -------------------------------------------------------------------------

@@ -36,9 +36,6 @@ s3.download_url = "%s/default/download" % s3.base_url
 # Global variables
 ##################
 
-# Interactive view formats
-s3.interactive_view_formats = ("html", "popup", "iframe")
-
 # Strings to i18n
 messages["UNAUTHORISED"] = "Not authorised!"
 messages["BADFORMAT"] = "Unsupported data format!"

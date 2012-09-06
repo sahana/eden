@@ -234,7 +234,7 @@ class S3StatsModel(S3Model):
             rebuild them by triggering off a request for each stats_data
             record.
         """
-        resource = current.manager.define_resource("stats", "aggregate")
+        resource = current.s3db.resource("stats_aggregate")
         resource.delete()
         table = current.s3db.stats_data
         rows = current.db().select(table.data_id)
@@ -561,7 +561,7 @@ class S3StatsModel(S3Model):
     def stats_aggregated_period(data_date = None):
         """
            This will return the start and end dates of the aggregated time period.
-           
+
            Currently the time period is annually so it will return the
            start and end of the current year.
         """

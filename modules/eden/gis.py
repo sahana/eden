@@ -1790,7 +1790,11 @@ class S3GISConfigModel(S3Model):
         if not path:
             path = current.db.gis_marker.image.uploadfolder
 
-        image = open(os.path.join(path, filename), "rb")
+        if "/" in filename:
+            _path, filename = filename.split("/")
+            image = open(os.path.join(path, _path, filename), "rb")
+        else:
+            image = open(os.path.join(path, filename), "rb")
         return (filename, image)
 
     # -------------------------------------------------------------------------

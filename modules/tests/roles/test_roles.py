@@ -38,63 +38,63 @@ from tests.web2unittest import SeleniumUnitTest
 def create_role_test_data():
     from lxml import etree
     import StringIO
-    
+
     db = current.db
     s3db = current.s3db
     auth = current.auth
     s3mgr = current.manager
     request = current.request
-    
-    # Define Organisations 
+
+    # Define Organisations
     orgs = ["Org-A",
             "Org-B",
             "Org-C",
             ]
-    branches = [ None, 
+    branches = [ None,
                  "Branch-A"]
-    
+
     #----------------------------------------------------------------------
     # Initialize Data & Users
     auth.override = True
     s3db.load_all_models()
 
-    test_dir = os.path.join( current.request.folder,"modules", 
-                             "tests", "roles", 
+    test_dir = os.path.join( current.request.folder,"modules",
+                             "tests", "roles",
                              current.deployment_settings.base.template)
-    
+
     data_file = open(os.path.join(test_dir, "data.xml"), "rb")
     data_template_string = data_file.read()
-    org_resource = s3mgr.define_resource("org", "organisation")
-    
+    org_resource = s3db.resource("org_organisation")
+
     user_file = open(os.path.join(test_dir, "users_template.csv"), "rb")
     user_template_string = user_file.read()
 
     # Ensure that the users are imported correctly
-    s3db.configure( "auth_user", 
+    s3db.configure( "auth_user",
                     onaccept = lambda form: auth.s3_link_user(form.vars))
     s3db.add_component("auth_membership", auth_user="user_id")
     s3mgr.import_prep = auth.s3_membership_import_prep
-    
-    user_resource = s3mgr.define_resource("auth", "user")
-    hr_resource = s3mgr.define_resource("pr", "person")
+
+    user_resource = s3db.resource("auth_user")
+    hr_resource = s3db.resource("pr_person")
 
     user_file = StringIO.StringIO()
-    user_stylesheet = os.path.join(current.request.folder,"static", "formats", 
+    user_stylesheet = os.path.join(current.request.folder,"static", "formats",
                                    "s3csv", "auth", "user.xsl")
     hr_stylesheet = os.path.join(current.request.folder,"static", "formats", "s3csv", "hrm", "person.xsl")
-    
+
     for org in orgs:
         for branch in branches:
-            
+
             # Get the "Other" Orgs
             copy_orgs = list(orgs)
             copy_orgs.remove(org)
             orgx1 = copy_orgs[0]
             orgx2 = copy_orgs[1]
-            
+
             if branch:
                 org = "%s-%s" % (org,branch)
-                
+
              # Create Test Data for each Organisation
             data_string = data_template_string % dict( org = org,
                                                        orgx1 = orgx1,
@@ -102,8 +102,8 @@ def create_role_test_data():
                                                        )
             xmltree = etree.ElementTree( etree.fromstring(data_string) )
             success = org_resource.import_xml(xmltree)
-        
-            # Create Users for each Organisation 
+
+            # Create Users for each Organisation
             user_string = user_template_string % dict(org = org)
             user_file = StringIO.StringIO(user_string)
             success = user_resource.import_xml(user_file,
@@ -120,12 +120,12 @@ def create_role_test_data():
 # Test Permissions against Role Matrix File
 def test_roles():
     import csv
-    
+
     s3db = current.s3db
     db = current.db
-    
+
     suite = unittest.TestSuite()
-    
+
     orgs = ["Org-A"]
     table_lookup = {"hrm_staff":"hrm_human_resource",
                     "vol_volunteer":"hrm_human_resource",
@@ -133,14 +133,14 @@ def test_roles():
                     }
 
     for org in orgs:
-        permission_matrix_filename = os.path.join(current.request.folder,"modules", "tests", "roles", 
+        permission_matrix_filename = os.path.join(current.request.folder,"modules", "tests", "roles",
                                                   current.deployment_settings.base.template, "%s_permission_matrix.csv" % org)
         permission_matrix_file = open(permission_matrix_filename, "rb")
         permission_matrix = csv.DictReader(permission_matrix_file)
         row_num = 1 # Header Row
         for test in permission_matrix:
             row_num = row_num + 1
-            
+
             #if row_num < 0 or row_num > 10:
             #    continue
             table = test["table"]
@@ -149,17 +149,17 @@ def test_roles():
             method = test["method"]
             uuid = test["uuid"]
             if table:
-                db_table = s3db[table] 
+                db_table = s3db[table]
             elif c and f:
                 db_table =  s3db[table_lookup["%s_%s" % (c,f)]]
             else:
                 # No Table or C and F
-                continue 
+                continue
             if uuid:
                 record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
             else:
                 record_id = None
-                
+
             for user, permission in test.items():
                 if user in ["table","c", "f", "method", "uuid"] or not user:
                     continue
@@ -175,7 +175,7 @@ def test_roles():
                                      uuid = uuid,
                                      permission = permission)
                 suite.addTest(test_role)
-                
+
     return suite
     #self.assertFalse(permitted)
     #self.assertTrue(False,"This Should have been True")
@@ -185,7 +185,7 @@ class TestRole(SeleniumUnitTest):
             org,
             row_num,
                  user,
-                 method, 
+                 method,
                  table,
                  c,
                  f,
@@ -195,30 +195,30 @@ class TestRole(SeleniumUnitTest):
         self.org = org
         self.row_num = row_num
         self.user = user
-        self.method = method 
+        self.method = method
         self.table = table
         self.c = c
         self.f = f
         self.record_id = record_id
         self.uuid = uuid
         self.permission = permission
-        
+
     def runTest(self):
         auth = current.auth
-        
+
         org = self.org
         row_num = self.row_num
         user = self.user
-        method = self.method 
+        method = self.method
         table = self.table
         c = self.c
         f = self.f
         record_id = self.record_id
         uuid = self.uuid
         permission = self.permission
-        
+
         auth.s3_impersonate(user)
-        permitted = auth.permission.has_permission(method = method, 
+        permitted = auth.permission.has_permission(method = method,
                                            t = table,
                                            c = c,
                                            f = f,
@@ -227,7 +227,7 @@ class TestRole(SeleniumUnitTest):
 Organisation:%s (Row:%s)
 user:%s
 table: %s\tc: %s\tf: %s\tmethod: %s\tuuid: %s\tid: %s
-Expected: %s\t Actual: %s 
+Expected: %s\t Actual: %s
 """ % (org, row_num,
        user,
        table, c, f, method, uuid, record_id,
@@ -238,32 +238,32 @@ Expected: %s\t Actual: %s
         #----------------------------------------------------------------------
 
     def dummy_code(self):
-        #resource = s3mgr.define_resource("org", "organisation", uid="Org-A")
+        #resource = current.s3db.resource("org_organisation", uid="Org-A")
         #resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.name, "Org-A")
-        
-        resource = s3mgr.define_resource("org", "office", uid="Office-A")
+
+        resource = current.s3db.resource("org_organisation", uid="Office-A")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.name, "Office-A")
-        
-        resource = s3mgr.define_resource("inv", "inv_item", uid="InvItem-A")
+
+        resource = current.s3db.resource("org_organisation", uid="InvItem-A")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.quantity, 10)
-        
-        resource = s3mgr.define_resource("supply", "item", uid="Item-A")
+
+        resource = current.s3db.resource("org_organisation", uid="Item-A")
         resource.load()
         self.assertEqual(len(resource), 1)
         record = resource._rows[0]
         self.assertEqual(record.name, "Item-A")
 
         #for org in orgs:
-            
+
         #    data_ids[org] = Storage()
         #    for table_name, value in org_data:
         #        # Unique name for each Org
@@ -278,8 +278,3 @@ Expected: %s\t Actual: %s
         #        data_ids[org][value] = id
         #print data_ids
         #db.commit()
-        
-
-
-
-

@@ -312,7 +312,7 @@ def submission():
     resource = tree.getroot().tag
 
     prefix, name = resource.split("_")
-    res = s3mgr.define_resource(prefix, name)
+    res = current.s3db.resource(resource)
 
     stylesheet = os.path.join(request.folder, "static", "formats", "odk", "import.xsl")
 

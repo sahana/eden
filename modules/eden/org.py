@@ -629,9 +629,10 @@ class S3OrganisationModel(S3Model):
         #
         tablename = "org_organisation_branch"
         table = define_table(tablename,
-                             organisation_id(),
+                             organisation_id(ondelete="CASCADE"),
                              organisation_id("branch_id",
-                                             label=T("Branch")),
+                                             label=T("Branch"),
+                                             ondelete="CASCADE"),
                              *s3_meta_fields())
 
         # CRUD strings

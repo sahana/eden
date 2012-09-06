@@ -64,6 +64,7 @@ from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
 from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key
+from s3resource import S3Resource
 
 DEBUG = False
 if DEBUG:
@@ -1227,13 +1228,13 @@ class S3Importer(S3CRUD):
                 limit = None # use default
         else:
             start = None # use default
-        rows = resource._select(list_fields,
-                                start=start,
-                                limit=limit,
+        rows = resource.select(list_fields,
+                               start=start,
+                               limit=limit,
+                               )
+        data = resource.extract(rows,
+                                list_fields,
                                 )
-        data = resource._extract(rows,
-                                 list_fields,
-                                 )
         # put each value through the represent function
         for row in data:
             for (key, value) in row.items():
@@ -2161,8 +2162,7 @@ class S3ImportItem(object):
 
             if not self.skip and not self.conflict:
 
-                prefix, name = self.tablename.split("_", 1)
-                resource = manager.define_resource(prefix, name, id=self.id)
+                resource = S3Resource(self.tablename, id=self.id)
 
                 ondelete = s3db.get_config(self.tablename, "ondelete")
                 success = resource.delete(ondelete=ondelete,

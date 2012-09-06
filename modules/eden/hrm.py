@@ -3368,13 +3368,8 @@ def hrm_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        year = now.year
-        month = now.month - 3
-        if month <= 0:
-            month += 12
-            year -= 1
-        three_months_prior = datetime.date(year, month - 3, now.day)
-        end = max(programmes.last().date, three_months_prior)
+        three_months_prior = (now - datetime.timedelta(days=92))
+        end = max(programmes.last().date, three_months_prior.date())
         last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:
@@ -4398,7 +4393,8 @@ def hrm_training_event_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if r.interactive and r.component:
+        if r.component and \
+           (r.interactive or r.extension == "aaData"):
             T = current.T
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(
@@ -4467,8 +4463,9 @@ def hrm_training_controller():
         redirect(URL(f="index"))
 
     def prep(r):
-        if r.interactive:
-            # Suitable liset_fields
+        if r.interactive or \
+           r.extension == "aaData":
+            # Suitable list_fields
             T = current.T
             list_fields = ["course_id",
                            "person_id",

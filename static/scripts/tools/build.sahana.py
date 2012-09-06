@@ -169,6 +169,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilenamedataTables, "../S3")
 
+    # Vulnerability
+    print "Compressing Vulnerability"
+    sourceDirectoryVulnerability = ".."
+    configFilenameVulnerability = "sahana.js.vulnerability.cfg"
+    outputFilenameVulnerability = "s3.vulnerability.min.js"
+    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
+                                      None,
+                                      configFilenameVulnerability)
+    minimizedVulnerability = minimize(mergedVulnerability)
+    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    try:
+        os.remove("../S3/%s" % outputFilenameVulnerability)
+    except:
+        pass
+    shutil.move(outputFilenameVulnerability, "../S3")
+
     # Single scripts
     for filename in [
                      "contacts",
@@ -179,7 +195,6 @@ def dojs(dogis = False, warnings = True):
                      "report",
                      "select_person",
                      "timeline",
-                     "vulnerability",
                      ]:
         print "Compressing s3.%s.js" % filename
         inputFilename = os.path.join("..", "S3", "s3.%s.js" % filename)

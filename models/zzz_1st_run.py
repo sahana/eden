@@ -141,7 +141,7 @@ if len(pop_list) > 0:
 
     # GIS
     # L0 Countries
-    resource = s3mgr.define_resource("gis", "location")
+    resource = s3base.S3Resource("gis_location")
     stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "gis", "location.xsl")
     import_file = os.path.join(request.folder, "private", "templates", "locations", "countries.csv")
     File = open(import_file, "r")
