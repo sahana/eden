@@ -1343,10 +1343,12 @@ class S3LocationSelectorWidget(FormWidget):
 
     def __init__(self,
                  hide_address=False,
-                 site_type=None):
+                 site_type=None,
+                 polygon=False):
 
         self.hide_address = hide_address
         self.site_type = site_type
+        self.polygon = polygon
 
     def __call__(self, field, value, **attributes):
 
@@ -1502,6 +1504,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  locations.addr_postcode,
                                                  locations.parent,
                                                  locations.path,
+                                                 locations.wkt,
                                                  limitby=(0, 1)).first()
                 if this_location:
                     uid = this_location.uuid
@@ -1568,6 +1571,9 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  # Same as a single zoom on a cluster
                                                  zoom = zoom + 2,
                                                  features = features,
+                                                 add_feature_active = not self.polygon,
+                                                 add_polygon = True,
+                                                 add_polygon_active = self.polygon,
                                                  add_feature = True,
                                                  #add_feature_active = True,
                                                  toolbar = True,
@@ -1608,7 +1614,9 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 if map_selector:
                     map_popup = gis.show_map(
                                              add_feature = True,
-                                             add_feature_active = True,
+                                             add_feature_active = not self.polygon,
+                                             add_polygon = True,
+                                             add_polygon_active = self.polygon,
                                              toolbar = True,
                                              collapsed = True,
                                              search = True,
@@ -2025,6 +2033,42 @@ S3.i18n.gis_country_required="%s"''' % (country_snippet,
             script = "s3.locationselector.widget.min.js"
 
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
+
+        if self.polygon:
+            map_button = A(T("Draw on Map"),
+                           _style="cursor:pointer; cursor:hand",
+                           _id="gis_location_map-btn",
+                           _class="action-btn")
+
+            map_button_row = TR(map_button, TD(),
+                                _id="gis_location_map_button_row",
+                                _class="locselect box_middle")
+
+            wkt_input_row = TAG[""](
+                                TR(TD(LABEL(T("Polygon (WGS84)"))), TD(), _class="box_middle"),
+                                TR(
+                                   TD(TEXTAREA(_class="wkt-input", _id="gis_location_wkt", _name="wkt")),
+                                   TD(), _class="box_middle",
+                                )
+                            )
+            return TAG[""](
+                            TR(INPUT(**attr)),  # Real input, which is hidden
+                            label_row,
+                            tab_rows,
+                            Lx_search_rows,
+                            search_rows,
+                            L0_rows,
+                            name_rows,
+                            street_rows,
+                            postcode_rows,
+                            Lx_rows,
+                            wkt_input_row,
+                            map_button_row,
+                            latlon_rows,
+                            divider,
+                            TR(map_popup, TD(), _class="box_middle"),
+                            requires=requires
+                          )
 
         # The overall layout of the components
         return TAG[""](
@@ -3653,75 +3697,64 @@ class S3KeyValueWidget(ListWidget):
         Allows for input of key-value pairs and stores them as list:string
     """
 
-    def __init__(self, key_label=None, value_label=None, delimiter="`"):
+    def __init__(self, key_label=None, value_label=None):
         """
             Returns a widget with key-value fields
         """
         self._class = "key-value-pairs"
-        self.delimiter = delimiter
         T = current.T
 
-        if key_label == None:
-            self.key_label = "%s: " % T("Key")
-        else:
-            self.key_label = key_label
-
-        if value_label == None:
-            self.value_label = "%s: " % T("Value")
-        else:
-            self.value_label = value_label
+        self.key_label = key_label or T("Key")
+        self.value_label = value_label or T("Value")
 
     def __call__(self, field, value, **attributes):
         T = current.T
+        s3 = current.response.s3
+
         _id = "%s_%s" % (field._tablename, field.name)
         _name = field.name
-        _class = "string"
-        requires = field.requires if isinstance(field.requires, (IS_NOT_EMPTY, IS_LIST_OF)) else None
-        items = []
+        _class = "text hide"
 
-        for val in value or [""]:
-            kv = val.split(self.delimiter)
-            k = kv[0]
-            if len(kv)>1: v = kv[1]
-            else: v = ""
-
-            items.append(LI(
-                INPUT(_id=_id, _class=_class, _name=_name, _type="hidden", value=val, hideerror=True, requires=requires),
-                self.key_label,
-                INPUT(_class="key", _type="text", _value=k), " ",
-                self.value_label,
-                INPUT(_class="value", _type="text", _value=v)
-            ))
+        attributes["_id"] = _id
+        attributes["_name"] = _name
+        attributes["_class"] = _class
 
         script = SCRIPT(
-'''(function($){
-$.fn.kv_pairs = function (keyl, vall, delim) {
- var self=$(this),
-     ref=self.find(':hidden:first').clone(),
-     plus=$('<a href="javascript:void(0)">+</a>').click(function(){new_item()})
- function new_item(){
-  self.find('li').each(function(){
-   var trimmed=$.trim($(this).find(":hidden").val())
-   if(trimmed==''||trimmed==delim) $(this).remove()
-  })
-  self.append($("<li>").append(ref.clone().val(''))
-   .append(keyl+' <input class="key" type="text"> '+vall+' <input class="value" type="text">')
-   .append(plus)).find('.key:last').focus()
-  return false
- }
- self.find('.value,.key').live('keypress',function(e){
-  return (e.which == 13)?$(this).is(".value")&&new_item():true
- }).live('blur',function(){
-  var li=$(this).parents().eq(0)
-  li.find(':hidden').val(li.find('.key').val()+delim+li.find('.value').val())
- })
- self.find('.value:last').after(plus)
-}
-})(jQuery)
-jQuery(document).ready(function(){jQuery('#%s_kv_pairs').kv_pairs('%s','%s','%s')})''' % \
-    (_id, self.key_label, self.value_label, self.delimiter))
-        attributes["_id"] = _id + "_kv_pairs"
+'''jQuery(document).ready(function(){jQuery('#%s').kv_pairs('%s','%s')})''' % \
+    (_id, self.key_label, self.value_label))
 
-        return TAG[""](UL(*items, **attributes), script)
+        if not value: value = "[]"
+        if not isinstance(value, str):
+            try:
+                value = json.dumps(value)
+            except:
+                raise("Bad value for key-value pair field")
+        appname = current.request.application
+        jsfile = "/%s/static/scripts/S3/%s" % (appname, "s3.keyvalue.widget.js")
 
+        if jsfile not in s3.scripts:
+            s3.scripts.append(jsfile)
+
+        return TAG[""](
+                    TEXTAREA(value, **attributes),
+                    script
+               )
+
+    @staticmethod
+    def represent(value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+                if isinstance(value, str):
+                    raise ValueError("key-value JSON is wrong.")
+            except:
+                # XXX: log this!
+                #raise ValueError("Bad json was found as value for a key-value field: %s" % value)
+                return ""
+
+        rep = []
+        if isinstance(value, (tuple, list)):
+            for kv in value:
+                rep += ["%s: %s" % (kv["key"], kv["value"])]
+        return ", ".join(rep)
 # END =========================================================================

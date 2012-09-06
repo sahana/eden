@@ -567,16 +567,18 @@ function addPointControl(toolbar, point_pressed) {
 }
 
 // Polygon Control to select Areas on the Map
-function addPolygonControl(toolbar, polygon_pressed) {
+function addPolygonControl(toolbar, polygon_pressed, not_regular) {
     // Toolbar Button
     S3.gis.polygonButton = new GeoExt.Action({
         // We'd like to use the Polygon, but this is hard to use server-side as a Resource filter
         //control: new OpenLayers.Control.DrawFeature(S3.gis.draftLayer, OpenLayers.Handler.Polygon, {
-        control: new OpenLayers.Control.DrawFeature(S3.gis.draftLayer, OpenLayers.Handler.RegularPolygon, {
-            handlerOptions: {
+        control: new OpenLayers.Control.DrawFeature(S3.gis.draftLayer,
+                          not_regular ? OpenLayers.Handler.Polygon :
+                                        OpenLayers.Handler.RegularPolygon, {
+            handlerOptions: not_regular ? {
                 sides: 4,
                 snapAngle: 90
-            },
+            } : {},
             // custom Callback
             'featureAdded': function(feature) {
                 // Remove previous polygon
@@ -586,6 +588,7 @@ function addPolygonControl(toolbar, polygon_pressed) {
                 // update Form Field
                 var WKT = feature.geometry.transform(S3.gis.projection_current, S3.gis.proj4326).toString();
                 $('#gis_search_polygon_input').val(WKT);
+                $('#gis_location_wkt').val(WKT);
                 // Prepare in case user draws a new polygon
                 S3.gis.lastDraftFeature = feature;
             }
