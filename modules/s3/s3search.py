@@ -64,6 +64,7 @@ __all__ = ["S3SearchWidget",
            "S3PersonSearch",
            "S3HRSearch",
            "S3PentitySearch",
+           "S3CAPSearch",
            ]
 
 MAX_RESULTS = 1000
@@ -2640,6 +2641,13 @@ class S3PentitySearch(S3Search):
         output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
         return output
+
+# =============================================================================
+class S3CAPSearch(S3Search):
+    """
+        Search method with specifics for Alerts
+    """
+    pass
 
 # =============================================================================
 class S3SearchOrgHierarchyWidget(S3SearchOptionsWidget):
