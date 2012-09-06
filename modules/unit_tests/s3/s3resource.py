@@ -312,7 +312,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction2(self):
 
@@ -342,7 +342,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction3(self):
 
@@ -364,7 +364,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction4(self):
 
