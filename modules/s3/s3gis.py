@@ -7114,13 +7114,16 @@ class S3ExportPOI(S3Method):
         else:
             self.lx = current_lx.id
 
-        # Parse the ?resources= parameter
         tables = []
+        # Parse the ?resources= parameter
         if "resources" in r.get_vars:
             resources = r.get_vars["resources"]
-            if not isinstance(resources, list):
-                resources = [resources]
-            [tables.extend(t.split(",")) for t in resources]
+        else:
+            # Fallback to deployment_setting
+            resources = current.deployment_settings.get_gis_poi_export_resources()
+        if not isinstance(resources, list):
+            resources = [resources]
+        [tables.extend(t.split(",")) for t in resources]
 
         # Parse the ?update_feed= parameter
         update_feed = True
@@ -7199,6 +7202,7 @@ class S3ExportPOI(S3Method):
         for tablename in tables:
 
             # Define the resource
+            prefix, name = tablename.split("_", 1)
             try:
                 resource = S3Resource(prefix, name, components=[])
             except AttributeError:

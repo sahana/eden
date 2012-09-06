@@ -3075,28 +3075,29 @@ class S3DataTable(object):
                 tr.append(TH(heading[field]))
         header.append(tr)
 
-        # Build the body rows (the actual data)
         body = TBODY()
-        rc = 0
-        for i in xrange(start, end):
-            row = data[i]
-            if rc % 2 == 0:
-                _class = "even"
-            else:
-                _class = "odd"
-            rc += 1
-            tr = TR(_class=_class)
-            for field in flist:
-                # Insert a checkbox for bulk select
-                if field == "BULK":
-                    tr.append(TD(INPUT(_id="select%s" % row[flist[action_col]],
-                                       _type="checkbox",
-                                       _class="bulkcheckbox",
-                                       )))
+        if data:
+            # Build the body rows (the actual data)
+            rc = 0
+            for i in xrange(start, end):
+                row = data[i]
+                if rc % 2 == 0:
+                    _class = "even"
                 else:
-                    tr.append(TD(row[field]))
-            body.append(tr)
-        table = TABLE([header,body], _id=id, _class="dataTable display")
+                    _class = "odd"
+                rc += 1
+                tr = TR(_class=_class)
+                for field in flist:
+                    # Insert a checkbox for bulk select
+                    if field == "BULK":
+                        tr.append(TD(INPUT(_id="select%s" % row[flist[action_col]],
+                                           _type="checkbox",
+                                           _class="bulkcheckbox",
+                                           )))
+                    else:
+                        tr.append(TD(row[field]))
+                body.append(tr)
+        table = TABLE([header, body], _id=id, _class="dataTable display")
         return table
 
     # ---------------------------------------------------------------------

@@ -403,6 +403,12 @@ class S3Config(Storage):
         return self.gis.get("marker_max_width", 30)
     def get_gis_mouse_position(self):
         return self.gis.get("mouse_position", "normal")
+    def get_gis_poi_export_resources(self):
+        """
+            List of resources (tablenames) to export as PoIs from Admin Locations
+            - KML & OpenStreetMap formats
+        """
+        return self.gis.get("poi_export_resources", ["cr_shelter", "hms_hospital", "org_office"])
     def get_gis_print_service(self):
         return self.gis.get("print_service", "")
     def get_gis_geoserver_url(self):
