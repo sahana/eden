@@ -183,7 +183,7 @@ class S3Msg(object):
         # Explicitly commit DB operations when running from Cron
         db.commit()
         return True
-    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def parse_import(workflow, source):
@@ -205,7 +205,7 @@ class S3Msg(object):
         contact_method = ctable.contact_method
         value = ctable.value
         lid = ltable.id
-        
+
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
         records = db(query).select(wtable.source_task_id)
@@ -217,22 +217,22 @@ class S3Msg(object):
                     (ltable.inbound == True) & \
                     (ltable.source_task_id == record.source_task_id)
             rows = db(query).select()
-            
+
             for row in rows:
                 message = row.message
                 try:
                     contact = row.sender.split("<")[1].split(">")[0]
                     query = (contact_method == "EMAIL") & \
-                        (value == contact) 
+                        (value == contact)
                     pe_ids = db(query).select(ctable.pe_id)
                     if not pe_ids:
                         query = (contact_method == "SMS") & \
-                            (value == contact) 
+                            (value == contact)
                         pe_ids = db(query).select(ctable.pe_id)
 
                 except:
                     raise ValueError("Source not defined!")
-                
+
                 reply = parser(workflow, message, contact)
                 if reply:
                     db(lid == row.id).update(reply = reply,
@@ -243,7 +243,7 @@ class S3Msg(object):
                     try:
                         wflow = flow.reply.split("Workflow:")[1].split(".")[0]
                     except:
-                        pass                            
+                        pass
                     if wflow == workflow:
                         reply = "Send help to see how to respond !"
                         db(lid == row.id).update(reply = reply,
@@ -253,18 +253,18 @@ class S3Msg(object):
                                 %workflow
                         db(lid == row.id).update(reply = flow.reply+reply)
                         db.commit()
-                        return                    
+                        return
                 reply = linsert(recipient = row.sender,
                                       subject ="Parsed Reply",
                                       message = reply)
-                
+
                 if pe_ids:
                     for pe_id in pe_ids:
                         oinsert(message_id = reply.id,
                                       address = contact, pe_id = pe_id.pe_id)
                 db.commit()
 
-        return    
+        return
 
     # =========================================================================
     # Outbound Messages
@@ -825,12 +825,12 @@ class S3Msg(object):
            @param: message - Inbound message to be parsed for OpenGeoSMS.
            Returns the lat, lon, code and text contained in the message.
         """
-        
+
         lat = ""
         lon = ""
         code = ""
         text = ""
-           
+
         s3db = current.s3db
         words = string.split(message)
         if "http://maps.google.com/?q" in words[0]:
@@ -842,10 +842,10 @@ class S3Msg(object):
             text = ""
             for a in range(1, len(words)):
                 text = text + words[a] + " "
-                
-                    
+
+
         return lat, lon, code, text
-                
+
     # -------------------------------------------------------------------------
     # Send SMS
     # -------------------------------------------------------------------------
@@ -1318,7 +1318,7 @@ class S3Msg(object):
                 inbox_table.insert(sender=sender, subject=subject, body=body)
                 log_table.insert(sender=sender, subject=subject, message=body, \
                                  source_task_id=source_task_id, inbound=True)
-                
+
                 if delete:
                     # Add it to the list of messages to delete later
                     dellist.append(number)
@@ -1392,7 +1392,7 @@ class S3Msg(object):
                         log_table.insert(sender=sender, subject=subject, \
                                 message=body, source_task_id=source_task_id, \
                                 inbound = True)
-                        
+
                         if delete:
                             # Add it to the list of messages to delete later
                             dellist.append(num)
@@ -1407,7 +1407,7 @@ class S3Msg(object):
     @staticmethod
     def source_id(username):
         """ Extracts the source_task_id from a given message. """
-        
+
         db = current.db
         table = db["scheduler_task"]
         records = db(table.id > 0).select()
@@ -1418,7 +1418,7 @@ class S3Msg(object):
     @staticmethod
     def twilio_inbound_sms(account_name):
         """ Fetches the inbound sms from twilio API."""
-        
+
         s3db = current.s3db
         db = current.db
         ttable = s3db.msg_twilio_inbound_settings
@@ -1429,19 +1429,19 @@ class S3Msg(object):
             url = account.url
             account_sid = account.account_sid
             auth_token = account.auth_token
-            
+
             url += "/%s/SMS/Messages.json"%str(account_sid)
-            
+
             import urllib, urllib2
-            # this creates a password manager 
+            # this creates a password manager
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             passman.add_password(None, url, account_sid, auth_token)
-  
+
             # create the AuthHandler
             authhandler = urllib2.HTTPBasicAuthHandler(passman)
-            opener = urllib2.build_opener(authhandler)            
+            opener = urllib2.build_opener(authhandler)
             urllib2.install_opener(opener)
-            
+
             downloaded_sms = []
             itable = s3db.msg_twilio_inbox
             ltable = s3db.msg_log
@@ -1463,12 +1463,12 @@ class S3Msg(object):
                                 received_on=sms["date_sent"])
                         linsert(sender=sender, message=sms["body"], \
                                  source_task_id=account_name, inbound=True)
-                                        
+
             except urllib2.HTTPError, e:
                 return "Error:" + str(e.code)
             db.commit()
             return
-        
+
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """
@@ -1646,49 +1646,21 @@ class S3Compose(S3CRUD):
         #ltable.priority.label = T("Priority")
 
         if "pe_id" in table:
-            records = resource.sqltable(fields=["pe_id"],
-                                        as_list=True, start=None, limit=None)
-            if records and table.virtualfields:
-                # Check for join
-                tablename = table._tablename
-                if tablename in records[0]:
-                    recipients = []
-                    for record in records:
-                        pe_id = record[tablename]["pe_id"]
-                        if pe_id:
-                            recipients.append(pe_id)
-                else:
-                    # No join
-                    recipients = [record["pe_id"] for record in records if record["pe_id"]]
-            else:
-                recipients = [record["pe_id"] for record in records if record["pe_id"]]
-
+            field = "pe_id"
         elif "person_id" in table:
-            # @ToDo: Optimise through a Join
-            records = resource.sqltable(fields=["person_id"],
-                                        as_list=True, start=None, limit=None)
-            if records and table.virtualfields:
-                # Check for join
-                tablename = table._tablename
-                if tablename in records[0]:
-                    persons = []
-                    for record in records:
-                        person_id = record[tablename]["person_id"]
-                        if person_id:
-                            persons.append(person_id)
-                else:
-                    # No join
-                    persons = [record["person_id"] for record in records if record["person_id"]]
-            else:
-                persons = [record["person_id"] for record in records]
-            table = s3db.pr_person
-            records = db(table.id.belongs(persons)).select(table.pe_id)
-            recipients = [record.pe_id for record in records]
+            field = "person_id$pe_id"
         elif "group_id" in table:
-            # @ToDo
-            recipients = None
+            field = None # "group_id$pe_id"?
         else:
-            recipients = None
+            field = None
+        if field:
+            records = resource.select([field])
+            if records:
+                rfield = resource.resolve_selector(field)
+                items = resource.extract(records, [field])
+                recipients = [item[rfield.colname] for item in items]
+            else:
+                recipients = []
 
         if recipients:
             self.recipients = recipients

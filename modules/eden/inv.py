@@ -2406,6 +2406,9 @@ def inv_warehouse_rheader(r):
     # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
+    if not record:
+        return None
+
     table = s3db.table(tablename)
 
     rheader = None
@@ -2443,7 +2446,7 @@ def inv_warehouse_rheader(r):
             # Inject the helptext script
             #rheader.append(s3.req_helptext_script)
 
-    elif tablename == "inv_inv_item" and record != None:
+    elif tablename == "inv_inv_item":
 
         # Tabs
         tabs = [(T("Details"), None),
@@ -2466,7 +2469,7 @@ def inv_warehouse_rheader(r):
                         ),
                     ), rheader_tabs)
 
-    elif tablename == "inv_track_item" and record != None:
+    elif tablename == "inv_track_item":
 
         # Tabs
         tabs = [(T("Details"), None),
@@ -2494,7 +2497,7 @@ def inv_warehouse_rheader(r):
                     ), rheader_tabs)
 
     # Build footer
-    if record and "site_id" in record:
+    if "site_id" in record:
 
         rfooter = TAG[""]()
         if (r.component and r.component.name == "inv_item"):
