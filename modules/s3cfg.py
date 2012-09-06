@@ -630,10 +630,71 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Alert
     def get_cap_identifier_prefix(self):
+        """
+            prefix to be prepended to identifiers of cap alerts.
+        """
         return self.cap.get("identifier_prefix", "")
 
     def get_cap_identifier_suffix(self):
+        """
+            suffix to be appended to identifiers of cap alerts.
+        """
         return self.cap.get("identifier_suffix", "")
+
+    def get_cap_codes(self):
+        """
+            default codes for cap alert.
+
+            should return a list of dicts:
+            [ {"key": "<ValueName>, "value": "<Value>",
+               "comment": "<Help string>", "mutable": True|False},
+              ...]
+
+        """
+        return self.cap.get("codes", [])
+
+    def get_cap_event_codes(self):
+        """
+            default alert codes for cap info.
+
+            should return a list of dicts:
+            [ {"key": "<ValueName>, "value": "<Value>",
+               "comment": "<Help string>", "mutable": True|False},
+              ...]
+
+        """
+        return self.cap.get("event_codes", [])
+
+    def get_cap_parameters(self):
+        """
+            default parameters for cap info.
+
+            should return a list of dicts:
+            [ {"key": "<ValueName>, "value": "<Value>",
+               "comment": "<Help string>", "mutable": True|False},
+              ...]
+
+        """
+        return self.cap.get("parameters", [])
+
+    def get_cap_geocodes(self):
+        """
+            default geocodes.
+
+            should return a list of dicts:
+            [ {"key": "<ValueName>, "value": "<Value>",
+               "comment": "<Help string>", "mutable": True|False},
+              ...]
+
+        """
+        return self.cap.get("geocodes", [])
+
+    def get_cap_base64(self):
+        """
+            Should cap resources be base64 encoded and embedded in the alert message?
+
+        """
+        return self.cap.get("base64", False)
 
     def get_cap_languages(self):
         """
@@ -653,6 +714,22 @@ class S3Config(Storage):
                                 ("ru", "русский"),
                                 ("es", "Español")
                             ]))
+
+    def get_cap_priorities(self):
+        """
+            settings for priorities.
+
+            Should be an ordered dict of the format
+            OrderedDict([
+                            ("<value>, "<Translated title>", <urgency>, <severity>, <certainty>, <color>),
+                             ...
+                        ]) """
+        T = current.T
+        return self.cap.get("priorities", [
+                                            ("Urgent", T("Urgent"), "Immediate", "Extreme", "Observed", "red"),
+                                            ("High", T("High"), "Expected", "Severe", "Observed", "orange"),
+                                            ("Low", T("Low"), "Expected", "Moderate", "Observed", "green")
+                                          ])
 
     # -------------------------------------------------------------------------
     # Human Resource Management
