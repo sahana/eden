@@ -1018,15 +1018,11 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                items = resource.sqltable(fields=list_fields,
-                                          as_list=True)
-            items = S3DataTable.htmlConfig(items,
-                                           "list",
-                                           sortby,
-                                           "", # the filter string
-                                           None, # the rfields
-                                           **S3DataTable.getConfigData()
-                                           )
+                rows = resource.select(list_fields)
+                if rows:
+                    items = rows.as_list()
+                else:
+                    items = []
             response.view = "plain.html"
             return dict(item=items)
 

@@ -2753,7 +2753,7 @@ class S3DataTable(object):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def listFormats(id, rfields=None):
+    def listFormats(id, rfields=None, permalink=None):
         """
             Calculate the export formats that can be added to the table
 
@@ -2765,6 +2765,12 @@ class S3DataTable(object):
         s3 = current.response.s3
         application = current.request.application
 
+        # @todo: this needs rework
+        #        - s3FormatRequest must retain any URL filters
+        #        - s3FormatRequest must remove the "search" method
+        #        - other data formats could have other list_fields,
+        #          hence applying the datatable sorting/filters is
+        #          not transparent
         if s3.datatable_ajax_source:
             end = s3.datatable_ajax_source.find(".aaData")
             default_url = s3.datatable_ajax_source[:end] # strip '.aaData' extension
@@ -2787,6 +2793,13 @@ class S3DataTable(object):
                             _alt=T("Export in RSS format"),
                             ))
         div = DIV(_class='list_formats')
+        if permalink is not None:
+            link = A(T("Link to this result"),
+                     _href=permalink,
+                     _class="permalink")
+            div.append(link)
+            div.append(" | ")
+
         div.append(current.T("Export to:"))
         if "have" in s3.formats:
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
@@ -3002,8 +3015,10 @@ class S3DataTable(object):
         # Wrap the table in a form and add some data in hidden fields
         form = FORM()
         if not s3.no_formats and len(html) > 0:
-            form.append (S3DataTable.listFormats(id, rfields))
-        form.append (html)
+            permalink = attr.get("dt_permalink", None)
+            form.append(S3DataTable.listFormats(id, rfields,
+                                                permalink=permalink))
+        form.append(html)
         # Add the configuration details for this dataTable
         form.append(INPUT(_type="hidden",
                           _id="%s_configurations" % id,
