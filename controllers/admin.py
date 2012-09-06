@@ -72,6 +72,8 @@ def user():
 
     tablename = "auth_user"
     table = db[tablename]
+    
+    auth.configure_user_fields()
 
     auth.configure_user_fields()
 
