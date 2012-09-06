@@ -877,14 +877,15 @@ class AuthS3(Auth):
             # Save temporary user fields
             self.s3_user_create_onaccept(form)
 
-            users = db(utable.id > 0).count()
-            if users == 1:
+            users = db(utable.id > 0).select(utable.id,
+                                             limitby=(0, 2))
+            if len(users) == 1:
                 # 1st user to register does need verification/approval
                 self.s3_approve_user(form.vars)
 
                 # And become admin
                 admin_group_id = 1
-                self.add_membership(admin_group_id, user.id)
+                self.add_membership(admin_group_id, users.first().id)
 
             elif settings.registration_requires_verification:
                 # Send the Verification email
