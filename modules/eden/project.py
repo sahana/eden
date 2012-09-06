@@ -4834,6 +4834,7 @@ def project_task_controller():
     T = current.T
     auth = current.auth
     request = current.request
+    vars = request.get_vars
     s3 = current.response.s3
     db = current.db
     s3db = current.s3db
@@ -4846,13 +4847,14 @@ def project_task_controller():
         crud_strings = s3.crud_strings["project_task"]
 
         if r.record:
-            # Put the Comments in the RFooter
-            project_ckeditor()
-            s3.rfooter = LOAD("project", "comments.load",
-                                args=[r.id],
-                                ajax=True)
+            if r.interactive:
+                # Put the Comments in the RFooter
+                project_ckeditor()
+                s3.rfooter = LOAD("project", "comments.load",
+                                  args=[r.id],
+                                  ajax=True)
 
-        elif "mine" in request.get_vars:
+        elif "mine" in vars:
             # Show the Open Tasks for this User
             if auth.user:
                 pe_id = auth.user.pe_id
@@ -4861,29 +4863,29 @@ def project_task_controller():
             crud_strings.title_list = T("My Open Tasks")
             crud_strings.msg_list_empty = T("No Tasks Assigned")
             s3db.configure(tablename,
-                            copyable=False,
-                            listadd=False)
+                           copyable=False,
+                           listadd=False)
             try:
                 # Add Virtual Fields
                 list_fields = s3db.get_config(tablename,
-                                                "list_fields")
+                                              "list_fields")
                 list_fields.insert(4, (T("Project"), "project"))
                 # Hide the Assignee column (always us)
                 list_fields.remove("pe_id")
                 # Hide the Status column (always 'assigned' or 'reopened')
                 list_fields.remove("status")
                 s3db.configure(tablename,
-                                list_fields=list_fields)
+                               list_fields=list_fields)
             except:
                 pass
 
-        elif "project" in request.get_vars:
+        elif "project" in vars:
             # Show Open Tasks for this Project
-            project = request.get_vars.project
+            project = vars.project
             ptable = s3db.project_project
             try:
                 name = db(ptable.id == project).select(ptable.name,
-                                                        limitby=(0, 1)).first().name
+                                                       limitby=(0, 1)).first().name
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
@@ -4896,16 +4898,16 @@ def project_task_controller():
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
             # Add Virtual Fields
             list_fields = s3db.get_config(tablename,
-                                            "list_fields")
+                                          "list_fields")
             list_fields.insert(2, (T("Activity"), "activity"))
             s3db.configure(tablename,
-                            # Block Add until we get the injectable component lookups
-                            insertable=False,
-                            deletable=False,
-                            copyable=False,
-                            #search_method=task_search,
-                            list_fields=list_fields)
-        elif "open" in request.get_vars:
+                           # Block Add until we get the injectable component lookups
+                           insertable=False,
+                           deletable=False,
+                           copyable=False,
+                           #search_method=task_search,
+                           list_fields=list_fields)
+        elif "open" in vars:
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
             s3.filter = (table.status.belongs(statuses))
@@ -4913,21 +4915,20 @@ def project_task_controller():
             crud_strings.title_list = T("All Tasks")
             crud_strings.title_search = T("All Tasks")
             list_fields = s3db.get_config(tablename,
-                                            "list_fields")
+                                          "list_fields")
             list_fields.insert(2, (T("Project"), "project"))
             list_fields.insert(3, (T("Activity"), "activity"))
             s3db.configure(tablename,
-                            report_options=Storage(
+                           report_options=Storage(
                                 search=[
                                     S3SearchOptionsWidget(
                                         field="project",
                                         name="project",
                                         label=T("Project")
                                     )
-                                ]
-                            ),
-                            list_fields=list_fields
-                            )
+                                ]),
+                           list_fields=list_fields
+                           )
 
         if r.component:
             if r.component_name == "req":
@@ -4956,7 +4957,6 @@ def project_task_controller():
                 field.readable = field.writable = False
                 field = table.status
                 field.readable = field.writable = False
-        print "%s=%s" % (r.representation, s3.filter)
         return True
     s3.prep = prep
 
@@ -4965,7 +4965,7 @@ def project_task_controller():
         if r.interactive:
             if not r.component and \
                    r.method != "import":
-                update_url = URL(args=["[id]"], vars=request.get_vars)
+                update_url = URL(args=["[id]"], vars=vars)
                 current.manager.crud.action_buttons(r,
                                                     update_url=update_url)
                 if r.method != "search" and \
@@ -5001,9 +5001,9 @@ def project_task_controller():
                         except:
                             pass
                         s3.scripts.append("/%s/static/scripts/S3/s3.project.js" % \
-                            current.request.application)
-                    if "project" in request.get_vars:
-                        widget = INPUT(value=request.get_vars.project, _name="project_id")
+                            request.application)
+                    if "project" in vars:
+                        widget = INPUT(value=vars.project, _name="project_id")
                         project = s3.crud.formstyle("project_task_project__row", "", widget, "")
                     else:
                         table = s3db.project_task_project
