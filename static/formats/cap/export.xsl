@@ -206,7 +206,7 @@
                 </addresses>
             </xsl:if>
 
-            <xsl:if test="data[@field='code']">
+            <xsl:if test="data[@field='codes']">
                 <xsl:call-template name="key-value-pairs">
                     <xsl:with-param name="string"><xsl:value-of select="data[@field='codes']"/>
                     </xsl:with-param>
@@ -333,9 +333,11 @@
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
-
-            <xsl:apply-templates select="resource[@name='cap_info_resource']"/>
-            <xsl:apply-templates select="resource[@name='cap_info_area']"/>
+            <!--
+            <xsl:if test="../resource[@name='cap_info_resource']/info_id = @uuid">
+                <xsl:apply-templates select="resource[@name='cap_info_resource']"/>
+                <xsl:apply-templates select="resource[@name='cap_info_area']"/>
+            </xsl:if> -->
         </info>
     </xsl:template>
 
