@@ -880,12 +880,19 @@ class AuthS3(Auth):
             users = db(utable.id > 0).select(utable.id,
                                              limitby=(0, 2))
             if len(users) == 1:
-                # 1st user to register does need verification/approval
+                # 1st user to register doesn't need verification/approval
                 self.s3_approve_user(form.vars)
 
                 # And become admin
                 admin_group_id = 1
                 self.add_membership(admin_group_id, users.first().id)
+                
+                # Log them in
+                user = utable[form.vars.id]
+                session.auth = Storage(user=user, last_visit=request.now,
+                                       expiration=self.settings.expiration)
+                self.user = user
+                session.confirmation = self.messages.logged_in
 
             elif settings.registration_requires_verification:
                 # Send the Verification email
@@ -903,18 +910,17 @@ class AuthS3(Auth):
                            vars = {"email": form.vars.email})
 
             else:
-                # Does the user need to be approved
+                # Does the user need to be approved?
                 approved = self.s3_verify_user(form.vars)
 
-                # Has the use been approved
+                # Has the user been approved?
                 if approved:
                     # Log them in
                     user = utable[form.vars.id]
                     session.auth = Storage(user=user, last_visit=request.now,
                                            expiration=self.settings.expiration)
                     self.user = user
-                    session.flash = self.messages.logged_in
-
+                    session.confirmation = self.messages.logged_in
 
             # Set a Cookie to present user with login box by default
             self.set_cookie()
@@ -1283,11 +1289,11 @@ class AuthS3(Auth):
                 current.session.flash = deployment_settings.get_auth_registration_pending()
             # @ToDo: include link to user
             subject = T("%(system_name)s - New User Registration Approval Pending") % \
-                      {"system_name": deployment_settings.get_system_name()}
+                        {"system_name": deployment_settings.get_system_name()}
             message = self.messages.approve_user % \
-                        dict( first_name = user.first_name,
-                              last_name = user.last_name,
-                              email = user.email)
+                        dict(first_name = user.first_name,
+                             last_name = user.last_name,
+                             email = user.email)
         else:
             approved = True
             self.s3_approve_user(user)
@@ -1297,9 +1303,9 @@ class AuthS3(Auth):
                 return True
             subject = T("%(system_name)s - New User Registered") % \
                       {"system_name": deployment_settings.get_system_name()}
-            message = self.messages.new_user % dict( first_name = user.first_name,
-                                                     last_name = user.last_name,
-                                                     email = user.email)
+            message = self.messages.new_user % dict(first_name = user.first_name,
+                                                    last_name = user.last_name,
+                                                    email = user.email)
 
         result = self.settings.mailer.send(to = approver,
                                            subject = subject,
@@ -1363,15 +1369,6 @@ class AuthS3(Auth):
         # Get required registration roles
         roles = deployment_settings.get_auth_registration_roles()
 
-        # @ToDo: MH: What's this for - we already have the user_id?
-        if roles or deployment_settings.has_module("delphi"):
-            query = (ptable.id == person_id) & \
-                    (ptable.pe_id == ltable.pe_id) & \
-                    (ltable.user_id == utable.id)
-            user = db(query).select(utable.id,
-                                    ltable.user_id,
-                                    limitby=(0, 1)).first()
-
         # Add User to required registration roles
         if roles:
             gtable = self.settings.table_group
@@ -1379,10 +1376,9 @@ class AuthS3(Auth):
             query = (gtable.uuid.belongs(roles))
             rows = db(query).select(gtable.id)
             for role in rows:
-                mtable.insert(user_id=user[ltable._tablename].user_id,
+                mtable.insert(user_id=user_id,
                               group_id=role.id)
 
-        # @ToDo: Move this to Templates settings.get_auth_registration_roles?
         if deployment_settings.has_module("delphi"):
             # Add user as a participant of the default problem group
             table = s3db.delphi_group
@@ -1392,11 +1388,10 @@ class AuthS3(Auth):
             if group:
                 table = s3db.delphi_membership
                 table.insert(group_id=group.id,
-                             user_id=user[utable._tablename].id,
+                             user_id=user_id,
                              status=3)
 
         session.confirmation = self.messages.registration_successful
-
 
         self.s3_link_user(user)
 
@@ -1530,13 +1525,12 @@ class AuthS3(Auth):
                    user.last_name != person.first_name:
                     # Update the person record if the user details have changed
                     query = (ptable.id == person_id)
-                    db(query).update( first_name = user.first_name,
-                                      last_name = user.last_name )
+                    db(query).update(first_name = user.first_name,
+                                     last_name = user.last_name)
 
                 # Update the person record email
-                query = ( (ctable.pe_id == pe_id ) &
-                          (ctable.contact_method == "EMAIL" )
-                          )
+                query = (ctable.pe_id == pe_id ) & \
+                        (ctable.contact_method == "EMAIL")
                 db(query).update(value = user.email,
                                  )
 

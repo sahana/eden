@@ -169,6 +169,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.duplicate_features = True
 # Mouse Position: 'normal', 'mgrs' or 'off'
 #settings.gis.mouse_position = "mgrs"
+# PoIs to export in KML/OSM feeds from Admin locations
+#settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office"]
 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"

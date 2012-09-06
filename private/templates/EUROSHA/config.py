@@ -76,6 +76,8 @@ settings.auth.owner_entity = eurosha_owner_entity
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted.
 settings.gis.menu = "Country"
+# PoIs to export in KML/OSM feeds from Admin locations
+settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office", "transport_airport", "transport_seaport"]
 
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
