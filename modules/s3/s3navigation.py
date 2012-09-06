@@ -1437,6 +1437,8 @@ class S3SearchTabs:
                 _href = "#"
             elif method == "compose":
                 _id = "gis_datatables_compose_tab"
+                # @todo: do not use the session filter - use the search
+                # query serialize_url instead (pass to search_tabs from S3Search)
                 _href = r.url(method="compose", vars=current.session.s3.filter)
             else:
                 # List View, defaults to active

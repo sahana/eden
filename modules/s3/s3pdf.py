@@ -3063,12 +3063,10 @@ class S3PDFDataSource:
         headers = [f.label for f in lfields if f.show]
         if orderby != None:
             orderby = fields[0].field
-        self.records = resource.sqltable(fields=list_fields,
-                                         start=None,
-                                         limit=None,
-                                         orderby=orderby,
-                                         no_ids=True,
-                                         as_rows=True)
+        self.records = resource.select(fields=list_fields,
+                                       start=None,
+                                       limit=None,
+                                       orderby=orderby)
 
         # Pass to getLabels
         self.labels = headers

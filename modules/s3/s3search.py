@@ -590,10 +590,9 @@ class S3SearchOptionsWidget(S3SearchWidget):
             else:
                 opt_values = []
 
-                rows = resource.sqltable(fields=[field_name],
-                                         start=None,
-                                         limit=None,
-                                         as_rows=True)
+                rows = resource.select(fields=[field_name],
+                                       start=None,
+                                       limit=None)
                 if rows:
                     if field_type.startswith("list"):
                         for row in rows:
@@ -1238,6 +1237,12 @@ class S3Search(S3CRUD):
                     # unfiltered
                     session_options = Storage()
                 form_values = session_options
+
+        # Remove the existing session filter if this is a new
+        # search (@todo: do not store the filter in session)
+        if r.http == "GET" and r.representation != "aadata":
+            if "filter" in session.s3:
+                del session.s3["filter"]
 
         # Build the search forms
         simple_form, advanced_form = self.build_forms(r, form_values)
@@ -2413,11 +2418,10 @@ class S3PersonSearch(S3Search):
                       "last_name",
                       ]
 
-            rows = resource.sqltable(fields=fields,
-                                     start=0,
-                                     limit=limit,
-                                     orderby="pr_person.first_name",
-                                     as_rows=True)
+            rows = resource.select(fields=fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="pr_person.first_name")
 
             if rows:
                 items = [{
@@ -2506,11 +2510,10 @@ class S3HRSearch(S3Search):
             if show_orgs:
                 fields.append("organisation_id$name")
 
-            rows = resource.sqltable(fields=fields,
-                                     start=0,
-                                     limit=limit,
-                                     orderby="pr_person.first_name",
-                                     as_rows=True)
+            rows = resource.select(fields=fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="pr_person.first_name")
 
             if rows:
                 items = [{
