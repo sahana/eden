@@ -2925,6 +2925,9 @@ class S3Resource(object):
 
         pkey = self.table._id
 
+        if not rows:
+            return []
+
         rfields = []
         for i in fields:
             if isinstance(i, tuple) and len(i) > 1:
