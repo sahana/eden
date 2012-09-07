@@ -1258,7 +1258,10 @@ class S3Importer(S3CRUD):
                                                       request.function,
                                                       ajax_item_id
                                                       )
+            totalrows = self.resource.count()
             items =  dt.html(id,
+                            totalrows,
+                            totalrows,
                             dt_ajax_url=url,
                             dt_bulk_actions = [current.T("Import")],
                             dt_bulk_selected = dt_bulk_select,

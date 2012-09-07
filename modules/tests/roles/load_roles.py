@@ -30,9 +30,6 @@ import os
 from gluon import current
 from gluon.storage import Storage
 
-import unittest
-from tests.web2unittest import SeleniumUnitTest
-#from tests import *
 #import unittest, re, time
 
 def create_role_test_data():
@@ -139,6 +136,8 @@ def create_role_test_data():
                 #print success
     db.commit()
     auth.override = False
+    
+create_role_test_data()
 
 #----------------------------------------------------------------------
 # Test Permissions against Role Matrix File
@@ -206,102 +205,3 @@ def test_roles():
     return suite
     #self.assertFalse(permitted)
     #self.assertTrue(False,"This Should have been True")
-
-class TestRole(SeleniumUnitTest):
-    def set(self,
-            org,
-            row_num,
-                 user,
-                 method,
-                 table,
-                 c,
-                 f,
-                 record_id,
-                 uuid,
-                 permission):
-        self.org = org
-        self.row_num = row_num
-        self.user = user
-        self.method = method
-        self.table = table
-        self.c = c
-        self.f = f
-        self.record_id = record_id
-        self.uuid = uuid
-        self.permission = permission
-
-    def runTest(self):
-        auth = current.auth
-
-        org = self.org
-        row_num = self.row_num
-        user = self.user
-        method = self.method
-        table = self.table
-        c = self.c
-        f = self.f
-        record_id = self.record_id
-        uuid = self.uuid
-        permission = self.permission
-
-        auth.s3_impersonate(user)
-        permitted = auth.permission.has_permission(method = method,
-                                           t = table,
-                                           c = c,
-                                           f = f,
-                                           record = record_id)
-        msg = """Permission Error
-Organisation:%s (Row:%s)
-user:%s
-table: %s\tc: %s\tf: %s\tmethod: %s\tuuid: %s\tid: %s
-Expected: %s\t Actual: %s
-""" % (org, row_num,
-       user,
-       table, c, f, method, uuid, record_id,
-       permission == "Yes", permitted
-       )
-        self.assertEqual(permission == "Yes", permitted, msg)
-        print msg
-        #----------------------------------------------------------------------
-
-    def dummy_code(self):
-        #resource = current.s3db.resource("org_organisation", uid="Org-A")
-        #resource.load()
-        self.assertEqual(len(resource), 1)
-        record = resource._rows[0]
-        self.assertEqual(record.name, "Org-A")
-
-        resource = current.s3db.resource("org_organisation", uid="Office-A")
-        resource.load()
-        self.assertEqual(len(resource), 1)
-        record = resource._rows[0]
-        self.assertEqual(record.name, "Office-A")
-
-        resource = current.s3db.resource("org_organisation", uid="InvItem-A")
-        resource.load()
-        self.assertEqual(len(resource), 1)
-        record = resource._rows[0]
-        self.assertEqual(record.quantity, 10)
-
-        resource = current.s3db.resource("org_organisation", uid="Item-A")
-        resource.load()
-        self.assertEqual(len(resource), 1)
-        record = resource._rows[0]
-        self.assertEqual(record.name, "Item-A")
-
-        #for org in orgs:
-
-        #    data_ids[org] = Storage()
-        #    for table_name, value in org_data:
-        #        # Unique name for each Org
-        #        value = "%s %s" % (org, value)
-        #        field_name = "name"
-        #        values = {field_name: value}
-
-        #        if not id:
-        #            table = db[table_name]
-        #            field = table[field_name]
-        #            id = db(field == value).select(db[table_name].id).first().id
-        #        data_ids[org][value] = id
-        #print data_ids
-        #db.commit()

@@ -1,0 +1,6 @@
+<s3xml>
+    <!-- Org X -->
+   <resource name="org_organisation" uuid="%(org)s">
+     <data field="name">%(org)s</data>
+   </resource>
+</s3xml>
