@@ -77,14 +77,6 @@ class SendItem(InvTestFunctions):
                        "3",
                       ),
                      ],
-                     [("send_inv_item_id",
-                       "Jerry Cans - 123461 - Australian Red Cross",
-                       "inv_widget",
-                      ),
-                      ("quantity",
-                       "7",
-                      ),
-                     ],
                     ]
 
         result = self.send(user, send_data)
