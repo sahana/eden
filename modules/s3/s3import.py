@@ -1481,13 +1481,11 @@ class S3Importer(S3CRUD):
             Set the resource and the table to being s3_import_upload
         """
 
+        self.tablename = self.upload_tablename
         if self.upload_resource == None:
-            from s3resource import S3Resource
-            (prefix, name) = self.UPLOAD_TABLE_NAME.split("_",1)
-            self.upload_resource = S3Resource(prefix, name)
+            self.upload_resource = current.s3db.resource(self.tablename)
         self.resource = self.upload_resource
         self.table = self.upload_table
-        self.tablename = self.upload_tablename
 
     # -------------------------------------------------------------------------
     def _use_controller_table(self):
@@ -1505,13 +1503,10 @@ class S3Importer(S3CRUD):
             Set the resource and the table to being s3_import_item
         """
 
-        if self.item_resource == None:
-            from s3resource import S3Resource
-            self.table = S3ImportJob.define_item_table()
-            (prefix, name) = S3ImportJob.ITEM_TABLE_NAME.split("_",1)
-            self.item_resource = S3Resource(prefix, name)
-        self.resource = self.item_resource
         self.tablename = S3ImportJob.ITEM_TABLE_NAME
+        if self.item_resource == None:
+            self.item_resource = current.s3db.resource(self.tablename)
+        self.resource = self.item_resource
         self.table = S3ImportJob.define_item_table()
 
     # -------------------------------------------------------------------------
@@ -2165,7 +2160,7 @@ class S3ImportItem(object):
 
             if not self.skip and not self.conflict:
 
-                resource = S3Resource(self.tablename, id=self.id)
+                resource = s3db.resource(self.tablename, id=self.id)
 
                 ondelete = s3db.get_config(self.tablename, "ondelete")
                 success = resource.delete(ondelete=ondelete,
