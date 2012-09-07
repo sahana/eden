@@ -62,9 +62,14 @@ def create_role_test_data():
                              "tests", "roles",
                              current.deployment_settings.base.template)
 
+    org_file = open(os.path.join(test_dir, "org_organisation.xml"), "rb")
+    org_template_string = org_file.read()
     data_file = open(os.path.join(test_dir, "data.xml"), "rb")
     data_template_string = data_file.read()
     org_resource = s3db.resource("org_organisation")
+    org_branch_file = open(os.path.join(test_dir, "org_organisation_branch.xml"), "rb")
+    org_branch_template_string = org_branch_file.read()
+    org_branch_resource = s3db.resource("org_organisation_branch")
 
     user_file = open(os.path.join(test_dir, "users_template.csv"), "rb")
     user_template_string = user_file.read()
@@ -93,10 +98,20 @@ def create_role_test_data():
             orgx2 = copy_orgs[1]
 
             if branch:
-                org = "%s-%s" % (org,branch)
+                orgx = "%s-%s" % (org,branch)
+            else:
+                orgx = org
+            
+            # Create Org & get id
+            org_string = org_template_string % dict( org = orgx )
+            xmltree = etree.ElementTree( etree.fromstring(org_string) )
+            success = org_resource.import_xml(xmltree)
+            otable = s3db.org_organisation
+            org_id = db(otable.name == orgx).select(otable.id).first().id
+            auth.user = Storage(organisation_id = org_id)
 
              # Create Test Data for each Organisation
-            data_string = data_template_string % dict( org = org,
+            data_string = data_template_string % dict( org = orgx,
                                                        orgx1 = orgx1,
                                                        orgx2 = orgx2,
                                                        )
@@ -104,15 +119,24 @@ def create_role_test_data():
             success = org_resource.import_xml(xmltree)
 
             # Create Users for each Organisation
-            user_string = user_template_string % dict(org = org)
+            user_string = user_template_string % dict(org = orgx,
+                                                      org_lower = org.lower())
             user_file = StringIO.StringIO(user_string)
             success = user_resource.import_xml(user_file,
                                                format="csv",
                                                stylesheet=user_stylesheet)
             user_file = StringIO.StringIO(user_string)
             hr_resource.import_xml(user_file, format="csv", stylesheet=hr_stylesheet)
-            #print success
-
+            
+            if branch:
+                # Link Branch to Org
+                org_branch_string = org_branch_template_string % dict( org = org,
+                                                                 branch = branch
+                                                                 )
+                #print org_branch_string
+                xmltree = etree.ElementTree( etree.fromstring(org_branch_string) )
+                success = org_branch_resource.import_xml(xmltree)
+                #print success
     db.commit()
     auth.override = False
 
@@ -129,7 +153,6 @@ def test_roles():
     orgs = ["Org-A"]
     table_lookup = {"hrm_staff":"hrm_human_resource",
                     "vol_volunteer":"hrm_human_resource",
-                    "inv_warehouse":"org_office"
                     }
 
     for org in orgs:
@@ -141,7 +164,7 @@ def test_roles():
         for test in permission_matrix:
             row_num = row_num + 1
 
-            #if row_num < 0 or row_num > 10:
+            #if row_num < 55 or row_num > 75:
             #    continue
             table = test["table"]
             c = test["c"]
@@ -151,11 +174,15 @@ def test_roles():
             if table:
                 db_table = s3db[table]
             elif c and f:
-                db_table =  s3db[table_lookup["%s_%s" % (c,f)]]
+                tablename = "%s_%s" % (c,f)
+                db_table =  s3db[table_lookup.get(tablename,tablename)]
             else:
-                # No Table or C and F
+                # No Table or C and F - probably header row
+                row_num = row_num - 1
                 continue
             if uuid:
+                print "%s, %s, %s, %s" % (table,c,f, uuid)
+                #print uuid
                 record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
             else:
                 record_id = None

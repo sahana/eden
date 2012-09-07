@@ -64,6 +64,9 @@ settings.security.policy = 7 # Realm w Hierarchy
 settings.security.map = True
 
 # Owner Entity
+# If the fallback options for the realm a record belong to will be 
+# the user's organisation, the the user's pe_id instead of None 
+# Is this now still needed?
 def eurosha_owner_entity(table, row):
     user = current.auth.user
     if user is not None:
