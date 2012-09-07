@@ -31,7 +31,6 @@ import re
 import sys
 import datetime
 import time
-import HTMLParser
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -184,9 +183,6 @@ class S3Resource(object):
         # Hooks ---------------------------------------------------------------
 
         self.ERROR = manager.ERROR
-
-        # Export/Import hooks
-        self.exporter = manager.exporter
 
         # Authorization hooks
         auth = current.auth
@@ -6329,19 +6325,5 @@ class S3RecordMerger(object):
 
         # Success
         return True
-
-# =============================================================================
-class S3MarkupStripper(HTMLParser.HTMLParser):
-    """ Simple markup stripper """
-
-    def __init__(self):
-        self.reset()
-        self.result = []
-
-    def handle_data(self, d):
-        self.result.append(d)
-
-    def stripped(self):
-        return "".join(self.result)
 
 # END =========================================================================

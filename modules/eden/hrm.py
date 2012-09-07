@@ -3792,7 +3792,7 @@ def hrm_service_record(r, **attr):
         # Volunteer
         list_fields = ["person_id$first_name"]
         name = s3_fullname(r.record.person_id)
-        exporter = r.resource.exporter.pdf
+        exporter = S3Exporter().pdf
         return exporter(r,
                         method = "list",
                         #pdf_componentname = "inv_track_item",

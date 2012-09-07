@@ -53,7 +53,7 @@ except ImportError:
 from gluon import *
 from gluon.storage import Storage
 
-from s3method import S3Method
+from s3rest import S3Method
 from s3import import S3ImportItem
 
 DEBUG = False

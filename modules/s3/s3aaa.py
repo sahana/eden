@@ -59,7 +59,7 @@ from gluon.utils import web2py_uuid
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_uid, s3_timestamp, s3_deletion_status, s3_comments
-from s3method import S3Method
+from s3rest import S3Method
 from s3utils import s3_mark_required
 from s3error import S3PermissionError
 
@@ -886,7 +886,7 @@ class AuthS3(Auth):
                 # And become admin
                 admin_group_id = 1
                 self.add_membership(admin_group_id, users.first().id)
-                
+
                 # Log them in
                 user = utable[form.vars.id]
                 session.auth = Storage(user=user, last_visit=request.now,

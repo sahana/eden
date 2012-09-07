@@ -164,6 +164,10 @@ current.xml = s3xml
 msg = s3base.S3Msg()
 current.msg = msg
 
+# Sync
+sync = s3base.S3Sync()
+current.sync = sync
+
 # -----------------------------------------------------------------------------
 def s3_clear_session():
 
