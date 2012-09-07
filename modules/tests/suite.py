@@ -88,6 +88,10 @@ parser.add_argument("-M",
                     "--test",
                     help = method_desc
                    )
+parser.add_argument("-A",
+                    "--auth",
+                    help = """web2py default argument feed""",
+                    )
 parser.add_argument("-V", "--verbose",
                     type = int,
                     default = 1,
