@@ -37,7 +37,6 @@ from gluon.storage import Storage
 from gluon.contenttype import contenttype
 from gluon.languages import lazyT
 
-from ..s3resource import S3Resource
 from ..s3codec import S3Codec
 
 try:
@@ -205,10 +204,9 @@ class S3RL_PDF(S3Codec):
         elif attr.get("pdf_componentname"):
             componentname = attr.get("pdf_componentname")
             (prefix, component) = componentname.split("_", 1)
-            resource = S3Resource(r.tablename,
-                                  components = [component],
-                                  id = r.id)
-
+            resource = current.s3db.resource(r.tablename,
+                                             components = [component],
+                                             id = r.id)
             body_flowable = self.get_resource_flowable(resource.components[component],
                                                        doc)
         else:
