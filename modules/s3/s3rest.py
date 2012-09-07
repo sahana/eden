@@ -170,36 +170,6 @@ class S3RequestManager(object):
         self.content_type = Storage()
 
     # -------------------------------------------------------------------------
-    # REST interface wrapper
-    # -------------------------------------------------------------------------
-    def parse_request(self, *args, **vars):
-        """
-            Wrapper function for S3Request
-
-            @see: S3Request.__init__() for argument list details
-        """
-
-        self.error = None
-        headers = {"Content-Type":"application/json"}
-        try:
-            r = S3Request(self, *args, **vars)
-        except SyntaxError:
-            print >> sys.stderr, "ERROR: %s" % self.error
-            raise HTTP(400, body=self.xml.json_message(False, 400,
-                                                       message=self.error),
-                       web2py_header=self.error,
-                       **headers)
-        except KeyError:
-            print >> sys.stderr, "ERROR: %s" % self.error
-            raise HTTP(404, body=self.xml.json_message(False, 404,
-                                                       message=self.error),
-                       web2py_header=self.error,
-                       **headers)
-        except:
-            raise
-        return r
-
-    # -------------------------------------------------------------------------
     # Session variables
     # -------------------------------------------------------------------------
     def get_session(self, prefix, name):
@@ -422,83 +392,6 @@ class S3RequestManager(object):
         return text
 
     # -------------------------------------------------------------------------
-    def original(self, table, record):
-        """
-            Find the original record for a possible duplicate:
-                - if the record contains a UUID, then only that UUID is used
-                  to match the record with an existing DB record
-                - otherwise, if the record contains some values for unique
-                  fields, all of them must match the same existing DB record
-
-            @param table: the table
-            @param record: the record as dict or S3XML Element
-        """
-
-        db = current.db
-        xml = self.xml
-        xml_decode = xml.xml_decode
-
-        VALUE = xml.ATTRIBUTE.value
-        UID = xml.UID
-        ATTRIBUTES_TO_FIELDS = xml.ATTRIBUTES_TO_FIELDS
-
-        # Get primary keys
-        pkeys = [f for f in table.fields if table[f].unique]
-        pvalues = Storage()
-
-        # Get the values from record
-        get = record.get
-        if isinstance(record, etree._Element):
-            xpath = record.xpath
-            xexpr = "%s[@%s='%%s']" % (xml.TAG.data, xml.ATTRIBUTE.field)
-            for f in pkeys:
-                v = None
-                if f == UID or f in ATTRIBUTES_TO_FIELDS:
-                    v = get(f, None)
-                else:
-                    child = xpath(xexpr % f)
-                    if child:
-                        child = child[0]
-                        v = child.get(VALUE, xml_decode(child.text))
-                if v:
-                    pvalues[f] = v
-        elif isinstance(record, dict):
-            for f in pkeys:
-                v = get(f, None)
-                if v:
-                    pvalues[f] = v
-        else:
-            raise TypeError
-
-        # Build match query
-        query = None
-        for f in pvalues:
-            if f == UID:
-                continue
-            _query = (table[f] == pvalues[f])
-            if query is not None:
-                query = query | _query
-            else:
-                query = _query
-
-        # Try to find exactly one match by non-UID unique keys
-        if query:
-            original = db(query).select(table.ALL, limitby=(0, 2))
-            if len(original) == 1:
-                return original.first()
-
-        # If no match, then try to find a UID-match
-        if UID in pvalues:
-            uid = self.xml.import_uid(pvalues[UID])
-            query = (table[UID] == uid)
-            original = db(query).select(table.ALL, limitby=(0, 1)).first()
-            if original:
-                return original
-
-        # No match or multiple matches
-        return None
-
-    # -------------------------------------------------------------------------
     def onaccept(self, table, record, method="create"):
 
         s3db = current.s3db
@@ -539,9 +432,9 @@ class S3Request(object):
 
     # -------------------------------------------------------------------------
     def __init__(self,
-                 manager,
                  prefix=None,
                  name=None,
+                 r=None,
                  c=None,
                  f=None,
                  args=None,
@@ -553,7 +446,6 @@ class S3Request(object):
         """
             Constructor
 
-            @param manager: the S3RequestManager
             @param prefix: the table name prefix
             @param name: the table name
             @param c: the controller prefix
@@ -623,6 +515,11 @@ class S3Request(object):
         self.http = http or current.request.env.request_method
 
         # Main resource attributes
+        if r is not None:
+            if not prefix:
+                prefix = r.prefix
+            if not name:
+                name = r.name
         self.prefix = prefix or self.controller
         self.name = name or self.function
 
@@ -1554,6 +1451,16 @@ class S3Request(object):
     # -------------------------------------------------------------------------
     # Tools
     # -------------------------------------------------------------------------
+    def factory(self, **args):
+        """
+            Generate a new request for the same resource
+
+            @param args: arguments for request constructor
+        """
+
+        return s3_request(r=self, **args)
+
+    # -------------------------------------------------------------------------
     def __getattr__(self, name):
         """
             Called upon r.<name>:
@@ -1852,5 +1759,35 @@ class S3Request(object):
             source.append(s)
 
         return source
+
+# =============================================================================
+# Global functions
+#
+def s3_request(*args, **kwargs):
+
+    manager = current.manager
+    xml = current.xml
+
+    manager.error = None
+    headers = {"Content-Type":"application/json"}
+    try:
+        r = S3Request(*args, **kwargs)
+    except SyntaxError:
+        error = manager.error
+        print >> sys.stderr, "ERROR: %s" % error
+        raise HTTP(400,
+                    body=xml.json_message(False, 400, message=error),
+                    web2py_header=error,
+                    **headers)
+    except KeyError:
+        error = manager.error
+        print >> sys.stderr, "ERROR: %s" % error
+        raise HTTP(404,
+                    body=xml.json_message(False, 404, message=error),
+                    web2py_header=error,
+                    **headers)
+    except:
+        raise
+    return r
 
 # END =========================================================================

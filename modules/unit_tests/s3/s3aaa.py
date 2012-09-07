@@ -2619,6 +2619,10 @@ class RecordApprovalTests(unittest.TestCase):
 
         table = s3db.pr_person
 
+        org_requires_approval = s3db.get_config("org_organisation",
+                                                "requires_approval")
+        s3db.clear_config("org_organisation", "requires_approval")
+
         try:
             # Set record approval on
             deployment_settings.auth.record_approval = True
@@ -2679,6 +2683,8 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertEqual(str(query), "(org_organisation.id > 0)")
 
         finally:
+            s3db.configure("org_organisation",
+                           requires_approval=org_requires_approval)
             deployment_settings.auth.record_approval = False
 
     def tearDown(self):
