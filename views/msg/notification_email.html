@@ -1,0 +1,38 @@
+<html>
+	<head>
+		<style type="text/css">
+			body {
+				background-color: white;
+				font-family: sans-serif;
+				color: #4f565d;
+			}
+			table {
+				border-collapse: collapse;
+			}
+			thead {
+				background-color: #dfdfdf;
+			}
+			tbody {
+			}
+			th, td {
+				border: 1px solid #cfcfcf;
+				padding: 2px;
+			}
+		</style>
+	</head>
+	<body>
+		<p>{{=system_name}}</p>
+
+		<h1>Search Notification {{=search_name}}</h1>
+
+		{{if new_table:}}
+			<p>{{=T("The following %s have been added" % resource_name)}}</p>
+			{{=new_table}}
+		{{pass}}
+
+		{{if mod_table:}}
+			<p>{{=T("The following %s have been updated" % resource_name)}}</p>
+			{{=mod_table}}
+		{{pass}}
+	</body>
+</html>
