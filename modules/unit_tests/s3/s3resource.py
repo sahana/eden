@@ -1181,6 +1181,28 @@ class S3ResourceImportTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class S3ResourceDataObjectAPITests(unittest.TestCase):
+    """ Test the S3Resource Data Object API """
+
+    def testLoadStatusIndication(self):
+        """ Test load status indication by value of _rows """
+
+        s3db = current.s3db
+
+        # A newly created resource has _rows=None
+        resource = s3db.resource("project_time")
+        self.assertEqual(resource._rows, None)
+
+        # After load(), this must always be a list
+        resource.load()
+        self.assertNotEqual(resource._rows, None)
+        self.assertTrue(isinstance(resource._rows, list))
+
+        # After clear(), this must be None again
+        resource.clear()
+        self.assertEqual(resource._rows, None)
+
+# =============================================================================
 class S3MergeOrganisationsTests(unittest.TestCase):
     """ Test merging org_organisation records """
 
@@ -1759,7 +1781,7 @@ if __name__ == "__main__":
         S3ResourceFilterTests,
         S3ResourceFieldTests,
         S3ResourceDataAccessTests,
-        #S3ResourceSQLTableTests,
+        S3ResourceDataObjectAPITests,
         S3ResourceExportTests,
         S3MergeOrganisationsTests,
         S3MergePersonsTests,
