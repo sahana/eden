@@ -48,7 +48,7 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from s3method import S3Method
+from s3rest import S3Method
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3widgets import S3EmbedComponentWidget
@@ -478,7 +478,7 @@ class S3CRUD(S3Method):
             response.view = "plain.html"
 
         elif representation == "csv":
-            exporter = resource.exporter.csv
+            exporter = S3Exporter().csv
             return exporter(resource)
 
         #elif representation == "map":
@@ -486,17 +486,17 @@ class S3CRUD(S3Method):
         #    return exporter(r, **attr)
 
         elif representation == "pdf":
-            exporter = resource.exporter.pdf
+            exporter = S3Exporter().pdf
             return exporter(r, **attr)
 
         elif representation == "xls":
             list_fields = _config("list_fields")
-            exporter = resource.exporter.xls
+            exporter = S3Exporter().xls
             return exporter(resource, list_fields=list_fields)
 
         elif representation == "json":
-            exporter = S3Exporter()
-            return exporter.json(resource)
+            exporter = S3Exporter().json
+            return exporter(resource)
 
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)
@@ -1027,11 +1027,11 @@ class S3CRUD(S3Method):
             return dict(item=items)
 
         elif representation == "csv":
-            exporter = S3Exporter()
-            return exporter.csv(resource)
+            exporter = S3Exporter().csv
+            return exporter(resource)
 
         elif representation == "pdf":
-            exporter = resource.exporter.pdf
+            exporter = S3Exporter().pdf
             return exporter(r,
                             list_fields=list_fields,
                             report_hide_comments = report_hide_comments,
@@ -1040,19 +1040,19 @@ class S3CRUD(S3Method):
                             **attr)
 
         elif representation == "xls":
-            exporter = S3Exporter()
-            return exporter.xls(resource,
-                                list_fields=list_fields,
-                                report_groupby=report_groupby,
-                                **attr)
+            exporter = S3Exporter().xls
+            return exporter(resource,
+                            list_fields=list_fields,
+                            report_groupby=report_groupby,
+                            **attr)
 
         elif representation == "json":
-            exporter = S3Exporter()
-            return exporter.json(resource,
-                                 start=start,
-                                 limit=limit,
-                                 fields=fields,
-                                 orderby=orderby)
+            exporter = S3Exporter().json
+            return exporter(resource,
+                            start=start,
+                            limit=limit,
+                            fields=fields,
+                            orderby=orderby)
 
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)

@@ -39,8 +39,7 @@ def repository():
            ]
 
     s3db.set_method("sync", "repository",
-                    method="register",
-                    action=s3mgr.sync)
+                    method="register", action=current.sync)
 
     def prep(r):
         if r.interactive:

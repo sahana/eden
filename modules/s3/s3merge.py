@@ -32,7 +32,7 @@
 
 __all__ = ["S3Merge"]
 
-from s3method import S3Method
+from s3rest import S3Method
 
 # =============================================================================
 class S3Merge(S3Method):

@@ -73,7 +73,7 @@ from s3fields import s3_all_meta_field_names
 from s3search import S3Search
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname, s3_has_foreign_key
-from s3method import S3Method
+from s3rest import S3Method
 
 DEBUG = False
 if DEBUG:
