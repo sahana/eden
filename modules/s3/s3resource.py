@@ -1546,12 +1546,12 @@ class S3Resource(object):
                            limit=limit,
                            orderby=orderby)
 
+        self._ids = []
+        self._rows = []
+
         if rows:
             pkey = table._id.name
             tablename = self.tablename
-
-            self._ids = []
-            self._rows = []
 
             for row in rows:
                 if tablename in row and isinstance(row[tablename], Row):
@@ -1566,9 +1566,8 @@ class S3Resource(object):
             if uid in table.fields:
                 self._uids = [row[table[uid]] for row in self._rows]
             self._length = len(self._rows)
-            return self._rows
-        else:
-            return None
+
+        return self._rows
 
     # -------------------------------------------------------------------------
     def clear(self):
@@ -1664,9 +1663,11 @@ class S3Resource(object):
                 c = self.links[component]
             else:
                 raise AttributeError("Undefined component %s" % component)
-            if c._rows is None:
-                c.load()
             rows = c._rows
+            if rows is None:
+                rows = c.load()
+            if not rows:
+                return []
             pkey, fkey = c.pkey, c.fkey
             master_id = master[pkey]
             if c.link:
@@ -1963,7 +1964,7 @@ class S3Resource(object):
 
         # Load slice
         if msince is not None and "modified_on" in table.fields:
-            orderby = "modified_on ASC"
+            orderby = "%s ASC" % table["modified_on"]
         else:
             orderby = None
 
