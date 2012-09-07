@@ -399,15 +399,15 @@ def twilio_inbound_settings():
     table.account_name.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("Account Name"),
                               T("Identifier Name for your Twilio Account."))))
-    
+
     table.url.label = T("URL")
     table.url.comment = DIV(DIV(_class="tooltip",
             _title="%s|%s" % (T("URL"),
                               T("URL for the twilio API."))))
-    
+
     table.account_sid.label = "Account SID"
     table.auth_token.label = T("AUTH TOKEN")
-    
+
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
     title_display = T("Twilio Setting Details"),
@@ -427,7 +427,7 @@ def twilio_inbound_settings():
     s3db.configure(tablename, listadd=True, deletable=True)
 
     def postp(r, output):
-        
+
         stable = s3db.scheduler_task
         ttable = r.table
 
@@ -582,7 +582,7 @@ def workflow():
                                                           zero=None)
         return True
     s3.prep = prep
-    
+
     def postp(r, output):
 
         wtable = s3db.msg_workflow
@@ -1460,12 +1460,9 @@ def load_search(id):
     date = date + "Z"
     var[field] = date
     #var["transform"] = "eden/static/formats/xml/import.xsl"
-    r = current.manager.parse_request(prefix,
-                                      function,
-                                      args=["search"],
-                                      #extension="xml",
-                                      get_vars=Storage(var)
-                                     )
+    r = s3_request(prefix, function, args=["search"],
+                                     #extension="xml",
+                                     get_vars=Storage(var))
     #redirect(URL(r=request, c=prefix, f=function, args=["search"],vars=var))
     s3.no_sspag=True
     output = r()

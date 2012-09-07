@@ -154,6 +154,7 @@ current.gis = gis
 # S3RequestManager
 s3mgr = s3base.S3RequestManager()
 current.manager = s3mgr
+s3_request = s3base.s3_request
 
 # S3XML
 s3xml = s3base.S3XML()

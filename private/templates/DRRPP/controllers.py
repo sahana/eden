@@ -717,12 +717,10 @@ class organisations():
         """
         """
 
-        from s3 import S3FieldSelector
+        from s3 import S3FieldSelector, s3_request
         T = current.T
 
-        s3request = current.manager.parse_request("org",
-                                                  "organisation",
-                                                  extension="aadata")
+        s3request = s3_request("org", "organisation", extension="aadata")
         # (S3FieldSelector("project.id") != None) & \
         f = (S3FieldSelector("organisation_type_id$name").anyof(["Regional Organisation",
                                                                  "Regional Office",
@@ -747,12 +745,10 @@ class organisations():
         """
         """
 
-        from s3 import S3FieldSelector
+        from s3 import S3FieldSelector, s3_request
         T = current.T
 
-        s3request = current.manager.parse_request("org",
-                                                  "organisation",
-                                                  extension="aadata")
+        s3request = s3_request("org", "organisation", extension="aadata")
         #(S3FieldSelector("project.id") != None) & \
         f = (S3FieldSelector("organisation_type_id$name").anyof(["Committees/Mechanism/Forum",
                                                                  "Network"]))

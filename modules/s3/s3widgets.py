@@ -2927,7 +2927,7 @@ class S3SearchAutocompleteWidget(FormWidget):
         else:
             attributes["value"] = ""
 
-        r = current.manager.parse_request(modulename, resourcename, args=[])
+        r = s3_request(modulename, resourcename, args=[])
         search_div = r.resource.search( r, **attributes)["form"]
 
         hidden_input = INPUT(value = value or "",

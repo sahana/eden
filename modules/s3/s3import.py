@@ -1763,7 +1763,7 @@ class S3ImportItem(object):
         self.tablename = table._tablename
 
         if original is None:
-            original = manager.original(table, element)
+            original = S3Resource.original(table, element)
         data = xml.record(table, element,
                           files=files,
                           original=original,
@@ -1809,7 +1809,7 @@ class S3ImportItem(object):
         if self.original is not None:
             original = self.original
         else:
-            original = current.manager.original(table, self.data)
+            original = S3Resource.original(table, self.data)
 
         if original is not None:
             self.original = original
@@ -2451,7 +2451,7 @@ class S3ImportItem(object):
         else:
             self.table = table
             self.tablename = tablename
-        original = current.manager.original(table, self.data)
+        original = S3Resource.original(table, self.data)
         if original is not None:
             self.original = original
             self.id = original[table._id.name]

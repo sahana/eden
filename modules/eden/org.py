@@ -503,6 +503,7 @@ class S3OrganisationModel(S3Model):
                   referenced_by=[(utablename, "organisation_id")],
                   search_method=organisation_search,
                   deduplicate=self.organisation_duplicate,
+                  requires_approval=True,
                   list_fields=["id",
                                  "name",
                                  "acronym",

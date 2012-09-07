@@ -245,7 +245,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
 
     # Parse the request
-    r = s3mgr.parse_request(prefix, resourcename)
+    r = s3_request(prefix, resourcename)
 
     # Set method handlers
     r.set_handler("barchart", s3_barchart)
