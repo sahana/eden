@@ -312,7 +312,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction2(self):
 
@@ -342,7 +342,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction3(self):
 
@@ -364,7 +364,7 @@ class S3ResourceFilterTests(unittest.TestCase):
 
         self.assertEqual(rfilter.joins, Storage())
         self.assertEqual(rfilter.left, Storage())
-        rows = component.sqltable(as_rows=True)
+        rows = component.select()
 
     def testComponentFilterConstruction4(self):
 
@@ -791,6 +791,27 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(value[:-1], "DATestOffice")
 
     # -------------------------------------------------------------------------
+    def testResourceJSON(self):
+        """ Test simple JSON export of a resource """
+
+        s3db = current.s3db
+        resource = s3db.resource("org_organisation", uid="DATESTORG")
+        jstr = resource.json(["name", "office.name"])
+
+        from gluon.contrib import simplejson as json
+        data = json.loads(jstr)
+        self.assertTrue(isinstance(data, list))
+        self.assertEqual(len(data), 1)
+        record = data[0]
+        self.assertTrue("org_organisation.name" in record)
+        self.assertTrue("org_office.name" in record)
+        self.assertTrue(isinstance(record["org_office.name"], list))
+        self.assertEqual(len(record["org_office.name"]), 2)
+        self.assertTrue("DATestOffice1" in record["org_office.name"])
+        self.assertTrue("DATestOffice2" in record["org_office.name"])
+        self.assertEqual(record["org_organisation.name"], "DATestOrg")
+
+    # -------------------------------------------------------------------------
     def testCollapseRows(self):
         """ Test correct handling of ambiguous rows in extract() """
 
@@ -829,6 +850,97 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(len(office_names), 2)
         self.assertTrue("DATestOffice1" in office_names)
         self.assertTrue("DATestOffice2" in office_names)
+
+    # -------------------------------------------------------------------------
+    def testLoadRows(self):
+        """ Test loading rows with ambiguous query """
+
+        s3db = current.s3db
+
+        # This filter query produces ambiguous rows (=the same
+        # organisation record appears once for each office):
+        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+
+        # load() should not load any duplicate rows
+        resource = s3db.resource("org_organisation")
+        resource.add_filter(query)
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        self.assertEqual(len(resource._rows), 1)
+        self.assertEqual(resource._length, 1)
+
+        # Try the same with an additional virtual field filter:
+        query = query & (S3FieldSelector("testfield") == "TEST")
+
+        # Should still not give any duplicates:
+        resource = s3db.resource("org_organisation")
+        class FakeVirtualFields(object):
+            def testfield(self):
+                return "TEST"
+        resource.table.virtualfields.append(FakeVirtualFields())
+        resource.add_filter(query)
+        resource.load()
+        self.assertEqual(len(resource), 1)
+        self.assertEqual(len(resource._rows), 1)
+        self.assertEqual(resource._length, 1)
+
+    # -------------------------------------------------------------------------
+    def testLoadIds(self):
+        """ Test loading IDs with ambiguous query """
+
+        s3db = current.s3db
+
+        # This filter query produces ambiguous rows (=the same
+        # organisation record appears once for each office):
+        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+
+        # load() should not load any duplicate rows
+        resource = s3db.resource("org_organisation")
+        resource.add_filter(query)
+        uid = resource.get_uid()
+        self.assertTrue(isinstance(uid, str))
+        self.assertEqual(uid, "DATESTORG")
+
+        # Try the same with an additional virtual field filter:
+        query = query & (S3FieldSelector("testfield") == "TEST")
+
+        # Should still not give any duplicates:
+        resource = s3db.resource("org_organisation")
+        class FakeVirtualFields(object):
+            def testfield(self):
+                return "TEST"
+        resource.table.virtualfields.append(FakeVirtualFields())
+        resource.add_filter(query)
+        uid = resource.get_uid()
+        self.assertTrue(isinstance(uid, str))
+        self.assertEqual(uid, "DATESTORG")
+
+    # -------------------------------------------------------------------------
+    def testCountRows(self):
+        """ Test counting rows with ambiguous query """
+
+        s3db = current.s3db
+
+        # This filter query produces ambiguous rows (=the same
+        # organisation record appears once for each office):
+        query = (S3FieldSelector("office.name").like("DATestOffice%"))
+
+        # count() should properly deduplicate the rows before counting them
+        resource = s3db.resource("org_organisation")
+        resource.add_filter(query)
+        self.assertEqual(resource.count(), 1)
+
+        # Try the same with an additional virtual field filter:
+        query = query & (S3FieldSelector("testfield") == "TEST")
+
+        # Should still not give any duplicates:
+        resource = s3db.resource("org_organisation")
+        class FakeVirtualFields(object):
+            def testfield(self):
+                return "TEST"
+        resource.table.virtualfields.append(FakeVirtualFields())
+        resource.add_filter(query)
+        self.assertEqual(resource.count(), 1)
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -1069,94 +1181,26 @@ class S3ResourceImportTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-class S3ResourceSQLTableTests(unittest.TestCase):
-    """ Test S3Resource.sqltable """
+class S3ResourceDataObjectAPITests(unittest.TestCase):
+    """ Test the S3Resource Data Object API """
 
-    def setUp(self):
+    def testLoadStatusIndication(self):
+        """ Test load status indication by value of _rows """
 
         s3db = current.s3db
 
-        ptable = s3db.pr_person
-        otable = s3db.org_organisation
-        htable = s3db.hrm_human_resource
-        jtable = s3db.hrm_job_title
+        # A newly created resource has _rows=None
+        resource = s3db.resource("project_time")
+        self.assertEqual(resource._rows, None)
 
-        job_title = Storage(name="TestJSONJobTitle")
-        job_title_id = jtable.insert(**job_title)
-        job_title.update(id=job_title_id)
-        current.manager.onaccept(jtable, Storage(vars=job_title))
+        # After load(), this must always be a list
+        resource.load()
+        self.assertNotEqual(resource._rows, None)
+        self.assertTrue(isinstance(resource._rows, list))
 
-        organisation = Storage(name="TestJSONOrganisation")
-        organisation_id = otable.insert(**organisation)
-        organisation.update(id=organisation_id)
-        s3db.update_super(otable, organisation)
-        current.manager.onaccept(otable, Storage(vars=organisation))
-
-        person = Storage(first_name="TestJSON1",
-                         last_name="Person")
-        person_id = ptable.insert(**person)
-        person.update(id=person_id)
-        s3db.update_super(ptable, person)
-        current.manager.onaccept(ptable, Storage(vars=person))
-
-        hr_record = Storage(person_id=person_id,
-                            organisation_id=organisation_id,
-                            job_title_id=job_title_id)
-        hr_record_id = htable.insert(**hr_record)
-        hr_record.update(id=hr_record_id)
-        current.manager.onaccept(htable, Storage(vars=hr_record))
-
-        person = Storage(first_name="TestJSON2",
-                         last_name="Person")
-        person_id = ptable.insert(**person)
-        person.update(id=person_id)
-        s3db.update_super(ptable, person)
-        current.manager.onaccept(ptable, Storage(vars=person))
-
-        hr_record = Storage(person_id=person_id,
-                            organisation_id=organisation_id)
-        hr_record_id = htable.insert(**hr_record)
-        hr_record.update(id=hr_record_id)
-        current.manager.onaccept(htable, Storage(vars=hr_record))
-
-        current.auth.override = True
-
-    def testJSONExport(self):
-        """ Test JSON representation of sqltable """
-
-        resource = current.s3db.resource("hrm_human_resource")
-        fields = ["id",
-                  "person_id$first_name",
-                  "person_id$middle_name",
-                  "person_id$last_name",
-                  "organisation_id$name",
-                  "job_title_id$name"]
-
-        FS = S3FieldSelector
-        query = FS("person_id$first_name").like("TestJSON%")
-
-        resource.add_filter(query)
-
-        result = resource.sqltable(fields=fields,
-                                   start=0,
-                                   limit=None,
-                                   as_json=True)
-
-        self.assertNotEqual(result, "[]")
-        from gluon.contrib import simplejson as json
-        data = json.loads(result)
-        self.assertEqual(len(data), 2)
-        for record in data:
-            self.assertTrue("hrm_job_title.name" in record)
-            if record["pr_person.first_name"] == "TestJSON1":
-                self.assertEqual(record["hrm_job_title.name"], "TestJSONJobTitle")
-            else:
-                self.assertEqual(record["hrm_job_title.name"], None)
-
-    def tearDown(self):
-
-        current.db.rollback()
-        current.auth.override = False
+        # After clear(), this must be None again
+        resource.clear()
+        self.assertEqual(resource._rows, None)
 
 # =============================================================================
 class S3MergeOrganisationsTests(unittest.TestCase):
@@ -1737,9 +1781,8 @@ if __name__ == "__main__":
         S3ResourceFilterTests,
         S3ResourceFieldTests,
         S3ResourceDataAccessTests,
-        S3ResourceSQLTableTests,
+        S3ResourceDataObjectAPITests,
         S3ResourceExportTests,
-        S3ResourceSQLTableTests,
         S3MergeOrganisationsTests,
         S3MergePersonsTests,
         S3MergeLocationsTests,

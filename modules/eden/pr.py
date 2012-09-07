@@ -145,6 +145,7 @@ class S3PersonEntity(S3Model):
                            pr_group = T("Group"),
                            org_organisation = T("Organization"),
                            org_office = T("Office"),
+                           inv_warehouse = T("Warehouse"),
                            # If we want these, then pe_id needs adding to their
                            # tables & configuring as a super-entity
                            #cr_shelter = shelter,
@@ -2038,8 +2039,8 @@ class S3SavedSearch(S3Model):
                                         writable = False,
                                         default = auth.user_id),
                                   Field("search_vars","text",
-                                        label = T("Search Criteria"),
-                                        represent=lambda id:s3_search_vars_represent(id)),
+                                        label = T("Search Criteria")),
+                                        #represent=lambda id:s3_search_vars_represent(id)),
                                   Field("subscribed","boolean",
                                         default=False),
                                   self.pr_person_id(
@@ -3002,6 +3003,11 @@ def pr_pentity_represent(id, show_label=True, default_label="[No ID Tag]"):
                                               limitby=(0, 1)).first()
         if office:
             pe_str = "%s (%s)" % (office.name, instance_type_nice)
+    elif instance_type == "inv_warehouse":
+        warehouse = db(table.pe_id == id).select(table.name,
+                                                 limitby=(0, 1)).first()
+        if warehouse:
+            pe_str = "%s (%s)" % (warehouse.name, instance_type_nice)
     else:
         pe_str = "[%s] (%s)" % (label,
                                 instance_type_nice)
