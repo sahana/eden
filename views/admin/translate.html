@@ -1,0 +1,13 @@
+{{extend "layout.html"}}
+
+<div id='home'>
+<h2>{{=T("Translation Functionality")}}</h2>
+<p>
+<ul>
+  <li><a href='{{=URL(c="admin", f="translate", args=["create"], vars=dict(opt="1"))}}'>{{=T("Select Modules which are to be translated")}}</a>
+  <li><a href='{{=URL(c="admin", f="translate", args=["create"], vars=dict(opt="2"))}}'>{{=T("Upload the (completely or partially) translated csv file")}}</a>
+  <li><a href='{{=URL(c="admin", f="translate", args=["create"], vars=dict(opt="3"))}}'>{{=T("View the module-wise percentage of translated strings")}}</a>
+  <li><a href='{{=URL(c="admin", f="translate", args=["create"], vars=dict(opt="4"))}}'>{{=T("Add strings manually through a text file")}}</a>
+</ul>
+</p>
+</div>
