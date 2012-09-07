@@ -1964,7 +1964,7 @@ class S3Resource(object):
 
         # Load slice
         if msince is not None and "modified_on" in table.fields:
-            orderby = "modified_on ASC"
+            orderby = "%s ASC" % table["modified_on"]
         else:
             orderby = None
 
