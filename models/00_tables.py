@@ -49,6 +49,7 @@ import eden.support
 import eden.survey
 import eden.sync
 import eden.transport
+import eden.translate
 import eden.vehicle
 import eden.vol
 import eden.vulnerability
