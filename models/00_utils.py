@@ -233,15 +233,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
         *** Callbacks:
 
-        create_onvalidation     Function/Lambda for additional record validation on create
-        create_onaccept         Function/Lambda after successful record insertion
+        create_onvalidation     Function for additional record validation on create
+        create_onaccept         Function after successful record insertion
 
-        update_onvalidation     Function/Lambda for additional record validation on update
-        update_onaccept         Function/Lambda after successful record update
+        update_onvalidation     Function for additional record validation on update
+        update_onaccept         Function after successful record update
 
         onvalidation            Fallback for both create_onvalidation and update_onvalidation
         onaccept                Fallback for both create_onaccept and update_onaccept
-        ondelete                Function/Lambda after record deletion
+        ondelete                Function after record deletion
     """
 
     # Parse the request
