@@ -195,7 +195,8 @@ def index():
                                    pdf_groupby="site_id",
                                    )
                     s3.filter = filter
-                    r = s3mgr.parse_request("inv", "inv_item", vars={"orderby" : orderby})
+                    r = s3_request("inv", "inv_item",
+                                   vars={"orderby" : orderby})
                     r.resource = resource
                     output = r(
                                pdf_groupby='site_id',
@@ -247,7 +248,7 @@ def index():
                                        dt_action_col=1,
                                        )
                 return supply_items
-        r = s3mgr.parse_request(prefix = "inv", name = "inv_item")
+        r = s3_request(prefix = "inv", name = "inv_item")
         return dict(module_name=module_name,
                     warehouses = warehouses,
                     inventory = inventory,

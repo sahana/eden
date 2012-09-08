@@ -60,11 +60,8 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3xml import S3XML
-from s3export import S3Exporter
-from s3method import S3Method
-from s3sync import S3Sync
-from s3resource import S3Resource, S3MarkupStripper
+from s3resource import S3Resource
+from s3utils import S3MarkupStripper
 
 DEBUG = False
 if DEBUG:
@@ -147,10 +144,6 @@ class S3RequestManager(object):
         # Register
         current.manager = self
 
-        self.xml = S3XML()
-        self.exporter = S3Exporter()
-        self.sync = S3Sync()
-
         # Codecs
         self.codecs = Storage()
 
@@ -168,36 +161,6 @@ class S3RequestManager(object):
         self.json_formats = []
         self.csv_formats = []
         self.content_type = Storage()
-
-    # -------------------------------------------------------------------------
-    # REST interface wrapper
-    # -------------------------------------------------------------------------
-    def parse_request(self, *args, **vars):
-        """
-            Wrapper function for S3Request
-
-            @see: S3Request.__init__() for argument list details
-        """
-
-        self.error = None
-        headers = {"Content-Type":"application/json"}
-        try:
-            r = S3Request(self, *args, **vars)
-        except SyntaxError:
-            print >> sys.stderr, "ERROR: %s" % self.error
-            raise HTTP(400, body=self.xml.json_message(False, 400,
-                                                       message=self.error),
-                       web2py_header=self.error,
-                       **headers)
-        except KeyError:
-            print >> sys.stderr, "ERROR: %s" % self.error
-            raise HTTP(404, body=self.xml.json_message(False, 404,
-                                                       message=self.error),
-                       web2py_header=self.error,
-                       **headers)
-        except:
-            raise
-        return r
 
     # -------------------------------------------------------------------------
     # Session variables
@@ -331,7 +294,7 @@ class S3RequestManager(object):
             @param extended_comments: Typically the comments are abbreviated
         """
 
-        xml_encode = self.xml.xml_encode
+        xml_encode = current.xml.xml_encode
 
         NONE = str(current.T("None")).decode("utf-8")
         cache = current.cache
@@ -422,83 +385,6 @@ class S3RequestManager(object):
         return text
 
     # -------------------------------------------------------------------------
-    def original(self, table, record):
-        """
-            Find the original record for a possible duplicate:
-                - if the record contains a UUID, then only that UUID is used
-                  to match the record with an existing DB record
-                - otherwise, if the record contains some values for unique
-                  fields, all of them must match the same existing DB record
-
-            @param table: the table
-            @param record: the record as dict or S3XML Element
-        """
-
-        db = current.db
-        xml = self.xml
-        xml_decode = xml.xml_decode
-
-        VALUE = xml.ATTRIBUTE.value
-        UID = xml.UID
-        ATTRIBUTES_TO_FIELDS = xml.ATTRIBUTES_TO_FIELDS
-
-        # Get primary keys
-        pkeys = [f for f in table.fields if table[f].unique]
-        pvalues = Storage()
-
-        # Get the values from record
-        get = record.get
-        if isinstance(record, etree._Element):
-            xpath = record.xpath
-            xexpr = "%s[@%s='%%s']" % (xml.TAG.data, xml.ATTRIBUTE.field)
-            for f in pkeys:
-                v = None
-                if f == UID or f in ATTRIBUTES_TO_FIELDS:
-                    v = get(f, None)
-                else:
-                    child = xpath(xexpr % f)
-                    if child:
-                        child = child[0]
-                        v = child.get(VALUE, xml_decode(child.text))
-                if v:
-                    pvalues[f] = v
-        elif isinstance(record, dict):
-            for f in pkeys:
-                v = get(f, None)
-                if v:
-                    pvalues[f] = v
-        else:
-            raise TypeError
-
-        # Build match query
-        query = None
-        for f in pvalues:
-            if f == UID:
-                continue
-            _query = (table[f] == pvalues[f])
-            if query is not None:
-                query = query | _query
-            else:
-                query = _query
-
-        # Try to find exactly one match by non-UID unique keys
-        if query:
-            original = db(query).select(table.ALL, limitby=(0, 2))
-            if len(original) == 1:
-                return original.first()
-
-        # If no match, then try to find a UID-match
-        if UID in pvalues:
-            uid = self.xml.import_uid(pvalues[UID])
-            query = (table[UID] == uid)
-            original = db(query).select(table.ALL, limitby=(0, 1)).first()
-            if original:
-                return original
-
-        # No match or multiple matches
-        return None
-
-    # -------------------------------------------------------------------------
     def onaccept(self, table, record, method="create"):
 
         s3db = current.s3db
@@ -539,9 +425,9 @@ class S3Request(object):
 
     # -------------------------------------------------------------------------
     def __init__(self,
-                 manager,
                  prefix=None,
                  name=None,
+                 r=None,
                  c=None,
                  f=None,
                  args=None,
@@ -553,7 +439,6 @@ class S3Request(object):
         """
             Constructor
 
-            @param manager: the S3RequestManager
             @param prefix: the table name prefix
             @param name: the table name
             @param c: the controller prefix
@@ -623,6 +508,11 @@ class S3Request(object):
         self.http = http or current.request.env.request_method
 
         # Main resource attributes
+        if r is not None:
+            if not prefix:
+                prefix = r.prefix
+            if not name:
+                name = r.name
         self.prefix = prefix or self.controller
         self.name = name or self.function
 
@@ -746,13 +636,13 @@ class S3Request(object):
                          http=["GET"], transform=True)
         self.set_handler("options", self.get_options,
                          http=["GET"], transform=True)
-        self.set_handler("sync", manager.sync,
-                         http=["GET", "PUT", "POST"], transform=True)
 
-        self.set_handler("sync_log", manager.sync.log,
-                         http=["GET"], transform=True)
-        self.set_handler("sync_log", manager.sync.log,
-                         http=["GET"], transform=False)
+        self.set_handler("sync", current.sync,
+                            http=["GET", "PUT", "POST"], transform=True)
+        self.set_handler("sync_log", current.sync.log,
+                            http=["GET"], transform=True)
+        self.set_handler("sync_log", current.sync.log,
+                            http=["GET"], transform=False)
 
         # Initialize CRUD
         self.resource.crud(self, method="_init")
@@ -1554,6 +1444,16 @@ class S3Request(object):
     # -------------------------------------------------------------------------
     # Tools
     # -------------------------------------------------------------------------
+    def factory(self, **args):
+        """
+            Generate a new request for the same resource
+
+            @param args: arguments for request constructor
+        """
+
+        return s3_request(r=self, **args)
+
+    # -------------------------------------------------------------------------
     def __getattr__(self, name):
         """
             Called upon r.<name>:
@@ -1852,5 +1752,321 @@ class S3Request(object):
             source.append(s)
 
         return source
+
+# =============================================================================
+class S3Method(object):
+    """
+        REST Method Handler Base Class
+
+        Method handler classes should inherit from this class and
+        implement the apply_method() method.
+
+        @note: instances of subclasses don't have any of the instance
+               attributes available until they actually get invoked
+               from a request - i.e. apply_method() should never be
+               called directly.
+    """
+
+    # -------------------------------------------------------------------------
+    def __call__(self, r, method=None, **attr):
+        """
+            Entry point for the REST interface
+
+            @param r: the S3Request
+            @param method: the method established by the REST interface
+            @param attr: dict of parameters for the method handler
+
+            @returns: output object to send to the view
+        """
+
+        # Environment of the request
+        self.request = r
+        manager = current.manager
+
+        # Settings
+        self.permit = manager.permit
+        self.download_url = manager.s3.download_url
+
+        # Init
+        self.next = None
+
+        # Override request method
+        if method is not None:
+            self.method = method
+        else:
+            self.method = r.method
+
+        # Find the target resource and record
+        if r.component:
+            component = r.component
+            self.resource = component
+            self.record_id = self._record_id(r)
+            if not self.method:
+                if r.multiple and not r.component_id:
+                    self.method = "list"
+                else:
+                    self.method = "read"
+            if component.link:
+                actuate_link = r.actuate_link()
+                if not actuate_link:
+                    self.resource = component.link
+        else:
+            self.record_id = r.id
+            self.resource = r.resource
+            if not self.method:
+                if r.id or r.method in ("read", "display"):
+                    self.method = "read"
+                else:
+                    self.method = "list"
+
+            ## In interactive single-record CRUD, open the
+            ## instance record instead of a super-entity record
+            #if r.interactive and \
+               #self.record_id and \
+               #self.method in ("read", "update") and \
+               #self.resource.table._id.name != "id":
+                #record = self.resource[self.record_id]
+                #tablename = record.instance_type
+                #resource = current.s3db.resource(tablename
+                                                 #uid=record.uuid)
+                #resource.load()
+                #if resource.count() == 1:
+                    #self.resource = resource
+                    #self.record_id = resource.records().first()[resource.table._id]
+
+        self.prefix = self.resource.prefix
+        self.name = self.resource.name
+        self.tablename = self.resource.tablename
+        self.table = self.resource.table
+
+        if self.method == "_init":
+            return None
+
+        # Apply method
+        output = self.apply_method(r, **attr)
+
+        # Redirection
+        if self.next and self.resource.lastid:
+            self.next = str(self.next)
+            placeholder = "%5Bid%5D"
+            self.next = self.next.replace(placeholder, self.resource.lastid)
+            placeholder = "[id]"
+            self.next = self.next.replace(placeholder, self.resource.lastid)
+        if not current.response.error:
+            r.next = self.next
+
+        # Add additional view variables (e.g. rheader)
+        self._extend_view(output, r, **attr)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Stub for apply_method, to be implemented in subclass
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+
+            @returns: output object to send to the view
+        """
+
+        output = dict()
+        return output
+
+    # -------------------------------------------------------------------------
+    # Utility functions
+    # -------------------------------------------------------------------------
+    def _permitted(self, method=None):
+        """
+            Check permission for the requested resource
+
+            @param method: method to check, defaults to the actually
+                           requested method
+        """
+
+        auth = current.auth
+        has_permission = auth.s3_has_permission
+
+        r = self.request
+
+        table = mtable = r.table
+        record_id = r.id
+
+        if not method:
+            method = self.method
+        if method == "list":
+            # Rest handled in S3Permission.METHODS
+            method = "read"
+
+        if r.component is not None:
+            table = ctable = r.component.table
+            record_id = r.component_id
+            master_access = True
+            if method in ("create", "update", "delete"):
+                is_owner = auth.permission.is_owner
+                if is_owner(ctable, record=record_id):
+                    master_access = True
+                else:
+                    # User must have update permission on the master record
+                    master_access = has_permission("update",
+                                                   mtable, record_id=r.id)
+                    if not master_access:
+                        # ... or own the master record
+                        master_access = is_owner(mtable, r.id)
+            if not master_access:
+                return False
+
+        return has_permission(method, table, record_id=record_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _record_id(r):
+        """
+            Get the ID of the target record of a S3Request
+
+            @param r: the S3Request
+        """
+
+        if r.component:
+            # Component
+            if not r.multiple and not r.component_id:
+                resource = r.component
+                table = resource.table
+                pkey = table._id.name
+                resource.load(start=0, limit=1)
+                if len(resource):
+                    r.component_id = resource.records().first()[pkey]
+            component_id = r.component_id
+            if not r.link:
+                return component_id
+            elif r.id and component_id:
+                if r.actuate_link():
+                    return component_id
+                elif r.link_id:
+                    return r.link_id
+        else:
+            # Master record
+            return r.id
+
+        return None
+
+    # -------------------------------------------------------------------------
+    def _config(self, key, default=None):
+        """
+            Get a configuration setting of the current table
+
+            @param key: the setting key
+            @param default: the default value
+        """
+
+        return current.s3db.get_config(self.tablename, key, default)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _view(r, default, format=None):
+        """
+            Get the path to the view stylesheet file
+
+            @param r: the S3Request
+            @param default: name of the default view stylesheet file
+            @param format: format string (optional)
+        """
+
+        request = r
+        folder = request.folder
+        prefix = request.controller
+
+        import os
+        if r.component:
+            view = "%s_%s_%s" % (r.name, r.component_name, default)
+            path = os.path.join(folder, "views", prefix, view)
+            if os.path.exists(path):
+                return "%s/%s" % (prefix, view)
+            else:
+                view = "%s_%s" % (r.name, default)
+                path = os.path.join(folder, "views", prefix, view)
+        else:
+            if format:
+                view = "%s_%s_%s" % (r.name, default, format)
+            else:
+                view = "%s_%s" % (r.name, default)
+            path = os.path.join(folder, "views", prefix, view)
+
+        if os.path.exists(path):
+            return "%s/%s" % (prefix, view)
+        else:
+            if format:
+                return default.replace(".html", "_%s.html" % format)
+            else:
+                return default
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _extend_view(output, r, **attr):
+        """
+            Add additional view variables (invokes all callables)
+
+            @param output: the output dict
+            @param r: the S3Request
+            @param attr: the view variables (e.g. 'rheader')
+
+            @note: overload this method in subclasses if you don't want
+                   additional view variables to be added automatically
+        """
+
+        if r.interactive and isinstance(output, dict):
+            for key in attr:
+                handler = attr[key]
+                if callable(handler):
+                    resolve = True
+                    try:
+                        display = handler(r)
+                    except TypeError:
+                        # Argument list failure
+                        # => pass callable to the view as-is
+                        display = handler
+                        continue
+                    except:
+                        # Propagate all other errors to the caller
+                        raise
+                else:
+                    display = handler
+                if isinstance(display, dict) and resolve:
+                    output.update(**display)
+                elif display is not None:
+                    output.update(**{key: display})
+                elif key in output and callable(handler):
+                    del output[key]
+
+# =============================================================================
+# Global functions
+#
+def s3_request(*args, **kwargs):
+
+    manager = current.manager
+    xml = current.xml
+
+    manager.error = None
+    headers = {"Content-Type":"application/json"}
+    try:
+        r = S3Request(*args, **kwargs)
+    except SyntaxError:
+        error = manager.error
+        print >> sys.stderr, "ERROR: %s" % error
+        raise HTTP(400,
+                    body=xml.json_message(False, 400, message=error),
+                    web2py_header=error,
+                    **headers)
+    except KeyError:
+        error = manager.error
+        print >> sys.stderr, "ERROR: %s" % error
+        raise HTTP(404,
+                    body=xml.json_message(False, 404, message=error),
+                    web2py_header=error,
+                    **headers)
+    except:
+        raise
+    return r
 
 # END =========================================================================

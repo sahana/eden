@@ -366,14 +366,13 @@ class S3FireStationModel(S3Model):
                 title_report = "Vehicle Deployment Times"
             )
 
-            req = current.manager.parse_request("irs", "ireport_vehicle",
-                                                args=["report"],
-                                                vars=Storage(
-                                                    rows = "asset_id",
-                                                    cols = "ireport_id",
-                                                    fact = "minutes",
-                                                    aggregate = "sum"
-                                                ))
+            req = r.factory("irs", "ireport_vehicle",
+                            args=["report"],
+                            vars=Storage(
+                            rows = "asset_id",
+                            cols = "ireport_id",
+                            fact = "minutes",
+                            aggregate = "sum"))
             req.set_handler("report", S3Report())
             req.resource.add_filter(query)
             return req(rheader=rheader)

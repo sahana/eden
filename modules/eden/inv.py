@@ -1739,7 +1739,7 @@ $(document).ready(function(){
                        "pack_value",
                        "bin",
                        ]
-        exporter = r.resource.exporter.pdf
+        exporter = S3Exporter().pdf
         return exporter(r,
                         method = "list",
                         pdf_componentname = "inv_track_item",
@@ -1862,7 +1862,7 @@ $(document).ready(function(){
                        "pack_value",
                        "bin"
                        ]
-        exporter = r.resource.exporter.pdf
+        exporter = S3Exporter().pdf
         return exporter(r,
                         method = "list",
                         pdf_title = T(current.deployment_settings.get_inv_recv_form_name()),
@@ -1897,7 +1897,7 @@ $(document).ready(function(){
         site_id = record.site_id
         site = field.represent(site_id, False)
 
-        exporter = r.resource.exporter.pdf
+        exporter = S3Exporter().pdf
         return exporter(r,
                         method="list",
                         pdf_title="Donation Certificate",

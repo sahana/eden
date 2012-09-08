@@ -34,6 +34,7 @@ import os
 import re
 import sys
 import urllib
+import HTMLParser
 
 try:
     import json # try stdlib (Python 2.6)
@@ -2551,6 +2552,20 @@ def URL2(a=None, c=None, r=None):
     #other = ""
     url = "/%s/%s" % (application, controller)
     return url
+
+# =============================================================================
+class S3MarkupStripper(HTMLParser.HTMLParser):
+    """ Simple markup stripper """
+
+    def __init__(self):
+        self.reset()
+        self.result = []
+
+    def handle_data(self, d):
+        self.result.append(d)
+
+    def stripped(self):
+        return "".join(self.result)
 
 # =============================================================================
 class S3DataTable(object):

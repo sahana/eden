@@ -39,36 +39,70 @@
 # Import all names from the S3 modules that shall be accessible
 # under the s3base namespace:
 
-# Basic Tools
-from s3navigation import *
+# Utilities, Validators and Widgets ===========================================
+#
+# These names are also imported into the global namespace in
+# 00_db.py in order to access them without the s3base prefix:
+from s3validators import *
+from s3utils import *
+from s3widgets import *
 
-# Model helpers
-from s3model import S3Model
+# Basic Toolkits ==============================================================
+#
+# Codecs for data export/import
+from s3codec import *
+from s3xml import *
+
+# Common field definitions
 from s3fields import *
+
+# Exception classes
+from s3error import *
+
+# Asynchronous Tasks
+from s3task import *
+
+# Core Framework ==============================================================
+
+# Model Extensions
+from s3model import S3Model
+
+# Resource Framework
 from s3resource import *
 
 # Authentication, Authorization, Accounting
 from s3aaa import *
 
-# Utilities, Validators and Widgets
-# These names are also imported into the global namespace in
-# 00_db.py in order to access them without the s3base prefix:
-from s3utils import *
-from s3validators import *
-from s3widgets import *
+# RESTful API =================================================================
 
-# RESTful API
+# Core
 from s3rest import *
-from s3method import *
 
-# Method Handlers
+# CRUD
 from s3crud import *
+
+# Search
 from s3search import *
+
+# Reporting
 from s3report import *
+
+# Synchronization
+from s3sync import *
+
+# Import
+from s3import import *
+
+# De-duplication
+from s3merge import *
+
 # Don't load S3PDF unless needed (very slow import with reportlab)
 #from s3pdf import S3PDF
-from s3import import *
-#from s3merge import *
+
+# Advanced Framework ==========================================================
+#
+# Tracking System
+from s3track import *
 
 # GIS Mapping
 from s3gis import *
@@ -76,14 +110,7 @@ from s3gis import *
 # Messaging
 from s3msg import *
 
-# Tracking System
-from s3track import *
+# GUI Navigation Framework
+from s3navigation import *
 
-# Synchronization Toolkit
-from s3sync import *
-
-# Asynchronous Tasks
-from s3task import *
-
-# Codecs for data export/import
-from s3codec import *
+# END =========================================================================

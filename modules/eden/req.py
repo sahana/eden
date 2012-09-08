@@ -555,7 +555,7 @@ $(function() {
                        "quantity_fulfil",
                       ]
 
-        exporter = r.resource.exporter.pdf
+        exporter = S3Exporter().pdf
         return exporter(r,
                         method = "list",
                         pdf_title = current.deployment_settings.get_req_form_name(),

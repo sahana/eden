@@ -31,7 +31,6 @@ import re
 import sys
 import datetime
 import time
-import HTMLParser
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -185,15 +184,13 @@ class S3Resource(object):
 
         self.ERROR = manager.ERROR
 
-        # Export/Import hooks
-        self.exporter = manager.exporter
-
         # Authorization hooks
-        self.permit = manager.permit
-        self.accessible_query = current.auth.s3_accessible_query
+        auth = current.auth
+        self.permit = auth.s3_has_permission
+        self.accessible_query = auth.s3_accessible_query
 
         # Audit hook
-        self.audit = manager.audit
+        self.audit = current.s3_audit
 
         # Filter --------------------------------------------------------------
 
@@ -248,9 +245,7 @@ class S3Resource(object):
         # Component - attach link table
         if linktable is not None:
             # Create as resource
-            tn = linktable._tablename
-            prefix, name = tn.split("_", 1)
-            self.link = S3Resource(prefix, name,
+            self.link = S3Resource(linktable,
                                    parent=self.parent,
                                    linked=self,
                                    include_deleted=self.include_deleted)
@@ -301,7 +296,7 @@ class S3Resource(object):
         """
 
         # Create as resource
-        component = S3Resource(hook.prefix, hook.name,
+        component = S3Resource(hook.table,
                                parent=self,
                                alias=alias,
                                linktable=hook.linktable,
@@ -908,8 +903,7 @@ class S3Resource(object):
                     db.rollback()
                     return False
                 else:
-                    onapprove = current.s3db.get_config(tablename,
-                                                        "onapprove", None)
+                    onapprove = self.get_config("onapprove", None)
                     if onapprove is not None:
                         callback(onapprove, record, tablename=tablename)
             if components is None:
@@ -2877,7 +2871,7 @@ class S3Resource(object):
             return xml.tostring(tree, pretty_print=True)
 
     # -------------------------------------------------------------------------
-    # Utility functions
+    # Data Model Helpers
     # -------------------------------------------------------------------------
     def validate(self, field, value, record=None):
         """
@@ -2949,6 +2943,84 @@ class S3Resource(object):
             return (None, None)
         else:
             return (value, error)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def original(table, record):
+        """
+            Find the original record for a possible duplicate:
+                - if the record contains a UUID, then only that UUID is used
+                  to match the record with an existing DB record
+                - otherwise, if the record contains some values for unique
+                  fields, all of them must match the same existing DB record
+
+            @param table: the table
+            @param record: the record as dict or S3XML Element
+        """
+
+        db = current.db
+        xml = current.xml
+        xml_decode = xml.xml_decode
+
+        VALUE = xml.ATTRIBUTE.value
+        UID = xml.UID
+        ATTRIBUTES_TO_FIELDS = xml.ATTRIBUTES_TO_FIELDS
+
+        # Get primary keys
+        pkeys = [f for f in table.fields if table[f].unique]
+        pvalues = Storage()
+
+        # Get the values from record
+        get = record.get
+        if isinstance(record, etree._Element):
+            xpath = record.xpath
+            xexpr = "%s[@%s='%%s']" % (xml.TAG.data, xml.ATTRIBUTE.field)
+            for f in pkeys:
+                v = None
+                if f == UID or f in ATTRIBUTES_TO_FIELDS:
+                    v = get(f, None)
+                else:
+                    child = xpath(xexpr % f)
+                    if child:
+                        child = child[0]
+                        v = child.get(VALUE, xml_decode(child.text))
+                if v:
+                    pvalues[f] = v
+        elif isinstance(record, dict):
+            for f in pkeys:
+                v = get(f, None)
+                if v:
+                    pvalues[f] = v
+        else:
+            raise TypeError
+
+        # Build match query
+        query = None
+        for f in pvalues:
+            if f == UID:
+                continue
+            _query = (table[f] == pvalues[f])
+            if query is not None:
+                query = query | _query
+            else:
+                query = _query
+
+        # Try to find exactly one match by non-UID unique keys
+        if query:
+            original = db(query).select(table.ALL, limitby=(0, 2))
+            if len(original) == 1:
+                return original.first()
+
+        # If no match, then try to find a UID-match
+        if UID in pvalues:
+            uid = xml.import_uid(pvalues[UID])
+            query = (table[UID] == uid)
+            original = db(query).select(table.ALL, limitby=(0, 1)).first()
+            if original:
+                return original
+
+        # No match or multiple matches
+        return None
 
     # -------------------------------------------------------------------------
     def extract(self, rows, fields, represent=False):
@@ -3226,6 +3298,31 @@ class S3Resource(object):
             self.dfields = dfields
 
         return (rfields, dfields)
+
+    # -------------------------------------------------------------------------
+    # Utility functions
+    # -------------------------------------------------------------------------
+    def configure(self, **settings):
+        """
+            Update configuration settings for this resource
+
+            @param settings: configuration settings for this resource
+                             as keyword arguments
+        """
+
+        current.s3db.configure(self.tablename, **settings)
+
+    # -------------------------------------------------------------------------
+    def get_config(self, key, default=None):
+        """
+            Get a configuration setting for the current resource
+
+            @param key: the setting key
+            @param default: the default value to return if the setting
+                            is not configured for this resource
+        """
+
+        return current.s3db.get_config(self.tablename, key, default=default)
 
     # -------------------------------------------------------------------------
     def limitby(self, start=None, limit=None):
@@ -6228,19 +6325,5 @@ class S3RecordMerger(object):
 
         # Success
         return True
-
-# =============================================================================
-class S3MarkupStripper(HTMLParser.HTMLParser):
-    """ Simple markup stripper """
-
-    def __init__(self):
-        self.reset()
-        self.result = []
-
-    def handle_data(self, d):
-        self.result.append(d)
-
-    def stripped(self):
-        return "".join(self.result)
 
 # END =========================================================================

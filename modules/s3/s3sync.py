@@ -53,7 +53,7 @@ except ImportError:
 from gluon import *
 from gluon.storage import Storage
 
-from s3method import S3Method
+from s3rest import S3Method
 from s3import import S3ImportItem
 
 DEBUG = False
@@ -1000,8 +1000,7 @@ class S3SyncLog(S3Method):
                 sync_log = current.s3db[self.TABLENAME]
                 sync_log.resource_name.readable = False
                 query = (sync_log.resource_name == resource.tablename)
-                r = current.manager.parse_request(prefix="sync", name="log",
-                                                  args=[])
+                r = r.factory(prefix="sync", name="log", args=[])
                 s3 = current.response.s3
                 s3.filter = query
                 s3.prep = None

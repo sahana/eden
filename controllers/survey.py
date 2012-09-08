@@ -188,7 +188,7 @@ def templateRead():
                     deletable=False,
                    )
 
-    r = s3mgr.parse_request("survey", "template", args=[template_id])
+    r = s3_request("survey", "template", args=[template_id])
     output  = r(method = "read", rheader=s3db.survey_template_rheader)
     return output
 

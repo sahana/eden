@@ -24,8 +24,7 @@ def config():
         record_id = record.id
 
     # Can't do anything else than update here
-    r = s3mgr.parse_request(args=[str(record_id), "update"],
-                            extension="html")
+    r = s3_request(args=[str(record_id), "update"], extension="html")
 
     return r(list_btn=None)
 
@@ -40,8 +39,7 @@ def repository():
            ]
 
     s3db.set_method("sync", "repository",
-                    method="register",
-                    action=s3mgr.sync)
+                    method="register", action=current.sync)
 
     def prep(r):
         if r.interactive:
@@ -128,10 +126,10 @@ def sync():
 
             # Request
             prefix, name = tablename.split("_", 1)
-            r = s3mgr.parse_request(prefix=prefix,
-                                    name=name,
-                                    args=["sync"],
-                                    get_vars=get_vars)
+            r = s3_request(prefix=prefix,
+                           name=name,
+                           args=["sync"],
+                           get_vars=get_vars)
 
             # Response
             output = r()

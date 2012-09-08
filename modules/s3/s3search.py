@@ -48,6 +48,7 @@ from s3navigation import s3_search_tabs
 from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
+from s3export import S3Exporter
 
 from s3resource import S3FieldSelector, S3Resource
 
@@ -1777,7 +1778,7 @@ class S3Search(S3CRUD):
                                          % MAX_SEARCH_RESULTS)])
 
             if output is None:
-                output = resource.exporter.json(resource,
+                output = S3Exporter().json(resource,
                                                 start=0,
                                                 limit=limit,
                                                 fields=fields,
@@ -2244,7 +2245,7 @@ class S3LocationSearch(S3Search):
                 output = jsons([])
 
         if output is None:
-            output = resource.exporter.json(resource,
+            output = S3Exporter().json(resource,
                                             start=0,
                                             limit=limit,
                                             fields=fields,
@@ -2600,7 +2601,7 @@ class S3PentitySearch(S3Search):
 
         resource.add_filter(ptable.pe_id == table.pe_id)
 
-        output = resource.exporter.json(resource, start=0, limit=limit,
+        output = S3Exporter().json(resource, start=0, limit=limit,
                                         fields=[table.pe_id], orderby=field)
         items = json.loads(output)
 
@@ -2612,7 +2613,7 @@ class S3PentitySearch(S3Search):
             resource.clear_query()
             resource.add_filter(query)
             resource.add_filter(gtable.pe_id == table.pe_id)
-            output = resource.exporter.json(resource,
+            output = S3Exporter().json(resource,
                                             start=0,
                                             limit=limit,
                                             fields=[table.pe_id],
@@ -2627,7 +2628,7 @@ class S3PentitySearch(S3Search):
             resource.clear_query()
             resource.add_filter(query)
             resource.add_filter(otable.pe_id == table.pe_id)
-            output = resource.exporter.json(resource,
+            output = S3Exporter().json(resource,
                                             start=0,
                                             limit=limit,
                                             fields=[table.pe_id],

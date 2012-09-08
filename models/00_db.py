@@ -154,6 +154,7 @@ current.gis = gis
 # S3RequestManager
 s3mgr = s3base.S3RequestManager()
 current.manager = s3mgr
+s3_request = s3base.s3_request
 
 # S3XML
 s3xml = s3base.S3XML()
@@ -162,6 +163,10 @@ current.xml = s3xml
 # Messaging
 msg = s3base.S3Msg()
 current.msg = msg
+
+# Sync
+sync = s3base.S3Sync()
+current.sync = sync
 
 # -----------------------------------------------------------------------------
 def s3_clear_session():

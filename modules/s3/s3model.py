@@ -340,7 +340,7 @@ class S3Model(object):
 
         return S3Resource(prefix, name=name, **attr)
 
-    # -------------------------------------------------------------------------
+   # -------------------------------------------------------------------------
     @staticmethod
     def configure(tablename, **attr):
         """
