@@ -5,15 +5,13 @@
     <!-- **********************************************************************
          Users - CSV Import Stylesheet
 
-         2011-Jun-13 / Graeme Foster <graeme AT acm DOT org>
-
          CSV fields:
-         First Name..............auth_user
-         Last Name...............auth_user
-         Email...................auth_user
-         Password................auth_user
-         Role....................auth_role
-         Organisation............org_organisation (Doesn't work as not a real Reference)
+         First Name..............auth_user.first_name
+         Last Name...............auth_user.last_name
+         Email...................auth_user.email
+         Password................auth_user.password
+         Role....................auth_group.role
+         Organisation............org_organisation.name (Doesn't work as not a real Reference)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

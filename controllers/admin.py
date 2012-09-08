@@ -10,18 +10,19 @@ resourcename = request.function
 # S3 framework functions
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
     module_name = deployment_settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
 
-
 # =============================================================================
 @auth.s3_requires_membership(1)
 def setting():
-    """ Custom page to link to those Settings which can be edited through the web interface """
+    """
+        Custom page to link to those Settings which can be edited through the web interface
+    """
+
     return dict()
 
 # =============================================================================
@@ -70,10 +71,8 @@ def role():
 def user():
     """ RESTful CRUD controller """
 
-    tablename = "auth_user"
-    table = db[tablename]
-    
-    auth.configure_user_fields()
+    table = auth.settings.table_user
+    tablename = table._tablename
 
     auth.configure_user_fields()
 
@@ -90,7 +89,6 @@ def user():
             session.error = T("Cannot disable your own account!")
             redirect(URL(args=[]))
 
-        table = auth.settings.table_user
         query = (table.id == r.id)
         db(query).update(registration_key = "disabled")
         session.confirmation = T("User Account has been Disabled")
@@ -151,7 +149,7 @@ def user():
         msg_list_empty = T("No Users currently registered"))
 
     def rheader(r, tabs = []):
-        if not r.interactive or r.representation != "html":
+        if r.representation != "html":
             return None
 
         id = r.id
@@ -188,8 +186,9 @@ def user():
                         )
                 rheader.append(btn)
 
-            tabs = [ (T("User Details"), None),
-                     (T("Roles"), "roles")]
+            tabs = [(T("User Details"), None),
+                    (T("Roles"), "roles")
+                    ]
             rheader_tabs = s3_rheader_tabs(r, tabs)
             rheader.append(rheader_tabs)
         return rheader
@@ -221,9 +220,10 @@ def user():
 
     def postp(r, output):
         # Only show the disable button if the user is not currently disabled
-        query = (r.table.registration_key != "disabled") & \
-                (r.table.registration_key != "pending")
-        rows = db(query).select(r.table.id)
+        table = r.table
+        query = (table.registration_key != "disabled") & \
+                (table.registration_key != "pending")
+        rows = db(query).select(table.id)
         restrict = [str(row.id) for row in rows]
         s3.actions = [
                         dict(label=str(UPDATE), _class="action-btn",
@@ -243,8 +243,8 @@ def user():
                              restrict = restrict)
                       ]
         # Only show the approve button if the user is currently pending
-        query = (r.table.registration_key == "pending")
-        rows = db(query).select(r.table.id)
+        query = (table.registration_key == "pending")
+        rows = db(query).select(table.id)
         restrict = [str(row.id) for row in rows]
         s3.actions.append(
                 dict(label=str(T("Approve")), _class="action-btn",
@@ -253,10 +253,9 @@ def user():
                      restrict = restrict)
             )
         # Add some highlighting to the rows
-        rtable = r.table
-        query = (rtable.registration_key.belongs(["disabled", "pending"]))
-        rows = db(query).select(rtable.id,
-                                rtable.registration_key)
+        query = (table.registration_key.belongs(["disabled", "pending"]))
+        rows = db(query).select(table.id,
+                                table.registration_key)
         s3.dataTableStyleDisabled = s3.dataTableStyleWarning = [str(row.id) for row in rows if row.registration_key == "disabled"]
         s3.dataTableStyleAlert = [str(row.id) for row in rows if row.registration_key == "pending"]
 
@@ -265,7 +264,7 @@ def user():
                   dict(col=6, key="None", display=str(T("Active"))),
                   dict(col=6, key="pending", display=str(T("Pending"))),
                   dict(col=6, key="disabled", display=str(T("Disabled")))
-                 ]
+                  ]
         s3.dataTableDisplay = values
 
         # Add client-side validation
@@ -274,7 +273,7 @@ def user():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("auth", resourcename,
+    output = s3_rest_controller("auth", "user",
                                 rheader=rheader)
     return output
 

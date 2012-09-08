@@ -3234,7 +3234,7 @@ class S3DataTable(object):
             details = []
             for field in flist:
                 if field == "BULK":
-                    details.append('<INPUT id="select%s" type="checkbox" class="bulkcheckbox">' % \
+                    details.append("<INPUT id='select%s' type='checkbox' class='bulkcheckbox'>" % \
                         row[flist[action_col]])
                 else:
                     details.append(s3_unicode(row[field]))
