@@ -1043,7 +1043,7 @@ class S3Request(object):
                 post_vars = self.post_vars
                 table = self.target()[2]
                 if "deleted" in table and "id" not in post_vars: # and "uuid" not in post_vars:
-                    original = current.manager.original(table, post_vars)
+                    original = S3Resource.original(table, post_vars)
                     if original and original.deleted:
                         self.post_vars.update(id=original.id)
                         self.vars.update(id=original.id)
