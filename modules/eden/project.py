@@ -1937,52 +1937,45 @@ class S3Project3WModel(S3Model):
             Record creation post-processing
 
             If the added organisation is the lead role, set the
-            project.organisation to point to the same organisation.
+            project.organisation to point to the same organisation 
+            & update the owned_by_entity.
 
             In DRRPP, update the donors field
         """
-
+        db = current.db
+        s3db = current.s3db
+        ptable = db.project_project
+        otable = db.project_organisation
         vars = form.vars
-        if current.deployment_settings.get_template() == "DRRPP":
-            db = current.db
-            otable = db.project_organisation
-            dtable = db.project_drrpp
+        
+        # Get the project ID from the new project organisation record
+        project_id = db(otable.id == vars.id).select( otable.project_id,
+                                                      limitby=(0, 1)
+                                                     ).first().project_id
 
-            # Get the project ID from the new project organisation record
-            rec = db(otable.id == vars.id).select(otable.project_id,
-                                                  limitby=(0, 1)).first()
+        if current.deployment_settings.get_template() == "DRRPP":
+            dtable = db.project_drrpp
+                                                  
             # Get all the Donors for this Project
             query = (otable.deleted == False) & \
                     (otable.role == 3) & \
-                    (otable.project_id == rec.project_id)
+                    (otable.project_id == project_id)
             rows = db(query).select(otable.organisation_id)
             if rows:
-                db(dtable.project_id == rec.project_id).update(
+                db(dtable.project_id == project_id).update(
                         # @ToDo: Remove if row.organisation_id once we have the DRRPP import working
                         donors=[row.organisation_id for row in rows if row.organisation_id]
                     )
 
-            if str(vars.role) == \
-               str(current.response.s3.project_organisation_lead_role):
-                # Set the Project's organisation_id to the new lead organisation
-                ptable = db.project_project
-                db(ptable.id == rec.project_id).update(
-                                        organisation_id = vars.organisation_id
-                                        )
-
-        elif str(vars.role) == \
+        if str(vars.role) == \
              str(current.response.s3.project_organisation_lead_role):
-            db = current.db
-            otable = db.project_organisation
-            ptable = db.project_project
-
-            # Get the project ID from the new project organisation record
-            rec = db(otable.id == vars.id).select(otable.project_id,
-                                                  limitby=(0, 1)).first()
 
             # Set the Project's organisation_id to the new lead organisation
-            db(ptable.id == rec.project_id).update(
-                                        organisation_id = vars.organisation_id
+            organisation_id = vars.organisation_id
+            db(ptable.id == project_id).update(
+                                        organisation_id = organisation_id,
+                                        owned_by_entity = s3db.pr_get_pe_id("org_organisation",
+                                                                            organisation_id)
                                         )
 
         return
