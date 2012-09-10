@@ -219,7 +219,7 @@ class S3MainMenu(object):
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
                             MM("Translation", c="admin", f="translate",
-                               check="translate"),
+                               check=translate),
                             MM("Test Results", f="result"),
                             MM("Tickets", f="errors"),
                         )
@@ -359,6 +359,7 @@ class S3OptionsMenu(object):
 
         ADMIN = current.session.s3.system_roles.ADMIN
         settings_messaging = self.settings_messaging()
+        translate = current.deployment_settings.has_module("translate")
 
         # ATTN: Do not specify a controller for the main menu to allow
         #       re-use of this menu by other controllers
@@ -384,17 +385,20 @@ class S3OptionsMenu(object):
                     ),
                     #M("Edit Application", a="admin", c="default", f="design",
                       #args=[request.application]),
-		    M("Translation",c="admin",f="translate")(
-                       M("Select Modules for translaton", c="admin", f="translate", m="create",vars=dict(opt="1")),
-                       M("Upload translated files", c="admin", f="translate", m="create", vars=dict(opt="2")),
-                       M("View Translation Percentage", c="admin", f="translate", m="create", vars=dict(opt="3")),
-                       M("Add strings manually", c="admin", f="translate", m="create", vars=dict(opt="4"))
-		    ),   
+                    M("Translation", c="admin", f="translate", check=translate)(
+                       M("Select Modules for translation", c="admin", f="translate",
+                         m="create", vars=dict(opt="1")),
+                       M("Upload translated files", c="admin", f="translate",
+                         m="create", vars=dict(opt="2")),
+                       M("View Translation Percentage", c="admin", f="translate",
+                         m="create", vars=dict(opt="3")),
+                       M("Add strings manually", c="admin", f="translate",
+                         m="create", vars=dict(opt="4"))
+                    ),
                     M("Tickets", c="admin", f="errors"),
                     M("View Test Result Reports", c="admin", f="result"),
                     M("Portable App", c="admin", f="portable")
-		    )
-                    
+                )
 
     # -------------------------------------------------------------------------
     def assess(self):
