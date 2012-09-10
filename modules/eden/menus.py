@@ -207,7 +207,9 @@ class S3MainMenu(object):
         """ Administrator Menu """
 
         ADMIN = current.session.s3.system_roles.ADMIN
-        name_nice = current.deployment_settings.modules["admin"].name_nice
+        settings = current.deployment_settings
+        name_nice = settings.modules["admin"].name_nice
+        translate = settings.has_module("translate")
 
         menu_admin = MM(name_nice, c="admin",
                         restrict=[ADMIN], **attr)(
@@ -216,7 +218,7 @@ class S3MainMenu(object):
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
-                            MM("Translation",c="admin",f="translate"),
+                            MM("Translation", c="admin", f="translate", restrict="translate"),
                             MM("Test Results", f="result"),
                             MM("Tickets", f="errors"),
                         )

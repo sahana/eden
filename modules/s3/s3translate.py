@@ -151,7 +151,7 @@ class TranslateAPI:
             if os.path.isfile(filename):
                 filename = os.path.abspath(filename)
             else:
-                print  "'%s' is not a valid file path!"%filename
+                print  "'%s' is not a valid file path!" % filename
                 return []
 
             R = TranslateReadFiles()
@@ -286,8 +286,8 @@ class TranslateGetFiles:
                     # If base refers to a module, append to corresponding list
                     if base in self.d.keys():
                         self.d[base].append(curFile)
-                    # else append it to "core" files list
                     else:
+                        # Append it to "core" files list
                         self.d["core"].append(curFile)
 
 # =============================================================================
@@ -491,7 +491,6 @@ class TranslateParseFiles:
                     # S3OptionsMenu class or its indentation level is equal
                     # to the first function in 'S3OptionsMenu class', then
                     # set fflag and store the indentation level in findent
-
                     elif token.tok_name[id] == "NAME" and value == "def" and \
                          (self.findent == -1 or level == self.findent):
                         if self.class_name == "S3OptionsMenu":
@@ -782,7 +781,7 @@ class TranslateReadFiles:
 
             f = open(fileName)
             fileContent = f.read()
-            fileContent = fileContent.replace("\r", "") + "\n"
+            fileContent = "%s\n" % fileContent.replace("\r", "")
             tmpstr = []
 
             # Create a parse tree list
@@ -800,7 +799,7 @@ class TranslateReadFiles:
             # Store the strings as (original string, translated string) tuple
             for i in range(0, len(tmpstr)):
                 if i%2 == 0:
-                    strings.append((tmpstr[i][1:-1], tmpstr[i+1][1:-1]))
+                    strings.append((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
             return strings
 
         # ---------------------------------------------------------------------
@@ -886,7 +885,7 @@ class TranslateReportStatus:
                 import pickle
 
             base_dir = current.request.folder
-            langfile = lang_code + ".py"
+            langfile = "%s.py" % lang_code
             langfile = os.path.join(base_dir, "languages", langfile)
 
             # Read the language file
@@ -967,7 +966,7 @@ class TranslateReportStatus:
                         db(query).update(sbit = False)
 
             # Dictionary keyed on modules to store percentage for each module
-            percent_dict={}
+            percent_dict = {}
             # Total number of translated strings for the given language
             total_translated = 0
             # Total number of untranslated strings for the given language
@@ -1149,6 +1148,8 @@ class StringsToExcel:
                 while i < lim and OldStrings[i][0] < s:
                     i += 1
 
+                # Remove the prefix from the filename
+                l = l.split("applications", 1)[1]
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))
@@ -1196,7 +1197,8 @@ class CsvToWeb2py:
 
             g = NamedTemporaryFile(delete=False)
             pofilename = "%s.po" % g.name
-            call(["csv2po", "-i", csvfilename, "-o", pofilename])
+            # Shell needed on Win32
+            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
             h = open(pofilename, "r")
 
@@ -1259,10 +1261,11 @@ class CsvToWeb2py:
             # Convert the csv file to intermediate po file
             g = NamedTemporaryFile(delete=False)
             pofilename = "%s.po" % g.name
-            call(["csv2po", "-i", csvfilename, "-o", pofilename])
+            # Shell needed for Win32
+            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
 
             # Convert the po file to w2p language file
-            call(["po2web2py", "-i", pofilename, "-o", w2pfilename])
+            call(["po2web2py", "-i", pofilename, "-o", w2pfilename], shell=True)
 
             # Remove intermediate files
             os.unlink(pofilename)
