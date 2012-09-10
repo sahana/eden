@@ -2804,7 +2804,7 @@ class DelegationTests(unittest.TestCase):
         from s3.s3aaa import S3Permission
         auth.permission = S3Permission(auth)
         auth.s3_impersonate("normaluser@example.com")
-        user = auth.user.id
+        user = auth.user.pe_id
 
         try:
 
