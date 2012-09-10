@@ -5119,7 +5119,7 @@ class S3ResourceFilter:
         """
 
         if type(value) is list:
-            value = ",".join[value]
+            value = ",".join(value)
         vlist = []
         w = ""
         quote = False

@@ -38,10 +38,10 @@ if len(pop_list) > 0:
                 uid=sysroles.ADMIN,
                 system=True, protected=True)
 
-    authenticated = create_role("Authenticated",
-                                "Authenticated - all logged-in users",
-                                uid=sysroles.AUTHENTICATED,
-                                protected=True)
+    create_role("Authenticated",
+                "Authenticated - all logged-in users",
+                uid=sysroles.AUTHENTICATED,
+                protected=True)
 
     create_role("Anonymous",
                 "Unauthenticated users",
