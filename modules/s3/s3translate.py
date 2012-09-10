@@ -2,8 +2,6 @@
 
 """ Translation API
 
-    @author: Vivek Hamirwasia <vivsmart[at]gmail[dot]com>
-
     @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -35,6 +33,7 @@ import parser
 import symbol
 import token
 import csv
+
 from gluon import current
 
 """
@@ -69,9 +68,7 @@ from gluon import current
 """
 
 # =============================================================================
-
 class TranslateAPI:
-
         """
             API class for the Translation module to get
             files, modules and strings individually
@@ -79,20 +76,15 @@ class TranslateAPI:
 
         def __init__(self):
 
-            base_dir = os.path.join(os.getcwd(), "applications",\
-                                   current.request.application)
             self.grp = TranslateGetFiles()
-            self.grp.group_files(base_dir, "", 0)
+            self.grp.group_files(current.request.folder, "", 0)
 
-        #--------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_langcodes(self):
-
             """ Return a list of language codes """
 
             lang_list = []
-            base_dir = os.path.join(os.getcwd(), "applications",\
-                                   current.request.application)
-            langdir = os.path.join(base_dir, "languages")
+            langdir = os.path.join(current.request.folder, "languages")
             files = os.listdir(langdir)
 
             for f in files:
@@ -100,16 +92,14 @@ class TranslateAPI:
 
             return lang_list
 
-        #--------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_modules(self):
-
             """ Return a list of modules """
 
             return self.grp.modlist
 
-        #------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_files_by_module(self, module):
-
             """ Return a list of files corresponding to a module """
 
             if module in self.grp.d.keys():
@@ -118,15 +108,14 @@ class TranslateAPI:
                 print "Module '%s' doesn't exist!" %module
                 return []
 
-        #--------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_strings_by_module(self, module):
-
             """ Return a list of strings corresponding to a module """
 
             if module in self.grp.d.keys():
                 fileList = self.grp.d[module]
             else:
-                print "Module '%s' doesn't exist!" %module
+                print "Module '%s' doesn't exist!" % module
                 return []
 
             strings = []
@@ -141,9 +130,9 @@ class TranslateAPI:
                 elif f.endswith(".html") == True or f.endswith(".js") == True:
                     tmpstr = R.read_html_js(f)
                 for s in tmpstr:
-                    strings.append((f+":"+str(s[0]), s[1]))
+                    strings.append((f + ":" + str(s[0]), s[1]))
 
-            # Handling "special" files separately
+            # Handle "special" files separately
             fileList = self.grp.d["special"]
             for f in fileList:
 
@@ -151,13 +140,12 @@ class TranslateAPI:
                 if f.endswith(".py") == True:
                     tmpstr = R.findstr(f, module, self.grp.modlist)
                 for s in tmpstr:
-                    strings.append((f+":"+str(s[0]), s[1]))
+                    strings.append((f + ":" + str(s[0]), s[1]))
 
             return strings
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_strings_by_file(self, filename):
-
             """ Return a list of strings in a given file """
 
             if os.path.isfile(filename):
@@ -180,17 +168,14 @@ class TranslateAPI:
                 return []
 
             for s in tmpstr:
-                strings.append((filename+":"+str(s[0]), s[1]))
+                strings.append((filename + ":" + str(s[0]), s[1]))
             return strings
 
-#==============================================================================
-
+# =============================================================================
 class TranslateGetFiles:
-
-        """Class to group files by modules"""
+        """ Class to group files by modules """
 
         def __init__(self):
-
             """
                 Set up a dictionary to hold files belonging to a particular
                 module with the module name as the key. Files which contain
@@ -204,7 +189,7 @@ class TranslateGetFiles:
             # Retrieve a list of eden modules
             self.modlist = self.get_module_list()
 
-            # Initializing to an empty list for each key
+            # Initialize to an empty list for each key
             for m in self.modlist:
                 self.d[m] = []
 
@@ -216,20 +201,19 @@ class TranslateGetFiles:
 
             # Directories which are not required to be searched
             self.rest_dirs = ["languages", "deployment-templates", "docs",
-            "tests", "test", ".git", "TranslationFunctionality", "uploads"]
+                              "tests", "test", ".git",
+                              "TranslationFunctionality", "uploads"
+                              ]
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_module_list(self):
-
             """
-                Returns a list of modules using files in /eden/controllers/
+                Returns a list of modules using files in /controllers/
                 as point of reference
             """
 
             mod = []
-            base_dir = os.path.join(os.getcwd(), "applications",\
-                       current.request.application)
-            cont_dir = os.path.join(base_dir, "controllers")
+            cont_dir = os.path.join(current.request.folder, "controllers")
             mod_files = os.listdir(cont_dir)
 
             for f in mod_files:
@@ -238,12 +222,13 @@ class TranslateGetFiles:
 
             return mod
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def group_files(self, currentDir, curmod, vflag):
-
             """
                 Recursive function to group Eden files into respective modules
             """
+
+            appname = current.request.application
 
             currentDir = os.path.abspath(currentDir)
             base_dir = os.path.basename(currentDir)
@@ -251,9 +236,9 @@ class TranslateGetFiles:
             if base_dir in self.rest_dirs:
                 return
 
-            # If current directory is '/eden/views', set vflag
+            # If current directory is '/views', set vflag
             if base_dir == "views":
-                vflag=1
+                vflag = 1
 
             files = os.listdir(currentDir)
 
@@ -262,10 +247,10 @@ class TranslateGetFiles:
                 baseFile = os.path.basename(curFile)
                 if os.path.isdir(curFile):
 
-                     # If the current directory is /eden/views,
-                     #categorize files based on the directory name
-                    if base_dir=="views":
-                        self.group_files(curFile, os.path.basename(curFile),\
+                    # If the current directory is /views,
+                    # categorize files based on the directory name
+                    if base_dir == "views":
+                        self.group_files(curFile, os.path.basename(curFile),
                                          vflag)
                     else:
                         self.group_files(curFile, curmod, vflag)
@@ -274,26 +259,26 @@ class TranslateGetFiles:
                       baseFile == "tests.py") == False:
 
                     # If in /eden/views, categorize by parent directory name
-                    if vflag==1:
+                    if vflag == 1:
                         base = curmod
 
                     # Categorize file as "special" as it contains strings
                     # belonging to various modules
-                    elif curFile.endswith("/eden/modules/eden/menus.py") or \
-                         curFile.endswith("/eden/modules/s3cfg.py") or \
+                    elif curFile.endswith("/%s/modules/eden/menus.py" % appname) or \
+                         curFile.endswith("/%s/modules/s3cfg.py" % appname) or \
                          baseFile == "000_config.py" or \
                          baseFile == "config.py":
                         base = "special"
                     else:
-                        # Removing '.py'
+                        # Remove '.py'
                         base = os.path.splitext(f)[0]
 
-                        # If file is inside /eden/modules/s3 directory and
+                        # If file is inside /modules/s3 directory and
                         # has "s3" as prefix, remove "s3" to get module name
                         if base_dir == "s3" and "s3" in base:
                             base = base[2:]
 
-                        # If file is inside /eden/models and file name is
+                        # If file is inside /models and file name is
                         # of the form var_module.py, remove the "var_" prefix
                         elif base_dir == "models" and "_" in base:
                             base = base.split("_")[1]
@@ -305,16 +290,13 @@ class TranslateGetFiles:
                     else:
                         self.d["core"].append(curFile)
 
-#==============================================================================
-
+# =============================================================================
 class TranslateParseFiles:
-
         """
             Class to extract strings from files depending on module and file
         """
 
         def __init__(self):
-
             """ Initializes all object variables """
 
             self.cflag = 0       # To indicate if next element is a class
@@ -329,9 +311,8 @@ class TranslateParseFiles:
             self.mod_name = ""   # Stores module that the string may belong to
             self.findent = -1    # Stores indentation level in menus.py
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def parseList(self, entry, tmpstr):
-
             """ Recursive function to extract strings from a parse tree """
 
             if isinstance(entry, list):
@@ -344,9 +325,8 @@ class TranslateParseFiles:
                     if token.tok_name[id] == "STRING":
                         tmpstr.append(value)
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def parseConfig(self, spmod, strings, entry, modlist):
-
             """ Function to extract strings from config.py / 000_config.py """
 
             if isinstance(entry, list):
@@ -372,9 +352,9 @@ class TranslateParseFiles:
                           value == "settings"):
                         self.fflag = 1
 
-                    # To get module name from deployment_setting.modules list
-                    elif self.tflag == 0 and self.func_name == "modules" \
-                         and token.tok_name[id] == "STRING":
+                    # Get module name from deployment_setting.modules list
+                    elif self.tflag == 0 and self.func_name == "modules" and \
+                         token.tok_name[id] == "STRING":
                         if value[1:-1] in modlist:
                             self.mod_name = value[1:-1]
 
@@ -385,23 +365,23 @@ class TranslateParseFiles:
                     # If sflag is set and '(' is found, set tflag
                     elif self.sflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.tflag=1
-                            self.bracket=1
-                        self.sflag=0
+                            self.tflag = 1
+                            self.bracket = 1
+                        self.sflag = 0
 
-                    #Check if inside 'T()'
+                    # Check if inside 'T()'
                     elif self.tflag == 1:
                         # If '(' is encountered, append it to outstr
                         if token.tok_name[id] == "LPAR":
-                            self.bracket+=1
-                            if self.bracket>1:
+                            self.bracket += 1
+                            if self.bracket > 1:
                                 self.outstr += "("
 
                         elif token.tok_name[id] == "RPAR":
-                            self.bracket-=1
+                            self.bracket -= 1
                             # If it's not the last ')' of 'T()',
                             # append to outstr
-                            if self.bracket>0:
+                            if self.bracket > 0:
                                 self.outstr += ")"
 
                             # If it's the last ')', add string to list
@@ -414,16 +394,15 @@ class TranslateParseFiles:
                                       self.mod_name == spmod) or \
                                      (self.func_name == spmod):
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=""
-                                self.tflag=0
+                                self.outstr = ""
+                                self.tflag = 0
 
                         # If we are inside 'T()', append value to outstr
-                        elif self.bracket>0:
+                        elif self.bracket > 0:
                             self.outstr += value
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def parseS3cfg(self, spmod, strings, entry, modlist):
-
             """ Function to extract the strings from s3cfg.py """
 
             if isinstance(entry, list):
@@ -449,42 +428,40 @@ class TranslateParseFiles:
 
                     elif self.sflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.tflag=1
-                            self.bracket=1
-                        self.sflag=0
+                            self.tflag = 1
+                            self.bracket = 1
+                        self.sflag = 0
 
                     elif self.tflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.bracket+=1
-                            if self.bracket>1:
+                            self.bracket += 1
+                            if self.bracket > 1:
                                 self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
-                            self.bracket-=1
-                            if self.bracket>0:
+                            self.bracket -= 1
+                            if self.bracket > 0:
                                 self.outstr += ")"
                             else:
                                 # If core module is requested
                                 if spmod == "core":
-
                                     # If extracted data doesn't belong
                                     # to any other module, append to list
                                     if "_" not in self.func_name or \
-                                   self.func_name.split("_")[1] not in modlist:
+                                       self.func_name.split("_")[1] not in modlist:
                                         strings.append((entry[2], self.outstr))
 
                                 # If 'module' in  'get_module_variable()'
                                 # is the requested module, append to list
                                 elif "_" in self.func_name and \
-                                self.func_name.split("_")[1] == spmod:
+                                     self.func_name.split("_")[1] == spmod:
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=""
-                                self.tflag=0
-                        elif self.bracket>0:
+                                self.outstr = ""
+                                self.tflag = 0
+                        elif self.bracket > 0:
                             self.outstr += value
 
-        #---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def parseMenu(self, spmod, strings, entry, level):
-
             """ Function to extract the strings from menus.py """
 
             if isinstance(entry, list):
@@ -492,7 +469,7 @@ class TranslateParseFiles:
                 value = entry[1]
                 if isinstance(value, list):
                     for element in entry:
-                        self.parseMenu(spmod, strings, element, level+1)
+                        self.parseMenu(spmod, strings, element, level + 1)
                 else:
 
                     # If value is a class name, store it in class_name
@@ -508,7 +485,7 @@ class TranslateParseFiles:
                         # Here func_name is used to store the function names
                         # which are in 'S3OptionsMenu' class
                         self.func_name = value
-                        self.fflag=0
+                        self.fflag = 0
 
                     # If value is "def" and it's the first function in the
                     # S3OptionsMenu class or its indentation level is equal
@@ -529,19 +506,19 @@ class TranslateParseFiles:
 
                     elif self.sflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.tflag=1
-                            self.bracket=1
-                        self.sflag=0
+                            self.tflag = 1
+                            self.bracket = 1
+                        self.sflag = 0
 
-                    # if inside 'T()', extract the data accordingly
+                    # If inside 'T()', extract the data accordingly
                     elif self.tflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.bracket+=1
-                            if self.bracket>1:
+                            self.bracket += 1
+                            if self.bracket > 1:
                                 self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
-                            self.bracket-=1
-                            if self.bracket>0:
+                            self.bracket -= 1
+                            if self.bracket > 0:
                                 self.outstr += ")"
                             else:
 
@@ -557,13 +534,13 @@ class TranslateParseFiles:
                                 # then append it to list
                                 elif self.func_name == spmod:
                                     strings.append((entry[2], self.outstr))
-                                self.outstr=""
-                                self.tflag=0
-                        elif self.bracket>0:
+                                self.outstr = ""
+                                self.tflag = 0
+                        elif self.bracket > 0:
                             self.outstr += value
 
                     else:
-                        # To get strings inside 'M()'
+                        # Get strings inside 'M()'
                         # If value is 'M', set mflag
                         if token.tok_name[id] == "NAME" and value == "M":
                             self.mflag = 1
@@ -585,9 +562,8 @@ class TranslateParseFiles:
                                  token.tok_name[id] == "RPAR":
                                 self.mflag = 0
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def parseAll(self, strings, entry):
-
             """ Function to extract all the strings from a file """
 
             if isinstance(entry, list):
@@ -597,33 +573,32 @@ class TranslateParseFiles:
                     for element in entry:
                         self.parseAll(strings, element)
                 else:
-
                     # If current element is 'T', set sflag
                     if token.tok_name[id] == "NAME" and value == "T":
                         self.sflag = 1
 
                     elif self.sflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.tflag=1
-                            self.bracket=1
-                        self.sflag=0
+                            self.tflag = 1
+                            self.bracket = 1
+                        self.sflag = 0
 
                     # If inside 'T', extract data accordingly
                     elif self.tflag == 1:
                         if token.tok_name[id] == "LPAR":
-                            self.bracket+=1
-                            if self.bracket>1:
+                            self.bracket += 1
+                            if self.bracket > 1:
                                 self.outstr += "("
                         elif token.tok_name[id] == "RPAR":
-                            self.bracket-=1
-                            if self.bracket>0:
+                            self.bracket -= 1
+                            if self.bracket > 0:
                                 self.outstr += ")"
                             else:
                                 strings.append((entry[2], self.outstr))
-                                self.outstr=""
-                                self.tflag=0
+                                self.outstr = ""
+                                self.tflag = 0
 
-                        elif self.bracket>0:
+                        elif self.bracket > 0:
                             self.outstr += value
 
                     else:
@@ -640,14 +615,12 @@ class TranslateParseFiles:
                                  token.tok_name[id] == "RPAR":
                                 self.mflag = 0
 
-#==============================================================================
-
+# =============================================================================
 class TranslateReadFiles:
-
         """ Class to open and read files """
 
+        # ---------------------------------------------------------------------
         def findstr(self, fileName, spmod, modlist):
-
             """
                 Using the methods in TranslateParseFiles to extract the strings
                 fileName -> the file to be used for extraction
@@ -689,15 +662,14 @@ class TranslateReadFiles:
                 for element in stList:
                     P.parseAll(strings, element)
             else:
-
-                # Handling cases for special files which contain
-                #strings belonging to different modules
-
-                if fileName.endswith("/eden/modules/eden/menus.py") == True:
+                # Handle cases for special files which contain
+                # strings belonging to different modules
+                appname = current.request.application
+                if fileName.endswith("/%s/modules/eden/menus.py" % appname) == True:
                     for element in stList:
                         P.parseMenu(spmod, strings, element, 0)
 
-                elif fileName.endswith("/eden/modules/s3cfg.py") == True:
+                elif fileName.endswith("/%s/modules/s3cfg.py" % appname) == True:
                     for element in stList:
                         P.parseS3cfg(spmod, strings, element, modlist)
 
@@ -706,29 +678,28 @@ class TranslateReadFiles:
                     for element in stList:
                         P.parseConfig(spmod, strings, element, modlist)
 
-            # Extracting strings from deployment_settings.variable() calls
+            # Extract strings from deployment_settings.variable() calls
             final_strings = []
             settings = current.deployment_settings
             for (loc, s) in strings:
-                if s[0]!='"' and s[0]!="'" and "settings." in s:
+                if s[0] != '"' and s[0] != "'" and "settings." in s:
 
-                    # Converting the call to a standard form
+                    # Convert the call to a standard form
                     s = s.replace("current.deployment_settings", "settings")
                     s = s.replace("()", "")
                     l = s.split(".")
                     obj = settings
 
-                    #Getting the actual value
+                    # Get the actual value
                     for atr in l[1:]:
                         obj = getattr(obj, atr)()
-                    s=obj
+                    s = obj
                 final_strings.append((loc, s))
 
             return final_strings
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def read_html_js(self, filename):
-
             """
                Function to read and extract strings from html/js files
                using regular expressions
@@ -756,16 +727,13 @@ class TranslateReadFiles:
             html_js_file.close()
             return strings
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_user_strings(self):
-
             """
                 Function to return the list of user-supplied strings
             """
 
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
-            user_file = os.path.join(base_dir, "uploads", "user_strings.txt")
+            user_file = os.path.join(current.request.folder, "uploads", "user_strings.txt")
 
             strings = []
             COMMENT = "User supplied"
@@ -780,17 +748,14 @@ class TranslateReadFiles:
 
             return strings
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def merge_user_strings_file(self, newstrings):
-
             """
                 Function to merge the existing file of user-supplied strings
                 with newly uploaded strings
             """
 
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
-            user_file = os.path.join(base_dir, "uploads", "user_strings.txt")
+            user_file = os.path.join(current.request.folder, "uploads", "user_strings.txt")
 
             oldstrings = []
 
@@ -800,7 +765,7 @@ class TranslateReadFiles:
                     oldstrings.append(line)
                 f.close()
 
-            # Appending user strings if not already present
+            # Append user strings if not already present
             f = open(user_file, "a")
             for s in newstrings:
                 if s not in oldstrings:
@@ -808,9 +773,8 @@ class TranslateReadFiles:
 
             f.close()
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def read_w2pfile(self, fileName):
-
             """
                 Function to read a web2py language file and
                 return a list of translation string pairs
@@ -819,9 +783,9 @@ class TranslateReadFiles:
             f = open(fileName)
             fileContent = f.read()
             fileContent = fileContent.replace("\r", "") + "\n"
-            tmpstr=[]
+            tmpstr = []
 
-            # Creating a parse tree list
+            # Create a parse tree list
             st = parser.suite(fileContent)
             stList = parser.st2list(st, line_info=1)
 
@@ -833,15 +797,14 @@ class TranslateReadFiles:
                 P.parseList(element, tmpstr)
 
             strings = []
-            # Storing the strings as (original string, translated string) tuple
+            # Store the strings as (original string, translated string) tuple
             for i in range(0, len(tmpstr)):
                 if i%2 == 0:
                     strings.append((tmpstr[i][1:-1], tmpstr[i+1][1:-1]))
             return strings
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def read_csvfile(self, fileName):
-
             """ Function to read a csv file and return a list of rows """
 
             data = []
@@ -852,24 +815,16 @@ class TranslateReadFiles:
             f.close()
             return data
 
-        #----------------------------------------------------------------------
-
-#==============================================================================
-
+# =============================================================================
 class TranslateReportStatus:
-
         """
            Class to report the percentage of translated strings for each module
            for a given language
         """
 
+        # ---------------------------------------------------------------------
         def create_master_file(self):
-
             """ Function to create a master file containing all the strings """
-
-            s3db = current.s3db
-            db = current.db
-            utable = s3db.translate_update
 
             try:
                 import cPickle as pickle
@@ -904,43 +859,37 @@ class TranslateReportStatus:
                         tmpind = all_strings.index(s)
                         string_dict[mod].append(tmpind)
 
-            # Saving all_strings and string_dict as pickle objects in a file
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
-            data_file = os.path.join(base_dir, "uploads", "temp.pkl")
+            # Save all_strings and string_dict as pickle objects in a file
+            data_file = os.path.join(current.request.folder, "uploads", "temp.pkl")
 
-            f = open(data_file, 'wb')
+            f = open(data_file, "wb")
             pickle.dump(all_strings, f)
             pickle.dump(string_dict, f)
             f.close()
 
-            # Setting the update flag for all languages to indicate that the
+            # Set the update flag for all languages to indicate that the
             # previously stored percentages of translation may have changed
             # as the master file has been changed.
-            db(utable.id>0).update(sbit=True)
+            utable = current.s3db.translate_update
+            current.db(utable.id > 0).update(sbit=True)
 
-        #---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def update_percentages(self, lang_code):
-
             """
                Function to update the translation percentages for all modules
                for a given language
             """
 
-            s3db = current.s3db
-            db = current.db
-            ptable = s3db.translate_percentage
             try:
                 import cPickle as pickle
             except:
                 import pickle
 
+            base_dir = current.request.folder
             langfile = lang_code + ".py"
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
             langfile = os.path.join(base_dir, "languages", langfile)
 
-            # Reading the language file
+            # Read the language file
             R = TranslateReadFiles()
             lang_strings = R.read_w2pfile(langfile)
 
@@ -948,16 +897,18 @@ class TranslateReportStatus:
             translated_strings = []
             for (s1, s2) in lang_strings:
                 if not s2.startswith("*** "):
-                    if s1!=s2 or lang_code == "en-gb":
+                    if s1 != s2 or lang_code == "en-gb":
                         translated_strings.append(s1)
 
-            # Retreing the data stored in master file
+            # Retrieve the data stored in master file
             data_file = os.path.join(base_dir, "uploads", "temp.pkl")
-            f = open(data_file, 'rb')
+            f = open(data_file, "rb")
             all_strings = pickle.load(f)
             string_dict = pickle.load(f)
             f.close()
 
+            db = current.db
+            ptable = current.s3db.translate_percentage
             for mod in string_dict.keys():
 
                 count = 0
@@ -967,25 +918,24 @@ class TranslateReportStatus:
                     if string in translated_strings:
                         count += 1
 
-                # Updating the translation count in the table
+                # Update the translation count in the table
                 query = (ptable.code == lang_code) & \
                         (ptable.module == mod)
                 db(query).update(translated = count,
                                  untranslated = len(string_dict[mod]) - count)
 
-        #---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def get_translation_percentages(self, lang_code):
+            """
+            """
 
-            import os
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
-            pickle_file = os.path.join(base_dir, "uploads", "temp.pkl")
+            pickle_file = os.path.join(current.request.folder, "uploads", "temp.pkl")
             # If master file doesn't exist, create it
             if not os.path.exists(pickle_file):
                 self.create_master_file()
 
-            s3db = current.s3db
             db = current.db
+            s3db = current.s3db
             ptable = s3db.translate_percentage
             utable = s3db.translate_update
 
@@ -1024,31 +974,29 @@ class TranslateReportStatus:
             total_untranslated = 0
             query = (ptable.code == lang_code)
             rows = db(query).select()
-            # Displaying the translation percentage for each module
+            # Display the translation percentage for each module
             # by fetching the data from the table
             for row in rows:
                 total_translated += row.translated
                 total_untranslated += row.untranslated
                 percent_dict[row.module] = \
-                  (float(row.translated)/(row.translated+row.untranslated))*100
+                  (float(row.translated) / (row.translated + row.untranslated)) * 100
             percent_dict["complete_file"] = \
-            (float(total_translated)/(total_translated+total_untranslated))*100
+            (float(total_translated) / (total_translated + total_untranslated)) * 100
 
-            # Rounding off the percentages to 2 decimal places
+            # Round off the percentages to 2 decimal places
             for mod in percent_dict.keys():
                 percent_dict[mod] = round(percent_dict[mod], 2)
 
             # Return the dictionary
             return percent_dict
 
-#==============================================================================
-
+# =============================================================================
 class StringsToExcel:
+        """ Class to convert strings to .xls format """
 
-        """Class to convert strings to .xls format"""
-
+        # ---------------------------------------------------------------------
         def remove_quotes(self, Strings):
-
             """
                 Function to remove single or double quotes around the strings
             """
@@ -1056,19 +1004,18 @@ class StringsToExcel:
             l = []
 
             for (d1, d2) in Strings:
-                if (d1[0] == '"' and d1[-1] == '"') or\
+                if (d1[0] == '"' and d1[-1] == '"') or \
                    (d1[0] == "'" and d1[-1] == "'"):
                     d1 = d1[1:-1]
-                if (d2[0] == '"' and d2[-1] == '"') or\
+                if (d2[0] == '"' and d2[-1] == '"') or \
                    (d2[0] == "'" and d2[-1] == "'"):
                     d2 = d2[1:-1]
                 l.append((d1, d2))
 
             return l
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def remove_duplicates(self, Strings):
-
             """
                 Function to club all the duplicate strings into one row
                 with ";" separated locations
@@ -1093,24 +1040,22 @@ class StringsToExcel:
 
             return l
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def create_spreadsheet(self, Strings):
-
             """
                 Function to create a spreadsheet (.xls file) of strings with
                 location, original string and translated string as columns
             """
 
-            import xlwt
-            from gluon.contenttype import contenttype
             try:
                 from cStringIO import StringIO    # Faster, where available
             except:
                 from StringIO import StringIO
+            import xlwt
 
-            response = current.response
+            from gluon.contenttype import contenttype
 
-            # Defining spreadsheet properties
+            # Define spreadsheet properties
             wbk = xlwt.Workbook("utf-8")
             sheet = wbk.add_sheet("Translate")
             style = xlwt.XFStyle()
@@ -1124,36 +1069,36 @@ class StringsToExcel:
 
             row_num = 1
 
-            # Writing the data to spreadsheet
+            # Write the data to spreadsheet
             for (loc, d1, d2) in Strings:
                 d2 = d2.decode("string-escape").decode("utf-8")
                 sheet.write(row_num, 0, loc, style)
                 sheet.write(row_num, 1, d1, style)
                 sheet.write(row_num, 2, d2, style)
-                row_num+=1
+                row_num += 1
 
-            # Setting column width
+            # Set column width
             for colx in range(0, 3):
                 sheet.col(colx).width = 15000
 
             # Initialize output
             output = StringIO()
 
-            # Saving the spreadsheet
+            # Save the spreadsheet
             wbk.save(output)
 
-            #Modifying headers to return the xls file for download
+            # Modify headers to return the xls file for download
             filename = "trans.xls"
             disposition = "attachment; filename=\"%s\"" % filename
+            response = current.response
             response.headers["Content-Type"] = contenttype(".xls")
             response.headers["Content-disposition"] = disposition
 
             output.seek(0)
             return output.read()
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def convert_to_xls(self, langfile, modlist, filelist, filetype):
-
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
@@ -1162,14 +1107,12 @@ class StringsToExcel:
                 export_to_po()" method is called.
             """
 
-            base_dir = os.path.join(os.getcwd(), "applications", \
-                                    current.request.application)
-            langfile = os.path.join(base_dir, "languages", langfile)
+            langfile = os.path.join(current.request.folder, "languages", langfile)
 
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
                 f = open(langfile, "w")
-                f.write('')
+                f.write("")
                 f.close()
 
             NewStrings = []
@@ -1192,22 +1135,21 @@ class StringsToExcel:
             NewStrings = self.remove_duplicates(NewStrings)
             NewStrings.sort(key=lambda tup: tup[1])
 
-            # Retrive strings from existing w2p language file
+            # Retrieve strings from existing w2p language file
             OldStrings = R.read_w2pfile(langfile)
             OldStrings.sort(key=lambda tup: tup[0])
 
-            # Merging those strings which were already translated earlier
-
+            # Merge those strings which were already translated earlier
             Strings = []
             i = 0
             lim = len(OldStrings)
 
             for (l, s) in NewStrings:
 
-                while i<lim and OldStrings[i][0] < s:
-                    i+=1
+                while i < lim and OldStrings[i][0] < s:
+                    i += 1
 
-                if i!=lim and OldStrings[i][0] == s and \
+                if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))
                 else:
@@ -1221,19 +1163,17 @@ class StringsToExcel:
                 C = CsvToWeb2py()
                 return C.export_to_po(Strings)
 
-#==============================================================================
-
+# =============================================================================
 class CsvToWeb2py:
-
         """ Class to convert a group of csv files to a web2py language file"""
 
+        # ---------------------------------------------------------------------
         def write_csvfile(self, fileName, data):
-
             """ Function to write a list of rows into a csv file """
 
             f = open(fileName, "wb")
 
-            # Quoting all the elements while writing
+            # Quote all the elements while writing
             transWriter = csv.writer(f, delimiter=" ",\
                                      quotechar='"', quoting = csv.QUOTE_ALL)
             transWriter.writerow(["location", "source", "target"])
@@ -1242,38 +1182,36 @@ class CsvToWeb2py:
 
             f.close()
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def export_to_po(self, data):
-
             """ Returns a ".po" file constructed from given strings """
 
-            from gluon.contenttype import contenttype
-            from tempfile import NamedTemporaryFile
             from subprocess import call
+            from tempfile import NamedTemporaryFile
+            from gluon.contenttype import contenttype
 
             f = NamedTemporaryFile(delete=False)
-            csvfilename = f.name + ".csv"
+            csvfilename = "%s.csv" % f.name
             self.write_csvfile(csvfilename, data)
 
             g = NamedTemporaryFile(delete=False)
-            pofilename = g.name + ".po"
+            pofilename = "%s.po" % g.name
             call(["csv2po", "-i", csvfilename, "-o", pofilename])
 
             h = open(pofilename, "r")
 
-            #Modifying headers to return the po file for download
-            response = current.response
+            # Modify headers to return the po file for download
             filename = "trans.po"
             disposition = "attachment; filename=\"%s\"" % filename
+            response = current.response
             response.headers["Content-Type"] = contenttype(".po")
             response.headers["Content-disposition"] = disposition
 
             h.seek(0)
             return h.read()
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         def convert_to_w2p(self, csvfiles, w2pfilename, option):
-
             """
                 Function to merge multiple translated csv files into one
                 and then merge/overwrite the existing w2p language file
@@ -1282,9 +1220,7 @@ class CsvToWeb2py:
             from subprocess import call
             from tempfile import NamedTemporaryFile
 
-            base_dir = os.path.join(os.getcwd(), "applications",\
-                                   current.request.application)
-            w2pfilename = os.path.join(base_dir, "languages", w2pfilename)
+            w2pfilename = os.path.join(current.request.folder, "languages", w2pfilename)
 
             # Dictionary to store (location,translated string)
             # with untranslated string as the key
@@ -1317,12 +1253,12 @@ class CsvToWeb2py:
 
             # Create intermediate csv file
             f = NamedTemporaryFile(delete=False)
-            csvfilename = f.name + ".csv"
+            csvfilename = "%s.csv" % f.name
             self.write_csvfile(csvfilename, data)
 
             # Convert the csv file to intermediate po file
             g = NamedTemporaryFile(delete=False)
-            pofilename = g.name + ".po"
+            pofilename = "%s.po" % g.name
             call(["csv2po", "-i", csvfilename, "-o", pofilename])
 
             # Convert the po file to w2p language file
@@ -1332,6 +1268,4 @@ class CsvToWeb2py:
             os.unlink(pofilename)
             os.unlink(csvfilename)
 
-        #----------------------------------------------------------------------
-
-#END===========================================================================
+# END =========================================================================

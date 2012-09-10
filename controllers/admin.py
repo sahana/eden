@@ -634,9 +634,7 @@ def create_portable_app(web2py_source, copy_database=False, copy_uploads=False):
 # =============================================================================
 # Translation Functionality
 # =============================================================================
-
 def translate():
-
     """
         Translation controller to enable four major workflows :-
 
@@ -664,25 +662,21 @@ def translate():
     from s3.s3translate import TranslateAPI, StringsToExcel, TranslateReportStatus, TranslateReadFiles
     from math import ceil
 
-    tablename = "translate_language"
-    opt = request.vars.opt
-
     def postp(r, output):
-
-        # Creating a custom form
+        # Create a custom form
         form = FORM()
 
-        # To prevent redirection
+        # Prevent redirection
         r.next = None
 
-        # To remove the false error from the form
+        # Remove the false error from the form
         # error : "Invalid form (re-opened in another window?)"
         if response.error and not output["form"]["error"]:
             response.error = None
 
+        opt = request.vars.opt
         if opt == "1":
-
-            # If 1st workflow is selected
+            # 1st workflow is selected
             if form.accepts(request.vars, session):
 
                 modlist = []
@@ -740,30 +734,41 @@ def translate():
 
             # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
             num = 0
-            max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
+            max_rows = int(ceil(modcount / float(NO_OF_COLUMNS)))
 
             while num < max_rows:
-                row = TR(TD(num+1), TD(INPUT(_type="checkbox", _name="module_list", _value=modlist[num])), TD(modlist[num]))
+                row = TR(TD(num + 1),
+                         TD(INPUT(_type="checkbox", _name="module_list",
+                                  _value=modlist[num])),
+                         TD(modlist[num]))
                 for c in range(1, NO_OF_COLUMNS):
-                    if num + c*max_rows < modcount:
-                        row.append(TD(num+1+c*max_rows))
-                        row.append(TD(INPUT(_type = "checkbox", _name="module_list", _value=modlist[num+c*max_rows])))
-                        row.append(TD(modlist[num+c*max_rows]))
+                    cmax_rows = num + c*max_rows
+                    if cmax_rows < modcount:
+                        row.append(TD(cmax_rows + 1))
+                        row.append(TD(INPUT(_type="checkbox",
+                                            _name="module_list",
+                                            _value=modlist[cmax_rows])))
+                        row.append(TD(modlist[cmax_rows]))
                 num += 1
                 table.append(row)
 
             div = DIV()
             div.append(table)
             div.append(BR())
-            row = TR(TD(INPUT(_type="checkbox", _name="module_list", _value="core", _checked="yes")), TD(T("Include core files")))
+            row = TR(TD(INPUT(_type="checkbox", _name="module_list",
+                              _value="core", _checked="yes")),
+                     TD(T("Include core files")))
             div.append(row)
             div.append(BR())
-            row = TR(TD(INPUT(_type="checkbox", _name="module_list", _value="all")), TD(T("Select all modules")))
+            row = TR(TD(INPUT(_type="checkbox", _name="module_list",
+                              _value="all")),
+                     TD(T("Select all modules")))
             div.append(row)
             div.append(BR())
 
             # Providing option to export strings in pootle format
-            row = TR(TD(INPUT(_type="checkbox", _name="filetype")), TD(T("Export as Pootle (.po) file (Excel (.xls) is default)")))
+            row = TR(TD(INPUT(_type="checkbox", _name="filetype")),
+                     TD(T("Export as Pootle (.po) file (Excel (.xls) is default)")))
             row.append(BR())
             row.append(BR())
             div.append(row)
@@ -789,8 +794,7 @@ def translate():
             output["title"] = T("Select the required modules")
             output["form"] = form
 
-        elif opt=="2":
-
+        elif opt == "2":
             # If 2nd workflow is selected
             div = DIV()
             div.append(BR())
@@ -799,8 +803,7 @@ def translate():
             form.append(div)
             output["form"] = form
 
-        elif opt=="3":
-
+        elif opt == "3":
             # If 3rd workflow is selected
             if form.accepts(request.vars, session):
 
@@ -815,7 +818,7 @@ def translate():
 
                 modlist = []
                 for mod in sorted(percent_dict.keys()):
-                    if mod!="complete_file":
+                    if mod != "complete_file":
                         modlist.append(mod)
                 modcount = len(modlist)
 
@@ -832,9 +835,10 @@ def translate():
                 while num < max_rows:
                     row = TR(TD(modlist[num]), TD(percent_dict[modlist[num]]))
                     for c in range(1, NO_OF_COLUMNS):
-                        if num + c*max_rows < modcount:
-                            row.append(TD(modlist[num+c*max_rows]))
-                            row.append(TD(percent_dict[modlist[num+c*max_rows]]))
+                        cmax_rows = num + c*max_rows
+                        if cmax_rows < modcount:
+                            row.append(TD(modlist[cmax_rows]))
+                            row.append(TD(percent_dict[modlist[cmax_rows]]))
                     num += 1
                     table.append(row)
 
@@ -842,7 +846,8 @@ def translate():
                 div = DIV()
                 div.append(table)
                 div.append(BR())
-                div.append(TR(TD("Overall translation percentage of the file: "), TD(percent_dict["complete_file"])))
+                div.append(TR(TD("Overall translation percentage of the file: "),
+                              TD(percent_dict["complete_file"])))
                 form.append(div)
                 output["title"] = T("Module-wise Percentage of Translated Strings")
                 output["form"] = form
@@ -855,20 +860,21 @@ def translate():
                 langlist.sort()
                 # Drop-down for selecting language codes
                 lang_col = TD()
-                lang_dropdown = SELECT(_name = "code")
+                lang_dropdown = SELECT(_name="code")
                 for lang in langlist:
                     lang_dropdown.append(lang)
                 lang_col.append(lang_dropdown)
 
                 div = DIV()
-                row = TR(TD(T("Language code: ")),TD(lang_col))
+                row = TR(TD(T("Language code: ")), TD(lang_col))
                 div.append(row)
                 div.append(BR())
-                row = TR(TD(INPUT(_type="checkbox", _name="update_master")), TD(T("Update Master file")))
+                row = TR(TD(INPUT(_type="checkbox", _name="update_master")),
+                         TD(T("Update Master file")))
                 div.append(row)
                 div.append(BR())
                 div.append(BR())
-                div.append(INPUT(_type='submit',_value='Submit'))
+                div.append(INPUT(_type="submit", _value=T("Submit")))
                 form.append(div)
                 # Adding the custom form to the output
                 output["title"] = T("Select the language file")
@@ -887,20 +893,19 @@ def translate():
                     strings.append(line)
                 # Update the file containing user strings
                 R.merge_user_strings_file(strings)
-                response.flash = "File Uploaded"
+                response.confirmation = T("File Uploaded")
 
             div = DIV()
             div.append(T("Upload a text file containing new-line separated strings:"))
             div.append(INPUT(_type="file", _name="upload"))
             div.append(BR())
-            div.append(INPUT(_type='submit',_value='Submit'))
+            div.append(INPUT(_type="submit", _value=T("Submit")))
             form.append(div)
             output["form"] = form
 
         return output
+    s3.postp = postp
 
-    response.s3.postp = postp
-    # Refering to the translate_language table defined in modules/eden/translate.py
     output = s3_rest_controller("translate", "language")
     return output
 
