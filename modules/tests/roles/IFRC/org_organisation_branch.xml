@@ -1,0 +1,6 @@
+<s3xml>
+   <resource name="org_organisation_branch" uuid="Link %(org)s-%(branch)s">
+     <reference field="organisation_id" resource="org_organisation" uuid="%(org)s"/>
+     <reference field="branch_id" resource="org_organisation" uuid="%(org)s-%(branch)s"/>
+   </resource>
+</s3xml>
