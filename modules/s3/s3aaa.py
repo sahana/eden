@@ -6342,16 +6342,17 @@ class S3RoleManager(S3Method):
             return select
         instance_type_nice = table.instance_type.represent
 
-        types = ("org_organisation", "org_office", "pr_group")
+        types = ("org_organisation", "org_office", "inv_warehouse", "pr_group")
         entities = s3db.pr_get_entities(types=types, group=True)
 
-        for instance_type in entities:
-            optgroup = OPTGROUP(_label=instance_type_nice(instance_type))
-            items = [(n, i) for i, n in entities[instance_type].items()]
-            items.sort()
-            for name, pe_id in items:
-                optgroup.append(OPTION(name, _value=pe_id))
-            select.append(optgroup)
+        for instance_type in types:
+            if instance_type in entities:
+                optgroup = OPTGROUP(_label=instance_type_nice(instance_type))
+                items = [(n, i) for i, n in entities[instance_type].items()]
+                items.sort()
+                for name, pe_id in items:
+                    optgroup.append(OPTION(name, _value=pe_id))
+                select.append(optgroup)
 
         return select
 
