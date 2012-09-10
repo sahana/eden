@@ -1,4 +1,4 @@
-﻿# coding: utf8
+# coding: utf8
 {
 '"update" is an optional expression like "field1=\'newvalue\'". You cannot update or delete the results of a JOIN': '"update" est une expression facultative comme "field1=\'newvalue\'". Vous ne pouvez mettre à jour ou supprimer les résultats d\'une jointure',
 '# of Houses Damaged': '# de maisons endommagé',

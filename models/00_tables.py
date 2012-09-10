@@ -48,6 +48,7 @@ import eden.supply
 import eden.support
 import eden.survey
 import eden.sync
+import eden.translate
 import eden.transport
 import eden.vehicle
 import eden.vol
