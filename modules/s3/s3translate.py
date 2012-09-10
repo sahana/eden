@@ -1106,7 +1106,8 @@ class StringsToExcel:
                 export_to_po()" method is called.
             """
 
-            langfile = os.path.join(current.request.folder, "languages", langfile)
+            request = current.request
+            langfile = os.path.join(request.folder, "languages", langfile)
 
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
@@ -1149,7 +1150,7 @@ class StringsToExcel:
                     i += 1
 
                 # Remove the prefix from the filename
-                l = l.split("applications", 1)[1]
+                l = l.split(request.application, 1)[1]
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
                     Strings.append((l, s, OldStrings[i][1]))

@@ -163,7 +163,7 @@ class S3PersonEntity(S3Model):
         # Search method
         pentity_search = S3PentitySearch(name = "pentity_search_simple",
                                          label = T("Name and/or ID"),
-                                         comment = T(""),
+                                         comment = "",
                                          field = ["pe_label"])
 
         pentity_search.pentity_represent = pr_pentity_represent

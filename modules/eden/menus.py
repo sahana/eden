@@ -218,7 +218,8 @@ class S3MainMenu(object):
                             MM("Person Registry", c="pr"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Synchronization", c="sync", f="index"),
-                            MM("Translation", c="admin", f="translate", restrict="translate"),
+                            MM("Translation", c="admin", f="translate",
+                               check="translate"),
                             MM("Test Results", f="result"),
                             MM("Tickets", f="errors"),
                         )
@@ -1172,7 +1173,8 @@ class S3OptionsMenu(object):
                                     fact="datetime",
                                     aggregate="count"))
                     ),
-                    M("Incident Categories", c="irs", f="icategory", restrict=[ADMIN])(
+                    M("Incident Categories", c="irs", f="icategory",
+                      restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -1180,7 +1182,8 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Facility Types", c="org", f="facility_type", restrict=[ADMIN])(
+                    M("Facility Types", c="org", f="facility_type",
+                      restrict=[ADMIN])(
                         M("New", m="create"),
                         M("List All"),
                     ),

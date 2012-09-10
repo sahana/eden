@@ -638,7 +638,7 @@ def translate():
     """
         Translation controller to enable four major workflows :-
 
-	1) Select modules which require translation. The list of strings
+        1) Select modules which require translation. The list of strings
            belonging to selected modules can be exported in .xls or .po format
 
         2) Upload csv file containing strings with their translations which
@@ -676,7 +676,7 @@ def translate():
 
         opt = request.vars.opt
         if opt == "1":
-            # 1st workflow is selected
+            # Select modules for Translation
             if form.accepts(request.vars, session):
 
                 modlist = []
@@ -795,7 +795,7 @@ def translate():
             output["form"] = form
 
         elif opt == "2":
-            # If 2nd workflow is selected
+            # Upload translated files
             div = DIV()
             div.append(BR())
             div.append(T("Note: Make sure that all the text cells are quoted in the csv file before uploading"))
@@ -804,10 +804,9 @@ def translate():
             output["form"] = form
 
         elif opt == "3":
-            # If 3rd workflow is selected
+            # View Translation Percentage
             if form.accepts(request.vars, session):
-
-                # Retreiving the translation percentage for each module
+                # Retrieve the translation percentage for each module
                 code = form.request_vars.code
                 S = TranslateReportStatus()
 
@@ -825,10 +824,10 @@ def translate():
                 table = TABLE(_class="translation_module_table")
                 table.append(BR())
 
-                # Setting number of columns in the table
+                # Set number of columns in the table
                 NO_OF_COLUMNS = 3
 
-                # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
+                # Display "NO_OF_COLUMNS" modules per row so as to utilize the page completely
                 num = 0
                 max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
 
@@ -842,7 +841,7 @@ def translate():
                     num += 1
                     table.append(row)
 
-                # Adding the table to output to display it
+                # Add the table to output to display it
                 div = DIV()
                 div.append(table)
                 div.append(BR())
@@ -854,7 +853,7 @@ def translate():
                 s3.has_required = False
 
             else:
-                # Display the form for 3rd workflow
+                # Display the form to view translated percentage
                 A = TranslateAPI()
                 langlist = A.get_langcodes()
                 langlist.sort()
@@ -876,16 +875,14 @@ def translate():
                 div.append(BR())
                 div.append(INPUT(_type="submit", _value=T("Submit")))
                 form.append(div)
-                # Adding the custom form to the output
+                # Add the custom form to the output
                 output["title"] = T("Select the language file")
                 output["form"] = form
 
         elif opt == "4":
-
-            # If 4th workflow is selected
+            # Add strings manually
             if form.accepts(request.vars, session):
-
-                # Retreiving strings from the uploaded file
+                # Retrieve strings from the uploaded file
                 f = request.vars.upload.file
                 strings = []
                 R = TranslateReadFiles()
