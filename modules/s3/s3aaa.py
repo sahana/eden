@@ -1460,168 +1460,175 @@ class AuthS3(Auth):
             Otherwise, a new person record is created, and a new email
             contact record with the email address from the user record
             is registered for that person.
-
-            @ToDo: MH: Under what circumstances will this return a list of person_ids?
         """
 
         db = current.db
         s3db = current.s3db
+
         utable = self.settings.table_user
-        uttable = s3db.auth_user_temp
+
+        ttable = s3db.auth_user_temp
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
         atable = s3db.pr_address
         etable = s3db.pr_pentity
-        ttable = s3db.sit_trackable
         gtable = s3db.gis_config
-
         ltable = s3db.pr_person_user
 
-        # Find the pe_id of the user's organisation
-        # for the person's owned_by_entity
+        # Organisation becomes the owner entity of the person record
         if organisation_id:
-            otable = s3db.org_organisation
-            query = (otable.id == organisation_id)
-            org = db(query).select(otable.pe_id,
-                                   limitby=(0, 1)).first()
-            if org:
-                owned_by_entity = org.pe_id
-            else:
-                owned_by_entity = None
+            owner_entity = s3db.pr_get_pe_id("org_organisation",
+                                             organisation_id)
         else:
-            owned_by_entity = None
+            owner_entity = None
 
         left = [ltable.on(ltable.user_id == utable.id),
                 ptable.on(ptable.pe_id == ltable.pe_id),
-                uttable.on(utable.id == uttable.user_id)]
+                ttable.on(utable.id == ttable.user_id)]
+
         if user is not None:
-            # @ToDo: MH: When is user ever a list/tuple?
             if not isinstance(user, (list, tuple)):
                 user = [user]
             user_ids = [u.id for u in user]
-            query = ( utable.id.belongs(user_ids) )
+            query = (utable.id.belongs(user_ids))
         else:
             query = (utable.id != None)
+
         rows = db(query).select(utable.id,
-                                 utable.first_name,
-                                 utable.last_name,
-                                 utable.email,
-                                 ltable.pe_id,
-                                 ptable.id,
-                                 ptable.first_name,
-                                 ptable.last_name,
-                                 uttable.mobile,
-                                 uttable.image,
-                                 left=left, distinct=True)
+                                utable.first_name,
+                                utable.last_name,
+                                utable.email,
+                                ltable.pe_id,
+                                ptable.id,
+                                ptable.first_name,
+                                ptable.last_name,
+                                ttable.mobile,
+                                ttable.image,
+                                left=left, distinct=True)
 
         person_ids = [] # Collect the person IDs
+
         for row in rows:
 
-            person = row.pr_person
-            person_id = person.id
-            pe_id = row.pr_person_user.pe_id
-            user = row[utable._tablename]
-            tuser = row.auth_user_temp
+            # The user record
+            user = row.auth_user
 
-            if person_id is not None:
-                # There is an existing person record for the user
+            # The person record
+            person = row.pr_person
+
+            # The link table record
+            link = row.pr_person_user
+
+            pe_id = link.pe_id
+            if pe_id is not None:
+                # There is an existing person record linked to this user account
+                # => update it
+
+                # Update the person names if changed
                 if user.first_name != person.first_name or \
                    user.last_name != person.first_name:
-                    # Update the person record if the user details have changed
-                    query = (ptable.id == person_id)
+
+                    query = (ptable.pe_id == pe_id)
                     db(query).update(first_name = user.first_name,
                                      last_name = user.last_name)
 
-                # Update the person record email
-                query = (ctable.pe_id == pe_id ) & \
-                        (ctable.contact_method == "EMAIL")
-                db(query).update(value = user.email,
-                                 )
+                # Add the user's email address to the person record if missing
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "EMAIL") & \
+                        (ctable.value == user.email)
+                item = db(query).select(limitby=(0, 1)).first()
+                if item is None:
+                    ctable.insert(pe_id = pe_id,
+                                  contact_method = "EMAIL",
+                                  value = user.email)
 
                 #@ToDo: Also update mobile phone? profile image? Groups?
 
                 person_ids.append(person.id)
-                continue
-
-            if "email" not in user:
-                # Cannot find a matching person record without an email
-                continue
-
-            owner = Storage(owned_by_user=user.id,
-                            owned_by_entity=owned_by_entity)
-
-            # Try to find a matching person record
-            first_name = user.first_name
-            last_name = user.last_name
-            email = user.email.lower()
-            query = (ptable.first_name == first_name) & \
-                    (ptable.last_name == last_name) & \
-                    (ctable.pe_id == ptable.pe_id) & \
-                    (ctable.contact_method == "EMAIL") & \
-                    (ctable.value.lower() == email)
-            person = db(query).select(ptable.id,
-                                      ptable.pe_id,
-                                      limitby=(0, 1)).first()
-
-            if person and \
-               not db(ltable.pe_id == person.pe_id).count():
-                # Match found, and it isn't linked to another user account
-
-                # Insert a link
-                ltable.insert(user_id=user.id, pe_id=person.pe_id)
-
-                # Assign ownership of the Person record
-                person.update_record(**owner)
-
-                # Assign ownership of the Contact record(s)
-                query = (ctable.pe_id == person.pe_id)
-                db(query).update(**owner)
-
-                # Assign ownership of the Address record(s)
-                query = (atable.pe_id == person.pe_id)
-                db(query).update(**owner)
-
-                # Assign ownership of the Config record(s)
-                query = (gtable.pe_id == person.pe_id)
-                db(query).update(**owner)
-
-                # Set pe_id if this is the current user
-                if self.user and self.user.id == user.id:
-                    self.user.pe_id = person.pe_id
-
-                person_ids.append(person.id)
 
             else:
-                # Create a PE
-                pe_id = etable.insert(instance_type="pr_person",
-                                      deleted=False)
-                # Create a TE
-                track_id = ttable.insert(instance_type="pr_person",
-                                         deleted=False)
-                if pe_id:
+                # This user account isn't yet linked to a person record
+                # => try to find a person record with same first name,
+                # last name and email address
 
-                    # Create a new person record
+                first_name = user.first_name
+                last_name = user.last_name
+                email = user.email.lower()
+                if email:
+                    query = (ptable.first_name == first_name) & \
+                            (ptable.last_name == last_name) & \
+                            (ctable.pe_id == ptable.pe_id) & \
+                            (ctable.contact_method == "EMAIL") & \
+                            (ctable.value.lower() == email)
+                    person = db(query).select(ptable.id,
+                                              ptable.pe_id,
+                                              limitby=(0, 1)).first()
+                else:
+                    # Can't find a match without an email address
+                    person = None
+
+                # Default record owner/realm
+                owner = Storage(owned_by_user=user.id,
+                                owned_by_entity=owner_entity)
+
+                if person:
+                    query = ltable.pe_id == person.pe_id
+                    other = db(query).select(ltable.id, limitby=(0, 1)).first()
+                if person and not other:
+                    # Match found, and it isn't linked to another user account
+                    # => link to this person record (+update it)
+
+                    pe_id = person.pe_id
+
+                    # Insert a link
+                    ltable.insert(user_id=user.id, pe_id=pe_id)
+
+                    # Assign ownership of the Person record
+                    person.update_record(**owner)
+
+                    # Assign ownership of the Contact record(s)
+                    query = (ctable.pe_id == pe_id)
+                    db(query).update(**owner)
+
+                    # Assign ownership of the Address record(s)
+                    query = (atable.pe_id == pe_id)
+                    db(query).update(**owner)
+
+                    # Assign ownership of the Config record(s)
+                    query = (gtable.pe_id == pe_id)
+                    db(query).update(**owner)
+
+                    # Set pe_id if this is the current user
+                    if self.user and self.user.id == user.id:
+                        self.user.pe_id = pe_id
+
+                    person_ids.append(person.id)
+
+                else:
+                    # There is no match or it is linked to another user account
+                    # => create a new person record (+link to it)
+
                     if current.request.vars.get("opt_in", None):
                         opt_in = current.deployment_settings.get_auth_opt_in_team_list()
                     else:
-                        opt_in = ""
-                    new_id = ptable.insert(pe_id = pe_id,
-                                           track_id = track_id,
-                                           first_name = first_name,
-                                           last_name = last_name,
-                                           opt_in = opt_in,
-                                           modified_by = user.id,
-                                           **owner)
+                        opt_in = []
 
-                    if new_id:
+                    # Create a new person record
+                    person_id = ptable.insert(first_name = first_name,
+                                              last_name = last_name,
+                                              opt_in = opt_in,
+                                              modified_by = user.id,
+                                              **owner)
+                    if person_id:
+
+                        # Update the super-entities
+                        person = Storage(id=person_id)
+                        s3db.update_super(ptable, person)
+
+                        pe_id = person.pe_id
 
                         # Insert a link
                         ltable.insert(user_id=user.id, pe_id=pe_id)
-
-                        # Register the new person UUID in the PE and TE
-                        person_uuid = ptable[new_id].uuid
-                        db(etable.id == pe_id).update(uuid=person_uuid)
-                        db(ttable.id == track_id).update(uuid=person_uuid)
 
                         # Add the email to pr_contact
                         ctable.insert(pe_id = pe_id,
@@ -1630,49 +1637,59 @@ class AuthS3(Auth):
                                       value = email,
                                       **owner)
 
-                        person_ids.append(new_id)
-
                         # Add the user to each team if they have chosen to opt-in
                         g_table = s3db["pr_group"]
-                        gm_table = s3db["pr_group_membership"]
+                        m_table = s3db["pr_group_membership"]
+
                         for team in opt_in:
                             query = (g_table.name == team)
                             team_rec = db(query).select(g_table.id,
                                                         limitby=(0, 1)).first()
+
                             # if the team doesn't exist then add it
                             if team_rec == None:
-                                team_id = g_table.insert(name = team, group_type = 5)
+                                team_id = g_table.insert(name = team,
+                                                         group_type = 5)
                             else:
                                 team_id = team_rec.id
                             gm_table.insert(group_id = team_id,
-                                            person_id = new_id)
+                                            person_id = person_id)
 
-            # Add the mobile to pr_contact
-            mobile = tuser.mobile
-            if mobile:
-                ctable.insert(
-                        pe_id = pe_id,
-                        contact_method = "SMS",
-                        priority = 2,
-                        value = mobile,
-                        **owner)
+                        person_ids.append(person_id)
 
-            # Insert the profile picture
-            image = tuser.image
-            if image: # and hasattr(image, "file"):
-                itable = s3db.pr_image
-                #field = itable.image
-                url = URL(c="default", f="download", args=image)
-                fields = dict(pe_id=pe_id,
-                              profile=True,
-                              image=image,
-                              url = url,
-                              description=current.T("Profile Picture"))
-                itable.insert(**fields)
+                    else:
 
-            # Set pe_id if this is the current user
-            if self.user and self.user.id == user.id:
-                self.user.pe_id = pe_id
+                        pe_id = None
+
+                if pe_id is not None:
+                    # Insert data from the temporary user data record
+                    tuser = row.auth_user_temp
+
+                    # Add the mobile phone number from the temporary
+                    # user data into pr_contact
+                    mobile = tuser.mobile
+                    if mobile:
+                        ctable.insert(pe_id = pe_id,
+                                      contact_method = "SMS",
+                                      priority = 2,
+                                      value = mobile,
+                                      **owner)
+
+                    # Insert the profile picture from the temporary
+                    # user data into pr_image
+                    image = tuser.image
+                    if image: # and hasattr(image, "file"):
+                        itable = s3db.pr_image
+                        url = URL(c="default", f="download", args=image)
+                        itable.insert(pe_id=pe_id,
+                                      profile=True,
+                                      image=image,
+                                      url = url,
+                                      description=current.T("Profile Picture"))
+
+                    # Set pe_id if this is the current user
+                    if self.user and self.user.id == user.id:
+                        self.user.pe_id = pe_id
 
         if len(person_ids) == 1:
             return person_ids[0]
