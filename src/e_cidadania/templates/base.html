@@ -33,9 +33,9 @@
 	</head>
 	<body>
 
-        {% get_current_language as LANGUAGE_CODE %}
+        {#} {% get_current_language as LANGUAGE_CODE %} {#}
     
-        {% cache 500 base_cache_block_1 LANGUAGE_CODE request.user.username %}
+        {#} {% cache 500 base_cache_block_1 LANGUAGE_CODE request.user.username %} {#}
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
@@ -46,7 +46,7 @@
                 </div>
             </div>
         </div>
-        {% endcache %}
+        {#} {% endcache %} {#}
         
         {% if messages %}
             {% for message in messages %}

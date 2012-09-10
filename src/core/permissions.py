@@ -18,7 +18,7 @@
 # along with e-cidadania. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This file contains various checks for the permission system integrated
+This file contains various chec functions for the permission system integrated
 inside the spaces module and also some checks for the django auth
 system.
 """
