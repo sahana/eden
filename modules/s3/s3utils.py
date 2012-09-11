@@ -2734,8 +2734,7 @@ class S3DataTable(object):
             @param vars: A list of variables sent from the dataTable
         """
 
-        # @todo: does not sort properly in option fields nor
-        #        FK references, see S3CRUD.ssp_orderby
+        # @todo: does not sort properly in option fields nor FK references
         if not vars.iSortingCols:
             return (False, "")
 
@@ -2750,8 +2749,7 @@ class S3DataTable(object):
                 orderby = f
             else:
                 orderby |= f
-        # @todo: does not search properly in option fields nor
-        #        FK references, see S3CRUD.ssp_filter
+        # @todo: does not search properly in option fields nor FK references
         words = vars.sSearch
         if not words:
             return (orderby, "")

@@ -643,6 +643,7 @@ class S3Resource(object):
         DELETED = manager.DELETED
 
         s3db = current.s3db
+        define_resource = s3db.resource
         get_config = s3db.get_config
         delete_super = s3db.delete_super
 
@@ -739,7 +740,7 @@ class S3Resource(object):
                     rtable = db[tn]
                     query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
-                        rresource = S3Resource(tn, filter=query)
+                        rresource = define_resource(tn, filter=query)
                         rondelete = get_config(tn, "ondelete")
                         rresource.delete(ondelete=rondelete, cascade=True)
                         if manager.error:
@@ -781,7 +782,8 @@ class S3Resource(object):
                                                          limitby=(0, 1)).first()
                             if not remaining:
                                 query = linked.table[fkey] == this[rkey]
-                                linked = S3Resource(linked.table, filter=query)
+                                linked = define_resource(linked.table,
+                                                         filter=query)
                                 ondelete = get_config(linked.tablename, "ondelete")
                                 linked.delete(ondelete=ondelete, cascade=True)
 
@@ -923,6 +925,7 @@ class S3Resource(object):
 
         manager = current.manager
 
+        define_resource = s3db.resource
         get_session = manager.get_session
         clear_session = manager.clear_session
         DELETED = manager.DELETED
@@ -976,7 +979,7 @@ class S3Resource(object):
                     query = (rfield == row[pkey])
                     # Ignore RESTRICTs => reject anyway
                     if rfield.ondelete in ("CASCADE", "RESTRICT"):
-                        rresource = S3Resource(tn, filter=query)
+                        rresource = define_resource(tn, filter=query)
                         rresource.reject(cascade=True)
                         if manager.error:
                             break
@@ -1261,6 +1264,242 @@ class S3Resource(object):
         # Keep the rows for later access
         self._rows = rows
         return rows
+
+    ## -------------------------------------------------------------------------
+    #def sqltable(self,
+                 #fields=None,
+                 #start=0,
+                 #limit=None,
+                 #left=None,
+                 #orderby=None,
+                 #distinct=False,
+                 #linkto=None,
+                 #download_url=None,
+                 #no_ids=False,
+                 #as_rows=False,
+                 #as_page=False,
+                 #as_list=False,
+                 #format=None):
+        #"""
+            #DRY helper function for SQLTABLEs in REST and CRUD,
+            #retained for backward-compatiblity
+
+            #@param fields: list of field selectors
+            #@param start: index of the first record
+            #@param limit: maximum number of records
+            #@param left: left outer joins
+            #@param orderby: orderby for the query
+            #@param distinct: distinct for the query
+            #@param linkto: hook to link record IDs
+            #@param download_url: the default download URL of the application
+            #@param as_rows: return bare Rows, no representations
+            #@param as_page: return the list as JSON page
+            #@param as_list: return the list as Python list
+            #@param format: the representation format
+
+            #@status: deprecated, use select(), datatable() or json() instead
+        #"""
+
+        #db = current.db
+        #table = self.table
+
+        ## Get the query and filters
+        #query = self.get_query()
+        #vfltr = self.get_filter()
+        #rfilter = self.rfilter
+
+        ## Handle distinct-attribute (must respect rfilter.distinct)
+        #distinct = self.rfilter.distinct | distinct
+
+        ## Resolve the fields
+        #if fields is None:
+            #fields = [f.name for f in self.readable_fields()]
+        #if table._id.name not in fields and not no_ids:
+            #fields.insert(0, table._id.name)
+        #ffields = rfilter.get_fields()
+        #for f in ffields:
+            #if f not in fields:
+                #fields.append(f)
+        #lfields, joins, ljoins, d = self.resolve_selectors(fields)
+
+        #distinct = distinct | d
+        #attributes = dict(distinct=distinct)
+
+        ## Left joins
+        #left_joins = left
+        #if left_joins is None:
+            #left_joins = []
+        #elif not isinstance(left, list):
+            #left_joins = [left_joins]
+        #joined_tables = [str(join.first) for join in left_joins]
+
+        ## Add the left joins from the field query
+        #ljoins = [j for tablename in ljoins for j in ljoins[tablename]]
+        #for join in ljoins:
+            #tn = str(join.first)
+            #if tn not in joined_tables:
+                #joined_tables.append(str(join.first))
+                #left_joins.append(join)
+
+        ## Add the left joins from the filter
+        #fjoins = rfilter.get_left_joins()
+        #for join in fjoins:
+            #tn = str(join.first)
+            #if tn not in joined_tables:
+                #joined_tables.append(str(join.first))
+                #left_joins.append(join)
+
+        ## Sort left joins and add to attributes
+        #if left_joins:
+            #try:
+                #left_joins.sort(self.sortleft)
+            #except:
+                #pass
+            #attributes.update(left=left_joins)
+
+        ## Joins
+        #for join in joins.values():
+            #if str(join) not in str(query):
+                #query &= join
+
+        ## Orderby
+        #if orderby is not None:
+            #attributes.update(orderby=orderby)
+
+        ## Limitby
+        #if vfltr is None:
+            #limitby = self.limitby(start=start, limit=limit)
+            #if limitby is not None:
+                #attributes.update(limitby=limitby)
+        #else:
+            ## Retrieve all records when filtering for virtual fields
+            ## => apply start/limit in vfltr instead
+            #limitby = None
+
+        ## Column names and headers
+        #colnames = [f.colname for f in lfields]
+        #headers = dict(map(lambda f: (f.colname, f.label), lfields))
+
+        ## Fields in the query
+        #load = current.s3db.table
+        #qfields = []
+        #qtables = []
+        #for f in lfields:
+            #field = f.field
+            #tname = f.tname
+            #if field is None:
+                #continue
+            #qtable = load(tname)
+            #if qtable is None:
+                #continue
+            #if tname not in qtables:
+                ## Make sure the primary key of the table this field
+                ## belongs to is included in the SELECT
+                #qtables.append(tname)
+                #pkey = qtable._id
+                #qfields.append(pkey)
+                #if str(field) == str(pkey):
+                    #continue
+            #qfields.append(field)
+
+        ## Add orderby fields which are not in qfields
+        ## @todo: this could need some cleanup/optimization
+        #if distinct and orderby is not None:
+            #qf = [str(f) for f in qfields]
+            #if isinstance(orderby, str):
+                #of = orderby.split(",")
+            #elif not isinstance(orderby, (list, tuple)):
+                #of = [orderby]
+            #else:
+                #of = orderby
+            #for e in of:
+                #if isinstance(e, Field) and str(e) not in qf:
+                    #qfields.append(e)
+                    #qf.append(str(e))
+                #elif isinstance(e, str) and e:
+                    #fn = e.strip().split()[0].split(".", 1)
+                    #tn, fn = ([table._tablename] + fn)[-2:]
+                    #try:
+                        #t = db[tn]
+                        #f = t[fn]
+                    #except:
+                        #continue
+                    #if str(f) not in qf:
+                        #qfields.append(f)
+                        #qf.append(str(e))
+
+        ## Retrieve the rows
+        #rows = db(query).select(*qfields, **attributes)
+        #if not rows:
+            #return None
+
+        ## Apply virtual filter
+        #if vfltr is not None:
+            #rows = rfilter(rows, start=start, limit=limit)
+
+        #if not rows:
+            ## No records found
+            #return None
+        #if as_rows:
+            ## No rendering - return bare Rows
+            #return rows
+
+        ## Fields to show
+        #row = rows.first()
+        #def __expand(tablename, row, lfields=lfields):
+            #columns = []
+            #if not row:
+                #return columns
+            #for f in lfields:
+                #tname = f.tname
+                #fname = f.fname
+                ## @todo: this is not clean - it could even be Rows
+                #if tname in row and type(row[tname]) is Row:
+                    #columns += __expand(tname, row[tname], lfields=lfields)
+                #elif (tname, fname) not in columns and fname in row:
+                    #columns.append((tname, fname))
+            #return columns
+        #columns = __expand(table._tablename, row)
+        #lfields = [lf for lf in lfields
+                   #if lf.show and (lf.tname, lf.fname) in columns]
+        #colnames = [f.colname for f in lfields]
+        #rows.colnames = colnames
+
+        ## Representation
+        #repr_row = current.manager.represent
+        #def __represent(f, row, columns=columns):
+            #field = f.field
+            #if field is not None:
+                #return repr_row(field, record=row, linkto=linkto)
+            #else:
+                #tname = f.tname
+                #fname = f.fname
+                #if (tname, fname) in columns:
+                    #if tname in row:
+                        #row = row[tname]
+                    #if fname in row:
+                        #return str(row[fname])
+                    #else:
+                        #return None
+                #else:
+                    #return None
+
+        ## Render as...
+        #if as_page:
+            ## ...JSON page (for pagination)
+            #items = [[__represent(f, row) for f in lfields] for row in rows]
+        #elif as_list:
+            ## ...Python list
+            #items = rows.as_list()
+        #else:
+            ## ...SQLTABLE
+            #items = SQLTABLES3(rows,
+                               #headers=headers,
+                               #linkto=linkto,
+                               #upload=download_url,
+                               #_id="list",
+                               #_class="dataTable display")
+        #return items
 
     # -------------------------------------------------------------------------
     # Data Object API
@@ -1687,6 +1926,8 @@ class S3Resource(object):
 
         """
 
+        define_resource = current.s3db.resource
+
         manager = current.manager
         xml = current.xml
 
@@ -1815,9 +2056,9 @@ class S3Resource(object):
             for tablename in load_map:
                 load_list = load_map[tablename]
                 prefix, name = tablename.split("_", 1)
-                rresource = S3Resource(tablename,
-                                       id=load_list,
-                                       components=[])
+                rresource = define_resource(tablename,
+                                            id=load_list,
+                                            components=[])
                 table = rresource.table
                 if manager.s3.base_url:
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
@@ -3289,6 +3530,209 @@ class S3Resource(object):
         return link_id
 
     # -------------------------------------------------------------------------
+    def datatable_filter(self, fields, vars):
+
+        db = current.db
+
+        left = []
+
+        sSearch = "sSearch"
+        iColumns = "iColumns"
+        iSortingCols = "iSortingCols"
+
+        parent = self.parent
+        fkey = self.fkey
+
+        # Skip joins for linked tables
+        if self.linked is not None:
+            skip = self.linked.tablename
+        else:
+            skip = None
+
+        # Resolve the list fields
+        rfields, joins, ljoins, distinct = self.resolve_selectors(fields)
+
+        # FILTER --------------------------------------------------------------
+
+        searchq = None
+
+        if sSearch in vars and iColumns in vars:
+
+            # Build filter
+            search_text = vars[sSearch]
+            search_like = "%%%s%%" % search_text.lower()
+
+            try:
+                numcols = int(vars[iColumns])
+            except:
+                numcols = 0
+
+            flist = []
+            for i in xrange(numcols):
+                try:
+                    field = rfields[i].field
+                except KeyError:
+                    continue
+                if field is None:
+                    continue
+                ftype = str(field.type)
+
+                # For foreign keys, we search through their sortby
+                if ftype[:9] == "reference" and \
+                    hasattr(field, "sortby") and field.sortby:
+                    tn = ftype[10:]
+                    if parent is not None and \
+                       parent.tablename == tn and field.name != fkey:
+                        alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                        ktable = db[tn].with_alias(alias)
+                        ktable._id = ktable[ktable._id.name]
+                        tn = alias
+                    else:
+                        ktable = db[tn]
+                    if tn != skip:
+                        q = (field == ktable._id)
+                        join = [j for j in left if j.first._tablename == tn]
+                        if not join:
+                            left.append(ktable.on(q))
+                    if isinstance(field.sortby, (list, tuple)):
+                        flist.extend([ktable[f] for f in field.sortby
+                                                if f in ktable.fields])
+                    else:
+                        if field.sortby in ktable.fields:
+                            flist.append(ktable[field.sortby])
+
+                # Otherwise, we search through the field itself
+                else:
+                    flist.append(field)
+
+            # Build search query
+            for field in flist:
+                query = None
+
+                ftype = str(field.type)
+
+                # Check whether this type has options
+                if ftype in ("integer", "list:integer", "list:string") or \
+                   ftype.startswith("list:reference") or \
+                   ftype.startswith("reference"):
+
+                    requires = field.requires
+                    if not isinstance(requires, (list, tuple)):
+                        requires = [requires]
+                    if requires:
+                        r = requires[0]
+                        if isinstance(r, IS_EMPTY_OR):
+                            r = r.other
+                        if hasattr(r, "options"):
+                            try:
+                                options = r.options()
+                            except:
+                                continue
+                        else:
+                            continue
+
+                        vlist = []
+                        for (value, text) in options:
+                            if str(text).lower().find(search_text.lower()) != -1:
+                                vlist.append(value)
+                        if vlist:
+                            query = field.belongs(vlist)
+                    else:
+                        continue
+
+                # ...or is string/text
+                elif str(field.type) in ("string", "text"):
+                    query = field.lower().like(search_like)
+
+                if searchq is None and query:
+                    searchq = query
+                elif query:
+                    searchq = searchq | query
+
+            # Append all joins (is this really necessary => rfields joins would be added anyway?)
+            #for j in joins.values():
+                #for q in j:
+                    #if searchq is None:
+                        #searchq = q
+                    #elif str(q) not in str(searchq):
+                        #searchq &= q
+
+        else:
+            searchq = None
+
+        # ORDERBY -------------------------------------------------------------
+
+        orderby = []
+        if iSortingCols in vars:
+
+            # Sorting direction
+            def direction(i):
+                dir = vars["sSortDir_%s" % str(i)]
+                return dir and " %s" % dir or ""
+
+            # Get the fields to order by
+            try:
+                numcols = int(vars[iSortingCols])
+            except:
+                numcols = 0
+            columns = []
+            for i in xrange(numcols):
+                try:
+                    rfield = rfields[int(vars["iSortCol_%s" % i])]
+                except:
+                    columns.append(None)
+                else:
+                    columns.append(rfield.field)
+
+            # Process the orderby-fields
+            for i in xrange(len(columns)):
+                field = columns[i]
+                if field is None:
+                    continue
+                ftype = str(field.type)
+
+                # Foreign keys with sortby will be ordered by sortby
+                if ftype[:9] == "reference" and \
+                   hasattr(field, "sortby") and field.sortby:
+
+                    # Get the key table
+                    tn = ftype[10:]
+                    if parent is not None and \
+                       parent.tablename == tn and field.name != fkey:
+                        alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
+                        ktable = db[tn].with_alias(alias)
+                        ktable._id = ktable[ktable._id.name]
+                        tn = alias
+                    else:
+                        ktable = db[tn]
+
+                    # Add left join (except for linked table)
+                    if tn != skip:
+                        q = (field == ktable._id)
+                        join = [j for j in left if j.first._tablename == tn]
+                        if not join:
+                            left.append(ktable.on(q))
+
+                    # Construct orderby from sortby
+                    if not isinstance(field.sortby, (list, tuple)):
+                        orderby.append("%s.%s%s" % (tn, field.sortby, direction(i)))
+                    else:
+                        orderby.append(", ".join(["%s.%s%s" %
+                                                  (tn, fn, direction(i))
+                                                  for fn in field.sortby]))
+
+                # otherwise, order by the field itself
+                else:
+                    orderby.append("%s%s" % (field, direction(i)))
+
+        if orderby:
+            orderby = ", ".join(orderby)
+        else:
+            orderby = None
+
+        return (searchq, orderby, left)
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def sortleft(x, y):
         """ Sort left joins after their dependency """
@@ -3542,24 +3986,11 @@ class S3ResourceField(object):
         if left is None:
             left = Storage()
 
-        if selector in resource.table.fields:
-            table = resource.table
-            field = table[selector]
-            return Storage(selector = selector,
-                           tname = table._tablename,
-                           fname = selector,
-                           colname = str(field),
-                           field = field,
-                           join = join,
-                           left = left,
-                           distinct = distinct)
-
         if "$" in selector:
             selector, tail = selector.split("$", 1)
             distinct = True
         else:
             tail = None
-
         if "." in selector:
             tn, fn = selector.split(".", 1)
         else:
@@ -3731,12 +4162,10 @@ class S3ResourceField(object):
                 left[ktablename] = [ktable.on(j)]
 
             # Resolve the tail
-            kresource = S3Resource(ktablename, vars=[])
-            field = S3ResourceField.resolve(kresource, tail,
-                                            join=join,
-                                            left=left)
-            field["selector"] = original
-            field["distinct"] = field["distinct"] or distinct
+            kresource = s3db.resource(ktablename, vars=[])
+            field = S3ResourceField.resolve(kresource, tail, join=join, left=left)
+            field.update(selector=original,
+                         distinct=field.distinct or distinct)
             return field
 
         else:
@@ -5825,7 +6254,7 @@ class S3RecordMerger(object):
 
         if replaced_by is not None:
             replaced_by = {str(id): replaced_by}
-        resource = S3Resource(table, id=id)
+        resource = s3db.resource(table, id=id)
         ondelete = s3db.get_config(resource.tablename, "ondelete")
         success = resource.delete(ondelete=ondelete,
                                   replaced_by=replaced_by,
@@ -5968,6 +6397,7 @@ class S3RecordMerger(object):
         fieldname = self.fieldname
 
         # Update all references
+        define_resource = s3db.resource
         for referee in referenced_by:
 
             if isinstance(referee, Field):
@@ -6022,7 +6452,7 @@ class S3RecordMerger(object):
                         # Two records => merge them
                         osub_id = osub[component.table._id]
                         dsub_id = dsub[component.table._id]
-                        cresource = S3Resource(component.tablename)
+                        cresource = define_resource(component.tablename)
                         cresource.merge(osub_id, dsub_id,
                                         replace=replace,
                                         update=update,
@@ -6069,7 +6499,7 @@ class S3RecordMerger(object):
                 skey_o = original[superkey]
                 skey_d = duplicate[superkey]
                 # Merge the super-records
-                sresource = S3Resource(entity)
+                sresource = define_resource(entity)
                 sresource.merge(skey_o, skey_d,
                                 replace=replace,
                                 update=update,

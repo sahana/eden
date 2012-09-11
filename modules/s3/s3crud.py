@@ -895,9 +895,7 @@ class S3CRUD(S3Method):
                     vars.update(iSortingCols="1",
                                 iSortCol_0=scol,
                                 sSortDir_0="asc")
-                    orderby = self.ssp_orderby(resource,
-                                               list_fields,
-                                               left=left)
+                    q, orderby, left = resource.datatable_filter(list_fields, vars)
                     del vars["iSortingCols"]
                     del vars["iSortCol_0"]
                     del vars["sSortDir_0"]
@@ -955,19 +953,13 @@ class S3CRUD(S3Method):
             # Count the rows
             totalrows = displayrows = resource.count()
 
-            # Apply data table filter (searchbox)
-            if vars.sSearch:
-                squery = self.ssp_filter(table,
-                                         fields=list_fields,
-                                         left=left)
-                if squery is not None:
-                    resource.add_filter(squery)
-                    displayrows = resource.count(left=left,
-                                                 distinct=distinct)
+            # Apply datatable filters
+            searchq, orderby, left = resource.datatable_filter(list_fields, vars)
+            if searchq is not None:
+                resource.add_filter(searchq)
+                displayrows = resource.count(left=left, distinct=True)
 
-            # Apply datatable sorting
-            if vars.iSortingCols:
-                orderby = self.ssp_orderby(resource, list_fields, left=left)
+            # Orderby fallbacks
             if r.method == "search" and not orderby:
                 orderby = fields[0]
             if orderby is None:
@@ -1819,175 +1811,6 @@ class S3CRUD(S3Method):
                         return str(URL(r=r, c=c, f=f,
                                        args=args))
         return list_linkto
-
-    # -------------------------------------------------------------------------
-    def ssp_filter(self, table, fields, left=[]):
-        """
-            Convert the SSPag GET vars into a filter query
-
-            @param table: the table
-            @param fields: list of field names as displayed in the
-                           list view (same order!)
-            @param left: list of left joins
-        """
-
-        db = current.db
-        vars = self.request.get_vars
-        resource = self.resource
-
-        if resource.linked is not None:
-            skip = [resource.linked.tablename]
-        else:
-            skip = []
-        parent = resource.parent
-        fkey = resource.fkey
-
-        context = str(vars.sSearch).lower()
-        columns = int(vars.iColumns)
-
-        wildcard = "%%%s%%" % context
-
-        # Retrieve the list of search fields
-        lfields, joins, ljoins, distinct = resource.resolve_selectors(fields)
-        flist = []
-        for i in xrange(0, columns):
-            field = lfields[i].field
-            if not field:
-                continue
-            fieldtype = str(field.type)
-            if fieldtype.startswith("reference") and \
-               hasattr(field, "sortby") and field.sortby:
-                tn = fieldtype[10:]
-                if parent is not None and \
-                   parent.tablename == tn and field.name != fkey:
-                    alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
-                    ktable = db[tn].with_alias(alias)
-                    ktable._id = ktable[ktable._id.name]
-                    tn = alias
-                else:
-                    ktable = db[tn]
-                if tn not in skip:
-                    q = (field == ktable._id)
-                    join = [j for j in left if j.first._tablename == tn]
-                    if not join:
-                        left.append(ktable.on(q))
-                if isinstance(field.sortby, (list, tuple)):
-                    flist.extend([ktable[f] for f in field.sortby
-                                            if f in ktable.fields])
-                else:
-                    if field.sortby in ktable.fields:
-                        flist.append(ktable[field.sortby])
-            else:
-                flist.append(field)
-
-        # Build search query
-        searchq = None
-        for field in flist:
-            query = None
-            ftype = str(field.type)
-            if ftype in ("integer", "list:integer", "list:string") or \
-               ftype.startswith("list:reference") or \
-               ftype.startswith("reference"):
-                requires = field.requires
-                if not isinstance(requires, (list, tuple)):
-                    requires = [requires]
-                if requires:
-                    r = requires[0]
-                    if isinstance(r, IS_EMPTY_OR):
-                        r = r.other
-                    try:
-                        options = r.options()
-                    except:
-                        continue
-                    vlist = []
-                    for (value, text) in options:
-                        if str(text).lower().find(context) != -1:
-                            vlist.append(value)
-                    if vlist:
-                        query = field.belongs(vlist)
-                else:
-                    continue
-            elif str(field.type) in ("string", "text"):
-                query = field.lower().like(wildcard)
-            if searchq is None and query:
-                searchq = query
-            elif query:
-                searchq = searchq | query
-
-        for j in joins.values():
-            for q in j:
-                if searchq is None:
-                    searchq = q
-                elif str(q) not in str(searchq):
-                    searchq &= q
-
-        return searchq
-
-    # -------------------------------------------------------------------------
-    def ssp_orderby(self, resource, fields, left=[]):
-        """
-            Convert the SSPag GET vars into a sorting query
-
-            @param table: the table
-            @param fields: list of field names as displayed
-                           in the list view (same order!)
-            @param left: list of left joins
-        """
-
-        db = current.db
-        vars = self.request.get_vars
-        table = resource.table
-        tablename = table._tablename
-
-        if resource.linked is not None:
-            skip = [resource.linked.tablename]
-        else:
-            skip = []
-        parent = resource.parent
-        fkey = resource.fkey
-
-        iSortingCols = int(vars["iSortingCols"])
-
-        def direction(i):
-            dir = vars["sSortDir_%s" % str(i)]
-            return dir and " %s" % dir or ""
-
-        orderby = []
-
-        lfields, joins, ljoins, distinct = resource.resolve_selectors(fields)
-        columns = [lfields[int(vars["iSortCol_%s" % str(i)])].field
-                   for i in xrange(iSortingCols)]
-        for i in xrange(len(columns)):
-            field = columns[i]
-            if not field:
-                continue
-            fieldtype = str(field.type)
-            if fieldtype.startswith("reference") and \
-               hasattr(field, "sortby") and field.sortby:
-                tn = fieldtype[10:]
-                if parent is not None and \
-                   parent.tablename == tn and field.name != fkey:
-                    alias = "%s_%s_%s" % (parent.prefix, "linked", parent.name)
-                    ktable = db[tn].with_alias(alias)
-                    ktable._id = ktable[ktable._id.name]
-                    tn = alias
-                else:
-                    ktable = db[tn]
-                if tn not in skip:
-                    q = (field == ktable._id)
-                    join = [j for j in left if j.first._tablename == tn]
-                    if not join:
-                        left.append(ktable.on(q))
-                if not isinstance(field.sortby, (list, tuple)):
-                    orderby.append("%s.%s%s" % (tn, field.sortby, direction(i)))
-                else:
-                    orderby.append(", ".join(["%s.%s%s" %
-                                              (tn, fn, direction(i))
-                                              for fn in field.sortby]))
-            else:
-                orderby.append("%s%s" % (field, direction(i)))
-
-        return ", ".join(orderby)
 
 # =============================================================================
 class S3ApproveRecords(S3CRUD):
