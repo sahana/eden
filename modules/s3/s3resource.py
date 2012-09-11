@@ -3531,6 +3531,16 @@ class S3Resource(object):
 
     # -------------------------------------------------------------------------
     def datatable_filter(self, fields, vars):
+        """
+            Parse datatable search/sort vars into a tuple of
+            query, orderby and left joins
+
+            @param fields: list of field selectors representing
+                           the order of fields in the datatable (list_fields)
+            @param vars: the datatable GET vars
+
+            @returns: tuple of (query, orderby, left joins)
+        """
 
         db = current.db
 
@@ -3555,7 +3565,6 @@ class S3Resource(object):
         # FILTER --------------------------------------------------------------
 
         searchq = None
-
         if sSearch in vars and iColumns in vars:
 
             # Build filter
@@ -3649,7 +3658,8 @@ class S3Resource(object):
                 elif query:
                     searchq = searchq | query
 
-            # Append all joins (is this really necessary => rfields joins would be added anyway?)
+            # Append all joins
+            # (is this really necessary => rfields joins would be added anyway?)
             #for j in joins.values():
                 #for q in j:
                     #if searchq is None:
