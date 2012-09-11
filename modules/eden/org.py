@@ -77,6 +77,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation",
              "org_organisation_id",
              "org_organisation_branch",
+             "org_organisation_user",
              ]
 
     def model(self):
