@@ -2755,25 +2755,24 @@ class S3ImportJob():
         references = element.findall("reference")
         for reference in references:
             field = reference.get(ATTRIBUTE.field, None)
+
             # Ignore references without valid field-attribute
             if not field or field not in fields:
                 continue
+
             # Find the key table
-            multiple = False
-            fieldtype = str(table[field].type)
-            if fieldtype.startswith("reference"):
-                ktablename = fieldtype[10:]
-            elif fieldtype.startswith("list:reference"):
-                ktablename = fieldtype[15:]
-                multiple = True
-            else:
-                # ignore if the field is not a reference type
-                continue
+            ktablename, key, multiple = s3_get_foreign_key(table[field])
+            if not ktablename:
+                if table._tablename == "auth_user" and \
+                   field == "organisation_id":
+                    ktablename = "org_organisation"
+                else:
+                    continue
             try:
-                ktable = s3db[ktablename]
+                ktable = current.s3db[ktablename]
             except:
-                # Invalid tablename - skip
                 continue
+
             tablename = reference.get(ATTRIBUTE.resource, None)
             # Ignore references to tables without UID field:
             if UID not in ktable.fields:
