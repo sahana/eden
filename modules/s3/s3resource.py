@@ -581,11 +581,9 @@ class S3Resource(object):
 
         # Retrieve the rows
         rows = db(query).select(*qfields, **attributes)
-        if not rows:
-            return None
 
-        # Apply virtual filter
-        if vfltr is not None:
+        # Apply virtual fields filter
+        if rows and vfltr is not None:
             rows = rfilter(rows, start=start, limit=limit)
 
         return rows
