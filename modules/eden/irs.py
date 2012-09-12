@@ -963,7 +963,7 @@ S3.timeline.now="''', now.isoformat()
                 def count_items(job, import_count = import_count):
                     if job.tablename == "irs_ireport":
                         import_count[0] += 1
-                self.configure("irs_report", deduplicate=count_items)
+                current.s3db.configure("irs_report", deduplicate=count_items)
 
                 ireports = r.resource
                 ushahidi = form.vars.url
@@ -986,10 +986,11 @@ S3.timeline.now="''', now.isoformat()
                         if success:
                             count = import_count[0]
                             if count:
-                                response.flash = "%s %s" % (import_count[0],
-                                                            T("reports successfully imported."))
+                                response.confirmation = "%s %s" % \
+                                    (import_count[0],
+                                     T("reports successfully imported."))
                             else:
-                                response.flash = T("No reports available.")
+                                response.information = T("No reports available.")
                         else:
                             response.error = self.error
 
