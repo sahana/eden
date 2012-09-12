@@ -225,8 +225,9 @@ class S3Importer(S3CRUD):
         self.xslt_extension = r.XSLT_EXTENSION
 
         # Check authorization
-        authorised = self.permit("create", self.upload_tablename) and \
-                     self.permit("create", self.controller_tablename)
+        permitted = current.auth.s3_has_permission
+        authorised = permitted("create", self.upload_tablename) and \
+                     permitted("create", self.controller_tablename)
         if not authorised:
             if r.method is not None:
                 r.unauthorised()

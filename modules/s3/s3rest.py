@@ -1784,7 +1784,6 @@ class S3Method(object):
         manager = current.manager
 
         # Settings
-        self.permit = manager.permit
         self.download_url = manager.s3.download_url
 
         # Init
@@ -1913,7 +1912,10 @@ class S3Method(object):
                                                    mtable, record_id=r.id)
                     if not master_access:
                         # ... or own the master record
-                        master_access = is_owner(mtable, r.id)
+                        mr = r.record
+                        master_access = (mr.owned_by_user is not None or
+                                         mr.owned_by_group is not None) and \
+                                        is_owner(mtable, r.id)
             if not master_access:
                 return False
 

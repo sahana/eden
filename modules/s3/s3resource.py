@@ -93,7 +93,7 @@ class S3Resource(object):
         S3 framework rules.
     """
 
-    def __init__(self, prefix,
+    def __init__(self, table,
                  name=None,
                  id=None,
                  uid=None,
@@ -104,25 +104,49 @@ class S3Resource(object):
                  linktable=None,
                  alias=None,
                  components=None,
-                 include_deleted=False):
+                 include_deleted=False,
+                 approved=True,
+                 unapproved=False):
         """
             Constructor
 
-            @param prefix: prefix of the resource name (=module name)
-            @param name: name of the resource (without prefix)
+            @param table: The table, tablename, a resource
+                          or the prefix of the table name (=module name)
+            @param name: name of the resource (without prefix),
+                         required if "table" is a table name prefix
+
             @param id: record ID (or list of record IDs)
             @param uid: record UID (or list of record UIDs)
-            @param filter: filter query (DAL resources only)
+
+            @param filter: filter query
             @param vars: dictionary of URL query variables
-            @param parent: the parent resource
-            @param linked: the linked resource
-            @param linktable: the link table
-            @param components: component name (or list of component names)
+
+            @param components: list of component aliases
+                               to load for this resource
+
+            @param alias: the alias for this resource (internal use only)
+            @param parent: the parent resource (internal use only)
+            @param linked: the linked resource (internal use only)
+            @param linktable: the link table (internal use only)
+
+            @param include_deleted: include deleted records (used for
+                                    synchronization)
+
+            @param approved: include approved records
+            @param unapproved: include unapproved records
+
+            @note: instead of prefix/name it is also possible to specify
+                   the tablename, i.e. S3Resource("prefix_name") instead
+                   of S3Resource("prefix", "name").
+
+            @note: instead of prefix/name it is also possible to specify
+                   a table or a resource as first parameter.
         """
 
         s3db = current.s3db
+        manager = current.manager
 
-        # Table properties ----------------------------------------------------
+        # Names ---------------------------------------------------------------
 
         self.table = None
         if id is None and \
@@ -130,19 +154,20 @@ class S3Resource(object):
             isinstance(name, str) and name.isdigit()):
             id, name = name, id
         if name is None:
-            if isinstance(prefix, Table):
-                self.table = prefix
-                tablename = prefix._tablename
-            elif isinstance(prefix, S3Resource):
-                self.table = prefix.table
-                tablename = prefix.tablename
+            if isinstance(table, Table):
+                self.table = table
+                tablename = table._tablename
+            elif isinstance(table, S3Resource):
+                self.table = table.table
+                tablename = table.tablename
             else:
-                tablename = prefix
+                tablename = table
             if "_" in tablename:
                 prefix, name = tablename.split("_", 1)
             else:
                 prefix, name = None, tablename
         else:
+            prefix = table
             tablename = "%s_%s" % (prefix, name)
 
         self.prefix = prefix
@@ -157,7 +182,7 @@ class S3Resource(object):
             without module prefix
         """
 
-        manager = current.manager
+        # Table ---------------------------------------------------------------
 
         if self.table is None:
             try:
@@ -165,20 +190,22 @@ class S3Resource(object):
             except:
                 manager.error = "Undefined table: %s" % tablename
                 raise # KeyError(manager.error)
+        table = self.table
 
-        # Table alias (needed for self-joins)
         self._alias = tablename
         """ Table alias (the tablename used in joins/queries) """
 
         if parent is not None:
             if parent.tablename == self.tablename:
-                alias = "%s_%s_%s" % (self.prefix, self.alias, self.name)
-                pkey = self.table._id.name
-                self.table = self.table.with_alias(alias)
-                self.table._id = self.table[pkey]
+                alias = "%s_%s_%s" % (prefix, self.alias, name)
+                pkey = table._id.name
+                table = table = table.with_alias(alias)
+                table._id = table[pkey]
                 self._alias = alias
-        self.fields = self.table.fields
-        self._id = self.table._id
+        self.table = table
+
+        self.fields = table.fields
+        self._id = table._id
 
         # Hooks ---------------------------------------------------------------
 
@@ -186,22 +213,32 @@ class S3Resource(object):
 
         # Authorization hooks
         auth = current.auth
+
         self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
+
+        #self.has_permission = lambda m, r=None, c=None, f=None: \
+                              #auth.s3_has_permission(m, table, record_id=r, c=c, f=f)
+        #self.accessible_query = lambda m, c=None, f=None: \
+                                #auth.s3_accessible_query(m, table, c=c, f=f)
 
         # Audit hook
         self.audit = current.s3_audit
 
         # Filter --------------------------------------------------------------
 
+        # Default query options
+        self.include_deleted = include_deleted
+        self._approved = approved
+        self._unapproved = unapproved
+
         # Resource Filter
         self.rfilter = None
         self.fquery = None
         self.fvfltr = None
 
-        self.include_deleted = include_deleted
+        # Rows ----------------------------------------------------------------
 
-        # The Rows
         self._rows = None
         self._rowindex = None
         self.rfields = None
@@ -218,7 +255,7 @@ class S3Resource(object):
 
         # Components ----------------------------------------------------------
 
-        # Component properties
+        # Initialize component properties (will be set during _attach)
         self.link = None
         self.linktable = None
         self.actuate = None
@@ -227,36 +264,39 @@ class S3Resource(object):
         self.pkey = None
         self.fkey = None
         self.multiple = True
+
         self.parent = parent # the parent resource
         self.linked = linked # the linked resource
 
-        # Primary resource - attach components
         self.components = Storage()
         self.links = Storage()
-        if self.parent is None:
-            # Attach components
-            hooks = s3db.get_components(self.table, names=components)
-            for alias in hooks:
-                self._attach(alias, hooks[alias])
+
+        if parent is None:
+            # This is the master resource - attach components
+            attach = self._attach
+            hooks = s3db.get_components(table, names=components)
+            [attach(alias, hooks[alias]) for alias in hooks]
 
             # Build query
             self.build_query(id=id, uid=uid, filter=filter, vars=vars)
 
         # Component - attach link table
-        if linktable is not None:
-            # Create as resource
+        elif linktable is not None:
+            # This is link-table component - attach the link table
             self.link = S3Resource(linktable,
                                    parent=self.parent,
                                    linked=self,
-                                   include_deleted=self.include_deleted)
+                                   include_deleted=self.include_deleted,
+                                   approved=self._approved,
+                                   unapproved=self._unapproved)
 
         # Export and Import ---------------------------------------------------
 
         # Pending Imports
         self.skip_import = False
         self.job = None
-        self.error = None
         self.mtime = None
+        self.error = None
         self.error_tree = None
         self.import_count = 0
         self.import_created = []
@@ -300,7 +340,9 @@ class S3Resource(object):
                                parent=self,
                                alias=alias,
                                linktable=hook.linktable,
-                               include_deleted=self.include_deleted)
+                               include_deleted=self.include_deleted,
+                               approved=self._approved,
+                               unapproved=self._unapproved)
 
         # Update component properties
         component.pkey = hook.pkey
@@ -326,6 +368,7 @@ class S3Resource(object):
             self.links[link.name] = link
 
         self.components[alias] = component
+        return
 
     # -------------------------------------------------------------------------
     # Query handling
@@ -4845,7 +4888,12 @@ class S3ResourceFilter:
         #
         # Accessible/available query
         if resource.accessible_query is not None:
-            mquery = resource.accessible_query("read", table)
+            method = []
+            if resource._approved:
+                method.append("read")
+            if resource._unapproved:
+                method.append("review")
+            mquery = resource.accessible_query(method, table)
         else:
             mquery = (table._id > 0)
 

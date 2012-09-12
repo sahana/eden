@@ -3582,11 +3582,13 @@ class S3Permission(object):
         "create": CREATE,
         "import": CREATE,
         "read": READ,
+        "review": READ,
         "map": READ,
         "report": READ,
         "search": READ,
         "update": UPDATE,
         "approve": UPDATE,
+        "reject": DELETE,
         "delete": DELETE})
 
     # Lambda expressions for ACL handling
@@ -4181,7 +4183,10 @@ class S3Permission(object):
         if record == 0:
             record = None
         _debug("\nhas_permission('%s', c=%s, f=%s, t=%s, record=%s)" % \
-               (",".join(method), c, f, t, record))
+               (",".join(method),
+                c or current.request.controller,
+                f or current.request.function,
+                t, record))
 
         # Auth override, system roles and login
         auth = self.auth
@@ -4316,10 +4321,12 @@ class S3Permission(object):
                 approver_role = current.session["approver_role"]
             if approver_role is None:
                 approver_role = sr.ADMIN
-            if approver_role not in realms or "approve" not in method:
-                permitted = self.approved(table, record) #or is_owner
+            if approver_role not in realms:
+                permitted = self.approved(table, record)
                 if not permitted:
                     _debug("==> Record not approved")
+                else:
+                    _debug("==> Record is approved")
             else:
                 permitted = True
 
@@ -4385,21 +4392,28 @@ class S3Permission(object):
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
 
+        base_filter = None
+
+        # Record approval
         approve = current.deployment_settings.get_auth_record_approval() & \
                   current.s3db.get_config(table, "requires_approval", False)
+        approval_methods = ("approve", "review", "reject")
         if approve and "approved_by" in table.fields:
             approver_role = current.session["approver_role"]
             if approver_role is None:
                 approver_role = sr.ADMIN
-            if approver_role not in realms or "approve" not in method:
+            if approver_role not in realms or \
+               not any([m in method for m in approval_methods]):
                 base_filter = (table.approved_by != None)
                 approve = False
-            else:
+            elif all([m in approval_methods for m in method]):
                 base_filter = (table.approved_by == None)
                 approve = True
+            else:
+                approve = False
+
+        if base_filter is not None:
             ALL_RECORDS = base_filter
-        else:
-            base_filter = None
 
         if not self.use_cacls:
             _debug("==> simple authorization")
@@ -4649,8 +4663,10 @@ class S3Permission(object):
         # Retrieve the ACLs
         if q:
             query &= q
-        query &= (table.group_id == gtable.id)
-        rows = db(query).select(gtable.id, table.ALL)
+            query &= (table.group_id == gtable.id)
+            rows = db(query).select(gtable.id, table.ALL)
+        else:
+            rows = []
 
         # Cascade ACLs
         ANY = "ANY"
@@ -4798,6 +4814,11 @@ class S3Permission(object):
             default_table_acl = default_page_acl
         else:
             default_table_acl = ALL
+
+        # Fall back to default page acl
+        if not acls and not (t and self.use_tacls):
+            acls[ANY] = Storage(c=default_page_acl)
+
 
         # Order by precedence
         result = Storage()
