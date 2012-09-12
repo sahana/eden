@@ -1579,7 +1579,7 @@ class S3Search(S3CRUD):
         ADD = self.crud_string(tablename, "label_create_button")
         href_add = r.url(method="create", representation=representation)
         insertable = self._config("insertable", True)
-        authorised = self.permit("create", tablename)
+        authorised = self._permitted("create")
         if authorised and insertable and representation != "plain":
             add_link = self.crud_button(ADD, _href=href_add,
                                         _id="add-btn", _class="action-lnk")

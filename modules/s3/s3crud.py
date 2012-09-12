@@ -216,9 +216,9 @@ class S3CRUD(S3Method):
                     from_record = long(from_record)
                 except:
                     r.error(404, self.resource.ERROR.BAD_RECORD)
-                authorised = self.permit("read",
-                                         from_table._tablename,
-                                         from_record)
+                authorised = current.auth.s3_has_permission("read",
+                                                    from_table._tablename,
+                                                    from_record)
                 if not authorised:
                     r.unauthorised()
                 if map_fields:
