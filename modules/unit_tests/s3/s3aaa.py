@@ -2907,9 +2907,10 @@ class RecordApprovalTests(unittest.TestCase):
             query = accessible_query("read", table, c="org", f="organisation")
             self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
 
-            # See all record with both
+            # See all records with both
             query = accessible_query(["read", "approve"], table, c="org", f="organisation")
             self.assertFalse("(org_organisation.approved_by IS NOT NULL)" in str(query))
+            self.assertFalse("(org_organisation.approved_by IS NULL)" in str(query))
 
             # Turn of record approval and check the default query
             deployment_settings.auth.record_approval = False
