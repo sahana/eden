@@ -931,11 +931,13 @@ class S3Resource(object):
 
         tablename = self.tablename
 
-        self.load()
-        for record in self._rows:
+        for record in self.select():
 
             table = self.table
             record_id = record[table._id]
+
+            # Forget any cached permission for this record
+            auth.permission.forget(table, record_id)
 
             if "approved_by" in table.fields:
                 query = (table._id == record_id)
@@ -957,6 +959,7 @@ class S3Resource(object):
                 if not success:
                     db.rollback()
                     return False
+
         return True
 
     # -------------------------------------------------------------------------
@@ -1003,6 +1006,7 @@ class S3Resource(object):
             references = table._referenced_by
 
             for row in rows:
+
                 error = manager.error
                 manager.error = None
 

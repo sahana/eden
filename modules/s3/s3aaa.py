@@ -3580,16 +3580,20 @@ class S3Permission(object):
     # Method string <-> required permission
     METHODS = Storage({
         "create": CREATE,
-        "import": CREATE,
         "read": READ,
-        "review": READ,
-        "map": READ,
-        "report": READ,
-        "search": READ,
         "update": UPDATE,
+        "delete": DELETE,
+
+        "search": READ,
+        "report": READ,
+        "map": READ,
+
+        "import": CREATE,
+
+        "review": UPDATE,
         "approve": UPDATE,
-        "reject": DELETE,
-        "delete": DELETE})
+        "reject": UPDATE
+    })
 
     # Lambda expressions for ACL handling
     required_acl = lambda self, methods: \
@@ -4309,6 +4313,8 @@ class S3Permission(object):
              current.deployment_settings.get_auth_record_approval() and \
              t is not None and record is not None:
 
+            approval_methods = ("approve", "review", "reject")
+
             # Check approval
             if not hasattr(t, "_tablename"):
                 table = current.s3db.table(t)
@@ -4322,13 +4328,21 @@ class S3Permission(object):
             if approver_role is None:
                 approver_role = sr.ADMIN
             if approver_role not in realms:
-                permitted = self.approved(table, record)
-                if not permitted:
-                    _debug("==> Record not approved")
+                if not any([m in method for m in approval_methods]):
+                    permitted = self.approved(table, record)
+                    if not permitted:
+                        _debug("==> Record not approved")
                 else:
-                    _debug("==> Record is approved")
+                    permitted = False
+                    _debug("==> Approver role required, but not given")
             else:
-                permitted = True
+                if sr.ADMIN in realms or \
+                   not any([m in method for m in approval_methods]):
+                    permitted = True
+                else:
+                    permitted = self.unapproved(table, record)
+                    if not permitted:
+                        _debug("==> Record already approved")
 
         if permitted:
             _debug("*** GRANTED ***")
@@ -4994,6 +5008,40 @@ class S3Permission(object):
 
         # In all other cases: yes
         return True
+
+    # -------------------------------------------------------------------------
+    def forget(self, table=None, record_id=None):
+        """
+            Remove any cached permissions for a record. This can be
+            necessary in methods which change the status of the record
+            (e.g. approval).
+
+            @param table: the table
+            @param record_id: the record ID
+        """
+
+        if table is None:
+            current.response.s3.permissions = Storage()
+            return
+        try:
+            permissions = current.response.s3.permissions
+        except:
+            return
+        if not permissions:
+            return
+
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+
+        for key in list(permissions.keys()):
+            r = key.split("/")
+            if len(r) > 1 and r[-2] == tablename:
+                if record_id is None or \
+                   record_id is not None and r[-1] == str(record_id):
+                    del permissions[key]
+        return
 
 # =============================================================================
 class S3Audit(object):

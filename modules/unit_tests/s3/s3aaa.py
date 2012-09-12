@@ -2799,6 +2799,14 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
 
+            # Normal user can not review/approve/reject the record
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+
             # Normal user can see unapproved record if they have the approver role
             deployment_settings.auth.record_approver_role = "AUTHENTICATED"
             session = current.session
@@ -2808,16 +2816,27 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertTrue(session.approver_role in auth.user.realms)
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             self.assertTrue(permitted)
+
+            # Normal user can review/approve/reject if they have the approver role
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
             permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
             self.assertTrue(permitted)
-
-            # Admin can always see the record
-            auth.s3_impersonate("admin@example.com")
-            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
             self.assertTrue(permitted)
 
             # Approve the record
-            db(otable.id==org_id).update(approved_by=auth.user.id)
+            resource = s3db.resource(otable, id=org_id, unapproved=True)
+            resource.approve()
+
+            # Normal user can not review/approve/reject once the record is approved
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
 
             # Normal user can now see the record without having the approver role
             deployment_settings.auth.record_approver_role = "ADMIN"
