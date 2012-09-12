@@ -1889,35 +1889,28 @@ class S3Method(object):
 
         r = self.request
 
-        table = mtable = r.table
-        record_id = r.id
-
         if not method:
             method = self.method
         if method == "list":
             # Rest handled in S3Permission.METHODS
             method = "read"
 
-        if r.component is not None:
-            table = ctable = r.component.table
+        if r.component is None:
+            table = r.table
+            record_id = r.id
+        else:
+            table = r.component.table
             record_id = r.component_id
-            master_access = True
-            if method in ("create", "update", "delete"):
-                is_owner = auth.permission.is_owner
-                if is_owner(ctable, record=record_id):
-                    master_access = True
-                else:
-                    # User must have update permission on the master record
-                    master_access = has_permission("update",
-                                                   mtable, record_id=r.id)
-                    if not master_access:
-                        # ... or own the master record
-                        mr = r.record
-                        master_access = (mr.owned_by_user is not None or
-                                         mr.owned_by_group is not None) and \
-                                        is_owner(mtable, r.id)
-            if not master_access:
-                return False
+
+            if method == "create":
+                # Must have permission to update the master record
+                # in order to create a new component record...
+                master_access = has_permission("update",
+                                               r.table,
+                                               record_id=r.id)
+
+                if not master_access:
+                    return False
 
         return has_permission(method, table, record_id=record_id)
 

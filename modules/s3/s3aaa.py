@@ -4203,7 +4203,7 @@ class S3Permission(object):
 
         # Required ACL
         racl = self.required_acl(method)
-        _debug("==> racl: %04X" % racl)
+        _debug("==> required ACL: %04X" % racl)
 
         # Get realms and delegations
         if not logged_in:
@@ -4462,7 +4462,7 @@ class S3Permission(object):
             return ALL_RECORDS
         elif not acls:
             _debug("==> no applicable ACLs")
-            _debug("*** NO RECORDS ***")
+            _debug("*** ACCESS DENIED ***")
             return NO_RECORDS
 
         oacls = []
