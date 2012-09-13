@@ -179,19 +179,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Catalog">
-        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
-
-        <resource name="supply_catalog">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$catalog"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$catalog"/></data>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
         <xsl:param name="OrgName"/>
 
@@ -203,6 +190,25 @@
                 <data field="name"><xsl:value-of select="$OrgName"/></data>
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Catalog">
+        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+        <xsl:variable name="organisation" select="col[@field='Warehouse Organisation']/text()"/>
+
+        <resource name="supply_catalog">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$catalog"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$catalog"/></data>
+        </resource>
+           <reference field="organisation_id" resource="org_organisation">
+               <xsl:attribute name="tuid">
+                   <xsl:value-of select="$organisation"/>
+               </xsl:attribute>
+           </reference>
+
     </xsl:template>
 
 
@@ -288,6 +294,12 @@
             <reference field="brand_id" resource="supply_brand">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Brand']"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to Supply Catalog -->
+            <reference field="catalog_id" resource="supply_catalog">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$catalog"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Supply Item Category -->

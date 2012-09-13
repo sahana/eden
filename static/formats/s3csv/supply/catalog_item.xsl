@@ -183,6 +183,12 @@
                     <xsl:value-of select="col[@field='Brand']"/>
                 </xsl:attribute>
             </reference>
+            <!-- Link to Supply Catalog -->
+            <reference field="catalog_id" resource="supply_catalog">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$catalog"/>
+                </xsl:attribute>
+            </reference>
             <!-- Link to Supply Item Category -->
             <reference field="item_category_id" resource="supply_item_category">
                 <xsl:attribute name="tuid">

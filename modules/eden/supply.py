@@ -166,9 +166,14 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         catalog_id = S3ReusableField("catalog_id", table,
                     sortby="name",
-                    requires = IS_NULL_OR(IS_ONE_OF(db, "supply_catalog.id",
-                                                    "%(name)s",
-                                                    sort=True)),
+                    requires = IS_NULL_OR(
+                                   IS_ONE_OF( # Restrict to catalogs the user can update
+                                              db(current.auth.s3_accessible_query("update", table)), 
+                                              "supply_catalog.id",
+                                              "%(name)s",
+                                              sort=True,
+                                              )
+                                          ),
                     represent = lambda id: \
                         s3_get_db_field_value(tablename = "supply_catalog",
                                               fieldname = "name",
@@ -187,7 +192,7 @@ class S3SupplyModel(S3Model):
 
         # Catalog Items as component of Catalogs
         add_component("supply_catalog_item", supply_catalog="catalog_id")
-
+        
         # =====================================================================
         # Item Category
         #
@@ -262,6 +267,16 @@ class S3SupplyModel(S3Model):
                                            label = T("Category"),
                                            comment = item_category_comment,
                                            ondelete = "RESTRICT")
+        item_category_id_script = SCRIPT(
+'''$(document).ready(function(){
+ S3FilterFieldChange({
+  'FilterField':'catalog_id',
+  'Field':'item_category_id',
+  'FieldPrefix':'supply',
+  'FieldResource':'item_category',
+ })
+})''')
+        
 
         # Categories as component of Categories
         add_component("supply_item_category",
@@ -287,6 +302,9 @@ class S3SupplyModel(S3Model):
         #
         tablename = "supply_item"
         table = define_table(tablename,
+                             catalog_id(),
+                             # Needed to auto-create a catalog_item
+                             item_category_id(script = item_category_id_script),
                              Field("name", length=128, notnull=True,
                                    label = T("Name"),
                                    ),
@@ -297,8 +315,6 @@ class S3SupplyModel(S3Model):
                                    label = T("Unit of Measure"),
                                    default = "piece"
                                    ),
-                             # Needed to auto-create a catalog_item
-                             item_category_id(),
                              brand_id(),
                              Field("kit", "boolean",
                                    default=False,
@@ -472,22 +488,13 @@ class S3SupplyModel(S3Model):
         # This resource is used to link Items with Catalogs (n-to-n)
         # Item Categories will also be catalog specific
         #
-        script = SCRIPT(
-'''$(document).ready(function(){
- S3FilterFieldChange({
-  'FilterField':'catalog_id',
-  'Field':'item_category_id',
-  'FieldPrefix':'supply',
-  'FieldResource':'item_category',
- })
-})''')
         tablename = "supply_catalog_item"
         table = define_table(tablename,
                              catalog_id(),
                              item_category_id("item_category_id",
                                               #label = T("Group"),
                                               # Filters item_category_id based on catalog_id
-                                              script = script,
+                                              script = item_category_id_script,
                                             ),
                              supply_item_id(script = None), # No Item Pack Filter
                              s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
@@ -567,7 +574,7 @@ class S3SupplyModel(S3Model):
         )
 
         configure(tablename,
-                  search_method = catalog_item_search)
+                  search_method = catalog_item_search,)
 
         # ---------------------------------------------------------------------
         # Calculate once, instead of for each record
@@ -1138,29 +1145,35 @@ S3FilterFieldChange({
         """
 
         db = current.db
+        auth = current.auth
 
         vars = form.vars
         item_id = vars.id
+        catalog_id = vars.catalog_id
+        catalog_item_id = None
 
-        if isinstance(form, SQLFORM):
-            # Create a supply_catalog_item for items added via browser
-            catalog_id = current.request.vars.catalog_id
-            if not catalog_id:
-                # Default Catalog
-                default = current.deployment_settings.get_supply_catalog_default()
-                ctable = db.supply_catalog
-                query = (ctable.name == default)
-                catalog = db(query).select(ctable.id,
-                                           limitby=(0, 1)).first()
-
-            table = db.supply_catalog_item
-            query = (table.item_id == item_id) & \
-                    (table.deleted == False )
-            if not db(query).count():
-                table.insert(catalog_id = catalog_id,
-                             item_category_id = vars.item_category_id,
-                             item_id = item_id,
-                             )
+        
+        citable = db.supply_catalog_item
+        query = (citable.item_id == item_id) & \
+                (citable.deleted == False )
+        rows = db(citable).select(citable.id)
+        if not len(rows):
+        # Create supply_catalog_item 
+            catalog_item_id = \
+                citable.insert(catalog_id = catalog_id,
+                               item_category_id = vars.item_category_id,
+                               item_id = item_id
+                               )
+        # Update if the catalog/category has changed - if there is only supply_catalog_item
+        elif len(rows) == 1:
+            catalog_item_id = rows.first().id
+            catalog_item_id = \
+                db(citable.id == catalog_item_id
+                   ).update(catalog_id = catalog_id,
+                            item_category_id = vars.item_category_id,
+                            item_id = item_id
+                            )
+        auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
 
         # Update UM
         um = vars.um or db.supply_item.um.default
