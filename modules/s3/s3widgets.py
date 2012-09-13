@@ -1498,6 +1498,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 this_location = db(query).select(locations.uuid,
                                                  locations.name,
                                                  locations.level,
+                                                 locations.inherited,
                                                  locations.lat,
                                                  locations.lon,
                                                  locations.addr_street,
@@ -1511,8 +1512,12 @@ S3.gis.tab="%s"''' % s3.gis.tab
                     level = this_location.level
                     defaults[level] = Storage()
                     defaults[level].id = value
-                    lat = this_location.lat
-                    lon = this_location.lon
+                    if this_location.inherited:
+                        lat = None
+                        lon = None
+                    else:
+                        lat = this_location.lat
+                        lon = this_location.lon
                     addr_street = this_location.addr_street or ""
                     #addr_street_encoded = ""
                     #if addr_street:
@@ -1743,8 +1748,8 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 label = location_hierarchy[level]
             except:
                 label = level
-            return DIV( _class="tooltip",
-                        _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
+            return DIV(_class="tooltip",
+                       _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
 
         hidden = ""
         throbber = "/%s/static/img/ajax-loader.gif" % appname
@@ -1766,9 +1771,10 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                     _disabled="disabled")
 
             lat_widget = S3LatLonWidget("lat",
-                disabled=True).widget(value=lat)
+                                        disabled=True).widget(value=lat)
             lon_widget = S3LatLonWidget("lon",
-                switch_button=True, disabled=True).widget(value=lon)
+                                        switch_button=True,
+                                        disabled=True).widget(value=lon)
 
             for level in levels:
                 if level == "L0":

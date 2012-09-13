@@ -1111,38 +1111,38 @@ function s3_gis_select_search_result(id, uuid) {
     s3_gis_hide_search_fields();
 
     // Copy the results from the Search fields to the View fields
-    var name = $( '#gis_location_name_search' ).val();
-    $( '#gis_location_name' ).val(name);
-    var street = $( '#gis_location_street_search' ).val();
-    $( '#gis_location_street' ).val(street);
-    var postcode = $( '#gis_location_postcode_search' ).val();
-    $( '#gis_location_postcode' ).val(postcode);
-    var lat = $( '#gis_location_lat_search' ).val();
-    $( '#gis_location_lat' ).val(lat);
-    var lon = $( '#gis_location_lon_search' ).val();
-    $( '#gis_location_lon' ).val(lon);
+    var name = $('#gis_location_name_search').val();
+    $('#gis_location_name').val(name);
+    var street = $('#gis_location_street_search').val();
+    $('#gis_location_street').val(street);
+    var postcode = $('#gis_location_postcode_search').val();
+    $('#gis_location_postcode').val(postcode);
+    var lat = $('#gis_location_lat_search').val();
+    $('#gis_location_lat').val(lat);
+    var lon = $('#gis_location_lon_search').val();
+    $('#gis_location_lon').val(lon);
     var L0 = $('body').data('L0');
-    $( '#gis_location_L0' ).val(L0);
+    $('#gis_location_L0').val(L0);
     var L1 = $('body').data('L1');
-    $( '#gis_location_L1' ).val(L1);
+    $('#gis_location_L1').val(L1);
     var L2 = $('body').data('L2');
-    $( '#gis_location_L2' ).val(L2);
+    $('#gis_location_L2').val(L2);
     var L3 = $('body').data('L3');
-    $( '#gis_location_L3' ).val(L3);
+    $('#gis_location_L3').val(L3);
     var L4 = $('body').data('L4');
-    $( '#gis_location_L4' ).val(L4);
+    $('#gis_location_L4').val(L4);
     var L5 = $('body').data('L5');
-    $( '#gis_location_L5' ).val(L5);
-    var L1_text = $( '#gis_location_L1_search' ).val();
-    $( '#gis_location_L1_ac' ).val(L1_text);
-    var L2_text = $( '#gis_location_L2_search' ).val();
-    $( '#gis_location_L2_ac' ).val(L2_text);
-    var L3_text = $( '#gis_location_L3_search' ).val();
-    $( '#gis_location_L3_ac' ).val(L3_text);
-    var L4_text = $( '#gis_location_L4_search' ).val();
-    $( '#gis_location_L4_ac' ).val(L4_text);
-    var L5_text = $( '#gis_location_L5_search' ).val();
-    $( '#gis_location_L5_ac' ).val(L5_text);
+    $('#gis_location_L5' ).val(L5);
+    var L1_text = $('#gis_location_L1_search').val();
+    $('#gis_location_L1_ac' ).val(L1_text);
+    var L2_text = $('#gis_location_L2_search').val();
+    $('#gis_location_L2_ac').val(L2_text);
+    var L3_text = $('#gis_location_L3_search').val();
+    $('#gis_location_L3_ac').val(L3_text);
+    var L4_text = $('#gis_location_L4_search').val();
+    $('#gis_location_L4_ac').val(L4_text);
+    var L5_text = $('#gis_location_L5_search').val();
+    $('#gis_location_L5_ac').val(L5_text);
 
     // Open the View tab
     s3_gis_view_tab();
@@ -1152,17 +1152,17 @@ function s3_gis_hide_search_fields() {
     // Hide the Search rows
     $('#gis_location_search_label__row').hide();
     $('#gis_location_search__row').hide();
-    $( '#gis_location_name_search__row' ).hide();
-    $( '#gis_location_street_search__row' ).hide();
-    $( '#gis_location_postcode_search__row' ).hide();
-    $( '#gis_location_lat_search__row' ).hide();
-    $( '#gis_location_lon_search__row' ).hide();
-    $( '#gis_location_L0_search__row').hide();
-    $( '#gis_location_L1_search__row').hide();
-    $( '#gis_location_L2_search__row').hide();
-    $( '#gis_location_L3_search__row').hide();
-    $( '#gis_location_L4_search__row').hide();
-    $( '#gis_location_L5_search__row').hide();
+    $('#gis_location_name_search__row').hide();
+    $('#gis_location_street_search__row').hide();
+    $('#gis_location_postcode_search__row').hide();
+    $('#gis_location_lat_search__row').hide();
+    $('#gis_location_lon_search__row').hide();
+    $('#gis_location_L0_search__row').hide();
+    $('#gis_location_L1_search__row').hide();
+    $('#gis_location_L2_search__row').hide();
+    $('#gis_location_L3_search__row').hide();
+    $('#gis_location_L4_search__row').hide();
+    $('#gis_location_L5_search__row').hide();
 }
 
 // Geocoder

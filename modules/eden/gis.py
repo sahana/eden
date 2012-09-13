@@ -3613,6 +3613,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
                                         table.level,
                                         table.parent,
                                         table.addr_street,
+                                        table.inherited,
                                         table.lat,
                                         table.lon,
                                         limitby=(0, 1)).first()
@@ -3722,6 +3723,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
                 # Get the 1st line of the street address.
                 represent_text = row.addr_street.splitlines()[0]
             if (not represent_text) and \
+               (row.inherited == False) and \
                (row.lat != None) and \
                (row.lon != None):
                 represent_text = lat_lon_represent(row)

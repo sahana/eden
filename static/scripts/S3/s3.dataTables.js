@@ -601,14 +601,16 @@ $(document).ready(function() {
         var sublevel = '';
         var levelClass = 'level_' + level;
         $(tableId[t]).addClass(levelClass);
-        for (var i=0; i<nTrs.length; i++) {
+        for (var i=0; i < nTrs.length; i++) {
             if ($(nTrs[i]).hasClass('group')) {
                 // Calculate the sublevel which can be used for the next new group
                 item = getElementClass($(nTrs[i]), 'group_');
                 sublevel = 'sublevel' + item.substr(6);
                 sLastGroup = '';
                 for (var gpCnt = 0; gpCnt < prefixID.length; gpCnt++) {
-                    groupPrefix += oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[prefixID[gpCnt]] + "_";
+                    try {
+                        groupPrefix += oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[prefixID[gpCnt]] + "_";
+                    } catch(err) {};
                 }
                 continue;
             }
@@ -732,7 +734,7 @@ $(document).ready(function() {
                     } // end of loop through for each row Action for this table
                 } // end of if there are to be Row Actions for this table
                 // Put the actions buttons in the actionCol
-                if ((aoTableConfig[t]['group'].length > 0) && (aoTableConfig[t]['group'][0][0] < actionCol)){
+                if ((aoTableConfig[t]['group'].length > 0) && (aoTableConfig[t]['group'][0][0] < actionCol)) {
                     actionCol -= 1;
                 }
                 $('td:eq(' + actionCol + ')', nRow).html( Buttons );

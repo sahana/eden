@@ -1366,7 +1366,12 @@ class GIS(object):
             gis.countries_by_id = countries_by_id
             gis.countries_by_code = countries_by_code
 
-        if key_type == "id":
+            if key_type == "id":
+                return countries_by_id
+            else:
+                return countries_by_code
+
+        elif key_type == "id":
             return gis.countries_by_id
         else:
             return gis.countries_by_code

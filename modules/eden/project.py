@@ -3813,7 +3813,7 @@ def project_project_represent(id, row=None, show_link=True):
     """ FK representation """
 
     if row:
-        pass
+        id = row.id
     elif id:
         db = current.db
         table = db.project_project
@@ -4724,7 +4724,8 @@ def project_rheader(r, tabs=[]):
         query = (ltable.deleted == False) & \
                 (ltable.task_id == r.id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.code,
+        project = db(query).select(ptable.id,
+                                   ptable.code,
                                    ptable.name,
                                    limitby=(0, 1)).first()
         if project:
