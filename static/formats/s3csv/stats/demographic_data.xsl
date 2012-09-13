@@ -19,6 +19,7 @@
          L3.............................optional.....gis_location.L3
          L4.............................optional.....gis_location.L4
          Name...........................optional.....gis_location.name
+         Status.........................optional.....demographic.approved_by ... list from (Pending, Approved, it will default as if Approved)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -87,10 +88,23 @@
     <!-- ****************************************************************** -->
     <!-- Demographic Data Record -->
     <xsl:template match="row">
+        <xsl:variable name="status" select="col[@field='Status']"/>
 
         <resource name="stats_demographic_data">
             <data field="value"><xsl:value-of select="col[@field='Value']"/></data>
             <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+            <data field="created_by">1</data>
+            <xsl:choose>
+                <xsl:when test="$status='Pending'">
+                    <data field="approved_by">0</data>
+                </xsl:when>
+                <xsl:when test="$status='Approved'">
+                    <data field="approved_by">1</data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="approved_by">1</data>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- Link to Demographic -->
             <reference field="parameter_id" resource="stats_demographic">
@@ -133,6 +147,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Source">
         <xsl:variable name="name" select="col[@field='Source Name']"/>
+        <xsl:variable name="status" select="col[@field='Status']"/>
 
         <xsl:if test="$name!=''">
             <resource name="stats_source">
@@ -142,8 +157,18 @@
                 <data field="name"><xsl:value-of select="$name"/></data>
                 <data field="url"><xsl:value-of select="col[@field='Source URL']"/></data>
                 <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
-                <data field="status">Approval pending</data>
                 <data field="created_by">1</data>
+                <xsl:choose>
+                    <xsl:when test="$status='Pending'">
+                        <data field="approved_by">0</data>
+                    </xsl:when>
+                    <xsl:when test="$status='Approved'">
+                        <data field="approved_by">1</data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <data field="approved_by">1</data>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference"/>
 

@@ -2940,10 +2940,15 @@ class S3DataTable(object):
                    dt_bulk_col: The column in which the checkboxes will appear,
                                 by default it will be the column immediately
                                 before the first data item
-                   dt_group: The column that is used to group the data
+                   dt_group: The column(s) that is(are) used to group the data
                    dt_group_totals: The number of record in each group.
                                     This will be displayed in parenthesis
                                     after the group title.
+                   dt_group_titles: The titles to be used for each group.
+                                    These are a list of lists with the inner list
+                                    consisting of two values, the repr from the
+                                    db and the label to display. This can be more than
+                                    the actual number of groups (giving an empty group).
                    dt_bulk_selected: A list of selected items
                    dt_actions: dictionary of actions
                    dt_styles: dictionary of styles to be applied to a list of ids
@@ -3015,6 +3020,7 @@ class S3DataTable(object):
             dt_group.append([group, "asc"])
         config.group = dt_group
         config.groupTotals = attr.get("dt_group_totals", [])
+        config.groupTitles = attr.get("dt_group_titles", [])
         if bulkActions:
             for order in orderby:
                 if config.bulkCol <= order[0]:

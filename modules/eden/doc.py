@@ -115,8 +115,6 @@ class S3DocumentLibrary(S3Model):
                              organisation_id(
                                 widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
                                 ),
-                             Field("status",
-                                    label=T("Status")),
                              s3_date(label = T("Date Published")),
                              location_id(),
                              self.doc_source_type_id(),
@@ -205,8 +203,6 @@ class S3DocumentLibrary(S3Model):
                              organisation_id(
                                 widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
                                 ),
-                             Field("status",
-                                    label=T("Status")),
                              s3_date(label = T("Date Taken")),
                              location_id(),
                              self.doc_source_type_id(),
@@ -372,6 +368,7 @@ class S3DocumentLibrary(S3Model):
         return
 
 # =============================================================================
+
 class S3DocumentSourceModel(S3Model):
 
     names = ["doc_source_entity",
@@ -384,7 +381,7 @@ class S3DocumentSourceModel(S3Model):
 
         from s3.s3fields import s3_authorstamp
         T = current.T
-
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         # ---------------------------------------------------------------------
         # The type of document held as a  document_source_entity.
         #
@@ -428,11 +425,11 @@ class S3DocumentSourceModel(S3Model):
         table = self.super_entity(tablename, "source_id", source_types,
                                   Field("name",
                                         label=T("Name")),
-                                  Field("status",
-                                        label=T("Status")),
                                   s3_date(label = T("Date Published")),
                                   self.gis_location_id(),
                                   source_type_id(),
+                                  Field("approved_by", "integer",
+                                        default = None),
                                   *s3_authorstamp()
                                   )
         # Reusable Field
@@ -444,8 +441,13 @@ class S3DocumentSourceModel(S3Model):
                                     represent = doc_source_represent,
                                     label = T("Source"),
                                     ondelete = "CASCADE")
+        table.virtualfields.append(DocSourceEntityVirtualFields())
         # Components
         self.add_component("doc_source", doc_source_entity=self.super_key(table))
+
+        self.configure("doc_source_entity",
+                        onaccept = self.doc_source_entity_onaccept,
+                        )
 
         # ---------------------------------------------------------------------
         # Document-source details
@@ -470,6 +472,7 @@ class S3DocumentSourceModel(S3Model):
         return Storage(
                 doc_source_id = source_id,
                 doc_source_type_id = source_type_id,
+                doc_source_entity_onaccept = self.doc_source_entity_onaccept,
             )
 
     # -------------------------------------------------------------------------
@@ -486,7 +489,48 @@ class S3DocumentSourceModel(S3Model):
         return Storage(
                 doc_source_id = source_id,
                 doc_source_type_id = source_type_id,
+                doc_source_entity_onaccept = self.doc_source_entity_onaccept,
             )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def doc_source_entity_onaccept(form):
+        """
+           When the status of a doc_source_entity record is updated then if
+           if is a stats_source then the status and the aggregated details
+           will need to be updated.
+        """
+        s3db = current.s3db
+        db = current.db
+        id = form.vars.source_id
+        status = form.vars.status
+        approver = form.vars.approved_by
+        dsetable = s3db.doc_source_entity
+        query = (dsetable.source_id == id)
+        record = db(query).select(limitby=(0, 1)).first()
+        if record.instance_type == "stats_source":
+            # Get the stats source records
+            sdtable = s3db.stats_data
+            query = (sdtable.source_id == id)
+            rows = db(query).select()
+            for row in rows:
+                if row.instance_type == "vulnerability_data":
+                    table = s3db.vulnerability_data
+                    # update the stats source status
+                elif row.instance_type == "stats_demographic_data":
+                    table = s3db.stats_demographic_data
+                else:
+                    continue                                        
+                query = (table.data_id == row.data_id)
+                record = db(query).select(limitby=(0, 1)).first()
+                db(query).update(status = status,
+                                 approved_by= approver)
+                s3db.update_super(table, table[record.id])
+                # update the aggregate details
+                current.s3task.async("stats_update_time_aggregate",
+                                     args = [record.id],
+                                     )
+
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -584,4 +628,25 @@ def doc_source_type_represent(id, row=None):
     except:
         return current.messages.UNKNOWN_OPT
 
+# =============================================================================
+class DocSourceEntityVirtualFields:
+    """ Virtual fields to show the group that the report belongs to
+        used by vulnerability/report
+    """
+
+    extra_fields = ["group",
+                    ]
+
+    def group(self):
+        try:
+            approved = self.doc_source_entity.approved_by
+        except (AttributeError,TypeError):
+            # @ToDo: i18n?
+            return "Approval pending"
+        else:
+            if not approved or approved == 0:
+                return "Approval pending"
+            else:
+                # @todo: add conditional branch for VCA report
+                return "Report"
 # END =========================================================================

@@ -118,10 +118,13 @@ class S3StatsModel(S3Model):
                              Field("date", "date",
                                    label = T("Date")),
                              self.doc_source_id(),
+                             Field("approved_by", "integer",
+                                   default = None)
                              )
 
         self.configure("stats_data",
-                        onaccept = self.stats_data_onaccept,
+                        onapprove = self.stats_data_onapprove,
+                        requires_approval = True,
                         )
         #----------------------------------------------------------------------
         # Stats Aggregated data
@@ -209,21 +212,17 @@ class S3StatsModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def stats_data_onaccept(form):
+    def stats_data_onapprove(row):
         """
-           When a stats_data record is created then the related stats_aggregate
+           When a stats_data record is approved then the related stats_aggregate
            fields need to be updated so that the results are kept up to date.
 
            This is done async as this can take some time
 
            Where appropriate add test cases to modules/unit_tests/eden/stats.py
         """
-
-        # calculate the aggregate for the location,
-        # when this has been done requests to calculate the aggregate for
-        # the parent locations will be made.
         current.s3task.async("stats_update_time_aggregate",
-                             args = [form.vars.data_id],
+                             args = [row.data_id],
                              )
 
     # ---------------------------------------------------------------------
@@ -234,13 +233,14 @@ class S3StatsModel(S3Model):
             rebuild them by triggering off a request for each stats_data
             record.
         """
-        resource = current.s3db.resource("stats_aggregate")
+        s3db = current.s3db
+        resource = s3db.resource("stats_aggregate")
         resource.delete()
-        table = current.s3db.stats_data
+        table = s3db.stats_data
         rows = current.db().select(table.data_id)
         for row in rows:
             current.s3task.async("stats_update_time_aggregate",
-                                 args = [row.data_id],
+                                 args = [row.stats_data.data_id],
                                  )
     # ---------------------------------------------------------------------
     @staticmethod
@@ -283,7 +283,8 @@ class S3StatsModel(S3Model):
         # Get all the stats_data record for this location and parameter
         query = (dtable.location_id == location_id) & \
                 (dtable.parameter_id == parameter_id) & \
-                (dtable.deleted != True)
+                (dtable.deleted != True) & \
+                (dtable.approved_by > 0)
         data_rows = db(query).select()
         # Get each record and store them in a dict keyed on the start date of
         # the aggregated period. The value stored is a list containing the date
@@ -489,13 +490,15 @@ class S3StatsModel(S3Model):
             # Get the most recent stats_data record for each location
             query = (table.location_id.belongs(child_ids)) & \
                     (table.parameter_id == parameter_id) & \
-                    (table.deleted != True)
+                    (table.deleted != True) & \
+                    (table.approved_by > 0)
             end_date = None
         else:
             query = (table.location_id.belongs(child_ids)) & \
                     (table.parameter_id == parameter_id) & \
                     (table.date <= end_date) & \
-                    (table.deleted != True)
+                    (table.deleted != True) & \
+                    (table.approved_by > 0)
         rows = db(query).select(table.value,
                                 table.date,
                                 table.location_id,
@@ -625,6 +628,7 @@ class S3StatsDemographicModel(S3Model):
         configure(tablename,
                   super_entity = "stats_parameter",
                   deduplicate = self.stats_demographic_duplicate,
+                  requires_approval = True,
                   )
 
         #----------------------------------------------------------------------
@@ -728,8 +732,6 @@ class S3StatsSourceModel(S3Model):
                                         requires = IS_NULL_OR(IS_URL()),
                                         represent = lambda url: \
                                             url and A(url,_href=url) or current.messages.NONE),
-                                  Field("status",
-                                        label=T("Status")),
                                   s3_date(label = T("Date Published")),
                                   self.gis_location_id(),
                                   self.doc_source_type_id(),
@@ -776,6 +778,7 @@ class S3StatsSourceModel(S3Model):
         self.configure(tablename,
                        super_entity = "doc_source_entity",
                        deduplicate = self.stats_source_duplicate,
+                       requires_approval=True,
                        )
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3

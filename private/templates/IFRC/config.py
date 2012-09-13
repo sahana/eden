@@ -18,6 +18,7 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requests_organisation = True
 settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = True
+settings.auth.record_approval = True
 
 # -----------------------------------------------------------------------------
 # Security Policy
