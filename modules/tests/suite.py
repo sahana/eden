@@ -226,7 +226,6 @@ elif args["suite"] == "smoke":
         pass
 elif args["suite"] == "roles":
     from tests.roles import *
-    create_role_test_data()
     #suite = unittest.TestSuite()
     suite = test_roles()
     

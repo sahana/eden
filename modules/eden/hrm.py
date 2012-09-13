@@ -3223,11 +3223,23 @@ def hrm_human_resource_onaccept(form):
     s3db.pr_update_affiliations(htable, record)
     auth = current.auth
     auth.s3_set_record_owner(htable, record, force_update=True)
-
+    
+    ptable = s3db.pr_person
     person_id = record.person_id
+    
+    setting = current.deployment_settings
+    if setting.get_auth_person_realm_human_resource_org():
+        # Set realm_entity = organisation pe_id for pr_person now that it is affliated
+        otable = s3db.org_organisation
+        organisation_id = record.organisation_id
+        person = ptable[person_id]
+        organisation = otable[organisation_id]
+        if organisation and not person.realm_entity:
+            db(s3db.pr_person.id == person_id
+               ).update(realm_entity = organisation.pe_id)
+
     site_id = record.site_id
     site_contact = record.site_contact
-    ptable = db.pr_person
     if record.type == 1:
         # Staff
         # Add/update the record in the link table

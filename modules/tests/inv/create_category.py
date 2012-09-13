@@ -45,10 +45,10 @@ class CreateCategory(SeleniumUnitTest):
         self.login(account="admin", nexturl="supply/item_category/create")
         self.create("supply_item_category", 
                     [( "catalog_id",
-                       "Other Items",
+                       "Default",
                        "option" ),
                      ( "parent_item_category_id",
-                       "Standard > Food",
+                       "Default > Food",
                        "option" ),
                      ( "code",
                        "123"),

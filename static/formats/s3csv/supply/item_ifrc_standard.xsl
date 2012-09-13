@@ -136,6 +136,12 @@
             <data field="width"><xsl:value-of select="$Width"/></data>
             <data field="volume"><xsl:value-of select="$Volume"/></data>
             <data field="weight"><xsl:value-of select="$Weight"/></data>
+            <!-- Link to Supply Catalog -->
+            <reference field="catalog_id" resource="supply_catalog">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$IFRCStandard"/>
+                </xsl:attribute>
+            </reference>
             <!-- Link to Category -->
             <reference field="item_category_id" resource="supply_item_category">
                 <xsl:attribute name="tuid">

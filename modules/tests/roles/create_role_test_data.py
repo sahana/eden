@@ -30,9 +30,7 @@ import os
 from gluon import current
 from gluon.storage import Storage
 
-#import unittest, re, time
-
-def create_role_test_data():
+def create_role_test_data(orgs, branches):
     from lxml import etree
     import StringIO
 
@@ -42,13 +40,7 @@ def create_role_test_data():
     s3mgr = current.manager
     request = current.request
 
-    # Define Organisations
-    orgs = ["Org-A",
-            "Org-B",
-            "Org-C",
-            ]
-    branches = [ None,
-                 "Branch-A"]
+
 
     #----------------------------------------------------------------------
     # Initialize Data & Users
@@ -98,6 +90,7 @@ def create_role_test_data():
                 orgx = "%s-%s" % (org,branch)
             else:
                 orgx = org
+            print orgx
             
             # Create Org & get id
             org_string = org_template_string % dict( org = orgx )
@@ -117,7 +110,7 @@ def create_role_test_data():
 
             # Create Users for each Organisation
             user_string = user_template_string % dict(org = orgx,
-                                                      org_lower = org.lower())
+                                                      org_lower = orgx.lower())
             user_file = StringIO.StringIO(user_string)
             success = user_resource.import_xml(user_file,
                                                format="csv",
@@ -134,74 +127,14 @@ def create_role_test_data():
                 xmltree = etree.ElementTree( etree.fromstring(org_branch_string) )
                 success = org_branch_resource.import_xml(xmltree)
                 #print success
+
+    # Import Test Users
+    test_user_file = open(os.path.join(test_dir, "test_users.csv"), "rb")
+    success = user_resource.import_xml(test_user_file,
+                                       format="csv",
+                                       stylesheet=user_stylesheet)
+    test_user_file = open(os.path.join(test_dir, "test_users.csv"), "rb")
+    hr_resource.import_xml(test_user_file, format="csv", stylesheet=hr_stylesheet)
+        
     db.commit()
     auth.override = False
-    
-create_role_test_data()
-
-#----------------------------------------------------------------------
-# Test Permissions against Role Matrix File
-def test_roles():
-    import csv
-
-    s3db = current.s3db
-    db = current.db
-
-    suite = unittest.TestSuite()
-
-    orgs = ["Org-A"]
-    table_lookup = {"hrm_staff":"hrm_human_resource",
-                    "vol_volunteer":"hrm_human_resource",
-                    }
-
-    for org in orgs:
-        permission_matrix_filename = os.path.join(current.request.folder,"modules", "tests", "roles",
-                                                  current.deployment_settings.base.template, "%s_permission_matrix.csv" % org)
-        permission_matrix_file = open(permission_matrix_filename, "rb")
-        permission_matrix = csv.DictReader(permission_matrix_file)
-        row_num = 1 # Header Row
-        for test in permission_matrix:
-            row_num = row_num + 1
-
-            #if row_num < 55 or row_num > 75:
-            #    continue
-            table = test["table"]
-            c = test["c"]
-            f = test["f"]
-            method = test["method"]
-            uuid = test["uuid"]
-            if table:
-                db_table = s3db[table]
-            elif c and f:
-                tablename = "%s_%s" % (c,f)
-                db_table =  s3db[table_lookup.get(tablename,tablename)]
-            else:
-                # No Table or C and F - probably header row
-                row_num = row_num - 1
-                continue
-            if uuid:
-                print "%s, %s, %s, %s" % (table,c,f, uuid)
-                #print uuid
-                record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
-            else:
-                record_id = None
-
-            for user, permission in test.items():
-                if user in ["table","c", "f", "method", "uuid"] or not user:
-                    continue
-                test_role = TestRole()
-                test_role.set(org = org,
-                              row_num = row_num,
-                                     user = user,
-                                     method = method,
-                                     table = table,
-                                     c = c,
-                                     f = f,
-                                     record_id = record_id,
-                                     uuid = uuid,
-                                     permission = permission)
-                suite.addTest(test_role)
-
-    return suite
-    #self.assertFalse(permitted)
-    #self.assertTrue(False,"This Should have been True")

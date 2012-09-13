@@ -25,6 +25,108 @@ settings.auth.record_approval = True
 settings.security.policy = 8 # Delegations
 settings.security.map = True
 
+# Owner Entity
+settings.auth.person_realm_human_resource_org = True
+settings.auth.person_realm_member_org = True
+def ifrc_realm_entity(table, row):
+    
+    s3db = current.s3db
+    db = current.db
+
+    tablename = table._tablename
+    id  = row.id
+
+    # Entity reference fields
+    EID = "pe_id"
+    OID = "organisation_id"
+    SID = "site_id"
+    GID = "group_id"
+    PID = "person_id"
+    entity_fields = (EID, OID, SID, GID, PID)
+
+    # Entity tables
+    otablename = "org_organisation"
+    stablename = "org_site"
+    gtablename = "pr_group"
+    ptablename = "pr_person"
+
+    # Owner Entity Foreign Key 
+    realm_entity_fks = dict( pr_contact = EID,
+                             pr_physical_description = EID,
+                             pr_address = EID,
+                             pr_identity = "person_id",
+                             pr_education = "person_id",
+                             pr_note = "person_id",
+                             inv_recv = "site_id",
+                             inv_recv_item = "req_id",
+                             inv_track_item = "track_org_id",
+                             inv_adj_item = "adj_id",
+                             req_req_item = "req_id"
+                             
+                           )
+
+    # Default Foreign Keys (ordered by priority)
+    default_fks = [
+        "catalog_id",
+        "project_id",
+        "project_location_id"
+    ]
+
+    # Link Table
+    realm_entity_link_table = dict(
+        project_task = Storage( tablename = "project_task_project",
+                                link_key = "task_id"
+                              )
+        )
+    if tablename in realm_entity_link_table:
+        # Replace row with the record from the link table
+        link_table =  realm_entity_link_table[tablename]
+        table = s3db[link_table.tablename]
+        row = db(table[link_table.link_key] == row.id
+                 ).select(table.id,
+                          limitby=(0, 1)).first()
+    
+    # Check if there is a FK to inherit the realm_entity
+    realm_entity = None
+    fk = realm_entity_fks.get(tablename,None)
+    for default_fk in [fk] + default_fks:
+        if default_fk in table.fields:
+            fk = default_fk
+            # Inherit realm_entity from parent record
+            if fk == EID:
+                ftable = s3db.pr_person
+                query = ftable[EID] == row[EID]
+            else:
+                ftablename = table[fk].type[10:] #reference tablename
+                ftable = s3db[ftablename]
+                query = (table.id == row.id) & \
+                        (table[fk] == ftable.id)
+            record = db( query ).select(ftable.realm_entity,
+                                        limitby=(0, 1)).first()
+            if record:
+                realm_entity =  record.realm_entity
+                break
+            else:
+                #print tablename + ", " + ftablename + ", " + str(row.id)
+                realm_entity = None
+                # continue to loop through the rest of the default_fks
+
+    if not realm_entity:
+        get_pe_id = s3db.pr_get_pe_id
+        if EID in row and tablename not in ("pr_person", "dvi_body"):
+            realm_entity = row[EID]
+        elif OID in row:
+            realm_entity = get_pe_id(otablename, row[OID])
+        elif SID in row:
+            realm_entity = get_pe_id(stablename, row[SID])
+        elif GID in row:
+            realm_entity = get_pe_id(gtablename, row[GID])
+        else:
+            realm_entity = None
+        
+    return realm_entity
+settings.auth.realm_entity = ifrc_realm_entity
+
 # -----------------------------------------------------------------------------
 # Pre-Populate
 settings.base.prepopulate = ["IFRC_Train"]
