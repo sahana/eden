@@ -124,7 +124,7 @@ class S3StatsModel(S3Model):
 
         self.configure("stats_data",
                         onapprove = self.stats_data_onapprove,
-                        requires_approval=True,
+                        requires_approval = True,
                         )
         #----------------------------------------------------------------------
         # Stats Aggregated data

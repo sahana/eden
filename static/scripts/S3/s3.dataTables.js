@@ -42,7 +42,7 @@ function getElementClass(tagObj, prefix) {
     // Calculate the sublevel which can be used for the next new group
     pLen = prefix.length;
     var classList = tagObj.attr('class').split(/\s+/);
-    var className = "";
+    var className = '';
     $.each( classList, function(index, item){
         if (item.substr(0, pLen) == prefix){
             className = item;
@@ -662,8 +662,8 @@ $(document).ready(function() {
             oDataTable[t] = null;
             return;
         }
-      aoTableConfig[t]["groupTitles"] = config["groupTitles"];
-      aoTableConfig[t]["groupTotals"] = config["groupTotals"];
+      aoTableConfig[t]['groupTitles'] = config['groupTitles'];
+      aoTableConfig[t]['groupTotals'] = config['groupTotals'];
       oDataTable[t] = $(oTable).dataTable({
         'bDestroy': bReplace,
         'sDom': sDom[t],

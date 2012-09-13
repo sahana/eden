@@ -641,9 +641,10 @@ class DocSourceEntityVirtualFields:
         try:
             approved = self.doc_source_entity.approved_by
         except (AttributeError,TypeError):
+            # @ToDo: i18n?
             return "Approval pending"
         else:
-            if not approved or approved ==0:
+            if not approved or approved == 0:
                 return "Approval pending"
             else:
                 # @todo: add conditional branch for VCA report
