@@ -1443,12 +1443,12 @@ class AuthS3(Auth):
 
             @param user: the user record
             @param organisation_id: the user's orgnaisation_id
-                                    to get the person's owned_by_entity
+                                    to get the person's realm_entity
 
             Policy for linking to pre-existing person records:
 
             If this user is already linked to a person record with a different
-            first_name, last_name, email or owned_by_entity these will be
+            first_name, last_name, email or realm_entity these will be
             updated to those of the user.
 
             If a person record with exactly the same first name and
@@ -1475,12 +1475,12 @@ class AuthS3(Auth):
         gtable = s3db.gis_config
         ltable = s3db.pr_person_user
 
-        # Organisation becomes the owner entity of the person record
+        # Organisation becomes the realm entity of the person record
         if organisation_id:
-            owner_entity = s3db.pr_get_pe_id("org_organisation",
+            realm_entity = s3db.pr_get_pe_id("org_organisation",
                                              organisation_id)
         else:
-            owner_entity = None
+            realm_entity = None
 
         left = [ltable.on(ltable.user_id == utable.id),
                 ptable.on(ptable.pe_id == ltable.pe_id),
@@ -1569,7 +1569,7 @@ class AuthS3(Auth):
 
                 # Default record owner/realm
                 owner = Storage(owned_by_user=user.id,
-                                owned_by_entity=owner_entity)
+                                realm_entity=realm_entity)
 
                 if person:
                     query = ltable.pe_id == person.pe_id
@@ -3271,7 +3271,7 @@ class AuthS3(Auth):
 
         ownership_fields = ("owned_by_user",
                             "owned_by_group",
-                            "owned_by_entity")
+                            "realm_entity")
         pkey = table._id.name
         if isinstance(record, (Row, dict)) and pkey in record:
             record_id = record[pkey]
@@ -3295,7 +3295,7 @@ class AuthS3(Auth):
             @param record: the record (or record ID)
             @keyword owned_by_user: the auth_user ID of the owner user
             @keyword owned_by_group: the auth_group ID of the owner group
-            @keyword owned_by_entity: the pe_id of the owner entity, or a tuple
+            @keyword realm_entity: the pe_id of the realm entity, or a tuple
                                       (instance_type, instance_id) to lookup the
                                       pe_id from
         """
@@ -3305,7 +3305,7 @@ class AuthS3(Auth):
         # Ownership fields
         OUSR = "owned_by_user"
         OGRP = "owned_by_group"
-        OENT = "owned_by_entity"
+        OENT = "realm_entity"
         ownership_fields = (OUSR, OGRP, OENT)
 
         # Entity reference fields
@@ -3395,40 +3395,40 @@ class AuthS3(Auth):
             elif OGRP in fields:
                 data[OGRP] = fields[OGRP]
 
-        # Find owned_by_entity
+        # Find realm_entity
         if OENT in fields_in_table:
             if OENT in fields:
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
-                # Check for a global method to determine owner_entity
-                handler = current.deployment_settings.get_auth_owner_entity()
+                # Check for a global method to determine realm_entity
+                handler = current.deployment_settings.get_auth_realm_entity()
                 if callable(handler):
-                    owner_entity = handler(table, row)
+                    realm_entity = handler(table, row)
                 else:
-                    owner_entity = 0
+                    realm_entity = 0
                 # Fall back to table-specific method
-                if owner_entity == 0:
-                    handler = s3db.get_config(tablename, "owner_entity")
+                if realm_entity == 0:
+                    handler = s3db.get_config(tablename, "realm_entity")
                     if callable(handler):
-                        owner_entity = handler(table, row)
-                # If successful, set the owner entity
-                if owner_entity != 0:
-                    data[OENT] = owner_entity
+                        realm_entity = handler(table, row)
+                # If successful, set the realm entity
+                if realm_entity != 0:
+                    data[OENT] = realm_entity
                 else:
                     # Otherwise: introspective (fallback cascade)
                     get_pe_id = s3db.pr_get_pe_id
                     if EID in row and tablename not in ("pr_person", "dvi_body"):
-                        owner_entity = row[EID]
+                        realm_entity = row[EID]
                     elif OID in row:
-                        owner_entity = get_pe_id(otablename, row[OID])
+                        realm_entity = get_pe_id(otablename, row[OID])
                     elif SID in row:
-                        owner_entity = get_pe_id(stablename, row[SID])
+                        realm_entity = get_pe_id(stablename, row[SID])
                     elif GID in row:
-                        owner_entity = get_pe_id(gtablename, row[GID])
+                        realm_entity = get_pe_id(gtablename, row[GID])
                     else:
-                        owner_entity = None
-                    if owner_entity:
-                        data["owned_by_entity"] = owner_entity
+                        realm_entity = None
+                    if realm_entity:
+                        data["realm_entity"] = realm_entity
 
         self.s3_update_record_owner(table, row, **data)
         return
@@ -3645,7 +3645,7 @@ class S3Permission(object):
         self.use_facls = self.policy in (4, 5, 6, 7, 8)
         # ACLs to control access per table:
         self.use_tacls = self.policy in (5, 6, 7, 8)
-        # Authorization takes owner entity into account:
+        # Authorization takes realm entity into account:
         self.entity_realm = self.policy in (6, 7, 8)
         # Permissions shared along the hierarchy of entities:
         self.entity_hierarchy = self.policy in (7, 8)
@@ -3730,7 +3730,7 @@ class S3Permission(object):
                             # by this entity
                             Field("entity", "integer"),
                             # apply this ACL to all record regardless
-                            # of the owner entity
+                            # of the realm entity
                             Field("unrestricted", "boolean",
                                   default=False),
                             migrate=migrate,
@@ -3874,13 +3874,13 @@ class S3Permission(object):
             @param record: the record ID (or the Row, if already loaded)
 
             @note: if passing a Row, it must contain all available ownership
-                   fields (id, owned_by_user, owned_by_group, owned_by_entity),
+                   fields (id, owned_by_user, owned_by_group, realm_entity),
                    otherwise the record will be re-loaded by this function.
 
-            @returns: tuple of (owner_entity, owner_group, owner_user)
+            @returns: tuple of (realm_entity, owner_group, owner_user)
         """
 
-        owner_entity = None
+        realm_entity = None
         owner_group = None
         owner_user = None
 
@@ -3895,7 +3895,7 @@ class S3Permission(object):
             return DEFAULT
 
         # Check which ownership fields the table defines
-        ownership_fields = ("owned_by_entity",
+        ownership_fields = ("realm_entity",
                             "owned_by_group",
                             "owned_by_user")
         fields = [f for f in ownership_fields if f in table.fields]
@@ -3925,13 +3925,13 @@ class S3Permission(object):
             # Record does not exist
             return DEFAULT
 
-        if "owned_by_entity" in record:
-            owner_entity = record["owned_by_entity"]
+        if "realm_entity" in record:
+            realm_entity = record["realm_entity"]
         if "owned_by_group" in record:
             owner_group = record["owned_by_group"]
         if "owned_by_user" in record:
             owner_user = record["owned_by_user"]
-        return (owner_entity, owner_group, owner_user)
+        return (realm_entity, owner_group, owner_user)
 
     # -------------------------------------------------------------------------
     def is_owner(self, table, record, owners=None):
@@ -3941,7 +3941,7 @@ class S3Permission(object):
             @param table: the table or tablename
             @param record: the record ID (or the Row if already loaded)
             @param owners: override the actual record owners by a tuple
-                           (owner_entity, owner_group, owner_user)
+                           (realm_entity, owner_group, owner_user)
 
             @returns: True if the current user owns the record, else False
         """
@@ -3961,10 +3961,10 @@ class S3Permission(object):
             # Admin owns all records
             return True
         elif owners is not None:
-            owner_entity, owner_group, owner_user = \
+            realm_entity, owner_group, owner_user = \
                     owners
         elif record:
-            owner_entity, owner_group, owner_user = \
+            realm_entity, owner_group, owner_user = \
                     self.get_owners(table, record)
         else:
             # All users own no records
@@ -3987,20 +3987,20 @@ class S3Permission(object):
             return True
 
         # Public record?
-        if not owner_entity and \
+        if not realm_entity and \
            not owner_group and \
            not owner_user:
             return True
 
         # OrgAuth:
-        # apply only group memberships with are valid for the owner entity
-        if self.entity_realm and owner_entity:
+        # apply only group memberships with are valid for the realm entity
+        if self.entity_realm and realm_entity:
             realms = self.auth.user.realms
             roles = [sr.ANONYMOUS]
             append = roles.append
             for r in realms:
                 realm = realms[r]
-                if realm is None or owner_entity in realm:
+                if realm is None or realm_entity in realm:
                     append(r)
 
         # Ownership based on user role
@@ -4024,7 +4024,7 @@ class S3Permission(object):
 
         OUSR = "owned_by_user"
         OGRP = "owned_by_group"
-        OENT = "owned_by_entity"
+        OENT = "realm_entity"
 
         query = None
         if user is None:
@@ -4109,7 +4109,7 @@ class S3Permission(object):
         """
 
         ANY = "ANY"
-        OENT = "owned_by_entity"
+        OENT = "realm_entity"
 
         if ANY in entities:
             return None
@@ -4484,7 +4484,7 @@ class S3Permission(object):
         no_realm = []
         check_owner_acls = True
 
-        OENT = "owned_by_entity"
+        OENT = "realm_entity"
 
         if "ANY" in uacls:
             _debug("==> permitted for any records")
@@ -4620,7 +4620,7 @@ class S3Permission(object):
             @param c: the controller name, falls back to current request
             @param f: the function name, falls back to current request
             @param t: the tablename
-            @param entity: the owner entity
+            @param entity: the realm entity
 
             @returns: None for no ACLs defined (allow),
                       [] for no ACLs applicable (deny),
@@ -4966,7 +4966,7 @@ class S3Permission(object):
         # If the table doesn't have any ownership fields, then no
         if "owned_by_user" not in table.fields and \
            "owned_by_group" not in table.fields and \
-           "owned_by_entity" not in table.fields:
+           "realm_entity" not in table.fields:
             return False
 
         if not isinstance(method, (list, tuple)):
@@ -5009,7 +5009,7 @@ class S3Permission(object):
         acls = [entity for entity in acls if acls[entity][0] & racl == racl]
 
         # If we have a UACL and it is not limited to any realm, then no
-        if "ANY" in acls or acls and "owned_by_entity" not in table.fields:
+        if "ANY" in acls or acls and "realm_entity" not in table.fields:
             return False
 
         # In all other cases: yes

@@ -222,9 +222,9 @@ class S3Config(Storage):
     def get_auth_record_approver_role(self):
         """ UID of the record approver role """
         return self.auth.get("record_approver_role", "APPROVER")
-    def get_auth_owner_entity(self):
+    def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
-        return self.auth.get("owner_entity", None)
+        return self.auth.get("realm_entity", None)
     def get_auth_role_modules(self):
         """
             Which modules are includes in the Role Manager

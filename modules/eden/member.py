@@ -72,7 +72,8 @@ class S3MembersModel(S3Model):
         table = define_table(tablename,
                              Field("name", notnull=True, length=64,
                                    label=T("Name")),
-                             # Only included in order to be able to set owned_by_entity to filter appropriately
+                             # Only included in order to be able to set
+                             # realm_entity to filter appropriately
                              organisation_id(
                                              default = root_org,
                                              readable = False,

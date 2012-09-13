@@ -114,6 +114,7 @@ def alert():
                                            'deleted',
                                            'modified_on',
                                            'owned_by_entity',
+                                           'realm_entity',
                                            'uuid',
                                            'created_on',
                                            'deleted_fk',

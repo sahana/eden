@@ -63,18 +63,15 @@ settings.fin.currencies = {
 settings.security.policy = 7 # Realm w Hierarchy
 settings.security.map = True
 
-# Owner Entity
-# If the fallback options for the realm a record belong to will be 
-# the user's organisation, the the user's pe_id instead of None 
-# Is this now still needed?
-def eurosha_owner_entity(table, row):
+# Realm Entity
+def eurosha_realm_entity(table, row):
     user = current.auth.user
     if user is not None:
         return current.s3db.pr_get_pe_id("org_organisation",
                                          user.organisation_id)
     else:
         return None
-settings.auth.owner_entity = eurosha_owner_entity
+settings.auth.realm_entity = eurosha_realm_entity
 
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted.

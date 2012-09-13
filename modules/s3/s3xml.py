@@ -87,7 +87,8 @@ class S3XML(S3Codec):
     IGNORE_FIELDS = [
             "id",
             "deleted_fk",
-            "owned_by_entity"]
+            "owned_by_entity",
+            "realm_entity"] # @todo: export the realm entity
 
     FIELDS_TO_ATTRIBUTES = [
             "id",

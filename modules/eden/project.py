@@ -1937,8 +1937,8 @@ class S3Project3WModel(S3Model):
             Record creation post-processing
 
             If the added organisation is the lead role, set the
-            project.organisation to point to the same organisation 
-            & update the owned_by_entity.
+            project.organisation to point to the same organisation
+            & update the realm_entity.
 
             In DRRPP, update the donors field
         """
@@ -1947,7 +1947,7 @@ class S3Project3WModel(S3Model):
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
-        
+
         # Get the project ID from the new project organisation record
         project_id = db(otable.id == vars.id).select( otable.project_id,
                                                       limitby=(0, 1)
@@ -1955,7 +1955,7 @@ class S3Project3WModel(S3Model):
 
         if current.deployment_settings.get_template() == "DRRPP":
             dtable = db.project_drrpp
-                                                  
+
             # Get all the Donors for this Project
             query = (otable.deleted == False) & \
                     (otable.role == 3) & \
@@ -1974,7 +1974,7 @@ class S3Project3WModel(S3Model):
             organisation_id = vars.organisation_id
             db(ptable.id == project_id).update(
                                         organisation_id = organisation_id,
-                                        owned_by_entity = s3db.pr_get_pe_id("org_organisation",
+                                        realm_entity = s3db.pr_get_pe_id("org_organisation",
                                                                             organisation_id)
                                         )
 
@@ -3040,7 +3040,7 @@ class S3ProjectTaskModel(S3Model):
                   super_entity="doc_entity",
                   copyable=True,
                   orderby="project_task.priority",
-                  owner_entity=self.task_owner_entity,
+                  realm_entity=self.task_realm_entity,
                   onvalidation=self.task_onvalidation,
                   create_next=URL(f="task", args=["[id]"]),
                   create_onaccept=self.task_create_onaccept,
@@ -3390,8 +3390,8 @@ class S3ProjectTaskModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def task_owner_entity(table, record):
-        """ Set the task owner entity to the project's owner entity """
+    def task_realm_entity(table, record):
+        """ Set the task realm entity to the project's realm entity """
 
         task_id = record.id
         db = current.db
@@ -3399,10 +3399,10 @@ class S3ProjectTaskModel(S3Model):
         ltable = db.project_task_project
         query = (ltable.task_id == task_id) & \
                 (ltable.project_id == ptable.id)
-        project = db(query).select(ptable.owned_by_entity,
+        project = db(query).select(ptable.realm_entity,
                                    limitby=(0, 1)).first()
         if project:
-            return project.owned_by_entity
+            return project.realm_entity
         else:
             return None
 
