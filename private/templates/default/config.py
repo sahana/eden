@@ -290,7 +290,7 @@ settings.L10n.decimal_separator = "."
 # Supply
 #settings.supply.use_alt_name = False
 # Do not edit after deployment
-#settings.supply.catalog_default = T("Other Items")
+#settings.supply.catalog_default = T("Default")
 
 # Organisation Management
 # Set the length of the auto-generated org/site code the default is 10

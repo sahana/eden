@@ -334,6 +334,19 @@ class S3MembersModel(S3Model):
 
         # Affiliation
         s3db.pr_update_affiliations(mtable, record)
+        ptable = s3db.pr_person
+        person_id = record.person_id
+        
+        setting = current.deployment_settings
+        if setting.get_auth_person_realm_member_org():
+            # Set realm_entity = organisation pe_id for pr_person now that it is affliated
+            otable = s3db.org_organisation
+            organisation_id = record.organisation_id
+            person = ptable[person_id]
+            organisation = otable[organisation_id]
+            if organisation and not person.realm_entity:
+                db(s3db.pr_person.id == person_id
+                   ).update(realm_entity = organisation.pe_id)
 
         # Update the location ID from the Home Address
         atable = s3db.pr_address

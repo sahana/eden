@@ -1080,7 +1080,7 @@ class S3TrackingModel(S3Model):
                              # - can't override field name, ondelete or requires
                              # @ToDo: We really need to be able to filter this by permitted_facilities
                              self.super_link("site_id", "org_site",
-                                              label = T("By Warehouse/Facility/Office"),
+                                              label = T("Warehouse/Facility/Office (Recipient)"),
                                               ondelete = "SET NULL",
                                               filterby = "site_id",
                                               filter_opts = permitted_facilities(redirect_on_error=False),
@@ -2379,7 +2379,7 @@ def inv_tabs(r):
             inv_tabs = [(T("Stock"), "inv_item"),
                         #(T("Incoming"), "incoming/"),
                         (recv_tab, "recv"),
-                        (T("Send"), "send", dict(select="sent")),
+                        (T("Send"), "send"),
                         ]
             if settings.has_module("proc"):
                 inv_tabs.append((T("Planned Procurements"), "plan"))
@@ -3446,7 +3446,7 @@ class InvTrackItemVirtualFields:
             # Need real numbers to use for Report calculations
             #return IS_FLOAT_AMOUNT.represent(v, precision=2)
             return v
-        except AttributeError:
+        except:
             # not available
             return current.messages.NONE
 

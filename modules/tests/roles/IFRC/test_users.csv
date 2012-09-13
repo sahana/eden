@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Warehouse-A,Org-A,warehouse-a@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-A,org_user/inv_warehouse.name=Org-A Warehouse-A,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A
+Warehouse-B,Org-A,warehouse-b@org-a.com,eden,"inv_editor/inv_warehouse.name=Org-A Warehouse-B,org_user/inv_warehouse.name=Org-A Warehouse-B,inv_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A
+Org-A-Branch-A,Org-A,branch-a@org-a.com,eden,"staff_editor/org_organisation.name=Org-A-Branch-A,org_user/org_organisation.name=Org-A-Branch-A,staff_reader/org_organisation.name=Org-A,org_user/org_organisation.name=Org-A",Org-A-Branch-A

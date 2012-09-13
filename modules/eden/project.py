@@ -1753,7 +1753,7 @@ class S3Project3WModel(S3Model):
                   deduplicate=self.project_organisation_deduplicate,
                   onvalidation=self.project_organisation_onvalidation,
                   onaccept=self.project_organisation_onaccept,
-                  ondelete=self.project_organisation_ondelete)
+                  ondelete=self.project_organisation_ondelete,)
 
         # Reusable Field
 

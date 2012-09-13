@@ -2772,9 +2772,6 @@ class S3PersonDescription(S3Model):
         # CRUD Strings
         # ?
 
-        # Resource Configuration
-        # ?
-
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #

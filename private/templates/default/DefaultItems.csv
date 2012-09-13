@@ -1,10 +1,10 @@
-"Catalogue","Cat Code","Category","Name","Unit of Measure","Notes"
-"Default","Agriculture","Agriculture","Rice Seed","sack20kg","This should provide enough seed for 1 Hectare of land"
-"Default","Food","Food","Rice","sack50kg","This should feed 125 people for 1 day"
-"Default","Food","Food","Cooking Utensils","kit","Cooking Utensils for a Household"
-"Default","Health","Health","First Aid Kit","kit","This should provide basic first aid (bandages, oral rehydration salts, etc) for 100 people to self-administer"
-"Default","Health","Health","Medical Kit","kit","This should provide medical supplies (medicines, vaccines) for a professional clinic to provide assistance to a total community of 10,000 people."
-"Default","Shelter","Shelter","Shelter Kit","kit","This kit is suitable to provide emergency repair to a damaged home. It contains a tarpaulin, zinc sheet, wooden poles, hammer & nails"
-"Default","Shelter","Shelter","Tent","piece","This should house a family of up to 8 people"
-"Default","WASH","WASH","Hygiene Kit","kit","Personal Hygiene supplies for 100 Households (5 persons/household): Each get 2x Buckets, 10x Soap, Cotton cloth"
-"Default","WASH","WASH","Water Purification Sachets","kit","Designed to provide a 1st phase drinking water purification solution at the household level. Contains 600 sachets to provide sufficient drinking water (4l) for 100 people for 30 days."
+Catalog,Category Code,Category,Name,Unit of Measure,Notes
+Default,Agriculture,Agriculture,Rice Seed,sack20kg,This should provide enough seed for 1 Hectare of land
+Default,Food,Food,Rice,sack50kg,This should feed 125 people for 1 day
+Default,Food,Food,Cooking Utensils,kit,Cooking Utensils for a Household
+Default,Health,Health,First Aid Kit,kit,"This should provide basic first aid (bandages, oral rehydration salts, etc) for 100 people to self-administer"
+Default,Health,Health,Medical Kit,kit,"This should provide medical supplies (medicines, vaccines) for a professional clinic to provide assistance to a total community of 10,000 people."
+Default,Shelter,Shelter,Shelter Kit,kit,"This kit is suitable to provide emergency repair to a damaged home. It contains a tarpaulin, zinc sheet, wooden poles, hammer & nails"
+Default,Shelter,Shelter,Tent,piece,This should house a family of up to 8 people
+Default,WASH,WASH,Hygiene Kit,kit,"Personal Hygiene supplies for 100 Households (5 persons/household): Each get 2x Buckets, 10x Soap, Cotton cloth"
+Default,WASH,WASH,Water Purification Sachets,kit,Designed to provide a 1st phase drinking water purification solution at the household level. Contains 600 sachets to provide sufficient drinking water (4l) for 100 people for 30 days.

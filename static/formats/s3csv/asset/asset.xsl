@@ -351,12 +351,18 @@
             <data field="name"><xsl:value-of select="$Name"/></data>
             <data field="model"><xsl:value-of select="$Model"/></data>
             <data field="um">piece</data>
-               <!-- Link to Supply Item Category -->
-               <reference field="item_category_id" resource="supply_item_category">
-                   <xsl:attribute name="tuid">
-                       <xsl:value-of select="$CategoryID"/>
-                   </xsl:attribute>
-               </reference>
+            <!-- Link to Supply Catalog -->
+            <reference field="catalog_id" resource="supply_catalog">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$CatalogName"/>
+                </xsl:attribute>
+            </reference>
+            <!-- Link to Supply Item Category -->
+            <reference field="item_category_id" resource="supply_item_category">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$CategoryID"/>
+                </xsl:attribute>
+            </reference>
             <xsl:if test="$BrandName!=''">
                 <reference field="brand_id" resource="supply_brand">
                     <xsl:attribute name="tuid">

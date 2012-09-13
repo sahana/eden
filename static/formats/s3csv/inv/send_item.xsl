@@ -27,6 +27,7 @@
          to_site_id.............inv_send.to_site_id
          status.................inv_send.status
          inv_send.comments......inv_send.comments
+         Catalog................supply_catalog_item.catalog_id.name
          item...................inv_send_item.item_id -> supply_item.name
          item_pack..............inv_send_item.item_pack_id -> supply_item_pack.id & supply_item.um
          item_model.............supply_item.model
@@ -59,6 +60,8 @@
     <xsl:key name="pr_recipient"
              match="row"
              use="col[@field='recipient']"/>
+
+    <xsl:key name="catalog" match="row" use="col[@field='Catalog']"/>
 
     <xsl:key name="inv_item"
              match="row"
@@ -138,6 +141,12 @@
                 <xsl:call-template name="Person">
                     <xsl:with-param name="name" select="col[@field='recipient']"/>
                 </xsl:call-template>
+            </xsl:for-each>
+            <!-- ******************************************************************
+                 Search for each catalog and create a unique supply_catalog record
+                 ****************************************************************** -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('catalog', col[@field='Catalog'])[1])]">
+                <xsl:call-template name="Catalog"/>
             </xsl:for-each>
             <!-- ******************************************************************
                  Search for each inventory item and create a unique inv_item record
@@ -319,6 +328,19 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Catalog">
+        <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
+
+        <resource name="supply_catalog">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$catalog"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$catalog"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Item">
         <xsl:variable name="item" select="col[@field='item']/text()"/>
         <xsl:variable name="pack" select="col[@field='item_pack']/text()"/>
@@ -330,6 +352,14 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$tuid"/>
             </xsl:attribute>
+            <xsl:if test="$catalog!=''">
+                <!-- Link to Supply Catalog -->
+                <reference field="catalog_id" resource="supply_catalog">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$catalog"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
             <data field="name"><xsl:value-of select="$item"/></data>
             <data field="um"><xsl:value-of select="$pack"/></data>
             <data field="model"><xsl:value-of select="$model"/></data>

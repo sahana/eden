@@ -952,6 +952,8 @@ $(document).ready(function(){
 })'''),
                                         )
 
+        # -------------------------------------------------------------------------
+
         self.configure(tablename,
                        super_entity="supply_item_entity",
                        onaccept=req_item_onaccept,
