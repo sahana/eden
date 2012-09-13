@@ -448,7 +448,7 @@ class S3CRUD(S3Method):
             # Hide empty fields from popups on map
             for field in table:
                 if field.readable:
-                    value = resource._rows.records[0][tablename][field.name]
+                    value = r.record[field]
                     if value is None or value == "" or value == []:
                         field.readable = False
 
