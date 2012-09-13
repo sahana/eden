@@ -445,36 +445,43 @@ class S3CRUD(S3Method):
                     pass
 
         elif representation == "plain":
-            # Hide empty fields from popups on map
-            for field in table:
-                if field.readable:
-                    value = resource._rows.records[0][tablename][field.name]
-                    if value is None or value == "" or value == []:
-                        field.readable = False
+            T = current.T
+            if r.component:
+                record = table[record_id] if record_id else None
+            else:
+                record = r.record
+            if record:
+                # Hide empty fields from popups on map
+                for field in table:
+                    if field.readable:
+                        value = record[field]
+                        if value is None or value == "" or value == []:
+                            field.readable = False
+                item = self.sqlform(request=request,
+                                    resource=self.resource,
+                                    record_id=record_id,
+                                    readonly=True,
+                                    format=representation)
 
-            # Form
-            item = self.sqlform(request=request,
-                                resource=self.resource,
-                                record_id=record_id,
-                                readonly=True,
-                                format=representation)
-            output["item"] = item
-
-            # Details Link
-            authorised = self._permitted(method="read")
-            if authorised:
+                # Details Link
                 popup_url = _config("popup_url", None)
                 if not popup_url:
                     popup_url = r.url(method="read", representation="html")
                 if popup_url:
-                    details_btn = A(current.T("Show Details"), _href=popup_url,
-                                    _id="details-btn", _target="_blank")
+                    details_btn = A(T("Show Details"),
+                                    _href=popup_url,
+                                    _id="details-btn",
+                                    _target="_blank")
                     output["details_btn"] = details_btn
 
-            # Title and subtitle
-            title = self.crud_string(r.tablename, "title_display")
-            output["title"] = title
+                # Title and subtitle
+                title = self.crud_string(r.tablename, "title_display")
+                output["title"] = title
 
+            else:
+                item = T("Record not found")
+
+            output["item"] = item
             response.view = "plain.html"
 
         elif representation == "csv":

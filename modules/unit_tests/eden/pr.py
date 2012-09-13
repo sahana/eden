@@ -187,7 +187,8 @@ class PersonDeduplicateTests(unittest.TestCase):
 
         deduplicate = s3db.get_config("pr_person", "deduplicate")
 
-        # Test Match
+        # Test Match:
+        # Same first name and last name, no email in either record
         person = Storage(first_name = "Test",
                          last_name = "UserDEDUP")
         item = self.import_item(person)
@@ -195,7 +196,8 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertEqual(item.id, self.person1_id)
         self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
-        # Test Mismatch
+        # Test Mismatch:
+        # Different first name, same last name
         person = Storage(first_name = "Other",
                          last_name = "UserDEDUP")
         item = self.import_item(person)
@@ -212,7 +214,9 @@ class PersonDeduplicateTests(unittest.TestCase):
 
         # Test without contact records in the DB
 
-        # Test Match
+        # Test Match:
+        # Same first and last name,
+        # no email in the DB but in the import item
         person = Storage(first_name = "Test",
                          last_name = "UserDEDUP")
         item = self.import_item(person, email="testuser@example.com")
@@ -221,6 +225,8 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
         # Test Mismatch
+        # Different first name, same last name,
+        # no email in the DB but in the import item
         person = Storage(first_name = "Other",
                          last_name = "UserDEDUP")
         item = self.import_item(person, email="testuser@example.com")
@@ -249,15 +255,41 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertEqual(item.id, self.person1_id)
         self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
-        # Test Match - same names, different email
+        # Test Mismatch - same names, no email in import item
         person = Storage(first_name = "Test",
                          last_name = "UserDEDUP")
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+        # Test Match - same names, no email in import item, but matching DOB
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP",
+                         date_of_birth = datetime.date(1974, 4, 13))
+        item = self.import_item(person)
+        deduplicate(item)
+        self.assertEqual(item.id, self.person1_id)
+        self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
+
+        # Test Mismatch - same names, different email
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP")
+        item = self.import_item(person, email="otheremail@example.com")
+        deduplicate(item)
+        self.assertNotEqual(item.id, self.person1_id)
+        self.assertNotEqual(item.id, self.person2_id)
+
+        # Test Match - same names, different email, but matching DOB
+        person = Storage(first_name = "Test",
+                         last_name = "UserDEDUP",
+                         date_of_birth = datetime.date(1974, 4, 13))
         item = self.import_item(person, email="otheremail@example.com")
         deduplicate(item)
         self.assertEqual(item.id, self.person1_id)
         self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
-        # Test Match - same names, same email, but different record
+        # Test Match - same names, same email, but other record
         person = Storage(first_name = "Test",
                          last_name = "UserDEDUP")
         item = self.import_item(person, email="otheruser@example.org")

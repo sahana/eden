@@ -869,9 +869,9 @@ class S3PersonModel(S3Model):
    # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
-        """ Onaccept callback 
+        """ Onaccept callback
             Update any user associated with this person
-        
+
         """
 
         db = current.db
@@ -880,11 +880,11 @@ class S3PersonModel(S3Model):
 
         vars = form.vars
         person_id = vars.id
-        
+
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
         utable = auth.settings.table_user
-        
+
         # Find a user for this person
         query = (ptable.id == person_id) & \
                 (ltable.pe_id == ptable.pe_id) & \
@@ -956,9 +956,17 @@ class S3PersonModel(S3Model):
                                       ptable.date_of_birth,
                                       etable.value,
                                       stable.value,
-                                      left=left)
+                                      left=left,
+                                      orderby=["pr_person.created_on ASC"])
 
         duplicates = Storage()
+
+        def rank(a, b, match, mismatch):
+            if a and b:
+                return match if a == b else mismatch
+            else:
+                return untested
+
         for row in candidates:
             row_fname = row[ptable.first_name]
             row_lname = row[ptable.last_name]
@@ -968,36 +976,27 @@ class S3PersonModel(S3Model):
             row_sms = row[stable.value]
 
             check = 0
+
             if fname and row_fname:
-                if fname.lower() == row_fname.lower():
-                    check += 2
-                else:
-                    check -= 2
+                check += rank(fname.lower(), row_fname.lower(), +2, -2)
+
             if lname and row_lname:
-                if lname.lower() == row_lname.lower():
-                    check += 2
-                else:
-                    check -= 2
+                check += rank(lname.lower(), row_lname.lower(), +2, -2)
+
             if dob and row_dob:
-                if dob == row_dob:
-                    check += 2
-                else:
-                    check -= 2
-            if initials and row_initials:
-                if initials.lower() == row_initials.lower():
-                    check += 1
-                else:
-                    check -= 1
+                check += rank(dob, row_dob, +3, -2)
+
             if email and row_email:
-                if email.lower() == row_email.lower():
-                    check += 1
-                else:
-                    check -= 1
+                check += rank(email.lower(), row_email.lower(), +2, -5)
+            elif not email:
+                # Treat missing email as mismatch
+                check -= 2 if initials else 3 if not row_email else 4
+
+            if initials and row_initials:
+                check += rank(initials.lower(), row_initials.lower(), +4, -1)
+
             if sms and row_sms:
-                if sms.lower() == row_sms.lower():
-                    check += 1
-                else:
-                    check -= 1
+                check += rank(sms.lower(), row_sms.lower(), +1, -1)
 
             if check in duplicates:
                 continue

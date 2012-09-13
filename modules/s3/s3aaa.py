@@ -3400,16 +3400,22 @@ class AuthS3(Auth):
             if OENT in fields:
                 data[OENT] = fields[OENT]
             elif not row[OENT] or force_update:
-                # Check for custom handler to find the owner entity
-                # (global setting overrides table-specific setting)
+                # Check for a global method to determine owner_entity
                 handler = current.deployment_settings.get_auth_owner_entity()
-                if handler is None:
-                    handler = s3db.get_config(tablename, "owner_entity")
                 if callable(handler):
                     owner_entity = handler(table, row)
-                    data[OENT] = owner_entity
-                # Otherwise, do a fallback cascade
                 else:
+                    owner_entity = 0
+                # Fall back to table-specific method
+                if owner_entity == 0:
+                    handler = s3db.get_config(tablename, "owner_entity")
+                    if callable(handler):
+                        owner_entity = handler(table, row)
+                # If successful, set the owner entity
+                if owner_entity != 0:
+                    data[OENT] = owner_entity
+                else:
+                    # Otherwise: introspective (fallback cascade)
                     get_pe_id = s3db.pr_get_pe_id
                     if EID in row and tablename not in ("pr_person", "dvi_body"):
                         owner_entity = row[EID]
