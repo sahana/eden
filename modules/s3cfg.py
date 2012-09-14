@@ -219,6 +219,9 @@ class S3Config(Storage):
     def get_auth_record_approval(self):
         """ Use record approval (False by default) """
         return self.auth.get("record_approval", False)
+    def get_auth_record_approval_required_for(self):
+        """ Which tables record approval is required for """
+        return self.auth.get("record_approval_required_for", None)
     def get_auth_record_approver_role(self):
         """ UID of the record approver role """
         return self.auth.get("record_approver_role", "APPROVER")
@@ -226,14 +229,14 @@ class S3Config(Storage):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("realm_entity", None)
     def get_auth_person_realm_human_resource_org(self):
-        """ 
-            Sets pr_person.realm_entity to 
+        """
+            Sets pr_person.realm_entity to
             organisation.pe_id of hrm_human_resource
         """
         return self.auth.get("person_realm_human_resource_org", False)
     def get_auth_person_realm_member_org(self):
-        """ 
-            Sets pr_person.realm_entity to 
+        """
+            Sets pr_person.realm_entity to
             organisation.pe_id of member_member
         """
         return self.auth.get("person_realm_member_org", False)

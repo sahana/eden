@@ -4138,9 +4138,9 @@ class S3Permission(object):
 
         db = current.db
 
-        approve = current.s3db.get_config(table, "requires_approval", False)
-        if not approve or "approved_by" not in table.fields:
-            return True
+        if "approved_by" not in table.fields or \
+           not self.requires_approval(table):
+            return approved
 
         if isinstance(record, (Row, dict)):
             if "approved_by" not in record:
@@ -4316,8 +4316,8 @@ class S3Permission(object):
             raise self.error("Cannot determine permission.")
 
         elif permitted and \
-             current.deployment_settings.get_auth_record_approval() and \
-             t is not None and record is not None:
+             t is not None and record is not None and \
+             self.requires_approval(t):
 
             approval_methods = ("approve", "review", "reject")
 
@@ -4415,8 +4415,7 @@ class S3Permission(object):
         base_filter = None
 
         # Record approval
-        approve = current.deployment_settings.get_auth_record_approval() & \
-                  current.s3db.get_config(table, "requires_approval", False)
+        approve = self.requires_approval(table)
         approval_methods = ("approve", "review", "reject")
         if approve and "approved_by" in table.fields:
             approver_role = current.session["approver_role"]
@@ -4902,6 +4901,32 @@ class S3Permission(object):
              c in modules and not modules[c].restricted:
             return False
         return True
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def requires_approval(table):
+        """
+            Check whether record approval is required for a table
+
+            @param table: the table (or tablename)
+        """
+
+        settings = current.deployment_settings
+
+        if settings.get_auth_record_approval():
+            tables = settings.get_auth_record_approval_required_for()
+            if tables is not None:
+                table = table._tablename if type(table) is Table else table
+                if table in tables:
+                    return True
+                else:
+                    return False
+            elif current.s3db.get_config(table, "requires_approval"):
+                return True
+            else:
+                return False
+        else:
+            return False
 
     # -------------------------------------------------------------------------
     def hidden_modules(self):

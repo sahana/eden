@@ -259,7 +259,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     if deployment_settings.get_auth_record_approval():
         prefix, name, table, tablename = r.target()
         if "approved_by" in table.fields and \
-           s3db.get_config(tablename, "requires_approval", False):
+           current.auth.permission.requires_approval(table):
             r.set_handler(["approve", "reject"], s3base.S3ApproveRecords(),
                           http = ["GET", "POST"])
 

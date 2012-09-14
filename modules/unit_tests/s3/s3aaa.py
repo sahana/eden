@@ -680,6 +680,10 @@ class AuthTests(unittest.TestCase):
             auth.s3_delete_role(UUID)
             auth.s3_impersonate(None)
 
+    def tearDown(self):
+
+        current.db.rollback()
+
     # -------------------------------------------------------------------------
     # Record Ownership
     #
@@ -1330,7 +1334,7 @@ class PermissionTests(unittest.TestCase):
     def remove_test_record(self):
         db = current.db
         db(self.table.id == self.record_id).delete()
-        db.commit()
+        #db.commit()
         return
 
 # =============================================================================
@@ -2478,6 +2482,84 @@ class RecordApprovalTests(unittest.TestCase):
             deployment_settings.auth.record_approval = False
             auth.s3_impersonate(None)
 
+    def testRequiresApproval(self):
+        """ Test requires_approval settings """
+
+        s3db = current.s3db
+        settings = current.deployment_settings
+
+        approval = settings.get_auth_record_approval()
+        tables = settings.get_auth_record_approval_required_for()
+
+        org_approval = s3db.get_config("org_organisation", "requires_approval")
+
+        approval_required = current.auth.permission.requires_approval
+
+        try:
+
+            # Approval globally turned off
+            settings.auth.record_approval = False
+            settings.auth.record_approval_required_for = []
+            s3db.configure("org_organisation", requires_approval=True)
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, but set to no tables and table=off
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = []
+            s3db.configure("org_organisation", requires_approval=False)
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, but set to no tables yet table=on
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = []
+            s3db.configure("org_organisation", requires_approval=True)
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, but set to any tables and table=on
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = None
+            s3db.configure("org_organisation", requires_approval=True)
+            self.assertTrue(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, but set to different tables and table=on
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = ["project_project"]
+            s3db.configure("org_organisation", requires_approval=True)
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, set to this table and table=off
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = ["org_organisation"]
+            s3db.configure("org_organisation", requires_approval=False)
+            self.assertTrue(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, set to any table and table=off
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = None
+            s3db.configure("org_organisation", requires_approval=False)
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+            # Approval globally turned on, set to any table and no table config
+            settings.auth.record_approval = True
+            settings.auth.record_approval_required_for = None
+            s3db.clear_config("org_organisation", "requires_approval")
+            self.assertFalse(approval_required("org_organisation"))
+            s3db.clear_config("org_organisation", "requires_approval")
+
+        finally:
+            settings.auth.record_approval = approval
+            settings.auth.record_approval_required_for = tables
+            if org_approval is not None:
+                s3db.configure("org_organisation",
+                               requires_approval = org_approval)
+
     def testRecordApprovalWithComponents(self):
         """ Test record approval including components """
 
@@ -2869,12 +2951,15 @@ class RecordApprovalTests(unittest.TestCase):
         table = s3db.pr_person
 
         otable = s3db.org_organisation
-        org_requires_approval = s3db.get_config(otable, "requires_approval")
+
+        approval = deployment_settings.get_auth_record_approval()
+        approval_required = deployment_settings.get_auth_record_approval_required_for()
+
+        # Record approval on, but for no tables
+        deployment_settings.auth.record_approval = True
+        deployment_settings.auth.record_approval_required_for = []
 
         try:
-            # Set record approval on
-            deployment_settings.auth.record_approval = True
-
             AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
 
             # Admin can always see all records
@@ -2888,7 +2973,6 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertFalse("approved_by" in str(query))
 
             table = s3db.org_organisation
-            s3db.clear_config("org_organisation", "requires_approval")
 
             # Approval not required by default
             session.approver_role = None
@@ -2896,7 +2980,7 @@ class RecordApprovalTests(unittest.TestCase):
             query = accessible_query("read", table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.id > 0)")
 
-            s3db.configure(table, requires_approval=True)
+            deployment_settings.auth.record_approval_required_for = ["org_organisation"]
 
             # Admin can always see all records
             session.approver_role = None
@@ -2937,9 +3021,8 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertEqual(str(query), "(org_organisation.id > 0)")
 
         finally:
-            s3db.configure("org_organisation",
-                           requires_approval=org_requires_approval)
-            deployment_settings.auth.record_approval = False
+            deployment_settings.auth.record_approval = approval
+            deployment_settings.auth.record_approval_required_for = approval_required
 
     def tearDown(self):
 
@@ -3762,8 +3845,10 @@ class EntityRoleManagerTests(unittest.TestCase):
         self.assertTrue("staff_reader" in assigned_roles)
         self.assertTrue("project_editor" in assigned_roles)
 
-        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
-                         {self.org_id: ["staff_reader", "project_editor"]})
+        assigned_roles = self.rm.get_assigned_roles(user_id=self.user_id)
+        self.assertTrue(all([r in assigned_roles[self.org_id]
+                             for r in ("staff_reader", "project_editor")]))
+        self.assertEqual(len(assigned_roles[self.org_id]), 2)
 
         roles = self.rm.get_assigned_roles(user_id=self.user_id)
         self.assertTrue(self.org_id in roles)
@@ -3776,29 +3861,36 @@ class EntityRoleManagerTests(unittest.TestCase):
 
     def testUpdateRoles(self):
         # test that the before/after works
-        before = ["staff_reader", "project_editor"]
-        after = ["survey_reader"]
+        before = ("staff_reader", "project_editor")
+        after = ("survey_reader",)
 
         # Give the user a new set of roles
         self.rm.update_roles(self.user_id,
                              self.org_id,
                              before,
                              after)
-        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
-                         {self.org_id: after})
+        assigned_roles = self.rm.get_assigned_roles(user_id=self.user_id)
+        self.assertTrue(self.org_id in assigned_roles)
+        self.assertTrue(all([r in assigned_roles[self.org_id]
+                             for r in after]))
+        self.assertEqual(len(assigned_roles[self.org_id]), len(after))
 
         # Reverse the changes
         self.rm.update_roles(self.user_id,
                              self.org_id,
                              after,
                              before)
-        self.assertEqual(self.rm.get_assigned_roles(user_id=self.user_id),
-                         {self.org_id: before})
+        assigned_roles = self.rm.get_assigned_roles(user_id=self.user_id)
+        self.assertTrue(self.org_id in assigned_roles)
+        self.assertTrue(all([r in assigned_roles[self.org_id]
+                             for r in before]))
+        self.assertEqual(len(assigned_roles[self.org_id]), len(before))
 
     def tearDown(self):
         auth = current.auth
         auth.s3_retract_role(self.user_id, "staff_reader", for_pe=self.org_id)
         auth.s3_retract_role(self.user_id, "project_editor", for_pe=self.org_id)
+        current.db.rollback()
 
     @classmethod
     def tearDownClass(cls):

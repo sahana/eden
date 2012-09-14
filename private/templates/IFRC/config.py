@@ -29,7 +29,7 @@ settings.security.map = True
 settings.auth.person_realm_human_resource_org = True
 settings.auth.person_realm_member_org = True
 def ifrc_realm_entity(table, row):
-    
+
     s3db = current.s3db
     db = current.db
 
@@ -50,7 +50,7 @@ def ifrc_realm_entity(table, row):
     gtablename = "pr_group"
     ptablename = "pr_person"
 
-    # Owner Entity Foreign Key 
+    # Owner Entity Foreign Key
     realm_entity_fks = dict( pr_contact = EID,
                              pr_physical_description = EID,
                              pr_address = EID,
@@ -62,7 +62,7 @@ def ifrc_realm_entity(table, row):
                              inv_track_item = "track_org_id",
                              inv_adj_item = "adj_id",
                              req_req_item = "req_id"
-                             
+
                            )
 
     # Default Foreign Keys (ordered by priority)
@@ -85,7 +85,7 @@ def ifrc_realm_entity(table, row):
         row = db(table[link_table.link_key] == row.id
                  ).select(table.id,
                           limitby=(0, 1)).first()
-    
+
     # Check if there is a FK to inherit the realm_entity
     realm_entity = None
     fk = realm_entity_fks.get(tablename,None)
@@ -123,7 +123,7 @@ def ifrc_realm_entity(table, row):
             realm_entity = get_pe_id(gtablename, row[GID])
         else:
             realm_entity = None
-        
+
     return realm_entity
 settings.auth.realm_entity = ifrc_realm_entity
 

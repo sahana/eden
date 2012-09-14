@@ -63,6 +63,8 @@ T = current.T
 #settings.auth.registration_roles = ["STAFF", "PROJECT_EDIT"]
 # Uncomment this to enable record approval
 #settings.auth.record_approval = True
+# Uncomment this and specify a list of tablenames for which record approval is required
+#settings.auth.record_approval_required_for = ["project_project"]
 # Uncomment & populate this to set an alternative record approver role
 #settings.auth.record_approver_role = "APPROVER"
 # Uncomment this to request an image when users register

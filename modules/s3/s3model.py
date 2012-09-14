@@ -30,6 +30,7 @@
 __all__ = ["S3Model", "S3ModelExtensions"]
 
 from gluon import *
+from gluon.dal import Table
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field
@@ -352,7 +353,7 @@ class S3Model(object):
 
         config = current.model.config
 
-        tn = str(tablename)
+        tn = tablename._tablename if type(tablename) is Table else tablename
         if tn not in config:
             config[tn] = Storage()
         config[tn].update(attr)
@@ -370,7 +371,7 @@ class S3Model(object):
 
         config = current.model.config
 
-        tn = str(tablename)
+        tn = tablename._tablename if type(tablename) is Table else tablename
         if tn in config:
             return config[tn].get(key, default)
         else:
@@ -388,7 +389,7 @@ class S3Model(object):
 
         config = current.model.config
 
-        tn = str(tablename)
+        tn = tablename._tablename if type(tablename) is Table else tablename
         if tn in config:
             if not keys:
                 del config[tn]
@@ -412,10 +413,7 @@ class S3Model(object):
 
         if not links:
             return
-        if hasattr(table, "_tablename"):
-            tablename = table._tablename
-        else:
-            tablename = table
+        tablename = table._tablename if type(table) is Table else table
         prefix, name = tablename.split("_", 1)
         for primary in links:
             hooks = components.get(primary, Storage())
@@ -441,8 +439,8 @@ class S3Model(object):
                     if joinby is None:
                         continue
                     linktable = link.get("link", None)
-                    if hasattr(linktable, "_tablename"):
-                        linktable = linktable._tablename
+                    linktable = linktable._tablename \
+                                if type(linktable) is Table else linktable
                     pkey = link.get("pkey", None)
                     if linktable is None:
                         lkey = None
@@ -509,7 +507,7 @@ class S3Model(object):
 
         hooks = Storage()
         single = False
-        if hasattr(table, "_tablename"):
+        if type(table) is Table:
             tablename = table._tablename
         else:
             tablename = table
@@ -621,7 +619,7 @@ class S3Model(object):
         get_hooks = cls.__get_hooks
 
         hooks = Storage()
-        if hasattr(table, "_tablename"):
+        if type(table) is Table:
             tablename = table._tablename
         else:
             tablename = table
