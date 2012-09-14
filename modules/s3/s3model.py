@@ -143,24 +143,26 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     def __getattr__(self, name):
+        """ Model auto-loader """
 
-        return self[name]
+        if str(name) in self.__dict__:
+            return self.__dict__[str(name)]
+        else:
+            db = current.db
+            if name in db:
+                return db[name]
+            else:
+                s3 = current.response.s3
+                if name in s3:
+                    return s3[name]
+                else:
+                    return self.table(name,
+                                      AttributeError("undefined table: %s" % name))
 
     # -------------------------------------------------------------------------
     def __getitem__(self, key):
-        """ Model auto-loader """
 
-        if str(key) in self.__dict__:
-            return dict.__getitem__(self, str(key))
-        else:
-            db = current.db
-            if key in db:
-                return db[key]
-            elif key in current.response.s3:
-                return current.response.s3[key]
-            else:
-                return self.table(key,
-                                  AttributeError("undefined table: %s" % key))
+        return self.__getattr__(key)
 
     # -------------------------------------------------------------------------
     def model(self):
@@ -193,6 +195,8 @@ class S3Model(object):
 
         if tablename in db:
             return db[tablename]
+        elif tablename in s3 and not db_only:
+            return s3[tablename]
         else:
             prefix, name = tablename.split("_", 1)
             models = current.models

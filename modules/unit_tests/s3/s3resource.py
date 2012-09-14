@@ -746,7 +746,8 @@ class S3ResourceFieldTests(unittest.TestCase):
 class S3ResourceDataAccessTests(unittest.TestCase):
     """ Test data access via resources """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
 
         s3db = current.s3db
         current.auth.override = True
@@ -765,9 +766,9 @@ class S3ResourceDataAccessTests(unittest.TestCase):
 </s3xml>"""
 
         from lxml import etree
-        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = s3db.resource("org_organisation")
-        resource.import_xml(self.xmltree)
+        resource.import_xml(xmltree)
 
     # -------------------------------------------------------------------------
     def testResourceFieldExtract(self):
@@ -943,7 +944,8 @@ class S3ResourceDataAccessTests(unittest.TestCase):
         self.assertEqual(resource.count(), 1)
 
     # -------------------------------------------------------------------------
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
 
         current.db.rollback()
         current.auth.override = False
@@ -1014,53 +1016,62 @@ class S3ResourceExportTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
-        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = current.s3db.resource("hms_hospital")
-        resource.import_xml(self.xmltree)
+        try:
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = current.s3db.resource("hms_hospital")
+            resource.import_xml(xmltree)
 
-        resource = current.s3db.resource(resource,
-                                         uid=["ORDERTESTHOSPITAL1",
-                                              "ORDERTESTHOSPITAL2"])
-        resource.load()
-        self.assertEqual(len(resource), 2)
-        first = resource._rows[0]["uuid"]
-        last = resource._rows[1]["uuid"]
+            resource = current.s3db.resource(resource,
+                                            uid=["ORDERTESTHOSPITAL1",
+                                                "ORDERTESTHOSPITAL2"])
+            resource.load()
+            self.assertEqual(len(resource), 2)
+            first = resource._rows[0]["uuid"]
+            last = resource._rows[1]["uuid"]
 
-        import time
-        time.sleep(2) # Wait 2 seconds to change mtime
-        resource._rows[0].update_record(name="OrderTestHospital1")
+            import time
+            time.sleep(1) # Wait 2 seconds to change mtime
+            resource._rows[0].update_record(name="OrderTestHospital1")
 
-        msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
+            msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
 
-        tree = resource.export_tree(start=0,
-                                    limit=1,
-                                    dereference=False)
-        root = tree.getroot()
-        self.assertEqual(len(root), 1)
+            tree = resource.export_tree(start=0,
+                                        limit=1,
+                                        dereference=False)
+            root = tree.getroot()
+            self.assertEqual(len(root), 1)
 
-        child = root[0]
-        uuid = child.get("uuid", None)
-        self.assertEqual(uuid, first)
+            child = root[0]
+            uuid = child.get("uuid", None)
+            self.assertEqual(uuid, first)
 
-        tree = resource.export_tree(start=0,
-                                    limit=1,
-                                    msince=msince,
-                                    dereference=False)
-        root = tree.getroot()
-        self.assertEqual(len(root), 1)
+            tree = resource.export_tree(start=0,
+                                        limit=1,
+                                        msince=msince,
+                                        dereference=False)
+            root = tree.getroot()
+            self.assertEqual(len(root), 1)
 
-        child = root[0]
-        uuid = child.get("uuid", None)
-        self.assertEqual(uuid, last)
+            child = root[0]
+            uuid = child.get("uuid", None)
+            self.assertEqual(uuid, last)
 
-        current.db.rollback()
+        finally:
+            current.db.rollback()
 
 # =============================================================================
 class S3ResourceImportTests(unittest.TestCase):
     """ Test XML imports into resources """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+
+        current.auth.override = True
+
+    # -------------------------------------------------------------------------
+    def testImportXML(self):
+        """ Test JSON message after XML import """
 
         xmlstr = """
 <s3xml>
@@ -1087,14 +1098,11 @@ class S3ResourceImportTests(unittest.TestCase):
 </s3xml>"""
 
         from lxml import etree
-        self.tree = etree.ElementTree(etree.fromstring(xmlstr))
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         current.auth.override = True
 
-    def testImportXML(self):
-        """ Test JSON message after XML import """
-
         resource = current.s3db.resource("pr_person")
-        msg = resource.import_xml(self.tree)
+        msg = resource.import_xml(xmltree)
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
         self.assertEqual(msg["status"], "success")
@@ -1123,9 +1131,9 @@ class S3ResourceImportTests(unittest.TestCase):
 </s3xml>"""
 
         from lxml import etree
-        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
-        resource.import_xml(self.xmltree)
+        resource.import_xml(xmltree)
         self.assertEqual(current.xml.as_utc(resource.mtime),
                          current.xml.as_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
 
@@ -1144,9 +1152,9 @@ class S3ResourceImportTests(unittest.TestCase):
 </s3xml>"""
 
         from lxml import etree
-        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
-        resource.import_xml(self.xmltree)
+        resource.import_xml(xmltree)
         # Can't compare with exactly utcnow as these would be milliseconds apart,
         # assume equal dates are sufficient for this test
         self.assertEqual(current.xml.as_utc(resource.mtime).date(),
@@ -1170,13 +1178,16 @@ class S3ResourceImportTests(unittest.TestCase):
 </s3xml>"""
 
         from lxml import etree
-        self.xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
-        resource.import_xml(self.xmltree)
+        resource.import_xml(xmltree)
         self.assertEqual(current.xml.as_utc(resource.mtime).date(),
                          current.xml.as_utc(datetime.datetime.utcnow()).date())
 
-    def tearDown(self):
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
         current.db.rollback()
         current.auth.override = False
 
@@ -1209,12 +1220,7 @@ class S3MergeOrganisationsTests(unittest.TestCase):
     def setUp(self):
         """ Set up organisation records """
 
-        db = current.db
-        auth = current.auth
         s3db = current.s3db
-        deployment_settings = current.deployment_settings
-
-        auth.override = True
 
         otable = s3db.org_organisation
 
@@ -1237,7 +1243,9 @@ class S3MergeOrganisationsTests(unittest.TestCase):
         self.id1 = org1_id
         self.id2 = org2_id
 
-        self.resource = s3db.resource("org_organisation")
+        self.resource = s3db.resource("org_organisation",
+                                      id=[self.id1, self.id2])
+        current.auth.override = True
 
     def testMerge(self):
         """ Test merge """
@@ -1783,6 +1791,7 @@ if __name__ == "__main__":
         S3ResourceDataAccessTests,
         S3ResourceDataObjectAPITests,
         S3ResourceExportTests,
+        S3ResourceImportTests,
         S3MergeOrganisationsTests,
         S3MergePersonsTests,
         S3MergeLocationsTests,
