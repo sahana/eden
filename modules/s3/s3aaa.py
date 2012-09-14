@@ -4903,8 +4903,8 @@ class S3Permission(object):
         return True
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def requires_approval(table):
+    @classmethod
+    def requires_approval(cls, table):
         """
             Check whether record approval is required for a table
 
@@ -5136,6 +5136,12 @@ class S3Audit(object):
 
         settings = current.deployment_settings
 
+        audit_read = settings.get_security_audit_read()
+        audit_write = settings.get_security_audit_write()
+
+        if not audit_read and not audit_write:
+            return True
+
         #import sys
         #print >> sys.stderr, "Audit %s: %s_%s record=%s representation=%s" % \
                              #(operation, prefix, name, record, representation)
@@ -5171,7 +5177,7 @@ class S3Audit(object):
             record = None
 
         if operation in ("list", "read"):
-            if settings.get_security_audit_read():
+            if audit_read:
                 table.insert(timestmp = now,
                              person = self.user,
                              operation = operation,
@@ -5180,7 +5186,7 @@ class S3Audit(object):
                              representation = representation)
 
         elif operation in ("create", "update"):
-            if settings.get_security_audit_write():
+            if audit_write:
                 if form:
                     record = form.vars.id
                     new_value = ["%s:%s" % (var, str(form.vars[var]))
@@ -5197,7 +5203,7 @@ class S3Audit(object):
                 self.diff = None
 
         elif operation == "delete":
-            if settings.get_security_audit_write():
+            if audit_write:
                 query = db[tablename].id == record
                 row = db(query).select(limitby=(0, 1)).first()
                 old_value = []
