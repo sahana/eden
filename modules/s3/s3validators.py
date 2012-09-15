@@ -198,6 +198,10 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
 
         if number is None:
             return ""
+        try:
+            intnumber = int(number)
+        except:
+            intnumber = number
 
         T = current.T
         settings = current.deployment_settings
@@ -218,7 +222,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
         else:
             sign = ""
 
-        str_number = unicode(number)
+        str_number = unicode(intnumber)
 
         if str_number[0] == "-":
             str_number = str_number[1:]
