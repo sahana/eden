@@ -3177,8 +3177,8 @@ class S3DataTable(object):
         if pagination:
             s3 = current.response.s3
             self.end = real_end
-            aadata = self.json(totalrows, filteredrows, id, sEcho,
-                               stringify=False, **attr)
+            aadata = self.aadata(totalrows, filteredrows, id, sEcho,
+                                 flist, stringify=False, **attr)
             cache = {"iCacheLower": self.start,
                      "iCacheUpper": self.end if filteredrows > self.end else filteredrows,
                      "lastJson": aadata}
@@ -3192,6 +3192,70 @@ class S3DataTable(object):
                                **attr
                                )
         return html
+
+    # ---------------------------------------------------------------------
+    def aadata(self,
+               totalrows,
+               displayrows,
+               id,
+               sEcho,
+               flist,
+               stringify=True,
+               **attr
+               ):
+        """
+            Method to render the data into a json object
+
+            @param totalrows: The total rows in the unfiltered query.
+            @param displayrows: The total rows in the filtered query.
+            @param id: The id of the table for which this ajax call will
+                       respond to.
+            @param sEcho: An unaltered copy of sEcho sent from the client used
+                          by dataTables as a draw count.
+            @param flist: The list of fields
+            @param attr: dictionary of attributes which can be passed in
+                   dt_action_col: The column where the action buttons will be placed
+                   dt_bulk_actions: list of labels for the bulk actions.
+                   dt_bulk_col: The column in which the checkboxes will appear,
+                                by default it will be the column immediately
+                                before the first data item
+                   dt_group_totals: The number of record in each group.
+                                    This will be displayed in parenthesis
+                                    after the group title.
+        """
+
+        from gluon.serializers import json
+
+        data = self.data
+        if not flist:
+            flist = self.lfields
+        start = self.start
+        end = self.end
+        action_col = attr.get("dt_action_col", 0)
+        structure = {}
+        aadata = []
+        for i in xrange(start, end):
+            row = data[i]
+            details = []
+            for field in flist:
+                if field == "BULK":
+                    details.append("<INPUT id='select%s' type='checkbox' class='bulkcheckbox'>" % \
+                        row[flist[action_col]])
+                else:
+                    details.append(s3_unicode(row[field]))
+            aadata.append(details)
+        structure["dataTable_id"] = id
+        structure["dataTable_filter"] = self.filterString
+        structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
+        structure["dataTable_sort"] = self.orderby
+        structure["aaData"] = aadata
+        structure["iTotalRecords"] = totalrows
+        structure["iTotalDisplayRecords"] = displayrows
+        structure["sEcho"] = sEcho
+        if stringify:
+            return json(structure)
+        else:
+            return structure
 
     # ---------------------------------------------------------------------
     def json(self,
@@ -3221,14 +3285,7 @@ class S3DataTable(object):
                                     This will be displayed in parenthesis
                                     after the group title.
         """
-
-        from gluon.serializers import json
-
-        data = self.data
         flist = self.lfields
-        start = self.start
-        end = self.end
-
         action_col = attr.get("dt_action_col", 0)
         if action_col != 0:
             if action_col == -1 or action_col >= len(flist):
@@ -3246,29 +3303,7 @@ class S3DataTable(object):
             if bulkCol <= action_col:
                 action_col += 1
 
-        structure = {}
-        aadata = []
-        for i in xrange(start, end):
-            row = data[i]
-            details = []
-            for field in flist:
-                if field == "BULK":
-                    details.append("<INPUT id='select%s' type='checkbox' class='bulkcheckbox'>" % \
-                        row[flist[action_col]])
-                else:
-                    details.append(s3_unicode(row[field]))
-            aadata.append(details)
-        structure["dataTable_id"] = id
-        structure["dataTable_filter"] = self.filterString
-        structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
-        structure["dataTable_sort"] = self.orderby
-        structure["aaData"] = aadata
-        structure["iTotalRecords"] = totalrows
-        structure["iTotalDisplayRecords"] = displayrows
-        structure["sEcho"] = sEcho
-        if stringify:
-            return json(structure)
-        else:
-            return structure
+        return self.aadata(totalrows, displayrows, id, sEcho, flist,
+                           stringify, **attr)
 
 # END =========================================================================

@@ -1219,7 +1219,7 @@ class S3Importer(S3CRUD):
             sEcho = int(vars.sEcho or 0)
         else: # catch all
             start = 0
-            limit = 1
+            limit = current.manager.ROWSPERPAGE
         if limit is not None:
             try:
                 start = int(start)
@@ -1246,10 +1246,10 @@ class S3Importer(S3CRUD):
         id = "s3import_1"
         if representation == "aadata":
             totalrows = self.resource.count()
-            return dt.json(id,
+            return dt.json(totalrows,
+                           totalrows,
+                           id,
                            sEcho,
-                           totalrows,
-                           totalrows,
                            dt_bulk_actions = [current.T("Import")],
                            )
         else:
@@ -1260,13 +1260,13 @@ class S3Importer(S3CRUD):
                                                       ajax_item_id
                                                       )
             totalrows = self.resource.count()
-            items =  dt.html(id,
-                            totalrows,
-                            totalrows,
-                            dt_ajax_url=url,
-                            dt_bulk_actions = [current.T("Import")],
-                            dt_bulk_selected = dt_bulk_select,
-                            )
+            items =  dt.html(totalrows,
+                             totalrows,
+                             id,
+                             dt_ajax_url=url,
+                             dt_bulk_actions = [current.T("Import")],
+                             dt_bulk_selected = dt_bulk_select,
+                             )
             current.response.s3.dataTableID = ["s3import_1"]
             output.update(items=items)
             return output
