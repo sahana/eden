@@ -924,4 +924,38 @@ def result():
         file_list.append(link)
     return dict(file_list=file_list)
 
+def result_automated():
+    """
+        Selenium Test Result Reports list
+    """
+
+    file_list_automated = UL()
+    static_path = os.path.join(request.folder, "static", "test_automated")
+    for filename in os.listdir(static_path):
+        link = A(filename,
+                 _href = URL(c = "static",
+                             f = "test_automated",
+                             args = [filename]
+                             )
+                 )
+        file_list_automated.append(link)
+    return dict(file_list_automated=file_list_automated)
+
+def result_smoke():
+    """
+        Selenium Test Result Reports list
+    """
+
+    file_list_smoke = UL()
+    static_path = os.path.join(request.folder, "static", "test_smoke")
+    for filename in os.listdir(static_path):
+        link = A(filename,
+                 _href = URL(c = "static",
+                             f = "test_smoke",
+                             args = [filename]
+                             )
+                 )
+        file_list_smoke.append(link)
+    return dict(file_list_smoke=file_list_smoke)
+
 # END =========================================================================
