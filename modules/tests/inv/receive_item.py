@@ -59,8 +59,12 @@ class ReceiveItem(InvTestFunctions):
                       "Same Warehouse (Warehouse)",
                       "option",
                      ),
-                     ("type",
+                    ("type",
                       "Internal Shipment",
+                      "option",
+                     ),
+                    ("from_site_id",
+                      "Lori (Facility)",
                       "option",
                      )
                     ]

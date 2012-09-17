@@ -19,3 +19,4 @@
 *.pyc
 *.~*~
 .directory
+/languages/en-gb.py
