@@ -3596,9 +3596,9 @@ class S3Permission(object):
 
         "import": CREATE,
 
-        "review": UPDATE,
-        "approve": UPDATE,
-        "reject": UPDATE
+        "review": READ,
+        "approve": READ, #UPDATE,
+        "reject": READ, #DELETE
     })
 
     # Lambda expressions for ACL handling
@@ -4424,7 +4424,7 @@ class S3Permission(object):
             if approver_role not in realms or \
                not any([m in method for m in approval_methods]):
                 base_filter = (table.approved_by != None)
-                approve = False
+                approve = True
             elif all([m in approval_methods for m in method]):
                 base_filter = (table.approved_by == None)
                 approve = True
