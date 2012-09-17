@@ -783,7 +783,9 @@ class S3Resource(object):
                     rtable = db[tn]
                     query = (rfield == row[pkey])
                     if rfield.ondelete == "CASCADE":
-                        rresource = define_resource(tn, filter=query)
+                        rresource = define_resource(tn,
+                                                    filter=query,
+                                                    unapproved=True)
                         rondelete = get_config(tn, "ondelete")
                         rresource.delete(ondelete=rondelete, cascade=True)
                         if manager.error:
@@ -826,7 +828,8 @@ class S3Resource(object):
                             if not remaining:
                                 query = linked.table[fkey] == this[rkey]
                                 linked = define_resource(linked.table,
-                                                         filter=query)
+                                                         filter=query,
+                                                         unapproved=True)
                                 ondelete = get_config(linked.tablename, "ondelete")
                                 linked.delete(ondelete=ondelete, cascade=True)
 
@@ -1026,7 +1029,7 @@ class S3Resource(object):
                     query = (rfield == row[pkey])
                     # Ignore RESTRICTs => reject anyway
                     if rfield.ondelete in ("CASCADE", "RESTRICT"):
-                        rresource = define_resource(tn, filter=query)
+                        rresource = define_resource(tn, filter=query, unapproved=True)
                         rresource.reject(cascade=True)
                         if manager.error:
                             break
