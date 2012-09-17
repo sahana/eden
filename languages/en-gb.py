@@ -347,7 +347,7 @@
 'Logout': 'Logout',
 'Longitude': 'Longitude',
 'Longitude is West-East (sideways).': 'Longitude is West-East (sideways).',
-'Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas.': 'Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas.',
+'Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia. Longitude is negative to the west, across the Atlantic and the Americas.': 'Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia. Longitude is negative to the west, across the Atlantic and the Americas.',
 'Longitude must be between -180 and 180.': 'Longitude must be between -180 and 180.',
 'Low': 'Low',
 'Mailing list': 'Mailing list',
