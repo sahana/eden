@@ -78,9 +78,9 @@
                                                         {% endif %}
                                                     </div>
                                                     <p class="note-text">{{ note.title }}</p>
-                                                    <span id="view-note" class="label label-info hidden"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
+                                                    <span id="view-note" class="label label-info"><a href="#" onclick="viewNote(this)" data-toggle="modal" data-target="#view-current-note">{% trans "View" %}</a></span>
                                                     {% if note.author == request_user or request_user.is_staff %}
-                                                        <span id="edit-note" class="label label-info hidden">
+                                                        <span id="edit-note" class="label label-info">
                                                             <a href="#" onclick="editNote(this)" data-toggle="modal" data-target="#edit-current-note">{% trans "Edit" %}</a>
                                                         </span>
                                                     {% endif %}<br />
