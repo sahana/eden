@@ -579,15 +579,15 @@ $(document).ready(function() {
         }
     } // end of function addNewGroup
 
-    /*********************************************************************/
-    /* Function to group the data
-    /* 
-    /* @param oSettings the dataTable settings
-    /* @param t the index of the table
-    /* @param group The index of the colum that will be grouped
-    /* @param groupTotals (optional) the totals to be used for each group
-    /* @param level the level of this group, starting at 1
-    /*********************************************************************/
+    /*********************************************************************
+     * Function to group the data
+     * 
+     * @param oSettings the dataTable settings
+     * @param t the index of the table
+     * @param group The index of the colum that will be grouped
+     * @param groupTotals (optional) the totals to be used for each group
+     * @param level the level of this group, starting at 1
+     *********************************************************************/
     function buildGroups(oSettings, t, group, groupTotals, prefixID, groupTitles, level) {
         var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
         var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';

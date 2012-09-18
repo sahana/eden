@@ -7,4 +7,4 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,TL,"District","SubDistrict","Suco","Aldeia",
 ,NZ,"Region","Territorial Authority",,,
 ,US,"State","County","City",,False
-,VN,"Region","Province","District","Commune",
+,VN,"Province","District","Commune",,

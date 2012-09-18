@@ -284,10 +284,6 @@ class S3LocationModel(S3Model):
                                        ]
                         )
 
-        from s3.s3gis import S3ExportPOI
-        self.set_method("gis", "location",
-                        method="export_poi", action=S3ExportPOI())
-
         # Tags as component of Locations
         add_component("gis_location_tag",
                       gis_location=dict(joinby="location_id",
@@ -3860,6 +3856,7 @@ def gis_rheader(r, tabs=[]):
 
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
+                (T("Import PoIs"), "import_poi"),
                 (T("Local Names"), "name"),
                 (T("Key Value pairs"), "tag"),
                 ]

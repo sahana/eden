@@ -319,8 +319,6 @@ class S3DocumentLibrary(S3Model):
             # This is a prepop, so file not in form
             return
 
-        import cgi
-
         T = current.T
         db = current.db
 
@@ -347,6 +345,7 @@ class S3DocumentLibrary(S3Model):
             form.errors.url = msg
 
         # Do a checksum on the file to see if it's a duplicate
+        #import cgi
         #if isinstance(doc, cgi.FieldStorage) and doc.filename:
         #    f = doc.file
         #    vars.checksum = doc_checksum(f.read())

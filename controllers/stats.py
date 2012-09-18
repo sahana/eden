@@ -26,9 +26,6 @@ def data():
 def aggregate():
     """ REST Controller """
 
-    tablename = "stats_aggregate"
-    table = s3db[tablename]
-
     def prep(r):
         if r.method == "clear":
             if not s3_has_role(ADMIN):

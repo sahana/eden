@@ -100,6 +100,7 @@
             -->
 
             <xsl:for-each select="./tag[starts-with(@k, 'name:')][1]">
+            
                 <data field="aka1">
                     <xsl:value-of select="@v"/>
                 </data>
@@ -169,7 +170,7 @@
                 <resource name="hms_image">
                     <data field="type" value="1"/>
                     <!-- Use either url (link the image) or image (upload the image) -->
-<!--                    <data field="url">
+                <!--<data field="url">
                         <xsl:value-of select="@v"/>
                     </data>-->
                     <data field="image">

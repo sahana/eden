@@ -77,10 +77,18 @@ settings.auth.realm_entity = eurosha_realm_entity
 # and a menu to select among them is wanted.
 settings.gis.menu = "Country"
 # PoIs to export in KML/OSM feeds from Admin locations
-settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office", "transport_airport", "transport_seaport"]
+settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office",
+                                     "transport_airport", "transport_seaport"
+                                     ]
 
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
+
+settings.frontpage.rss = [
+    {"title": "Blog",
+     "url": "http://eurosha-volunteers-blog.org/feed/"
+    }
+]
 
 # Organisation Management
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff

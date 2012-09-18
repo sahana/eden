@@ -643,7 +643,6 @@ class S3Importer(S3CRUD):
         TEMPLATE = "csv_template"
         REPLACE_OPTION = "replace_option"
 
-        session = current.session
         response = current.response
         s3 = response.s3
         request = self.request
@@ -658,6 +657,10 @@ class S3Importer(S3CRUD):
                 table.replace_option.readable = True
                 table.replace_option.writable = True
                 table.replace_option.label = replace_option
+                table.replace_option.comment = DIV(_class="tooltip",
+                                                   _title="%s|%s" % \
+                    (replace_option,
+                     current.T("Delete all data of this type which the user has permission to before upload. This is designed for workflows where the data is maintained in an offline spreadsheet and uploaded just for Reads.")))
 
         fields = [f for f in table if f.readable or f.writable and not f.compute]
         if EXTRA_FIELDS in attr:
@@ -699,7 +702,7 @@ class S3Importer(S3CRUD):
             except:
                 pass
 
-        if form.accepts(r.post_vars, session,
+        if form.accepts(r.post_vars, current.session,
                         formname="upload_form"):
             upload_id = table.insert(**table._filter_fields(form.vars))
             if self.csv_extra_fields:

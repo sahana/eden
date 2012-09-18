@@ -203,9 +203,19 @@ def location():
                             ),
                     )
 
-    # Custom Method
-    s3db.set_method("gis", "location", method="parents",
-                    action=s3_gis_location_parents)
+    # Custom Methods
+    set_method = s3db.set_method
+    from s3.s3gis import S3ExportPOI
+    set_method("gis", "location",
+               method="export_poi",
+               action=S3ExportPOI())
+    from s3.s3gis import S3ImportPOI
+    set_method("gis", "location",
+               method="import_poi",
+               action=S3ImportPOI())
+    set_method("gis", "location",
+               method="parents",
+               action=s3_gis_location_parents)
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
@@ -1303,7 +1313,8 @@ def layer_arcrest():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename, method="enable",
+    s3db.set_method(module, resourcename,
+                    method="enable",
                     action=enable_layer)
 
     # Pre-processor
@@ -1459,7 +1470,8 @@ def layer_georss():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename, method="enable",
+    s3db.set_method(module, resourcename,
+                    method="enable",
                     action=enable_layer)
 
     # Pre-processor
@@ -1707,7 +1719,8 @@ def layer_openweathermap():
         msg_list_empty=NO_LAYERS)
 
     # Custom Method
-    s3db.set_method(module, resourcename, method="enable",
+    s3db.set_method(module, resourcename,
+                    method="enable",
                     action=enable_layer)
 
     # Pre-processor
@@ -1884,7 +1897,7 @@ def layer_tms():
     # Custom Method
     s3db.set_method(module, resourcename,
                     method="enable",
-                           action=enable_layer)
+                    action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2022,8 +2035,8 @@ def layer_wms():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                           method="enable",
-                           action=enable_layer)
+                    method="enable",
+                    action=enable_layer)
 
     # Pre-processor
     def prep(r):
@@ -2091,8 +2104,8 @@ def layer_xyz():
 
     # Custom Method
     s3db.set_method(module, resourcename,
-                           method="enable",
-                           action=enable_layer)
+                    method="enable",
+                    action=enable_layer)
 
     # Pre-processor
     def prep(r):

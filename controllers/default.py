@@ -91,7 +91,8 @@ def index():
     response.title = title
 
     item = ""
-    if settings.has_module("cms"):
+    has_module = settings.has_module
+    if has_module("cms"):
         table = s3db.cms_post
         item = db(table.module == module).select(table.body,
                                                  limitby=(0, 1)).first()
@@ -100,7 +101,7 @@ def index():
         else:
             item = ""
 
-    if settings.has_module("cr"):
+    if has_module("cr"):
         table = s3db.cr_shelter
         SHELTERS = s3.crud_strings["cr_shelter"].title_list
     else:
@@ -140,12 +141,12 @@ def index():
                 }
 
     for div, label, app, function in menu_btns:
-        if settings.has_module(app):
+        if has_module(app):
             # @ToDo: Also check permissions (e.g. for anonymous users)
             menu_divs[div].append(A(DIV(label,
                                         _class = "menu-btn-r"),
                                     _class = "menu-btn-l",
-                                    _href = URL(app,function)
+                                    _href = URL(app, function)
                                     )
                                  )
 
@@ -280,9 +281,9 @@ $('#login-btn').click(function(){
                                 dict(login=B(T("login")))))))
 
     if settings.frontpage.rss:
-        s3.external_stylesheets.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css" )
-        s3.scripts.append( "http://www.google.com/jsapi?key=notsupplied-wizard" )
-        s3.scripts.append( "http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js" )
+        s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+        s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
+        s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
         counter = 0
         feeds = ""
         for feed in settings.frontpage.rss:

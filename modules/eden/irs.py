@@ -911,8 +911,6 @@ S3.timeline.now="''', now.isoformat()
             @ToDo: Deployment setting for Ushahidi instance URL
         """
 
-        import os
-
         T = current.T
         auth = current.auth
         request = current.request
@@ -930,54 +928,57 @@ S3.timeline.now="''', now.isoformat()
 
             url = r.get_vars.get("url", "http://")
 
-            title = T("Incident Reports")
-            subtitle = T("Import from Ushahidi Instance")
+            title = T("Import Incident Reports from Ushahidi")
 
-            form = FORM(TABLE(TR(
-                        TH("URL: "),
-                        INPUT(_type="text", _name="url", _size="100", _value=url,
-                              requires=[IS_URL(), IS_NOT_EMPTY()]),
-                        TH(DIV(SPAN("*", _class="req", _style="padding-right: 5px;")))),
-                        TR(TD("Ignore Errors?: "),
-                        TD(INPUT(_type="checkbox", _name="ignore_errors", _id="ignore_errors"))),
-                        TR("", INPUT(_type="submit", _value=T("Import")))))
+            form = FORM(
+                    TABLE(
+                        TR(
+                            TH(B("%s: " % T("URL"))),
+                            INPUT(_type="text", _name="url", _size="100",
+                                  _value=url,
+                                  requires=[IS_URL(), IS_NOT_EMPTY()]),
+                            TH(DIV(SPAN("*", _class="req",
+                                        _style="padding-right: 5px;")))
+                            ),
+                        TR(
+                            TD(B("%s: " % T("Ignore Errors?"))),
+                            TD(INPUT(_type="checkbox", _name="ignore_errors",
+                                     _id="ignore_errors"))
+                            ),
+                        TR("", INPUT(_type="submit", _value=T("Import")))
+                        ))
 
-            label_list_btn = S3CRUD.crud_string(r.tablename, "label_list_button")
-            list_btn = A(label_list_btn,
-                         _href=r.url(method="", vars=None),
-                         _class="action-btn")
-
-            rheader = DIV(P("%s: http://wiki.ushahidi.com/doku.php?id=ushahidi_api" % T("API is documented here")),
-                          P("%s URL: http://ushahidi.my.domain/api?task=incidents&by=all&resp=xml&limit=1000" % T("Example")))
+            rheader = DIV(P("%s: http://wiki.ushahidi.com/doku.php?id=ushahidi_api" % \
+                                T("API is documented here")),
+                          P("%s URL: http://ushahidi.my.domain/api?task=incidents&by=all&resp=xml&limit=1000" % \
+                                T("Example")))
 
             output = dict(title=title,
                           form=form,
-                          subtitle=subtitle,
-                          list_btn=list_btn,
                           rheader=rheader)
 
             if form.accepts(request.vars, session):
 
                 # "Exploit" the de-duplicator hook to count import items
                 import_count = [0]
-                def count_items(job, import_count = import_count):
+                def count_items(job, import_count=import_count):
                     if job.tablename == "irs_ireport":
                         import_count[0] += 1
                 current.s3db.configure("irs_report", deduplicate=count_items)
 
-                ireports = r.resource
-                ushahidi = form.vars.url
+                vars = form.vars
+                ushahidi_url = vars.url
 
-                ignore_errors = form.vars.get("ignore_errors", None)
-
+                import os
                 stylesheet = os.path.join(request.folder, "static", "formats",
                                           "ushahidi", "import.xsl")
 
-                if os.path.exists(stylesheet) and ushahidi:
+                if os.path.exists(stylesheet) and ushahidi_url:
+                    ignore_errors = vars.get("ignore_errors", None)
                     try:
-                        success = ireports.import_xml(ushahidi,
-                                                      stylesheet=stylesheet,
-                                                      ignore_errors=ignore_errors)
+                        success = r.resource.import_xml(ushahidi_url,
+                                                        stylesheet=stylesheet,
+                                                        ignore_errors=ignore_errors)
                     except:
                         import sys
                         e = sys.exc_info()[1]
