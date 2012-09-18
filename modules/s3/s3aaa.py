@@ -3596,9 +3596,9 @@ class S3Permission(object):
 
         "import": CREATE,
 
-        "review": UPDATE,
-        "approve": UPDATE,
-        "reject": UPDATE
+        "review": READ,
+        "approve": READ, #UPDATE,
+        "reject": READ, #DELETE
     })
 
     # Lambda expressions for ACL handling
@@ -4319,36 +4319,46 @@ class S3Permission(object):
              t is not None and record is not None and \
              self.requires_approval(t):
 
-            approval_methods = ("approve", "review", "reject")
-
-            # Check approval
+            # Approval possible for this table?
             if not hasattr(t, "_tablename"):
                 table = current.s3db.table(t)
                 if not table:
                     raise AttributeError("undefined table %s" % tablename)
             else:
                 table = t
-            approver_role = None
             if "approved_by" in table.fields:
+
+                approval_methods = ("approve", "review", "reject")
+                access_approved = not all([m in approval_methods for m in method])
+                access_unapproved = any([m in method for m in approval_methods])
+
                 approver_role = current.session["approver_role"]
-            if approver_role is None:
-                approver_role = sr.ADMIN
-            if approver_role not in realms:
-                if not any([m in method for m in approval_methods]):
+                if approver_role is None:
+                    approver_role = sr.ADMIN
+
+                if access_unapproved:
+                    if access_approved:
+                        if approver_role not in realms:
+                            permitted = self.approved(table, record)
+                            if not permitted:
+                                _debug("==> Record not approved")
+                        else:
+                            pass # no change
+                    else:
+                        if approver_role in realms:
+                            permitted = self.unapproved(table, record)
+                            if not permitted:
+                                _debug("==> Record already approved")
+                        else:
+                            permitted = False
+                            _debug("==> Approver role required but not given")
+                else:
                     permitted = self.approved(table, record)
                     if not permitted:
                         _debug("==> Record not approved")
-                else:
-                    permitted = False
-                    _debug("==> Approver role required, but not given")
             else:
-                if sr.ADMIN in realms or \
-                   not any([m in method for m in approval_methods]):
-                    permitted = True
-                else:
-                    permitted = self.unapproved(table, record)
-                    if not permitted:
-                        _debug("==> Record already approved")
+                # Approval not possible for this table => no change
+                pass
 
         if permitted:
             _debug("*** GRANTED ***")
@@ -4370,11 +4380,13 @@ class S3Permission(object):
             @param f: function name (falls back to current request)
         """
 
+        # Get the table
         if not hasattr(table, "_tablename"):
             tablename = table
-            table = current.s3db.table(tablename)
-            if not table:
-                raise AttributeError("undefined table %s" % tablename)
+            error = AttributeError("undefined table %s" % tablename)
+            table = current.s3db.table(tablename,
+                                       db_only = True,
+                                       default = error)
 
         if not isinstance(method, (list, tuple)):
             method = [method]
@@ -4384,18 +4396,36 @@ class S3Permission(object):
         ALL_RECORDS = (table._id > 0)
         NO_RECORDS = (table._id == 0)
 
+        # Record approval required?
+        if self.requires_approval(table) and \
+           "approved_by" in table.fields:
+            requires_approval = True
+            APPROVED = (table.approved_by != None)
+            UNAPPROVED = (table.approved_by == None)
+        else:
+            requires_approval = False
+            APPROVED = ALL_RECORDS
+            UNAPPROVED = NO_RECORDS
+
+        # Approval method?
+        approval_methods = ("review", "approve", "reject")
+        unapproved = any([m in method for m in approval_methods])
+        approved = not all([m in approval_methods for m in method])
+
+        # What does ALL RECORDS mean?
+        ALL_RECORDS = ALL_RECORDS if approved and unapproved \
+                                  else UNAPPROVED if unapproved \
+                                  else APPROVED
+
         # Auth override, system roles and login
         auth = self.auth
-        if self.auth.override:
+        if auth.override:
             _debug("==> auth.override")
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
+
         sr = auth.get_system_roles()
         logged_in = auth.s3_logged_in()
-
-        # Required ACL
-        racl = self.required_acl(method)
-        _debug("==> racl: %04X" % racl)
 
         # Get realms and delegations
         user = auth.user
@@ -4412,28 +4442,23 @@ class S3Permission(object):
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
 
-        base_filter = None
-
-        # Record approval
-        approve = self.requires_approval(table)
-        approval_methods = ("approve", "review", "reject")
-        if approve and "approved_by" in table.fields:
+        # Re-adjust ALL RECORDS after actual user roles
+        if requires_approval:
             approver_role = current.session["approver_role"]
             if approver_role is None:
                 approver_role = sr.ADMIN
-            if approver_role not in realms or \
-               not any([m in method for m in approval_methods]):
-                base_filter = (table.approved_by != None)
-                approve = False
-            elif all([m in approval_methods for m in method]):
-                base_filter = (table.approved_by == None)
-                approve = True
-            else:
-                approve = False
+            if approver_role not in realms:
+                if not approved:
+                    _debug("==> user doesn't have approver role")
+                    _debug("*** NO RECORDS ***")
+                    return NO_RECORDS
+                ALL_RECORDS = APPROVED
 
-        if base_filter is not None:
-            ALL_RECORDS = base_filter
+        # Required ACL
+        racl = self.required_acl(method)
+        _debug("==> required permissions: %04X" % racl)
 
+        # Use ACLs?
         if not self.use_cacls:
             _debug("==> simple authorization")
             # Fall back to simple authorization
@@ -4515,8 +4540,11 @@ class S3Permission(object):
                 _debug("==> permitted for any records owned by entities %s" % str(uacls+oacls))
                 query = self.realm_query(table, uacls+oacls)
 
-            if query is not None and approve:
-                query = base_filter & query
+            if query is not None and requires_approval:
+                base_filter = None if approved and unapproved else \
+                              UNAPPROVED if unapproved else APPROVED
+                if base_filter is not None:
+                    query = base_filter & query
 
         # Fallback
         if query is None:
@@ -4903,8 +4931,8 @@ class S3Permission(object):
         return True
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def requires_approval(table):
+    @classmethod
+    def requires_approval(cls, table):
         """
             Check whether record approval is required for a table
 
@@ -5136,6 +5164,12 @@ class S3Audit(object):
 
         settings = current.deployment_settings
 
+        audit_read = settings.get_security_audit_read()
+        audit_write = settings.get_security_audit_write()
+
+        if not audit_read and not audit_write:
+            return True
+
         #import sys
         #print >> sys.stderr, "Audit %s: %s_%s record=%s representation=%s" % \
                              #(operation, prefix, name, record, representation)
@@ -5171,7 +5205,7 @@ class S3Audit(object):
             record = None
 
         if operation in ("list", "read"):
-            if settings.get_security_audit_read():
+            if audit_read:
                 table.insert(timestmp = now,
                              person = self.user,
                              operation = operation,
@@ -5180,7 +5214,7 @@ class S3Audit(object):
                              representation = representation)
 
         elif operation in ("create", "update"):
-            if settings.get_security_audit_write():
+            if audit_write:
                 if form:
                     record = form.vars.id
                     new_value = ["%s:%s" % (var, str(form.vars[var]))
@@ -5197,7 +5231,7 @@ class S3Audit(object):
                 self.diff = None
 
         elif operation == "delete":
-            if settings.get_security_audit_write():
+            if audit_write:
                 query = db[tablename].id == record
                 row = db(query).select(limitby=(0, 1)).first()
                 old_value = []

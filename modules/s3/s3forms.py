@@ -1314,7 +1314,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     query &= f
 
                 # Get the rows:
-                # @todo: should not need to extract ALL here!
                 rows = current.db(query).select(*qfields)
 
                 items = []
@@ -1334,25 +1333,21 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     for f in headers:
                         fname = f["name"]
+                        field = table[fname]
                         if fname in row:
                             value = row[fname]
                             try:
-                                text = represent(table[fname],
-                                                value = value,
-                                                strip_markup = True,
-                                                xml_escape = True)
+                                text = represent(field,
+                                                 value = value,
+                                                 strip_markup = True,
+                                                 xml_escape = True)
                             except:
                                 text = s3_unicode(value)
                         else:
                             value = None
                             text = ""
-                        # @todo: using s3_unicode here may not be enough,
-                        # this must produce the exact input format for
-                        # the respective field validator and thus probably
-                        # rather use the formatter of the validator than
-                        # just s3_unicode.
-                        item[fname] = {"value": s3_unicode(value),
-                                       "text": text}
+                        value = field.formatter(value)
+                        item[fname] = {"value": value, "text": text}
                     items.append(item)
             else:
                 items = []
@@ -1697,6 +1692,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         continue
                     # Update the master table foreign key
                     pkey = component.pkey
+                    fkey = component.fkey
                     mastertable = resource.table
                     if pkey != mastertable._id.name:
                         query = (mastertable._id == master_id)
@@ -1704,9 +1700,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                                limitby=(0, 1)).first()
                         if not row:
                             return
-                        values[pkey] = row[mastertable[pkey]]
+                        values[fkey] = row[mastertable[pkey]]
                     else:
-                        values[pkey] = master_id
+                        values[fkey] = master_id
 
                     # Create the new record
                     record_id = component.table.insert(**values)

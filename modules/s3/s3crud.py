@@ -1157,22 +1157,54 @@ class S3CRUD(S3Method):
             # Field validation
             fields = Storage()
             for fname in record:
+
+                error = None
+                validated = fields[fname] = Storage()
+
+                # We do not validate primary keys
+                # (because we don't update them)
                 if fname in (pkey, "_id"):
                     continue
-                error = None
+
                 value = record[fname]
-                validated = fields[fname] = Storage(value = value)
+
                 if fname not in table.fields:
-                    validated._error = "invalid field"
+                    validated["value"] = value
+                    validated["_error"] = "invalid field"
                     continue
+                else:
+                    field = table[fname]
+
+                # Convert numeric type (does not always happen in the widget)
                 field = table[fname]
+                if field.type == "integer":
+                    if value not in (None, ""):
+                        try:
+                            value = int(value)
+                        except ValueError:
+                            value = 0
+                    else:
+                        value = None
+                if field.type == "double":
+                    if value not in (None, ""):
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            value = 0
+                    else:
+                        value = None
+
+                # Validate and format the value
                 try:
                     value, error = validate(table, original, fname, value)
                 except AttributeError:
                     error = "invalid field"
+                validated["value"] = value # field.formatter(value)?
+
+                # Handle errors, update the validated item
                 if error:
                     has_errors = True
-                    validated._error = s3_unicode(error)
+                    validated["_error"] = s3_unicode(error)
                 else:
                     try:
                         text = represent(field,
@@ -1181,7 +1213,7 @@ class S3CRUD(S3Method):
                                          xml_escape = True)
                     except:
                         text = s3_unicode(value)
-                    validated.text = text
+                    validated["text"] = text
 
             # Form validation (=onvalidation)
             if not has_errors:
