@@ -4454,6 +4454,10 @@ class S3Permission(object):
                     return NO_RECORDS
                 ALL_RECORDS = APPROVED
 
+        # Required ACL
+        racl = self.required_acl(method)
+        _debug("==> required permissions: %04X" % racl)
+
         # Use ACLs?
         if not self.use_cacls:
             _debug("==> simple authorization")
@@ -4469,10 +4473,6 @@ class S3Permission(object):
                 else:
                     _debug("*** ACCESS DENIED ***")
                     return NO_RECORDS
-
-        # Required ACL
-        racl = self.required_acl(method)
-        _debug("==> required permissions: %04X" % racl)
 
         # Fall back to current request
         c = c or self.controller
