@@ -30,9 +30,9 @@
 
 		"link": 	"<li>" 
 						
-						+ "<div class='bootstrap-wysihtml5-insert-link-modal modal hide fade'>"
+						+ "<div id='bootstrap-wysihtml5-insert-link-modal' class='bootstrap-wysihtml5-insert-link-modal modal hide fade'>"
 							+ "<div class='modal-header'>"
-							+ "<a class='close' data-dismiss='modal'>×</a>"
+							+ "<a class='close' data-dismiss='modal' data-target='#bootstrap-wysihtml5-insert-link-modal'>×</a>"
 							  + "<h3>Insert Link</h3>"
 							+ "</div>"
 							+ "<div class='modal-body'>"
@@ -52,7 +52,7 @@
 						
 						+ "<div class='bootstrap-wysihtml5-insert-image-modal modal hide fade'>"
 							+ "<div class='modal-header'>"
-							+ "<a class='close' data-dismiss='modal'>×</a>"
+							+ "<a class='close' data-dismiss='modal' data-target='#bootstrap-wysihtml5-insert-link-modal'>×</a>"
 							  + "<h3>Insert Image</h3>"
 							+ "</div>"
 							+ "<div class='modal-body'>"
@@ -235,18 +235,18 @@
 			urlInput.keypress(function(e) {
 				if(e.which == 13) {
 					insertImage();
-					insertImageModal.modal('hide');
+					insertImageModal.modal('hide').stopPropagation();
 				}
 			});
 
 			insertButton.click(insertImage);
 
 			insertImageModal.on('shown', function() {
-				urlInput.focus();
+				urlInput.focus().stopPropagation();
 			});
 
 			insertImageModal.on('hide', function() { 
-				self.editor.currentView.element.focus();
+				self.editor.currentView.element.focus().stopPropagation();
 			});
 
 			toolbar.find('a[data-wysihtml5-command=insertImage]').click(function() {
@@ -275,14 +275,14 @@
 			urlInput.keypress(function(e) {
 				if(e.which == 13) {
 					insertLink();
-					insertLinkModal.modal('hide');
+					insertLinkModal.modal('hide').stopPropagation();
 				}
 			});
 
 			insertButton.click(insertLink);
 
 			insertLinkModal.on('shown', function() {
-				urlInput.focus();
+				urlInput.focus().stopPropagation();
 			});
 
 			insertLinkModal.on('hide', function() { 
