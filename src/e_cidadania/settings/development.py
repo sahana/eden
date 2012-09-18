@@ -22,11 +22,11 @@ from e_cidadania.settings.defaults import *
 
 # Registration mail settings. Please use a different mail server and account
 # during development than in production.
-#EMAIL_HOST = ""
+EMAIL_HOST = "mail.ecidadania.org"
 #EMAIL_PORT=
-#EMAIL_HOST_USER=""
-#EMAIL_HOST_PASSWORD=""
-#DEFAULT_FROM_EMAIL = ""
+EMAIL_HOST_USER="noreply@ecidadania.org"
+EMAIL_HOST_PASSWORD="tremolo80202:pandora"
+DEFAULT_FROM_EMAIL = "noreply@ecidadania.org"
 
 # Time and zone configuration
 TIME_ZONE = 'Europe/London'
