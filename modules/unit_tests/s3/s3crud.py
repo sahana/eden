@@ -12,9 +12,10 @@ except:
     from StringIO import StringIO
 
 # =============================================================================
-class S3CRUDValidateTests(unittest.TestCase):
-    """ Test S3CRUD "validate" method """
+class ValidateTests(unittest.TestCase):
+    """ Test S3CRUD/validate """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         s3db = current.s3db
@@ -31,7 +32,9 @@ class S3CRUDValidateTests(unittest.TestCase):
                                representation="json",
                                http="GET")
 
+    # -------------------------------------------------------------------------
     def testValidateMainTable(self):
+        """ Test successful main table validation """
 
         request = self.request
         crud = self.resource.crud
@@ -61,7 +64,9 @@ class S3CRUDValidateTests(unittest.TestCase):
         self.assertTrue(isinstance(acronym["text"], basestring))
         self.assertFalse("_error" in acronym)
 
+    # -------------------------------------------------------------------------
     def testValidateMainTableError(self):
+        """ Test error in main table validation """
 
         request = self.request
         crud = self.resource.crud
@@ -90,7 +95,9 @@ class S3CRUDValidateTests(unittest.TestCase):
         self.assertTrue(isinstance(acronym["text"], basestring))
         self.assertFalse("_error" in acronym)
 
+    # -------------------------------------------------------------------------
     def testValidateComponentTable(self):
+        """ Test successful component validation """
 
         request = self.request
         crud = self.resource.crud
@@ -114,7 +121,9 @@ class S3CRUDValidateTests(unittest.TestCase):
         self.assertTrue(isinstance(name["text"], basestring))
         self.assertFalse("_error" in name)
 
+    # -------------------------------------------------------------------------
     def testValidateComponentTableFailure(self):
+        """ Test error in component validation """
 
         request = self.request
         crud = self.resource.crud
@@ -130,6 +139,7 @@ class S3CRUDValidateTests(unittest.TestCase):
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
+
         self.assertTrue("name" in data)
         name = data["name"]
         self.assertTrue(isinstance(name, dict))
@@ -144,8 +154,41 @@ class S3CRUDValidateTests(unittest.TestCase):
         self.assertFalse("text" in acronym)
         self.assertTrue("_error" in acronym)
 
-    def tearDown(self):
-        pass
+    # -------------------------------------------------------------------------
+    def testTypeConversionFeature(self):
+        """ Check that values get converted into the field type during validation """
+
+        s3db = current.s3db
+
+        # Create a fake request
+        resource = s3db.resource("project_organisation")
+        request = Storage(prefix="project",
+                          name="organisation",
+                          resource=resource,
+                          table=resource.table,
+                          tablename=resource.tablename,
+                          method="validate",
+                          get_vars=Storage(),
+                          representation="json",
+                          http="GET")
+
+        crud = resource.crud
+
+        jsonstr = """{"organisation_id":"1", "role":"1"}"""
+        request.body = StringIO(jsonstr)
+
+        output = crud.validate(request)
+        self.assertTrue(isinstance(output, basestring))
+        from gluon.contrib import simplejson as json
+        data = json.loads(output)
+        self.assertTrue(isinstance(data, dict))
+        self.assertEqual(len(data), 2)
+
+        self.assertTrue("role" in data)
+        role = data["role"]
+        self.assertTrue(isinstance(role, dict))
+        self.assertTrue("value" in role)
+        self.assertTrue(isinstance(role["value"], int))
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -163,7 +206,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        S3CRUDValidateTests,
+        ValidateTests,
     )
 
 # END ========================================================================

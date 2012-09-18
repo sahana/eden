@@ -202,6 +202,10 @@ $(function() {
             value = row[fieldname]['value'];
             element = '#sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
             $(element).val(value);
+            // Populate text in autocompletes
+            text =  row[fieldname]['text']
+            element = '#dummy_sub_' + formname + '_' + formname + '_' + fieldname + '_edit_0';
+            $(element).val(text);
         }
 
         // Insert the edit row after this read row
@@ -268,6 +272,8 @@ $(function() {
                 // Reset add-field to default value
                 default_value = $('#sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
                 $('#sub_' + formname + '_' + formname + '_' + field + '_edit_none').val(default_value);
+                default_value = $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
+                $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_none').val(default_value);
             }
             // Add edit-button
             edit = '#edt-' + formname + '-none';
@@ -335,6 +341,8 @@ $(function() {
                 // Reset edit-field to default value
                 default_value = $('#sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
                 $('#sub_' + formname + '_' + formname + '_' + field + '_edit_0').val(default_value);
+                default_value = $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_default').val();
+                $('#dummy_sub_' + formname + '_' + formname + '_' + field + '_edit_0').val(default_value);
             }
             // Add edit-button
             edit = '#edt-' + formname + '-none';
