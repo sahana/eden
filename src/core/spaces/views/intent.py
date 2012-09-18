@@ -46,9 +46,11 @@ def add_intent(request, space_url):
     :context: space_url, heading
     """
     space = get_object_or_404(Space, url=space_url)
+
     try:
         intent = Intent.objects.get(user=request.user, space=space)
         heading = _("Access has been already authorized")
+        
     except Intent.DoesNotExist:
         token = hashlib.md5("%s%s%s" % (request.user, space,
                             datetime.datetime.now())).hexdigest()
