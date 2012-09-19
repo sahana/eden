@@ -28,10 +28,7 @@
 """
 
 __all__ = ["S3DocumentLibrary",
-           "S3DocumentSourceModel",
            "doc_image_represent",
-           "doc_source_represent",
-           "doc_source_type_represent",
           ]
 
 import os
@@ -96,7 +93,7 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_document"
         table = define_table(tablename,
                              # Instance
-                             super_link("source_id", "doc_source_entity"),
+                             super_link("source_id", "stats_source"),
                              # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
@@ -117,7 +114,7 @@ class S3DocumentLibrary(S3Model):
                                 ),
                              s3_date(label = T("Date Published")),
                              location_id(),
-                             self.doc_source_type_id(),
+                             self.stats_group_type_id(),
                              s3_comments(),
                              #Field("entered", "boolean", label=T("Entered")),
                              Field("checksum", readable=False, writable=False),
@@ -154,7 +151,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "doc_source_entity",
+                  super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
                   onvalidation=self.document_onvalidation)
 
@@ -175,7 +172,7 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_image"
         table = define_table(tablename,
                              # Instance
-                             super_link("source_id", "doc_source_entity"),
+                             super_link("source_id", "stats_source"),
                              # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
@@ -205,7 +202,7 @@ class S3DocumentLibrary(S3Model):
                                 ),
                              s3_date(label = T("Date Taken")),
                              location_id(),
-                             self.doc_source_type_id(),
+                             self.stats_group_type_id(),
                              s3_comments(),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())
@@ -234,6 +231,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
                   onvalidation=lambda form: \
                                 self.document_onvalidation(form, document=False))
@@ -367,186 +365,6 @@ class S3DocumentLibrary(S3Model):
         return
 
 # =============================================================================
-
-class S3DocumentSourceModel(S3Model):
-
-    names = ["doc_source_entity",
-             "doc_source_id",
-             "doc_source",
-             "doc_source_type",
-             ]
-
-    def model(self):
-
-        from s3.s3fields import s3_authorstamp
-        T = current.T
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        # ---------------------------------------------------------------------
-        # The type of document held as a  document_source_entity.
-        #
-        tablename = "doc_source_type"
-        table = self.define_table(tablename,
-                                  Field("doc_source_instance",
-                                        label=T("Instance Type")),
-                                  Field("name",
-                                        label=T("Name")),
-                                  Field("display",
-                                        label=T("Display")),
-                                  *s3_meta_fields()
-                                  )
-        # Reusable Field
-        source_type_id = S3ReusableField("source_type_id", table,
-                                    requires = IS_NULL_OR(
-                                                IS_ONE_OF(current.db,
-                                                          "doc_source_type.id",
-                                                          doc_source_type_represent)),
-                                    represent = doc_source_type_represent,
-                                    label = T("Source Type"),
-                                    ondelete = "CASCADE")
-        # Resource Configuration
-        self.configure(tablename,
-                       deduplicate=self.doc_source_type_duplicate,
-                       )
-        # ---------------------------------------------------------------------
-        # Document-source entities
-        #
-        source_types = Storage(
-                               #pr_pentity = T("Person"),
-                               doc_image = T("Image"),
-                               doc_document = T("Document"),
-                               stats_source = T("Stats"),
-                               #flood_gauge = T("Flood Gauge"),
-                               #survey_series = T("Survey")
-                               )
-
-        tablename = "doc_source_entity"
-
-        table = self.super_entity(tablename, "source_id", source_types,
-                                  Field("name",
-                                        label=T("Name")),
-                                  s3_date(label = T("Date Published")),
-                                  self.gis_location_id(),
-                                  source_type_id(),
-                                  Field("approved_by", "integer",
-                                        default = None),
-                                  *s3_authorstamp()
-                                  )
-        # Reusable Field
-        source_id = S3ReusableField("source_id", table,
-                                    requires = IS_NULL_OR(
-                                                IS_ONE_OF(current.db,
-                                                          "doc_source_entity.source_id",
-                                                          doc_source_represent)),
-                                    represent = doc_source_represent,
-                                    label = T("Source"),
-                                    ondelete = "CASCADE")
-        table.virtualfields.append(DocSourceEntityVirtualFields())
-        # Components
-        self.add_component("doc_source", doc_source_entity=self.super_key(table))
-
-        self.configure("doc_source_entity",
-                        onaccept = self.doc_source_entity_onaccept,
-                        )
-
-        # ---------------------------------------------------------------------
-        # Document-source details
-        #
-        tablename = "doc_source"
-        table = self.define_table(tablename,
-                                  # This is a component, so needs to be a super_link
-                                  # - can't override field name, ondelete or requires
-                                  self.super_link("source_id", "doc_source_entity"),
-                                  Field("name",
-                                        label=T("Name")),
-                                  Field("reliability",
-                                        label=T("Reliability")),
-                                  Field("review",
-                                        label=T("Review")),
-                                  *s3_meta_fields()
-                                  )
-
-        # ---------------------------------------------------------------------
-        # Pass model-global names to response.s3
-        #
-        return Storage(
-                doc_source_id = source_id,
-                doc_source_type_id = source_type_id,
-                doc_source_entity_onaccept = self.doc_source_entity_onaccept,
-            )
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-        """ Safe defaults if the module is disabled """
-        source_id = S3ReusableField("source_id", "integer",
-                                    readable=False,
-                                    writable=False)
-
-        source_type_id = S3ReusableField("source_type_id", "integer",
-                                         readable=False,
-                                         writable=False)
-
-        return Storage(
-                doc_source_id = source_id,
-                doc_source_type_id = source_type_id,
-                doc_source_entity_onaccept = self.doc_source_entity_onaccept,
-            )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def doc_source_entity_onaccept(form):
-        """
-           When the status of a doc_source_entity record is updated then if
-           if is a stats_source then the status and the aggregated details
-           will need to be updated.
-        """
-        s3db = current.s3db
-        db = current.db
-        id = form.vars.source_id
-        status = form.vars.status
-        approver = form.vars.approved_by
-        dsetable = s3db.doc_source_entity
-        query = (dsetable.source_id == id)
-        record = db(query).select(limitby=(0, 1)).first()
-        if record.instance_type == "stats_source":
-            # Get the stats source records
-            sdtable = s3db.stats_data
-            query = (sdtable.source_id == id)
-            rows = db(query).select()
-            for row in rows:
-                if row.instance_type == "vulnerability_data":
-                    table = s3db.vulnerability_data
-                    # update the stats source status
-                elif row.instance_type == "stats_demographic_data":
-                    table = s3db.stats_demographic_data
-                else:
-                    continue                                        
-                query = (table.data_id == row.data_id)
-                record = db(query).select(limitby=(0, 1)).first()
-                db(query).update(status = status,
-                                 approved_by= approver)
-                s3db.update_super(table, table[record.id])
-                # update the aggregate details
-                current.s3task.async("stats_update_time_aggregate",
-                                     args = [record.id],
-                                     )
-
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def doc_source_type_duplicate(item):
-        """ Import item de-duplication """
-
-        if item.tablename == "doc_source_type":
-            table = item.table
-            name = item.data.get("name", None)
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-# =============================================================================
 def doc_image_represent(filename):
     """
         Represent an image as a clickable thumbnail
@@ -587,65 +405,5 @@ def doc_checksum(docstr):
     converted = hashlib.sha1(docstr).hexdigest()
     return converted
 
-# =============================================================================
-def doc_source_represent(id, row=None):
-    """ FK representation """
 
-    if row:
-        return row.name
-    elif not id:
-        return current.messages.NONE
-    elif isinstance(id, Row):
-        return id.name
-
-    db = current.db
-    table = db.doc_source_entity
-    r = db(table._id == id).select(table.name,
-                                   limitby = (0, 1)).first()
-    try:
-        return r.name
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def doc_source_type_represent(id, row=None):
-    """ FK representation """
-
-    if row:
-        return row.display
-    elif not id:
-        return current.messages.NONE
-    elif isinstance(id, Row):
-        return id.display
-
-    db = current.db
-    table = db.doc_source_type
-    r = db(table._id == id).select(table.display,
-                                   limitby = (0, 1)).first()
-    try:
-        return r.display
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-class DocSourceEntityVirtualFields:
-    """ Virtual fields to show the group that the report belongs to
-        used by vulnerability/report
-    """
-
-    extra_fields = ["group",
-                    ]
-
-    def group(self):
-        try:
-            approved = self.doc_source_entity.approved_by
-        except (AttributeError,TypeError):
-            # @ToDo: i18n?
-            return "Approval pending"
-        else:
-            if not approved or approved == 0:
-                return "Approval pending"
-            else:
-                # @todo: add conditional branch for VCA report
-                return "Report"
 # END =========================================================================

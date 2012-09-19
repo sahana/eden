@@ -177,7 +177,7 @@ def index():
     if AUTHENTICATED in roles and \
        auth.s3_has_permission("read", db.org_organisation):
         org_items = organisation()
-        datatable_ajax_source = "/%s/default/organisation.aaData" % \
+        datatable_ajax_source = "/%s/default/organisation.aadata" % \
                                 appname
         s3.actions = None
         response.view = "default/index.html"
@@ -342,7 +342,7 @@ def organisation():
     table = resource.table
 
     list_fields = ["id", "name"]
-    limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aaData" else 1
+    limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aadata" else 1
     rfields = resource.resolve_selectors(list_fields)[0]
     (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
     resource.add_filter(filter)
@@ -368,7 +368,7 @@ def organisation():
                         dt_displayLength=10,
                         dt_ajax_url=URL(c="default",
                                         f="organisation",
-                                        extension="aaData",
+                                        extension="aadata",
                                         vars={"id": "org_list_1"},
                                         ),
                        )

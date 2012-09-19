@@ -219,8 +219,8 @@ class InvTestFunctions(SeleniumUnitTest):
                         a_rec.item_pack_id,
                         a_rec.quantity - b_rec.quantity)
                           )
-                found = True
-                break
+                    found = True
+                    break
             if not found:
                 changes.append(
                        (a_rec.item_id,
