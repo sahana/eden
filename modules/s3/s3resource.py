@@ -6133,7 +6133,8 @@ class S3RecordMerger(object):
                 try:
                     db(query).update(realm_entity = original_pe_id)
                 except:
-                    pass
+                    db.rollback()
+                    raise
         return
 
 
