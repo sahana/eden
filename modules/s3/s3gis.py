@@ -2326,7 +2326,7 @@ class GIS(object):
             shape = wkt_loads(feature.wkt)
         except:
             s3_debug("Invalid WKT: %s" % name)
-            return
+            return False
 
         geom_type = shape.geom_type
         if geom_type == "MultiPolygon" or \
@@ -2335,7 +2335,12 @@ class GIS(object):
             polygons = shape.geoms
         else:
             polygons = [shape]
-        filename = "/tmp/%s.poly" % name
+        if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp
+            TEMP = os.path.join(os.getcwd(), "temp")
+        else:
+            import tempfile
+            TEMP = tempfile.gettempdir()
+        filename = os.path.join(TEMP, "%s.poly" % name)
         File = open(filename, "w")
         File.write(filename)
         count = 1
@@ -2348,6 +2353,8 @@ class GIS(object):
             ++count
         File.write("END")
         File.close()
+
+        return True
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7374,7 +7381,7 @@ class S3ImportPOI(S3Method):
         if r.representation == "html" and \
            r.name == "location" and r.id and not r.component:
 
-            title = T("Import Points of Interest")
+            title = T("Import from OpenStreetMap")
 
             form = FORM(
                     TABLE(
@@ -7428,23 +7435,31 @@ class S3ImportPOI(S3Method):
                     File = vars.file
                 else:
                     # Create .poly file
-                    S3GIS.create_poly(r.record)
+                    result = GIS.create_poly(r.record)
+                    if not result:
+                        current.session.error = T("Cannot export from %s as WKT is invalid!") % r.record.name
+                        redirect(URL(args=r.id))
                     # Use Osmosis to extract an .osm file using this .poly
                     name = r.record.name
-                    filename = "/tmp/%s.osm" % name
+                    if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp
+                        TEMP = os.path.join(os.getcwd(), "temp")
+                    else:
+                        import tempfile
+                        TEMP = tempfile.gettempdir()
+                    filename = os.path.join(TEMP, "%s.osm" % name)
                     from subprocess import call
-                    subprocess.call(["/home/osm/osmosis/bin/osmosis",
-                                     "--read-pgsql",
-                                     "host=%s" % vars.host,
-                                     "database=%s" % vars.database,
-                                     "user=%s" % vars.user,
-                                     "password=%s" % vars.password,
-                                     "--dataset-dump",
-                                     "--bounding-polygon",
-                                     "file=\"/tmp/%s.poly\"" % name,
-                                     "--write-xml",
-                                     "file=\"%s\"" % filename,
-                                     ], shell=True)
+                    call(["/home/osm/osmosis/bin/osmosis",
+                          "--read-pgsql",
+                          "host=%s" % vars.host,
+                          "database=%s" % vars.database,
+                          "user=%s" % vars.user,
+                          "password=%s" % vars.password,
+                          "--dataset-dump",
+                          "--bounding-polygon",
+                          "file=\"%s\"" % os.path.join(TEMP, "%s.poly" % name),
+                          "--write-xml",
+                          "file=\"%s\"" % filename,
+                          ], shell=True)
                     File = open(filename, "r")
 
                 # "Exploit" the de-duplicator hook to count import items
@@ -7454,7 +7469,6 @@ class S3ImportPOI(S3Method):
                         import_count[0] += 1
                 current.s3db.configure("gis_location", deduplicate=count_items)
 
-                import os
                 stylesheet = os.path.join(request.folder, "static", "formats",
                                           "osm", "import.xsl")
 

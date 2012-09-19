@@ -72,7 +72,6 @@ class index():
                        #_class="menu_box fleft swidth"
                        _class="menu_box"
                        )
-        s3.stylesheets = ["EUROSHA.css"]
         facility_box  = menu_divs["facility"]
         facility_box.append(A(IMG(_src="/%s/static/img/map_icon_128.png" % \
                                         appname),

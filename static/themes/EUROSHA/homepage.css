@@ -1,0 +1,18 @@
+@charset "UTF-8";
+
+/* EUROSHA homepage additions */
+#menu_div_col0 {
+    float: left;
+    width: 200px;
+    height: 100px;
+}
+#cols_box {
+    height: 140px;
+}
+p.m {
+    margin: 0 auto;
+}
+table.tacenter td {
+    text-align: center;
+    padding-right: 5px;
+}

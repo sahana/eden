@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{=T.accepted_language or "en"}}">{{# class="no-js" needed for modernizr }}
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+{{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
+{{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
+{{# http://dev.w3.org/html5/markup/meta.name.html }}
+<meta name="application-name" content="{{=appname}}" />
+{{# Set your site up with Google: http://google.com/webmasters }}
+{{# <meta name="google-site-verification" content="" /> }}
+{{a="""<!--  Mobile Viewport Fix
+ j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
+ device-width: Occupy full width of the screen in its current orientation
+ initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
+ maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
+--> """}}
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
+{{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/EUROSHA/favicon.ico" type="image/x-icon" />
+{{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
+{{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
+{{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
+<style type="text/css">
+{{if s3.rtl:}}
+ div{direction:rtl;}
+{{else:}}
+ body{direction:ltr;}
+{{pass}}
+</style>
+{{if s3.debug:}}
+ <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-all.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/scripts/ext/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />	
+ {{=s3base.s3_include_debug_css()}}
+{{else:}}
+ <link href="/{{=appname}}/static/scripts/ext/resources/css/ext-theme.min.css" rel="stylesheet" type="text/css" />
+ {{# Built by /static/scripts/tools/build.sahana.py }}
+ <link href="/{{=appname}}/static/themes/EUROSHA/eden.min.css" rel="stylesheet" type="text/css" />
+{{pass}}
+{{for sheet in s3.external_stylesheets:}}
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{for sheet in s3.stylesheets:}}
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{include "scripts_top.html"}}
+</head>
+{{try:}}
+ {{if r.representation == "popup":}}{{representation = "popup"}}
+ {{elif r.representation == "iframe":}}{{representation = "iframe"}}
+ {{else:}}{{representation = ""}}{{pass}}
+{{except:}}{{representation = ""}}{{pass}}
+{{if representation == "popup":}}
+ <body>
+ {{if s3.debug:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
+ {{else:}}{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.min.js"]))}}{{pass}}
+ {{if response.flash or response.confirmation:}}
+  {{include "layout_popup.html"}}
+ {{else:}}{{include}}{{pass}}
+{{elif representation == "iframe":}}
+ {{include "layout_iframe.html"}}
+ {{include}}
+{{else:}}
+<body>
+ <div id='menu_modules'>
+  {{=current.menu.main}}
+ </div>
+ <div class='colmask fullpage'>
+  {{if current.menu.options is not None:}}
+   <div class='aside'>
+    <div id='menu_options'>
+     {{=current.menu.options}}
+    </div>
+   </div>
+  {{pass}}
+  <div {{if current.menu.options is not None:}}class='rightside'{{pass}}>
+   <div class='col1'>
+    {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
+    {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
+    {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
+    {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
+    {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
+    <div id='content' class='cf'>
+     {{#include "breadcrumbs.html"}} 
+     {{include}}
+    </div>
+   </div>
+  </div>
+ </div>
+ <div id='footer'>
+  {{include "../private/templates/default/views/footer.html"}}
+  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
+ </div>
+{{pass}}
+{{include "scripts.html"}}
+</body>
+</html>

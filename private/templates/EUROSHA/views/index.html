@@ -34,9 +34,49 @@
 </div>
 <div id='about'>
  <p>
- {{=T("For more details on the Sahana Eden system, see the")}} <a href="http://eden.sahanafoundation.org" target="_blank">{{=T("Sahana Eden Website")}}</a>
- <br/>{{=T("For live help from the Sahana community on using this application, go to")}} <a href="http://eden.sahanafoundation.org/wiki/Chat" target="_blank">{{=T("Sahana Community Chat")}}</a>
+  {{=XML(T("EUROSHA is a pilot project within the framework of the %(European_Voluntary_Humanitarian_Aid_Corp)s that seeks to address humanitarian issues and specifically to promote inclusive humanitarian information-sharing in crisis preparedness."))}}
  </p>
+ <p>
+  {{=XML(T("This site, powered by %(Sahana_Eden)s, serves as a public repository of humanitarian organizations, locations and project data for the four countries involved in the EUROSHA pilot (Burundi, the Central African Republic, Chad and Kenya).  For more information, see the %(EUROSHA_Volunteers_site)s.") % dict(European_Voluntary_Humanitarian_Aid_Corp=A(T("European Voluntary Humanitarian Aid Corp"), _href="http://ec.europa.eu/echo/aid/voluntarycorps_en.htm"), EUROSHA_Volunteers_site=A(T("EUROSHA Volunteers site"), _href="http://eurosha-volunteers-blog.org"), Sahana_Eden=A(T("Sahana Eden"), _href="http://eden.sahanafoundation.org")))}}
+ </p>
+ <table class="tacenter">
+  <tr>
+   <td rowspan=2>{{=T("This project is sponsored by")}}:</td>
+   <td><a href="http://ec.europa.eu/echo/index_en.htm"><img src="/{{=request.application}}/static/themes/EUROSHA/img/ECHO.png"></a></td>
+  </tr>
+  <tr>
+   <td><a href="http://ec.europa.eu/echo/index_en.htm">{{=T("European Commission Humanitarian Office / Humanitarian Aid & Civil Protection")}}</a></td>
+  </tr>
+ </table>
+ <table class="tacenter">
+  <tr>
+   <td rowspan=2>{{=T("Project Partners")}}:</td>
+   <td><a href="http://acra.it"><img src="/{{=request.application}}/static/themes/EUROSHA/img/ACRA.png"></a></td>
+   <td><a href="http://hrp.diakonie.cz/eng/"><img src="/{{=request.application}}/static/themes/EUROSHA/img/Diaconia.png"></a></td>
+   <td><a href="http://www.focsiv.it"><img src="/{{=request.application}}/static/themes/EUROSHA/img/FOCSIV.png"></a></td>
+   <td><a href="http://www.france-volontaires.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/FranceVolontaires.png"></a></td>
+   <td><a href="http://www.urd.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/GroupeURD.png"></a></td>
+   <td><a href="http://hot.openstreetmap.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/HOT.png"></a></td>
+   <td><a href="http://openstreetmap.fr"><img src="/{{=request.application}}/static/themes/EUROSHA/img/OSM-FR.png"></a></td>
+   <td><a href="http://www.clovekvohrozeni.sk/en/"><img src="/{{=request.application}}/static/themes/EUROSHA/img/PeopleInPeril.png"></a></td>
+   <td><a href="http://sahanafoundation.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/SSF.png"></a></td>
+   <td><a href="http://www.scd.asso.fr"><img src="/{{=request.application}}/static/themes/EUROSHA/img/SCD.png"></a></td>
+   <td><a href="http://www.sloga-platform.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/Sloga.png"></a></td>
+  </tr>
+  <tr>
+   <td><a href="http://acra.it">ACRA</a></td>
+   <td><a href="http://hrp.diakonie.cz/eng/">Diaconia ECCB</a></td>
+   <td><a href="http://www.focsiv.it">Focsiv</a></td>
+   <td><a href="http://www.france-volontaires.org">France Volontaires</a></td>
+   <td><a href="http://www.urd.org">Groupe URD</a></td>
+   <td><a href="http://hot.openstreetmap.org">Humanitarian OpenStreetMap Team</a></td>
+   <td><a href="http://openstreetmap.fr">OpenStreetMap France</a></td>
+   <td><a href="http://www.clovekvohrozeni.sk/en/">People in Peril</a></td>
+   <td><a href="http://sahanafoundation.org">Sahana Software Foundation</a></td>
+   <td><a href="http://www.scd.asso.fr">SCD</a></td>
+   <td><a href="http://www.sloga-platform.org">Sloga</a></td>
+  </tr>
+ </table>
 </div>
 {{if settings.frontpage.rss:}}
 <div id='feed-control'>

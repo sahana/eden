@@ -956,3 +956,8 @@ table.report td {
     height: 9px;
     overflow: hidden;
 }
+
+/* Translation Functionality */
+table.translation_module_table {
+    width: 55%;
+}

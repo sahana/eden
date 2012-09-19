@@ -3856,7 +3856,7 @@ def gis_rheader(r, tabs=[]):
 
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
-                (T("Import PoIs"), "import_poi"),
+                (T("Import from OpenStreetMap"), "import_poi"),
                 (T("Local Names"), "name"),
                 (T("Key Value pairs"), "tag"),
                 ]

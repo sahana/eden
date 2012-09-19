@@ -13,11 +13,11 @@ T = current.T
 # Pre-Populate
 settings.base.prepopulate = ["EUROSHA"]
 
-settings.base.system_name = T("Eurosha Humanitarian Data Registry")
+settings.base.system_name = T("EUROSHA Humanitarian Data Registry")
 settings.base.system_name_short = T("EUROSHA")
 
 # Theme (folder to use for views/layout.html)
-#settings.base.theme = "EUROSHA"
+settings.base.theme = "EUROSHA"
 
 # Auth settings
 # Do new users need to verify their email address?

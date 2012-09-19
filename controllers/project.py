@@ -76,6 +76,7 @@ def project():
         def postp(r, output):
             if r.interactive:
                 if not r.component:
+                    # @ToDo: Fix the filtering in project_task_controller()
                     read_url = URL(f="task", #args="search",
                                    vars={"project":"[id]"})
                     update_url = URL(f="task", #args="search",
