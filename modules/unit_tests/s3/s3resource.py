@@ -1627,6 +1627,7 @@ class MergeOrganisationsTests(unittest.TestCase):
 
         org1, org2 = self.get_records()
 
+        s3db = current.s3db
         org1_pe_id = s3db.pr_get_pe_id(org1)
         org2_pe_id = s3db.pr_get_pe_id(org2)
 
