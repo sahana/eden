@@ -46,14 +46,63 @@ class ReceiveItem(InvTestFunctions):
     """
 
     # -------------------------------------------------------------------------
-    def test_inv002_receive_items(self):
+    def test_inv002a_receive_items(self):
         """ Tests for Receive Workflow """
         user = "admin"
         recv_data = [("send_ref",
-                      "WB_TEST_000001",
+                      "WB_TEST_000002a",
                      ),
                      ("purchase_ref",
-                      "PO_TEST_000001",
+                      "PO_TEST_000002a",
+                     ),
+                     ("site_id",
+                      "Same Warehouse (Warehouse)",
+                      "option",
+                     ),
+                     ("type",
+                      "-",
+                      "option",
+                     )
+                    ]
+
+        item_data = [
+                     [
+                      ("item_id",
+                       "Blankets",
+                       "supply_widget",
+                      ),
+                      ("item_pack_id",
+                       "Piece",
+                       "option",
+                      ),
+                      ("quantity",
+                       "3",
+                      ),
+                     ]
+                    ]
+
+        # Create the receive shipment
+        result = self.receive(user, recv_data)
+        recv_id = self.recv_get_id(result)
+        # Add items to the shipment
+        item_list = []
+        for data in item_data:
+            result = self.track_recv_item(user, recv_id, data)
+            text = "%s %s" % (data[2][1], data[0][1])
+            item_list.append({"text": text,
+                              "record":result["after"].records[0]
+                             })
+        # Receive the shipment
+        self.recv_shipment(user, recv_id, item_list)
+
+    def test_inv002b_receive_items(self):
+        """ Tests for Receive Workflow """
+        user = "admin"
+        recv_data = [("send_ref",
+                      "WB_TEST_000002b",
+                     ),
+                     ("purchase_ref",
+                      "PO_TEST_000002b",
                      ),
                      ("site_id",
                       "Same Warehouse (Warehouse)",
@@ -62,7 +111,11 @@ class ReceiveItem(InvTestFunctions):
                      ("type",
                       "Internal Shipment",
                       "option",
-                     )
+                     ),
+                     ("from_site_id",
+                      "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
+                      "option",
+                     ),
                     ]
 
         item_data = [

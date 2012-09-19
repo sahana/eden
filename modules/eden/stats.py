@@ -29,7 +29,7 @@
 
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
-           "S3StatsSourceModel",
+           "S3StatsGroupModel",
            "stats_parameter_represent",
            ]
 
@@ -119,7 +119,7 @@ class S3StatsModel(S3Model):
                                    label = T("Value")),
                              Field("date", "date",
                                    label = T("Date")),
-                             self.doc_source_id(),
+                             self.stats_group_id(),
                              Field("approved_by", "integer",
                                    default = None)
                              )
@@ -632,7 +632,7 @@ class S3StatsDemographicModel(S3Model):
             msg_record_deleted = T("Demographic deleted"),
             msg_list_empty = T("No demographics currently defined"))
 
-        configure(tablename,
+        configure("stats_demographic",
                   super_entity = "stats_parameter",
                   deduplicate = self.stats_demographic_duplicate,
                   requires_approval = True,
@@ -661,7 +661,7 @@ class S3StatsDemographicModel(S3Model):
                                    label = T("Value")),
                              Field("date", "date",
                                    label = T("Date")),
-                             self.doc_source_id(),
+                             self.stats_group_id(),
                              *s3_meta_fields()
                              )
 
@@ -713,12 +713,17 @@ class S3StatsDemographicModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class S3StatsSourceModel(S3Model):
+class S3StatsGroupModel(S3Model):
     """
-        Table to hold the source details of the different stats records
+        Table to hold the group details of the different stats records
     """
 
-    names = ["stats_source",
+    names = ["stats_group_type",
+             "stats_group",
+             "stats_source",
+             "stats_group_id",
+             "stats_group_type_id",
+             "stats_source_id",
              ]
 
     def model(self):
@@ -726,26 +731,31 @@ class S3StatsSourceModel(S3Model):
         T = current.T
 
         # ---------------------------------------------------------------------
-        # Source
+        # Document-source entities
         #
+        source_types = Storage(
+                               #pr_pentity = T("Person"),
+                               doc_image = T("Image"),
+                               doc_document = T("Document"),
+                               #flood_gauge = T("Flood Gauge"),
+                               #survey_series = T("Survey")
+                               )
+
         tablename = "stats_source"
-        table = self.define_table(tablename,
-                                  # Instance
-                                  self.super_link("source_id", "doc_source_entity"),
+
+        table = self.super_entity(tablename, "source_id", source_types,
                                   Field("name",
-                                        label = T("Name")),
-                                  Field("url",
-                                        label = T("URL"),
-                                        requires = IS_NULL_OR(IS_URL()),
-                                        represent = lambda url: \
-                                            url and A(url,_href=url) or current.messages.NONE),
-                                  s3_date(label = T("Date Published")),
-                                  self.gis_location_id(),
-                                  self.doc_source_type_id(),
-                                  s3_comments("description",
-                                              label = T("Description")),
-                                  *s3_meta_fields()
+                                        label=T("Name")),
                                   )
+        # Reusable Field
+        source_id = S3ReusableField("source_id", table,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(current.db,
+                                                          "stats_source.source_id",
+                                                          stats_source_represent)),
+                                    represent = stats_source_represent,
+                                    label = T("Source"),
+                                    ondelete = "CASCADE")
 
         # CRUD Strings
         ADD_STAT_SOURCE = T("Add Demographic Source")
@@ -764,7 +774,6 @@ class S3StatsSourceModel(S3Model):
             msg_record_deleted = T("Demographic source deleted"),
             msg_list_empty = T("No demographic sources currently defined"))
 
-
         ADD_VULNERABILITY = T("Add Vulnerability Indicator Source")
         vulnerability_crud_strings = Storage(
             title_create = ADD_VULNERABILITY,
@@ -782,24 +791,138 @@ class S3StatsSourceModel(S3Model):
             msg_list_empty = T("No vulnerability indicator Sources currently defined"))
 
         current.response.s3.crud_strings[tablename] = demographic_crud_strings
-        self.configure(tablename,
-                       super_entity = "doc_source_entity",
+
+        # Components
+        self.add_component("stats_group", stats_source=self.super_key(table))
+        self.configure("stats_source",
                        deduplicate = self.stats_source_duplicate,
-                       requires_approval=True,
                        )
+
+        # ---------------------------------------------------------------------
+        # The type of document held as a stats_group.
+        #
+        tablename = "stats_group_type"
+        table = self.define_table(tablename,
+                                  Field("stats_group_instance",
+                                        label=T("Instance Type")),
+                                  Field("name",
+                                        label=T("Name")),
+                                  Field("display",
+                                        label=T("Display")),
+                                  *s3_meta_fields()
+                                  )
+        # Reusable Field
+        group_type_id = S3ReusableField("group_type_id", table,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(current.db,
+                                                          "stats_group_type.id",
+                                                          stats_group_type_represent)),
+                                    represent = stats_group_type_represent,
+                                    label = T("Source Type"),
+                                    ondelete = "CASCADE")
+        # Resource Configuration
+        self.configure("stats_group_type",
+                       deduplicate=self.stats_group_type_duplicate,
+                       )
+
+        # ---------------------------------------------------------------------
+        # Container for documents and stats records
+        #
+        tablename = "stats_group"
+        table = self.define_table(tablename,
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
+                                  self.super_link("source_id", "stats_source"),
+                                  s3_date(label = T("Date Published")),
+                                  self.gis_location_id(),
+                                  group_type_id(),
+                                  #Field("reliability",
+                                  #      label=T("Reliability")),
+                                  #Field("review",
+                                  #      label=T("Review")),
+                                  *s3_meta_fields()
+                                  )
+        # Reusable Field
+        group_id = S3ReusableField("group_id", table,
+                                    requires = IS_ONE_OF(current.db,
+                                                          "stats_group.id",
+                                                          stats_group_represent),
+                                    represent = stats_group_represent,
+                                    label = T("Stats Group"),
+                                    ondelete = "CASCADE")
+
+        table.virtualfields.append(StatsGroupVirtualFields())
+        # Resource Configuration
+        self.configure("stats_group",
+                       deduplicate=self.stats_group_duplicate,
+                       requires_approval = True,
+                       )
+
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
         return Storage(
                        demographic_source_crud_strings = demographic_crud_strings,
                        vulnerability_source_crud_strings = vulnerability_crud_strings,
+                       stats_group_type_id = group_type_id,
+                       stats_group_id = group_id,
+                       stats_source_id = source_id,
                        )
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if the module is disabled """
 
-        return Storage()
+        group_id = S3ReusableField("group_id", "integer",
+                                    readable=False,
+                                    writable=False)
+
+        group_type_id = S3ReusableField("group_type_id", "integer",
+                                         readable=False,
+                                         writable=False)
+
+        source_id = S3ReusableField("source_id", "integer",
+                                    readable=False,
+                                    writable=False)
+
+        return Storage(
+                       stats_group_type_id = group_type_id,
+                       stats_group_id = group_id,
+                       stats_source_id = source_id,
+                       )
+
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def stats_group_type_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "stats_group_type":
+            table = item.table
+            name = item.data.get("name", None)
+            query = (table.name.lower() == name.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def stats_group_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "stats_group":
+            table = item.table
+            location_id = item.data.get("location_id", None)
+            date = item.data.get("date", None)
+            query = (table.location_id == location_id) & \
+                    (table.date == date)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -815,7 +938,6 @@ class S3StatsSourceModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-
 
 # =============================================================================
 def stats_parameter_represent(id, row=None):
@@ -837,4 +959,86 @@ def stats_parameter_represent(id, row=None):
     except:
         return current.messages.UNKNOWN_OPT
 
+
+# =============================================================================
+def stats_group_type_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.display
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.display
+
+    db = current.db
+    table = db.stats_group_type
+    r = db(table._id == id).select(table.display,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.display
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def stats_group_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.name
+
+    db = current.db
+    table = db.stats_group
+    r = db(table._id == id).select(table.name,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+def stats_source_represent(id, row=None):
+    """ FK representation """
+
+    if row:
+        return row.name
+    elif not id:
+        return current.messages.NONE
+    elif isinstance(id, Row):
+        return id.name
+
+    db = current.db
+    table = db.stats_source_entity
+    r = db(table._id == id).select(table.name,
+                                   limitby = (0, 1)).first()
+    try:
+        return r.name
+    except:
+        return current.messages.UNKNOWN_OPT
+
+# =============================================================================
+class StatsGroupVirtualFields:
+    """ Virtual fields to show the group that the report belongs to
+        used by vulnerability/report
+    """
+
+    extra_fields = ["group",
+                    ]
+
+    def group(self):
+        try:
+            approved = self.stats_group.approved_by
+        except (AttributeError,TypeError):
+            # @ToDo: i18n?
+            return "Approval pending"
+        else:
+            if not approved or approved == 0:
+                return "Approval pending"
+            else:
+                # @todo: add conditional branch for VCA report
+                return "Report"
 # END =========================================================================

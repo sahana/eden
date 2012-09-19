@@ -2780,8 +2780,8 @@ class S3DataTable(object):
         #          hence applying the datatable sorting/filters is
         #          not transparent
         if s3.datatable_ajax_source:
-            end = s3.datatable_ajax_source.find(".aaData")
-            default_url = s3.datatable_ajax_source[:end] # strip '.aaData' extension
+            end = s3.datatable_ajax_source.find(".aadata")
+            default_url = s3.datatable_ajax_source[:end] # strip '.aadata' extension
         else:
             default_url = current.request.url
         iconList = []
@@ -2982,7 +2982,7 @@ class S3DataTable(object):
         config.bFilter = attr.get("dt_bFilter", "true")
         config.ajaxUrl = attr.get("dt_ajax_url", URL(c=request.controller,
                                                      f=request.function,
-                                                     extension="aaData",
+                                                     extension="aadata",
                                                      args=request.args,
                                                      vars=request.get_vars,
                                                      ))

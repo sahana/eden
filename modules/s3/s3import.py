@@ -236,6 +236,7 @@ class S3Importer(S3CRUD):
 
         # @todo: clean this up
         source = None
+        open_file = None
         transform = None
         upload_id = None
         items = None
@@ -328,37 +329,55 @@ class S3Importer(S3CRUD):
 
         db = current.db
         table = self.upload_table
-
-        title=self.uploadTitle
-        form = self._upload_form(r, **attr)
-
-        r = self.request
-        r.read_body()
-        sfilename = form.vars.file
-        try:
-            ofilename = r.post_vars["file"].filename
-        except:
-            form.errors.file = self.messages.no_file
-
-        if form.errors:
-            response.flash = ""
-            output = self._create_upload_dataTable()
-            output.update(form=form, title=title)
-
-        elif not sfilename or \
-             ofilename not in r.files or r.files[ofilename] is None:
-            response.flash = ""
-            response.error = self.messages.file_not_found
-            output = self._create_upload_dataTable()
-            output.update(form=form, title=title)
-
+        output = None
+        # Experimental uploading via ajax - added for vulnerability
+        # Part of the problem with this is that it works directly with the
+        # opened file. This might pose a security risk, is should be alright
+        # if only trusted users are involved but care should be taken with this
+        self.ajax = "file" in r.post_vars and current.request.ajax
+        if self.ajax:
+            sfilename = ofilename = r.post_vars["file"].filename
+            #current.request.representation = "aadata"
+            upload_id = table.insert(controller=self.controller,
+                                     function=self.function,
+                                     filename=ofilename,
+                                     file = sfilename,
+                                     user_id=current.session.auth.user.id
+                                     )
         else:
+            title=self.uploadTitle
+            form = self._upload_form(r, **attr)
+    
+            r = self.request
+            r.read_body()
+            sfilename = form.vars.file
+            try:
+                ofilename = r.post_vars["file"].filename
+            except:
+                form.errors.file = self.messages.no_file
+
+            if form.errors:
+                response.flash = ""
+                output = self._create_upload_dataTable()
+                output.update(form=form, title=title)
+    
+            elif not sfilename or \
+                 ofilename not in r.files or r.files[ofilename] is None:
+                response.flash = ""
+                response.error = self.messages.file_not_found
+                output = self._create_upload_dataTable()
+                output.update(form=form, title=title)
+            else:
+                query = (table.file == sfilename)
+                db(query).update(controller=self.controller,
+                                 function=self.function,
+                                 filename=ofilename,
+                                 user_id=current.session.auth.user.id)
+                row = db(query).select(table.id, limitby=(0, 1)).first()
+                upload_id = row.id
+
+        if not output:
             output = dict()
-            query = (table.file == sfilename)
-            db(query).update(controller=self.controller,
-                             function=self.function,
-                             filename=ofilename,
-                             user_id=current.session.auth.user.id)
             # must commit here to separate this transaction from
             # the trial import phase which will be rolled back.
             db.commit()
@@ -369,7 +388,10 @@ class S3Importer(S3CRUD):
                 response.error = self.messages.invalid_file_format
                 return self.upload(r, **attr)
 
-            upload_file = r.files[ofilename]
+            if self.ajax:
+                upload_file = r.post_vars.file.file
+            else:
+                upload_file = r.files[ofilename]
             if extension == "xls":
                 if "xls_parser" in s3:
                     upload_file.seek(0)
@@ -383,8 +405,6 @@ class S3Importer(S3CRUD):
             else:
                 upload_file.seek(0)
 
-            row = db(query).select(table.id, limitby=(0, 1)).first()
-            upload_id = row.id
             if "single_pass" in r.vars:
                 single_pass = r.vars["single_pass"]
             else:
@@ -838,6 +858,19 @@ class S3Importer(S3CRUD):
         s3.filter = (self.table.job_id == job_id) & \
                     (self.table.tablename == self.controller_tablename)
 
+        # Experimental uploading via ajax - added for vulnerability
+        if self.ajax:
+            resource = self.resource
+            resource.add_filter(s3.filter)
+            rows = resource.select(["id", "element", "error"],
+                                   start=0,
+                                   limit=resource.count(),
+                                   )
+            data = resource.extract(rows,
+                                    ["id", "element", "error"],
+                                    )
+            return data
+
         # Get a list of the records that have an error of None
         query =  (self.table.job_id == job_id) & \
                  (self.table.tablename == self.controller_tablename)
@@ -1239,6 +1272,7 @@ class S3Importer(S3CRUD):
         data = resource.extract(rows,
                                 list_fields,
                                 )
+
         # put each value through the represent function
         for row in data:
             for (key, value) in row.items():
@@ -1257,7 +1291,7 @@ class S3Importer(S3CRUD):
                            )
         else:
             output = dict()
-            url = "/%s/%s/%s/import.aaData?job=%s" % (request.application,
+            url = "/%s/%s/%s/import.aadata?job=%s" % (request.application,
                                                       request.controller,
                                                       request.function,
                                                       ajax_item_id
@@ -1509,12 +1543,11 @@ class S3Importer(S3CRUD):
         """
             Set the resource and the table to being s3_import_item
         """
-
+        self.table = S3ImportJob.define_item_table()
         self.tablename = S3ImportJob.ITEM_TABLE_NAME
         if self.item_resource == None:
             self.item_resource = current.s3db.resource(self.tablename)
         self.resource = self.item_resource
-        self.table = S3ImportJob.define_item_table()
 
     # -------------------------------------------------------------------------
     def __define_table(self):
