@@ -1622,6 +1622,30 @@ class MergeOrganisationsTests(unittest.TestCase):
         self.assertEqual(str(user.organisation_id), str(self.id1))
 
     # -------------------------------------------------------------------------
+    def testMergeRealms(self):
+        """ Test merge of realms when merging two person entities """
+
+        org1, org2 = self.get_records()
+
+        s3db = current.s3db
+        org1_pe_id = s3db.pr_get_pe_id(org1)
+        org2_pe_id = s3db.pr_get_pe_id(org2)
+
+        person = Storage(first_name="Nxthga",
+                         realm_entity=org2_pe_id)
+        ptable = s3db.pr_person
+        person_id = ptable.insert(**person)
+
+        person = ptable[person_id]
+        self.assertEqual(person.realm_entity, org2_pe_id)
+
+        success = self.resource.merge(self.id1, self.id2)
+        self.assertTrue(success)
+
+        person = ptable[person_id]
+        self.assertEqual(person.realm_entity, org1_pe_id)
+
+    # -------------------------------------------------------------------------
     def get_records(self):
 
         table = self.resource.table

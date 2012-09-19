@@ -6106,6 +6106,39 @@ class S3RecordMerger(object):
         return success
 
     # -------------------------------------------------------------------------
+    def merge_realms(self, table, original, duplicate):
+        """
+            Merge the realms of two person entities (update all
+            realm_entities in all records from duplicate to original)
+
+            @param table: the table original and duplicate belong to
+            @param original: the original record
+            @param duplicate: the duplicate record
+        """
+
+        if "pe_id" not in table.fields:
+            return
+
+        original_pe_id = original["pe_id"]
+        duplicate_pe_id = duplicate["pe_id"]
+
+        db = current.db
+
+        for t in db:
+            if "realm_entity" in t.fields:
+
+                query = (t.realm_entity == duplicate_pe_id)
+                if "deleted" in t.fields:
+                    query &= (t.deleted != True)
+                try:
+                    db(query).update(realm_entity = original_pe_id)
+                except:
+                    db.rollback()
+                    raise
+        return
+
+
+    # -------------------------------------------------------------------------
     def fieldname(self, key):
 
         fn = None
@@ -6363,6 +6396,7 @@ class S3RecordMerger(object):
 
         # Delete the duplicate
         if not is_super_entity:
+            self.merge_realms(table, original, duplicate)
             delete_record(table, duplicate_id, replaced_by=original_id)
 
         # Success

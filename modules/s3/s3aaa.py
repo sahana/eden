@@ -1874,15 +1874,18 @@ class AuthS3(Auth):
 
         # Check for Domain: Whitelist or specific Approver
         table = s3db.auth_organisation
-        address, domain = user.email.split("@", 1)
-        query = (table.domain == domain)
-        record = db(query).select(table.organisation_id,
-                                  table.approver,
-                                  limitby=(0, 1)).first()
+        if "email" in user and user["email"] and "@" in user["email"]:
+            domain = user.email.split("@", 1)[-1]
+            query = (table.domain == domain)
+            record = db(query).select(table.organisation_id,
+                                      table.approver,
+                                      limitby=(0, 1)).first()
+        else:
+            record = None
+
         if record:
             organisation_id = record.organisation_id
             approver = record.approver
-
         elif deployment_settings.get_auth_registration_requests_organisation():
             # Check for an Organization-specific Approver
             organisation_id = user.get("organisation_id", None)

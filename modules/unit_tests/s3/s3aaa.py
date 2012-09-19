@@ -1144,6 +1144,8 @@ class HasPermissionTests(unittest.TestCase):
                                  uacl=acl.ALL, oacl=acl.ALL),
                             uid="TESTDVIADMIN")
 
+        current.db.commit()
+
     # -------------------------------------------------------------------------
     def setUp(self):
 
@@ -1658,6 +1660,8 @@ class AccessibleQueryTests(unittest.TestCase):
                             dict(t="dvi_body",
                                  uacl=acl.ALL, oacl=acl.ALL),
                             uid="TESTDVIADMIN")
+
+        current.db.commit()
 
     # -------------------------------------------------------------------------
     def setUp(self):
