@@ -88,20 +88,29 @@ hr { /* This hr replaces the bootstrap one */
     margin-top: 45px;
 }
 
-/*.content {*/
-/*    min-height: 500px;*/
-/*}*/
-
-footer {
-    background: #EEE;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #DDD;
-    margin-bottom: 15px;
-    border-top: 1px solid #DDD;
+.mainfooter {
+    position: absolute;
+    bottom: 0;
     padding-top: 10px;
-    margin-top: 20px;
+    padding-bottom: 10px;
+    width: 100%;
+    margin: auto;
+    color: #EEE;
+    background: #000;
+    opacity: 0.8;
+    border: none;
 }
 
+.mainfooter a {
+    text-decoration: none;
+}
+
+.centered {
+    height: 400px;
+    position: absolute;
+    top: 20%;
+    margin-top: -200px;
+}
 /* END COMMON CUSTOMIZATIONS */
 
 /* MAIN INDEX */
