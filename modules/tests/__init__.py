@@ -7,3 +7,5 @@ from asset import *
 from project import *
 from smoke import *
 from member import *
+from volunteer import *
+from staff import *

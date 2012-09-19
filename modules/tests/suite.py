@@ -23,9 +23,15 @@ def loadAllTests():
 
     # Setup Staff
     addTests(loadTests(CreateStaff))
+    addTests(loadTests(CreateStaffJobRole))
+    addTests(loadTests(CreateStaffCertificate))
 
-    # Setup New Volunteer
+    # Setup Volunteer
     addTests(loadTests(CreateVolunteer))
+    addTests(loadTests(CreateVolunteerJobRole))
+    addTests(loadTests(CreateVolunteerProgramme))
+    addTests(loadTests(CreateVolunteerSkill))
+    addTests(loadTests(CreateVolunteerCertificate))
 
     # Create Staff & Volunteer Training
     addTests(loadTests(CreateStaffTraining))
@@ -70,7 +76,6 @@ def loadAllTests():
 
     # Search Staff (Simple & Advance)
     #addTests(loadTests(SearchStaff))
-
     return suite
 
 # Set up the command line arguments
