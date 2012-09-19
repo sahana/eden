@@ -28,13 +28,15 @@ settings.security.map = True
 # Owner Entity
 settings.auth.person_realm_human_resource_org = True
 settings.auth.person_realm_member_org = True
+
 def ifrc_realm_entity(table, row):
+    """
+        Assign a Realm Entity to records
+    """
 
-    s3db = current.s3db
     db = current.db
-
+    s3db = current.s3db
     tablename = table._tablename
-    id  = row.id
 
     # Entity reference fields
     EID = "pe_id"
@@ -51,40 +53,40 @@ def ifrc_realm_entity(table, row):
     ptablename = "pr_person"
 
     # Owner Entity Foreign Key
-    realm_entity_fks = dict( pr_contact = EID,
-                             pr_physical_description = EID,
-                             pr_address = EID,
-                             pr_identity = "person_id",
-                             pr_education = "person_id",
-                             pr_note = "person_id",
-                             inv_recv = "site_id",
-                             inv_recv_item = "req_id",
-                             inv_track_item = "track_org_id",
-                             inv_adj_item = "adj_id",
-                             req_req_item = "req_id"
-
-                           )
+    realm_entity_fks = dict(pr_contact = EID,
+                            pr_physical_description = EID,
+                            pr_address = EID,
+                            pr_identity = "person_id",
+                            pr_education = "person_id",
+                            pr_note = "person_id",
+                            inv_recv = "site_id",
+                            inv_recv_item = "req_id",
+                            inv_track_item = "track_org_id",
+                            inv_adj_item = "adj_id",
+                            req_req_item = "req_id"
+                            )
 
     # Default Foreign Keys (ordered by priority)
-    default_fks = [
-        "catalog_id",
-        "project_id",
-        "project_location_id"
-    ]
+    default_fks = ["catalog_id",
+                   "project_id",
+                   "project_location_id"
+                   ]
 
-    # Link Table
+    # Link Tables
     realm_entity_link_table = dict(
-        project_task = Storage( tablename = "project_task_project",
-                                link_key = "task_id"
-                              )
+        project_task = Storage(tablename = "project_task_project",
+                               link_key = "task_id"
+                               )
         )
     if tablename in realm_entity_link_table:
         # Replace row with the record from the link table
-        link_table =  realm_entity_link_table[tablename]
+        link_table = realm_entity_link_table[tablename]
         table = s3db[link_table.tablename]
-        row = db(table[link_table.link_key] == row.id
-                 ).select(table.id,
-                          limitby=(0, 1)).first()
+        rows = db(table[link_table.link_key] == row.id).select(table.id,
+                                                               limitby=(0, 1))
+        if rows:
+            # Update not Create
+            row = rows.first()
 
     # Check if there is a FK to inherit the realm_entity
     realm_entity = None
@@ -97,14 +99,14 @@ def ifrc_realm_entity(table, row):
                 ftable = s3db.pr_person
                 query = ftable[EID] == row[EID]
             else:
-                ftablename = table[fk].type[10:] #reference tablename
+                ftablename = table[fk].type[10:] # reference tablename
                 ftable = s3db[ftablename]
                 query = (table.id == row.id) & \
                         (table[fk] == ftable.id)
-            record = db( query ).select(ftable.realm_entity,
-                                        limitby=(0, 1)).first()
+            record = db(query).select(ftable.realm_entity,
+                                      limitby=(0, 1)).first()
             if record:
-                realm_entity =  record.realm_entity
+                realm_entity = record.realm_entity
                 break
             else:
                 #print tablename + ", " + ftablename + ", " + str(row.id)

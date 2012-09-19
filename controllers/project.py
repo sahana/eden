@@ -76,9 +76,9 @@ def project():
         def postp(r, output):
             if r.interactive:
                 if not r.component:
-                    read_url = URL(f="task", args="search",
+                    read_url = URL(f="task", #args="search",
                                    vars={"project":"[id]"})
-                    update_url = URL(f="task", args="search",
+                    update_url = URL(f="task", #args="search",
                                      vars={"project":"[id]"})
                     s3mgr.crud.action_buttons(r, deletable=False,
                                               read_url=read_url,

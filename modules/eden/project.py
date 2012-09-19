@@ -1949,8 +1949,8 @@ class S3Project3WModel(S3Model):
         vars = form.vars
 
         # Get the project ID from the new project organisation record
-        project_id = db(otable.id == vars.id).select( otable.project_id,
-                                                      limitby=(0, 1)
+        project_id = db(otable.id == vars.id).select(otable.project_id,
+                                                     limitby=(0, 1)
                                                      ).first().project_id
 
         if current.deployment_settings.get_template() == "DRRPP":
@@ -1975,7 +1975,7 @@ class S3Project3WModel(S3Model):
             db(ptable.id == project_id).update(
                                         organisation_id = organisation_id,
                                         realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                                            organisation_id)
+                                                                         organisation_id)
                                         )
 
         return
@@ -4883,10 +4883,15 @@ def project_task_controller():
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
-            ltable = s3db.project_task_project
-            s3.filter = (ltable.project_id == project) & \
-                        (ltable.task_id == table.id) & \
-                        (table.status.belongs(statuses))
+            if r.method == "search":
+                r.get_vars = {"task_search_project": name,
+                              "task_search_status": ",".join([str(status) for status in statuses])
+                              }
+            else:
+                ltable = s3db.project_task_project
+                s3.filter = (ltable.project_id == project) & \
+                            (ltable.task_id == table.id) & \
+                            (table.status.belongs(statuses))
             crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
             crud_strings.title_search = T("Search Open Tasks for %(project)s") % dict(project=name)
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)

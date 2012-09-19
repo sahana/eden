@@ -1190,7 +1190,7 @@ class S3Search(S3CRUD):
         """
 
         from s3.s3utils import S3DataTable
-        # Get environment
+
         T = current.T
         session = current.session
         request = self.request
@@ -1200,11 +1200,9 @@ class S3Search(S3CRUD):
         settings = current.deployment_settings
         db = current.db
         s3db = current.s3db
-        gis = current.gis
         table = self.table
         tablename = self.tablename
 
-        # Get representation
         representation = r.representation
 
         # Initialize output
@@ -1418,6 +1416,7 @@ class S3Search(S3CRUD):
                 url = URL(extension="geojson",
                           args=None,
                           vars=vars)
+                gis = current.gis
                 feature_resources = [{
                         "name"   : T("Search Results"),
                         "id"     : "search_results",
