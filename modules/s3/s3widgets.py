@@ -3374,11 +3374,10 @@ def s3_grouped_checkboxes_widget(field,
         letters_options = {}
 
         for val, label in options:
-            letter = label and label[0]
+            letter = label
 
             if letter:
-                letter = str(letter.upper())
-
+                letter = s3_unicode(letter).upper()[0]
                 if letter not in letters_options:
                     letters.append(letter)
                     letters_options[letter] = [(val, label)]
