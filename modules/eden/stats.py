@@ -125,9 +125,9 @@ class S3StatsModel(S3Model):
                              )
 
         self.configure("stats_data",
-                        onapprove = self.stats_data_onapprove,
-                        requires_approval = True,
-                        )
+                       onapprove = self.stats_data_onapprove,
+                       requires_approval = True,
+                       )
         #----------------------------------------------------------------------
         # Stats Aggregated data
         #
@@ -845,8 +845,8 @@ class S3StatsGroupModel(S3Model):
         # Reusable Field
         group_id = S3ReusableField("group_id", table,
                                     requires = IS_ONE_OF(current.db,
-                                                          "stats_group.id",
-                                                          stats_group_represent),
+                                                         "stats_group.id",
+                                                         stats_group_represent),
                                     represent = stats_group_represent,
                                     label = T("Stats Group"),
                                     ondelete = "CASCADE")
@@ -985,16 +985,19 @@ def stats_group_represent(id, row=None):
     """ FK representation """
 
     if row:
-        return row.name
+        return stats_source_represent(row.source_id)
     elif not id:
         return current.messages.NONE
     elif isinstance(id, Row):
-        return id.name
+        return stats_source_represent(id.source_id)
 
-    db = current.db
-    table = db.stats_group
-    r = db(table._id == id).select(table.name,
-                                   limitby = (0, 1)).first()
+    s3db = current.s3db
+    table = s3db.stats_group
+    stable = s3db.stats_source
+    query = (table._id == id) & \
+            (stable._id == table.source_id)
+    r = current.db(query).select(stable.name,
+                                 limitby = (0, 1)).first()
     try:
         return r.name
     except:
@@ -1011,10 +1014,9 @@ def stats_source_represent(id, row=None):
     elif isinstance(id, Row):
         return id.name
 
-    db = current.db
-    table = db.stats_source_entity
-    r = db(table._id == id).select(table.name,
-                                   limitby = (0, 1)).first()
+    table = current.s3db.stats_source
+    r = current.db(table._id == id).select(table.name,
+                                           limitby = (0, 1)).first()
     try:
         return r.name
     except:
@@ -1041,4 +1043,5 @@ class StatsGroupVirtualFields:
             else:
                 # @todo: add conditional branch for VCA report
                 return "Report"
+
 # END =========================================================================

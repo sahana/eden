@@ -2322,39 +2322,52 @@ class GIS(object):
 
         name = feature.name
 
+        if "wkt" in feature:
+            wkt = feature.wkt
+        else:
+            # WKT not included by default in feature, so retrieve this now
+            table = current.s3db.gis_location
+            wkt = current.db(table.id == feature.id).select(table.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first().wkt
+
         try:
-            shape = wkt_loads(feature.wkt)
+            shape = wkt_loads(wkt)
         except:
-            s3_debug("Invalid WKT: %s" % name)
-            return False
+            error = "Invalid WKT: %s" % name
+            s3_debug(error)
+            return error
 
         geom_type = shape.geom_type
-        if geom_type == "MultiPolygon" or \
-           geom_type == "MultiLineString" or \
-           geom_type == "MultiPoint":
+        if geom_type == "MultiPolygon":
             polygons = shape.geoms
-        else:
+        elif geom_type == "Polygon":
             polygons = [shape]
+        else:
+            error = "Unsupported Geometry: %s, %s" % (name, geom_type)
+            s3_debug(error)
+            return error
         if os.path.exists(os.path.join(os.getcwd(), "temp")): # use web2py/temp
             TEMP = os.path.join(os.getcwd(), "temp")
         else:
             import tempfile
             TEMP = tempfile.gettempdir()
-        filename = os.path.join(TEMP, "%s.poly" % name)
-        File = open(filename, "w")
-        File.write(filename)
+        filename = "%s.poly" % name
+        filepath = os.path.join(TEMP, filename)
+        File = open(filepath, "w")
+        File.write("%s\n" % filename)
         count = 1
         for polygon in polygons:
-            File.write(count)
-            points = polygon.geoms
+            File.write("%s\n" % count)
+            points = polygon.exterior.coords
             for point in points:
-                File.write("\t%s\t%s" % (point.x, point.y))
-            File.write("END")
+                File.write("\t%s\t%s\n" % (point[0], point[1]))
+            File.write("END\n")
             ++count
-        File.write("END")
+        File.write("END\n")
         File.close()
 
-        return True
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7409,6 +7422,9 @@ class S3ImportPOI(S3Method):
                                      _id="password", _value="osm"))
                             ),
                         TR(
+                            TD(T("or")),
+                            ),
+                        TR(
                             TH(B("%s: " % T("File"))),
                             INPUT(_type="file", _name="file", _size="50"),
                             TH(DIV(SPAN("*", _class="req",
@@ -7435,9 +7451,9 @@ class S3ImportPOI(S3Method):
                     File = vars.file
                 else:
                     # Create .poly file
-                    result = GIS.create_poly(r.record)
-                    if not result:
-                        current.session.error = T("Cannot export from %s as WKT is invalid!") % r.record.name
+                    error = GIS.create_poly(r.record)
+                    if error:
+                        current.session.error = error
                         redirect(URL(args=r.id))
                     # Use Osmosis to extract an .osm file using this .poly
                     name = r.record.name
@@ -7447,20 +7463,28 @@ class S3ImportPOI(S3Method):
                         import tempfile
                         TEMP = tempfile.gettempdir()
                     filename = os.path.join(TEMP, "%s.osm" % name)
-                    from subprocess import call
-                    call(["/home/osm/osmosis/bin/osmosis",
-                          "--read-pgsql",
-                          "host=%s" % vars.host,
-                          "database=%s" % vars.database,
-                          "user=%s" % vars.user,
-                          "password=%s" % vars.password,
-                          "--dataset-dump",
-                          "--bounding-polygon",
-                          "file=\"%s\"" % os.path.join(TEMP, "%s.poly" % name),
-                          "--write-xml",
-                          "file=\"%s\"" % filename,
-                          ], shell=True)
-                    File = open(filename, "r")
+                    try:
+                        from subprocess import check_output as call
+                    except:
+                        # Python < 2.7
+                        from subprocess import call
+                    result = call(["/home/osm/osmosis/bin/osmosis",
+                                   "--read-pgsql",
+                                   "host=%s" % vars.host,
+                                   "database=%s" % vars.database,
+                                   "user=%s" % vars.user,
+                                   "password=%s" % vars.password,
+                                   "--dataset-dump",
+                                   "--bounding-polygon",
+                                   "file=\"%s\"" % os.path.join(TEMP, "%s.poly" % name),
+                                   "--write-xml",
+                                   "file=\"%s\"" % filename,
+                                   ], shell=True)
+                    try:
+                        File = open(filename, "r")
+                    except:
+                        current.session.error = T("OSM file generation failed: %s") % result
+                        redirect(URL(args=r.id))
 
                 # "Exploit" the de-duplicator hook to count import items
                 import_count = [0]

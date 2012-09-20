@@ -1,6 +1,6 @@
 UUID,Country,L1,L2,L3,L4,Edit L1
 SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",
-,BI,"Province","Commune","Colline",,
-,CF,"Prefecture","Sub-Prefecture",,,
+,BI,"Province","Commune","Colline","Sous Colline",
+,CF,"Prefecture","Sub-Prefecture","Commune",,
 ,KE,"Province","District","Division","Location",
 ,TD,"Region","Department","Sub-Prefecture","Canton",
