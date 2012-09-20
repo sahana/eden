@@ -50,7 +50,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row, Query, Set, Table, Expression
+from gluon.dal import Row, Rows, Query, Set, Table, Expression
 from gluon.storage import Storage, Messages
 from gluon.sqlhtml import OptionsWidget
 from gluon.tools import Auth, callback, addrow
@@ -3272,9 +3272,13 @@ class AuthS3(Auth):
             @param fields: dict of {ownership_field:value}
         """
 
-        ownership_fields = ("owned_by_user",
-                            "owned_by_group",
-                            "realm_entity")
+        # Ownership fields
+        OUSR = "owned_by_user"
+        OGRP = "owned_by_group"
+        REALM = "realm_entity"
+
+        ownership_fields = (OUSR, OGRP, REALM)
+
         pkey = table._id.name
         if isinstance(record, (Row, dict)) and pkey in record:
             record_id = record[pkey]
@@ -3299,8 +3303,8 @@ class AuthS3(Auth):
             @keyword owned_by_user: the auth_user ID of the owner user
             @keyword owned_by_group: the auth_group ID of the owner group
             @keyword realm_entity: the pe_id of the realm entity, or a tuple
-                                      (instance_type, instance_id) to lookup the
-                                      pe_id from
+                                   (instance_type, instance_id) to lookup the
+                                   pe_id from
         """
 
         s3db = current.s3db
@@ -3308,8 +3312,9 @@ class AuthS3(Auth):
         # Ownership fields
         OUSR = "owned_by_user"
         OGRP = "owned_by_group"
-        OENT = "realm_entity"
-        ownership_fields = (OUSR, OGRP, OENT)
+        REALM = "realm_entity"
+
+        ownership_fields = (OUSR, OGRP, REALM)
 
         # Entity reference fields
         EID = "pe_id"
@@ -3318,12 +3323,6 @@ class AuthS3(Auth):
         GID = "group_id"
         PID = "person_id"
         entity_fields = (EID, OID, SID, GID, PID)
-
-        # Entity tables
-        otablename = "org_organisation"
-        stablename = "org_site"
-        gtablename = "pr_group"
-        ptablename = "pr_person"
 
         # Find the table
         if hasattr(table, "_tablename"):
@@ -3349,7 +3348,7 @@ class AuthS3(Auth):
         fields_in_table = [f for f in ownership_fields if f in table.fields]
         if not fields_in_table:
             return
-        fields_in_table += [f for f in entity_fields if f in table]
+        fields_in_table += [f for f in entity_fields if f in table.fields]
 
         # Get all available fields for the record
         fields_missing = [f for f in fields_in_table if f not in record]
@@ -3398,43 +3397,182 @@ class AuthS3(Auth):
             elif OGRP in fields:
                 data[OGRP] = fields[OGRP]
 
-        # Find realm_entity
-        if OENT in fields_in_table:
-            if OENT in fields:
-                data[OENT] = fields[OENT]
-            elif not row[OENT] or force_update:
-                # Check for a global method to determine realm_entity
-                handler = current.deployment_settings.get_auth_realm_entity()
-                if callable(handler):
-                    realm_entity = handler(table, row)
+        # Find realm entity
+        if REALM in fields_in_table:
+            if REALM in row and row[REALM] and not force_update:
+                pass
+            else:
+                if REALM in fields:
+                    entity = fields[REALM]
                 else:
-                    realm_entity = 0
-                # Fall back to table-specific method
-                if realm_entity == 0:
-                    handler = s3db.get_config(tablename, "realm_entity")
-                    if callable(handler):
-                        realm_entity = handler(table, row)
-                # If successful, set the realm entity
-                if realm_entity != 0:
-                    data[OENT] = realm_entity
-                else:
-                    # Otherwise: introspective (fallback cascade)
-                    get_pe_id = s3db.pr_get_pe_id
-                    if EID in row and tablename not in ("pr_person", "dvi_body"):
-                        realm_entity = row[EID]
-                    elif OID in row:
-                        realm_entity = get_pe_id(otablename, row[OID])
-                    elif SID in row:
-                        realm_entity = get_pe_id(stablename, row[SID])
-                    elif GID in row:
-                        realm_entity = get_pe_id(gtablename, row[GID])
-                    else:
-                        realm_entity = None
-                    if realm_entity:
-                        data["realm_entity"] = realm_entity
+                    entity = 0
+                realm_entity = self.get_realm_entity(table, row,
+                                                     entity=entity)
+                data[REALM] = realm_entity
 
         self.s3_update_record_owner(table, row, **data)
         return
+
+    # -------------------------------------------------------------------------
+    def set_realm_entity(self, table, records, entity=0, force_update=False):
+        """
+            Update the realm entity for records.
+
+            @param table: the table (or tablename)
+            @param records: - a single record
+                            - a single record ID
+                            - a list of records, or a Rows object
+                            - a list of record IDs
+                            - a query to find records in table
+            @param entity: - an entity ID
+                           - a tuple (table, instance_id)
+                           - 0 for default lookup
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        REALM = "realm_entity"
+
+        EID = "pe_id"
+        OID = "organisation_id"
+        SID = "site_id"
+        GID = "group_id"
+        entity_fields = (EID, OID, SID, GID)
+
+        # Find the table
+        if hasattr(table, "_tablename"):
+            tablename = table._tablename
+        else:
+            tablename = table
+            table = s3db.table(tablename)
+        if not table or REALM not in table.fields:
+            return
+
+        # Find the available fields
+        fields_in_table = [table._id.name, REALM] + \
+                          [f for f in entity_fields if f in table.fields]
+        fields_to_load = [table[f] for f in fields_in_table]
+
+        # Realm entity specified by call?
+        realm_entity = entity
+        if isinstance(realm_entity, tuple):
+            realm_entity = s3db.pr_get_pe_id(realm_entity)
+            if not realm_entity:
+                return
+
+        if isinstance(records, Query):
+            query = records
+        else:
+            query = None
+
+        # Bulk update?
+        if realm_entity != 0 and force_update and query is not None:
+            db(query).update(**{REALM:realm_entity})
+            return
+
+        # Find the records
+        if query is not None:
+            if not force_update:
+                query &= (table[REALM] == None)
+            records = db(query).select(*fields_to_load)
+        elif not isinstance(records, (list, Rows)):
+            records = [records]
+        if not records:
+            return
+
+        # Update record by record
+        for record in records:
+
+            if not isinstance(record, Row):
+                record_id = record
+                row = Storage()
+            else:
+                row = record
+                if table._id.name not in record:
+                    continue
+                record_id = row[table._id.name]
+            q = (table._id == record_id)
+
+            # Do we need to reload the record?
+            fields_missing = [f for f in fields_in_table if f not in row]
+            if fields_missing:
+                row = db(q).select(*fields_to_load, limitby = (0, 1)).first()
+                if not row:
+                    continue
+
+            # Do we need to update the record at all?
+            if row[REALM] and not force_update:
+                continue
+
+            realm_entity = self.get_realm_entity(table, row,
+                                                 entity=realm_entity)
+
+            db(q).update(**{REALM:realm_entity})
+
+        return
+
+    # -------------------------------------------------------------------------
+    def get_realm_entity(self, table, record, entity=0):
+        """
+            Lookup the realm entity for a record
+
+            @param table: the table
+            @param record: the record (as Row or dict)
+            @param entity: the entity (pe_id)
+        """
+
+        s3db = current.s3db
+
+        REALM = "realm_entity"
+
+        EID = "pe_id"
+        OID = "organisation_id"
+        SID = "site_id"
+        GID = "group_id"
+
+        otablename = "org_organisation"
+        stablename = "org_site"
+        gtablename = "pr_group"
+
+        if REALM not in table:
+            return None
+
+        # Entity specified by call?
+        realm_entity = entity
+        if isinstance(entity, tuple):
+            realm_entity = s3db.pr_get_pe_id(entity)
+
+        # Fall back to deployment-global method to determine the realm entity
+        if realm_entity == 0:
+            handler = current.deployment_settings.get_auth_realm_entity()
+            if callable(handler):
+                realm_entity = handler(table, record)
+            else:
+                realm_entity = 0
+
+        # Fall back to table-specific method
+        if realm_entity == 0:
+            handler = s3db.get_config(table, "realm_entity")
+            if callable(handler):
+                realm_entity = handler(table, record)
+
+        # Fall back to standard lookup cascade
+        if realm_entity == 0:
+            get_pe_id = s3db.pr_get_pe_id
+            if EID in record and \
+               table._tablename not in ("pr_person", "dvi_body"):
+                realm_entity = record[EID]
+            elif OID in record:
+                realm_entity = get_pe_id(otablename, record[OID])
+            elif SID in record:
+                realm_entity = get_pe_id(stablename, record[SID])
+            elif GID in record:
+                realm_entity = get_pe_id(gtablename, record[GID])
+            else:
+                realm_entity = None
+
+        return realm_entity
 
     # -------------------------------------------------------------------------
     def permitted_facilities(self,

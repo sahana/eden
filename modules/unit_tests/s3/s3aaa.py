@@ -3048,74 +3048,6 @@ class RecordApprovalTests(unittest.TestCase):
             auth.s3_impersonate(None)
 
     # -------------------------------------------------------------------------
-    def testSuperEntityAccessibleQueryWithRecordApproval(self):
-        """ Test accessible_query with record approval for a super entity """
-
-        db = current.db
-        auth = current.auth
-        s3db = current.s3db
-
-        settings = current.deployment_settings
-        accessible_query = auth.s3_accessible_query
-        session = current.session
-
-        # Store current settings
-        approval = settings.get_auth_record_approval()
-        approval_required = settings.get_auth_record_approval_required_for()
-
-        # Record approval on, but for no tables
-        settings.auth.record_approval = True
-        settings.auth.record_approval_required_for = []
-
-        try:
-            table = s3db.doc_source_entity
-            tablename = "doc_source_entity"
-
-            AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
-            auth.permission.update_acl(AUTHENTICATED,
-                                       t=tablename,
-                                       uacl=auth.permission.READ,
-                                       entity="any")
-
-            auth.permission.update_acl(AUTHENTICATED,
-                                       c="doc", f="source_entity",
-                                       uacl=auth.permission.READ,
-                                       entity="any")
-
-            # Approval required for this table
-            settings.auth.record_approval_required_for = [tablename]
-
-            session.approver_role = None
-            auth.s3_impersonate("normaluser@example.com")
-
-            # User can only see approved records
-            resource = s3db.resource(tablename, unapproved=False)
-            query = resource.get_query()
-            self.assertTrue("(doc_source_entity.approved_by IS NOT NULL)" in str(query))
-
-            # ...even if we explicitly request them all
-            resource = s3db.resource(tablename, unapproved=True)
-            query = resource.get_query()
-            self.assertTrue("(doc_source_entity.approved_by IS NOT NULL)" in str(query))
-
-            # ...unless the user has the approver role
-            session.approver_role = None
-            settings.auth.record_approver_role = "AUTHENTICATED"
-            auth.s3_impersonate("normaluser@example.com")
-
-            # ...and request all records
-            resource = s3db.resource(tablename, unapproved=True)
-            query = resource.get_query()
-            self.assertFalse("(doc_source_entity.approved_by IS NOT NULL)" in str(query))
-
-        finally:
-            # Restore settings
-            settings.auth.record_approval = approval
-            settings.auth.record_approval_required_for = approval_required
-            settings.auth.record_approver_role = None
-            session.approver_role = None
-            auth.s3_impersonate(None)
-
     def tearDown(self):
 
         current.deployment_settings.security.policy = self.policy
@@ -3204,18 +3136,135 @@ class RealmEntityTests(unittest.TestCase):
         self.assertEqual(self.owned_record, "checked")
 
     # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecord(self):
+        """ Test the realm entity can be set for a record """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, record, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecordID(self):
+        """ Test the realm entity can be set for a record ID """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, self.org_id, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecordIDList(self):
+        """ Test the realm entity can be set for a list of record IDs """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, [self.org_id], force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQuery(self):
+        """ Test the realm entity can be set for a query """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQueryAndOverride(self):
+        """ Test that realm entity can be overridden by call """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, entity=4, force_update=True)
+        self.assertEqual(self.owned_record, None)
+
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 4)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQueryAndOverrideNone(self):
+        """ Test that realm entity can be set to None """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, entity=None, force_update=True)
+        self.assertEqual(self.owned_record, None)
+
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, None)
+
+    # -------------------------------------------------------------------------
     def realm_entity(self, table, row):
         """ Dummy method for hook testing """
 
         self.owned_record = (table._tablename, row.id)
-        return None
+        return 5
 
     # -------------------------------------------------------------------------
     def realm_entity_override(self, table, row):
         """ Dummy method for hook testing """
 
         self.owned_record = "checked"
-        return None
+        return 6
 
     # -------------------------------------------------------------------------
     def tearDown(self):
