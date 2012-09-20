@@ -3136,18 +3136,135 @@ class RealmEntityTests(unittest.TestCase):
         self.assertEqual(self.owned_record, "checked")
 
     # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecord(self):
+        """ Test the realm entity can be set for a record """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, record, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecordID(self):
+        """ Test the realm entity can be set for a record ID """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, self.org_id, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithRecordIDList(self):
+        """ Test the realm entity can be set for a list of record IDs """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        auth.set_realm_entity(otable, [self.org_id], force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQuery(self):
+        """ Test the realm entity can be set for a query """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+        record = otable[self.org_id]
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, force_update=True)
+        self.assertEqual(self.owned_record, (tname, record.id))
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 5)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQueryAndOverride(self):
+        """ Test that realm entity can be overridden by call """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, entity=4, force_update=True)
+        self.assertEqual(self.owned_record, None)
+
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, 4)
+
+    # -------------------------------------------------------------------------
+    def testSetRealmEntityWithQueryAndOverrideNone(self):
+        """ Test that realm entity can be set to None """
+
+        s3db = current.s3db
+        auth = current.auth
+        settings = current.deployment_settings
+
+        otable = s3db.org_organisation
+
+        tname = "org_organisation"
+        settings.auth.realm_entity = self.realm_entity
+
+        query = (otable.id == self.org_id)
+        auth.set_realm_entity(otable, query, entity=None, force_update=True)
+        self.assertEqual(self.owned_record, None)
+
+        record = otable[self.org_id]
+        self.assertEqual(record.realm_entity, None)
+
+    # -------------------------------------------------------------------------
     def realm_entity(self, table, row):
         """ Dummy method for hook testing """
 
         self.owned_record = (table._tablename, row.id)
-        return None
+        return 5
 
     # -------------------------------------------------------------------------
     def realm_entity_override(self, table, row):
         """ Dummy method for hook testing """
 
         self.owned_record = "checked"
-        return None
+        return 6
 
     # -------------------------------------------------------------------------
     def tearDown(self):
