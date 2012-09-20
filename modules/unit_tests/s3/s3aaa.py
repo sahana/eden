@@ -2411,6 +2411,8 @@ class RecordApprovalTests(unittest.TestCase):
     def setUp(self):
 
         auth = current.auth
+        settings = current.deployment_settings
+
         sr = auth.get_system_roles()
         auth.permission.update_acl(sr.AUTHENTICATED,
                                    c="org",
@@ -2422,8 +2424,14 @@ class RecordApprovalTests(unittest.TestCase):
                                    uacl=auth.permission.READ|auth.permission.CREATE,
                                    oacl=auth.permission.READ|auth.permission.UPDATE)
 
-        self.policy = current.deployment_settings.get_security_policy()
-        current.deployment_settings.security.policy = 5
+        self.policy = settings.get_security_policy()
+        settings.security.policy = 5
+        self.approval = settings.get_auth_record_approval()
+        self.approval_for = settings.get_auth_record_approval_required_for()
+
+        settings.auth.record_approval = False
+        settings.auth.record_approval_required_for = None
+
         auth.override = False
         auth.s3_impersonate(None)
 
@@ -3050,7 +3058,12 @@ class RecordApprovalTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
 
-        current.deployment_settings.security.policy = self.policy
+        settings = current.deployment_settings
+
+        settings.security.policy = self.policy
+        settings.auth.record_approval = self.approval
+        settings.auth.record_approval_required_for = self.approval_for
+
         current.auth.s3_impersonate(None)
         current.db.rollback()
 

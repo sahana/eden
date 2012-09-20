@@ -1,0 +1,33 @@
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div>
+{{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+<div>
+{{try:}}{{=approve_form}}{{except:}}{{pass}}
+</div>
+{{include "last_update.html"}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{try:}}{{=item}}{{except:}}{{pass}}{{pass}}
+</div>
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function(){
+  $('#approve-btn').live('click', function(event) {
+    if (confirm('{{=T("Do you really want to approve this record?")}}')) {
+      return true;
+    } else {
+      event.preventDefault();
+      return false;
+    }
+  });
+  $('#reject-btn').live('click', function(event) {
+    if (confirm('{{=T("Do you really want to delete this record? (This action can not be reversed)")}}')) {
+      return true;
+    } else {
+      event.preventDefault();
+      return false;
+    }
+  });
+});
+//]]></script>

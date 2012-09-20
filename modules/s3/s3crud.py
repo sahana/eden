@@ -94,22 +94,22 @@ class S3CRUD(S3Method):
             elif isinstance(populate, dict):
                 self.data = populate
 
+        method = self.method
+
         if r.http == "DELETE" or self.method == "delete":
             output = self.delete(r, **attr)
-        elif self.method == "create":
+        elif method == "create":
             output = self.create(r, **attr)
-        elif self.method == "read":
+        elif method == "read":
             output = self.read(r, **attr)
-        elif self.method == "update":
+        elif method == "update":
             output = self.update(r, **attr)
-        elif self.method == "list":
+        elif method == "list":
             output = self.select(r, **attr)
-        elif self.method == "validate":
+        elif method == "validate":
             output = self.validate(r, **attr)
-        elif self.method == "review":
+        elif method == "review":
             if r.record:
-                r.error(405, "Review: Not Implemented",
-                        next=URL(args="review", vars=r.get_vars))
                 output = self.review(r, **attr)
             else:
                 output = self.unapproved(r, **attr)
@@ -390,7 +390,7 @@ class S3CRUD(S3Method):
 
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
-            if not r.method:
+            if not r.method or r.method == "review":
                 authorised = self._permitted("update")
                 if authorised and representation == "html" and editable:
                     return self.update(r, **attr)
@@ -1261,6 +1261,91 @@ class S3CRUD(S3Method):
                          '"dataTable_id": "list", ' \
                          '"sEcho": %s, ' \
                          '"aaData": []}' % (totalrows, sEcho)
+
+        else:
+            r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def review(self, r, **attr):
+        """
+            Review/approve/reject an unapproved record.
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+        """
+
+        if not self._permitted("review"):
+            r.unauthorized()
+
+        T = current.T
+
+        session = current.session
+        response = current.response
+
+        output = Storage()
+        if r.interactive:
+
+            _next = r.url(id="[id]", method="review")
+
+            if self._permitted("approve") and self._permitted("reject"):
+
+                approve = FORM(INPUT(_value=T("Approve"),
+                                    _type="submit",
+                                    _name="approve-btn",
+                                    _id="approve-btn"))
+
+                reject = FORM(INPUT(_value=T("Reject"),
+                                    _type="submit",
+                                    _name="reject-btn",
+                                    _id="reject-btn"))
+
+                cancel = A(T("Cancel"),
+                           _href=r.url(id=0),
+                           _class="action-lnk")
+
+                output["approve_form"] = DIV(TABLE(TR(approve, reject, cancel)),
+                                             _id="approve_form")
+
+                if approve.accepts(r.post_vars, session, formname="approve"):
+                    resource = current.s3db.resource(r.tablename, r.id,
+                                                     approved=False,
+                                                     unapproved=True)
+                    try:
+                        success = resource.approve()
+                    except:
+                        success = False
+                    if success:
+                        response.confirmation = T("Record approved")
+                        output["approve_form"] = ""
+                    else:
+                        response.warning = T("Record could not be approved.")
+
+                    r.http = "GET"
+                    _next = r.url(id=0)
+
+                elif reject.accepts(r.post_vars, session, formname="reject"):
+                    resource = current.s3db.resource(r.tablename, r.id,
+                                                     approved=False,
+                                                     unapproved=True)
+                    try:
+                        success = resource.reject()
+                    except:
+                        success = False
+                    if success:
+                        response.confirmation = T("Record deleted")
+                        output["approve_form"] = ""
+                    else:
+                        response.warning = T("Record could not be deleted.")
+
+                    r.http = "GET"
+                    _next = r.url(id=0)
+
+            output.update(self.read(r, **attr))
+            self.next = _next
+            r.http = r.env.request_method
+            current.response.view = "review.html"
 
         else:
             r.error(501, current.manager.ERROR.BAD_FORMAT)
