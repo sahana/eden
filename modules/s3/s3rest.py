@@ -1603,7 +1603,7 @@ class S3Request(object):
             representation = self.representation
         if method is None:
             method = self.method
-        elif method=="":
+        elif method == "":
             method = None
             if not read:
                 if self.component:
@@ -1613,6 +1613,8 @@ class S3Request(object):
         else:
             if id is None:
                 id = self.id
+            elif id == 0:
+                id = None
             else:
                 id = str(id)
                 if len(id) == 0:

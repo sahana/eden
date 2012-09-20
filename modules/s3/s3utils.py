@@ -793,10 +793,10 @@ def s3_register_validation():
 
     if s3.debug:
         s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
     else:
         s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
-        s3.scripts.append("/%s/static/scripts/jquery.pstrength.1.3.min.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
 
     if request.cookies.has_key("registered"):
         password_position = '''last'''
