@@ -555,7 +555,7 @@ class S3Request(object):
         if components is None:
             components = cnames
 
-        if self.method in ("review", "approve", "reject"):
+        if self.method == "review":
             approved, unapproved = False, True
         else:
             approved, unapproved = True, False

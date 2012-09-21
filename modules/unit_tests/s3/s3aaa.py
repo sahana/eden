@@ -2426,10 +2426,11 @@ class RecordApprovalTests(unittest.TestCase):
 
         self.policy = settings.get_security_policy()
         settings.security.policy = 5
-        self.approval = settings.get_auth_record_approval()
-        self.approval_for = settings.get_auth_record_approval_required_for()
 
+        self.approval = settings.get_auth_record_approval()
         settings.auth.record_approval = False
+
+        self.approval_for = settings.get_auth_record_approval_required_for()
         settings.auth.record_approval_required_for = None
 
         auth.override = False
@@ -2467,8 +2468,6 @@ class RecordApprovalTests(unittest.TestCase):
         finally:
             db.rollback()
             settings.auth.record_approval = False
-            settings.auth.record_approver_role = None
-            current.session.approver_role = None
             auth.s3_impersonate(None)
 
     # -------------------------------------------------------------------------
@@ -2545,8 +2544,6 @@ class RecordApprovalTests(unittest.TestCase):
 
         finally:
             settings.auth.record_approval = approval
-            settings.auth.record_approver_role = None
-            current.session.approver_role = None
             settings.auth.record_approval_required_for = tables
             if org_approval is not None:
                 s3db.configure("org_organisation",
@@ -2645,9 +2642,7 @@ class RecordApprovalTests(unittest.TestCase):
 
         finally:
             current.db.rollback()
-            current.session.approver_role = None
             settings.auth.record_approval = False
-            settings.auth.record_approver_role = None
             auth.s3_impersonate(None)
 
             s3db.configure("org_organisation",
@@ -2669,10 +2664,10 @@ class RecordApprovalTests(unittest.TestCase):
         # Set record approval on
         settings.auth.record_approval = True
         otable = s3db.org_organisation
-        otable_requires_approval = s3db.get_config(otable, "requires_approval", False)
+        otable_requires_approval = s3db.get_config(otable, "requires_approval", None)
         s3db.configure(otable, requires_approval=True)
         ftable = s3db.org_office
-        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", False)
+        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", None)
         s3db.configure(ftable, requires_approval=True)
 
         try:
@@ -2734,12 +2729,12 @@ class RecordApprovalTests(unittest.TestCase):
         finally:
             current.db.rollback()
             settings.auth.record_approval = False
-            settings.auth.record_approver_role = None
-            current.session.approver_role = None
-            s3db.configure("org_organisation",
-                           requires_approval=otable_requires_approval)
-            s3db.configure("org_office",
-                           requires_approval=ftable_requires_approval)
+            if otable_requires_approval is not None:
+                s3db.configure("org_organisation",
+                               requires_approval=otable_requires_approval)
+            if ftable_requires_approval is not None:
+                s3db.configure("org_office",
+                               requires_approval=ftable_requires_approval)
             auth.s3_impersonate(None)
 
     # -------------------------------------------------------------------------
@@ -2765,9 +2760,9 @@ class RecordApprovalTests(unittest.TestCase):
         # Set record approval on
         settings.auth.record_approval = True
         otable = s3db.org_organisation
-        otable_requires_approval = s3db.get_config(otable, "requires_approval", False)
+        otable_requires_approval = s3db.get_config(otable, "requires_approval", None)
         ftable = s3db.org_office
-        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", False)
+        ftable_requires_approval = s3db.get_config(ftable, "requires_approval", None)
 
         try:
 
@@ -2832,16 +2827,17 @@ class RecordApprovalTests(unittest.TestCase):
         finally:
             current.db.rollback()
             settings.auth.record_approval = False
-            settings.auth.record_approver_role = None
-            current.session.approver_role = None
             auth.s3_impersonate(None)
 
-            s3db.configure("org_organisation",
-                           onreject=org_onreject,
-                           requires_approval=otable_requires_approval)
-            s3db.configure("org_office",
-                           onreject=office_onreject,
-                           requires_approval=ftable_requires_approval)
+            s3db.configure("org_organisation", onreject=org_onreject)
+            if otable_requires_approval is not None:
+                s3db.configure("org_organisation",
+                               requires_approval=otable_requires_approval)
+            s3db.configure("org_office", onreject=office_onreject)
+            if ftable_requires_approval is not None:
+                s3db.configure("org_office",
+                               onreject=office_onreject,
+                               requires_approval=ftable_requires_approval)
 
     # -------------------------------------------------------------------------
     def testHasPermissionWithRecordApproval(self):
@@ -2849,18 +2845,22 @@ class RecordApprovalTests(unittest.TestCase):
 
         db = current.db
         auth = current.auth
+        acl = auth.permission
         s3db = current.s3db
         settings = current.deployment_settings
 
+        has_permission = auth.s3_has_permission
         AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
 
-        otable = s3db.org_organisation
-        otable_requires_approval = s3db.get_config(otable, "requires_approval", False)
+        # Store global settings
+        approval = settings.get_auth_record_approval()
+        approval_required = settings.get_auth_record_approval_required_for()
+
+        # Record approval on, but for no tables
+        settings.auth.record_approval = True
+        settings.auth.record_approval_required_for = []
 
         try:
-            # Set record approval on
-            settings.auth.record_approval = True
-
             # Impersonate as admin
             auth.s3_impersonate("admin@example.com")
 
@@ -2872,13 +2872,27 @@ class RecordApprovalTests(unittest.TestCase):
             org.update(id=org_id)
             s3db.update_super(otable, org)
 
-            s3db.configure(otable, requires_approval=True)
-            has_permission = auth.s3_has_permission
+            # Normal can see unapproved record if approval is not on for this table
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted) # not allowed as per ACL!
+
+            # They can not run any of the approval methods without permission, though
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+
+            # Turn on approval for this table
+            settings.auth.record_approval_required_for = ["org_organisation"]
 
             # Normal user must not see unapproved record
-            settings.auth.record_approver_role = "ADMIN"
-            session = current.session
-            session.approver_role = None
             auth.s3_impersonate("normaluser@example.com")
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
@@ -2897,14 +2911,24 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
 
-            # Normal user can still not see unapproved record even if they have the approver role
-            settings.auth.record_approver_role = "AUTHENTICATED"
-            session = current.session
-            session.approver_role = None
+            # Give user review and approve permissions on this table
+            acl.update_acl(AUTHENTICATED,
+                           c="org",
+                           uacl=acl.READ|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+
+            acl.update_acl(AUTHENTICATED,
+                           t="org_organisation",
+                           uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+
+            # Normal user can still not see unapproved record even if they have approve-permissions
             auth.s3_impersonate("normaluser@example.com")
-            self.assertEqual(session.approver_role, AUTHENTICATED)
-            self.assertTrue(session.approver_role in auth.user.realms)
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
 
             # Normal user can review/approve/reject if they have the approver role
@@ -2936,19 +2960,19 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertFalse(permitted)
 
             # Normal user can now see the record without having the approver role
-            settings.auth.record_approver_role = "ADMIN"
-            session = current.session
-            session.approver_role = None
             auth.s3_impersonate("normaluser@example.com")
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             self.assertTrue(permitted)
+            permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted) # not allowed as per ACL!
 
         finally:
-            settings.auth.record_approval = False
-            settings.auth.record_approver_role = None
-            session.approver_role = None
-            s3db.configure("org_organisation",
-                           requires_approval=otable_requires_approval)
+            # Restore global settings
+            settings.auth.record_approval = approval
+            settings.auth.record_approval_required_for = approval_required
+
             auth.s3_impersonate(None)
 
     # -------------------------------------------------------------------------
@@ -2957,6 +2981,7 @@ class RecordApprovalTests(unittest.TestCase):
 
         db = current.db
         auth = current.auth
+        acl = auth.permission
         s3db = current.s3db
         settings = current.deployment_settings
         accessible_query = auth.s3_accessible_query
@@ -2989,7 +3014,6 @@ class RecordApprovalTests(unittest.TestCase):
             table = s3db.org_organisation
 
             # Approval not required by default
-            session.approver_role = None
             auth.s3_impersonate("normaluser@example.com")
             query = accessible_query("read", table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.id > 0)")
@@ -2997,7 +3021,6 @@ class RecordApprovalTests(unittest.TestCase):
             settings.auth.record_approval_required_for = ["org_organisation"]
 
             # Admin can see all records
-            session.approver_role = None
             auth.s3_impersonate("admin@example.com")
 
             # See only approved records in read
@@ -3011,7 +3034,6 @@ class RecordApprovalTests(unittest.TestCase):
             self.assertEqual(str(query), "(org_organisation.id > 0)")
 
             # User can only see approved records
-            session.approver_role = None
             auth.s3_impersonate("normaluser@example.com")
 
             # See only approved records in read
@@ -3024,35 +3046,40 @@ class RecordApprovalTests(unittest.TestCase):
             query = accessible_query(["read", "review"], table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.approved_by IS NOT NULL)")
 
-            # User can see unapproved records with approval-methods,
-            # if given the approver-role
-            settings.auth.record_approver_role = "AUTHENTICATED"
-            session.approver_role = None
+            # Give user review and approve permissions on this table
+            acl.update_acl(AUTHENTICATED,
+                           c="org",
+                           uacl=acl.READ|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+
+            acl.update_acl(AUTHENTICATED,
+                           t="org_organisation",
+                           uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
+                           oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+
+            # User can now access unapproved records
             auth.s3_impersonate("normaluser@example.com")
-            self.assertEqual(session.approver_role, AUTHENTICATED)
-            self.assertTrue(session.approver_role in auth.user.realms)
 
             # See only approved records in read
             query = accessible_query("read", table, c="org", f="organisation")
             self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
-            # See only unapproved records in approve
+            # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
             self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
             # See all records with both
             query = accessible_query(["read", "approve"], table, c="org", f="organisation")
-            self.assertFalse("(org_organisation.approved_by IS NOT NULL)" in str(query))
-            self.assertFalse("(org_organisation.approved_by IS NULL)" in str(query))
+            self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
+            self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
 
-            # Turn of record approval and check the default query
+            # Turn off record approval and check the default query
             settings.auth.record_approval = False
+
             query = accessible_query("read", table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.id > 0)")
 
         finally:
             settings.auth.record_approval = approval
             settings.auth.record_approval_required_for = approval_required
-            settings.auth.record_approver_role = None
-            session.approver_role = None
             auth.s3_impersonate(None)
 
     # -------------------------------------------------------------------------

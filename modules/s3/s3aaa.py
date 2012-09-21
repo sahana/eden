@@ -2046,22 +2046,6 @@ class AuthS3(Auth):
 
             user_id = self.user.id
 
-            # Lookup approver role and store in session
-            if settings.get_auth_record_approval():
-                approver_role = session["approver_role"]
-                if approver_role is None:
-                    approver_role = system_roles.ADMIN
-                    role_uuid = settings.get_auth_record_approver_role()
-                    if role_uuid:
-                        gtable = self.settings.table_group
-                        query = (gtable.uuid == role_uuid) & \
-                                (gtable.deleted != True)
-                        row = db(query).select(gtable.id,
-                                               limitby=(0, 1)).first()
-                        if row:
-                            approver_role = row.id
-                session["approver_role"] = approver_role
-
             # Set pe_id for current user
             ltable = s3db.table("pr_person_user")
             if ltable is not None:
@@ -3711,18 +3695,20 @@ class S3Permission(object):
     READ = 0x0002
     UPDATE = 0x0004
     DELETE = 0x0008
+    REVIEW = 0x0010
+    APPROVE = 0x0020
 
-    ALL = CREATE | READ | UPDATE | DELETE
+    ALL = CREATE | READ | UPDATE | DELETE | REVIEW | APPROVE
     NONE = 0x0000 # must be 0!
 
     PERMISSION_OPTS = OrderedDict([
         #(NONE, "NONE"),
-        #(READ, "READ"),
-        #(CREATE|UPDATE|DELETE, "WRITE"),
         [CREATE, "CREATE"],
         [READ, "READ"],
         [UPDATE, "UPDATE"],
-        [DELETE, "DELETE"]])
+        [DELETE, "DELETE"],
+        [REVIEW, "REVIEW"],
+        [APPROVE, "APPROVE"]])
 
     # Method string <-> required permission
     METHODS = Storage({
@@ -3737,9 +3723,9 @@ class S3Permission(object):
 
         "import": CREATE,
 
-        "review": READ,
-        "approve": READ, #UPDATE,
-        "reject": READ, #DELETE
+        "review": REVIEW,
+        "approve": APPROVE,
+        "reject": APPROVE,
     })
 
     # Lambda expressions for ACL handling
@@ -4329,8 +4315,15 @@ class S3Permission(object):
             @param record: the record or record ID (None for any record)
         """
 
-        if not isinstance(method, (list, tuple)):
+        if isinstance(method, (list, tuple)):
+            query = None
+            for m in method:
+                if self.has_permission(m, c=c, f=f, t=t, record=record):
+                    return True
+            return False
+        else:
             method = [method]
+
         if record == 0:
             record = None
         _debug("\nhas_permission('%s', c=%s, f=%s, t=%s, record=%s)" % \
@@ -4473,26 +4466,11 @@ class S3Permission(object):
                 access_approved = not all([m in approval_methods for m in method])
                 access_unapproved = any([m in method for m in approval_methods])
 
-                approver_role = current.session["approver_role"]
-                if approver_role is None:
-                    approver_role = sr.ADMIN
-
                 if access_unapproved:
-                    if access_approved:
-                        if approver_role not in realms:
-                            permitted = self.approved(table, record)
-                            if not permitted:
-                                _debug("==> Record not approved")
-                        else:
-                            pass # no change
-                    else:
-                        if approver_role in realms:
-                            permitted = self.unapproved(table, record)
-                            if not permitted:
-                                _debug("==> Record already approved")
-                        else:
-                            permitted = False
-                            _debug("==> Approver role required but not given")
+                    if not access_approved:
+                        permitted = self.unapproved(table, record)
+                        if not permitted:
+                            _debug("==> Record already approved")
                 else:
                     permitted = self.approved(table, record)
                     if not permitted:
@@ -4510,7 +4488,7 @@ class S3Permission(object):
         return permitted
 
     # -------------------------------------------------------------------------
-    def accessible_query(self, method, table, c=None, f=None):
+    def accessible_query(self, method, table, c=None, f=None, deny=True):
         """
             Returns a query to select the accessible records for method
             in table.
@@ -4531,11 +4509,12 @@ class S3Permission(object):
 
         if not isinstance(method, (list, tuple)):
             method = [method]
+
         _debug("\naccessible_query(%s, '%s')" % (table, ",".join(method)))
 
         # Defaults
         ALL_RECORDS = (table._id > 0)
-        NO_RECORDS = (table._id == 0)
+        NO_RECORDS = (table._id == 0) if deny else None
 
         # Record approval required?
         if self.requires_approval(table) and \
@@ -4583,17 +4562,19 @@ class S3Permission(object):
             _debug("*** ALL RECORDS ***")
             return ALL_RECORDS
 
-        # Re-adjust ALL RECORDS after actual user roles
-        if requires_approval:
-            approver_role = current.session["approver_role"]
-            if approver_role is None:
-                approver_role = sr.ADMIN
-            if approver_role not in realms:
-                if not approved:
-                    _debug("==> user doesn't have approver role")
-                    _debug("*** NO RECORDS ***")
-                    return NO_RECORDS
-                ALL_RECORDS = APPROVED
+        # Multiple methods?
+        if len(method) > 1:
+            query = None
+            for m in method:
+                q = self.accessible_query(m, table, c=c, f=f, deny=False)
+                if q is not None:
+                    if query is None:
+                        query = q
+                    else:
+                        query |= q
+            if query is None:
+                query = NO_RECORDS
+            return query
 
         # Required ACL
         racl = self.required_acl(method)

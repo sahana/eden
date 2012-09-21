@@ -1289,7 +1289,7 @@ class S3CRUD(S3Method):
 
             _next = r.url(id="[id]", method="review")
 
-            if self._permitted("approve") and self._permitted("reject"):
+            if self._permitted("approve"):
 
                 approve = FORM(INPUT(_value=T("Approve"),
                                     _type="submit",
