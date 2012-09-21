@@ -4302,6 +4302,53 @@ class S3Permission(object):
         return self.approved(table, record, approved=False)
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def requires_approval(cls, table):
+        """
+            Check whether record approval is required for a table
+
+            @param table: the table (or tablename)
+        """
+
+        settings = current.deployment_settings
+
+        if settings.get_auth_record_approval():
+            tables = settings.get_auth_record_approval_required_for()
+            if tables is not None:
+                table = table._tablename if type(table) is Table else table
+                if table in tables:
+                    return True
+                else:
+                    return False
+            elif current.s3db.get_config(table, "requires_approval"):
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def set_default_approver(cls, table):
+        """
+            Set the default approver for new records in table
+
+            @param table: the table
+        """
+
+        auth = current.auth
+        APPROVER = "approved_by"
+
+        if APPROVER in table:
+            approver = table[APPROVER]
+            if auth.s3_logged_in() and \
+               auth.s3_has_permission("approve", table):
+                approver.default = auth.user.id
+            else:
+                approver.default = None
+        return
+
+    # -------------------------------------------------------------------------
     # Authorization
     # -------------------------------------------------------------------------
     def has_permission(self, method, c=None, f=None, t=None, record=None):
@@ -5051,32 +5098,6 @@ class S3Permission(object):
              c in modules and not modules[c].restricted:
             return False
         return True
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def requires_approval(cls, table):
-        """
-            Check whether record approval is required for a table
-
-            @param table: the table (or tablename)
-        """
-
-        settings = current.deployment_settings
-
-        if settings.get_auth_record_approval():
-            tables = settings.get_auth_record_approval_required_for()
-            if tables is not None:
-                table = table._tablename if type(table) is Table else table
-                if table in tables:
-                    return True
-                else:
-                    return False
-            elif current.s3db.get_config(table, "requires_approval"):
-                return True
-            else:
-                return False
-        else:
-            return False
 
     # -------------------------------------------------------------------------
     def hidden_modules(self):

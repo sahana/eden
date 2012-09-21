@@ -144,7 +144,7 @@ class S3CRUD(S3Method):
         insertable = _config("insertable", True)
         if not insertable:
             if r.method is not None:
-                r.error(405, self.resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.BAD_METHOD)
             else:
                 return dict(form=None)
 
@@ -213,13 +213,13 @@ class S3CRUD(S3Method):
                     from_table, from_record = from_record.split(".", 1)
                     from_table = current.db.get(from_table, None)
                     if not from_table:
-                        r.error(404, self.resource.ERROR.BAD_RESOURCE)
+                        r.error(404, resource.ERROR.BAD_RESOURCE)
                 else:
                     from_table = table
                 try:
                     from_record = long(from_record)
                 except:
-                    r.error(404, self.resource.ERROR.BAD_RECORD)
+                    r.error(404, resource.ERROR.BAD_RECORD)
                 authorised = current.auth.s3_has_permission("read",
                                                     from_table._tablename,
                                                     from_record)
@@ -254,9 +254,12 @@ class S3CRUD(S3Method):
 
             subheadings = _config("subheadings")
 
+            # Set default approver
+            current.auth.permission.set_default_approver(table)
+
             # Get the form
             form = self.sqlform(request=request,
-                                resource=self.resource,
+                                resource=resource,
                                 data=self.data,
                                 record_id=original,
                                 from_table=from_table,
@@ -409,7 +412,7 @@ class S3CRUD(S3Method):
             # Item
             if record_id:
                 item = self.sqlform(request=request,
-                                    resource=self.resource,
+                                    resource=resource,
                                     record_id=record_id,
                                     readonly=True,
                                     subheadings=subheadings,
@@ -462,7 +465,7 @@ class S3CRUD(S3Method):
                         if value is None or value == "" or value == []:
                             field.readable = False
                 item = self.sqlform(request=request,
-                                    resource=self.resource,
+                                    resource=resource,
                                     record_id=record_id,
                                     readonly=True,
                                     format=representation)
@@ -610,7 +613,7 @@ class S3CRUD(S3Method):
 
             # Get the form
             form = self.sqlform(request=self.request,
-                                resource=self.resource,
+                                resource=resource,
                                 record_id=record_id,
                                 onvalidation=onvalidation,
                                 onaccept=onaccept,

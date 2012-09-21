@@ -1790,17 +1790,18 @@ class AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id > 0)")
         query = accessible_query("update",table,  c="dvi", f="body")
+        roles = ",".join([str(r) for r in auth.user.realms if r is not None])
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, roles))
         query = accessible_query("delete", table, c="dvi", f="body")
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, roles))
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
@@ -1839,11 +1840,12 @@ class AccessibleQueryTests(unittest.TestCase):
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id > 0)")
         query = accessible_query("update",table,  c="dvi", f="body")
+        roles = ",".join([str(r) for r in auth.user.realms if r is not None])
         self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
                                      "((dvi_body.owned_by_user IS NULL) AND "
                                      "(dvi_body.owned_by_group IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3,%s)))" %
-                                     (auth.user.id, self.dvi_reader))
+                                     "(dvi_body.owned_by_group IN (%s)))" %
+                                     (auth.user.id, roles))
         query = accessible_query("delete", table, c="dvi", f="body")
         self.assertEqual(str(query), "(dvi_body.id = 0)")
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
@@ -2549,6 +2551,48 @@ class RecordApprovalTests(unittest.TestCase):
                 s3db.configure("org_organisation",
                                requires_approval = org_approval)
             current.auth.s3_impersonate(None)
+
+    # -------------------------------------------------------------------------
+    def testSetDefaultApprover(self):
+        """
+            Test whether default approver is set if current user has
+            permission to approve records in a table
+        """
+
+        auth = current.auth
+        acl = auth.permission
+
+        AUTHENTICATED = auth.get_system_roles().AUTHENTICATED
+
+        otable = current.s3db.org_organisation
+
+        self.assertEqual(otable.approved_by.default, None)
+
+        auth.s3_impersonate("normaluser@example.com")
+        acl.set_default_approver(otable)
+        self.assertEqual(otable.approved_by.default, None)
+
+        # Give user review and approve permissions on this table
+        acl.update_acl(AUTHENTICATED,
+                       c="org",
+                       uacl=acl.READ|acl.REVIEW|acl.APPROVE,
+                       oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+        acl.update_acl(AUTHENTICATED,
+                       t="org_organisation",
+                       uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
+                       oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
+
+        auth.s3_impersonate("normaluser@example.com")
+        acl.set_default_approver(otable)
+        self.assertEqual(otable.approved_by.default, auth.user.id)
+
+        auth.s3_impersonate("admin@example.com")
+        acl.set_default_approver(otable)
+        self.assertEqual(otable.approved_by.default, auth.user.id)
+
+        auth.s3_impersonate(None)
+        acl.set_default_approver(otable)
+        self.assertEqual(otable.approved_by.default, None)
 
     # -------------------------------------------------------------------------
     def testRecordApprovalWithComponents(self):
