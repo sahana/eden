@@ -65,8 +65,6 @@ T = current.T
 #settings.auth.record_approval = True
 # Uncomment this and specify a list of tablenames for which record approval is required
 #settings.auth.record_approval_required_for = ["project_project"]
-# Uncomment & populate this to set an alternative record approver role
-#settings.auth.record_approver_role = "APPROVER"
 # Uncomment this to request an image when users register
 #settings.auth.registration_requests_image = True
 # Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details

@@ -177,9 +177,6 @@ def s3_clear_session():
     # Session-owned records
     if "owned_records" in session:
         del session["owned_records"]
-    # Approver-role
-    if "approver_role" in session:
-        del session["approver_role"]
 
     if "s3" in session:
         s3 = session.s3
