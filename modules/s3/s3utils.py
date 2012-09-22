@@ -2944,6 +2944,7 @@ class S3DataTable(object):
                                     consisting of two values, the repr from the
                                     db and the label to display. This can be more than
                                     the actual number of groups (giving an empty group).
+                   dt_group_space: Insert a space between the group heading and the next group
                    dt_bulk_selected: A list of selected items
                    dt_actions: dictionary of actions
                    dt_styles: dictionary of styles to be applied to a list of ids
@@ -3016,6 +3017,7 @@ class S3DataTable(object):
         config.group = dt_group
         config.groupTotals = attr.get("dt_group_totals", [])
         config.groupTitles = attr.get("dt_group_titles", [])
+        config.groupSpacing = attr.get("dt_group_space", "false")
         if bulkActions:
             for order in orderby:
                 if config.bulkCol <= order[0]:
