@@ -28,9 +28,7 @@ if len(pop_list) > 0:
     acl = auth.permission
     sysroles = auth.S3_SYSTEM_ROLES
     create_role = auth.s3_create_role
-    update_acls = auth.s3_update_acls
-
-    default_oacl = acl.READ|acl.UPDATE
+    #update_acls = auth.s3_update_acls
 
     # Do not remove or change order of these 5 definitions (System Roles):
     create_role("Administrator",

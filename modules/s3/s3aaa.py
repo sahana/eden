@@ -3931,6 +3931,7 @@ class S3Permission(object):
         if oacl is None:
             oacl = uacl
 
+        success = False
         if group:
             group_id = None
             acl = dict(group_id=group_id,
