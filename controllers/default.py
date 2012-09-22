@@ -599,7 +599,7 @@ def apath(path=""):
 
     from gluon.fileutils import up
     opath = up(request.folder)
-    #TODO: This path manipulation is very OS specific.
+    # @ToDo: This path manipulation is very OS specific.
     while path[:3] == "../": opath, path=up(opath), path[3:]
     return os.path.join(opath,path).replace("\\", "/")
 
@@ -611,6 +611,15 @@ def about():
         @ToDo: Avoid relying on Command Line tools which may not be in path
                - pull back info from Python modules instead?
     """
+
+    response.title = T("About")
+    if settings.get_template() != "default":
+        # Try a Custom View
+        path = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "help.html")
+        if os.path.exists(path):
+            response.view = "../private/templates/%s/views/help.html" % settings.get_template()
+            return dict()
 
     import sys
     import subprocess
@@ -681,12 +690,28 @@ def about():
 # -----------------------------------------------------------------------------
 def help():
     """ Custom View """
+
+    if settings.get_template() != "default":
+        # Try a Custom View
+        path = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "help.html")
+        if os.path.exists(path):
+            response.view = "../private/templates/%s/views/help.html" % settings.get_template()
+
     response.title = T("Help")
     return dict()
 
 # -----------------------------------------------------------------------------
 def privacy():
     """ Custom View """
+
+    if settings.get_template() != "default":
+        # Try a Custom View
+        path = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "privacy.html")
+        if os.path.exists(path):
+            response.view = "../private/templates/%s/views/privacy.html" % settings.get_template()
+
     response.title = T("Privacy")
     return dict()
 
@@ -726,10 +751,14 @@ def contact():
 
         output = s3_rest_controller(prefix, resourcename)
         return output
-    else:
-        # Default: Simple Custom View
-        response.title = T("Contact us")
-        return dict()
+    elif settings.get_template() != "default":
+        # Try a Custom View
+        path = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "contact.html")
+        if os.path.exists(path):
+            response.view = "../private/templates/%s/views/contact.html" % settings.get_template()
 
+    response.title = T("Contact us")
+    return dict()
 
 # END =========================================================================
