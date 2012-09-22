@@ -43,6 +43,9 @@ __all__ = ["S3Parsing"]
 import string
 import sys
 
+#import pyparsing
+#import nltk
+
 from gluon import current
 
 from s3.s3utils import soundex
@@ -50,9 +53,21 @@ from s3.s3utils import soundex
 # =============================================================================
 class S3Parsing(object):
     """
-       Message Parsing Framework.
+       Message Parsing Template.
     """
   
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def filter(message="", sender=""):
+        """
+            Filter unstructured data (e.g. Tweets)
+        """
+
+        category = "Test"
+        priority = 1
+
+        return category, priority
+
     # -------------------------------------------------------------------------
     @staticmethod
     def keyword_search(message="", sender=""):
@@ -64,10 +79,6 @@ class S3Parsing(object):
         if not message:
             return None
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        
         # Equivalent keywords in one list
         primary_keywords = ["get", "give", "show"] 
         contact_keywords = ["email", "mobile", "facility", "clinical",
@@ -101,7 +112,6 @@ class S3Parsing(object):
             reply = False
         return reply
 
-
     # -------------------------------------------------------------------------
     def parse_person(self, pquery="", name="", sender=""):
         """
@@ -132,9 +142,14 @@ class S3Parsing(object):
                 presult = dict(name = row.first_name, id = row.pe_id)
                 result.append(presult)
 
-        if len(result) > 1:
+        if len(result) == 0:
+            return T("No Match")
+
+        elif len(result) > 1:
             return T("Multiple Matches")
-        if len(result) == 1:
+            
+        else:
+            # Single Match
             reply = result[0]["name"]
             table = s3db.pr_contact
             if "email" in pquery:
@@ -147,7 +162,7 @@ class S3Parsing(object):
                 if recipient:
                     reply = "%s Email->%s" % (reply, recipient.value)
                 else:
-                    reply = "%s 's Email Not available!"%reply
+                    reply = "%s 's Email Not available!" % reply
             if "phone" in pquery:
                 query = (table.pe_id == result[0]["id"]) & \
                         (table.contact_method == "SMS") & \
@@ -157,12 +172,9 @@ class S3Parsing(object):
                                              limitby=(0, 1)).first()
                 if recipient:
                     reply = "%s Mobile->%s" % (reply,
-                                           recipient.value)
+                                               recipient.value)
                 else:
-                    reply = "%s 's Mobile Contact Not available!"%reply
-
-        if len(result) == 0:
-            return T("No Match")
+                    reply = "%s 's Mobile Contact Not available!" % reply
 
         return reply
     
@@ -197,13 +209,20 @@ class S3Parsing(object):
                (_name == soundex(row.aka2)):
                 result.append(row)
 
-        if len(result) > 1:
+        if len(result) == 0:
+            return T("No Match")
+
+        elif len(result) > 1:
             return T("Multiple Matches")
 
-        if len(result) == 1:
+        else:
+            # Single Match
             hospital = result[0]
-            status = db(stable.hospital_id == hospital.id).\
-                                                select(limitby=(0,1)).first()
+            status = db(stable.hospital_id == hospital.id).select(stable.facility_status,
+                                                                  stable.clinical_status,
+                                                                  stable.security_status,
+                                                                  limitby=(0, 1)
+                                                                  ).first()
             reply = "%s %s (%s) " % (reply, hospital.name,
                                      T("Hospital"))
             if "phone" in pquery:
@@ -220,9 +239,6 @@ class S3Parsing(object):
                 reply = reply + "Security status " + \
                     str(stable.security_status.represent\
                                             (status.security_status))
-
-        if len(result) == 0:
-            return T("No Match")
 
         return reply
 
@@ -254,10 +270,14 @@ class S3Parsing(object):
                (_name == soundex(row.acronym)):
                 result.append(row)
 
-        if len(result) > 1:
+        if len(reply) == 0:
+            return T("No Match")
+
+        elif len(result) > 1:
             return T("Multiple Matches")
 
-        if len(result) == 1:
+        else:
+            # Single Match
             org = result[0]
             reply = "%s %s (%s) " % (reply, org.name,
                                      T("Organization"))
@@ -270,8 +290,6 @@ class S3Parsing(object):
                 office = db(query).select(otable.address,
                                           limitby=(0, 1)).first()
                 reply = reply + "Address->" + office.address
-        if len(reply) == 0:
-            return T("No Match")
 
         return reply
 
@@ -285,14 +303,12 @@ class S3Parsing(object):
         if not message:
             return None
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        msg = current.msg
         parser = S3Parsing()
 
-        (lat, lon, code, text) = msg.parse_opengeosms(message)
+        (lat, lon, code, text) = current.msg.parse_opengeosms(message)
+
         if code == "SI":
+            # OpenGeoSMS
             reply = parser.parse_opengeosms(lat, lon, text, message, sender)
         else:
             words = string.split(message)
@@ -324,19 +340,18 @@ class S3Parsing(object):
         return reply				    
 
     # -------------------------------------------------------------------------
-    def parse_opengeosms(self,lat="", lon="", text="", message="", sender=""):
+    def parse_opengeosms(self, lat="", lon="", text="", message="", sender=""):
         """
             Parse OpenGeoSMS formatted messages.
         """
 
-        db = current.db
         s3db = current.s3db
         rtable = s3db.irs_ireport
         gtable = s3db.gis_location
         info = string.split(text)
-        name = info[len(info)-1]
+        name = info[len(info) - 1]
         category = ""
-        for a in range(0, len(info)-1):
+        for a in range(0, len(info) - 1):
             category = category + info[a] + " "
             
         #@ToDo: Check for an existing location in DB
@@ -360,7 +375,7 @@ class S3Parsing(object):
                       category=category,
                       location_id=location_id)			
 
-        db.commit()
+        current.db.commit()
         return "Incident Report Logged!"
 	                    
     # -------------------------------------------------------------------------

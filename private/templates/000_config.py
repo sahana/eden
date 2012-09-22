@@ -134,8 +134,8 @@ settings.frontpage.rss = [
 # Register an app at http://twitter.com/apps
 # (select Aplication Type: Client)
 # You'll get your consumer_key and consumer_secret from Twitter
-#settings.msg_twitter_oauth_consumer_key = ""
-#settings.msg_twitter_oauth_consumer_secret = ""
+#settings.msg.twitter_oauth_consumer_key = ""
+#settings.msg.twitter_oauth_consumer_secret = ""
 
 # UI options
 # Should user be prompted to save before navigating away?

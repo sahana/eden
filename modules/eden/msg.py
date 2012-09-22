@@ -570,7 +570,8 @@ class S3TwitterModel(S3Model):
                                    readable = False, writable = False),
                              Field("oauth_secret",
                                    readable = False, writable = False),
-                             Field("twitter_account", writable = False),
+                             Field("twitter_account",
+                                   writable = False),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -586,10 +587,18 @@ class S3TwitterModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "msg_twitter_search_results"
         table = define_table(tablename,
-                             Field("tweet", length=140),
-                             Field("posted_by"),
-                             Field("posted_at"),
-                             Field("twitter_search", db.msg_twitter_search),
+                             Field("tweet", length=140,
+                                   writable=False),
+                             Field("category",
+                                   writable=False),
+                             Field("priority", "integer",
+                                   writable=False),
+                             Field("posted_by",
+                                   writable=False),
+                             Field("posted_at",
+                                   writable=False),
+                             Field("twitter_search", db.msg_twitter_search,
+                                   writable=False),
                              *s3_meta_fields())
 
         #table.twitter_search.requires = IS_ONE_OF(db, "twitter_search.search_query")
@@ -600,6 +609,8 @@ class S3TwitterModel(S3Model):
 
         configure(tablename,
                   list_fields=["id",
+                               "priority",
+                               "category",
                                "tweet",
                                "posted_by",
                                "posted_at",
@@ -613,12 +624,13 @@ class S3TwitterModel(S3Model):
     @staticmethod
     def twitter_settings_onvalidation(form):
         """
-            Complete oauth: take tokens from session + pin from form, and do the 2nd API call to Twitter
+            Complete oauth: take tokens from session + pin from form,
+            and do the 2nd API call to Twitter
         """
 
         T = current.T
         session = current.session
-        settings = current.deployment_settings
+        settings = current.deployment_settings.msg
         s3 = session.s3
         vars = form.vars
 
@@ -628,8 +640,8 @@ class S3TwitterModel(S3Model):
             except:
                 raise HTTP(501, body=T("Can't import tweepy"))
 
-            oauth = tweepy.OAuthHandler(settings.twitter.oauth_consumer_key,
-                                        settings.twitter.oauth_consumer_secret)
+            oauth = tweepy.OAuthHandler(settings.twitter_oauth_consumer_key,
+                                        settings.twitter_oauth_consumer_secret)
             oauth.set_request_token(s3.twitter_request_key,
                                     s3.twitter_request_secret)
             try:
@@ -683,52 +695,59 @@ class S3ParsingModel(S3Model):
     """
 
     names = ["msg_workflow",
-             "msg_sessions"]
+             "msg_session"
+             ]
 
     def model(self):
 
         T = current.T
         
+        # ---------------------------------------------------------------------
+        #
+        # Link between Message Sources and Workflows in parser.py
+
         tablename = "msg_workflow"
         table = self.define_table(tablename,
                                   Field("source_task_id",
                                         label = T("Inbound Message Source"),
-                                        represent = lambda id: \
-                                        self.source_represent(id, 
-                                                              show_link=True)),
+                                        represent = self.source_represent,
+                                        ),
                                   Field("workflow_task_id",
                                         label = T("Workflow")),                                          
-                                        *s3_meta_fields())
+                                  *s3_meta_fields())
                                   
         # ---------------------------------------------------------------------
-        # user_opts contains the available users.
-        now = current.request.utcnow
-        
+        #
+        # Login sessions for Messaging
+
         tablename = "msg_session"
         table = self.define_table(tablename,
                                   Field("email"),
                                   Field("created_datetime","datetime",
-                                        default = now),
+                                        default = current.request.utcnow),
                                   Field("expiration_time", "integer"),
-                                  Field("is_expired","boolean",
+                                  Field("is_expired", "boolean",
                                         default = False),
                                   Field("sender"),
                                   *s3_meta_fields())
                                   
-        
+        # ---------------------------------------------------------------------
         return Storage()
+
     # -------------------------------------------------------------------------
     @staticmethod
-    def source_represent(id, show_link = True):
+    def source_represent(id, show_link=True):
         """ Represent a Message Source in the Workflow Table """
     
         db = current.db
         stable = db.msg_inbound_email_settings
         wtable = db.msg_workflow
         source = db(wtable.source_task_id == id).select(wtable.source_task_id,
-                                                        limitby = (0,1)).first()
+                                                        limitby=(0, 1)
+                                                        ).first()
         setting = db(stable.username == source.source_task_id).select(stable.id,
-                                                        limitby = (0,1)).first()
+                                                                      limitby=(0, 1)
+                                                                      ).first()
         repr = source.source_task_id
         if setting:
             id = setting.id

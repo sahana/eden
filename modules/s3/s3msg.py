@@ -223,11 +223,11 @@ class S3Msg(object):
                 try:
                     contact = row.sender.split("<")[1].split(">")[0]
                     query = (contact_method == "EMAIL") & \
-                        (value == contact)
+                            (value == contact)
                     pe_ids = db(query).select(ctable.pe_id)
                     if not pe_ids:
                         query = (contact_method == "SMS") & \
-                            (value == contact)
+                                (value == contact)
                         pe_ids = db(query).select(ctable.pe_id)
 
                 except:
@@ -238,20 +238,20 @@ class S3Msg(object):
                     db(lid == row.id).update(reply = reply,
                                                    is_parsed = True)
                 else:
-                    flow = db(lid == row.id).select(ltable.reply, \
-                                                    limitby=(0,1)).first()
+                    flow = db(lid == row.id).select(ltable.reply,
+                                                    limitby=(0, 1)).first()
                     try:
                         wflow = flow.reply.split("Workflow:")[1].split(".")[0]
                     except:
                         pass
                     if wflow == workflow:
-                        reply = "Send help to see how to respond !"
+                        reply = "Send help to see how to respond!"
                         db(lid == row.id).update(reply = reply,
-                                                is_parsed = True)
+                                                 is_parsed = True)
                     else:
-                        reply = "Workflow:%s.Send help to see how to respond!"\
-                                %workflow
-                        db(lid == row.id).update(reply = flow.reply+reply)
+                        reply = "Workflow:%s. Send help to see how to respond!" \
+                                % workflow
+                        db(lid == row.id).update(reply = flow.reply + reply)
                         db.commit()
                         return
                 reply = linsert(recipient = row.sender,
@@ -1052,8 +1052,7 @@ class S3Msg(object):
                 current_prefix = prefix # from now on, we want a prefix
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_twitter_api():
+    def get_twitter_api(self):
         """
             Initialize Twitter API
         """
@@ -1066,22 +1065,23 @@ class S3Msg(object):
         else:
             self.tweepy = tweepy
 
-        db = current.db
-        s3db = current.db
-        settings = current.deployment_settings
-
-        table = s3db.msg_twitter_settings
-        query = (table.id > 0)
-        twitter_settings = db(query).select(limitby=(0, 1)).first()
+        table = current.s3db.msg_twitter_settings
+        twitter_settings = current.db(table.id > 0).select(table.oauth_key,
+                                                           table.oauth_secret,
+                                                           table.twitter_account,
+                                                           limitby=(0, 1)
+                                                           ).first()
         if twitter_settings and twitter_settings.twitter_account:
+            settings = current.deployment_settings.msg
             try:
-                oauth = tweepy.OAuthHandler(settings.twitter.oauth_consumer_key,
-                                            settings.twitter.oauth_consumer_secret)
+                oauth = tweepy.OAuthHandler(settings.twitter_oauth_consumer_key,
+                                            settings.twitter_oauth_consumer_secret)
                 oauth.set_access_token(twitter_settings.oauth_key,
                                        twitter_settings.oauth_secret)
                 twitter_api = tweepy.API(oauth)
-                twitter_account = tmp_twitter_settings.twitter_account
-                return dict(twitter_api=twitter_api, twitter_account=twitter_account)
+                twitter_account = twitter_settings.twitter_account
+                return dict(twitter_api=twitter_api,
+                            twitter_account=twitter_account)
             except:
                 pass
 
@@ -1142,7 +1142,8 @@ class S3Msg(object):
     #-------------------------------------------------------------------------
     def receive_subscribed_tweets(self):
         """
-            Function  to call to drop the tweets into search_results table - called via cron
+            Function  to call to drop the tweets into search_results table
+            - called via cron or twitter_search_results controller
         """
 
         # Initialize Twitter API
@@ -1150,8 +1151,8 @@ class S3Msg(object):
         if not twitter_settings:
             # Abort
             return False
-        tweepy = self.tweepy
 
+        tweepy = self.tweepy
         twitter_api = None
         if twitter_settings:
             twitter_api = twitter_settings["twitter_api"]
@@ -1160,12 +1161,15 @@ class S3Msg(object):
             # Abort
             return False
 
+        from s3parser import S3Parsing
+        parser = S3Parsing.parser
+
         db = current.db
         s3db = current.s3db
-        table = s3db.msg_twitter_search
-        rows = db().select(table.ALL)
-
         results_table = s3db.msg_twitter_search_results
+        table = s3db.msg_twitter_search
+        rows = db(table.id > 0).select(table.id,
+                                       table.search_query)
 
         # Get the latest updated post time to use it as since_id in twitter search
         recent_time = results_table.posted_by.max()
@@ -1185,20 +1189,28 @@ class S3Msg(object):
 
                 search_results.reverse()
 
+                id = row.id
                 for result in search_results:
                     # Check if the tweet already exists in the table
                     query = (results_table.posted_by == result.from_user) & \
-                            (results_table.posted_at == result.created_at )
-                    tweet_exists = db(query).select().first()
+                            (results_table.posted_at == result.created_at)
+                    tweet_exists = db(query).select(results_table.id,
+                                                    limitby=(0, 1)
+                                                    ).first()
 
                     if tweet_exists:
                         continue
                     else:
-                        results_table.insert(tweet = result.text,
-                                             posted_by = result.from_user,
+                        tweet = result.text
+                        posted_by = result.from_user
+                        category, priority = parser("filter", tweet, posted_by)
+                        results_table.insert(tweet = tweet,
+                                             category = category,
+                                             priority = priority,
+                                             posted_by = posted_by,
                                              posted_at = result.created_at,
-                                             twitter_search = row.id
-                                            )
+                                             twitter_search = id
+                                             )
             except tweepy.TweepError:
                 s3_debug("Unable to get the Tweets for the user search query.")
                 return False

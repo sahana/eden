@@ -163,7 +163,7 @@ if len(pop_list) > 0:
                                              username = "example-username",
                                              password = "password",
                                              delete_from_server = False
-                                            )
+                                             )
         # Need entries for the Settings/1/Update URLs to work
         db.msg_setting.insert( outgoing_sms_handler = "WEB_API" )
         db.msg_modem_settings.insert( modem_baud = 115200 )

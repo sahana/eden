@@ -630,9 +630,9 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Twitter
     def get_msg_twitter_oauth_consumer_key(self):
-        return self.twitter.get("oauth_consumer_key", "")
+        return self.msg.get("twitter_oauth_consumer_key", "")
     def get_msg_twitter_oauth_consumer_secret(self):
-        return self.twitter.get("oauth_consumer_secret", "")
+        return self.msg.get("twitter_oauth_consumer_secret", "")
 
     # -------------------------------------------------------------------------
     # Save Search and Subscription
