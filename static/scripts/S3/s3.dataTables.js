@@ -60,9 +60,14 @@ function showSubRows(groupid){
     $('.arrow_s' + groupid).show();
     // Add the active row class
     $('.' + groupid).addClass('activeRow');
+    // Display the spacer of open groups
+    $(sublevel + '.spacer').show();
     // If this has opened groups then open the first row in the group
     var firstObj = $(sublevel + ':first')
-    if (firstObj.hasClass('collapsable')){
+    if (firstObj.hasClass('spacer')) {
+        firstObj = firstObj.next();
+    }
+    if (firstObj.hasClass('collapsable')) {
         groupLevel = getElementClass(firstObj, 'group_');
         if (groupLevel) {
             showSubRows(groupLevel);
@@ -70,9 +75,9 @@ function showSubRows(groupid){
     }
 }
 
-function toggleRow(groupid){
+function toggleRow(groupid) {
     var sublevel = '.sublevel' + groupid.substr(6);
-    if ($(sublevel).is(':visible')){
+    if ($(sublevel).is(':visible')) {
         // Close all sublevels and change the icon to collapsed
         hideSubRows(groupid);
         $(sublevel).hide();
@@ -93,7 +98,7 @@ function toggleRow(groupid){
 /* $('.collapsable').click(function(){thisAccordionRow(0,this);});
 /*
 /********************************************************************/
-function thisAccordionRow(t, obj){
+function thisAccordionRow(t, obj) {
     var level = '';
     var groupid = '';
     var classList = $(obj).attr('class').split(/\s+/);
@@ -108,7 +113,7 @@ function thisAccordionRow(t, obj){
     accordionRow(t, level, groupid);
 }
 
-function accordionRow(t, level, groupid){
+function accordionRow(t, level, groupid) {
     /******************************************************************/
     /* Close all rows with a level higher than then level passed in   */
     /******************************************************************/
@@ -136,6 +141,9 @@ function accordionRow(t, level, groupid){
     /* Open the items that are members of the clicked group           */
     /******************************************************************/
     showSubRows(groupid);
+    // Display the spacer of open groups
+    $('.spacer.alwaysOpen').show();
+
 }
 
 function tableIdReverse(id) {
@@ -286,7 +294,7 @@ $(document).ready(function() {
                     }
                 }
             }
-            function fnGetKey( aoData, sKey ) {
+            function fnGetKey(aoData, sKey) {
                 for (var i=0, iLen=aoData.length; i < iLen; i++) {
                     if ( aoData[i].name == sKey ) {
                         return aoData[i].value;
@@ -294,7 +302,7 @@ $(document).ready(function() {
                 }
                 return null;
             }
-            function fnDataTablesPipeline ( sSource, aoData, fnCallback ) {
+            function fnDataTablesPipeline(sSource, aoData, fnCallback) {
                 var table = '#' + this[0].id;
                 var t = tableIdReverse(table);
                 var iRequestLength = fnGetKey(aoData, 'iDisplayLength');
@@ -516,6 +524,7 @@ $(document).ready(function() {
                          groupPrefix,
                          groupTitle,
                          addIcons,
+                         insertSpace,
                          shrink,
                          accordion,
                          groupCnt,
@@ -543,15 +552,15 @@ $(document).ready(function() {
             }
         }
         // Create the new HTML elements
-        var nGroup = document.createElement( 'tr' );
+        var nGroup = document.createElement('tr');
         nGroup.className = 'group';
-        var nCell = document.createElement( 'td' );
+        var nCell = document.createElement('td');
         if (shrink || accordion) {
             var groupClass = 'group_' + t + level + groupCnt;
             $(nGroup).addClass('headerRow');
             $(nGroup).addClass(groupClass);
             $(nGroup).addClass(levelClass);
-            if (sublevel){
+            if (sublevel) {
                 $(nGroup).addClass(sublevel);
                 $(nGroup).addClass('collapsable');
             }
@@ -571,11 +580,25 @@ $(document).ready(function() {
         }
         nCell.colSpan = iColspan;
         nCell.innerHTML = levelDisplay + htmlText;
-        nGroup.appendChild( nCell );
+        nGroup.appendChild(nCell);
         if (before) {
-            $(nGroup).insertBefore( row );
+            $(nGroup).insertBefore(row);
         } else {
-            $(nGroup).insertAfter( row );
+            $(nGroup).insertAfter(row);
+        }
+        if (insertSpace) {
+            var nSpace = document.createElement('tr');
+            $(nSpace).addClass('spacer');
+            if (sublevel){
+                $(nSpace).addClass(sublevel);
+                $(nSpace).addClass('collapsable');
+            } else {
+                $(nSpace).addClass('alwaysOpen');
+            }
+            var nCell = document.createElement('td');
+            nCell.colSpan = iColspan;
+            nSpace.appendChild( nCell );
+            $(nSpace).insertAfter(nGroup);
         }
     } // end of function addNewGroup
 
@@ -591,6 +614,7 @@ $(document).ready(function() {
     function buildGroups(oSettings, t, group, groupTotals, prefixID, groupTitles, level) {
         var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
         var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
+        var insertSpace = aoTableConfig[t]['groupSpacing'];
         var nTrs = $(tableId[t] + ' tbody tr');
         var iColspan = $(tableId[t] + ' thead tr')[0].getElementsByTagName('th').length;
         var sLastGroup = '';
@@ -602,6 +626,9 @@ $(document).ready(function() {
         var levelClass = 'level_' + level;
         $(tableId[t]).addClass(levelClass);
         for (var i=0; i < nTrs.length; i++) {
+            if ($(nTrs[i]).hasClass('spacer')) {
+                continue;
+            }
             if ($(nTrs[i]).hasClass('group')) {
                 // Calculate the sublevel which can be used for the next new group
                 item = getElementClass($(nTrs[i]), 'group_');
@@ -618,16 +645,16 @@ $(document).ready(function() {
             if ( sGroup != sLastGroup ) {  // New group
                 while (groupTitles.length > groupTitleCnt && sGroup != groupTitles[groupTitleCnt][0]) {
                     title = groupTitles[groupTitleCnt][1]
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                     groupCnt++;
                 }
                 if (groupTitles.length > groupTitleCnt){
                     title = groupTitles[groupTitleCnt][1]
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                     groupTitleCnt++;
                 } else {
-                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
                 }
                 groupCnt++;
                 sLastGroup = sGroup;
@@ -641,7 +668,7 @@ $(document).ready(function() {
         // add any empty groups not yet added to at the end of the table
         while (groupTitles.length > groupTitleCnt) {
             title = groupTitles[groupTitleCnt][1]
-            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
+            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
             groupTitleCnt++;
             groupCnt++;
         }
@@ -688,7 +715,7 @@ $(document).ready(function() {
             $('#modeSelectionAll').on('click', setModeSelectionAll);
             $('#modeSelectionNone').on('click', setModeSelectionNone);
         },
-        'fnRowCallback': function( nRow, aData, iDisplayIndex ) {
+        'fnRowCallback': function(nRow, aData, iDisplayIndex) {
             // Extract the id # from the link
             t = tableIdReverse(this.selector);
             var actionCol = aoTableConfig[t]['actionCol'];
@@ -785,7 +812,7 @@ $(document).ready(function() {
             table = '#' + oSettings.nTable.id;
             t = tableIdReverse(table);
             bindButtons(t);
-            if ( oSettings.aiDisplay.length == 0 ) {
+            if (oSettings.aiDisplay.length == 0) {
                 return;
             }
             if (aoTableConfig[t]['group'].length > 0) {
@@ -949,7 +976,7 @@ Ext.onReady(function(){
             // Deactivate the list Tab
             $('#gis_datatables_list_tab').parent().removeClass('tab_here').addClass('tab_other');
             // Set to revert if Map closed
-            $('div.x-tool-close').click( function(evt) {
+            $('div.x-tool-close').click(function(evt) {
                 // Set the Tab to show as inactive
                 $('#gis_datatables_map-btn').parent().removeClass('tab_here').addClass('tab_other');
                 // Activate the list Tab

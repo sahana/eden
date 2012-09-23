@@ -263,6 +263,13 @@ class S3Importer(S3CRUD):
         else:
             self.job_id = None
 
+
+        # Experimental uploading via ajax - added for vulnerability
+        # Part of the problem with this is that it works directly with the
+        # opened file. This might pose a security risk, is should be alright
+        # if only trusted users are involved but care should be taken with this
+        self.ajax = current.request.ajax and r.post_vars.approach == "ajax"
+
         # Now branch off to the appropriate controller function
         if r.http == "GET":
             if source != None:
@@ -330,14 +337,8 @@ class S3Importer(S3CRUD):
         db = current.db
         table = self.upload_table
         output = None
-        # Experimental uploading via ajax - added for vulnerability
-        # Part of the problem with this is that it works directly with the
-        # opened file. This might pose a security risk, is should be alright
-        # if only trusted users are involved but care should be taken with this
-        self.ajax = "file" in r.post_vars and current.request.ajax
         if self.ajax:
             sfilename = ofilename = r.post_vars["file"].filename
-            #current.request.representation = "aadata"
             upload_id = table.insert(controller=self.controller,
                                      function=self.function,
                                      filename=ofilename,
@@ -598,6 +599,8 @@ class S3Importer(S3CRUD):
         # record the summary details
         # delete the upload file
         result = self._update_upload_job(upload_id)
+        if self.ajax:
+            return result
         # redirect to the start page (removes all vars)
         self._display_completed_job(result)
         redirect(URL(r=self.request, f=self.function, args=["import"]))
@@ -858,19 +861,6 @@ class S3Importer(S3CRUD):
         s3.filter = (self.table.job_id == job_id) & \
                     (self.table.tablename == self.controller_tablename)
 
-        # Experimental uploading via ajax - added for vulnerability
-        if self.ajax:
-            resource = self.resource
-            resource.add_filter(s3.filter)
-            rows = resource.select(["id", "element", "error"],
-                                   start=0,
-                                   limit=resource.count(),
-                                   )
-            data = resource.extract(rows,
-                                    ["id", "element", "error"],
-                                    )
-            return data
-
         # Get a list of the records that have an error of None
         query =  (self.table.job_id == job_id) & \
                  (self.table.tablename == self.controller_tablename)
@@ -882,6 +872,19 @@ class S3Importer(S3CRUD):
                 error_list.append(str(row.id))
             else:
                 select_list.append("%s" % row.id)
+
+        # Experimental uploading via ajax - added for vulnerability
+        if self.ajax:
+            resource = self.resource
+            resource.add_filter(s3.filter)
+            rows = resource.select(["id", "element", "error"],
+                                   start=0,
+                                   limit=resource.count(),
+                                   )
+            data = resource.extract(rows,
+                                    ["id", "element", "error"],
+                                    )
+            return (upload_id, select_list, data)
 
         s3.actions = [
                         dict(label= str(self.messages.item_show_details),
