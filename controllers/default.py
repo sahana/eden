@@ -380,7 +380,7 @@ def organisation():
             echo = None
         items = dt.json(totalrows,
                         filteredrows,
-                        "supply_list_1",
+                        "org_list_1",
                         echo)
     else:
         raise HTTP(501, s3mgr.ERROR.BAD_FORMAT)

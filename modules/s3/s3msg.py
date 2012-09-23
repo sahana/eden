@@ -1203,7 +1203,8 @@ class S3Msg(object):
                     else:
                         tweet = result.text
                         posted_by = result.from_user
-                        category, priority = parser("filter", tweet, posted_by)
+                        category, priority = parser("filter", tweet, posted_by,
+                                                    service="twitter")
                         results_table.insert(tweet = tweet,
                                              category = category,
                                              priority = priority,

@@ -45,7 +45,7 @@ class S3Parsing(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parser(workflow, message = "", sender=""):
+    def parser(workflow, message = "", sender="", **kwargs):
         """
            Parsing Workflow Filter.
            Called by parse_import() in s3msg.py.
@@ -89,11 +89,11 @@ class S3Parsing(object):
         #for parser in parse_opts:
         #    if parser == workflow:
         try:
-            result = getattr(S3Parsing, workflow)
+            fn = getattr(S3Parsing, workflow)
         except:
             s3_debug("Parser not found: %s" % workflow)
 
-        return result(message, sender)
+        return fn(message, sender, **kwargs)
 
 # =============================================================================
 class AuthParse(object): 

@@ -58,14 +58,43 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def filter(message="", sender=""):
+    def filter(message="", sender="", service=""):
         """
             Filter unstructured data (e.g. Tweets)
         """
 
-        category = "Test"
-        priority = 1
+        # Split message into words
+        words = message.split(" ")
 
+        # Start with a base priority
+        priority = 0
+
+        if service == "twitter":
+            --priority
+        elif service == "sms":
+            ++priority
+
+        # Lookup trusted senders
+        
+
+        # Look for URL
+        
+
+        # Follow URL to see if we can find an image
+        
+
+        # Categorise
+        category = "Unknown"
+
+        # Location
+        # Check for lat/lon
+        
+
+        # Check for Name
+        
+
+        # @ToDo: Location (either location_id or list of possibles)
+        # @ToDo: Image
         return category, priority
 
     # -------------------------------------------------------------------------
