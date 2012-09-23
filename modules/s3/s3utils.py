@@ -72,16 +72,14 @@ def s3_debug(message, value=None):
        @ToDo: Should be using python's built-in logging module?
     """
 
-    try:
-        output = "S3 Debug: %s" % str(message)
-        if value:
-            output = "%s: %s" % (output, str(value))
-    except:
-        output = u"S3 Debug: %s" % unicode(message)
-        if value:
-            output = u"%s: %s" % (output, unicode(value))
+    output = "S3 Debug: %s" % s3_unicode(message)
+    if value:
+        output = "%s: %s" % (output, s3_unicode(value))
 
-    print >> sys.stderr, output
+    try:
+        print >> sys.stderr, output
+    except:
+        print >> sys.stderr, "Debug crashed"
 
 # =============================================================================
 def s3_dev_toolbar():

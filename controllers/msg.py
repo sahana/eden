@@ -193,14 +193,22 @@ def twitter_search():
 def twitter_search_results():
     """
         Controller to view tweets from user saved search queries
+
+        @ToDo: Action Button to update async
     """
 
-    # Update results
-    result = msg.receive_subscribed_tweets()
-
-    if not result:
-        session.error = T("Need to configure Twitter Authentication")
-        redirect(URL(f="twitter_settings", args=[1, "update"]))
+    def prep(r):
+        if r.interactive:
+            table = r.table
+            if not db(table.id > 0).select(table.id,
+                                           limitby=(0, 1)).first():
+                # Update results
+                result = msg.receive_subscribed_tweets()
+                if not result:
+                    session.error = T("Need to configure Twitter Authentication")
+                    redirect(URL(f="twitter_settings", args=[1, "update"]))
+        return True
+    s3.prep = prep
 
     s3db.configure("msg_twitter_search_results",
                    insertable=False,
@@ -515,6 +523,18 @@ def twilio_inbound_settings():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def keyword():
+    """ REST Controller """
+    
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def sender():
+    """ REST Controller """
+    
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def workflow():
     """
         RESTful CRUD controller for workflows
@@ -533,7 +553,7 @@ def workflow():
     table.workflow_task_id.label = T("Parsing Workflow")
     table.workflow_task_id.comment = DIV(DIV(_class="tooltip",
                 _title="%s|%s" % (T("Parsing Workflow"),
-                                  T("This is the name of the parsing functionn used as a workflow."))))
+                                  T("This is the name of the parsing function used as a workflow."))))
 
     # CRUD Strings
     s3.crud_strings["msg_workflow"] = Storage(

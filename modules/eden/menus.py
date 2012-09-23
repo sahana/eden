@@ -1330,6 +1330,8 @@ class S3OptionsMenu(object):
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(
+                       M("Keywords", f="keyword"),
+                       M("Senders", f="sender"),
                        M("Queries", f="twitter_search"),
                        M("Results", f="twitter_search_results")
                     ),

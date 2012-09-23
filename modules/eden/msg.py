@@ -593,7 +593,9 @@ class S3TwitterModel(S3Model):
                                    writable=False),
                              Field("priority", "integer",
                                    writable=False),
+                             self.gis_location_id(),
                              Field("posted_by",
+                                   represent = self.twitter_represent,
                                    writable=False),
                              Field("posted_at",
                                    writable=False),
@@ -608,9 +610,11 @@ class S3TwitterModel(S3Model):
         #self.add_component(table, msg_twitter_search="twitter_search")
 
         configure(tablename,
+                  orderby=table.priority,
                   list_fields=["id",
                                "priority",
                                "category",
+                               "location_id",
                                "tweet",
                                "posted_by",
                                "posted_at",
@@ -619,6 +623,34 @@ class S3TwitterModel(S3Model):
 
         # ---------------------------------------------------------------------
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def twitter_represent(nickname, show_link=True):
+        """
+            Represent a Twitter account
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.pr_contact
+        query = (table.contact_method == "TWITTER") & \
+                (table.value == nickname)
+        row = db(query).select(table.pe_id,
+                               limitby=(0, 1)).first()
+        if row:
+            repr = s3db.pr_pentity_represent(row.pe_id, show_label=False)
+            if show_link:
+                # Assume person
+                ptable = s3db.pr_person
+                row = db(ptable.pe_id == row.pe_id).select(ptable.id,
+                                                           limitby=(0, 1))
+                if row:
+                    link = URL(c="pr", f="person", args=[row.id])
+                    return A(repr, _href=link)
+            return repr
+        else:
+            return nickname
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -695,7 +727,9 @@ class S3ParsingModel(S3Model):
     """
 
     names = ["msg_workflow",
-             "msg_session"
+             "msg_session",
+             "msg_keyword",
+             "msg_sender",
              ]
 
     def model(self):
@@ -718,7 +752,7 @@ class S3ParsingModel(S3Model):
                                   
         # ---------------------------------------------------------------------
         #
-        # Login sessions for Messaging
+        # Login sessions for Message Parsing
 
         tablename = "msg_session"
         table = self.define_table(tablename,
@@ -731,6 +765,28 @@ class S3ParsingModel(S3Model):
                                   Field("sender"),
                                   *s3_meta_fields())
                                   
+        # ---------------------------------------------------------------------
+        #
+        # Keywords for Message Parsing
+
+        tablename = "msg_keyword"
+        table = self.define_table(tablename,
+                                  Field("keyword",
+                                        label=T("Keyword")),
+                                  self.event_incident_type_id(),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        #
+        # Senders for Message Parsing
+
+        tablename = "msg_sender"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("priority", "integer",
+                                        label=T("Priority")),
+                                  *s3_meta_fields())
+
         # ---------------------------------------------------------------------
         return Storage()
 

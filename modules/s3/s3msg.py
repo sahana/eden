@@ -1172,7 +1172,7 @@ class S3Msg(object):
                                        table.search_query)
 
         # Get the latest updated post time to use it as since_id in twitter search
-        recent_time = results_table.posted_by.max()
+        recent_time = results_table.posted_at.max()
 
         for row in rows:
             query = row.search_query
@@ -1203,11 +1203,19 @@ class S3Msg(object):
                     else:
                         tweet = result.text
                         posted_by = result.from_user
-                        category, priority = parser("filter", tweet, posted_by,
-                                                    service="twitter")
+                        if result.geo:
+                            coordinates = result.geo["coordinates"]
+                        else:
+                            coordinates = None
+                        category, priority, location_id = parser("filter",
+                                                                 tweet,
+                                                                 posted_by,
+                                                                 service="twitter",
+                                                                 coordinates=coordinates)
                         results_table.insert(tweet = tweet,
                                              category = category,
                                              priority = priority,
+                                             location_id = location_id,
                                              posted_by = posted_by,
                                              posted_at = result.created_at,
                                              twitter_search = id

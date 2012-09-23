@@ -549,6 +549,7 @@ class S3IncidentTypeModel(S3Model):
 
     names = ["event_incident_type",
              "event_incident_type_id",
+             "event_incident_type_represent",
              ]
 
     def model(self):
@@ -581,7 +582,9 @@ class S3IncidentTypeModel(S3Model):
             msg_record_created = T("Incident Type added"),
             msg_record_modified = T("Incident Type updated"),
             msg_record_deleted = T("Incident Type removed"),
-            msg_list_empty = T("No Incident Types currently registered in this event"))
+            #msg_list_empty = T("No Incident Types currently registered in this event")
+            msg_list_empty = T("No Incident Types currently registered")
+            )
 
         incident_type_id = S3ReusableField("incident_type_id", table,
                                            sortby="name",
@@ -608,6 +611,7 @@ class S3IncidentTypeModel(S3Model):
         #
         return Storage(
                 event_incident_type_id = incident_type_id,
+                event_incident_type_represent = self.incident_type_represent,
             )
 
     # -------------------------------------------------------------------------

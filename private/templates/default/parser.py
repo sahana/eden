@@ -40,15 +40,22 @@
 
 __all__ = ["S3Parsing"]
 
+#import re
 import string
 import sys
 
 #import pyparsing
-#import nltk
+try:
+    import nltk
+    from nltk.corpus import wordnet as wn
+    NLTK = True
+except:
+    NLTK = False
 
 from gluon import current
+from gluon.tools import fetch
 
-from s3.s3utils import soundex
+from s3.s3utils import s3_debug, soundex
                 
 # =============================================================================
 class S3Parsing(object):
@@ -58,44 +65,179 @@ class S3Parsing(object):
   
     # -------------------------------------------------------------------------
     @staticmethod
-    def filter(message="", sender="", service=""):
+    def filter(message="", sender="", service="", coordinates=""):
         """
             Filter unstructured data (e.g. Tweets)
         """
 
-        # Split message into words
-        words = message.split(" ")
-
+        db = current.db
+        s3db = current.s3db
+        cache = s3db.cache
+        
         # Start with a base priority
         priority = 0
 
-        if service == "twitter":
-            --priority
-        elif service == "sms":
-            ++priority
-
-        # Lookup trusted senders
-        
-
-        # Look for URL
-        
-
-        # Follow URL to see if we can find an image
-        
-
-        # Categorise
+        # Default Category
         category = "Unknown"
 
-        # Location
-        # Check for lat/lon
-        
+        if service == "twitter":
+            priority -= 1
+        elif service == "sms":
+            priority += 1
 
-        # Check for Name
+        # @ToDo: Lookup trusted senders
+        table = s3db.msg_sender
+        ctable = s3db.pr_contact
+        query = (table.deleted == False) & \
+                (ctable.pe_id == table.pe_id) & \
+                (ctable.contact_method == "TWITTER")
+        senders = db(query).select(table.priority,
+                                   ctable.value,
+                                   cache=cache)
+        for s in senders:
+            if sender == s[ctable].value:
+                priority += s[table].priority
+                break
         
+        # If Anonymous, check their history
+        # - within our database
+        # if service == "twitter":
+        #     # Check Followers
+        #     # Check Retweets
+        #     # Check when account was created
 
-        # @ToDo: Location (either location_id or list of possibles)
+        ktable = s3db.msg_keyword
+        keywords = db(ktable.deleted == False).select(ktable.id,
+                                                      ktable.keyword,
+                                                      ktable.incident_type_id,
+                                                      cache=cache)
+        incident_type_represent = s3db.event_incident_type_represent
+        if NLTK:
+            # Lookup synonyms
+            # @ToDo: Cache
+            synonyms = {}
+            for kw in keywords:
+                syns = []
+                try:
+                    synsets = wn.synsets(kw.keyword)
+                    for synset in synsets:
+                        syns += [lemma.name for lemma in synset.lemmas]
+                except LookupError:
+                    nltk.download("wordnet")
+                    synsets = wn.synsets(kw.keyword)
+                    for synset in synsets:
+                        syns += [lemma.name for lemma in synset.lemmas]
+                synonyms[kw.keyword.lower()] = syns
+
+        ltable = s3db.gis_location
+        query = (ltable.deleted != True) & \
+                (ltable.name != None)
+        locs = db(query).select(ltable.id,
+                                ltable.name,
+                                cache=cache)
+        lat = lon = None
+        location_id = None
+        loc_matches = 0
+
+        # Split message into words
+        words = message.split(" ")
+
+        index = 0
+        max_index = len(words) - 1
+        for word in words:
+            word = word.lower()
+            if word.endswith(".") or \
+               word.endswith(":") or \
+               word.endswith(","):
+                word = word[:-1]
+
+            skip = False
+
+            if word in ("safe", "ok"):
+                priority -= 1
+            elif word in ("help"):
+                priority += 1
+            elif service == "twitter" and \
+                 word == "RT":
+                # @ToDo: Increase priority of the original message
+                priority -= 1
+                skip = True
+
+            # Look for URL
+            if word.startswith("http://"):
+                priority += 1
+                skip = True
+                # @ToDo: Follow URL to see if we can find an image
+                #try:
+                #    page = fetch(word)
+                #except urllib2.HTTPError:
+                #    pass
+                # Check returned str for image like IS_IMAGE()
+
+            if (index < max_index):
+                if word == "lat":
+                    skip = True
+                    try:
+                        lat = words[index + 1]
+                        lat = float(lat)
+                    except:
+                        pass
+                elif word == "lon":
+                    skip = True
+                    try:
+                        lon = words[index + 1]
+                        lon = float(lon)
+                    except:
+                        pass
+
+            if not skip:
+                for kw in keywords:
+                    _word = kw.keyword.lower()
+                    if _word == word:
+                        # Check for negation
+                        if index and words[index - 1].lower() == "no":
+                            pass
+                        else:
+                            category = incident_type_represent(kw.incident_type_id)
+                            break
+                    elif NLTK:
+                        # Synonyms
+                        if word in synonyms[_word]:
+                            # Check for negation
+                            if index and words[index - 1].lower() == "no":
+                                pass
+                            else:
+                                category = incident_type_represent(kw.incident_type_id)
+                                break
+                # Check for Location
+                for loc in locs:
+                    name = loc.name.lower()
+                    if word == name:
+                        if not loc_matches:
+                            location_id = loc.id
+                            priority += 1
+                        loc_matches += 1
+                    elif (index < max_index) and \
+                         ("%s %s" % (word, words[index + 1]) == name):
+                        # Try names with 2 words
+                        if not loc_matches:
+                            location_id = loc.id
+                            priority += 1
+                        loc_matches += 1
+
+            index += 1
+
+        if not loc_matches or loc_matches > 1:
+            if lat and lon:
+                location_id = ltable.insert(lat = lat,
+                                            lon = lon)
+            elif coordinates:
+                # Use Geolocation of Tweet
+                location_id = ltable.insert(lat = coordinates[0],
+                                            lon = coordinates[1])
+            
         # @ToDo: Image
-        return category, priority
+        return category, priority, location_id
 
     # -------------------------------------------------------------------------
     @staticmethod
