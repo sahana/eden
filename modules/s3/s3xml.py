@@ -51,7 +51,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3codec import S3Codec
-from s3utils import s3_get_foreign_key
+from s3utils import s3_get_foreign_key, s3_unicode
 
 try:
     from lxml import etree
@@ -550,7 +550,7 @@ class S3XML(S3Codec):
                     krecord = db(query).select(k_id, limitby=(0, 1)).first()
                     if not krecord:
                         continue
-            value = str(table[f].formatter(val)).decode("utf-8")
+            value = s3_unicode(table[f].formatter(val))
             if table[f].represent:
                 text = represent(table, f, val)
             else:
@@ -936,10 +936,10 @@ class S3XML(S3Codec):
             elif value is not None:
                 text = xml_encode(value)
             else:
-                text = xml_encode(str(formatter(v)).decode("utf-8"))
+                text = xml_encode(s3_unicode(formatter(v)))
             if is_attr:
                 if text is not None:
-                    attrib[f] = str(text)
+                    attrib[f] = s3_unicode(text)
             elif fieldtype == "upload":
                 fileurl = "%s/%s" % (download_url, v)
                 filename = v
@@ -1249,7 +1249,7 @@ class S3XML(S3Codec):
                     except:
                         error = sys.exc_info()[1]
 
-                child.set(self.ATTRIBUTE.value, str(v).decode("utf-8"))
+                child.set(self.ATTRIBUTE.value, s3_unicode(v))
                 if error:
                     child.set(self.ATTRIBUTE.error, "%s: %s" % (f, error))
                     valid = False
@@ -1320,9 +1320,9 @@ class S3XML(S3Codec):
                     uid = uids[str(value)]
                 else:
                     uid = None
-                value = cls.xml_encode(str(value).decode("utf-8"))
+                value = cls.xml_encode(s3_unicode(value))
                 try:
-                    markup = etree.XML(str(text))
+                    markup = etree.XML(s3_unicode(text))
                     text = markup.xpath(".//text()")
                     if text:
                         text = " ".join(text)
@@ -1330,7 +1330,7 @@ class S3XML(S3Codec):
                         text = ""
                 except:
                     pass
-                text = cls.xml_encode(str(text).decode("utf-8"))
+                text = cls.xml_encode(s3_unicode(text))
                 option = etree.SubElement(select, cls.TAG.option)
                 option.set(cls.ATTRIBUTE.value, value)
                 if uid:
@@ -1438,11 +1438,11 @@ class S3XML(S3Codec):
                                   len(opts) and True or False)
                 field.set(self.ATTRIBUTE.has_options, has_options)
                 if labels:
-                    label = str(table[f].label).decode("utf-8")
+                    label = s3_unicode(table[f].label)
                     field.set(self.ATTRIBUTE.label, label)
                     comment = table[f].comment
                     if comment:
-                        comment = str(comment).decode("utf-8")
+                        comment = s3_unicode(comment)
                     if comment and "<" in comment:
                         try:
                             markup = etree.XML(comment)
@@ -1836,9 +1836,11 @@ class S3XML(S3Codec):
             col = etree.SubElement(row, cls.TAG.col)
             col.set(cls.ATTRIBUTE.field, str(key))
             if value:
-                text = str(value)
+                text = s3_unicode(value)
+                #text = str(value)
                 if text.lower() not in ("null", "<null>"):
-                    text = cls.xml_encode(unicode(text.decode("utf-8")))
+                    text = cls.xml_encode(text)
+                    #text = cls.xml_encode(unicode(text.decode("utf-8")))
                     col.text = text
             else:
                 col.text = ""
