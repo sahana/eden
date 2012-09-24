@@ -66,7 +66,7 @@ from s3error import S3PermissionError
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     import sys
     print >> sys.stderr, "S3AAA: DEBUG MODE"
@@ -2862,11 +2862,12 @@ class AuthS3(Auth):
     # -------------------------------------------------------------------------
     # User Identity
     # -------------------------------------------------------------------------
-    def s3_get_user_id(self, person_id):
+    def s3_get_user_id(self, person_id=None, pe_id=None):
         """
             Get the user_id for a person_id
 
             @param person_id: the pr_person record ID
+            @param pe_id: the person entity ID, alternatively
         """
 
         if isinstance(person_id, basestring) and not person_id.isdigit():
@@ -2878,15 +2879,21 @@ class AuthS3(Auth):
                 return user.id
         else:
             s3db = current.s3db
-            ptable = s3db.pr_person
             ltable = s3db.pr_person_user
-            if ptable and ltable:
+            if not ltable:
+                return None
+            if person_id:
+                ptable = s3db.pr_person
+                if not ptable:
+                    return None
                 query = (ptable.id == person_id) & \
                         (ptable.pe_id == ltable.pe_id)
-                link = current.db(query).select(ltable.user_id,
-                                                limitby=(0, 1)).first()
-                if link:
-                    return link.user_id
+            else:
+                query = (ltable.pe_id == pe_id)
+            link = current.db(query).select(ltable.user_id,
+                                            limitby=(0, 1)).first()
+            if link:
+                return link.user_id
         return None
 
     # -------------------------------------------------------------------------
@@ -3351,17 +3358,23 @@ class AuthS3(Auth):
 
         # Find owned_by_user
         if OUSR in fields_in_table:
+            pi = ("pr_person",
+                  "pr_contact",
+                  "pr_address",
+                  "pr_contact_emergency",
+                  "pr_physical_description")
             if OUSR in fields:
                 data[OUSR] = fields[OUSR]
-            elif row[OUSR]:
-                pass
-            else:
+            elif not row[OUSR] or tablename in pi:
                 user_id = None
-                # Records which link to a person_id shall be owned by that person
+                # Records in PI tables should be owned by the person
+                # they refer to (if that person has a user account)
                 if tablename == "pr_person":
-                    user_id = self.s3_get_user_id(row[table._id])
-                elif PID in row:
-                    user_id = self.s3_get_user_id(row[PID])
+                    user_id = self.s3_get_user_id(person_id = row[table._id])
+                elif PID in row and tablename in pi:
+                    user_id = self.s3_get_user_id(person_id = row[PID])
+                elif EID in row and tablename in pi:
+                    user_id = self.s3_get_user_id(pe_id = row[EID])
                 if not user_id and self.s3_logged_in() and self.user:
                     # Fallback to current user
                     user_id = self.user.id
@@ -4062,7 +4075,7 @@ class S3Permission(object):
         return (realm_entity, owner_group, owner_user)
 
     # -------------------------------------------------------------------------
-    def is_owner(self, table, record, owners=None):
+    def is_owner(self, table, record, owners=None, strict=False):
         """
             Check whether the current user owns the record
 
@@ -4089,8 +4102,7 @@ class S3Permission(object):
             # Admin owns all records
             return True
         elif owners is not None:
-            realm_entity, owner_group, owner_user = \
-                    owners
+            realm_entity, owner_group, owner_user = owners
         elif record:
             realm_entity, owner_group, owner_user = \
                     self.get_owners(table, record)
@@ -4115,13 +4127,12 @@ class S3Permission(object):
             return True
 
         # Public record?
-        if not realm_entity and \
-           not owner_group and \
-           not owner_user:
+        if not any((realm_entity, owner_group, owner_user)) and not strict:
             return True
+        elif strict:
+            return False
 
-        # OrgAuth:
-        # apply only group memberships with are valid for the realm entity
+        # OrgAuth: apply only group memberships within the realm
         if self.entity_realm and realm_entity:
             realms = self.auth.user.realms
             roles = [sr.ANONYMOUS]
@@ -4363,6 +4374,7 @@ class S3Permission(object):
             @param record: the record or record ID (None for any record)
         """
 
+        # Multiple methods?
         if isinstance(method, (list, tuple)):
             query = None
             for m in method:
@@ -4375,7 +4387,7 @@ class S3Permission(object):
         if record == 0:
             record = None
         _debug("\nhas_permission('%s', c=%s, f=%s, t=%s, record=%s)" % \
-               (",".join(method),
+               ("|".join(method),
                 c or current.request.controller,
                 f or current.request.function,
                 t, record))
@@ -4431,6 +4443,7 @@ class S3Permission(object):
             is_owner = self.is_owner(t, record, owners=owners)
             entity = owners[0]
         else:
+            owners = []
             is_owner = True
             entity = None
 
@@ -4520,9 +4533,11 @@ class S3Permission(object):
                         if not permitted:
                             _debug("==> Record already approved")
                 else:
-                    permitted = self.approved(table, record)
+                    permitted = self.approved(table, record) or \
+                                self.is_owner(table, record, owners, strict=True)
                     if not permitted:
                         _debug("==> Record not approved")
+                        _debug("==> is owner: %s" % is_owner)
             else:
                 # Approval not possible for this table => no change
                 pass

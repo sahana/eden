@@ -2955,6 +2955,27 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
 
+            # Normal user can see the unapproved record if he owns it
+            db(otable.id==org_id).update(owned_by_user=auth.user.id)
+
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted) # not permitted per ACL
+
+            # Normal user can not review/approve/reject the record even if he owns it
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+
+            db(otable.id==org_id).update(owned_by_user=None)
+
             # Give user review and approve permissions on this table
             acl.update_acl(AUTHENTICATED,
                            c="org",
