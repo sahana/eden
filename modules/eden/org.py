@@ -2454,7 +2454,9 @@ def org_organisation_controller():
                 sr = auth.get_system_roles()
                 realms = auth.user.realms or Storage()
                 if sr.ADMIN in realms or \
-                   sr.ORG_ADMIN in realms and r.record.pe_id in realms[sr.ORG_ADMIN]:
+                   sr.ORG_ADMIN in realms and \
+                   realms[sr.ORG_ADMIN] is None or \
+                   r.record.pe_id in realms[sr.ORG_ADMIN]:
                     s3db.set_method(r.prefix, r.name,
                                     method="roles",
                                     action=S3OrgRoleManager())

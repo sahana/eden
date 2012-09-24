@@ -4619,6 +4619,12 @@ class S3Permission(object):
             realms = user.realms
             delegations = user.delegations
 
+        # Don't filter out unapproved records owned by the user
+        if requires_approval and not unapproved and \
+           "owned_by_user" in table.fields:
+            ALL_RECORDS = ((table.approved_by != None) | \
+                           (table.owned_by_user == user.id))
+
         # Administrators have all permissions
         if sr.ADMIN in realms:
             _debug("==> user is ADMIN")
