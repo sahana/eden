@@ -371,13 +371,15 @@ class S3LocationModel(S3Model):
             On Accept for GIS Locations (after DB I/O)
         """
 
-        # Update the Path (async if-possible)
-        vars = form.vars
-        feature = json.dumps(dict(id=vars.id,
-                                  level=vars.get("level", False),
-                                  ))
-        current.s3task.async("gis_update_location_tree",
-                             args=[feature])
+        if not current.auth.override:
+            # Update the Path (async if-possible)
+            # (skip during prepop)
+            vars = form.vars
+            feature = json.dumps(dict(id=vars.id,
+                                      level=vars.get("level", False),
+                                      ))
+            current.s3task.async("gis_update_location_tree",
+                                 args=[feature])
         return
 
     # -------------------------------------------------------------------------

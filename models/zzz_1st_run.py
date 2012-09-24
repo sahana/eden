@@ -360,6 +360,13 @@ if len(pop_list) > 0:
     # Restore Auth
     auth.override = False
 
+    # Update Location Tree
+    # (disabled during prepop)
+    start = datetime.datetime.now()
+    gis.update_location_tree()
+    end = datetime.datetime.now()
+    print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
+
     # Restore view
     response.view = "default/index.html"
 

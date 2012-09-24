@@ -42,6 +42,12 @@ def aggregate():
     return output
 
 # -----------------------------------------------------------------------------
+def group():
+    """ REST Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def demographic():
     """ REST Controller """
 

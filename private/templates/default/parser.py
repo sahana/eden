@@ -10,8 +10,6 @@
     Imported by private/templates/<template>
     where <template> is the "default" template by default.
 
-    @author: Ashwyn Sharma <ashwyn1092[at]gmail.com>
-    
     @copyright: 2012 (c) Sahana Software Foundation
     @license: MIT
 
@@ -85,7 +83,8 @@ class S3Parsing(object):
         elif service == "sms":
             priority += 1
 
-        # @ToDo: Lookup trusted senders
+        # Lookup trusted senders
+        # - these could be trained or just trusted
         table = s3db.msg_sender
         ctable = s3db.pr_contact
         query = (table.deleted == False) & \
@@ -105,6 +104,7 @@ class S3Parsing(object):
         #     # Check Followers
         #     # Check Retweets
         #     # Check when account was created
+        # (Note that it is still possible to game this - plausible accounts can be purchased)
 
         ktable = s3db.msg_keyword
         keywords = db(ktable.deleted == False).select(ktable.id,
@@ -227,6 +227,9 @@ class S3Parsing(object):
 
             index += 1
 
+        # @ToDo: Prioritise reports from people located where they are reporting from
+        # if coordinates:
+        
         if not loc_matches or loc_matches > 1:
             if lat and lon:
                 location_id = ltable.insert(lat = lat,

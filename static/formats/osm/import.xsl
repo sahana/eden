@@ -23,23 +23,41 @@
 
     <xsl:key name="nodes" match="node" use="@id" />
 
+    <!-- ****************************************************************** -->
     <xsl:template match="/">
         <xsl:apply-templates select="./osm"/>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template match="osm">
         <s3xml>
             <xsl:choose>
-
+                <!-- Airports -->
+                <xsl:when test="$name='airport'">
+                    <xsl:apply-templates select="node[./tag[@k='aeroway' and @v='aerodrome']]|way[./tag[@k='aeroway' and @v='aerodrome']]"/>
+                </xsl:when>
                 <!-- Hospitals -->
+                <!-- @ToDo: Pharmacies (http://wiki.openstreetmap.org/wiki/Tag:amenity%3Dpharmacy) -->
                 <xsl:when test="$name='hospital'">
                     <xsl:apply-templates select="node[./tag[@k='amenity' and @v='hospital']]|way[./tag[@k='amenity' and @v='hospital']]|node[./tag[@k='amenity' and @v='clinic']]|way[./tag[@k='amenity' and @v='clinic']]"/>
                 </xsl:when>
-
-                <!--
-                    @ToDo: Catch:
-                        Pharmacies (http://wiki.openstreetmap.org/wiki/Tag:amenity%3Dpharmacy)
-                -->
+                <!-- Offices -->
+                <xsl:when test="$name='office'">
+                    <xsl:apply-templates select="node[./tag[@k='office' and @v='ngo']]|way[./tag[@k='office' and @v='ngo']]"/>
+                </xsl:when>
+                <!-- Churches & Schools -->
+                <xsl:when test="$name='facility'">
+                    <xsl:apply-templates select="node[./tag[@k='amenity' and @v='place_of_worship']]|way[./tag[@k='amenity' and @v='place_of_worship']]|node[./tag[@k='amenity' and @v='school']]|way[./tag[@k='amenity' and @v='school']]"/>
+                </xsl:when>
+                <!-- Sea Ports -->
+                <xsl:when test="$name='seaport'">
+                    <xsl:apply-templates select="node[./tag[@k='harbour' and @v='yes']]|way[./tag[@k='harbour' and @v='yes']]"/>
+                </xsl:when>
+                <!-- Shelters -->
+                <xsl:when test="$name='shelter'">
+                    <xsl:apply-templates select="node[./tag[@k='refugee' and @v='yes']]|way[./tag[@k='refugee' and @v='yes']]"/>
+                </xsl:when>
+                <!-- Default: Locations -->
                 <xsl:otherwise>
                     <xsl:apply-templates select="node|way"/>
                     <!-- @ToDo: Handle Relations (minority case): lookup all linked ways, & hence nodes, create WKT & pull in as polygon or multipolygon -->
@@ -49,10 +67,20 @@
         </s3xml>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template match="node|way">
         <xsl:choose>
+            <xsl:when test="$name='airport'">
+                <xsl:call-template name="airport"/>
+            </xsl:when>
             <xsl:when test="$name='hospital'">
                 <xsl:call-template name="hospital"/>
+            </xsl:when>
+            <xsl:when test="$name='office'">
+                <xsl:call-template name="office"/>
+            </xsl:when>
+            <xsl:when test="$name='seaport'">
+                <xsl:call-template name="seaport"/>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:call-template name="location"/>
@@ -60,6 +88,64 @@
         </xsl:choose>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="airport">
+        <resource name="transport_airport">
+
+            <xsl:attribute name="modified_on">
+                <xsl:call-template name="datetime">
+                    <xsl:with-param name="datetime" select="@timestamp"/>
+                </xsl:call-template>
+            </xsl:attribute>
+
+            <data field="name">
+                <xsl:value-of select="./tag[@k='name']/@v"/>
+            </data>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="facility">
+        <resource name="org_facility">
+
+            <xsl:attribute name="modified_on">
+                <xsl:call-template name="datetime">
+                    <xsl:with-param name="datetime" select="@timestamp"/>
+                </xsl:call-template>
+            </xsl:attribute>
+
+            <data field="name">
+                <xsl:value-of select="./tag[@k='name']/@v"/>
+            </data>
+            
+            <reference field="facility_type_id" resource="org_facility_type">
+                <data field="name">
+                    <xsl:choose>
+                        <xsl:when test="./tag[@v='place_of_worship']"/>
+                            <xsl:text>Church</xsl:text>
+                        </xsl:when>
+                        <xsl:when test="./tag[@v='school']"/>
+                            <xsl:text>School</xsl:text>
+                        </xsl:when>
+                    </xsl:choose>
+                </data>
+            </reference>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="hospital">
         <resource name="hms_hospital">
 
@@ -191,6 +277,73 @@
         </resource>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="office">
+        <resource name="org_office">
+
+            <xsl:attribute name="modified_on">
+                <xsl:call-template name="datetime">
+                    <xsl:with-param name="datetime" select="@timestamp"/>
+                </xsl:call-template>
+            </xsl:attribute>
+
+            <data field="name">
+                <xsl:value-of select="./tag[@k='name']/@v"/>
+            </data>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="seaport">
+        <resource name="transport_seaport">
+
+            <xsl:attribute name="modified_on">
+                <xsl:call-template name="datetime">
+                    <xsl:with-param name="datetime" select="@timestamp"/>
+                </xsl:call-template>
+            </xsl:attribute>
+
+            <data field="name">
+                <xsl:value-of select="./tag[@k='name']/@v"/>
+            </data>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="shelter">
+        <resource name="cr_shelter">
+
+            <xsl:attribute name="modified_on">
+                <xsl:call-template name="datetime">
+                    <xsl:with-param name="datetime" select="@timestamp"/>
+                </xsl:call-template>
+            </xsl:attribute>
+
+            <data field="name">
+                <xsl:value-of select="./tag[@k='name']/@v"/>
+            </data>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="location">
         <resource name="gis_location">
 
@@ -339,11 +492,13 @@
         </resource>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template name="datetime">
         <xsl:param name="datetime"/>
         <xsl:value-of select="concat(substring-before($datetime, 'T'),' ',substring-before(substring-after($datetime, 'T'), 'Z'))"/>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template name="phone_exchange">
         <xsl:for-each select="./tag[@k='contact:phone' or @k='phone' or @k='phone_number' or @k='telephone']">
             <xsl:if test="position() != 1">
@@ -353,6 +508,7 @@
         </xsl:for-each>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template name="phone_business">
         <xsl:for-each select="./tag[@k='sahana:phone_business']">
             <xsl:if test="position() != 1">
@@ -362,6 +518,7 @@
         </xsl:for-each>
     </xsl:template>
 
+    <!-- ****************************************************************** -->
     <xsl:template name="phone_emergency">
         <xsl:for-each select="./tag[@k='emergency_phone' or @k='emergency_department_phone']">
             <xsl:if test="position() != 1">

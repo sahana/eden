@@ -75,6 +75,12 @@
                             </xsl:attribute>
                         </tag>
                         <tag>
+                            <xsl:attribute name="k">sahana</xsl:attribute>
+                            <xsl:attribute name="v">
+                                <xsl:value-of select="@url"/>
+                            </xsl:attribute>
+                        </tag>
+                        <tag>
                             <xsl:attribute name="k">name</xsl:attribute>
                             <xsl:attribute name="v"><xsl:value-of select="data[@field='name']"/></xsl:attribute>
                         </tag>
