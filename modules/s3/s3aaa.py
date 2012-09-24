@@ -66,7 +66,7 @@ from s3error import S3PermissionError
 DEFAULT = lambda: None
 table_field = re.compile("[\w_]+\.[\w_]+")
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     import sys
     print >> sys.stderr, "S3AAA: DEBUG MODE"
