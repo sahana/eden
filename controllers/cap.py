@@ -35,7 +35,7 @@ def info_prep(r):
                 s3db.cap_info[f].required = False
 
     if request.post_vars.get("language", False):
-        if (r.tablename == "cap_info"):
+        if r.tablename == "cap_info":
             try:
                 template_info_id = s3db.cap_info(s3db.cap_info.id == request.resource._ids[0]) \
                                     .template_info_id
@@ -53,7 +53,7 @@ def info_prep(r):
         # read template and copy locked fields to post_vars
         template = s3db.cap_info(s3db.cap_info.id == template_info_id)
         settings = json.loads(template.template_settings)
-        if isinstance(settings.get('locked', False), dict):
+        if isinstance(settings.get("locked", False), dict):
             locked_fields = [lf for lf in settings["locked"] if settings["locked"]]
             for lf in locked_fields:
                 request.post_vars[lf] = template[lf]
@@ -64,6 +64,7 @@ def alert():
     """ REST controller for CAP alerts """
 
     def prep(r):
+        # @fixme: must not use resource._ids (either use resource.get_id() or r.id)
         if "_ids" in dir(r.resource) and len(r.resource._ids) == 1 and \
             s3db.cap_alert_is_template(r.resource._ids[0]):
             redirect(URL(c="cap", f="template", args=request.args, vars=request.vars))
@@ -78,7 +79,7 @@ def alert():
                         settings = json.loads(template.template_settings)
                     except ValueError:
                         settings = dict()
-                    if isinstance(settings.get('locked', False), dict):
+                    if isinstance(settings.get("locked", False), dict):
                         locked_fields = [lf for lf in settings["locked"] if settings["locked"]]
                         for lf in locked_fields:
                             request.post_vars[lf] = template[lf]
@@ -107,21 +108,21 @@ def alert():
                                     ).select()
                     for row in template_info:
                         row_clone = row.as_dict()
-                        unwanted_fields = ['deleted_rb',
-                                           'owned_by_user',
-                                           'approved_by',
-                                           'mci',
-                                           'deleted',
-                                           'modified_on',
-                                           'owned_by_entity',
-                                           'realm_entity',
-                                           'uuid',
-                                           'created_on',
-                                           'deleted_fk',
+                        unwanted_fields = ["deleted_rb",
+                                           "owned_by_user",
+                                           "approved_by",
+                                           "mci",
+                                           "deleted",
+                                           "modified_on",
+                                           "owned_by_entity",
+                                           "realm_entity",
+                                           "uuid",
+                                           "created_on",
+                                           "deleted_fk",
                                            # Don't copy this: make an
                                            # Ajax call instead
-                                           'template_settings',
-                                           'id'
+                                           "template_settings",
+                                           "id"
                                           ]
                         for key in unwanted_fields:
                             try:
@@ -165,7 +166,7 @@ def template():
     #return True
     #s3.prep = info_prep
 
-    viewing = request.vars['viewing']
+    viewing = request.vars["viewing"]
     if viewing:
         table, id = viewing.strip().split(".")
         if table == "cap_alert":

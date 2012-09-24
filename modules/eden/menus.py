@@ -1142,13 +1142,13 @@ class S3OptionsMenu(object):
         ADMIN = session.s3.system_roles.ADMIN
 
         return M(c="cap")(
-                    M("Alerts", f="alert", vars={'alert.is_template': 'F'})(
-                        M("List alerts", f="alert", vars={'alert.is_template': 'F'}),
+                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
+                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
                         M("Create alert", f="alert", m="create"),
                         M("Search & Subscribe", m="search"),
                     ),
-                    M("Templates", f="template", vars={'alert.is_template': 'T'})(
-                        M("List templates", f="template", vars={'alert.is_template': 'T'}),
+                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
+                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
                         M("Create template", f="template", m="create"),
                     ),
                     #M("CAP Profile", f="profile")(
@@ -1703,10 +1703,10 @@ class S3OptionsMenu(object):
 
         return [
             M("Email Settings", c="msg", f="inbound_email_settings"),
-            M("Parsing Settings", c="msg", f="workflow"),                       
+            M("Parsing Settings", c="msg", f="workflow"),
             M("SMS Settings", c="msg", f="setting",
                 args=[1], m="update"),
-            M("Twilio SMS Settings", c="msg", f="twilio_inbound_settings"),           
+            M("Twilio SMS Settings", c="msg", f="twilio_inbound_settings"),
             M("Twitter Settings", c="msg", f="twitter_settings",
                 args=[1], m="update")
         ]
