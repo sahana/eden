@@ -5,14 +5,14 @@
             alert_table = 'cap_alert',
             info_table = 'cap_info';
 
-        if (_formname.substring(0, alert_table.length) == alert_table) {
-            return alert_table;
+        if (typeof(_formname) != 'undefined') {
+            if (_formname.substring(0, alert_table.length) == alert_table) {
+                return alert_table;
+            }
+            if (_formname.substring(0, info_table.length) == info_table) {
+                return info_table;
+            }
         }
-
-        if (_formname.substring(0, info_table.length) == info_table) {
-            return info_table;
-        }
-
         return '';
     }
 

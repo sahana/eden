@@ -844,7 +844,7 @@ class S3Request(object):
                 count = self.resource.count()
                 if self.vars is not None and count == 1:
                     self.resource.load()
-                    self.record = self.resource._rows.first()
+                    self.record = self.resource._rows[0]
                 else:
                     if hasattr(self.resource.search, "search_interactive"):
                         redirect(URL(r=self, f=self.name, args="search",

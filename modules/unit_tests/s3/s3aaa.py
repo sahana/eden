@@ -2955,6 +2955,27 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
             self.assertFalse(permitted)
 
+            # Normal user can see the unapproved record if he owns it
+            db(otable.id==org_id).update(owned_by_user=auth.user.id)
+
+            auth.s3_impersonate("normaluser@example.com")
+            permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
+            self.assertTrue(permitted)
+            permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted) # not permitted per ACL
+
+            # Normal user can not review/approve/reject the record even if he owns it
+            permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("approve", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+            permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
+            self.assertFalse(permitted)
+
+            db(otable.id==org_id).update(owned_by_user=None)
+
             # Give user review and approve permissions on this table
             acl.update_acl(AUTHENTICATED,
                            c="org",
@@ -3069,7 +3090,8 @@ class RecordApprovalTests(unittest.TestCase):
 
             # See only approved records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.approved_by IS NOT NULL)")
+            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
+                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.approved_by IS NULL)")
@@ -3080,15 +3102,17 @@ class RecordApprovalTests(unittest.TestCase):
             # User can only see approved records
             auth.s3_impersonate("normaluser@example.com")
 
-            # See only approved records in read
+            # See only approved and personally owned records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.approved_by IS NOT NULL)")
+            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
+                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
             # See no records in approve
             query = accessible_query("review", table, c="org", f="organisation")
             self.assertEqual(str(query), "(org_organisation.id = 0)")
-            # See only approved records with both
+            # See only approved and personally owned records with both
             query = accessible_query(["read", "review"], table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.approved_by IS NOT NULL)")
+            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
+                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
 
             # Give user review and approve permissions on this table
             acl.update_acl(AUTHENTICATED,
@@ -3106,13 +3130,18 @@ class RecordApprovalTests(unittest.TestCase):
 
             # See only approved records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
+            self.assertTrue("((org_organisation.approved_by IS NOT NULL) OR " \
+                            "(org_organisation.owned_by_user = %s))" % auth.user.id \
+                            in str(query))
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
+            self.assertFalse("(org_organisation.approved_by IS NOT NULL)" in str(query))
             self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
             # See all records with both
             query = accessible_query(["read", "approve"], table, c="org", f="organisation")
-            self.assertTrue("(org_organisation.approved_by IS NOT NULL)" in str(query))
+            self.assertTrue("((org_organisation.approved_by IS NOT NULL) OR " \
+                            "(org_organisation.owned_by_user = %s))" % auth.user.id \
+                            in str(query))
             self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
 
             # Turn off record approval and check the default query

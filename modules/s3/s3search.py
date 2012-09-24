@@ -45,7 +45,7 @@ from gluon.storage import Storage
 
 from s3crud import S3CRUD
 from s3navigation import s3_search_tabs
-from s3utils import s3_debug, S3DateTime, s3_get_foreign_key
+from s3utils import s3_debug, S3DateTime, s3_get_foreign_key, s3_unicode
 from s3validators import *
 from s3widgets import S3OrganisationHierarchyWidget, s3_grouped_checkboxes_widget
 from s3export import S3Exporter
@@ -591,7 +591,6 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 opt_values = (True, False)
             else:
                 opt_values = []
-
                 rows = resource.select(fields=[field_name],
                                        start=None,
                                        limit=None)
@@ -652,7 +651,8 @@ class S3SearchOptionsWidget(S3SearchWidget):
                         opt_list.append([opt_value, opt_represent])
             else:
                 # Straight string representations of the values
-                opt_list = [(opt_value, "%s" % opt_value) for opt_value in opt_values if opt_value]
+                opt_list = [(opt_value, s3_unicode(opt_value))
+                            for opt_value in opt_values if opt_value]
 
             options = dict(opt_list)
 
@@ -1232,11 +1232,18 @@ class S3Search(S3CRUD):
                 session_options = session.s3.search_options
                 if session_options and tablename in session_options:
                     # session
-                    session_options = session_options[tablename]
+                    if "clear_opts" in r.get_vars:
+                        session_options = Storage()
+                    else:
+                        session_options = session_options[tablename]
                 else:
                     # unfiltered
                     session_options = Storage()
                 form_values = session_options
+            if "clear_opts" in r.get_vars:
+                del r.get_vars["clear_opts"]
+            if "clear_opts" in r.vars:
+                del r.vars["clear_opts"]
 
         # Remove the existing session filter if this is a new
         # search (@todo: do not store the filter in session)
@@ -1585,6 +1592,12 @@ class S3Search(S3CRUD):
         else:
             add_link = ""
 
+        opts = Storage(r.get_vars)
+        opts["clear_opts"] = "1"
+        clear_opts = A(T("Reset all filters"),
+                       _href=r.url(vars=opts),
+                       _class="action-lnk")
+
         # Simple search form
         if simple:
             # Switch-link
@@ -1595,6 +1608,7 @@ class S3Search(S3CRUD):
                 switch_link = ""
             simple_form = self._build_form(simple,
                                            form_values=form_values,
+                                           clear=clear_opts,
                                            add=add_link,
                                            switch=switch_link,
                                            _class="simple-form")
@@ -1610,6 +1624,7 @@ class S3Search(S3CRUD):
                 _class = "%s"
             advanced_form = self._build_form(advanced,
                                              form_values=form_values,
+                                             clear=clear_opts,
                                              add=add_link,
                                              switch=switch_link,
                                              _class=_class % "advanced-form")
@@ -1617,9 +1632,24 @@ class S3Search(S3CRUD):
         return (simple_form, advanced_form)
 
     # -------------------------------------------------------------------------
-    def _build_form(self, widgets, form_values=None, add="", switch="", **attr):
+    def _build_form(self, widgets,
+                    form_values=None,
+                    clear="",
+                    add="",
+                    switch="",
+                    **attr):
         """
-            @todo: docstring
+            Render a search form.
+
+            @param widgets: the widgets
+            @param form_values: the form values (as dict) to pass to
+                                the widgets
+            @param clear: the clear-values action link
+            @param add: the add-record action link
+            @param switch: the switch-forms action link
+            @param attr: HTML attributes for the form
+
+            @returns: a FORM instance
         """
 
         T = current.T
@@ -1651,7 +1681,7 @@ class S3Search(S3CRUD):
             trows.append(tr)
 
         trows.append(TR("", TD(INPUT(_type="submit", _value=T("Search")),
-                               switch, add)))
+                               clear, switch, add)))
         form = FORM(TABLE(trows), **attr)
         return form
 

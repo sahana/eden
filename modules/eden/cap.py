@@ -1028,6 +1028,7 @@ class S3CAPModel(S3Model):
 
 # =============================================================================
 def cap_info_labels():
+
     T = current.T
     return dict(
                 language=T("Language"),
@@ -1050,7 +1051,6 @@ def cap_info_labels():
                 contact=T("Contact information"),
                 parameter=T("Parameters")
                 )
-
 
 # =============================================================================
 def cap_alert_is_template(alert_id):
@@ -1211,6 +1211,8 @@ def add_submit_button(form, name, value):
                 INPUT(_type="submit", _name=name,
                       _value=value)))
 
+    return
+
 # =============================================================================
 def alert_form_mods(form):
     """
@@ -1231,7 +1233,7 @@ def alert_form_mods(form):
 
     form[0][-1][0][0].update(_value=T("Save and edit information"),
                              _name="edit_info")
-
+    return
 
 # =============================================================================
 def cap_alert_controller():
@@ -1246,14 +1248,14 @@ def cap_alert_controller():
         if form and "table" in dir(form):
             tablename = form.table._tablename
 
-            if tablename == 'cap_alert':
+            if tablename == "cap_alert":
                 alert_form_mods(form)
                 form.update(_class="cap_alert_form")
             set_priority_js()
         else:
             return output
 
-        #if tablename == 'cap_info':
+        #if tablename == "cap_info":
         #    add_submit_button(form, "add_language", T("Save and add another language"))
 
     return output
@@ -1315,9 +1317,9 @@ def cap_template_controller():
 
         tablename = form.table._tablename
 
-        if tablename == 'cap_alert':
+        if tablename == "cap_alert":
             form.update(_class="cap_template_form")
-        if tablename == 'cap_info':
+        if tablename == "cap_info":
             form.update(_class="cap_info_template_form")
 
     return output
@@ -1338,6 +1340,7 @@ def cap_info_controller():
 
     return output
 
+# =============================================================================
 def cap_first_run():
     """ Add the default template """
 
@@ -1348,9 +1351,11 @@ def cap_first_run():
     s3db.configure("cap_alert")
     if not db(atable.id > 0).select(atable.id,
                                     limitby=(0, 1)):
-        # @fixme: get this to work!
-        s3db.cap_alert.insert(template_title="Default", is_template='T')
+        s3db.cap_alert.insert(template_title="Default", is_template=True)
 
+    return
+
+# =============================================================================
 def set_priority_js():
     """ Output json for priority field """
 
@@ -1363,6 +1368,9 @@ def set_priority_js():
     if not priority_conf in js_global:
         js_global.append(priority_conf)
 
+    return
+
+# =============================================================================
 def update_alert_id(table):
     """ On-accept for area and resource records """
 
@@ -1395,6 +1403,7 @@ def update_alert_id(table):
 
     return func
 
+# =============================================================================
 def info_onaccept(form):
 
     if "vars" in form:
@@ -1423,4 +1432,5 @@ def info_onaccept(form):
         info.update()
 
     return True
+
 # END =========================================================================
