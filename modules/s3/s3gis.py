@@ -7486,44 +7486,50 @@ class S3ImportPOI(S3Method):
                     except:
                         # Python < 2.7
                         from subprocess import call
-                    result = call(["/home/osm/osmosis/bin/osmosis", # @ToDo: deployment_setting
-                                   "--read-pgsql",
-                                   "host=%s" % vars.host,
-                                   "database=%s" % vars.database,
-                                   "user=%s" % vars.user,
-                                   "password=%s" % vars.password,
-                                   "--dataset-dump",
-                                   "--bounding-polygon",
-                                   "file=%s" % os.path.join(TEMP, "%s.poly" % name),
-                                   "--write-xml",
-                                   "file=%s" % filename,
-                                   ], shell=True)
+                    try:
+                        result = call(["/home/osm/osmosis/bin/osmosis", # @ToDo: deployment_setting
+                                       "--read-pgsql",
+                                       "host=%s" % vars.host,
+                                       "database=%s" % vars.database,
+                                       "user=%s" % vars.user,
+                                       "password=%s" % vars.password,
+                                       "--dataset-dump",
+                                       "--bounding-polygon",
+                                       "file=%s" % os.path.join(TEMP, "%s.poly" % name),
+                                       "--write-xml",
+                                       "file=%s" % filename,
+                                       ], shell=True)
+                    except:
+                        # Py2.7
+                        current.session.error = T("OSM file generation failed: %s") % result
+                        redirect(URL(args=r.id))
                     try:
                         File = open(filename, "r")
                     except:
-                        current.session.error = T("OSM file generation failed: %s") % result
+                        # Py2.6
+                        current.session.error = T("OSM file generation failed")
                         redirect(URL(args=r.id))
-
-                import_count = 0
-                resource.import_count
 
                 stylesheet = os.path.join(request.folder, "static", "formats",
                                           "osm", "import.xsl")
                 ignore_errors = vars.get("ignore_errors", None)
                 xml = current.xml
                 tree = xml.csv2tree(File)
-                tree = xml.transform(tree, stylesheet=stylesheet)
-                define_resource = current.s3db.define_resource
+                #tree = xml.transform(tree, stylesheet_path=stylesheet)
+                define_resource = current.s3db.resource
                 response.error = ""
-                for tablename in settings.get_gis_poi_resources():
+                import_count = 0
+                for tablename in current.deployment_settings.get_gis_poi_resources():
                     resource = define_resource(tablename)
+                    x3xml = xml.transform(tree, stylesheet_path=stylesheet,
+                                          name=tablename.split("_", 1)[1])
                     try:
-                        success = resource.import_xml(tree,
+                        success = resource.import_xml(s3xml,
                                                       ignore_errors=ignore_errors)
                         import_count += resource.import_count
                     except:
                         import sys
-                        response.error += sys.exc_info()[1]
+                        response.error += str(sys.exc_info()[1])
                 if import_count:
                     response.confirmation = "%s %s" % \
                         (import_count,
