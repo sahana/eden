@@ -133,6 +133,8 @@ class S3HRModel(S3Model):
                                                   # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                                   #filterby = "site_id",
                                                   #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                  instance_types = auth.org_site_types,
+                                                  updateable = True,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = [True],
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
@@ -1603,6 +1605,8 @@ class S3HRSkillModel(S3Model):
                                              # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                              #filterby = "site_id",
                                              #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                             instance_types = auth.org_site_types,
+                                             updateable = True,
                                              not_filterby = "obsolete",
                                              not_filter_opts = [True],
                                              default = auth.user.site_id if auth.is_logged_in() else None,
@@ -3248,10 +3252,10 @@ def hrm_human_resource_onaccept(form):
     s3db.pr_update_affiliations(htable, record)
     auth = current.auth
     auth.s3_set_record_owner(htable, record, force_update=True)
-    
+
     ptable = s3db.pr_person
     person_id = record.person_id
-    
+
     setting = current.deployment_settings
     if setting.get_auth_person_realm_human_resource_org():
         # Set realm_entity = organisation pe_id for pr_person now that it is affliated

@@ -412,8 +412,10 @@ class S3AssetModel(S3Model):
                              # - can't override field name, ondelete or requires
                              super_link("site_id", "org_site",
                                         label = T("Warehouse/Facility/Office"),
-                                        filterby = "site_id",
-                                        filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                        #filterby = "site_id",
+                                        #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                        instance_types = auth.org_site_types,
+                                        updateable = True,
                                         not_filterby = "obsolete",
                                         not_filter_opts = [True],
                                         #default = user.site_id if is_logged_in() else None,

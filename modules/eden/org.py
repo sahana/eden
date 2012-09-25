@@ -2813,7 +2813,7 @@ def org_office_controller():
                         except:
                             # A non-standard formstyle with just a single row
                             pass
-            elif r.component.name == "human_resource":
+            elif r.component_name == "human_resource":
                 # Modify action button to open staff instead of human_resource
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
                 delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"])
