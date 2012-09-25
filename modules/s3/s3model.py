@@ -810,6 +810,8 @@ class S3Model(object):
                    filter_opts=None,
                    not_filterby=None,
                    not_filter_opts=None,
+                   instance_types=None,
+                   updateable=False,
                    groupby=None,
                    widget=None,
                    empty=True,
@@ -849,6 +851,8 @@ class S3Model(object):
                                  groupby=groupby,
                                  filterby=filterby,
                                  filter_opts=filter_opts,
+                                 instance_types=instance_types,
+                                 updateable=updateable,
                                  not_filterby=not_filterby,
                                  not_filter_opts=not_filter_opts,)
             if empty:

@@ -218,6 +218,8 @@ class S3RequestModel(S3Model):
                                                   # Automatic in IS_ONE_OF
                                                   #filterby = "site_id",
                                                   #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                  instance_types = auth.org_site_types,
+                                                  updateable = True,
                                                   # Comment these to use a Dropdown & not an Autocomplete
                                                   #widget = S3SiteAutocompleteWidget(),
                                                   #comment = DIV(_class="tooltip",

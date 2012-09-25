@@ -167,7 +167,7 @@ class AuthS3(Auth):
         self.settings.lock_keys = True
 
         self.messages.lock_keys = False
-        
+
         # @ToDo Move these to deployment_settings
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
@@ -1023,7 +1023,7 @@ Thank you
         if log == DEFAULT:
             log = self.messages.profile_log
         labels, required = s3_mark_required(utable)
-        
+
         # If we have an opt_in and some post_vars then update the opt_in value
         if settings.get_auth_opt_in_to_email() and request.post_vars:
             opt_list = settings.get_auth_opt_in_team_list()
@@ -3361,9 +3361,9 @@ Thank you
             return None
 
     # -------------------------------------------------------------------------
-    def s3_set_record_owner(self, 
-                            table, 
-                            record, 
+    def s3_set_record_owner(self,
+                            table,
+                            record,
                             force_update = False,
                             **fields):
         """
@@ -4706,8 +4706,9 @@ class S3Permission(object):
         # Don't filter out unapproved records owned by the user
         if requires_approval and not unapproved and \
            "owned_by_user" in table.fields:
+            user_id = user.id if user is not None else None
             ALL_RECORDS = ((table.approved_by != None) | \
-                           (table.owned_by_user == user.id))
+                           (table.owned_by_user == user_id))
 
         # Administrators have all permissions
         if sr.ADMIN in realms:

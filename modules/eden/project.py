@@ -546,7 +546,7 @@ class S3ProjectModel(S3Model):
             sortby="name",
             requires = IS_NULL_OR(
                             IS_ONE_OF(db(current.auth.s3_accessible_query("update",
-                                                                          table)), 
+                                                                          table)),
                                       "project_project.id",
                                       project_project_represent_no_link
                                       )),
@@ -743,7 +743,7 @@ class S3ProjectModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_project_onaccept(form):
-        """ 
+        """
             Create/update project_organisation record from the organisation_id
         """
 
@@ -751,12 +751,12 @@ class S3ProjectModel(S3Model):
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
-        
+
         lead_role = current.deployment_settings.get_project_organisation_lead_role()
 
         query = (otable.project_id == vars.id) & \
                 (otable.role == lead_role)
-                
+
         # Update the lead organisation
         count = db(query).update(organisation_id = vars.organisation_id)
         if not count:
@@ -1369,7 +1369,7 @@ class S3Project3WModel(S3Model):
         project_location_id = S3ReusableField("project_location_id", table,
             requires = IS_NULL_OR(
                         IS_ONE_OF(db(current.auth.s3_accessible_query("update",
-                                                                      table)), 
+                                                                      table)),
                                   "project_location.id",
                                   project_location_represent,
                                   sort=True)),

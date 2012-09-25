@@ -369,6 +369,8 @@ class IS_ONE_OF_EMPTY(Validator):
                  filter_opts=None,
                  not_filterby=None,
                  not_filter_opts=None,
+                 updateable=False,
+                 instance_types=None,
                  error_message="invalid value!",
                  orderby=None,
                  groupby=None,
@@ -423,6 +425,9 @@ class IS_ONE_OF_EMPTY(Validator):
         self.not_filterby = not_filterby
         self.not_filter_opts = not_filter_opts
 
+        self.updateable = updateable
+        self.instance_types = instance_types
+
     # -------------------------------------------------------------------------
     def set_self_id(self, id):
         if self._and:
@@ -467,9 +472,14 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Caching breaks Colorbox dropdown refreshes
                 #dd = dict(orderby=orderby, groupby=groupby, cache=(current.cache.ram, 60))
                 dd = dict(orderby=orderby, groupby=groupby)
-                query = current.auth.s3_accessible_query("read", table)
+
+                method = "update" if self.updateable else "read"
+                query, left = self.accessible_query(method, table,
+                                                    instance_types=self.instance_types)
+
                 if "deleted" in table:
                     query = ((table["deleted"] == False) & query)
+
                 filterby = self.filterby
                 if filterby and filterby in table:
                     filter_opts = self.filter_opts
@@ -480,18 +490,27 @@ class IS_ONE_OF_EMPTY(Validator):
                             filter_opts = [f for f in filter_opts if f is not None]
                             if filter_opts:
                                 _query = _query | (table[filterby].belongs(filter_opts))
-                            query = query & _query
+                            query &= _query
                         else:
-                            query = query & (table[filterby].belongs(filter_opts))
+                            query &= (table[filterby].belongs(filter_opts))
                     if not self.orderby:
                         dd.update(orderby=table[filterby])
-                if self.not_filterby and self.not_filterby in table and self.not_filter_opts:
-                    query = query & (~(table[self.not_filterby].belongs(self.not_filter_opts)))
+
+                not_filterby = self.not_filterby
+                if not_filterby and not_filterby in table:
+                    not_filter_opts = self.not_filter_opts
+                    if not_filter_opts:
+                        query &= (~(table[not_filterby].belongs(not_filter_opts)))
                     if not self.orderby:
                         dd.update(orderby=table[filterby])
+
+                if self.left is not None:
+                    self.left.append(left)
+                else:
+                    self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
-                records = dbset(query).select(*fields, **dd)
+                records = dbset(query).select(distinct=True, *fields, **dd)
             else:
                 # Note this does not support filtering.
                 orderby = self.orderby or \
@@ -546,6 +565,65 @@ class IS_ONE_OF_EMPTY(Validator):
         else:
             self.theset = None
             self.labels = None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def accessible_query(cls, method, table, instance_types=None):
+        """
+            Returns an accessible query (and left joins, if necessary) for
+            records in table the user is permitted to access with method
+
+            @param method: the method (e.g. "read" or "update")
+            @param table: the table
+            @param instance_types: list of instance tablenames, if table is
+                                   a super-entity (required in this case!)
+
+            @returns: tuple (query, left) where query is the query and left joins
+                      is the list of left joins required for the query
+
+            @note: for higher security policies and super-entities with many
+                   instance types this can give a very complex query. Try to
+                   always limit the instance types to what is really needed
+        """
+
+        s3db = current.s3db
+        auth = current.auth
+
+        DEFAULT = (table._id == 0)
+
+        left = None
+
+        if "instance_type" in table:
+            # Super-entity
+            if not instance_types:
+                return DEFAULT
+            query = None
+            for instance_type in instance_types:
+                itable = s3db.table(instance_type)
+                if itable is None:
+                    continue
+
+                join = itable.on(itable[table._id.name] == table._id)
+                if left is None:
+                    left = [join]
+                else:
+                    left.append(join)
+
+                q = (itable._id != None) & \
+                    auth.s3_accessible_query(method, itable)
+                if "deleted" in itable:
+                    q &= itable.deleted != True
+                if query is None:
+                    query = q
+                else:
+                    query |= q
+
+            if query is None:
+                query = DEFAULT
+        else:
+            query = auth.s3_accessible_query(method, table, c=c, f=f)
+
+        return query, left
 
     # -------------------------------------------------------------------------
     # Removed as we don't want any options downloaded unnecessarily
