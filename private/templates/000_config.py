@@ -80,10 +80,10 @@ settings.auth.hmac_key = "akeytochange"
 #settings.mail.tls = True
 #settings.mail.login = "username:password"
 # From Address
-settings.mail.sender = "'Sahana' <sahana@your.org>"
+#settings.mail.sender = "'Sahana' <sahana@example.org>"
 # Default email address to which requests to approve new user accounts gets sent
 # This can be overridden for specific domains/organisations via the auth_domain table
-settings.mail.approver = "useradmin@your.org"
+#settings.mail.approver = "useradmin@example.org"
 # Daily Limit on Sending of emails
 #settings.mail.limit = 1000
 

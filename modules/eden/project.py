@@ -543,17 +543,19 @@ class S3ProjectModel(S3Model):
 
         # Reusable Field
         project_id = S3ReusableField("project_id", table,
-                                     sortby="name",
-                                     requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db(current.auth.s3_accessible_query("update", table)), 
-                                                              "project_project.id",
-                                                              project_project_represent_no_link
-                                                              )),
-                                     represent = project_project_represent,
-                                     comment = S3AddResourceLink(c="project", f="project",
-                                                                 tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
-                                     label = T("Project"),
-                                     ondelete = "CASCADE")
+            sortby="name",
+            requires = IS_NULL_OR(
+                            IS_ONE_OF(db(current.auth.s3_accessible_query("update",
+                                                                          table)), 
+                                      "project_project.id",
+                                      project_project_represent_no_link
+                                      )),
+            represent = project_project_represent,
+            comment = S3AddResourceLink(c="project", f="project",
+                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
+            label = T("Project"),
+            ondelete = "CASCADE"
+            )
 
         # ---------------------------------------------------------------------
         # Custom Methods
@@ -742,15 +744,10 @@ class S3ProjectModel(S3Model):
     @staticmethod
     def project_project_onaccept(form):
         """ 
-            Form onaccept
-            Creates project_organisation record for the project.organisation_id
+            Create/update project_organisation record from the organisation_id
         """
 
-        # if the project has an Host National Society organisation
-        # update organisation_id with its id
-
-        db = current.db
-        s3db = current.s3db
+        db = current.sdb
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars
@@ -761,12 +758,13 @@ class S3ProjectModel(S3Model):
                 (otable.role == lead_role)
                 
         # Update the lead organisation
-        count = db(query).update( organisation_id = vars.organisation_id )
+        count = db(query).update(organisation_id = vars.organisation_id)
         if not count:
-            #if there is no record to update - create a record
-            otable.insert( project_id = vars.id,
-                           organisation_id = vars.organisation_id,
-                           role = lead_role )
+            # If there is no record to update, then create a new one
+            otable.insert(project_id = vars.id,
+                          organisation_id = vars.organisation_id,
+                          role = lead_role,
+                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1369,17 +1367,19 @@ class S3Project3WModel(S3Model):
 
         # Reusable Field
         project_location_id = S3ReusableField("project_location_id", table,
-                                      requires = IS_NULL_OR(
-                                                    IS_ONE_OF( db(current.auth.s3_accessible_query("update", table)), 
-                                                               "project_location.id",
-                                                               project_location_represent,
-                                                               sort=True)),
-                                      represent = project_location_represent,
-                                      label = LOCATION,
-                                      comment = S3AddResourceLink(ADD_LOCATION,
-                                                                  c="project", f="location",
-                                                                  tooltip=LOCATION_TOOLTIP),
-                                      ondelete = "CASCADE")
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db(current.auth.s3_accessible_query("update",
+                                                                      table)), 
+                                  "project_location.id",
+                                  project_location_represent,
+                                  sort=True)),
+            represent = project_location_represent,
+            label = LOCATION,
+            comment = S3AddResourceLink(ADD_LOCATION,
+                                        c="project", f="location",
+                                        tooltip=LOCATION_TOOLTIP),
+            ondelete = "CASCADE"
+            )
 
         # Components
         add_component("project_beneficiary",
@@ -1714,14 +1714,15 @@ class S3Project3WModel(S3Model):
         tablename = "project_organisation"
         table = define_table(tablename,
                              project_id(),
-                             organisation_id( requires = self.org_organisation_requires(updateable_only = True),
-                                              widget = None,
-                                              comment=S3AddResourceLink(c="org",
-                                                                        f="organisation",
-                                                                        label=T("Add Organization"),
-                                                                        title=T("Organization"),
-                                                                        tooltip=organisation_help)
-                                             ),
+                             organisation_id(
+                                requires = self.org_organisation_requires(updateable_only=True),
+                                widget = None,
+                                comment=S3AddResourceLink(c="org",
+                                                          f="organisation",
+                                                          label=T("Add Organization"),
+                                                          title=T("Organization"),
+                                                          tooltip=organisation_help)
+                                ),
                              Field("role", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
                                    represent = lambda opt, row=None: \

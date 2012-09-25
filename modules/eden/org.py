@@ -1799,7 +1799,7 @@ class S3OfficeModel(S3Model):
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  widget = None,
-                                 requires = self.org_organisation_requires(updateable_only = True),
+                                 requires = self.org_organisation_requires(updateable_only=True),
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -2198,19 +2198,23 @@ def org_root_organisation(organisation_id=None, pe_id=None):
 
     return None, None
 # =============================================================================
-def org_organisation_requires(updateable_only = False):
+def org_organisation_requires(updateable_only=False):
+    """
+        Filter the list of organisations for a form field to just those which
+        the user has update permissions for
+    """
+
     db = current.db
-    s3db = current.s3db
     if updateable_only:
-        set = db(current.auth.s3_accessible_query("update", s3db.org_organisation))
+        set = db(current.auth.s3_accessible_query("update",
+                                                  current.s3db.org_organisation))
     else:
         set = db
-    return IS_NULL_OR( IS_ONE_OF( set,
-                                  "org_organisation.id",
-                                  org_organisation_represent,
-                                  orderby="org_organisation.name",
-                                  sort=True)
-                      )
+    return IS_NULL_OR(IS_ONE_OF(set, "org_organisation.id",
+                                org_organisation_represent,
+                                orderby="org_organisation.name",
+                                sort=True))
+
 # =============================================================================
 def org_organisation_represent(id, row=None, show_link=False,
                                acronym=True, parent=True):

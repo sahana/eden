@@ -168,7 +168,7 @@ class AuthS3(Auth):
 
         self.messages.lock_keys = False
         
-        # @ToDo Move these to deployemnt_settings modules/s3cfg.py
+        # @ToDo Move these to deployment_settings
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
@@ -995,7 +995,7 @@ Thank you
             .. method:: Auth.profile([next=DEFAULT [, onvalidation=DEFAULT
                 [, onaccept=DEFAULT [, log=DEFAULT]]]])
 
-            Patched for S3 to use s3_mark_required
+            Patched for S3 to use s3_mark_required and handle opt_in mailing lists
         """
 
         utable = self.settings.table_user
@@ -1059,10 +1059,11 @@ Thank you
                 gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
                 if not gm_rec:
                     query = (g_table.name == team)
-                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    team_rec = db(query).select(g_table.id,
+                                                limitby=(0, 1)).first()
                     # if the team doesn't exist then add it
                     if team_rec == None:
-                        team_id = g_table.insert(name = team, group_type = 5)
+                        team_id = g_table.insert(name=team, group_type=5)
                     else:
                         team_id = team_rec.id
                     gm_table.insert(group_id = team_id,
@@ -1084,7 +1085,7 @@ Thank you
                 separator = ""
                 )
             if form.accepts(request, session,
-                            formname='profile',
+                            formname="profile",
                             onvalidation=onvalidation,
                             hideerror=self.settings.hideerror):
                 self.user.update(utable._filter_fields(form.vars))
@@ -1096,8 +1097,8 @@ Thank you
                     next = self.url(args=request.args)
                 elif isinstance(next, (list, tuple)): ### fix issue with 2.6
                     next = next[0]
-                elif next and not next[0] == '/' and next[:4] != 'http':
-                    next = self.url(next.replace('[id]', str(form.vars.id)))
+                elif next and not next[0] == "/" and next[:4] != "http":
+                    next = self.url(next.replace("[id]", str(form.vars.id)))
                 redirect(next)
 
         if settings.get_auth_opt_in_to_email():
@@ -1106,7 +1107,8 @@ Thank you
             opt_list = settings.get_auth_opt_in_team_list()
             query = (ltable.user_id == form.record.id) & \
                     (ltable.pe_id == ptable.pe_id)
-            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
+            db_opt_in_list = db(query).select(ptable.opt_in,
+                                              limitby=(0, 1)).first().opt_in
             for opt_in in opt_list:
                 field_id = "%s_opt_in_%s" % (_table_user, opt_list)
                 if opt_in in db_opt_in_list:
@@ -1114,11 +1116,13 @@ Thank you
                 else:
                     checked = None
                 form[0].insert(-1,
-                               TR(TD(LABEL("Receive %s updates:" % opt_in,
+                               TR(TD(LABEL(T("Receive %(opt_in)s updates:") % \
+                                                dict(opt_in=opt_in),
                                            _for="opt_in",
                                            _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
                                      _class="w2p_fl"),
-                                     INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
+                                     INPUT(_name=opt_in, _id=field_id,
+                                           _type="checkbox", _checked=checked),
                                _id=field_id + SQLFORM.ID_ROW_SUFFIX))
         return form
 
@@ -1345,20 +1349,15 @@ Thank you
             @returns boolean - if the user has been approved
         """
 
-        db = current.db
         deployment_settings = current.deployment_settings
-        T = current.T
-
-        utable = self.settings.table_user
-
-        user_id = user.id
 
         # Lookup the Approver
         approver, organisation_id = self.s3_approver(user)
 
         if deployment_settings.get_auth_registration_requires_approval() and approver:
             approved = False
-            db(utable.id == user_id).update(registration_key = "pending")
+            utable = self.settings.table_user
+            current.db(utable.id == user.id).update(registration_key = "pending")
 
             if user.registration_key:
                 # User has just been verified
@@ -1367,7 +1366,7 @@ Thank you
                 #No Verification needed
                 current.session.information = deployment_settings.get_auth_registration_pending()
             # @ToDo: include link to user
-            subject = T("%(system_name)s - New User Registration Approval Pending") % \
+            subject = current.T("%(system_name)s - New User Registration Approval Pending") % \
                         {"system_name": deployment_settings.get_system_name()}
             message = self.messages.approve_user % \
                         dict(first_name = user.first_name,
@@ -1377,12 +1376,13 @@ Thank you
             approved = True
             self.s3_approve_user(user)
             self.s3_send_welcome_email(user)
-            current.session.confirmation = self.messages.email_verified
-            current.session.flash = self.messages.registration_successful
+            session = current.session
+            session.confirmation = self.messages.email_verified
+            session.flash = self.messages.registration_successful
 
             if not deployment_settings.get_auth_always_notify_approver():
                 return True
-            subject = T("%(system_name)s - New User Registered") % \
+            subject = current.T("%(system_name)s - New User Registered") % \
                       {"system_name": deployment_settings.get_system_name()}
             message = self.messages.new_user % dict(first_name = user.first_name,
                                                     last_name = user.last_name,
@@ -1392,7 +1392,8 @@ Thank you
                                            subject = subject,
                                            message = message)
         if not result:
-            db.rollback()
+            # Don't prevent registration just because email not configured
+            #db.rollback()
             current.response.error = self.messages.email_send_failed
             return False
 

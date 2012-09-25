@@ -505,8 +505,6 @@ def person():
          - HRM 
         
     """
-    configure = s3db.configure
-    set_method = s3db.set_method
 
     # Set to current user
     user_person_id  = str(s3_logged_in_person())
@@ -529,17 +527,18 @@ def person():
 
         next = URL(c = "default",
                    f = "person",
-                   args = [ str(user_person_id),
-                            "user"])
+                   args = [str(user_person_id), "user"])
         onaccept = lambda form: auth.s3_approve_user(form.vars),
-        form = auth.profile( next = next,
-                             onaccept = onaccept)
+        form = auth.profile(next = next,
+                            onaccept = onaccept)
 
         return dict(
                 title = T("User Profile"),
                 rheader = rheader,
                 form = form,
             )
+
+    set_method = s3db.set_method
 
     set_method("pr", "person",
                method="user",
@@ -554,7 +553,7 @@ def person():
     if settings.has_module("asset"):
         # Assets as component of people
         s3db.add_component("asset_asset",
-                            pr_person="assigned_to_id")
+                           pr_person="assigned_to_id")
 
     group = request.get_vars.get("group", "staff")
 
@@ -564,8 +563,8 @@ def person():
     if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
        (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
         table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
-    #configure(tablename,
-    #          deletable=False)
+    #s3db.configure(tablename,
+    #               deletable=False)
 
     # Configure for personal mode
     s3.crud_strings[tablename].update(
@@ -609,7 +608,6 @@ def person():
         else:
             # Disable non-interactive & import
             return False
-    
     s3.prep = prep
 
     # CRUD post-process
@@ -635,10 +633,11 @@ def person():
 
     output = s3_rest_controller("pr", "person",
                                 native=False,
-                                rheader = lambda r: s3db.hrm_rheader(r, 
-                                              profile = True),
+                                rheader = lambda r: \
+                                    s3db.hrm_rheader(r, profile=True),
                                 )
     return output
+
 # -----------------------------------------------------------------------------
 def facebook():
     """ Login using Facebook """

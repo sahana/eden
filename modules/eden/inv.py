@@ -425,7 +425,7 @@ class S3InventoryModel(S3Model):
                                                    represent=self.org_site_represent),
                                   self.supply_item_entity_id,
                                   self.supply_item_id(ondelete = "RESTRICT",
-                                                           required = True),
+                                                      required = True),
                                   self.supply_item_pack_id(ondelete = "RESTRICT",
                                                            required = True),
                                   Field("quantity", "double", notnull=True,

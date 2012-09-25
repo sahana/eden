@@ -415,12 +415,13 @@ class S3Config(Storage):
         return self.gis.get("marker_max_width", 30)
     def get_gis_mouse_position(self):
         return self.gis.get("mouse_position", "normal")
-    def get_gis_poi_export_resources(self):
+    def get_gis_poi_resources(self):
         """
-            List of resources (tablenames) to export as PoIs from Admin Locations
+            List of resources (tablenames) to import/export as PoIs from Admin Locations
             - KML & OpenStreetMap formats
         """
-        return self.gis.get("poi_export_resources", ["cr_shelter", "hms_hospital", "org_office"])
+        return self.gis.get("poi_resources",
+                            ["cr_shelter", "hms_hospital", "org_office"])
     def get_gis_print_service(self):
         return self.gis.get("print_service", "")
     def get_gis_geoserver_url(self):
@@ -612,9 +613,9 @@ class S3Config(Storage):
         """
         return self.mail.get("tls", False)
     def get_mail_sender(self):
-        return self.mail.get("sender", "sahana@your.org")
+        return self.mail.get("sender", "'Sahana' <sahana@example.org>")
     def get_mail_approver(self):
-        return self.mail.get("approver", "useradmin@your.org")
+        return self.mail.get("approver", "useradmin@example.org")
     def get_mail_limit(self):
         """ A daily limit to the number of messages which can be sent """
         return self.mail.get("limit", None)

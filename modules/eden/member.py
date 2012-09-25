@@ -132,7 +132,7 @@ class S3MembersModel(S3Model):
         tablename = "member_membership"
         table = define_table(tablename,
                              organisation_id(#widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                             requires = self.org_organisation_requires(updateable_only = True),
+                                             requires = self.org_organisation_requires(updateable_only=True),
                                              widget = None,
                                              empty=False),
                              person_id(widget=S3AddPersonWidget(controller="member"),
