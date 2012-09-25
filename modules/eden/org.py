@@ -1799,7 +1799,6 @@ class S3OfficeModel(S3Model):
                              self.org_organisation_id(
                                  #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  widget = None,
-                                 # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                  requires = self.org_organisation_requires(updateable=True),
                                  ),
                              office_type_id(
@@ -2202,21 +2201,15 @@ def org_root_organisation(organisation_id=None, pe_id=None):
 # =============================================================================
 def org_organisation_requires(updateable=False):
     """
-        Filter the list of organisations for a form field to just those which
-        the user has update permissions for
+        Optionally: Filter the list of organisations for a form field to
+        just those which the user has update permissions for
     """
 
-    db = current.db
-    if updateable:
-        # @ToDo: Replace with option to IS_ONE_OF
-        set = db(current.auth.s3_accessible_query("update",
-                                                  current.s3db.org_organisation))
-    else:
-        set = db
-    return IS_NULL_OR(IS_ONE_OF(set, "org_organisation.id",
+    return IS_NULL_OR(IS_ONE_OF(current.db, "org_organisation.id",
                                 org_organisation_represent,
-                                orderby="org_organisation.name",
-                                sort=True))
+                                updateable = updateable,
+                                orderby = "org_organisation.name",
+                                sort = True))
 
 # =============================================================================
 def org_organisation_represent(id, row=None, show_link=False,

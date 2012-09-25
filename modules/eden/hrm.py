@@ -130,9 +130,6 @@ class S3HRModel(S3Model):
                                     ),
                                   self.super_link("site_id", "org_site",
                                                   label=T("Office/Warehouse/Facility"),
-                                                  # @ToDo: Add 'updateable=True' to IS_ONE_OF
-                                                  #filterby = "site_id",
-                                                  #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                   instance_types = auth.org_site_types,
                                                   updateable = True,
                                                   not_filterby = "obsolete",
@@ -1602,9 +1599,6 @@ class S3HRSkillModel(S3Model):
                              course_id(empty=False),
                              self.super_link("site_id", "org_site",
                                              label=T("Office/Warehouse/Facility"),
-                                             # @ToDo: Add 'updateable=True' to IS_ONE_OF
-                                             #filterby = "site_id",
-                                             #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                              instance_types = auth.org_site_types,
                                              updateable = True,
                                              not_filterby = "obsolete",
