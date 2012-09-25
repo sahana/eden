@@ -1,4 +1,5 @@
 "uid","role"," description","controller","function","table","uacl","oacl","entity","Notes"
+"ANONYMOUS","Anonymous",,"cr",,,"READ",,"any",
 "ANONYMOUS","Anonymous",,"hms",,,"READ",,"any",
 "ANONYMOUS","Anonymous",,"inv",,,"READ",,"any",
 "ANONYMOUS","Anonymous",,"inv","warehouse",,"READ",,"any",
@@ -25,6 +26,7 @@
 "AUTHENTICATED","Anonymous",,"pr","pentity",,"READ",,"any",
 "AUTHENTICATED","Anonymous",,"pr","person_search",,"READ",,"any","Custom Controller to allow access to PR via JSON for AutoComplete"
 "reader","Reader",,"asset",,,"READ",,"any",
+"reader","Reader",,"cr",,,"READ",,"any",
 "reader","Reader",,"hrm",,,"READ",,"any",
 "reader","Reader",,"hrm","certificate",,"READ",,"any",
 "reader","Reader",,"hrm","course",,"READ",,"any",
@@ -33,6 +35,7 @@
 "reader","Reader",,"pr",,,"READ",,"any",
 "reader","Reader",,"supply",,,"READ",,"any",
 "data_entry","Data Entry",,"asset",,,"READ|CREATE","READ|CREATE|UPDATE",,
+"data_entry","Data Entry",,"cr",,,"READ|CREATE","READ|CREATE|UPDATE",,
 "data_entry","Data Entry",,"hms",,,"READ|CREATE","READ|CREATE|UPDATE",,
 "data_entry","Data Entry",,"hrm",,,"READ|CREATE","READ|CREATE|UPDATE",,
 "data_entry","Data Entry",,"hrm","certificate",,"READ","READ","any",
@@ -47,6 +50,7 @@
 "data_entry","Data Entry",,"supply",,,"READ|CREATE","READ|CREATE|UPDATE",,
 "data_entry","Data Entry",,"transport",,,"READ|CREATE","READ|CREATE|UPDATE",,
 "editor","Data Editor",,"asset",,,"READ|CREATE|UPDATE",,,
+"editor","Data Editor",,"cr",,,"READ|CREATE|UPDATE","READ|CREATE|UPDATE",,
 "editor","Data Editor",,"hms",,,"READ|CREATE|UPDATE","READ|CREATE|UPDATE",,
 "editor","Data Editor",,"hrm",,,"READ|CREATE|UPDATE","READ|CREATE|UPDATE",,
 "editor","Data Editor",,"hrm","certificate",,"READ","READ","any",
@@ -61,6 +65,7 @@
 "editor","Data Editor",,"supply",,,"READ|CREATE|UPDATE",,,
 "editor","Data Editor",,"transport",,,"READ|CREATE|UPDATE",,,
 "super","Super Editor",,"asset",,,"READ|CREATE|UPDATE|DELETE",,,
+"super","Super Editor",,"cr",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"hms",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"hrm",,,"READ|CREATE|UPDATE|DELETE",,,
 "super","Super Editor",,"hrm","certificate",,"READ|CREATE|UPDATE|DELETE",,,

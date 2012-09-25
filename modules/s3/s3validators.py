@@ -586,9 +586,6 @@ class IS_ONE_OF_EMPTY(Validator):
                    always limit the instance types to what is really needed
         """
 
-        s3db = current.s3db
-        auth = current.auth
-
         DEFAULT = (table._id == 0)
 
         left = None
@@ -598,6 +595,8 @@ class IS_ONE_OF_EMPTY(Validator):
             if not instance_types:
                 return DEFAULT
             query = None
+            auth = current.auth
+            s3db = current.s3db
             for instance_type in instance_types:
                 itable = s3db.table(instance_type)
                 if itable is None:
@@ -621,7 +620,7 @@ class IS_ONE_OF_EMPTY(Validator):
             if query is None:
                 query = DEFAULT
         else:
-            query = auth.s3_accessible_query(method, table, c=c, f=f)
+            query = current.auth.s3_accessible_query(method, table)
 
         return query, left
 

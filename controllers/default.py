@@ -665,11 +665,6 @@ def google():
     return dict(form=form)
 
 # -----------------------------------------------------------------------------
-def source():
-    """ RESTful CRUD controller """
-    return s3_rest_controller("s3", "source")
-
-# -----------------------------------------------------------------------------
 # About Sahana
 def apath(path=""):
     """ Application path """
@@ -692,11 +687,15 @@ def about():
     response.title = T("About")
     if settings.get_template() != "default":
         # Try a Custom View
-        path = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "help.html")
-        if os.path.exists(path):
-            response.view = "../private/templates/%s/views/help.html" % settings.get_template()
-            return dict()
+        view = os.path.join(request.folder, "private", "templates",
+                            settings.get_template(), "views", "about.html")
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
 
     import sys
     import subprocess
@@ -770,10 +769,15 @@ def help():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        path = os.path.join(request.folder, "private", "templates",
+        view = os.path.join(request.folder, "private", "templates",
                             settings.get_template(), "views", "help.html")
-        if os.path.exists(path):
-            response.view = "../private/templates/%s/views/help.html" % settings.get_template()
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
 
     response.title = T("Help")
     return dict()
@@ -784,10 +788,15 @@ def privacy():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        path = os.path.join(request.folder, "private", "templates",
+        view = os.path.join(request.folder, "private", "templates",
                             settings.get_template(), "views", "privacy.html")
-        if os.path.exists(path):
-            response.view = "../private/templates/%s/views/privacy.html" % settings.get_template()
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
 
     response.title = T("Privacy")
     return dict()
@@ -830,10 +839,15 @@ def contact():
         return output
     elif settings.get_template() != "default":
         # Try a Custom View
-        path = os.path.join(request.folder, "private", "templates",
+        view = os.path.join(request.folder, "private", "templates",
                             settings.get_template(), "views", "contact.html")
-        if os.path.exists(path):
-            response.view = "../private/templates/%s/views/contact.html" % settings.get_template()
+        if os.path.exists(view):
+            try:
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
 
     response.title = T("Contact us")
     return dict()
