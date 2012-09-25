@@ -424,8 +424,10 @@ class S3InventoryModel(S3Model):
                                                    #                                T("Enter some characters to bring up a list of possible matches"))),
                                                    represent=self.org_site_represent),
                                   self.supply_item_entity_id,
-                                  self.supply_item_id(ondelete = "RESTRICT"),
-                                  self.supply_item_pack_id(ondelete = "RESTRICT"),
+                                  self.supply_item_id(ondelete = "RESTRICT",
+                                                           required = True),
+                                  self.supply_item_pack_id(ondelete = "RESTRICT",
+                                                           required = True),
                                   Field("quantity", "double", notnull=True,
                                         label = T("Quantity"),
                                         represent=lambda v, row=None: \

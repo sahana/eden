@@ -1,9 +1,9 @@
 from tests.roles.create_role_test_data import *
 
 # Define Organisations
-orgs = ["Org-1",
-        "Org-2",
-        "Org-3",
+orgs = ["Org-A",
+        "Org-B",
+        "Org-C",
         ]
 branches = [ None,
              "Branch-A"]

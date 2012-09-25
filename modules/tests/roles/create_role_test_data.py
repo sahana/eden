@@ -40,8 +40,6 @@ def create_role_test_data(orgs, branches):
     s3mgr = current.manager
     request = current.request
 
-
-
     #----------------------------------------------------------------------
     # Initialize Data & Users
     auth.override = True
@@ -90,7 +88,7 @@ def create_role_test_data(orgs, branches):
                 orgx = "%s-%s" % (org,branch)
             else:
                 orgx = org
-            print orgx
+            #print orgx
             
             # Create Org & get id
             org_string = org_template_string % dict( org = orgx )

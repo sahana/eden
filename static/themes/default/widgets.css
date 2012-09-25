@@ -16,6 +16,7 @@ div.form-container {
     width: 100%;
     overflow: auto;
     margin-top: 5px;
+    margin-bottom: 15px;
 }
 div.form-container form {
     padding: 5px;
@@ -561,6 +562,7 @@ div#component {
 /* Resource Footer */
 div#rfooter {
 	padding: 15px 0;
+	clear: both;
 }
 
 /* Last Update Meta-data */

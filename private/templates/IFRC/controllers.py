@@ -208,7 +208,8 @@ $('.marker').mouseout(function(){
                    _class="map-tip"))
 
         current.menu.breadcrumbs = None
-
+        response.homepage = True
+        
         return dict(map=map)
 
 # END =========================================================================

@@ -167,6 +167,8 @@ class AuthS3(Auth):
         self.settings.lock_keys = True
 
         self.messages.lock_keys = False
+        
+        # @ToDo Move these to deployemnt_settings modules/s3cfg.py
         self.messages.email_approver_failed = "Failed to send mail to Approver - see if you can notify them manually!"
         self.messages.email_verification_failed = "Unable to send verification email - either your email is invalid or our email server is down"
         self.messages.email_sent = "Verification Email sent - please check your email to validate. If you do not receive this email please check you junk email or spam filters"
@@ -174,9 +176,15 @@ class AuthS3(Auth):
         self.messages.welcome_email_subject = "Welcome to %(system_name)s" % \
             dict(system_name=system_name)
         self.messages.welcome_email = \
-            "Welcome to %(system_name)s - click on the link %(url)s to complete your profile" % \
-                dict(system_name = system_name,
-                     url = deployment_settings.get_base_public_url() + URL("default", "user", args=["profile"]))
+"""Welcome to %(system_name)s
+ - You can start using %(system_name)s at: %(url)s
+ - To edit your profile go to: %(url)s%(profile)s
+Thank you
+""" % \
+            dict(system_name = system_name,
+                 url = deployment_settings.get_base_public_url(),
+                 profile = URL("default", "user", args=["profile"])
+                 )
         self.messages.duplicate_email = "This email address is already in use"
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
@@ -881,6 +889,8 @@ class AuthS3(Auth):
             if len(users) == 1:
                 # 1st user to register doesn't need verification/approval
                 self.s3_approve_user(form.vars)
+                self.s3_send_welcome_email(form.vars)
+                current.session.confirmation = self.messages.registration_successful
 
                 # 1st user gets Admin rights
                 admin_group_id = 1
@@ -1000,6 +1010,8 @@ class AuthS3(Auth):
 
         request = current.request
         session = current.session
+        settings = current.deployment_settings
+
         if next == DEFAULT:
             next = request.get_vars._next \
                 or request.post_vars._next \
@@ -1011,35 +1023,103 @@ class AuthS3(Auth):
         if log == DEFAULT:
             log = self.messages.profile_log
         labels, required = s3_mark_required(utable)
-        form = SQLFORM(
-            utable,
-            self.user.id,
-            fields = self.settings.profile_fields,
-            labels = labels,
-            hidden = dict(_next=next),
-            showid = self.settings.showid,
-            submit_button = self.messages.profile_save_button,
-            delete_label = self.messages.delete_label,
-            upload = self.settings.download_url,
-            formstyle = self.settings.formstyle,
-            separator = ""
-            )
-        if form.accepts(request, session,
-                        formname='profile',
-                        onvalidation=onvalidation,
-                        hideerror=self.settings.hideerror):
-            self.user.update(utable._filter_fields(form.vars))
-            session.flash = self.messages.profile_updated
-            if log:
-                self.log_event(log % self.user)
-            callback(onaccept, form)
-            if not next:
-                next = self.url(args=request.args)
-            elif isinstance(next, (list, tuple)): ### fix issue with 2.6
-                next = next[0]
-            elif next and not next[0] == '/' and next[:4] != 'http':
-                next = self.url(next.replace('[id]', str(form.vars.id)))
-            redirect(next)
+        
+        # If we have an opt_in and some post_vars then update the opt_in value
+        if settings.get_auth_opt_in_to_email() and request.post_vars:
+            opt_list = settings.get_auth_opt_in_team_list()
+            removed = []
+            selected = []
+            for opt_in in opt_list:
+                if opt_in in request.post_vars:
+                    selected.append(opt_in)
+                else:
+                    removed.append(opt_in)
+            ptable = s3db.pr_person
+            putable = s3db.pr_person_user
+            query = (putable.user_id == request.post_vars.id) & \
+                    (putable.pe_id == ptable.pe_id)
+            person_id = db(query).select(ptable.id, limitby=(0, 1)).first().id
+            db(ptable.id == person_id).update(opt_in = selected)
+
+            g_table = s3db["pr_group"]
+            gm_table = s3db["pr_group_membership"]
+            # Remove them from any team they are a member of in the removed list
+            for team in removed:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if gm_rec:
+                    db(gm_table.id == gm_rec.id).delete()
+            # Add them to the team (if they are not already a team member)
+            for team in selected:
+                query = (g_table.name == team) & \
+                        (gm_table.group_id == g_table.id) & \
+                        (gm_table.person_id == person_id)
+                gm_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                if not gm_rec:
+                    query = (g_table.name == team)
+                    team_rec = db(query).select(g_table.id, limitby=(0, 1)).first()
+                    # if the team doesn't exist then add it
+                    if team_rec == None:
+                        team_id = g_table.insert(name = team, group_type = 5)
+                    else:
+                        team_id = team_rec.id
+                    gm_table.insert(group_id = team_id,
+                                    person_id = person_id)
+        if settings.get_auth_openid():
+            form = DIV(form, openid_login_form.list_user_openids())
+        else:
+            form = SQLFORM(
+                utable,
+                self.user.id,
+                fields = self.settings.profile_fields,
+                labels = labels,
+                hidden = dict(_next=next),
+                showid = self.settings.showid,
+                submit_button = self.messages.profile_save_button,
+                delete_label = self.messages.delete_label,
+                upload = self.settings.download_url,
+                formstyle = self.settings.formstyle,
+                separator = ""
+                )
+            if form.accepts(request, session,
+                            formname='profile',
+                            onvalidation=onvalidation,
+                            hideerror=self.settings.hideerror):
+                self.user.update(utable._filter_fields(form.vars))
+                session.flash = self.messages.profile_updated
+                if log:
+                    self.log_event(log % self.user)
+                callback(onaccept, form)
+                if not next:
+                    next = self.url(args=request.args)
+                elif isinstance(next, (list, tuple)): ### fix issue with 2.6
+                    next = next[0]
+                elif next and not next[0] == '/' and next[:4] != 'http':
+                    next = self.url(next.replace('[id]', str(form.vars.id)))
+                redirect(next)
+
+        if settings.get_auth_opt_in_to_email():
+            ptable = s3db.pr_person
+            ltable = s3db.pr_person_user
+            opt_list = settings.get_auth_opt_in_team_list()
+            query = (ltable.user_id == form.record.id) & \
+                    (ltable.pe_id == ptable.pe_id)
+            db_opt_in_list = db(query).select(ptable.opt_in, limitby=(0, 1)).first().opt_in
+            for opt_in in opt_list:
+                field_id = "%s_opt_in_%s" % (_table_user, opt_list)
+                if opt_in in db_opt_in_list:
+                    checked = "selected"
+                else:
+                    checked = None
+                form[0].insert(-1,
+                               TR(TD(LABEL("Receive %s updates:" % opt_in,
+                                           _for="opt_in",
+                                           _id=field_id + SQLFORM.ID_LABEL_SUFFIX),
+                                     _class="w2p_fl"),
+                                     INPUT(_name=opt_in, _id=field_id, _type="checkbox", _checked=checked),
+                               _id=field_id + SQLFORM.ID_ROW_SUFFIX))
         return form
 
     # -------------------------------------------------------------------------
@@ -1296,7 +1376,9 @@ class AuthS3(Auth):
         else:
             approved = True
             self.s3_approve_user(user)
+            self.s3_send_welcome_email(user)
             current.session.confirmation = self.messages.email_verified
+            current.session.flash = self.messages.registration_successful
 
             if not deployment_settings.get_auth_always_notify_approver():
                 return True
@@ -1382,17 +1464,6 @@ class AuthS3(Auth):
 
         # Allow them to login
         db(utable.id == user_id).update(registration_key = "")
-
-        session.confirmation = self.messages.registration_successful
-
-        # Send email to user confirming that they are now able to login
-        if not self.settings.mailer or \
-               not self.settings.mailer.send(to=user.email,
-                    subject = self.messages.confirmation_email_subject,
-                    message = self.messages.confirmation_email):
-                db.rollback()
-                session.warning = self.messages.unable_send_email
-                return
 
         return
 
@@ -1919,7 +1990,11 @@ class AuthS3(Auth):
         subject = self.messages.welcome_email_subject
         message = self.messages.welcome_email
 
-        self.settings.mailer.send(user["email"], subject=subject, message=message)
+        results = self.settings.mailer.send(user["email"], subject=subject, message=message)
+        if not results:
+            db.rollback()
+            current.response.error = self.messages.unable_send_email
+        return
 
     # -------------------------------------------------------------------------
     # S3-specific authentication methods
@@ -3285,7 +3360,11 @@ class AuthS3(Auth):
             return None
 
     # -------------------------------------------------------------------------
-    def s3_set_record_owner(self, table, record, force_update=False, **fields):
+    def s3_set_record_owner(self, 
+                            table, 
+                            record, 
+                            force_update = False,
+                            **fields):
         """
             Update the record owner, to be called from CRUD and Importer
 
@@ -3359,10 +3438,14 @@ class AuthS3(Auth):
         # Find owned_by_user
         if OUSR in fields_in_table:
             pi = ("pr_person",
+                  "pr_identity",
+                  "pr_education",
                   "pr_contact",
                   "pr_address",
                   "pr_contact_emergency",
-                  "pr_physical_description")
+                  "pr_physical_description",
+                  "pr_group_membership",
+                  "hrm_training")
             if OUSR in fields:
                 data[OUSR] = fields[OUSR]
             elif not row[OUSR] or tablename in pi:

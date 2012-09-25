@@ -66,8 +66,6 @@ def index():
                                                   extension="aadata",
                                                   vars={"id":"warehouse_list_1"},
                                                   ),
-                                     dt_text_maximum_len = 16,
-                                     dt_text_condense_len = 12,
                                      )
             else:
                 warehouse = dt.json(totalrows,
@@ -168,9 +166,9 @@ def index():
                                                      "dtwarning": warningList,
                                                      "dtalert": alertList,
                                                      },
-                                        dt_text_maximum_len = 10,
-                                        dt_text_condense_len = 8,
-                                        dt_group_space = "true",
+                                        #dt_text_maximum_len = 10,
+                                        #dt_text_condense_len = 8,
+                                        #dt_group_space = "true",
                                         dt_shrink_groups = "accordion",
                                         #dt_shrink_groups = "individual",
                                         )
@@ -234,8 +232,6 @@ def index():
                                                        extension="aadata",
                                                        vars={"id": "supply_list_1"},
                                                        ),
-                                       dt_text_maximum_len = 16,
-                                       dt_text_condense_len = 12,
                                        )
             else:
                 supply_items = dt.json(totalrows,
