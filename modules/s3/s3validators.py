@@ -380,6 +380,37 @@ class IS_ONE_OF_EMPTY(Validator):
                  sort=True,
                  _and=None,
                 ):
+        """
+            Validator for foreign keys.
+
+            @param dbset: a Set of records like db(query), or db itself
+            @param field: the field in the referenced table
+            @param label: lookup method for the label corresponding a value,
+                          alternatively a string template to be filled with
+                          values from the record
+            @param filterby: a field in the referenced table to filter by
+            @param filter_opts: values for the filterby field which indicate
+                                records to include
+            @param not_filterby: a field in the referenced table to filter by
+            @param not_filter_opts: values for not_filterby field which indicate
+                                    records to exclude
+            @param updateable: only include records in the referenced table which
+                               can be updated by the user (if False, all readable
+                               records will be included)
+            @param instance_types: if the referenced table is a super-entity, then
+                                   only include these instance types (this parameter
+                                   is required for super entity lookups!)
+            @param error_message: the error message to return for failed validation
+            @param orderby: orderby for the options
+            @param groupby: groupby for the options
+            @param left: additional left joins required for the options lookup
+                         (super-entity instance left joins will be included
+                         automatically)
+            @param multiple: allow multiple values (for list:reference types)
+            @param zero: add this as label for the None-option (allow selection of "None")
+            @param sort: sort options alphabetically by their label
+            @param _and: internal use
+        """
 
         if hasattr(dbset, "define_table"):
             self.dbset = dbset()
@@ -706,9 +737,42 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
 
     """
         Extends IS_ONE_OF_EMPTY by restoring the 'options' method.
+
+        @param dbset: a Set of records like db(query), or db itself
+        @param field: the field in the referenced table
+        @param label: lookup method for the label corresponding a value,
+                        alternatively a string template to be filled with
+                        values from the record
+        @param filterby: a field in the referenced table to filter by
+        @param filter_opts: values for the filterby field which indicate
+                            records to include
+        @param not_filterby: a field in the referenced table to filter by
+        @param not_filter_opts: values for not_filterby field which indicate
+                                records to exclude
+        @param updateable: only include records in the referenced table which
+                            can be updated by the user (if False, all readable
+                            records will be included)
+        @param instance_types: if the referenced table is a super-entity, then
+                                only include these instance types (this parameter
+                                is required for super entity lookups!)
+        @param error_message: the error message to return for failed validation
+        @param orderby: orderby for the options
+        @param groupby: groupby for the options
+        @param left: additional left joins required for the options lookup
+                        (super-entity instance left joins will be included
+                        automatically)
+        @param multiple: allow multiple values (for list:reference types)
+        @param zero: add this as label for the None-option (allow selection of "None")
+        @param sort: sort options alphabetically by their label
+        @param _and: internal use
     """
 
     def options(self):
+        """
+            Return the options for this validator as list of
+            tuples (value, label), used e.g. to build SELECTs
+            from this validator
+        """
 
         self.build_set()
         items = [(k, self.labels[i]) for (i, k) in enumerate(self.theset)]
