@@ -40,6 +40,7 @@ __all__ = ["S3OrganisationModel",
            "S3OfficeTypeTagModel",
            "org_organisation_logo",
            "org_root_organisation",
+           "org_organisation_requires",
            "org_organisation_represent",
            "org_site_represent",
            "org_rheader",
@@ -423,13 +424,11 @@ class S3OrganisationModel(S3Model):
                                                       title=T("Organization"),
                                                       tooltip=help)
 
+        auth = current.auth
         organisation_id = S3ReusableField("organisation_id", table,
                                           sortby="name",
-                                          requires=IS_NULL_OR(
-                                                        IS_ONE_OF(db, "org_organisation.id",
-                                                                  org_organisation_represent,
-                                                                  orderby="org_organisation.name",
-                                                                  sort=True)),
+                                          default = auth.user.organisation_id if auth.is_logged_in() else None,
+                                          requires=org_organisation_requires(),
                                           represent=org_organisation_represent,
                                           label=T("Organization"),
                                           comment=organisation_comment,
@@ -1061,7 +1060,6 @@ class S3OrganisationModel(S3Model):
         if record:
             current.s3db.pr_update_affiliations(table, record)
         return
-
 # =============================================================================
 class S3OrganisationVirtualFields:
     """ Virtual fields for the org_organisation table """
@@ -1165,6 +1163,7 @@ class S3SiteModel(S3Model):
     """
 
     names = ["org_site",
+             "org_site_requires",
              "org_site_id",
              ]
 
@@ -1214,7 +1213,7 @@ class S3SiteModel(S3Model):
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
-                                  label=T("Facility"),
+                                  label=T("Office/Warehouse/Facility"),
                                   default=auth.user.site_id if auth.is_logged_in() else None,
                                   represent=lambda id: \
                                     org_site_represent(id, show_link=True),
@@ -1223,7 +1222,7 @@ class S3SiteModel(S3Model):
                                   # Comment these to use a Dropdown & not an Autocomplete
                                   widget=S3SiteAutocompleteWidget(),
                                   comment=DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Facility"),
+                                                _title="%s|%s" % (T("Office/Warehouse/Facility"),
                                                                   T("Enter some characters to bring up a list of possible matches")))
                                   )
 
@@ -1797,8 +1796,11 @@ class S3OfficeModel(S3Model):
                                    #writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    ),
-                             self.org_organisation_id(widget=S3OrganisationAutocompleteWidget(
-                                default_from_profile=True)),
+                             self.org_organisation_id(
+                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
+                                 widget = None,
+                                 requires = self.org_organisation_requires(updateable_only = True),
+                                 ),
                              office_type_id(
                                             #readable = False,
                                             #writable = False,
@@ -2195,7 +2197,20 @@ def org_root_organisation(organisation_id=None, pe_id=None):
             return (row.id, row.pe_id)
 
     return None, None
-
+# =============================================================================
+def org_organisation_requires(updateable_only = False):
+    db = current.db
+    s3db = current.s3db
+    if updateable_only:
+        set = db(current.auth.s3_accessible_query("update", s3db.org_organisation))
+    else:
+        set = db
+    return IS_NULL_OR( IS_ONE_OF( set,
+                                  "org_organisation.id",
+                                  org_organisation_represent,
+                                  orderby="org_organisation.name",
+                                  sort=True)
+                      )
 # =============================================================================
 def org_organisation_represent(id, row=None, show_link=False,
                                acronym=True, parent=True):

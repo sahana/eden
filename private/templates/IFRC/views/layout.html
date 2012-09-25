@@ -81,7 +81,9 @@
      {{if response.menu_left:}}{{=response.menu_left}}{{pass}}
     </div>
     <div id='right-col'>
-   {{else:}}
+   {{elif response.homepage:}}
+    <div id='home-col'>
+   {{else:}} 
     <div id='single-col'>
    {{pass}}
      {{include "breadcrumbs.html"}}

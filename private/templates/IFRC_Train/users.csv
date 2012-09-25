@@ -1,5 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Test,User,test@example.com,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies
+Test,User,test@ifrc.org,eden,"inv_editor/0,project_editor/0,staff_editor/0,vol_editor/0,survey_editor/0,member_editor/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies
 Adriana,Macedo,adriana.macedo@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
 Duarte,Botelheiro,duarte.botelheiro@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society
 Beatriz,de Carvalho,beatriz.decarvalho@redcross.tl,eden,"inv_editor,project_editor,staff_editor,vol_editor,survey_editor,member_editor,vulnerability_editor",Timor-Leste Red Cross Society

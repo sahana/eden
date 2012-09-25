@@ -18,15 +18,21 @@
 #wrapper{
     overflow:hidden;
 }
+#home-col,
 #single-col,
 #right-col,
 #left-col{
     background: #fff;
 }
+#home-col,
 #single-col{
     position: relative;
     clear: both;
 }
+#single-col{
+    padding: 15px 15px 0 15px;
+}
+
 #right-col{
     /*width: 788px;
     padding: 15px 50px 0 15px;*/
@@ -60,13 +66,13 @@
     width: 60px;
 }
 #header #logo {
-    width: 600px;
+    width: 585px;
     height: 90px;
     border: 1px solid #9c9c9c;
     border-width: 0 1px 0 1px;
 }
 #header #personal-menu {
-    width: 359px;
+    width: 374px;
 }
 #header #logo h1 {
     float: left;

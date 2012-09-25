@@ -463,6 +463,115 @@ def person():
                                 )
     return output
 
+def profile():
+    """
+        Profile Controller
+        - includes components relevant to HRM
+    """
+
+    configure = s3db.configure
+    set_method = s3db.set_method
+
+    request.args = [str(s3_logged_in_person())]
+
+    # Custom Method for Contacts
+    set_method("pr", resourcename,
+               method="contacts",
+               action=s3db.pr_contacts)
+
+    if settings.has_module("asset"):
+        # Assets as component of people
+        s3db.add_component("asset_asset",
+                            pr_person="assigned_to_id")
+
+    group = request.get_vars.get("group", "staff")
+
+    # Configure human resource table
+    tablename = "hrm_human_resource"
+    table = s3db[tablename]
+    table.type.default = 1
+
+    # Configure person table
+    tablename = "pr_person"
+    table = s3db[tablename]
+    if (group == "staff" and settings.get_hrm_staff_experience() == "programme") or \
+       (group == "volunteer" and settings.get_hrm_vol_experience() == "programme"):
+        table.virtualfields.append(s3db.hrm_programme_person_virtual_fields())
+    configure(tablename,
+              deletable=False)
+
+    # Configure for personal mode
+    s3.crud_strings[tablename].update(
+        title_display = T("Personal Profile"),
+        title_update = T("Personal Profile"))
+
+    # CRUD pre-process
+    def prep(r):
+        if r.interactive and r.method != "import":
+            if r.component:
+                if r.component_name == "physical_description":
+                    # Hide all but those details that we want
+                    # Lock all the fields
+                    table = r.component.table
+                    for field in table.fields:
+                        table[field].writable = False
+                        table[field].readable = False
+                    # Now enable those that we want
+                    table.ethnicity.writable = True
+                    table.ethnicity.readable = True
+                    table.blood_type.writable = True
+                    table.blood_type.readable = True
+                    table.medical_conditions.writable = True
+                    table.medical_conditions.readable = True
+                    table.other_details.writable = True
+                    table.other_details.readable = True
+            else:
+                table = r.table
+                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
+                table.occupation.readable = False
+                table.occupation.writable = False
+                table.pe_label.readable = False
+                table.pe_label.writable = False
+                table.missing.readable = False
+                table.missing.writable = False
+                table.age_group.readable = False
+                table.age_group.writable = False
+                # Assume volunteers only between 12-81
+                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                return True
+        else:
+            # Disable non-interactive & import
+            return False
+    
+    s3.prep = prep
+
+    # CRUD post-process
+    def postp(r, output):
+        if r.interactive and r.component:
+            if r.component_name == "human_resource":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+            if r.component_name == "experience":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+            elif r.component_name == "asset":
+                # Provide a link to assign a new Asset
+                # @ToDo: Proper Widget to do this inline
+                output["add_btn"] = A(T("Assign Asset"),
+                                      _href=URL(c="asset", f="asset"),
+                                      _id="add-btn",
+                                      _class="action-btn")
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("pr", "person",
+                                native=False,
+                                rheader=s3db.hrm_rheader,
+                                )
+    return output
+
 # -----------------------------------------------------------------------------
 def person_search():
     """

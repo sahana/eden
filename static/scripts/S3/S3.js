@@ -699,8 +699,12 @@ function S3FilterFieldChange (setting) {
 	        }
 	    });
     });
-    // Initially hide or filter field
-    selFilterField.change();
+
+    // If the field value is empty
+    if (selField.val() == "") {
+        // Initially hide or filter field
+        selFilterField.change();
+    }
 };
 
 // ============================================================================

@@ -215,6 +215,8 @@ class S3RequestModel(S3Model):
                                                    readable = True,
                                                    writable = True,
                                                    empty = False,
+                                                   filterby = "site_id",
+                                                   filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                    # Comment these to use a Dropdown & not an Autocomplete
                                                    #widget = S3SiteAutocompleteWidget(),
                                                    #comment = DIV(_class="tooltip",
