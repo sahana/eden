@@ -3806,7 +3806,7 @@ class GIS(object):
                                           L0=L0_name,
                                           L1=name)
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) and \
+            query = (table.parent == id) & \
                     (table.inherited == True)
             fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
@@ -3908,7 +3908,7 @@ class GIS(object):
                                           L1=L1_name,
                                           L2=name)
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) and \
+            query = (table.parent == id) & \
                     (table.inherited == True)
             fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
@@ -4048,7 +4048,7 @@ class GIS(object):
                                           L2=L2_name,
                                           L3=name)
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) and \
+            query = (table.parent == id) & \
                     (table.inherited == True)
             fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
@@ -4222,7 +4222,7 @@ class GIS(object):
                                           L3=L3_name,
                                           L4=name)
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) and \
+            query = (table.parent == id) & \
                     (table.inherited == True)
             fields = [table.id, table.name, table.level, table.path, table.parent,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
