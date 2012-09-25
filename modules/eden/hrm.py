@@ -122,7 +122,7 @@ class S3HRModel(S3Model):
                                   self.super_link("track_id", "sit_trackable"),
                                   self.org_organisation_id(
                                     label = organisation_label,
-                                    requires = self.org_organisation_requires(updateable_only=True),
+                                    requires = self.org_organisation_requires(updateable=True),
                                     widget = None,
                                     #widget=S3OrganisationAutocompleteWidget(
                                     #    default_from_profile=True),
@@ -130,7 +130,7 @@ class S3HRModel(S3Model):
                                     ),
                                   self.super_link("site_id", "org_site",
                                                   label=T("Office/Warehouse/Facility"),
-                                                  # Automatic in IS_ONE_OF
+                                                  # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                                   #filterby = "site_id",
                                                   #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                   not_filterby = "obsolete",
@@ -1600,7 +1600,7 @@ class S3HRSkillModel(S3Model):
                              course_id(empty=False),
                              self.super_link("site_id", "org_site",
                                              label=T("Office/Warehouse/Facility"),
-                                             # Automatic in IS_ONE_OF
+                                             # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                              #filterby = "site_id",
                                              #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                              not_filterby = "obsolete",

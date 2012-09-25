@@ -296,10 +296,11 @@ class S3ProjectModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              # multi_orgs deployments use the separate project_organisation table
                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
-                             organisation_id( label = org_label,
-                                              requires = self.org_organisation_requires(updateable_only = True),
-                                              widget = None,
-                                              ),
+                             organisation_id(
+                                label = org_label,
+                                requires = self.org_organisation_requires(updateable=True),
+                                widget = None,
+                                ),
                              Field("name", unique = True,
                                    label = T("Name"),
                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
@@ -1715,7 +1716,7 @@ class S3Project3WModel(S3Model):
         table = define_table(tablename,
                              project_id(),
                              organisation_id(
-                                requires = self.org_organisation_requires(updateable_only=True),
+                                requires = self.org_organisation_requires(updateable=True),
                                 widget = None,
                                 comment=S3AddResourceLink(c="org",
                                                           f="organisation",

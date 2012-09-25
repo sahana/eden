@@ -215,7 +215,7 @@ class S3RequestModel(S3Model):
                                                   readable = True,
                                                   writable = True,
                                                   empty = False,
-                                                  # Automatic in IS_ONE_OF
+                                                  # @ToDo: Add 'updateable=True' to IS_ONE_OF
                                                   #filterby = "site_id",
                                                   #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                   # Comment these to use a Dropdown & not an Autocomplete
