@@ -652,7 +652,7 @@ class IS_ONE_OF_EMPTY(Validator):
             if query is None:
                 query = DEFAULT
         else:
-            query = auth.s3_accessible_query(method, table, c=c, f=f)
+            query = auth.s3_accessible_query(method, table)
 
         return query, left
 
