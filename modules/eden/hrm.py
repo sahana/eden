@@ -130,8 +130,9 @@ class S3HRModel(S3Model):
                                     ),
                                   self.super_link("site_id", "org_site",
                                                   label=T("Office/Warehouse/Facility"),
-                                                  filterby = "site_id",
-                                                  filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                  # Automatic in IS_ONE_OF
+                                                  #filterby = "site_id",
+                                                  #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = [True],
                                                   default = auth.user.site_id if auth.is_logged_in() else None,
@@ -1599,8 +1600,9 @@ class S3HRSkillModel(S3Model):
                              course_id(empty=False),
                              self.super_link("site_id", "org_site",
                                              label=T("Office/Warehouse/Facility"),
-                                             filterby = "site_id",
-                                             filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                             # Automatic in IS_ONE_OF
+                                             #filterby = "site_id",
+                                             #filter_opts = auth.permitted_facilities(redirect_on_error=False),
                                              not_filterby = "obsolete",
                                              not_filter_opts = [True],
                                              default = auth.user.site_id if auth.is_logged_in() else None,

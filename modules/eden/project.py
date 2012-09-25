@@ -747,7 +747,7 @@ class S3ProjectModel(S3Model):
             Create/update project_organisation record from the organisation_id
         """
 
-        db = current.sdb
+        db = current.db
         ptable = db.project_project
         otable = db.project_organisation
         vars = form.vars

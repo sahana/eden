@@ -15,36 +15,32 @@
     height: 132px;
     background: #f4edd4;
 }
-#wrapper{
+#wrapper {
     overflow:hidden;
 }
-#home-col,
 #single-col,
 #right-col,
-#left-col{
+#left-col {
     background: #fff;
 }
-#home-col,
-#single-col{
+#single-col {
     position: relative;
     clear: both;
 }
-#single-col{
-    padding: 15px 15px 0 15px;
-}
 
-#right-col{
+#right-col {
     /*width: 788px;
     padding: 15px 50px 0 15px;*/
     width: 823px;
     padding: 15px 15px 0 15px;
     border-left: 1px #9c9c9c solid;
 }
-#left-col{
+#left-col {
     width: 170px;
     padding-top: 15px;
 }
-#right-col,#left-col{
+#right-col,
+#left-col {
     float: left;
     margin-bottom: -99999px;
     padding-bottom: 99999px;
@@ -62,17 +58,19 @@
 #header > div {
     float :left;
 }
-#header #society-icon{
+#header #society-icon {
     width: 60px;
 }
 #header #logo {
-    width: 585px;
+    /*width: 600px;*/
+    width: 580px;
     height: 90px;
     border: 1px solid #9c9c9c;
     border-width: 0 1px 0 1px;
 }
 #header #personal-menu {
-    width: 374px;
+    /*width: 359px;*/
+    width: 379px;
 }
 #header #logo h1 {
     float: left;

@@ -84,15 +84,15 @@ def incident():
                     s3db.configure("event_human_resource",
                                    list_fields=["human_resource_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"]=T("Remove")
+                    s3mgr.LABEL["DELETE"] = T("Remove")
                 elif r.component.name == "asset":
                     s3db.configure("event_asset",
                                    list_fields=["asset_id"])
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"]=T("Remove")
+                    s3mgr.LABEL["DELETE"] = T("Remove")
                 else:
                     s3.crud.submit_button = T("Assign")
-                    s3mgr.LABEL["DELETE"]=T("Remove")
+                    s3mgr.LABEL["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate

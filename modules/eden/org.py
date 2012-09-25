@@ -2719,8 +2719,8 @@ def org_office_controller():
                                    )
 
                 elif cname == "human_resource":
-                    # Filter out people which are already staff for this office
-                    s3_filter_staff(r)
+                    # Filter to just Staff
+                    s3.filter = (s3db.hrm_human_resource.type == 1)
                     # Make it clear that this is for adding new staff, not assigning existing
                     s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
                     # Cascade the organisation_id from the office to the staff
@@ -2728,6 +2728,8 @@ def org_office_controller():
                     htable.organisation_id.default = r.record.organisation_id
                     htable.organisation_id.writable = False
                     htable.organisation_id.comment = None
+                    # Filter out people which are already staff for this office
+                    s3_filter_staff(r)
 
                 elif cname == "req" and r.method not in ("update", "read"):
                     # Hide fields which don't make sense in a Create form
@@ -2808,6 +2810,14 @@ def org_office_controller():
                         except:
                             # A non-standard formstyle with just a single row
                             pass
+            elif r.component.name == "human_resource":
+                # Modify action button to open staff instead of human_resource
+                read_url = URL(c="hrm", f="staff", args=["[id]"])
+                delete_url = URL(c="hrm", f="staff", args=["[id]", "delete"])
+                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+                S3CRUD.action_buttons(r, read_url=read_url,
+                                         delete_url=delete_url,
+                                         update_url=update_url)
         return output
     s3.postp = postp
 

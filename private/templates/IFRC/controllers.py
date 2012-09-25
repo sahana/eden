@@ -32,8 +32,7 @@ $('.marker').mouseover(function(){
 $('.marker').mouseout(function(){
  $(this).children('.marker-window').hide();
 })'''
-        s3 = response.s3
-        s3.jquery_ready.append(script)
+        response.s3.jquery_ready.append(script)
 
         markers = [
             Storage(name = "Afghan Red Crescent Society",
@@ -209,7 +208,6 @@ $('.marker').mouseout(function(){
                    _class="map-tip"))
 
         current.menu.breadcrumbs = None
-        s3.homepage = True
         
         return dict(map=map)
 

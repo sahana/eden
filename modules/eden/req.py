@@ -210,19 +210,21 @@ class S3RequestModel(S3Model):
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
                                   self.super_link("site_id", "org_site",
-                                                   label = T("Requested For Facility"),
-                                                   default = auth.user.site_id if auth.is_logged_in() else None,
-                                                   readable = True,
-                                                   writable = True,
-                                                   empty = False,
-                                                   filterby = "site_id",
-                                                   filter_opts = auth.permitted_facilities(redirect_on_error=False),
-                                                   # Comment these to use a Dropdown & not an Autocomplete
-                                                   #widget = S3SiteAutocompleteWidget(),
-                                                   #comment = DIV(_class="tooltip",
-                                                   #              _title="%s|%s" % (T("Requested By Facility"),
-                                                   #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                   represent = self.org_site_represent),
+                                                  label = T("Requested For Facility"),
+                                                  default = auth.user.site_id if auth.is_logged_in() else None,
+                                                  readable = True,
+                                                  writable = True,
+                                                  empty = False,
+                                                  # Automatic in IS_ONE_OF
+                                                  #filterby = "site_id",
+                                                  #filter_opts = auth.permitted_facilities(redirect_on_error=False),
+                                                  # Comment these to use a Dropdown & not an Autocomplete
+                                                  #widget = S3SiteAutocompleteWidget(),
+                                                  #comment = DIV(_class="tooltip",
+                                                  #              _title="%s|%s" % (T("Requested By Facility"),
+                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
+                                                  represent = self.org_site_represent
+                                                  ),
                                   #Field("location",
                                   #      label = T("Neighborhood")),
                                   Field("transport_req", "boolean",
