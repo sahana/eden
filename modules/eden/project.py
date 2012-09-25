@@ -279,6 +279,9 @@ class S3ProjectModel(S3Model):
         # Project
         #
 
+        LEAD_ROLE = settings.get_project_organisation_lead_role()
+        org_label = settings.get_project_organisation_roles()[LEAD_ROLE]
+
         # HFA
         project_hfa_opts = {
             1: T("HFA1: Ensure that disaster risk reduction is a national and a local priority with a strong institutional basis for implementation."),
@@ -293,10 +296,10 @@ class S3ProjectModel(S3Model):
                              super_link("doc_id", "doc_entity"),
                              # multi_orgs deployments use the separate project_organisation table
                              # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
-                             organisation_id(
-                                          readable=False if multi_orgs else True,
-                                          writable=False if multi_orgs else True,
-                                        ),
+                             organisation_id( label = org_label,
+                                              requires = self.org_organisation_requires(updateable_only = True),
+                                              widget = None,
+                                              ),
                              Field("name", unique = True,
                                    label = T("Name"),
                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
@@ -465,10 +468,7 @@ class S3ProjectModel(S3Model):
         project_search = S3Search(advanced = advanced)
 
         # Resource Configuration
-        if multi_orgs:
-            create_next = URL(c="project", f="project",
-                              args=["[id]", "organisation"])
-        elif theme_percentages:
+        if theme_percentages:
             create_next = URL(c="project", f="project",
                               args=["[id]", "theme_percentage"])
         elif mode_task:
@@ -497,11 +497,7 @@ class S3ProjectModel(S3Model):
             if use_codes:
                 append("code")
             append("name")
-            if multi_orgs:
-                LEAD_ROLE = settings.get_project_organisation_lead_role()
-                append((settings.get_project_organisation_roles()[LEAD_ROLE], "organisation_id"))
-            else:
-                append("organisation_id")
+            append("organisation_id")
             if use_sectors:
                 append("sector_id")
             if mode_3w:
@@ -526,6 +522,7 @@ class S3ProjectModel(S3Model):
                   super_entity="doc_entity",
                   deduplicate=self.project_project_deduplicate,
                   onvalidation=self.project_project_onvalidation,
+                  onaccept=self.project_project_onaccept,
                   create_next=create_next,
                   search_method=project_search,
                   list_fields=list_fields,
@@ -548,7 +545,8 @@ class S3ProjectModel(S3Model):
         project_id = S3ReusableField("project_id", table,
                                      sortby="name",
                                      requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "project_project.id",
+                                                    IS_ONE_OF(db(current.auth.s3_accessible_query("update", table)), 
+                                                              "project_project.id",
                                                               project_project_represent_no_link
                                                               )),
                                      represent = project_project_represent,
@@ -739,6 +737,36 @@ class S3ProjectModel(S3Model):
             # Populate code from name
             form.vars.code = form.vars.name
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_project_onaccept(form):
+        """ 
+            Form onaccept
+            Creates project_organisation record for the project.organisation_id
+        """
+
+        # if the project has an Host National Society organisation
+        # update organisation_id with its id
+
+        db = current.db
+        s3db = current.s3db
+        ptable = db.project_project
+        otable = db.project_organisation
+        vars = form.vars
+        
+        lead_role = current.deployment_settings.get_project_organisation_lead_role()
+
+        query = (otable.project_id == vars.id) & \
+                (otable.role == lead_role)
+                
+        # Update the lead organisation
+        count = db(query).update( organisation_id = vars.organisation_id )
+        if not count:
+            #if there is no record to update - create a record
+            otable.insert( project_id = vars.id,
+                           organisation_id = vars.organisation_id,
+                           role = lead_role )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1342,9 +1370,10 @@ class S3Project3WModel(S3Model):
         # Reusable Field
         project_location_id = S3ReusableField("project_location_id", table,
                                       requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "project_location.id",
-                                                              project_location_represent,
-                                                              sort=True)),
+                                                    IS_ONE_OF( db(current.auth.s3_accessible_query("update", table)), 
+                                                               "project_location.id",
+                                                               project_location_represent,
+                                                               sort=True)),
                                       represent = project_location_represent,
                                       label = LOCATION,
                                       comment = S3AddResourceLink(ADD_LOCATION,
@@ -1685,11 +1714,13 @@ class S3Project3WModel(S3Model):
         tablename = "project_organisation"
         table = define_table(tablename,
                              project_id(),
-                             organisation_id(comment=S3AddResourceLink(c="org",
-                                                                       f="organisation",
-                                                                       label=T("Add Organization"),
-                                                                       title=T("Organization"),
-                                                                       tooltip=organisation_help)
+                             organisation_id( requires = self.org_organisation_requires(updateable_only = True),
+                                              widget = None,
+                                              comment=S3AddResourceLink(c="org",
+                                                                        f="organisation",
+                                                                        label=T("Add Organization"),
+                                                                        title=T("Organization"),
+                                                                        tooltip=organisation_help)
                                              ),
                              Field("role", "integer",
                                    requires = IS_NULL_OR(IS_IN_SET(project_organisation_roles)),
@@ -4034,7 +4065,7 @@ class S3ProjectOrganisationDonorVirtualFields:
 
 # =============================================================================
 class S3ProjectOrganisationFundingVirtualFields:
-    """ Virtual fields for the project_project table when multi_orgs=True """
+    """ Virtual fields for the project_project table """
 
     # -------------------------------------------------------------------------
     def total_organisation_amount(self):

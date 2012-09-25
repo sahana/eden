@@ -87,7 +87,7 @@ def test_roles():
                 row_num = row_num - 1
                 continue
             if uuid:
-                print "%s, %s, %s, %s" % (table,c,f, uuid)
+                #print "%s, %s, %s, %s" % (table,c,f, uuid)
                 #print uuid
                 record_id = db(db_table.uuid==uuid).select(db_table._id, limitby=(0,1)).first()[db_table._id]
             else:

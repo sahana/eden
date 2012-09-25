@@ -4,6 +4,7 @@
 
     <!-- **********************************************************************
          Human Resources - CSV Import Stylesheet
+         Must be imported through the pr_person resource
 
          Column headers defined in this stylesheet:
 

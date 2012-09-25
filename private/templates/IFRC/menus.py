@@ -228,10 +228,11 @@ class S3MainMenu(default.S3MainMenu):
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
                            check=s3_has_role(ADMIN)),
-                        MP("Logout", c="default", f="user",
-                           m="logout"),
+                        MP("Profile", c="default", f="person"),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
+                        MP("Logout", c="default", f="user",
+                           m="logout"),
                         menu_lang,
             )
         return menu_personal
@@ -328,14 +329,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("My Profile", c="hrm", f="person",
-                      check=personal_mode, vars=dict(mode="personal")),
+                    #M("My Profile", c="hrm", f="person",
+                    #  check=personal_mode, vars=dict(mode="personal")),
                     # This provides the link to switch to the manager mode:
                     M("Human Resources", c="hrm", f="index",
                       check=[personal_mode, is_org_admin]),
                     # This provides the link to switch to the personal mode:
-                    M("Personal Profile", c="hrm", f="person",
-                      check=manager_mode, vars=dict(mode="personal"))
+                    #M("Personal Profile", c="hrm", f="person",
+                    #  check=manager_mode, vars=dict(mode="personal"))
                 )
 
     # -------------------------------------------------------------------------
@@ -426,8 +427,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Volunteer Report", m="report"),
                         M("Training Report", f="training", m="report"),
                     ),
-                    M("My Profile", f="person",
-                      check=personal_mode, vars=dict(mode="personal")),
+                    #M("My Profile", f="person",
+                    #  check=personal_mode, vars=dict(mode="personal")),
                     M("My Tasks", f="task",
                       check=[personal_mode, show_tasks],
                       vars=dict(mode="personal",
@@ -436,8 +437,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Volunteer Management", f="index",
                       check=[personal_mode, is_org_admin]),
                     # This provides the link to switch to the personal mode:
-                    M("Personal Profile", f="person",
-                      check=manager_mode, vars=dict(mode="personal"))
+                    #M("Personal Profile", f="person",
+                    #  check=manager_mode, vars=dict(mode="personal"))
                 )
 
     # -------------------------------------------------------------------------

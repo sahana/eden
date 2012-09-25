@@ -38,17 +38,18 @@ def subsector():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def site():
-    """ RESTful CRUD controller """
-
-    # Pre-processor
-    def prep(r):
-        # Location Filter
-        s3db.gis_location_filter(r)
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
+#  What is this controller needed for? It creates issues with  Permissions 
+#def site():
+#    """ RESTful CRUD controller """
+#
+#    # Pre-processor
+#    def prep(r):
+#        # Location Filter
+#        s3db.gis_location_filter(r)
+#        return True
+#    s3.prep = prep
+#
+#    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def site_org_json():
