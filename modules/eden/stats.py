@@ -225,9 +225,10 @@ class S3StatsModel(S3Model):
            Where appropriate add test cases to modules/unit_tests/eden/stats.py
         """
 
-        current.s3task.async("stats_update_time_aggregate",
-                             args = [row.data_id],
-                             )
+        if not current.auth.override:
+            current.s3task.async("stats_update_time_aggregate",
+                                 args = [row.data_id],
+                                 )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -241,9 +242,7 @@ class S3StatsModel(S3Model):
                    - should be reworked to delete old data after new data has been added?
         """
 
-        s3db = current.s3db
-
-        resource = s3db.resource("stats_aggregate")
+        resource = current.s3db.resource("stats_aggregate")
         resource.delete()
 
         current.s3task.async("stats_update_time_aggregate")
