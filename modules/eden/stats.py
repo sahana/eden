@@ -540,9 +540,9 @@ class S3StatsModel(S3Model):
         values = []
         append = values.append
         for row in rows:
-            location_id = row.location_id
-            if location_id != last_location:
-                last_location = location_id
+            new_location_id = row.location_id
+            if new_location_id != last_location:
+                last_location = new_location_id
                 append(row.value)
 
         # Aggregate the values

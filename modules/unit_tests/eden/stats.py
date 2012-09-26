@@ -20,7 +20,7 @@ class StatsTests(unittest.TestCase):
     def setUp(self):
         """ Set up location records """
         auth = current.auth
-        auth.override = True
+        auth.s3_impersonate("admin@example.com")
 
         self.location_code = Storage()
         self.location_ids = Storage()
@@ -81,6 +81,18 @@ class StatsTests(unittest.TestCase):
                                        limitby=(0, 1)).first()
         self.resilience_id = row.parameter_id
 
+    def approve_record(self, record):
+        """
+            Helper function to approve the vulnerability indicator and the
+            Stats_data reciord that has been inserted
+
+            @param record: the vulnerability indicator record just created
+        """
+        resource = s3db.resource("vulnerability_data", id=record.id, unapproved=True)
+        resource.approve()
+        resource = s3db.resource("stats_data", id=record.data_id, unapproved=True)
+        resource.approve()
+
     def testStats_aggregate(self):
         """
             Test that the stats_aggregate records are being generated correctly.
@@ -115,6 +127,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
@@ -224,6 +237,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
@@ -339,6 +353,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2006,01,1):1,
@@ -509,6 +524,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2010,01,1):1,
@@ -715,6 +731,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2008,01,1):1,
@@ -981,6 +998,7 @@ class StatsTests(unittest.TestCase):
                            date = actual_date,
                            )
         s3db.update_super(vtable, dict(id=id))
+        self.approve_record(vtable[id])
 
         expected = Storage()
         expected["rule1"] = Storage(type={date(2008,01,1):1,
@@ -1383,7 +1401,7 @@ class StatsTests(unittest.TestCase):
     def tearDown(self):
 
         current.db.rollback()
-        current.auth.override = False
+        auth.s3_impersonate(None)
 
 # =============================================================================
 def run_suite(*test_classes):
