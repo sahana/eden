@@ -60,7 +60,6 @@ from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
 from gluon.tools import callback
 
-from s3utils import SQLTABLES3
 from s3crud import S3CRUD
 from s3xml import S3XML
 from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key
@@ -348,7 +347,7 @@ class S3Importer(S3CRUD):
         else:
             title=self.uploadTitle
             form = self._upload_form(r, **attr)
-    
+
             r = self.request
             r.read_body()
             sfilename = form.vars.file
@@ -361,7 +360,7 @@ class S3Importer(S3CRUD):
                 response.flash = ""
                 output = self._create_upload_dataTable()
                 output.update(form=form, title=title)
-    
+
             elif not sfilename or \
                  ofilename not in r.files or r.files[ofilename] is None:
                 response.flash = ""
