@@ -367,6 +367,16 @@ if len(pop_list) > 0:
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
 
+    # Update stats_aggregate
+    stats_rebuild_aggregates = s3db.get("stats_rebuild_aggregates")
+    if stats_rebuild_aggregates is not None:
+        start = datetime.datetime.now()
+        stats_rebuild_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
+    else:
+        print "Statistics data aggregation function not available - skipped"
+
     # Restore view
     response.view = "default/index.html"
 
