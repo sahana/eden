@@ -1686,17 +1686,18 @@ class S3PersonImageModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def pr_image_represent(image):
+    def pr_image_represent(image, size=None):
         """ Representation """
 
         if not image:
             return current.messages.NONE
         url_full = URL(c="default", f="download", args=image)
-        size = (None, 60)
+        if size is None:
+            size = (None, 60)
         image = pr_image_represent(image, size=size)
         url_small = URL(c="default", f="download", args=image)
 
-        return DIV(A(IMG(_src=url_small, _height=60), _href=url_full))
+        return DIV(A(IMG(_src=url_small, _height=size[1]), _href=url_full))
 
     # -------------------------------------------------------------------------
     @staticmethod

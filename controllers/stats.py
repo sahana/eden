@@ -59,4 +59,10 @@ def demographic_data():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def group_type():
+    """ REST Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

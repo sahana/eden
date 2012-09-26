@@ -778,13 +778,12 @@ class S3OptionsMenu(object):
                     M("Fullscreen Map", f="map_viewing_client"),
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
-                    M("Locations", f="location",
-                      restrict=[MAP_ADMIN])(
+                    M("Locations", f="location", m="search")(
                         M("Add Location", m="create"),
-                        M("Add Location Group", m="create", vars={"group": 1}),
-                        M("List All"),
-                        M("Search", m="search"),
-                        M("Import", m="import"),
+                        #M("Add Location Group", m="create", vars={"group": 1}),
+                        #M("List All"),
+                        #M("Search", m="search"),
+                        M("Import", m="import", restrict=[MAP_ADMIN]),
                         #M("Geocode", f="geocode_manual"),
                     ),
                     M("Population Report", f="location", m="report",
