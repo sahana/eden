@@ -242,7 +242,10 @@ class S3StatsModel(S3Model):
                    - should be reworked to delete old data after new data has been added?
         """
 
-        resource = current.s3db.resource("stats_aggregate")
+        if not current.auth.s3_has_role(current.session.s3.system_roles.ADMIN):
+            return
+        s3db = current.s3db
+        resource = s3db.resource("stats_aggregate")
         resource.delete()
 
         current.s3task.async("stats_update_time_aggregate")
