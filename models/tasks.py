@@ -169,7 +169,7 @@ if settings.has_module("msg"):
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
 
-    def stats_update_time_aggregate(data_id, user_id=None):
+    def stats_update_time_aggregate(data_id=None, user_id=None):
         """
             Update the stats_aggregate table for the given stats_data record
 

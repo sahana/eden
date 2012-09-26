@@ -392,12 +392,11 @@ def s3_meta_fields():
     utable = current.auth.settings.table_user
 
     # Approver of a record
-    s3_meta_approved_by = S3ReusableField("approved_by", utable,
+    s3_meta_approved_by = S3ReusableField("approved_by", "integer",
                                           readable=False,
                                           writable=False,
                                           requires=None,
-                                          represent=s3_auth_user_represent,
-                                          ondelete="RESTRICT")
+                                          represent=s3_auth_user_represent)
 
     fields = (s3_meta_uuid(),
               s3_meta_mci(),
