@@ -57,6 +57,7 @@ class StatsTests(unittest.TestCase):
                          ("gis4_11", "Test Commune 11", "L4", "gis3_5"),
                          ("gis4_12", "Test Commune 12", "L4", "gis3_5"),
                          ]
+        update_location_tree = current.gis.update_location_tree
         for location in gis_test_data:
             gis_code = location[0]
             gis_data = Storage(name=location[1],
@@ -64,6 +65,8 @@ class StatsTests(unittest.TestCase):
                                parent=self.location_ids[location[3]],
                                )
             gis_id = gtable.insert(**gis_data)
+            update_location_tree(dict(id=gis_id,
+                                                  level=location[2]))
             self.location_code[gis_id] = gis_code
             self.location_ids[gis_code] = gis_id
 
@@ -72,7 +75,8 @@ class StatsTests(unittest.TestCase):
                               "min",
                               "mean",
                               "median",
-                              "count",
+                              "reported_count",
+                              "ward_count"
                               ]
         param_table = s3db.vulnerability_aggregated_indicator
         query = (param_table.uuid == "Resilience") & \
@@ -137,7 +141,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           }
                                     )
@@ -147,7 +152,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -155,7 +161,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -163,7 +170,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -171,7 +179,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -182,7 +191,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -190,7 +200,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -198,7 +209,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -206,7 +218,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -214,7 +227,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -247,13 +261,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2007,01,1):{"max" : 4,
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           }
                                     )
@@ -263,7 +279,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -271,7 +288,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -279,7 +297,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -287,7 +306,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 4,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -298,7 +318,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -306,7 +327,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -314,7 +336,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -322,7 +345,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -330,7 +354,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -365,13 +390,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           }
                                     )
@@ -381,13 +408,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -395,13 +424,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -409,13 +440,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -423,13 +456,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -440,13 +475,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -454,13 +491,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -468,13 +507,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -482,13 +523,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -496,13 +539,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -534,7 +579,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           }
                                     )
@@ -544,19 +590,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -564,19 +613,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -584,19 +636,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -604,19 +659,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 5,
                                                            "mean": 5,
                                                            "median":5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -627,7 +685,8 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -635,19 +694,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -655,19 +717,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -675,19 +740,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -695,19 +763,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 4,
                                                            "mean": 4.5,
                                                            "median":4.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -743,14 +814,17 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2010,01,1):{"max" : 2,
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
-                                                           },                                          }
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
+                                                           },
+                                          }
                                     )
         expected["rule2"] = Storage(
                                     data={self.location_ids["gis3_1"]:{
@@ -758,25 +832,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -784,25 +862,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -810,25 +892,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -836,25 +922,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -865,13 +955,15 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2010,01,1):{"max" : 2,
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -879,25 +971,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -905,25 +1001,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -931,25 +1031,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -957,25 +1061,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 3,
                                                            "mean": 4,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -1010,19 +1118,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2009,01,1):{"max" : 1,
                                                            "min" : 1,
                                                            "mean": 1,
                                                            "median":1,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2010,01,1):{"max" : 2,
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           }
                                     )
@@ -1032,25 +1143,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -1058,25 +1173,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -1084,25 +1203,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -1110,25 +1233,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 3,
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -1139,19 +1266,22 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3,
                                                            "median":3,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2009,01,1):{"max" : 1,
                                                            "min" : 1,
                                                            "mean": 1,
                                                            "median":1,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                           date(2010,01,1):{"max" : 2,
                                                            "min" : 2,
                                                            "mean": 2,
                                                            "median":2,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 1
                                                            },
                                                                        },
                                           self.location_ids["gis3_1"]:{
@@ -1159,25 +1289,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 3
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 10.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 3
                                                            },
                                                                        },
                                           self.location_ids["gis2_1"]:{
@@ -1185,25 +1319,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 8
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 10.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 8
                                                            },
                                                                        },
                                           self.location_ids["gis1"]:{
@@ -1211,25 +1349,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 10.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           self.location_ids["gis0"]:{
@@ -1237,25 +1379,29 @@ class StatsTests(unittest.TestCase):
                                                            "min" : 3,
                                                            "mean": 3.5,
                                                            "median":3.5,
-                                                           "count": 1,
+                                                           "reported_count": 1,
+                                                           "ward_count": 12
                                                            },
                                           date(2008,01,1):{"max" : 4,
                                                            "min" : 3,
                                                            "mean": 10.0/3,
                                                            "median":3,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2009,01,1):{"max" : 5,
                                                            "min" : 1,
                                                            "mean": 10.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                           date(2010,01,1):{"max" : 5,
                                                            "min" : 2,
                                                            "mean": 11.0/3,
                                                            "median":4,
-                                                           "count": 2,
+                                                           "reported_count": 2,
+                                                           "ward_count": 12
                                                            },
                                                                        },
                                           },
@@ -1342,6 +1488,7 @@ class StatsTests(unittest.TestCase):
             else:
                 aggr_data[row.date] = {row.location_id : row}
         # Rule 2 check the records exist
+        last_exp_data = {}
         for dt in rrule(YEARLY, dtstart=first_period, until=last_period):
             dt = dt.date()
             for location in location_list:
@@ -1354,9 +1501,9 @@ class StatsTests(unittest.TestCase):
                 self.assertTrue(record.agg_type == 2, msg)
                 if dt in expected.rule2.data[location]:
                     exp_data = expected.rule2.data[location][dt]
-                    last_exp_data = exp_data
+                    last_exp_data[location] = exp_data
                 else:
-                    exp_data = last_exp_data
+                    exp_data = last_exp_data[location]
                 # check each statistic
                 for statistic in self.statisticList:
                     exp_stat = exp_data[statistic]

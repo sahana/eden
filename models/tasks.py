@@ -185,7 +185,8 @@ if settings.has_module("stats"):
 
     tasks["stats_update_time_aggregate"] = stats_update_time_aggregate
 
-    def stats_update_aggregate_location(root_location_id,
+    def stats_update_aggregate_location(location_level,
+                                        root_location_id,
                                         parameter_id,
                                         start_date,
                                         end_date,
@@ -193,6 +194,7 @@ if settings.has_module("stats"):
         """
             Update the stats_aggregate table for the given location and parameter
 
+            @param location_level: the gis level at which the data needs to be accumulated
             @param root_location_id: the id of the location
             @param paramerter_id: the parameter for which the stats are being updated
             @param start_date: the start date of the period in question
@@ -203,7 +205,8 @@ if settings.has_module("stats"):
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task
-        result = s3db.stats_update_aggregate_location(root_location_id,
+        result = s3db.stats_update_aggregate_location(location_level,
+                                                      root_location_id,
                                                       parameter_id,
                                                       start_date,
                                                       end_date,
