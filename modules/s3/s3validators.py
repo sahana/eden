@@ -617,14 +617,14 @@ class IS_ONE_OF_EMPTY(Validator):
                    always limit the instance types to what is really needed
         """
 
-        DEFAULT = (table._id == 0)
+        DEFAULT = (table._id > 0)
 
         left = None
 
         if "instance_type" in table:
             # Super-entity
             if not instance_types:
-                return DEFAULT
+                return DEFAULT, left
             query = None
             auth = current.auth
             s3db = current.s3db
