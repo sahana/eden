@@ -175,7 +175,7 @@ def index():
     # Check logged in AND permissions
     roles = session.s3.roles
     if AUTHENTICATED in roles and \
-       auth.s3_has_permission("read", db.org_organisation):
+       auth.s3_has_permission("read", s3db.org_organisation):
         org_items = organisation()
         datatable_ajax_source = "/%s/default/organisation.aadata" % \
                                 appname
@@ -500,10 +500,10 @@ def user():
 def person():
     """
         Profile to show:
-         - User Details 
+         - User Details
          - Person Details
-         - HRM 
-        
+         - HRM
+
     """
 
     # Set to current user
@@ -516,12 +516,12 @@ def person():
         # Custom View
         response.view = "update.html"
         current.menu.breadcrumbs = None
-    
+
         # RHeader for consistency
         rheader = attr.get("rheader", None)
         if callable(rheader):
             rheader = rheader(r)
-            
+
         table = auth.settings.table_user
         tablename = table._tablename
 
@@ -548,7 +548,7 @@ def person():
     set_method("pr", "person",
                method="contacts",
                action=s3db.pr_contacts)
-    
+
 
     if settings.has_module("asset"):
         # Assets as component of people

@@ -92,6 +92,7 @@ class StatsTests(unittest.TestCase):
 
             @param record: the vulnerability indicator record just created
         """
+        s3db = current.s3db
         resource = s3db.resource("vulnerability_data", id=record.id, unapproved=True)
         resource.approve()
         resource = s3db.resource("stats_data", id=record.data_id, unapproved=True)
@@ -1543,12 +1544,12 @@ class StatsTests(unittest.TestCase):
                 for statistic in self.statisticList:
                     exp_stat = exp_data[statistic]
                     msg = "Expecting a %s of %s  for location %s in record %s" % (statistic, exp_stat, self.location_code[location], record)
-                    self.assertTrue(record[statistic] == exp_stat, msg)
+                    self.assertTrue(record[statistic] - exp_stat < 1e-7, msg)
 
     def tearDown(self):
 
         current.db.rollback()
-        auth.s3_impersonate(None)
+        current.auth.s3_impersonate(None)
 
 # =============================================================================
 def run_suite(*test_classes):
