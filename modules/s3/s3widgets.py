@@ -3323,7 +3323,7 @@ def s3_richtext_widget(field, value):
 # =============================================================================
 def s3_grouped_checkboxes_widget(field,
                                  value,
-                                 size=20,
+                                 size = 20,
                                  **attributes):
     """
         Displays checkboxes for each value in the table column "field".
@@ -3341,8 +3341,6 @@ def s3_grouped_checkboxes_widget(field,
 
         Used by S3SearchOptionsWidget
     """
-
-    import locale
 
     requires = field.requires
     if not isinstance(requires, (list, tuple)):
@@ -3369,17 +3367,19 @@ def s3_grouped_checkboxes_widget(field,
     if total > size:
         # Options are put into groups of "size"
 
-        #letters = [u"A", u"Z"] # ToDo: localisation?
+        import locale
+
         letters = []
         letters_options = {}
 
+        append = letters.append
         for val, label in options:
             letter = label
 
             if letter:
                 letter = s3_unicode(letter).upper()[0]
                 if letter not in letters_options:
-                    letters.append(letter)
+                    append(letter)
                     letters_options[letter] = [(val, label)]
                 else:
                     letters_options[letter].append((val, label))
@@ -3395,11 +3395,12 @@ def s3_grouped_checkboxes_widget(field,
         to_letter = letters[0]
         letters.sort(locale.strcoll)
 
+        lget = letters_options.get
         for letter in letters:
             if from_letter is None:
                 from_letter = letter
 
-            group_options += letters_options.get(letter, [])
+            group_options += lget(letter, [])
 
             count = len(group_options)
 
@@ -3421,11 +3422,13 @@ def s3_grouped_checkboxes_widget(field,
                                   _class="s3-grouped-checkboxes-widget-label"))
 
                 group_field = field
-                group_field.requires = IS_IN_SET(group_options,
-                                                 multiple=True)
+                # Can give Unicode issues:
+                #group_field.requires = IS_IN_SET(group_options,
+                #                                 multiple=True)
 
                 letter_widget = s3_checkboxes_widget(group_field,
                                                      value,
+                                                     options = group_options,
                                                      start_at_id=input_index,
                                                      **attributes)
 
@@ -3454,9 +3457,10 @@ def s3_grouped_checkboxes_widget(field,
 # =============================================================================
 def s3_checkboxes_widget(field,
                          value,
-                         cols=1,
-                         start_at_id=0,
-                         help_field=None,
+                         options = None,
+                         cols = 1,
+                         start_at_id = 0,
+                         help_field = None,
                          **attributes):
     """
         Display checkboxes for each value in the table column "field".
@@ -3472,20 +3476,21 @@ def s3_checkboxes_widget(field,
                           containing help text for each option
     """
 
-    values = not isinstance(value,(list,tuple)) and [value] or value
+    values = not isinstance(value, (list, tuple)) and [value] or value
     values = [str(v) for v in values]
 
     if "_class" not in attributes:
         attributes["_class"] = "s3-checkboxes-widget"
 
-    requires = field.requires
-    if not isinstance(requires, (list, tuple)):
-        requires = [requires]
+    if options is None:
+        requires = field.requires
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
 
-    if hasattr(requires[0], "options"):
-        options = requires[0].options()
-    else:
-        raise SyntaxError, "widget cannot determine options of %s" % field
+        if hasattr(requires[0], "options"):
+            options = requires[0].options()
+        else:
+            raise SyntaxError, "widget cannot determine options of %s" % field
 
     help_text = Storage()
 
@@ -3500,7 +3505,6 @@ def s3_checkboxes_widget(field,
             # not a reference - no expand
             # option text = field representation
             ktablename = None
-
 
         if ktablename is not None:
             if "." in ktablename:
@@ -3517,7 +3521,9 @@ def s3_checkboxes_widget(field,
 
             if lookup_field in ktable.fields:
                 query = ktable[pkey].belongs([k for k, v in options])
-                rows = current.db(query).select(ktable[pkey], ktable[lookup_field])
+                rows = current.db(query).select(ktable[pkey],
+                                                ktable[lookup_field]
+                                                )
 
                 for row in rows:
                     help_text[str(row[ktable[pkey]])] = row[ktable[lookup_field]]
@@ -3530,7 +3536,7 @@ def s3_checkboxes_widget(field,
 
 
     options = [(k, v) for k, v in options if k != ""]
-    options = sorted(options, key=lambda option: s3_unicode(option[1]).lower())
+    options = sorted(options, key=lambda option: option[1].lower())
 
     input_index = start_at_id
     rows = []

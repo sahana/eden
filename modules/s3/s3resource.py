@@ -622,6 +622,17 @@ class S3Resource(object):
                         qfields.append(f)
                         qf.append(str(e))
 
+        #if db._dbname == "postgres":
+        #    # Look for extra fields in query
+        #    qf = [str(f) for f in qfields]
+        #    for join in left_joins:
+        #        extra_field = join.second.second
+        #        e = str(extra_field)
+        #        # Works for Country filter but not Branch filter
+        #        if e == "gis_location.id" and e not in qf:
+        #            qfields.append(extra_field)
+        #            qf.append(str(extra_field))
+
         # Retrieve the rows
         rows = db(query).select(*qfields, **attributes)
 

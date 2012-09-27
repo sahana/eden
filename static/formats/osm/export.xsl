@@ -38,6 +38,7 @@
     <xsl:template match="/">
         <osm>
             <xsl:attribute name="version">0.6</xsl:attribute>
+            <xsl:attribute name="upload">true</xsl:attribute>
             <xsl:attribute name="generator">Sahana Eden</xsl:attribute>
             <xsl:apply-templates select="s3xml"/>
         </osm>
@@ -46,12 +47,14 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/s3xml">
         <xsl:variable name="domain" select="@domain" />
+        <!--
         <bounds>
             <xsl:attribute name="minlat"><xsl:value-of select="@latmin"/></xsl:attribute>
             <xsl:attribute name="minlon"><xsl:value-of select="@lonmin"/></xsl:attribute>
             <xsl:attribute name="maxlat"><xsl:value-of select="@latmax"/></xsl:attribute>
             <xsl:attribute name="maxlon"><xsl:value-of select="@lonmax"/></xsl:attribute>
         </bounds>
+        -->
         <xsl:apply-templates select=".//resource"/>
     </xsl:template>
 

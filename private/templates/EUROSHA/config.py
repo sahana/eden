@@ -35,8 +35,8 @@ settings.auth.role_modules = OrderedDict([
         ("staff", "Staff"),
         ("vol", "Volunteers"),
         ("project", "Projects"),
-        ("asset", "Assets"),
-        ("vehicle", "Vehicles"),
+        #("asset", "Assets"),
+        #("vehicle", "Vehicles"),
     ])
 
 # L10n settings
