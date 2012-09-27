@@ -294,6 +294,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New Job Role", m="create"),
                         M("List All"),
+                        M("Import", m="import", p="create", check=is_org_admin),
                     ),
                     #M("Skill Catalog", f="skill",
                       #check=manager_mode)(
@@ -321,12 +322,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New Training Course", m="create"),
                         M("List All"),
+                        M("Import", m="import", p="create", check=is_org_admin),
                         M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", c="hrm", f="certificate",
                       check=manager_mode)(
                         M("New Certificate", m="create"),
                         M("List All"),
+                        M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     #M("My Profile", c="hrm", f="person",

@@ -187,9 +187,9 @@ class S3Importer(S3CRUD):
         messages.commit_total_errors = "%s records in error"
 
         try:
-            self.uploadTitle = current.response.s3.crud_strings[self.tablename].title_upload
+            self.uploadTitle = current.response.s3.crud_strings[self.tablename].title_upload or T("Import")
         except:
-            self.uploadTitle = T("Upload a %s import file" % r.function)
+            self.uploadTitle = T("Import")
 
         # @todo: correct to switch this off for the whole session?
         current.session.s3.ocr_enabled = False

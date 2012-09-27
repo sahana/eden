@@ -10,8 +10,8 @@ T = current.T
     Template settings for Delphi Decision Maker
 """
 
-settings.base.system_name = T("Delphi Decision Maker")
-settings.base.system_name_short = T("Delphi")
+settings.base.system_name = T("Decision Support 2.0")
+settings.base.system_name_short = T("Decision Support 2.0")
 
 # Pre-Populate
 settings.base.prepopulate = ["Delphi"]

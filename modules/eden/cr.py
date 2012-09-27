@@ -56,6 +56,7 @@ class S3CampDataModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        messages = current.messages
 
         # -------------------------------------------------------------------------
         # Shelter types
@@ -216,7 +217,7 @@ class S3CampDataModel(S3Model):
                                 Field("status", "integer",
                                       requires = IS_NULL_OR(IS_IN_SET(cr_shelter_opts)),
                                       represent = lambda opt: \
-                                        cr_shelter_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                        cr_shelter_opts.get(opt, messages.UNKNOWN_OPT),
                                       label = T("Status")),
                                 Field("source",
                                       label = T("Source")),

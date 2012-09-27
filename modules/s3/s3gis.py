@@ -1862,7 +1862,7 @@ class GIS(object):
                 symbology_id = config.symbology_id
             query = (ftable.controller == controller) & \
                     (ftable.function == function) & \
-                    (ftable.id == ltable.layer_id) & \
+                    (ftable.layer_id == ltable.layer_id) & \
                     (ltable.symbology_id == symbology_id) & \
                     (ltable.marker_id == mtable.id)
             marker = db(query).select(mtable.image,
@@ -7249,7 +7249,7 @@ class S3ExportPOI(S3Method):
             resources = r.get_vars["resources"]
         else:
             # Fallback to deployment_setting
-            resources = current.deployment_settings.get_gis_poi_export_resources()
+            resources = current.deployment_settings.get_gis_poi_resources()
         if not isinstance(resources, list):
             resources = [resources]
         [tables.extend(t.split(",")) for t in resources]
@@ -7277,7 +7277,7 @@ class S3ExportPOI(S3Method):
                 except ValueError:
                     msince = None
 
-        # Export a combined three
+        # Export a combined tree
         tree = self.export_combined_tree(tables,
                                          msince=msince,
                                          update_feed=update_feed)
@@ -7350,8 +7350,11 @@ class S3ExportPOI(S3Method):
             query = (ftable.tablename == tablename) & \
                     (ftable.location_id == self.lx)
             feed = current.db(query).select(limitby=(0, 1)).first()
-            if msince == "auto" and feed is not None:
-                _msince = feed.last_update
+            if msince == "auto":
+                if feed is None:
+                    _msince = None
+                else:
+                    _msince = feed.last_update
             else:
                 _msince = msince
 

@@ -344,19 +344,23 @@ if len(pop_list) > 0:
         try:
             # Python-2.7
             duration = '{:.2f}'.format(duration.total_seconds()/60)
-            print >> sys.stdout, "Pre-populate completed in %s mins" % duration
+            print >> sys.stdout, "Pre-populate task completed in %s mins" % duration
         except AttributeError:
             # older Python
-            print >> sys.stdout, "Pre-populate completed in %s" % duration
+            print >> sys.stdout, "Pre-populate task completed in %s" % duration
         bi.resultList = []
-
-    grandTotalEnd = datetime.datetime.now()
-    duration = grandTotalEnd - grandTotalStart
-    print >> sys.stdout, "Pre-populate completed in %s" % (duration)
     for errorLine in bi.errorList:
         print >> sys.stderr, errorLine
+
     # Restore table protection
     s3mgr.PROTECTED = protected
+
+    # Update stats_aggregate (disabled during prepop)
+    if has_module("stats"):
+        start = datetime.datetime.now()
+        s3db.stats_rebuild_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
 
     # Restore Auth
     auth.override = False
@@ -367,12 +371,15 @@ if len(pop_list) > 0:
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
 
-    # Update stats_aggregate (disabled during prepop)
-    if has_module("stats"):
-        start = datetime.datetime.now()
-        s3db.stats_rebuild_aggregates()
-        end = datetime.datetime.now()
-        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
+    grandTotalEnd = datetime.datetime.now()
+    duration = grandTotalEnd - grandTotalStart
+    try:
+        # Python-2.7
+        duration = '{:.2f}'.format(duration.total_seconds()/60)
+        print >> sys.stdout, "Pre-populate completed in %s mins" % duration
+    except AttributeError:
+        # older Python
+        print >> sys.stdout, "Pre-populate completed in %s" % duration
 
     # Restore view
     response.view = "default/index.html"
