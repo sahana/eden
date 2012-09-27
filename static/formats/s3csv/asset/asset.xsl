@@ -20,10 +20,10 @@
 
            You can add a third argument &ignore_errors
          CSV fields:
-         Organisation....................asset_log.organisation_id.name
-         Acronym.........................asset_log.organisation_id.acronym
-         Office..........................asset_log.site_id
-         OfficeCode......................asset_log.site_id.code
+         Organisation....................organisation_id.name & asset_log.organisation_id.name
+         Acronym.........................organisation_id.acronym & asset_log.organisation_id.acronym
+         Office..........................site_id & asset_log.site_id
+         OfficeCode......................site_id.code & asset_log.site_id.code
          Catalog.........................supply_catalog_item.catalog_id.name
          Asset No........................number
          Type............................type
@@ -199,6 +199,17 @@
                     <xsl:value-of select="$ItemCode"/>
                 </xsl:attribute>
             </reference>
+            <!-- Site -->
+            <reference field="organisation_id" resource="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OrgName"/>
+                </xsl:attribute>
+            </reference>
+            <reference field="site_id" resource="org_office">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$OfficeID"/>
+                </xsl:attribute>
+            </reference>
             <resource name="asset_log">
                 <!-- Set Base -->
                 <data field="status" value="1"/>
@@ -213,7 +224,6 @@
                 <!-- Good Condition -->
                 <data field="cond" value="1"/>
                 <!-- Site -->
-                <data field="site_or_location" value="1"/>
                 <reference field="organisation_id" resource="org_organisation">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$OrgName"/>
