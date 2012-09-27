@@ -83,6 +83,8 @@ function toggleRow(groupid) {
         $(sublevel).hide();
         $('#' + groupid + '_in').show();
         $('#' + groupid + '_out').hide();
+    // Display the spacer of open groups
+    $(sublevel + '.spacer').show();
     } else {
         // Open the immediate sublevel and change the icon to expanded
         $(sublevel).show();
@@ -143,6 +145,12 @@ function accordionRow(t, level, groupid) {
     showSubRows(groupid);
     // Display the spacer of open groups
     $('.spacer.alwaysOpen').show();
+    $.each($('.activeRow') , function(index, itemClass){
+        rowClass = getElementClass($(itemClass), 'group_');
+        var sublevel = '.sublevel' + rowClass.substr(6);
+        // Display the spacer of open groups
+        $(sublevel + '.spacer').show();
+    });
 
 }
 

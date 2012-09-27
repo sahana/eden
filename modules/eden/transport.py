@@ -38,7 +38,7 @@ from ..s3 import *
 # =============================================================================
 class S3TransportModel(S3Model):
     """
-        http://eden.sahanafoundation.org/wiki/BluePrintTransport
+        http://eden.sahanafoundation.org/wiki/BluePrint/Transport
     """
 
     names = ["transport_airport",
