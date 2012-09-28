@@ -57,7 +57,10 @@ class AddStaffToOrganisation(SeleniumUnitTest):
         browser.get("%s/org/organisation/%s/human_resource" % (config.url, org_id))
 
         self.create("hrm_human_resource", 
-                    [( "first_name",
+                    [( "site_id",
+                       "AP Zone (Office)",
+                       "option"),
+                     ( "first_name",
                        "Herculano",
                        "pr_person"),
                      ( "last_name",

@@ -50,7 +50,7 @@ class CreateMember(SeleniumUnitTest):
         self.create("member_membership", 
                     [( "organisation_id",
                        "Timor-Leste Red Cross Society",
-                       "autocomplete"),
+                       "option"),
                      ( "first_name",
                        "Denise",
                        "pr_person"),
